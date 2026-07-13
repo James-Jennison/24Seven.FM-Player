@@ -28,7 +28,7 @@ Codec and bitrate remain unknown until stream response headers or device playbac
 
 ## Playback ownership
 
-`RadioPlaybackService` owns the single `ExoPlayer` and `MediaSession`. The foreground Activity will connect through a Media3 `MediaController` adapter implementing a domain-facing playback interface. Switching stations replaces the active `MediaItem`; two stations must never play simultaneously.
+`RadioPlaybackService` owns the single `ExoPlayer` and `MediaSession`. The application connects through a Media3 `MediaController` adapter implementing the domain-facing `PlaybackController` interface. Switching stations stops the current item and atomically replaces the playlist with the selected station's ordered primary and fallback streams; two stations can never play simultaneously. The service advances to the fallback once when the primary stream fails.
 
 ## Authentication
 

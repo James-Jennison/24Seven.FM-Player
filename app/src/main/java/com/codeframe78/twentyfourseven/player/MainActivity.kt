@@ -16,15 +16,34 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Radio
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.codeframe78.twentyfourseven.player.domain.PlaybackStatus
 import com.codeframe78.twentyfourseven.player.domain.StationId
 import com.codeframe78.twentyfourseven.player.ui.MainUiState
 import com.codeframe78.twentyfourseven.player.ui.MainViewModel
@@ -35,27 +54,43 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         val container = (application as RadioApplication).appContainer
         setContent {
-            val vm: MainViewModel = viewModel(factory = MainViewModel.Factory(container.stationRepository))
+            val vm: MainViewModel = viewModel(
+                factory = MainViewModel.Factory(container.stationRepository, container.playbackController),
+            )
             val state by vm.uiState.collectAsStateWithLifecycle()
-            MaterialTheme(colorScheme = darkColorScheme()) { RadioApp(state, vm::selectStation) }
+            MaterialTheme(colorScheme = darkColorScheme()) {
+                RadioApp(state, vm::selectStation, vm::play, vm::pause, vm::stop)
+            }
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun RadioApp(state: MainUiState, onSelect: (StationId) -> Unit) {
+private fun RadioApp(
+    state: MainUiState,
+    onSelect: (StationId) -> Unit,
+    onPlay: () -> Unit,
+    onPause: () -> Unit,
+    onStop: () -> Unit,
+) {
     var menuOpen by remember { mutableStateOf(false) }
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(title = {
                 Box {
-                    TextButton(onClick = { menuOpen = true }) { Text(state.selectedStation?.name ?: "Choose station") }
+                    TextButton(onClick = { menuOpen = true }) {
+                        Text(state.selectedStation?.name ?: "Choose station")
+                    }
                     DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                         state.stations.forEach { station ->
-                            DropdownMenuItem(text = { Text(station.name) }, onClick = {
-                                onSelect(station.id); menuOpen = false
-                            })
+                            DropdownMenuItem(
+                                text = { Text(station.name) },
+                                onClick = {
+                                    onSelect(station.id)
+                                    menuOpen = false
+                                },
+                            )
                         }
                     }
                 }
@@ -77,15 +112,49 @@ private fun RadioApp(state: MainUiState, onSelect: (StationId) -> Unit) {
         ) {
             Text(state.selectedStation?.shortName ?: "24seven.FM", style = MaterialTheme.typography.displaySmall)
             Spacer(Modifier.height(12.dp))
-            Text("Track metadata will appear here", style = MaterialTheme.typography.titleLarge)
+            Text("Live radio", style = MaterialTheme.typography.titleLarge)
             Spacer(Modifier.height(6.dp))
-            Text("Stream endpoints pending verification", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                state.playback.errorMessage ?: state.selectedStation?.description.orEmpty(),
+                color = if (state.playback.status == PlaybackStatus.Error) {
+                    MaterialTheme.colorScheme.error
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+            )
             Spacer(Modifier.height(32.dp))
-            FilledIconButton(onClick = {}, enabled = false, shape = CircleShape) {
-                Icon(Icons.Default.PlayArrow, contentDescription = "Play")
+            val isPlaying = state.playback.status in setOf(
+                PlaybackStatus.Connecting,
+                PlaybackStatus.Buffering,
+                PlaybackStatus.Playing,
+                PlaybackStatus.Retrying,
+            )
+            FilledIconButton(
+                onClick = if (isPlaying) onPause else onPlay,
+                enabled = state.selectedStation?.streams?.isNotEmpty() == true,
+                shape = CircleShape,
+            ) {
+                Icon(
+                    if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                    contentDescription = if (isPlaying) "Pause" else "Play",
+                )
             }
-            Spacer(Modifier.height(16.dp))
-            Text("LIVE • Not connected", style = MaterialTheme.typography.labelLarge)
+            TextButton(onClick = onStop, enabled = state.playback.status != PlaybackStatus.Idle) {
+                Icon(Icons.Default.Stop, contentDescription = null)
+                Text("Stop")
+            }
+            Text("LIVE • ${state.playback.status.displayName}", style = MaterialTheme.typography.labelLarge)
         }
     }
 }
+
+private val PlaybackStatus.displayName: String
+    get() = when (this) {
+        PlaybackStatus.Idle -> "Not connected"
+        PlaybackStatus.Connecting -> "Connecting"
+        PlaybackStatus.Buffering -> "Buffering"
+        PlaybackStatus.Playing -> "Playing"
+        PlaybackStatus.Paused -> "Paused"
+        PlaybackStatus.Retrying -> "Trying fallback"
+        PlaybackStatus.Error -> "Playback error"
+    }

@@ -18,9 +18,11 @@ The application is written in Kotlin with Jetpack Compose and Jetpack Media3. It
 - MVVM and unidirectional data flow
 - Compose phone navigation shell
 - Media3 `MediaSessionService` for background playback
+- Play, pause, stop, atomic station switching, and one-step stream fallback
+- Immutable playback state exposed through a domain-facing controller
 - Repository boundaries for future metadata, authentication, chat, and requests
 
-Production stream and API endpoints are intentionally not guessed. They will be added only after verification and review of supported integration options.
+Audio stream addresses come from station-provided playlists and remain subject to device verification. API endpoints are intentionally not guessed and will be added only after verification and review of supported integration options.
 
 ## Building
 
