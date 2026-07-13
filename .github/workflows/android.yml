@@ -1,0 +1,33 @@
+name: Android CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Install Android SDK platform
+        run: sdkmanager "platforms;android-36.1" "build-tools;36.1.0"
+
+      - name: Validate app
+        run: |
+          chmod +x gradlew
+          ./gradlew test lint assembleDebug --no-daemon --console=plain

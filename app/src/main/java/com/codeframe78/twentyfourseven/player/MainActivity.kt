@@ -13,10 +13,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.QueueMusic
 import androidx.compose.material.icons.filled.Radio
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -64,8 +64,8 @@ private fun RadioApp(state: MainUiState, onSelect: (StationId) -> Unit) {
         bottomBar = {
             NavigationBar {
                 NavigationBarItem(true, {}, { Icon(Icons.Default.Radio, null) }, label = { Text("Playing") })
-                NavigationBarItem(false, {}, { Icon(Icons.Default.Chat, null) }, label = { Text("Chat") })
-                NavigationBarItem(false, {}, { Icon(Icons.Default.QueueMusic, null) }, label = { Text("Queue") })
+                NavigationBarItem(false, {}, { Icon(Icons.AutoMirrored.Filled.Chat, null) }, label = { Text("Chat") })
+                NavigationBarItem(false, {}, { Icon(Icons.AutoMirrored.Filled.QueueMusic, null) }, label = { Text("Queue") })
                 NavigationBarItem(false, {}, { Icon(Icons.Default.MoreHoriz, null) }, label = { Text("More") })
             }
         },

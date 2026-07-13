@@ -24,7 +24,19 @@ Production stream and API endpoints are intentionally not guessed. They will be 
 
 ## Building
 
-Open the repository in a current Android Studio release with JDK 17. The project targets Android API 36 and supports Android 8.0 (API 26) and newer.
+Open the repository in a current Android Studio release with JDK 17. The project targets Android API 36, compiles against Android 36.1, and supports Android 8.0 (API 26) and newer.
+
+From PowerShell, validate the project with:
+
+```powershell
+.\gradlew.bat test lint assembleDebug
+```
+
+If the repository is inside a OneDrive-synced directory and Gradle stalls on file operations, direct app build outputs to a local directory before running Gradle:
+
+```powershell
+$env:TWENTYFOURSEVEN_ANDROID_BUILD_DIR="$env:TEMP\24seven-android-build"
+```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) before contributing.
 

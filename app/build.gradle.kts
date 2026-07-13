@@ -1,12 +1,22 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
+providers.environmentVariable("TWENTYFOURSEVEN_ANDROID_BUILD_DIR")
+    .orNull
+    ?.let { layout.buildDirectory.set(file(it)) }
+
 android {
     namespace = "com.codeframe78.twentyfourseven.player"
-    compileSdk = 36
+    compileSdk {
+        version = release(36) {
+            minorApiLevel = 1
+        }
+    }
     defaultConfig {
         applicationId = "com.codeframe78.twentyfourseven.player"
         minSdk = 26
@@ -19,7 +29,12 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions { jvmTarget = "17" }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_17
+    }
 }
 
 dependencies {
