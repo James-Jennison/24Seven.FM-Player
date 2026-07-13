@@ -1,3 +1,30 @@
 # 24Seven.FM Player
 
-Unofficial native Android client for the 24seven.FM radio network.
+An unofficial, community-built native Android client for the 24seven.FM internet-radio network.
+
+The application is written in Kotlin with Jetpack Compose and Jetpack Media3. It does not use a WebView and is not affiliated with or endorsed by 24seven.FM or its stations.
+
+## Planned stations
+
+- StreamingSoundtracks.com
+- 1980s.FM
+- Adagio.FM
+- Death.FM
+- Entranced.FM
+
+## Current milestone
+
+- Station-first domain model
+- MVVM and unidirectional data flow
+- Compose phone navigation shell
+- Media3 `MediaSessionService` for background playback
+- Repository boundaries for future metadata, authentication, chat, and requests
+
+Production stream and API endpoints are intentionally not guessed. They will be added only after verification and review of supported integration options.
+
+## Building
+
+Open the repository in a current Android Studio release with JDK 17. The project targets Android API 36 and supports Android 8.0 (API 26) and newer.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) before contributing.
+

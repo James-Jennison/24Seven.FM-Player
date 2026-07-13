@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false" />
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">1980s.fm</domain>
+        <domain includeSubdomains="true">adagio.fm</domain>
+        <domain includeSubdomains="true">death.fm</domain>
+        <domain includeSubdomains="true">entranced.fm</domain>
+        <domain includeSubdomains="true">streamingsoundtracks.com</domain>
+    </domain-config>
+</network-security-config>
+
