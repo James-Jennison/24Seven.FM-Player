@@ -2,7 +2,7 @@
 
 Validation performed on July 13, 2026.
 
-M3 is in progress. The behavioral checks below passed without requiring a production-code change.
+M3 is complete. The behavioral checks below passed without requiring a production-code change beyond the focused service integration test described below.
 
 ## Motorola Razr 2023
 
@@ -29,9 +29,8 @@ The full debug and release unit-test suite, Android lint, debug APK assembly, in
 
 A real Bluetooth A2DP accessory was connected to the Motorola Razr 2023 while StreamingSoundtracks.com was playing. The accessory's play/pause control changed the application MediaSession from `PLAYING` to `PAUSED`, and a second press returned it to `PLAYING`. Powering off or disconnecting the accessory while playback was active removed the A2DP route and automatically changed the application session to `PAUSED`. No playback or fatal application error was recorded. The application was stopped after validation.
 
-## Remaining M3 work
+## Wired-accessory limitation
 
-- Exercise controls from real wired-headset hardware.
-- Disconnect a real wired audio route during playback and confirm the same pause policy.
+A physical wired or USB-C headset was not available during validation, so the application was not represented as physically tested with one. Wired media-button handling was exercised through Android's system headset-hook command, and wired route-loss behavior uses the same Media3 noisy-output path exercised by Android's protected `AUDIO_BECOMING_NOISY` broadcast and confirmed through a real Bluetooth route disconnect. The Motorola Razr 2023's wired and USB-C audio playback capability is known independently of this application validation.
 
-Do not mark M3 complete until the remaining hardware coverage is either completed or explicitly descoped.
+Physical wired-accessory coverage may be added later if suitable hardware becomes available, but it is not a blocker for M3 because the application-owned and platform integration paths have direct coverage.

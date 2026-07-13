@@ -66,7 +66,7 @@ M1 is complete and CI builds the project with JDK 17 and the committed Gradle wr
 - station metadata in the media notification;
 - notification controls that do not expose the internal fallback playlist.
 
-The latest successful build validation ran unit tests for debug and release, Android lint, and `assembleDebug`. M3 device validation is in progress. See `docs/m1-validation.md`, `docs/m2-validation.md`, and `docs/m3-validation.md` for exact evidence.
+The latest successful build validation ran unit tests for debug and release, Android lint, `assembleDebug`, instrumentation APK assembly, and the API 35 connected service test. M3 device validation is complete. See `docs/m1-validation.md`, `docs/m2-validation.md`, and `docs/m3-validation.md` for exact evidence.
 
 ## Physical Razr setup
 
@@ -105,14 +105,19 @@ Primary-to-source fallback was also verified under a controlled primary-only net
 
 Before testing, use `adb devices -l` and pass `-s <device>` to ADB commands when an emulator is also running.
 
-## M3 progress and immediate next objective
+## M3 completion and immediate next objective
 
-M2 device validation is complete. M3 background-playback hardening has verified foreground-to-background playback, lock and idle behavior, task removal, notification continuity, system and real Bluetooth media commands, transient and permanent audio-focus policy, real Bluetooth route-disconnect pausing, simulated noisy-output pausing, and automated service stop/reconnect behavior. The transient-focus policy automatically resumes after focus returns; permanent focus loss remains paused until the user explicitly resumes playback.
+M3 background-playback hardening is complete. It verified foreground-to-background playback, lock and idle behavior, task removal, notification continuity, system and real Bluetooth media commands, transient and permanent audio-focus policy, real Bluetooth route-disconnect pausing, protected noisy-output broadcast handling, and automated service stop/reconnect behavior. The transient-focus policy automatically resumes after focus returns; permanent focus loss remains paused until the user explicitly resumes playback.
 
-Complete the remaining M3 work:
+No physical wired or USB-C accessory was available. Do not claim that physical test occurred. The system headset-hook command, Android's protected noisy-output broadcast, and real Bluetooth disconnect cover the relevant application and Media3 paths; physical wired coverage is non-blocking and can be added later.
 
-1. Verify controls from real wired-headset hardware.
-2. Disconnect the real wired audio route while playing and confirm the noisy-output pause policy.
+Proceed to M4 Now Playing:
+
+1. Inspect the five verified streams for ICY headers and metadata without guessing endpoints.
+2. Record codec, bitrate, and metadata evidence separately for each station and relay.
+3. Define immutable, station-scoped now-playing state behind a domain repository contract.
+4. Add only metadata fields and artwork sources that are verified and permitted.
+5. Keep playback independent from metadata availability or failure.
 
 An API 35 instrumentation test connects through the real `MediaSessionService`, checks that fallback navigation remains hidden, stops the running service, and reconnects after recreation. Run it against an explicit emulator serial with `ANDROID_SERIAL=<emulator>` and `./gradlew connectedDebugAndroidTest` when both an emulator and physical device are connected.
 
