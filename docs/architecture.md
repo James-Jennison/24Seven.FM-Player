@@ -23,7 +23,9 @@ The bundled catalog contains identities and public website addresses only. Strea
 
 The initial stream addresses were extracted from station-provided PLS playlists. Each catalog entry keeps the primary `hi5` relay first and the `hi` source stream as a fallback. Because those playlists use HTTP, Android cleartext access is permitted only for the five explicit station domains; cleartext remains disabled globally.
 
-Codec and bitrate remain unknown until stream response headers or device playback verify them. Do not infer AAC, MP3, or a bitrate from the `hi` hostname.
+All ten committed relay URLs advertise `audio/aacp` and 128 kbps through ICY headers. The catalog therefore records `StreamFormat.Aac` and 128 kbps based on protocol evidence, not hostname inference. Revalidate this evidence before changing the labels.
+
+Live ICY titles flow from the service-owned player through a station-scoped `NowPlayingRepository` contract. Compose receives only immutable domain state. ICY supplies one composite title, so the application displays it unchanged and does not guess artist, album, composer, duration, or artwork fields.
 
 
 ## Playback ownership

@@ -111,6 +111,7 @@ class Media3PlaybackController(context: Context) : PlaybackController {
                         MediaMetadata.Builder()
                             .setTitle(station.name)
                             .setArtist("24seven.FM")
+                            .setAlbumTitle(station.name)
                             .setSubtitle(stream.label)
                             .setIsBrowsable(false)
                             .setIsPlayable(true)

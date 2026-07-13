@@ -3,6 +3,8 @@ package com.codeframe78.twentyfourseven.player.ui
 import com.codeframe78.twentyfourseven.player.data.BootstrapStationRepository
 import com.codeframe78.twentyfourseven.player.domain.PlaybackController
 import com.codeframe78.twentyfourseven.player.domain.PlaybackState
+import com.codeframe78.twentyfourseven.player.domain.NowPlayingRepository
+import com.codeframe78.twentyfourseven.player.domain.NowPlayingState
 import com.codeframe78.twentyfourseven.player.domain.Station
 import com.codeframe78.twentyfourseven.player.domain.StationId
 import kotlinx.coroutines.Dispatchers
@@ -37,7 +39,7 @@ class MainViewModelTest {
     fun `selection and playback actions are delegated through domain contracts`() = runTest(dispatcher) {
         val stations = BootstrapStationRepository()
         val playback = FakePlaybackController()
-        val viewModel = MainViewModel(stations, playback)
+        val viewModel = MainViewModel(stations, playback, FakeNowPlayingRepository())
         advanceUntilIdle()
 
         assertEquals("sst", playback.selectedStation?.id?.value)
@@ -52,6 +54,10 @@ class MainViewModelTest {
         assertEquals(1, playback.playCalls)
         assertEquals(1, playback.pauseCalls)
         assertEquals(1, playback.stopCalls)
+    }
+
+    private class FakeNowPlayingRepository : NowPlayingRepository {
+        override fun observeNowPlaying() = MutableStateFlow(NowPlayingState())
     }
 
     private class FakePlaybackController : PlaybackController {

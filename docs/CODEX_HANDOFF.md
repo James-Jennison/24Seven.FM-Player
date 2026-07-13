@@ -66,6 +66,14 @@ M1 is complete and CI builds the project with JDK 17 and the committed Gradle wr
 - station metadata in the media notification;
 - notification controls that do not expose the internal fallback playlist.
 
+M4 now includes:
+
+- verified ICY titles on all five stations and both relay types;
+- immutable station-scoped now-playing state behind a domain repository contract;
+- raw title display without heuristic artist/album/composer parsing;
+- matching live titles in Compose and Android MediaSession metadata;
+- protocol-verified AAC and advertised 128 kbps quality labels.
+
 The latest successful build validation ran unit tests for debug and release, Android lint, `assembleDebug`, instrumentation APK assembly, and the API 35 connected service test. M3 device validation is complete. See `docs/m1-validation.md`, `docs/m2-validation.md`, and `docs/m3-validation.md` for exact evidence.
 
 ## Physical Razr setup
@@ -111,13 +119,14 @@ M3 background-playback hardening is complete. It verified foreground-to-backgrou
 
 No physical wired or USB-C accessory was available. Do not claim that physical test occurred. The system headset-hook command, Android's protected noisy-output broadcast, and real Bluetooth disconnect cover the relevant application and Media3 paths; physical wired coverage is non-blocking and can be added later.
 
-Proceed to M4 Now Playing:
+Continue M4 Now Playing:
 
-1. Inspect the five verified streams for ICY headers and metadata without guessing endpoints.
-2. Record codec, bitrate, and metadata evidence separately for each station and relay.
-3. Define immutable, station-scoped now-playing state behind a domain repository contract.
-4. Add only metadata fields and artwork sources that are verified and permitted.
-5. Keep playback independent from metadata availability or failure.
+1. Verify that a title change within one continuously playing station updates both Compose and MediaSession state.
+2. Re-run the controlled primary-to-source fallback and confirm live ICY titles continue on the source item.
+3. Treat structured artist, album, composer, duration, and artwork as unavailable until a supported source verifies them.
+4. Keep playback independent from metadata availability or failure.
+
+See `docs/m4-metadata-research.md` for per-relay ICY headers, field constraints, implementation evidence, and device results.
 
 An API 35 instrumentation test connects through the real `MediaSessionService`, checks that fallback navigation remains hidden, stops the running service, and reconnects after recreation. Run it against an explicit emulator serial with `ANDROID_SERIAL=<emulator>` and `./gradlew connectedDebugAndroidTest` when both an emulator and physical device are connected.
 
@@ -135,7 +144,7 @@ The exact URLs below came from station-provided PLS files. The trailing semicolo
 | Death.FM | `http://hi5.death.fm/;` | `http://hi.death.fm/;` |
 | Entranced.FM | `http://hi5.entranced.fm/;` | `http://hi.entranced.fm/;` |
 
-Codec and bitrate remain unverified. Cleartext is disabled globally and allowed only for the five station domains. Do not broaden the network security policy or guess HTTPS/API endpoints.
+All ten relays advertise `audio/aacp` and 128 kbps through ICY headers. Cleartext is disabled globally and allowed only for the five station domains. Do not broaden the network security policy or guess HTTPS/API endpoints.
 
 ## Architectural invariants
 

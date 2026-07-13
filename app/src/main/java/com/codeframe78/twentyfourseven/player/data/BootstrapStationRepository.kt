@@ -3,6 +3,7 @@ package com.codeframe78.twentyfourseven.player.data
 import com.codeframe78.twentyfourseven.player.domain.Station
 import com.codeframe78.twentyfourseven.player.domain.StationId
 import com.codeframe78.twentyfourseven.player.domain.StationRepository
+import com.codeframe78.twentyfourseven.player.domain.StreamFormat
 import com.codeframe78.twentyfourseven.player.domain.StreamVariant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,8 +28,8 @@ class BootstrapStationRepository : StationRepository {
 
     private companion object {
         fun streams(domain: String) = listOf(
-            StreamVariant("http://hi5.$domain/;", "Primary relay", priority = 0),
-            StreamVariant("http://hi.$domain/;", "Source stream", priority = 1),
+            StreamVariant("http://hi5.$domain/;", "Primary relay", priority = 0, format = StreamFormat.Aac, bitrateKbps = 128),
+            StreamVariant("http://hi.$domain/;", "Source stream", priority = 1, format = StreamFormat.Aac, bitrateKbps = 128),
         )
     }
 }

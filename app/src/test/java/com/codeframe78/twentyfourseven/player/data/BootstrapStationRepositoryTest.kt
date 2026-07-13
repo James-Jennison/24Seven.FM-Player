@@ -1,6 +1,7 @@
 package com.codeframe78.twentyfourseven.player.data
 
 import com.codeframe78.twentyfourseven.player.domain.StationId
+import com.codeframe78.twentyfourseven.player.domain.StreamFormat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -31,6 +32,8 @@ class BootstrapStationRepositoryTest {
         repository.observeStations().first().forEach { station ->
             assertEquals(listOf("Primary relay", "Source stream"), station.streams.map { it.label })
             assertEquals(listOf(0, 1), station.streams.map { it.priority })
+            assertEquals(listOf(StreamFormat.Aac, StreamFormat.Aac), station.streams.map { it.format })
+            assertEquals(listOf(128, 128), station.streams.map { it.bitrateKbps })
         }
     }
 }

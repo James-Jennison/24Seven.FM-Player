@@ -8,6 +8,8 @@ import com.codeframe78.twentyfourseven.player.domain.StationId
 import com.codeframe78.twentyfourseven.player.domain.StationRepository
 import com.codeframe78.twentyfourseven.player.domain.PlaybackController
 import com.codeframe78.twentyfourseven.player.domain.PlaybackState
+import com.codeframe78.twentyfourseven.player.domain.NowPlayingRepository
+import com.codeframe78.twentyfourseven.player.domain.NowPlayingState
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -18,15 +20,28 @@ data class MainUiState(
     val stations: List<Station> = emptyList(),
     val selectedStation: Station? = null,
     val playback: PlaybackState = PlaybackState(),
+    val nowPlaying: NowPlayingState = NowPlayingState(),
 )
 
 class MainViewModel(
     private val stations: StationRepository,
     private val playback: PlaybackController,
+    private val nowPlaying: NowPlayingRepository,
 ) : ViewModel() {
     val uiState: StateFlow<MainUiState> = combine(
-        stations.observeStations(), stations.observeSelectedStation(), playback.state,
-    ) { all, selected, playbackState -> MainUiState(all, selected, playbackState) }
+        stations.observeStations(),
+        stations.observeSelectedStation(),
+        playback.state,
+        nowPlaying.observeNowPlaying(),
+    ) { all, selected, playbackState, nowPlayingState ->
+        MainUiState(
+            stations = all,
+            selectedStation = selected,
+            playback = playbackState,
+            nowPlaying = nowPlayingState.takeIf { it.stationId == selected.id }
+                ?: NowPlayingState(stationId = selected.id),
+        )
+    }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), MainUiState())
 
     init {
@@ -43,9 +58,10 @@ class MainViewModel(
     class Factory(
         private val stations: StationRepository,
         private val playback: PlaybackController,
+        private val nowPlaying: NowPlayingRepository,
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel> create(modelClass: Class<T>): T = MainViewModel(stations, playback) as T
+        override fun <T : ViewModel> create(modelClass: Class<T>): T = MainViewModel(stations, playback, nowPlaying) as T
     }
 }
 

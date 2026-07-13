@@ -44,11 +44,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.codeframe78.twentyfourseven.player.domain.PlaybackStatus
 import com.codeframe78.twentyfourseven.player.domain.StationId
+import com.codeframe78.twentyfourseven.player.domain.StreamFormat
 import com.codeframe78.twentyfourseven.player.ui.MainUiState
 import com.codeframe78.twentyfourseven.player.ui.MainViewModel
 
@@ -69,7 +72,11 @@ class MainActivity : ComponentActivity() {
         val container = (application as RadioApplication).appContainer
         setContent {
             val vm: MainViewModel = viewModel(
-                factory = MainViewModel.Factory(container.stationRepository, container.playbackController),
+                factory = MainViewModel.Factory(
+                    container.stationRepository,
+                    container.playbackController,
+                    container.nowPlayingRepository,
+                ),
             )
             val state by vm.uiState.collectAsStateWithLifecycle()
             MaterialTheme(colorScheme = darkColorScheme()) {
@@ -126,7 +133,13 @@ private fun RadioApp(
         ) {
             Text(state.selectedStation?.shortName ?: "24seven.FM", style = MaterialTheme.typography.displaySmall)
             Spacer(Modifier.height(12.dp))
-            Text("Live radio", style = MaterialTheme.typography.titleLarge)
+            Text(
+                state.nowPlaying.displayTitle ?: "Live radio",
+                style = MaterialTheme.typography.titleLarge,
+                textAlign = TextAlign.Center,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis,
+            )
             Spacer(Modifier.height(6.dp))
             Text(
                 state.playback.errorMessage ?: state.selectedStation?.description.orEmpty(),
@@ -158,9 +171,29 @@ private fun RadioApp(
                 Text("Stop")
             }
             Text("LIVE • ${state.playback.status.displayName}", style = MaterialTheme.typography.labelLarge)
+            state.selectedStation?.streams?.minByOrNull { it.priority }?.qualityLabel?.let { quality ->
+                Text(
+                    quality,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }
+
+private val com.codeframe78.twentyfourseven.player.domain.StreamVariant.qualityLabel: String?
+    get() {
+        val formatLabel = when (format) {
+            StreamFormat.Aac -> "AAC"
+            StreamFormat.Mp3 -> "MP3"
+            StreamFormat.Hls -> "HLS"
+            StreamFormat.Unknown -> null
+        }
+        return listOfNotNull(formatLabel, bitrateKbps?.let { "$it kbps" })
+            .takeIf(List<String>::isNotEmpty)
+            ?.joinToString(" • ")
+    }
 
 private val PlaybackStatus.displayName: String
     get() = when (this) {
