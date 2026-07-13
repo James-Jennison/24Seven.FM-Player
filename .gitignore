@@ -7,3 +7,4 @@ local.properties
 *.aab
 captures/
 *.har
+.codex-remote-attachments/

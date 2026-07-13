@@ -1,58 +1,121 @@
-# Windows Codex handoff
+# Windows development handoff
 
-## Mission
+## Mission and repository
 
-Complete **24Seven.FM Player**, an unofficial, fully native Android client for the 24seven.FM radio network. The app must use Kotlin, Jetpack Compose, MVVM, and Jetpack Media3. It must not use a WebView.
+Complete **24Seven.FM Player**, an unofficial, fully native Android client for the 24seven.FM radio network. The app uses Kotlin, Jetpack Compose, MVVM, and Jetpack Media3. It must not use a WebView.
 
-Repository: `https://github.com/codeframe78/24Seven.FM-Player`
+- Repository: `https://github.com/codeframe78/24Seven.FM-Player`
+- Working branch: `agent/initial-android-scaffold`
+- Draft pull request: `https://github.com/codeframe78/24Seven.FM-Player/pull/1`
 
-Working branch: `agent/initial-android-scaffold`
-
-Draft pull request: `https://github.com/codeframe78/24Seven.FM-Player/pull/1`
-
-## Start here
+Clone the current handoff branch on the new PC:
 
 ```powershell
 git clone https://github.com/codeframe78/24Seven.FM-Player.git
-cd 24Seven.FM-Player
+Set-Location '24Seven.FM-Player'
 git switch agent/initial-android-scaffold
 git status
 ```
 
-Open this directory in Android Studio. Read these files before editing:
+Read `AGENTS.md`, `README.md`, `CONTRIBUTING.md`, `docs/architecture.md`, and `docs/m2-validation.md` before editing. Preserve the existing station-first domain model and dependency boundaries.
 
-1. `AGENTS.md`
-2. `README.md`
-3. `CONTRIBUTING.md`
-4. `docs/architecture.md`
-5. `docs/endpoint-research-template.md`
-6. This handoff
+## Required Windows environment
 
-Inspect the existing implementation before proposing a rewrite. Preserve the station-first domain model and the separation between Compose, ViewModels, domain interfaces, data implementations, and Media3.
+- A current Android Studio release
+- JDK 17
+- Android SDK Platform 36
+- Android SDK Build Tools 36.1.0
+- Android SDK Platform Tools
+- Optional Android Emulator image for API 35 or 36
 
-## Current state
+The app compiles against API 36 because the selected AndroidX Activity and Media3 versions require it. It targets API 35 to match the primary Motorola Razr 2023 running Android 15. Minimum SDK is API 26.
 
-The initial scaffold contains:
+Install SDK packages from Android Studio's SDK Manager or with `sdkmanager`:
 
-- Android application configuration compiling against API 36, targeting API 35, and supporting API 26+
-- Kotlin and Jetpack Compose configuration
-- a phone-oriented Now Playing shell with station picker and bottom navigation
-- domain models for stations, capabilities, and stream variants
-- a bootstrap catalog for all five stations
-- an MVVM station-selection flow
-- a Media3 `MediaSessionService` owning `ExoPlayer` and `MediaSession`
-- station PLS files stored in `res/raw`
-- a domain-restricted cleartext network policy
-- initial station-catalog unit tests
-- architecture and contributor documentation
+```powershell
+sdkmanager "platforms;android-36" "build-tools;36.1.0" "platform-tools"
+```
 
-The project has **not yet been compiled**. The browser-based Work environment did not have Gradle, Kotlin, an Android SDK, an emulator, or a device. Treat compilation as the first source of truth.
+Do not commit `local.properties`. If Android Studio does not discover the SDK automatically, set `ANDROID_HOME` for the current PowerShell session:
 
-The repository does not yet contain a Gradle wrapper. Add one with a Gradle version compatible with the selected Android Gradle Plugin, commit the complete wrapper files, and use `gradlew.bat` for repeatable Windows and CI builds.
+```powershell
+$env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
+```
 
-## Station catalog and streams
+The complete Gradle wrapper is committed. Do not install a separate Gradle distribution. Validate the new PC from the repository root:
 
-Station-provided PLS files supplied the following exact values:
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate-windows.ps1
+```
+
+The script checks JDK and SDK prerequisites, redirects build output to `%TEMP%`, and runs `test lint assembleDebug`. The equivalent manual command is documented in `README.md`.
+
+## Current implementation
+
+M1 is complete and CI builds the project with JDK 17 and the committed Gradle wrapper. M2 currently includes:
+
+- five-station catalog with station-provided primary and source-fallback URLs;
+- immutable playback state behind a domain `PlaybackController` contract;
+- Activity-to-service Media3 controller connection;
+- one service-owned `ExoPlayer` and `MediaSession`;
+- play, pause, stop, and atomic station switching;
+- one-step fallback from the primary relay to the source stream;
+- Android 13+ notification permission request;
+- foreground/background playback with system media pause and resume;
+- station metadata in the media notification;
+- notification controls that do not expose the internal fallback playlist.
+
+The latest successful validation ran unit tests for debug and release, Android lint, and `assembleDebug`. See `docs/m1-validation.md` and `docs/m2-validation.md` for exact evidence.
+
+## Physical Razr setup
+
+The primary device is a Motorola Razr 2023:
+
+- Android 15 / API 35
+- device model reported by ADB: `motorola_razr_2023`
+- physical display: 1080 x 2640 at 420 dpi
+
+ADB trust keys are specific to each development PC. The new PC must pair again; do not copy old ADB keys. On the phone:
+
+1. Enable Developer options.
+2. Open **Settings > System > Developer options > Wireless debugging**.
+3. Choose **Pair device with pairing code**.
+4. Keep the pairing screen open while running `adb pair <phone-ip>:<pairing-port>` on the new PC.
+5. Enter the six-digit code shown by the phone.
+6. Return to the main Wireless debugging screen and run `adb connect <phone-ip>:<debug-port>`.
+7. Confirm the connection with `adb devices -l`.
+
+The pairing port and debugging port are different and can change. Never commit the phone's LAN/Tailscale address, pairing code, device serial, or screenshots of the Wireless debugging screen. If both PCs and the phone use Tailscale, the phone's current Tailscale address can be used explicitly with `adb pair` and `adb connect`; mDNS discovery is not required.
+
+## Verified device behavior
+
+The Razr has verified:
+
+- StreamingSoundtracks.com and Adagio.FM primary-stream playback;
+- station switching while playback is active;
+- background continuation with a foreground media service;
+- notification permission and visible media notification;
+- system media pause/resume;
+- in-app stop;
+- correct session metadata and audio focus;
+- no user-facing Next action for the internal fallback item.
+
+Before testing, use `adb devices -l` and pass `-s <device>` to ADB commands when an emulator is also running.
+
+## Immediate next objective
+
+Finish M2 device validation:
+
+1. Verify 1980s.FM, Death.FM, and Entranced.FM on the Razr.
+2. Exercise primary-to-source fallback under a controlled, local test failure without changing or inventing production URLs.
+3. Verify switching repeatedly among all five stations.
+4. Record results and any stream-specific failures in `docs/m2-validation.md`.
+
+Then proceed to M3 hardening: notification/lock-screen behavior, Bluetooth/headset controls, audio focus transitions, noisy-output handling, and service lifecycle tests.
+
+## Station stream evidence
+
+The exact URLs below came from station-provided PLS files. The trailing semicolon is part of each supplied URL and must not be removed without testing and documentation.
 
 | Station | Primary relay | Source fallback |
 | --- | --- | --- |
@@ -62,116 +125,28 @@ Station-provided PLS files supplied the following exact values:
 | Death.FM | `http://hi5.death.fm/;` | `http://hi.death.fm/;` |
 | Entranced.FM | `http://hi5.entranced.fm/;` | `http://hi.entranced.fm/;` |
 
-The semicolon is present in the supplied playlist URLs. Do not remove it without testing both forms and documenting the result.
-
-The playlists identify live, indefinite streams but do not identify codec or bitrate. Do not label them MP3, AAC, AAC+, or a particular bitrate until headers or successful playback verify that information.
-
-HTTPS equivalents were not verified. Cleartext traffic is disabled globally and enabled only for the five station domains in `network_security_config.xml`. Prefer verified HTTPS endpoints if the service supports them; do not enable global cleartext access.
-
-## Immediate objective: M1 buildable baseline
-
-1. Confirm installed JDK and Android SDK versions.
-2. Review dependency versions for compatibility rather than blindly upgrading everything.
-3. Add the Gradle wrapper.
-4. Sync in Android Studio.
-5. Run unit tests, lint, and `assembleDebug`.
-6. Fix every compilation, resource, manifest, and dependency error.
-7. Launch the app on an emulator or physical device.
-8. Record the exact validation commands and results in PR #1.
-9. Add a GitHub Actions workflow using JDK 17 and the Gradle wrapper.
-
-Suggested validation after the wrapper exists:
-
-```powershell
-.\gradlew.bat test
-.\gradlew.bat lint
-.\gradlew.bat assembleDebug
-```
-
-Do not mark PR #1 ready or merge it merely because Gradle sync succeeds. The debug app must launch and the tests and lint results must be understood.
-
-## M2: working multi-station playback
-
-After M1 is clean:
-
-1. Define a domain-facing `PlaybackRepository` or `PlaybackController` interface.
-2. Connect the Activity/ViewModels to `RadioPlaybackService` using Media3 `MediaController`.
-3. Keep the `ExoPlayer` instance exclusively inside the service.
-4. Load the selected station's primary relay as a `MediaItem`.
-5. Implement Play, Pause, and Stop.
-6. Switch stations atomically so two streams never play simultaneously.
-7. Attempt the source stream after bounded failure of the primary relay.
-8. Expose immutable playback state: idle, connecting, buffering, playing, paused, retrying, and error.
-9. Update notification metadata when the station changes.
-10. Verify all five stations on a real device when possible.
-
-For a live radio stream, do not show a seekable progress bar. Show `LIVE`, connection state, and elapsed track time only if trustworthy track timing becomes available.
-
-## Later milestones
-
-Proceed in this order unless evidence requires a dependency change:
-
-1. **M3 — Background playback:** notification, lock screen, headset/Bluetooth controls, audio focus, noisy-output handling, service lifecycle.
-2. **M4 — Now Playing:** ICY or supported metadata, track/album/composer fields, artwork strategy, stream quality based on evidence.
-3. **M5 — Native navigation:** working Player, Chat, Queue, and More destinations; persistent mini-player; adaptive tablet layout.
-4. **M6 — Queue/history:** document and implement supported station-scoped metadata endpoints.
-5. **M7 — Authentication:** native login, CSRF/cookie behavior, secure session storage, logout and expiry recovery.
-6. **M8 — Chat:** determine whether the actual transport is polling, long polling, SSE, or WebSocket before implementing it.
-7. **M9 — Requests:** search, eligibility/cooldowns, submission, confirmation, and error handling.
-8. **M10–M12 — Polish, security, testing, and automation.**
-9. **M13 — Beta release.**
-10. **M14 — Stable 1.0 release.**
-
-Use `docs/endpoint-research-template.md` for protocol research. Never commit credentials, cookies, CSRF values, authorization headers, private messages, or unsanitized HAR captures. Verify whether a supported developer API exists before depending on scraped HTML or undocumented private endpoints.
+Codec and bitrate remain unverified. Cleartext is disabled globally and allowed only for the five station domains. Do not broaden the network security policy or guess HTTPS/API endpoints.
 
 ## Architectural invariants
 
 - No WebView.
-- No direct ExoPlayer calls from composables or screen ViewModels.
-- No Retrofit/OkHttp/WebSocket/cookie objects in composables.
-- State flows downward; user actions flow upward.
+- Compose receives immutable state and emits actions upward.
+- ViewModels depend on repository/controller interfaces, never Media3 or network implementations.
+- ExoPlayer remains exclusively service-owned.
 - Every station-specific operation accepts or derives a `StationId`.
-- Unsupported station features are represented by capability flags, not crashes or hard-coded UI assumptions.
+- Unsupported station features use capability flags.
 - Only one station may play at a time.
-- Public listening should not be unnecessarily blocked behind login.
-- Authentication and chat failures must not stop public audio playback.
-- Do not claim the project is official or endorsed by 24seven.FM.
+- Public audio playback must not depend on login, chat, or metadata availability.
+- Never commit credentials, cookies, tokens, private endpoints, private network addresses, pairing codes, HAR files, screenshots containing device identifiers, SDK paths, APKs, or build output.
 
 ## Git workflow
 
-Continue on `agent/initial-android-scaffold` until PR #1 reaches a genuinely buildable baseline. Keep commits focused and descriptive. Push changes to the existing branch so PR #1 updates.
-
-Before each commit:
+Continue on `agent/initial-android-scaffold` while PR #1 remains the active draft. Before editing, fetch and confirm the branch has not advanced elsewhere:
 
 ```powershell
-git status --short
-git diff
+git fetch origin
+git status
+git log --oneline --decorate -5
 ```
 
-Do not commit Android SDK paths, `.idea` state, secrets, build outputs, APKs, or captured account data. Do not force-push shared work without confirming that nobody else has added commits.
-
-When M1 is verified, update PR #1 with:
-
-- Android Studio version
-- JDK version
-- compile/target SDK
-- emulator or device used
-- test, lint, and assemble commands
-- results and remaining warnings
-
-## Definition of completion
-
-The project is complete when:
-
-- all five stations play reliably with primary/fallback behavior;
-- background playback and system media controls work correctly;
-- station switching is clean and race-free;
-- now-playing data is useful and evidence-based;
-- supported chat, login, queue/history, and requests work natively;
-- the UI is usable on phones and adapts appropriately to larger screens;
-- secrets and sessions are handled safely;
-- automated tests and CI protect critical behavior;
-- a signed beta has been tested before the stable 1.0 release;
-- documentation enables outside contributors to build and extend the project.
-
-Begin by reporting the current branch, repository status, Android Studio/JDK/SDK environment, and the first Gradle sync/build result. Then fix M1 autonomously, stopping only for a decision that materially changes product scope or requires credentials/authorization.
+Keep commits focused. Do not force-push. Run `git diff --check` and `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate-windows.ps1` before publishing implementation changes. The bypass applies only to that PowerShell process and does not change the PC's saved execution policy.
