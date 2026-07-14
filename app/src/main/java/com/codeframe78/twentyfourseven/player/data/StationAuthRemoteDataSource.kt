@@ -23,11 +23,13 @@ internal interface AuthRemoteDataSource {
         password: String,
         securityCode: String,
     ): AuthenticatedPage
+    fun persistSession(stationId: StationId)
     suspend fun signOut(stationId: StationId)
 }
 
 internal class StationAuthRemoteDataSource(
     private val parser: AuthLoginPageParser = AuthLoginPageParser(),
+    private val sessionStore: AuthSessionStore = InMemoryAuthSessionStore(),
 ) : AuthRemoteDataSource {
     private val cookieManagers = ConcurrentHashMap<StationId, CookieManager>()
 
@@ -65,11 +67,18 @@ internal class StationAuthRemoteDataSource(
             Unit
         } finally {
             cookieManagers.remove(stationId)
+            sessionStore.clear(stationId)
         }
     }
 
+    override fun persistSession(stationId: StationId) {
+        val domain = URI(origin(stationId)).host
+        val cookies = cookieManager(stationId).cookieStore.cookies
+        sessionStore.save(stationId, domain, cookies)
+    }
+
     private fun request(stationId: StationId, initialUri: URI, method: String, body: String? = null): AuthenticatedPage {
-        val cookies = cookieManagers.getOrPut(stationId) { CookieManager(null, CookiePolicy.ACCEPT_ORIGINAL_SERVER) }
+        val cookies = cookieManager(stationId)
         var uri = initialUri
         var requestMethod = method
         var requestBody = body
@@ -125,6 +134,13 @@ internal class StationAuthRemoteDataSource(
 
     private fun origin(stationId: StationId): String = ORIGINS[stationId]
         ?: throw IOException("Unsupported station")
+
+    private fun cookieManager(stationId: StationId): CookieManager = cookieManagers.getOrPut(stationId) {
+        val origin = URI(origin(stationId))
+        CookieManager(null, CookiePolicy.ACCEPT_ORIGINAL_SERVER).also { manager ->
+            sessionStore.load(stationId, origin.host).forEach { manager.cookieStore.add(origin, it) }
+        }
+    }
 
     private fun encode(value: String): String = URLEncoder.encode(value, StandardCharsets.UTF_8.name())
 

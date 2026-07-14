@@ -32,6 +32,7 @@ class NetworkAuthRepositoryTest {
         assertEquals("Listener", state.displayName)
         assertNull(state.challengeImageUrl)
         assertEquals(listOf("Listener", "secret", "654321"), remote.submittedInputs)
+        assertEquals(1, remote.persistCalls)
     }
 
     @Test
@@ -68,6 +69,7 @@ class NetworkAuthRepositoryTest {
     ) : AuthRemoteDataSource {
         var challengeCalls = 0
         var signOutCalls = 0
+        var persistCalls = 0
         var submittedInputs: List<String>? = null
 
         override suspend fun fetchChallenge(stationId: StationId): LoginChallenge {
@@ -92,6 +94,10 @@ class NetworkAuthRepositoryTest {
 
         override suspend fun signOut(stationId: StationId) {
             signOutCalls++
+        }
+
+        override fun persistSession(stationId: StationId) {
+            persistCalls++
         }
     }
 }

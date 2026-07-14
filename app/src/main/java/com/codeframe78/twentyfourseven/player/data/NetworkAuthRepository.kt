@@ -46,6 +46,7 @@ class NetworkAuthRepository internal constructor(
             val origin = "${action.scheme}://${action.authority}/"
             resultParser.parseSignedInDisplayName(page.html, origin, username)
         }.onSuccess { displayName ->
+            remote.persistSession(stationId)
             challenges.remove(stationId)
             state(stationId).value = AuthState(stationId, AuthStatus.SignedIn, displayName = displayName)
         }.onFailure {
