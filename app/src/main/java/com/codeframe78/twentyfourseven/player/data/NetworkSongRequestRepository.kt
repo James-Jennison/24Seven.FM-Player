@@ -68,7 +68,18 @@ internal class NetworkSongRequestRepository(
                     RequestSubmissionResult.AuthenticationRequired -> update(stationId) { it.copy(status = SongRequestLoadStatus.Ready, pendingRequest = null, errorMessage = "Sign in to this station before requesting a song.") }
                 }
             }
-            .onFailure { failure(stationId, "The request could not be submitted. Nothing was retried.") }
+            .onFailure {
+                update(stationId) { current ->
+                    current.copy(
+                        status = SongRequestLoadStatus.Ready,
+                        pendingRequest = null,
+                        tracks = current.tracks.map {
+                            if (it.songId == pending.songId) it.copy(eligible = false) else it
+                        },
+                        errorMessage = "The station may have received this request, but confirmation could not be read. Check Queue before trying again. Nothing was retried.",
+                    )
+                }
+            }
     }
 
     private fun state(stationId: StationId) = states.getOrPut(stationId) { MutableStateFlow(SongRequestState(stationId)) }

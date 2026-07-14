@@ -177,12 +177,15 @@ the message in the public feed, and restored both the signed-in composer and liv
 relaunch. Debug and release unit tests, lint, assembly, and all seven API 35 connected tests pass. See
 `docs/m8-chat-research.md` and `docs/m8-validation.md`.
 
-M9 Native Requests is implemented but awaits its single approved live submission. The administrator authorized
+M9 Native Requests is complete. The administrator authorized
 public catalog browsing/searching and explicit user-initiated requests across all five stations. The shared native
 flow searches by title, album, artist, or genre; opens station album listings; preserves server-derived per-track
 availability; requires a protected station session and visible confirmation; sends at most one request; and never
-retries. Search and album reads are user initiated with no polling. Choose one specific station and track before
-performing the remaining Razr validation. See `docs/m9-request-research.md` and `docs/m9-validation.md`.
+retries. Search and album reads are user initiated with no polling. The single approved Razr submission requested
+`Kung` from *Bulletproof Monk* on StreamingSoundtracks.com and was verified at position 22 in the public queue. The
+station accepted it before the confirmation response failed; the app now treats that outcome as indeterminate,
+directs the listener to Queue, and suppresses immediate resubmission. See `docs/m9-request-research.md` and
+`docs/m9-validation.md`.
 
 See `docs/m4-metadata-research.md` for per-relay ICY headers, field constraints, implementation evidence, and device results.
 

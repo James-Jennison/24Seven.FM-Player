@@ -37,9 +37,11 @@ eligibility. These rules remain server-authoritative; the app does not reproduce
   captured pages, request history, and browsing history are not logged or committed.
 - Search results and album tracks are transient UI state. The app does not persist or batch them.
 
-## Remaining live validation
+## Completed live validation
 
-No song was submitted during protocol discovery. End-to-end validation requires the administrator to identify one
-specific station and track, after which the native app may submit that one clearly identified request and verify
-the server response and queue behavior. Until then, successful parsing, confirmation gating, and no-retry behavior
-are covered with sanitized local fixtures and transport fakes.
+No song was submitted during protocol discovery. For the later authorized end-to-end check, the administrator chose
+`Kung` from *Bulletproof Monk* on StreamingSoundtracks.com. The native app issued one request and did not retry. The
+track was verified at position 22 in the public queue. Because the server accepted the mutation before the client
+failed to read its confirmation, indeterminate outcomes now direct the listener to Queue and suppress immediate
+resubmission. Sanitized tests cover parsing, confirmation gating, and both confirmed and indeterminate no-retry
+outcomes.

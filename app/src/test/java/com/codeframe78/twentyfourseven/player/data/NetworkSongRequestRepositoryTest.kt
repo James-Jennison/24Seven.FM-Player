@@ -49,10 +49,31 @@ class NetworkSongRequestRepositoryTest {
         assertFalse(state.tracks.single().eligible)
     }
 
+    @Test
+    fun `indeterminate confirmation suppresses retry and directs user to queue`() = runTest {
+        val remote = FakeRemote().apply { submitFailure = true }
+        val repository = NetworkSongRequestRepository(remote)
+        repository.openAlbum(stationId, "ALBUM_1")
+        repository.prepareRequest(stationId, "12345")
+
+        repository.confirmRequest(stationId)
+        repository.confirmRequest(stationId)
+
+        val state = repository.observeRequests(stationId).first()
+        assertEquals(1, remote.submitCalls)
+        assertNull(state.pendingRequest)
+        assertFalse(state.tracks.single().eligible)
+        assertEquals(
+            "The station may have received this request, but confirmation could not be read. Check Queue before trying again. Nothing was retried.",
+            state.errorMessage,
+        )
+    }
+
     private class FakeRemote : SongRequestRemoteDataSource {
         var searchCalls = 0
         var albumCalls = 0
         var submitCalls = 0
+        var submitFailure = false
 
         override suspend fun search(stationId: StationId, query: String, field: RequestSearchField): List<RequestSearchResult> {
             searchCalls++
@@ -69,6 +90,7 @@ class NetworkSongRequestRepositoryTest {
 
         override suspend fun submit(stationId: StationId, track: RequestableTrack): RequestSubmissionResult {
             submitCalls++
+            if (submitFailure) error("Confirmation read failed")
             return RequestSubmissionResult.Submitted("Request accepted")
         }
     }
