@@ -23,13 +23,14 @@ internal interface AuthRemoteDataSource {
         password: String,
         securityCode: String,
     ): AuthenticatedPage
-    fun restoredDisplayName(stationId: StationId): String?
+    suspend fun restoredDisplayName(stationId: StationId): String?
     fun persistSession(stationId: StationId, displayName: String)
     suspend fun signOut(stationId: StationId)
 }
 
 internal class StationAuthRemoteDataSource(
     private val parser: AuthLoginPageParser = AuthLoginPageParser(),
+    private val resultParser: AuthLoginResultParser = AuthLoginResultParser(),
     private val sessionStore: AuthSessionStore = InMemoryAuthSessionStore(),
 ) : AuthRemoteDataSource {
     private val cookieManagers = ConcurrentHashMap<StationId, CookieManager>()
@@ -72,9 +73,18 @@ internal class StationAuthRemoteDataSource(
         }
     }
 
-    override fun restoredDisplayName(stationId: StationId): String? {
-        if (cookieManager(stationId).cookieStore.cookies.isEmpty()) return null
-        return sessionStore.loadDisplayName(stationId)
+    override suspend fun restoredDisplayName(stationId: StationId): String? = withContext(Dispatchers.IO) {
+        if (cookieManager(stationId).cookieStore.cookies.isEmpty()) return@withContext null
+        val displayName = sessionStore.loadDisplayName(stationId) ?: return@withContext null
+        val origin = origin(stationId)
+        val page = runCatching { request(stationId, URI(origin), method = "GET") }
+            .getOrNull() ?: return@withContext displayName
+        runCatching { resultParser.parseSignedInDisplayName(page.html, origin, displayName) }
+            .getOrElse {
+                cookieManagers.remove(stationId)
+                sessionStore.clear(stationId)
+                null
+            }
     }
 
     override fun persistSession(stationId: StationId, displayName: String) {

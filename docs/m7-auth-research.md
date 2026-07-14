@@ -13,22 +13,18 @@ same repository contract.
 
 This authorization does not yet cover chat reads/writes or song-request submission.
 
-## Scope and current boundary
+## Scope and boundary
 
 M7 adds native account authentication under the authorization above. The earlier authorization for public
 queue and history polling remains separate and does not authorize chat or request submission.
 
-The repository currently contains only safe groundwork:
+The implementation includes a station-scoped `AuthRepository`, immutable authentication states, a native
+security challenge and credential form, strict same-origin transport, signed-in response classification, and
+Android-protected session retention. No credentials, challenge answers, cookies, tokens, or captured traffic
+are committed.
 
-- a station-scoped `AuthRepository` contract;
-- immutable unavailable, signed-out, signing-in, signed-in, and error states;
-- a no-operation implementation that remains unavailable;
-- capability-aware UI reporting; and
-- no concrete endpoint, cookies, credentials, tokens, or captured traffic.
-
-Public station pages state that registered members can use chat and song requests. Similar page structure is
-visible across the station sites, but this is not sufficient evidence that account databases, login behavior,
-or browser sessions are shared. No login was attempted during this research.
+Public station pages state that registered members can use chat and song requests. Authentication does not
+authorize those features, and account/session sharing between stations is not assumed.
 
 ## Public login protocol evidence
 
@@ -59,8 +55,7 @@ rule; no cookie values or stored password data were inspected.
 
 The legacy signed-in page also contained an unrelated link with an account-derived value in its URL. The app
 must treat that value as sensitive, ignore unrelated links when classifying authentication, and never store,
-log, or expose it. Authenticated cookie names and attributes, failure responses, expiry, and completed logout
-behavior remain to be verified.
+log, or expose it.
 
 On July 13, 2026, native sign-in was successfully completed on the Motorola Razr 2023 using the least-privileged
 StreamingSoundtracks.com account. The administrator entered credentials and the case-sensitive alphanumeric
@@ -78,47 +73,45 @@ After signing in with the revised build, a real application process stop and res
 signed-in identity automatically. The Android Keystore instrumentation test also verifies encrypted cookie and
 identity round-trip, exact-domain enforcement, HTTPS-only restoration, and clearing.
 
-## Confirmed and remaining protocol questions
+Signing out returned the native account area to a fresh sign-in state. A subsequent real process stop and
+restart remained signed out, confirming that the in-memory cookie manager and encrypted cookie plus identity
+were cleared. Restored sessions are checked against the selected station when the network is available. A
+reachable anonymous response clears stale protected state; a temporary network failure retains the encrypted
+identity and does not block public playback.
+
+## Confirmed and follow-up protocol questions
 
 The administrator has confirmed login/session permission and station-specific accounts. Protocol research must
 still determine:
 
 1. Whether an app-specific API exists and is preferred over the legacy browser form.
 2. Any login rate limit, CAPTCHA, multi-factor authentication, lockout, or automated-client restriction.
-3. How long a session should
-   remain valid.
-4. The authoritative signals for successful login, expired sessions, disabled accounts, and logout.
+3. The server-defined natural session lifetime.
+4. Whether disabled accounts have a distinct response from other anonymous sessions.
 5. Whether registration and password recovery must remain external website flows.
-6. A least-privileged test account or an administrator-supervised device test. Credentials must be supplied
-   out of band or typed directly on the device and must never enter source control, documentation, logs, or
-   test fixtures.
 
 Authorization for chat reads/writes and song requests will be documented separately in their own milestones.
 
-## Intended implementation
+## Implemented safeguards
 
 - Compose owns only transient field state and emits sign-in and sign-out actions upward.
-- `MainViewModel` will depend only on `AuthRepository`.
-- The data layer will own redirects, CSRF handling, cookies, expiry detection, and response limits.
-- Passwords will be used only for the active sign-in operation and will not be persisted or logged.
-- Persisted session material will use Android platform-protected storage and will be cleared on logout or
-  invalidation.
+- `MainViewModel` depends only on `AuthRepository`.
+- The data layer owns redirects, challenge handling, cookies, expiry detection, and response limits.
+- Passwords and security-code answers are used only for the active sign-in operation and are not persisted or logged.
+- Persisted session material uses Android platform-protected storage and is cleared on logout or invalidation.
 - Public playback and public queue/history will continue working while signed out or after session failure.
-- Station authentication capability flags will remain false until the corresponding flow is verified.
+- Station authentication capability flags are enabled for the five verified matching public form interfaces.
 
-## Validation plan
+## Validation coverage
 
 - Unit tests for state transitions, response classification, expiry, logout, and secret redaction.
 - Integration tests against sanitized local fixtures; no captured live session values.
 - Compose tests for validation, progress, errors, signed-in identity, and logout.
-- A least-privileged physical-device login/logout/expiry pass on the Motorola Razr 2023.
+- A least-privileged physical-device login, process restoration, logout, and cleared-restart pass on the Motorola Razr 2023.
+- Parser-backed invalidation for a reachable anonymous restoration response; natural server expiry remains follow-up evidence.
 - Regression validation for public playback and queue/history while signed out.
 
-## Groundwork validation
+## Validation
 
-The safe authentication groundwork passed unit tests, lint, debug and release compilation, and the repository's
-Windows validation script. All four existing connected Android tests also passed on the Motorola Razr 2023
-running API 35 after wireless ADB was restored. The GitHub Android build passed for commit `bb416d0`.
-
-This validates the repository boundary and unavailable UI state only. No login request was made, and no live
-authentication behavior should be considered validated.
+The native flow, protected session restoration, sign-out clearing, and regression coverage are recorded in
+`docs/m7-validation.md`.

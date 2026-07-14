@@ -146,16 +146,21 @@ M5 Native Navigation is complete. Player, Chat, Queue, and More are real native 
 
 M6 Queue and History is complete. The administrator-authorized public player interface supplies live data for all five stations without authentication. The app makes one request only while Queue is selected, enforces the authorized 60-second minimum interval across automatic and manual refresh, preserves explicit track and artist text, and displays only station-hosted cover artwork. See `docs/m6-queue-research.md` and `docs/m6-validation.md`.
 
-M7 Authentication groundwork has started. A station-scoped repository contract, immutable authentication
-states, unavailable implementation, and capability-aware account status are present without any concrete
-login endpoint or secret handling. On July 13, 2026, a station administrator authorized use of the public-facing
-login and session interfaces across all five stations, user-entered credential submission, Android-protected
-session retention, research, and least-privileged testing. Accounts are currently station-specific, although
-that may change. Chat and request submission remain outside the authorization.
+M7 Authentication is complete. A station-scoped repository contract and immutable states drive a fully native
+challenge, sign-in, restoration, and sign-out flow for the verified matching public interfaces across all five
+stations. Passwords and case-sensitive alphanumeric security-code answers remain transient. Cookies and display
+identity are encrypted with Android Keystore AES-GCM, normalized to the exact station domain, restored as
+HTTPS-only, checked online when reachable, and cleared on anonymous restoration or sign-out. Network failure
+preserves the protected cached identity and never blocks public playback.
 
-The groundwork passed unit tests, lint, debug and release compilation, Windows validation, the GitHub Android
-build, and all four connected tests on the Motorola Razr 2023 running API 35. These results do not validate a
-login protocol because no login was attempted.
+On July 13, 2026, a station administrator authorized the public-facing login and session interfaces, user-entered
+credential submission, Android-protected session retention, research, and least-privileged testing. A native
+least-privileged StreamingSoundtracks.com sign-in, real process-restart restoration, sign-out, and signed-out
+restart were verified on the Motorola Razr 2023 running API 35. Unit tests, lint, debug and release compilation,
+Windows validation, and all six connected tests pass. Natural server expiry was not waited out; online restoration
+uses the strict signed-in classifier to clear an expired anonymous session. Accounts remain station-specific until
+shared behavior is verified. Chat and request submission remain outside the authorization. See
+`docs/m7-auth-research.md` and `docs/m7-validation.md`.
 
 See `docs/m4-metadata-research.md` for per-relay ICY headers, field constraints, implementation evidence, and device results.
 

@@ -108,7 +108,7 @@ class NetworkAuthRepositoryTest {
             signOutCalls++
         }
 
-        override fun restoredDisplayName(stationId: StationId): String? = restoredName
+        override suspend fun restoredDisplayName(stationId: StationId): String? = restoredName
 
         override fun persistSession(stationId: StationId, displayName: String) {
             persistCalls++

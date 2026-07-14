@@ -46,11 +46,16 @@ The phone shell uses bottom navigation below 600 dp. Wider layouts use a navigat
 
 ## Authentication
 
-Authentication will live behind `AuthRepository`. Composables never read or store cookies. If the network uses legacy form login, its CSRF, redirect, and session-cookie behavior will be handled by the data layer. No credentials or captured session values belong in the repository.
+Authentication lives behind the station-scoped `AuthRepository`; Compose receives immutable state and emits
+actions without reading cookies. The data layer owns the verified legacy form challenge, same-origin redirects,
+bounded responses, session cookies, and signed-in response classification. Passwords and security-code answers
+remain transient.
 
-The contract and UI state are station-scoped because shared accounts and sessions have not been verified. The
-default implementation remains unavailable, and authentication capability flags remain false until explicit
-authorization and protocol evidence exist. See `docs/m7-auth-research.md`.
+Session cookies and display identity are encrypted with an Android Keystore AES-GCM key. Restored sessions are
+revalidated when the station is reachable; an anonymous response clears them, while a network failure preserves
+the protected cached identity so public playback remains available offline. Sign-out clears both the in-memory
+cookie manager and protected storage even if the remote logout request fails. See `docs/m7-auth-research.md` and
+`docs/m7-validation.md`.
 
 ## Chat
 
