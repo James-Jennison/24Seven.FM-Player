@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -42,9 +43,17 @@ class MainViewModel(
 ) : ViewModel() {
     private val destination = MutableStateFlow(MainDestination.Player)
 
-    private val selectedQueue = stations.observeSelectedStation().flatMapLatest { station ->
-        queue.observeQueue(station.id)
-    }
+    private val selectedQueue = combine(
+        stations.observeSelectedStation(),
+        destination,
+    ) { station, selectedDestination -> station to selectedDestination }
+        .flatMapLatest { (station, selectedDestination) ->
+            if (selectedDestination == MainDestination.Queue) {
+                queue.observeQueue(station.id)
+            } else {
+                flowOf(QueueState(station.id))
+            }
+        }
 
     private val stationContent = combine(nowPlaying.observeNowPlaying(), selectedQueue, ::StationContent)
 

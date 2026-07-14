@@ -7,14 +7,18 @@ enum class QueueLoadStatus { Unavailable, Loading, Ready, Error }
 data class QueueTrack(
     val position: Int,
     val displayTitle: String,
+    val artistName: String? = null,
     val albumTitle: String? = null,
     val durationLabel: String? = null,
+    val artworkUrl: String? = null,
 )
 
 data class HistoryTrack(
     val displayTitle: String,
+    val artistName: String? = null,
     val albumTitle: String? = null,
     val durationLabel: String? = null,
+    val artworkUrl: String? = null,
 )
 
 data class QueueState(

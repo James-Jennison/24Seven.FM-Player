@@ -36,13 +36,13 @@ Live ICY titles flow from the service-owned player through a station-scoped `Now
 
 The selected Player, Chat, Queue, or More destination is immutable `MainUiState` owned by `MainViewModel`. Destination composables emit navigation and playback actions upward. Secondary destinations reuse the same domain playback and now-playing state through a persistent mini-player; they never connect to Media3 directly.
 
-The phone shell uses bottom navigation below 600 dp. Wider layouts use a navigation rail and content pane. Chat and Queue remain navigable native destinations while unsupported, but their content is controlled by station capability flags and does not imply that an unverified endpoint exists.
+The phone shell uses bottom navigation below 600 dp. Wider layouts use a navigation rail and content pane. Chat remains a navigable unavailable destination. Queue content is controlled by verified station capability flags and repository state.
 
 ## Queue and history
 
-`QueueRepository` is station-scoped and exposes immutable unavailable, loading, ready, and error state. `MainViewModel` switches the observed repository flow when the selected `StationId` changes, and Compose only renders the resulting state or emits a refresh action upward.
+`QueueRepository` is station-scoped and exposes immutable unavailable, loading, ready, and error state. `MainViewModel` observes it only while Queue is selected, switches the flow when `StationId` changes, and cancels observation when leaving Queue. Compose only renders the resulting state or emits a refresh action upward.
 
-The production implementation remains explicitly unavailable. Research found only unreliable internal HTML fragments and full-page HTML refreshes, not a supported structured feed. No station capability may be enabled until a source and its permitted use are verified. See `docs/m6-queue-research.md`.
+`PollingQueueRepository` performs one request immediately and then no more than once every 60 seconds. Manual refresh uses the same limiter. The remote adapter supplies the player request headers, bounded I/O, station mapping, JSON extraction, and defensive HTML parsing. The parser preserves explicit title and artist fields, does not infer missing album or duration values, and only accepts artwork hosted by the selected station domain. See `docs/m6-queue-research.md`.
 
 ## Authentication
 

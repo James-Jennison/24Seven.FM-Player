@@ -1,6 +1,7 @@
 package com.codeframe78.twentyfourseven.player.data
 
 import com.codeframe78.twentyfourseven.player.domain.Station
+import com.codeframe78.twentyfourseven.player.domain.StationCapabilities
 import com.codeframe78.twentyfourseven.player.domain.StationId
 import com.codeframe78.twentyfourseven.player.domain.StationRepository
 import com.codeframe78.twentyfourseven.player.domain.StreamFormat
@@ -12,11 +13,11 @@ import kotlinx.coroutines.flow.flowOf
 
 class BootstrapStationRepository : StationRepository {
     private val stations = listOf(
-        Station(StationId("sst"), "StreamingSoundtracks.com", "SST", "Movie, game, TV and anime scores", "https://www.streamingsoundtracks.com/", streams("streamingsoundtracks.com")),
-        Station(StationId("1980s"), "1980s.FM", "1980s", "Music from the 1980s", "https://1980s.fm/", streams("1980s.fm")),
-        Station(StationId("adagio"), "Adagio.FM", "Adagio", "Classical and light music", "https://adagio.fm/", streams("adagio.fm")),
-        Station(StationId("death"), "Death.FM", "Death", "Extreme metal", "https://death.fm/", streams("death.fm")),
-        Station(StationId("entranced"), "Entranced.FM", "Entranced", "Trance and electronic music", "https://entranced.fm/", streams("entranced.fm")),
+        Station(StationId("sst"), "StreamingSoundtracks.com", "SST", "Movie, game, TV and anime scores", "https://www.streamingsoundtracks.com/", streams("streamingsoundtracks.com"), queueCapabilities),
+        Station(StationId("1980s"), "1980s.FM", "1980s", "Music from the 1980s", "https://1980s.fm/", streams("1980s.fm"), queueCapabilities),
+        Station(StationId("adagio"), "Adagio.FM", "Adagio", "Classical and light music", "https://adagio.fm/", streams("adagio.fm"), queueCapabilities),
+        Station(StationId("death"), "Death.FM", "Death", "Extreme metal", "https://death.fm/", streams("death.fm"), queueCapabilities),
+        Station(StationId("entranced"), "Entranced.FM", "Entranced", "Trance and electronic music", "https://entranced.fm/", streams("entranced.fm"), queueCapabilities),
     )
     private val selected = MutableStateFlow(stations.first())
 
@@ -27,6 +28,8 @@ class BootstrapStationRepository : StationRepository {
     }
 
     private companion object {
+        val queueCapabilities = StationCapabilities(supportsQueue = true, supportsHistory = true)
+
         fun streams(domain: String) = listOf(
             StreamVariant("http://hi5.$domain/;", "Primary relay", priority = 0, format = StreamFormat.Aac, bitrateKbps = 128),
             StreamVariant("http://hi.$domain/;", "Source stream", priority = 1, format = StreamFormat.Aac, bitrateKbps = 128),

@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
@@ -55,7 +56,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -68,6 +71,7 @@ import com.codeframe78.twentyfourseven.player.domain.QueueTrack
 import com.codeframe78.twentyfourseven.player.domain.StationCapabilities
 import com.codeframe78.twentyfourseven.player.domain.StationId
 import com.codeframe78.twentyfourseven.player.domain.StreamFormat
+import coil3.compose.AsyncImage
 
 private val navigationItems = listOf(
     NavigationItem(MainDestination.Player, "Player", Icons.Default.Radio),
@@ -292,7 +296,14 @@ private fun QueueLists(
             item { EmptyTrackList("The station queue is currently empty.") }
         } else {
             items(upcoming, key = { "queue-${it.position}-${it.displayTitle}" }) { track ->
-                TrackCard(track.position.toString(), track.displayTitle, track.albumTitle, track.durationLabel)
+                TrackCard(
+                    track.position.toString(),
+                    track.displayTitle,
+                    track.artistName,
+                    track.albumTitle,
+                    track.durationLabel,
+                    track.artworkUrl,
+                )
             }
         }
         item {
@@ -303,7 +314,14 @@ private fun QueueLists(
             item { EmptyTrackList("No recent history is available.") }
         } else {
             items(history) { track ->
-                TrackCard(null, track.displayTitle, track.albumTitle, track.durationLabel)
+                TrackCard(
+                    null,
+                    track.displayTitle,
+                    track.artistName,
+                    track.albumTitle,
+                    track.durationLabel,
+                    track.artworkUrl,
+                )
             }
         }
     }
@@ -315,17 +333,38 @@ private fun EmptyTrackList(message: String) {
 }
 
 @Composable
-private fun TrackCard(position: String?, title: String, album: String?, duration: String?) {
+private fun TrackCard(
+    position: String?,
+    title: String,
+    artist: String?,
+    album: String?,
+    duration: String?,
+    artworkUrl: String? = null,
+) {
     Card(Modifier.fillMaxWidth()) {
         Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
             position?.let {
                 Text(it, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
                 Spacer(Modifier.width(14.dp))
             }
+            artworkUrl?.let {
+                AsyncImage(
+                    model = it,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.size(56.dp).clip(RoundedCornerShape(6.dp)),
+                )
+                Spacer(Modifier.width(12.dp))
+            }
             Column(Modifier.weight(1f)) {
                 Text(title, style = MaterialTheme.typography.titleMedium)
-                album?.let {
-                    Text(it, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                listOfNotNull(artist, album).takeIf(List<String>::isNotEmpty)?.let { details ->
+                    Text(
+                        details.joinToString(" • "),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 }
             }
             duration?.let {

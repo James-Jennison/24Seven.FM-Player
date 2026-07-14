@@ -36,4 +36,12 @@ class BootstrapStationRepositoryTest {
             assertEquals(listOf(128, 128), station.streams.map { it.bitrateKbps })
         }
     }
+
+    @Test
+    fun `every station exposes the administrator authorized queue and history capabilities`() = runTest {
+        repository.observeStations().first().forEach { station ->
+            assertEquals(true, station.capabilities.supportsQueue)
+            assertEquals(true, station.capabilities.supportsHistory)
+        }
+    }
 }

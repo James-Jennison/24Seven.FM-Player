@@ -82,17 +82,20 @@ M5 now includes:
 - bottom navigation below 600 dp and a navigation rail on wider layouts;
 - unit and Compose device coverage for navigation and adaptive branch selection.
 
-M6 groundwork now includes:
+M6 now includes:
 
 - a station-scoped `QueueRepository` domain contract;
 - immutable unavailable, loading, ready, and error states;
 - native upcoming-queue and recently-played rendering with refresh actions;
-- unit and Compose coverage for station scoping and ready-state rendering;
-- sanitized source research in `docs/m6-queue-research.md`.
+- explicit title and artist fields plus station-hosted cover artwork;
+- one request per selected station with a shared 60-second automatic/manual limit;
+- polling only while Queue is selected and collected in the foreground;
+- unit, Compose, and API 35 device coverage;
+- sanitized source research and authorization in `docs/m6-queue-research.md`.
 
-Live M6 data remains blocked. The public players rely on undocumented HTML fragments that failed for four of five stations during verification, while Live Studio reparses complete page HTML. Do not commit or implement those internal requests. Keep all queue/history capabilities disabled until 24seven.FM provides a supported structured feed or written authorization and polling guidance.
+Live M6 data is authorized by a 24seven.FM administrator for this unofficial, non-commercial Android app across all five stations. Access is unauthenticated, requester display and cover artwork are permitted, and polling may occur no more than once every 60 seconds. Preserve those limits. Do not add cookies or broaden the response parser to community, birthday, rating, or unrelated HTML fields.
 
-The latest successful build validation ran unit tests for debug and release, Android lint, `assembleDebug`, instrumentation APK assembly, and API 35 connected tests. M3 through M5 device validation is complete. See `docs/m1-validation.md`, `docs/m2-validation.md`, `docs/m3-validation.md`, `docs/m4-metadata-research.md`, and `docs/m5-validation.md` for exact evidence.
+The latest successful build validation ran unit tests for debug and release, Android lint, `assembleDebug`, instrumentation APK assembly, and API 35 connected tests. M3 through M6 device validation is complete. See `docs/m1-validation.md`, `docs/m2-validation.md`, `docs/m3-validation.md`, `docs/m4-metadata-research.md`, `docs/m5-validation.md`, and `docs/m6-validation.md` for exact evidence.
 
 ## Physical Razr setup
 
@@ -131,7 +134,7 @@ Primary-to-source fallback was also verified under a controlled primary-only net
 
 Before testing, use `adb devices -l` and pass `-s <device>` to ADB commands when an emulator is also running.
 
-## M3 through M5 completion
+## M3 through M6 completion
 
 M3 background-playback hardening is complete. It verified foreground-to-background playback, lock and idle behavior, task removal, notification continuity, system and real Bluetooth media commands, transient and permanent audio-focus policy, real Bluetooth route-disconnect pausing, protected noisy-output broadcast handling, and automated service stop/reconnect behavior. The transient-focus policy automatically resumes after focus returns; permanent focus loss remains paused until the user explicitly resumes playback.
 
@@ -140,6 +143,8 @@ No physical wired or USB-C accessory was available. Do not claim that physical t
 M4 Now Playing is complete. A continuous physical-device run verified that a changed raw title updated both Compose and the application MediaSession while playback remained healthy. A controlled API 35 emulator run verified that the source fallback item continued publishing a non-empty ICY title after the expected primary failure. Metadata fields and artwork that are not present in the verified ICY source remain intentionally unavailable, and playback does not depend on metadata.
 
 M5 Native Navigation is complete. Player, Chat, Queue, and More are real native destinations, secondary destinations retain a persistent mini-player, and wider layouts select a navigation rail. Chat and Queue intentionally show capability-aware unavailable states until their later protocol milestones; M5 does not guess or implement remote endpoints.
+
+M6 Queue and History is complete. The administrator-authorized public player interface supplies live data for all five stations without authentication. The app makes one request only while Queue is selected, enforces the authorized 60-second minimum interval across automatic and manual refresh, preserves explicit track and artist text, and displays only station-hosted cover artwork. See `docs/m6-queue-research.md` and `docs/m6-validation.md`.
 
 See `docs/m4-metadata-research.md` for per-relay ICY headers, field constraints, implementation evidence, and device results.
 

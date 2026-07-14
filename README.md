@@ -14,7 +14,7 @@ The application is written in Kotlin with Jetpack Compose and Jetpack Media3. It
 
 ## Current milestone
 
-M1 through M5 are complete. M6 queue/history groundwork is in progress, with live data intentionally blocked pending a supported feed or station authorization.
+M1 through M6 are complete. The app includes verified playback and Now Playing behavior plus administrator-authorized live Queue and History data across all five stations.
 
 - Station-first domain model
 - MVVM and unidirectional data flow
@@ -28,10 +28,11 @@ M1 through M5 are complete. M6 queue/history groundwork is in progress, with liv
 - Immutable destination state with capability-aware native screens
 - Persistent mini-player outside the Player destination
 - Bottom navigation on phones and a navigation rail at 600 dp and wider
-- Station-scoped queue/history contracts and native unavailable, loading, error, empty, and ready states
+- Station-scoped live queue/history with native loading, error, empty, and ready states
+- Explicit track title and artist text, station-hosted cover artwork, and a shared 60-second refresh limit
 - Repository boundaries for future authentication, chat, and requests
 
-Audio stream addresses come from station-provided playlists and remain subject to device verification. API endpoints are intentionally not guessed and will be added only after verification and review of supported integration options. See [docs/m6-queue-research.md](docs/m6-queue-research.md) for the current queue/history evidence and blocker.
+Audio stream addresses come from station-provided playlists and remain subject to device verification. Remote interfaces are added only after source verification and permission review. See [docs/m6-queue-research.md](docs/m6-queue-research.md) and [docs/m6-validation.md](docs/m6-validation.md) for the queue/history authorization, protocol evidence, limits, and device results.
 
 ## Building
 

@@ -13,11 +13,12 @@ import com.codeframe78.twentyfourseven.player.domain.StationId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -125,11 +126,22 @@ class MainViewModelTest {
 
         assertEquals(StationId("sst"), viewModel.uiState.value.queue?.stationId)
 
+        viewModel.selectDestination(MainDestination.Queue)
+        advanceUntilIdle()
+        assertEquals(StationId("sst"), queue.observedStation)
+        assertEquals(1, queue.activeObservations)
+
         viewModel.selectStation(StationId("death"))
         advanceUntilIdle()
 
         assertEquals(StationId("death"), viewModel.uiState.value.queue?.stationId)
         assertEquals(QueueLoadStatus.Unavailable, viewModel.uiState.value.queue?.status)
+        assertEquals(StationId("death"), queue.observedStation)
+        assertEquals(1, queue.activeObservations)
+
+        viewModel.selectDestination(MainDestination.Player)
+        advanceUntilIdle()
+        assertEquals(0, queue.activeObservations)
     }
 
     private class FakeNowPlayingRepository : NowPlayingRepository {
@@ -164,11 +176,21 @@ class MainViewModelTest {
 
     private class FakeQueueRepository : QueueRepository {
         var refreshedStation: StationId? = null
+        var observedStation: StationId? = null
+        var activeObservations = 0
 
-        override fun observeQueue(stationId: StationId): Flow<QueueState> =
-            MutableSharedFlow<QueueState>(replay = 1).also {
-                it.tryEmit(QueueState(stationId))
+        override fun observeQueue(stationId: StationId): Flow<QueueState> {
+            observedStation = stationId
+            return flow {
+                activeObservations++
+                emit(QueueState(stationId))
+                try {
+                    awaitCancellation()
+                } finally {
+                    activeObservations--
+                }
             }
+        }
 
         override suspend fun refresh(stationId: StationId) {
             refreshedStation = stationId

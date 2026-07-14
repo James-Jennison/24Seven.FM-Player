@@ -1,39 +1,34 @@
 # M6 queue and history research
 
-Observed on July 13, 2026. This note contains no cookies, credentials, private messages, device identifiers, track values, or undocumented endpoint addresses.
+Observed and authorized on July 13, 2026. This note contains no cookies, credentials, private messages, device identifiers, or track values.
 
-## Scope
+## Administrator authorization
 
-M6 aims to provide native upcoming-queue and recently-played lists for each station. A source is suitable only if it is station-owned, structured, reliable across the supported network, and permitted for an unofficial client.
+A 24seven.FM site administrator authorized this unofficial, non-commercial Android app to use the public queue/history interfaces across all five stations. Access is unauthenticated, polling must occur no more than once every 60 seconds, and requester names/messages and cover artwork may be displayed.
 
-## Official evidence
+The implementation applies a stricter traffic policy: it polls only while Queue is the selected native destination, makes one request for the selected station, shares the same 60-second limit with manual refresh, and stops polling when the destination or foreground lifecycle is no longer collected.
 
-All five station-owned `player.php` pages visibly offer Queue and History. Their legacy network-player launchers redirect to those pages. Adagio's public `studio.php` page also renders both lists.
+## Public interface evidence
 
-The player client code first reads a public current-track JSON document. That document contains current-track metadata only; it does not contain queue or history collections. The client then makes an undocumented same-page request using the current album identifier. Its response embeds queue and history as HTML fragments inside JSON rather than returning stable track objects.
+All five station-owned `player.php` pages visibly offer Queue and History. Their legacy network-player launchers redirect to those pages. The player makes a same-page, read-only request with a station code and returns JSON containing `queue_html` and `played_html` fragments.
 
-A sanitized, unauthenticated check found:
+Initial command-line checks without the player request headers returned server errors on four stations. Repeating the request with the public player's `Referer`, JSON `Accept`, and `X-Requested-With` headers returned HTTP 200 on all five. An honest app-identifying user agent also succeeded; the app does not impersonate a browser.
 
-- no cookies were set or required by the player page or current-track document;
-- the internal queue/history request returned HTTP 200 for StreamingSoundtracks.com;
-- the equivalent request returned HTTP 500 for 1980s.FM, Adagio.FM, Death.FM, and Entranced.FM at the same observation time;
-- the one successful response contained ten three-cell rows for each list;
-- Adagio's Live Studio refreshes and reparses the complete HTML page rather than using a structured public feed;
-- no station-owned developer or API documentation describing queue/history reuse was found;
-- the shared robots policy does not disallow the public player page, but robots policy is not integration authorization;
-- the published terms permit personal, non-commercial use of the services but do not expressly authorize third-party application reuse of internal page data.
+The queue/history fragments do not require the current album identifier. Omitting that unrelated lookup reduced each poll from two requests to one. A sanitized verification found:
 
-## Decision
+- StreamingSoundtracks.com: 10 queue rows and 10 history rows;
+- 1980s.FM: 10 queue rows and 10 history rows;
+- Adagio.FM: 9 queue rows and 10 history rows at the observation time;
+- Death.FM: 10 queue rows and 10 history rows;
+- Entranced.FM: 10 queue rows and 10 history rows;
+- no authentication cookies were sent or stored;
+- each row consistently exposed an ordering marker, station-hosted cover image, artist text, and track-title text;
+- album, duration, and per-row requester fields were not present and are not inferred.
 
-The internal HTML-fragment response and full-page Live Studio HTML are **not suitable for implementation**. Depending on either would introduce unsupported scraping, fail four supported stations today, and conflict with the requirement not to commit undocumented private endpoints.
+## Implementation decision
 
-M6 therefore keeps every queue/history capability disabled. The app now has a station-scoped `QueueRepository` contract, immutable unavailable/loading/ready/error state, refresh actions, and native queue/history rendering that can accept a supported implementation without changing Compose or playback ownership.
+The authorized interface is suitable with a defensive adapter. The data layer owns the five public domain/station-code mappings, required request headers, response-size and timeout limits, JSON extraction, and HTML-fragment parsing. Compose and `MainViewModel` never depend on network or parser types.
 
-## Unblocking requirement
+The parser accepts only rows with a nonblank explicit track-title element, preserves artist and title text without heuristic splitting, ignores scripts and inline event handlers, and accepts artwork only from the selected station domain or its subdomains. Remote errors are replaced by a generic user-facing message.
 
-Real queue/history data needs one of:
-
-1. a documented, stable, structured station-owned feed with stated client-use terms; or
-2. written authorization from 24seven.FM identifying the supported endpoint, fields, polling limits, and station coverage.
-
-When either exists, recheck all five stations, document pagination and refresh behavior, enable only verified capability flags, and add parser, repository, ViewModel, UI, failure, and device tests.
+All five stations have verified queue and history capability flags. If a station changes or removes the public structure, its adapter or capabilities can be changed without affecting playback.

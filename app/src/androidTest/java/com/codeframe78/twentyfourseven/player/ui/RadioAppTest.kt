@@ -95,8 +95,16 @@ class RadioAppTest {
                         queue = QueueState(
                             stationId = station.id,
                             status = QueueLoadStatus.Ready,
-                            upcoming = listOf(QueueTrack(1, "Upcoming track", "Upcoming album", "3:21")),
-                            recentlyPlayed = listOf(HistoryTrack("Played track", "Played album", "4:05")),
+                            upcoming = listOf(
+                                QueueTrack(
+                                    position = 1,
+                                    displayTitle = "Upcoming track",
+                                    artistName = "Upcoming artist",
+                                ),
+                            ),
+                            recentlyPlayed = listOf(
+                                HistoryTrack(displayTitle = "Played track", artistName = "Played artist"),
+                            ),
                         ),
                     ),
                     onSelectStation = {},
