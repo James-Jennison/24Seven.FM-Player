@@ -32,3 +32,11 @@ The authorized interface is suitable with a defensive adapter. The data layer ow
 The parser accepts only rows with a nonblank explicit track-title element, preserves artist and title text without heuristic splitting, ignores scripts and inline event handlers, and accepts artwork only from the selected station domain or its subdomains. Remote errors are replaced by a generic user-facing message.
 
 All five stations have verified queue and history capability flags. If a station changes or removes the public structure, its adapter or capabilities can be changed without affecting playback.
+
+## Extended queue visibility (2026-07-13)
+
+The administrator requested a native display ceiling of 30 tracks so a newly requested song can be verified farther down the queue. The public `Queue_Played` interface exposes longer, explicit queue and played tables for StreamingSoundtracks.com, 1980s.FM, Adagio.FM, and Entranced.FM. At verification time StreamingSoundtracks.com supplied 25 upcoming and 25 played rows; the other stations supplied as many rows as were currently available. The app parses these tables defensively and caps each list at 30.
+
+Death.FM's extended interface did not respond reliably during verification, so its adapter deliberately retains the established compact player feed (up to 10 rows per list). This avoids a second fallback request and preserves the authorization limit: one public read per selected-station refresh, no more often than once every 60 seconds.
+
+Extended rows provide explicit position, duration, album, artist, title, and station-hosted artwork. Requester text is not stored in the current queue domain model and is excluded from track titles.

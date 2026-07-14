@@ -38,6 +38,44 @@ class PlayerQueueResponseParserTest {
         assertEquals(emptyList<Any>(), result.recentlyPlayed)
     }
 
+    @Test
+    fun `parses extended queue fields without including requester text`() {
+        val result = parser.parseExtended(
+            extendedPage(
+                queue = extendedRow(1, "4:05", "/covers/queue.jpg", "Album", "Artist", "Track"),
+                history = extendedRow(7, "2:17", "/covers/history.jpg", "Played album", "Played artist", "Played track"),
+            ),
+            "https://streamingsoundtracks.com/",
+        )
+
+        with(result.upcoming.single()) {
+            assertEquals(1, position)
+            assertEquals("Track", displayTitle)
+            assertEquals("Artist", artistName)
+            assertEquals("Album", albumTitle)
+            assertEquals("4:05", durationLabel)
+            assertEquals("https://streamingsoundtracks.com/covers/queue.jpg", artworkUrl)
+        }
+        assertEquals("Played track", result.recentlyPlayed.single().displayTitle)
+    }
+
+    @Test
+    fun `caps extended queue and history at thirty tracks`() {
+        val queue = (1..35).joinToString("") { position ->
+            extendedRow(position, title = "Queue track $position")
+        }
+        val history = (1..35).joinToString("") { position ->
+            extendedRow(position, title = "Played track $position")
+        }
+
+        val result = parser.parseExtended(extendedPage(queue, history), "https://1980s.fm/")
+
+        assertEquals(30, result.upcoming.size)
+        assertEquals(30, result.recentlyPlayed.size)
+        assertEquals(30, result.upcoming.last().position)
+        assertEquals("Played track 30", result.recentlyPlayed.last().displayTitle)
+    }
+
     private fun response(queue: String, history: String) = JSONObject()
         .put("queue_html", queue)
         .put("played_html", history)
@@ -48,6 +86,34 @@ class PlayerQueueResponseParserTest {
           <td>$duration</td>
           <td><img src="$artwork" onerror="ignored()"></td>
           <td><strong>$title</strong><br><span>$album</span></td>
+        </tr>
+    """.trimIndent()
+
+    private fun extendedPage(queue: String, history: String) = """
+        <table>
+          <tr><th colspan="3">Queue</th></tr>
+          <tr><th>Position</th><th>Cover</th><th>Track</th></tr>
+          $queue
+        </table>
+        <table>
+          <tr><th colspan="3">Played</th></tr>
+          <tr><th>Position</th><th>Cover</th><th>Track</th></tr>
+          $history
+        </table>
+    """.trimIndent()
+
+    private fun extendedRow(
+        position: Int,
+        duration: String = "3:21",
+        artwork: String = "/covers/$position.jpg",
+        album: String = "Album $position",
+        artist: String = "Artist $position",
+        title: String = "Track $position",
+    ) = """
+        <tr>
+          <td><b>$position</b><br>$duration</td>
+          <td><img src="$artwork"></td>
+          <td><b>$album</b> - <i>$artist</i><br>$title<br><span class="req-text">Request By: Listener</span></td>
         </tr>
     """.trimIndent()
 }

@@ -7,6 +7,7 @@ import java.io.IOException
 import java.io.Reader
 import java.net.HttpURLConnection
 import java.net.URI
+import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 
 internal interface QueueRemoteDataSource {
@@ -18,27 +19,49 @@ internal class PlayerQueueRemoteDataSource(
 ) : QueueRemoteDataSource {
     override suspend fun fetch(stationId: StationId): QueuePayload = withContext(Dispatchers.IO) {
         val endpoint = endpoints[stationId] ?: throw IOException("Unsupported station")
+        if (endpoint.extendedQueue) {
+            val origin = "https://${endpoint.domain}/"
+            val response = get(
+                url = "${origin}modules/Queue_Played/Queue_Played-gen.php",
+                referer = "${origin}modules.php?name=Queue_Played",
+                accept = "text/html",
+                fallbackCharset = StandardCharsets.ISO_8859_1,
+            )
+            return@withContext parser.parseExtended(response, origin)
+        }
         val playerUrl = "https://${endpoint.domain}/player.php"
         val response = get(
             url = "$playerUrl?ajax_action=get_db_info&station=${endpoint.stationCode}&asin=",
             referer = playerUrl,
+            accept = "application/json",
+            fallbackCharset = StandardCharsets.UTF_8,
         )
         parser.parse(response, "https://${endpoint.domain}/")
     }
 
-    private fun get(url: String, referer: String): String {
+    private fun get(url: String, referer: String, accept: String, fallbackCharset: Charset): String {
         val connection = URI(url).toURL().openConnection() as HttpURLConnection
         return try {
             connection.connectTimeout = REQUEST_TIMEOUT_MILLIS
             connection.readTimeout = REQUEST_TIMEOUT_MILLIS
             connection.instanceFollowRedirects = true
-            connection.setRequestProperty("Accept", "application/json")
+            connection.setRequestProperty("Accept", accept)
             connection.setRequestProperty("Referer", referer)
             connection.setRequestProperty("User-Agent", USER_AGENT)
-            connection.setRequestProperty("X-Requested-With", "XMLHttpRequest")
+            if (accept == "application/json") {
+                connection.setRequestProperty("X-Requested-With", "XMLHttpRequest")
+            }
             val status = connection.responseCode
             if (status !in 200..299) throw IOException("Station returned HTTP $status")
-            connection.inputStream.bufferedReader(StandardCharsets.UTF_8).use { reader ->
+            val charset = connection.contentType
+                ?.substringAfter("charset=", "")
+                ?.substringBefore(';')
+                ?.trim()
+                ?.trim('"')
+                ?.takeIf(String::isNotEmpty)
+                ?.let { runCatching { Charset.forName(it) }.getOrNull() }
+                ?: fallbackCharset
+            connection.inputStream.bufferedReader(charset).use { reader ->
                 reader.readBounded(MAX_RESPONSE_CHARACTERS)
             }
         } finally {
@@ -46,7 +69,11 @@ internal class PlayerQueueRemoteDataSource(
         }
     }
 
-    private data class Endpoint(val domain: String, val stationCode: String)
+    private data class Endpoint(
+        val domain: String,
+        val stationCode: String,
+        val extendedQueue: Boolean = true,
+    )
 
     private companion object {
         const val USER_AGENT = "24Seven.FM-Player/0.1 (Android; unofficial non-commercial client)"
@@ -56,7 +83,7 @@ internal class PlayerQueueRemoteDataSource(
             StationId("sst") to Endpoint("streamingsoundtracks.com", "sst"),
             StationId("1980s") to Endpoint("1980s.fm", "80s"),
             StationId("adagio") to Endpoint("adagio.fm", "afm"),
-            StationId("death") to Endpoint("death.fm", "dfm"),
+            StationId("death") to Endpoint("death.fm", "dfm", extendedQueue = false),
             StationId("entranced") to Endpoint("entranced.fm", "efm"),
         )
     }

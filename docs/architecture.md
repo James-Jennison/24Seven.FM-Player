@@ -42,7 +42,7 @@ The phone shell uses bottom navigation below 600 dp. Wider layouts use a navigat
 
 `QueueRepository` is station-scoped and exposes immutable unavailable, loading, ready, and error state. `MainViewModel` observes it only while Queue is selected, switches the flow when `StationId` changes, and cancels observation when leaving Queue. Compose only renders the resulting state or emits a refresh action upward.
 
-`PollingQueueRepository` performs one request immediately and then no more than once every 60 seconds. Manual refresh uses the same limiter. The remote adapter supplies the player request headers, bounded I/O, station mapping, JSON extraction, and defensive HTML parsing. The parser preserves explicit title and artist fields, does not infer missing album or duration values, and only accepts artwork hosted by the selected station domain. See `docs/m6-queue-research.md`.
+`PollingQueueRepository` performs one request immediately and then no more than once every 60 seconds. Manual refresh uses the same limiter. The remote adapter supplies bounded I/O, station mapping, and defensive parsing for each station's public queue source. Extended sources display at most 30 upcoming and 30 recently played tracks; compact sources display the rows they provide. The parser preserves explicit track fields, does not guess unavailable fields, and only accepts artwork hosted by the selected station domain. See `docs/m6-queue-research.md`.
 
 `SongRequestRepository` owns station-scoped transient search, album, eligibility, confirmation, and submission
 state. Catalog reads are user initiated and never polled. The remote adapter accepts only same-origin HTTPS album

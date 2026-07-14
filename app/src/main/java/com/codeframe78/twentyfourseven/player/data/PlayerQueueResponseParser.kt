@@ -40,6 +40,40 @@ internal class PlayerQueueResponseParser {
         )
     }
 
+    fun parseExtended(html: String, baseUrl: String, maxTracks: Int = MAX_VISIBLE_TRACKS): QueuePayload {
+        require(maxTracks in 1..MAX_VISIBLE_TRACKS)
+        val document = Jsoup.parse(html, baseUrl)
+        val queueTable = document.select("table").firstOrNull { table ->
+            table.selectFirst("th")?.text()?.trim().equals("Queue", ignoreCase = true)
+        }
+        val playedTable = document.select("table").firstOrNull { table ->
+            table.selectFirst("th")?.text()?.trim().equals("Played", ignoreCase = true)
+        }
+        return QueuePayload(
+            upcoming = queueTable?.select("tr").orEmpty().mapNotNull { row ->
+                val track = parseExtendedRow(row, baseUrl) ?: return@mapNotNull null
+                QueueTrack(
+                    position = track.position,
+                    displayTitle = track.displayTitle,
+                    artistName = track.artistName,
+                    albumTitle = track.albumTitle,
+                    durationLabel = track.durationLabel,
+                    artworkUrl = track.artworkUrl,
+                )
+            }.take(maxTracks),
+            recentlyPlayed = playedTable?.select("tr").orEmpty().mapNotNull { row ->
+                val track = parseExtendedRow(row, baseUrl) ?: return@mapNotNull null
+                HistoryTrack(
+                    displayTitle = track.displayTitle,
+                    artistName = track.artistName,
+                    albumTitle = track.albumTitle,
+                    durationLabel = track.durationLabel,
+                    artworkUrl = track.artworkUrl,
+                )
+            }.take(maxTracks),
+        )
+    }
+
     private fun rows(html: String, baseUrl: String): List<Element> =
         Jsoup.parse("<table><tbody>$html</tbody></table>", baseUrl).select("tr")
 
@@ -54,6 +88,32 @@ internal class PlayerQueueResponseParser {
             artistName = artistName,
             albumTitle = null,
             durationLabel = null,
+            artworkUrl = cells[1].selectFirst("img[src]")
+                ?.absUrl("src")
+                ?.takeIf { isSafeWebUrl(it, baseUrl) },
+        )
+    }
+
+    private fun parseExtendedRow(row: Element, baseUrl: String): ExtendedTrack? {
+        val cells = row.select("td")
+        if (cells.size != 3) return null
+        val position = cells[0].selectFirst("b")?.text()?.trim()?.toIntOrNull() ?: return null
+        val duration = DURATION.find(cells[0].text())?.value ?: return null
+        val details = cells[2]
+        val album = details.selectFirst("b")?.text()?.trim()?.takeIf(String::isNotEmpty) ?: return null
+        val artist = details.selectFirst("i")?.text()?.trim()?.takeIf(String::isNotEmpty)
+        val title = details.clone().apply { select("b, i, span").remove() }
+            .text()
+            .trim()
+            .removePrefix("-")
+            .trim()
+            .takeIf(String::isNotEmpty) ?: return null
+        return ExtendedTrack(
+            position = position,
+            displayTitle = title,
+            artistName = artist,
+            albumTitle = album,
+            durationLabel = duration,
             artworkUrl = cells[1].selectFirst("img[src]")
                 ?.absUrl("src")
                 ?.takeIf { isSafeWebUrl(it, baseUrl) },
@@ -75,4 +135,18 @@ internal class PlayerQueueResponseParser {
         val durationLabel: String?,
         val artworkUrl: String?,
     )
+
+    private data class ExtendedTrack(
+        val position: Int,
+        val displayTitle: String,
+        val artistName: String?,
+        val albumTitle: String,
+        val durationLabel: String,
+        val artworkUrl: String?,
+    )
+
+    private companion object {
+        const val MAX_VISIBLE_TRACKS = 30
+        val DURATION = Regex("\\b\\d{1,2}:\\d{2}\\b")
+    }
 }
