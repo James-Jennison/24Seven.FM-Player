@@ -44,6 +44,12 @@ The phone shell uses bottom navigation below 600 dp. Wider layouts use a navigat
 
 `PollingQueueRepository` performs one request immediately and then no more than once every 60 seconds. Manual refresh uses the same limiter. The remote adapter supplies the player request headers, bounded I/O, station mapping, JSON extraction, and defensive HTML parsing. The parser preserves explicit title and artist fields, does not infer missing album or duration values, and only accepts artwork hosted by the selected station domain. See `docs/m6-queue-research.md`.
 
+`SongRequestRepository` owns station-scoped transient search, album, eligibility, confirmation, and submission
+state. Catalog reads are user initiated and never polled. The remote adapter accepts only same-origin HTTPS album
+and request actions, and submission requires the M7 protected station session. Compose receives immutable state
+and emits search, album, prepare, cancel, and confirm actions upward. A state-changing request is made only after
+two explicit actions and is never retried. See `docs/m9-request-research.md`.
+
 ## Authentication
 
 Authentication lives behind the station-scoped `AuthRepository`; Compose receives immutable state and emits

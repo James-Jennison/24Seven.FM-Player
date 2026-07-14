@@ -3,6 +3,7 @@ package com.codeframe78.twentyfourseven.player.ui
 import com.codeframe78.twentyfourseven.player.data.BootstrapStationRepository
 import com.codeframe78.twentyfourseven.player.data.UnavailableAuthRepository
 import com.codeframe78.twentyfourseven.player.data.UnavailableChatRepository
+import com.codeframe78.twentyfourseven.player.data.UnavailableSongRequestRepository
 import com.codeframe78.twentyfourseven.player.domain.ChatRepository
 import com.codeframe78.twentyfourseven.player.domain.ChatState
 import com.codeframe78.twentyfourseven.player.domain.PlaybackController
@@ -60,6 +61,7 @@ class MainViewModelTest {
             queue,
             UnavailableAuthRepository(),
             UnavailableChatRepository(),
+            UnavailableSongRequestRepository(),
         )
         advanceUntilIdle()
 
@@ -89,6 +91,7 @@ class MainViewModelTest {
             FakeQueueRepository(),
             UnavailableAuthRepository(),
             UnavailableChatRepository(),
+            UnavailableSongRequestRepository(),
         )
         backgroundScope.launch { viewModel.uiState.collect() }
         advanceUntilIdle()
@@ -115,6 +118,7 @@ class MainViewModelTest {
             FakeQueueRepository(),
             UnavailableAuthRepository(),
             UnavailableChatRepository(),
+            UnavailableSongRequestRepository(),
         )
         backgroundScope.launch { viewModel.uiState.collect() }
         advanceUntilIdle()
@@ -137,6 +141,7 @@ class MainViewModelTest {
             queue,
             UnavailableAuthRepository(),
             UnavailableChatRepository(),
+            UnavailableSongRequestRepository(),
         )
         backgroundScope.launch { viewModel.uiState.collect() }
         advanceUntilIdle()
@@ -173,6 +178,7 @@ class MainViewModelTest {
             FakeQueueRepository(),
             UnavailableAuthRepository(),
             chat,
+            UnavailableSongRequestRepository(),
         )
         backgroundScope.launch { viewModel.uiState.collect() }
         advanceUntilIdle()

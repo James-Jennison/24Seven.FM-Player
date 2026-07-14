@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.Radio
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Card
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
@@ -80,6 +81,8 @@ import com.codeframe78.twentyfourseven.player.domain.QueueTrack
 import com.codeframe78.twentyfourseven.player.domain.StationCapabilities
 import com.codeframe78.twentyfourseven.player.domain.StationId
 import com.codeframe78.twentyfourseven.player.domain.StreamFormat
+import com.codeframe78.twentyfourseven.player.domain.RequestSearchField
+import com.codeframe78.twentyfourseven.player.domain.SongRequestLoadStatus
 import coil3.compose.AsyncImage
 
 private val navigationItems = listOf(
@@ -109,12 +112,17 @@ internal fun RadioApp(
     onRefreshAuth: () -> Unit = {},
     onSignIn: (String, String, String) -> Unit = { _, _, _ -> },
     onSignOut: () -> Unit = {},
+    onSearchRequests: (String, RequestSearchField) -> Unit = { _, _ -> },
+    onOpenRequestAlbum: (String) -> Unit = {},
+    onPrepareRequest: (String) -> Unit = {},
+    onCancelRequest: () -> Unit = {},
+    onConfirmRequest: () -> Unit = {},
 ) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
         if (maxWidth >= 600.dp) {
-            TabletShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, onRefreshQueue, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut)
+            TabletShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, onRefreshQueue, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onConfirmRequest)
         } else {
-            PhoneShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, onRefreshQueue, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut)
+            PhoneShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, onRefreshQueue, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onConfirmRequest)
         }
     }
 }
@@ -134,6 +142,11 @@ private fun PhoneShell(
     onRefreshAuth: () -> Unit,
     onSignIn: (String, String, String) -> Unit,
     onSignOut: () -> Unit,
+    onSearchRequests: (String, RequestSearchField) -> Unit,
+    onOpenRequestAlbum: (String) -> Unit,
+    onPrepareRequest: (String) -> Unit,
+    onCancelRequest: () -> Unit,
+    onConfirmRequest: () -> Unit,
 ) {
     Scaffold(
         topBar = { StationTopBar(state, onSelectStation) },
@@ -155,7 +168,7 @@ private fun PhoneShell(
             }
         },
     ) { padding ->
-        DestinationContent(state, padding, onPlay, onPause, onStop, onRefreshQueue, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut)
+        DestinationContent(state, padding, onPlay, onPause, onStop, onRefreshQueue, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onConfirmRequest)
     }
 }
 
@@ -174,6 +187,11 @@ private fun TabletShell(
     onRefreshAuth: () -> Unit,
     onSignIn: (String, String, String) -> Unit,
     onSignOut: () -> Unit,
+    onSearchRequests: (String, RequestSearchField) -> Unit,
+    onOpenRequestAlbum: (String) -> Unit,
+    onPrepareRequest: (String) -> Unit,
+    onCancelRequest: () -> Unit,
+    onConfirmRequest: () -> Unit,
 ) {
     Row(Modifier.fillMaxSize()) {
         NavigationRail(Modifier.fillMaxHeight().testTag("tablet_navigation_rail")) {
@@ -197,7 +215,7 @@ private fun TabletShell(
                 }
             },
         ) { padding ->
-            DestinationContent(state, padding, onPlay, onPause, onStop, onRefreshQueue, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut)
+            DestinationContent(state, padding, onPlay, onPause, onStop, onRefreshQueue, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onConfirmRequest)
         }
     }
 }
@@ -241,12 +259,17 @@ private fun DestinationContent(
     onRefreshAuth: () -> Unit,
     onSignIn: (String, String, String) -> Unit,
     onSignOut: () -> Unit,
+    onSearchRequests: (String, RequestSearchField) -> Unit,
+    onOpenRequestAlbum: (String) -> Unit,
+    onPrepareRequest: (String) -> Unit,
+    onCancelRequest: () -> Unit,
+    onConfirmRequest: () -> Unit,
 ) {
     when (state.destination) {
         MainDestination.Player -> PlayerScreen(state, padding, onPlay, onPause, onStop)
         MainDestination.Chat -> ChatScreen(state, padding, onRefreshChat, onSendChatMessage)
         MainDestination.Queue -> QueueScreen(state, padding, onRefreshQueue)
-        MainDestination.More -> MoreScreen(state, padding, onRefreshAuth, onSignIn, onSignOut)
+        MainDestination.More -> MoreScreen(state, padding, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onConfirmRequest)
     }
 }
 
@@ -629,6 +652,11 @@ private fun MoreScreen(
     onRefreshAuth: () -> Unit,
     onSignIn: (String, String, String) -> Unit,
     onSignOut: () -> Unit,
+    onSearchRequests: (String, RequestSearchField) -> Unit,
+    onOpenRequestAlbum: (String) -> Unit,
+    onPrepareRequest: (String) -> Unit,
+    onCancelRequest: () -> Unit,
+    onConfirmRequest: () -> Unit,
 ) {
     Column(
         Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(24.dp),
@@ -646,6 +674,7 @@ private fun MoreScreen(
         Text("Feature availability", style = MaterialTheme.typography.titleMedium)
         CapabilityCard(state.selectedStation?.capabilities ?: StationCapabilities())
         AccountSection(state, onRefreshAuth, onSignIn, onSignOut)
+        SongRequestSection(state, onSearchRequests, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onConfirmRequest)
         Text(
             "Features remain unavailable until their station-specific sources and behavior are verified.",
             style = MaterialTheme.typography.bodyMedium,
@@ -714,6 +743,147 @@ private fun AccountSection(
                             securityCode = ""
                         }) { Text("Sign in") }
                         TextButton(onClick = onRefresh) { Text("New code") }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SongRequestSection(
+    state: MainUiState,
+    onSearch: (String, RequestSearchField) -> Unit,
+    onOpenAlbum: (String) -> Unit,
+    onPrepareRequest: (String) -> Unit,
+    onCancelRequest: () -> Unit,
+    onConfirmRequest: () -> Unit,
+) {
+    val requests = state.requests
+    var query by remember(state.selectedStation?.id) { mutableStateOf("") }
+    var field by remember(state.selectedStation?.id) { mutableStateOf(RequestSearchField.Title) }
+    var fieldMenuOpen by remember { mutableStateOf(false) }
+    val signedIn = state.auth?.status == AuthStatus.SignedIn
+
+    requests?.pendingRequest?.let { track ->
+        AlertDialog(
+            onDismissRequest = onCancelRequest,
+            title = { Text("Request this track?") },
+            text = {
+                Text(
+                    buildString {
+                        append(track.title)
+                        track.artist?.let { append(" — $it") }
+                        append("\n\nThe station enforces queue, artist, album, eligibility, and cooldown rules. This sends one request and will not retry automatically.")
+                    },
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = onConfirmRequest,
+                    enabled = requests.status != SongRequestLoadStatus.Submitting,
+                ) { Text("Send request") }
+            },
+            dismissButton = { TextButton(onClick = onCancelRequest) { Text("Cancel") } },
+        )
+    }
+
+    Text("Song requests", style = MaterialTheme.typography.titleMedium)
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            if (state.selectedStation?.capabilities?.supportsRequests != true) {
+                Text("Song requests have not been verified for this station.")
+                return@Column
+            }
+            Text(
+                "Search the station library. A request is only sent after you review and confirm one available track.",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box {
+                    TextButton(onClick = { fieldMenuOpen = true }) {
+                        Text("Search by ${field.name.lowercase()}")
+                    }
+                    DropdownMenu(expanded = fieldMenuOpen, onDismissRequest = { fieldMenuOpen = false }) {
+                        RequestSearchField.entries.forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option.name) },
+                                onClick = {
+                                    field = option
+                                    fieldMenuOpen = false
+                                },
+                            )
+                        }
+                    }
+                }
+            }
+            OutlinedTextField(
+                value = query,
+                onValueChange = { query = it.take(100) },
+                label = { Text("Library search") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Button(
+                onClick = { onSearch(query, field) },
+                enabled = requests?.status != SongRequestLoadStatus.Loading &&
+                    requests?.status != SongRequestLoadStatus.Submitting,
+            ) { Text("Search") }
+
+            if (requests?.status == SongRequestLoadStatus.Loading || requests?.status == SongRequestLoadStatus.Submitting) {
+                CircularProgressIndicator()
+                Text(if (requests.status == SongRequestLoadStatus.Submitting) "Sending one request…" else "Loading station library…")
+            }
+            requests?.errorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+            requests?.notice?.let { Text(it, color = MaterialTheme.colorScheme.primary) }
+
+            requests?.searchResults?.takeIf { it.isNotEmpty() }?.let { results ->
+                Text("Search results", style = MaterialTheme.typography.titleSmall)
+                results.forEach { result ->
+                    Surface(
+                        onClick = { onOpenAlbum(result.albumId) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        tonalElevation = 2.dp,
+                    ) {
+                        Column(Modifier.padding(12.dp)) {
+                            Text(result.trackTitle, fontWeight = FontWeight.Medium)
+                            Text(
+                                listOfNotNull(result.albumTitle, result.year).joinToString(" • "),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Text("View album", color = MaterialTheme.colorScheme.primary)
+                        }
+                    }
+                }
+            }
+
+            requests?.tracks?.takeIf { it.isNotEmpty() }?.let { tracks ->
+                Text(requests.albumTitle ?: "Album tracks", style = MaterialTheme.typography.titleSmall)
+                if (!signedIn) {
+                    Text("Sign in to request a track. Library browsing remains available without an account.")
+                }
+                tracks.forEach { track ->
+                    Row(
+                        Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text(track.title, fontWeight = FontWeight.Medium)
+                            Text(
+                                listOfNotNull(track.artist, track.duration).joinToString(" • "),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        if (track.eligible) {
+                            TextButton(
+                                onClick = { onPrepareRequest(track.songId) },
+                                enabled = signedIn && requests.status == SongRequestLoadStatus.Ready,
+                            ) { Text("Request") }
+                        } else {
+                            Text("Unavailable", style = MaterialTheme.typography.bodySmall)
+                        }
                     }
                 }
             }

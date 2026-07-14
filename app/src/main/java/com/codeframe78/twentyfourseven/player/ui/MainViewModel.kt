@@ -16,6 +16,9 @@ import com.codeframe78.twentyfourseven.player.domain.AuthRepository
 import com.codeframe78.twentyfourseven.player.domain.AuthState
 import com.codeframe78.twentyfourseven.player.domain.ChatRepository
 import com.codeframe78.twentyfourseven.player.domain.ChatState
+import com.codeframe78.twentyfourseven.player.domain.RequestSearchField
+import com.codeframe78.twentyfourseven.player.domain.SongRequestRepository
+import com.codeframe78.twentyfourseven.player.domain.SongRequestState
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -37,6 +40,7 @@ data class MainUiState(
     val queue: QueueState? = null,
     val auth: AuthState? = null,
     val chat: ChatState? = null,
+    val requests: SongRequestState? = null,
     val destination: MainDestination = MainDestination.Player,
 )
 
@@ -48,6 +52,7 @@ class MainViewModel(
     private val queue: QueueRepository,
     private val auth: AuthRepository,
     private val chat: ChatRepository,
+    private val requests: SongRequestRepository,
 ) : ViewModel() {
     private val destination = MutableStateFlow(MainDestination.Player)
 
@@ -78,11 +83,15 @@ class MainViewModel(
             }
         }
 
+    private val selectedRequests = stations.observeSelectedStation()
+        .flatMapLatest { station -> requests.observeRequests(station.id) }
+
     private val stationContent = combine(
         nowPlaying.observeNowPlaying(),
         selectedQueue,
         selectedAuth,
         selectedChat,
+        selectedRequests,
         ::StationContent,
     )
 
@@ -102,6 +111,7 @@ class MainViewModel(
             queue = content.queue.takeIf { it.stationId == selected.id },
             auth = content.auth.takeIf { it.stationId == selected.id },
             chat = content.chat.takeIf { it.stationId == selected.id },
+            requests = content.requests.takeIf { it.stationId == selected.id },
             destination = selectedDestination,
         )
     }
@@ -148,6 +158,26 @@ class MainViewModel(
         auth.signOut(stations.observeSelectedStation().first().id)
     }
 
+    fun searchRequests(query: String, field: RequestSearchField) = viewModelScope.launch {
+        requests.search(stations.observeSelectedStation().first().id, query, field)
+    }
+
+    fun openRequestAlbum(albumId: String) = viewModelScope.launch {
+        requests.openAlbum(stations.observeSelectedStation().first().id, albumId)
+    }
+
+    fun prepareSongRequest(songId: String) = viewModelScope.launch {
+        requests.prepareRequest(stations.observeSelectedStation().first().id, songId)
+    }
+
+    fun cancelSongRequest() = viewModelScope.launch {
+        requests.cancelRequest(stations.observeSelectedStation().first().id)
+    }
+
+    fun confirmSongRequest() = viewModelScope.launch {
+        requests.confirmRequest(stations.observeSelectedStation().first().id)
+    }
+
     class Factory(
         private val stations: StationRepository,
         private val playback: PlaybackController,
@@ -155,10 +185,11 @@ class MainViewModel(
         private val queue: QueueRepository,
         private val auth: AuthRepository,
         private val chat: ChatRepository,
+        private val requests: SongRequestRepository,
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =
-            MainViewModel(stations, playback, nowPlaying, queue, auth, chat) as T
+            MainViewModel(stations, playback, nowPlaying, queue, auth, chat, requests) as T
     }
 }
 
@@ -167,5 +198,6 @@ private data class StationContent(
     val queue: QueueState,
     val auth: AuthState,
     val chat: ChatState,
+    val requests: SongRequestState,
 )
 

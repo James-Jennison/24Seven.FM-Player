@@ -42,6 +42,7 @@ class BootstrapStationRepositoryTest {
         repository.observeStations().first().forEach { station ->
             assertEquals(true, station.capabilities.supportsQueue)
             assertEquals(true, station.capabilities.supportsHistory)
+            assertEquals(true, station.capabilities.supportsRequests)
         }
     }
 }

@@ -39,6 +39,7 @@ class MainActivity : ComponentActivity() {
                     container.queueRepository,
                     container.authRepository,
                     container.chatRepository,
+                    container.songRequestRepository,
                 ),
             )
             val state = viewModel.uiState.collectAsStateWithLifecycle().value
@@ -56,6 +57,11 @@ class MainActivity : ComponentActivity() {
                     onRefreshAuth = viewModel::refreshAuth,
                     onSignIn = viewModel::signIn,
                     onSignOut = viewModel::signOut,
+                    onSearchRequests = viewModel::searchRequests,
+                    onOpenRequestAlbum = viewModel::openRequestAlbum,
+                    onPrepareRequest = viewModel::prepareSongRequest,
+                    onCancelRequest = viewModel::cancelSongRequest,
+                    onConfirmRequest = viewModel::confirmSongRequest,
                 )
             }
         }

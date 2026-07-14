@@ -14,6 +14,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.unit.dp
 import com.codeframe78.twentyfourseven.player.domain.Station
 import com.codeframe78.twentyfourseven.player.domain.StationId
@@ -27,6 +28,9 @@ import com.codeframe78.twentyfourseven.player.domain.AuthStatus
 import com.codeframe78.twentyfourseven.player.domain.ChatLoadStatus
 import com.codeframe78.twentyfourseven.player.domain.ChatMessage
 import com.codeframe78.twentyfourseven.player.domain.ChatState
+import com.codeframe78.twentyfourseven.player.domain.RequestableTrack
+import com.codeframe78.twentyfourseven.player.domain.SongRequestLoadStatus
+import com.codeframe78.twentyfourseven.player.domain.SongRequestState
 import org.junit.Rule
 import org.junit.Test
 import org.junit.Assert.assertEquals
@@ -200,6 +204,53 @@ class RadioAppTest {
         composeRule.onNodeWithText("Message").performTextInput("Hello chat")
         composeRule.onNodeWithText("Send").performClick()
         composeRule.runOnIdle { assertEquals(listOf("Hello chat"), sentMessages) }
+    }
+
+    @Test
+    fun songRequestRequiresExplicitConfirmation() {
+        val prepared = mutableListOf<String>()
+        var confirmed = 0
+        val track = RequestableTrack("ALBUM_1", "12345", "Requestable track", "Composer", "3:21", true)
+        composeRule.setContent {
+            var pending by remember { mutableStateOf(false) }
+            MaterialTheme {
+                RadioApp(
+                    state = sampleState().copy(
+                        destination = MainDestination.More,
+                        selectedStation = station.copy(
+                            capabilities = StationCapabilities(supportsAuthentication = true, supportsRequests = true),
+                        ),
+                        auth = AuthState(station.id, AuthStatus.SignedIn, displayName = "Listener"),
+                        requests = SongRequestState(
+                            station.id,
+                            SongRequestLoadStatus.Ready,
+                            albumTitle = "Example album",
+                            tracks = listOf(track),
+                            pendingRequest = track.takeIf { pending },
+                        ),
+                    ),
+                    onSelectStation = {},
+                    onSelectDestination = {},
+                    onPlay = {},
+                    onPause = {},
+                    onStop = {},
+                    onRefreshQueue = {},
+                    onPrepareRequest = {
+                        prepared += it
+                        pending = true
+                    },
+                    onConfirmRequest = { confirmed++ },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("Request").performScrollTo().performClick()
+        composeRule.onNodeWithText("Request this track?").assertIsDisplayed()
+        composeRule.onNodeWithText("Send request").performClick()
+        composeRule.runOnIdle {
+            assertEquals(listOf("12345"), prepared)
+            assertEquals(1, confirmed)
+        }
     }
 
     private fun sampleState() = MainUiState(

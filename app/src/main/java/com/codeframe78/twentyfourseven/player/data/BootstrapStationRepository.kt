@@ -33,6 +33,7 @@ class BootstrapStationRepository : StationRepository {
             supportsChat = true,
             supportsQueue = true,
             supportsHistory = true,
+            supportsRequests = true,
         )
 
         fun streams(domain: String) = listOf(
