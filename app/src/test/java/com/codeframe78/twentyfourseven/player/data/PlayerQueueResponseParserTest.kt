@@ -39,10 +39,19 @@ class PlayerQueueResponseParserTest {
     }
 
     @Test
-    fun `parses extended queue fields without including requester text`() {
+    fun `parses extended queue fields and explicit requester separately from title`() {
         val result = parser.parseExtended(
             extendedPage(
-                queue = extendedRow(1, "4:05", "/covers/queue.jpg", "Album", "Artist", "Track"),
+                queue = extendedRow(
+                    1,
+                    "4:05",
+                    "/covers/queue.jpg",
+                    "Album",
+                    "Artist",
+                    "Track",
+                    requesterName = "Listener",
+                    requestMessage = "A message for the queue",
+                ),
                 history = extendedRow(7, "2:17", "/covers/history.jpg", "Played album", "Played artist", "Played track"),
             ),
             "https://streamingsoundtracks.com/",
@@ -55,8 +64,25 @@ class PlayerQueueResponseParserTest {
             assertEquals("Album", albumTitle)
             assertEquals("4:05", durationLabel)
             assertEquals("https://streamingsoundtracks.com/covers/queue.jpg", artworkUrl)
+            assertEquals("Listener", requesterName)
+            assertEquals("A message for the queue", requestMessage)
         }
         assertEquals("Played track", result.recentlyPlayed.single().displayTitle)
+        assertEquals("Listener", result.recentlyPlayed.single().requesterName)
+    }
+
+    @Test
+    fun `ignores malformed requester labels without changing track fields`() {
+        val result = parser.parseExtended(
+            extendedPage(
+                queue = extendedRow(1, requesterName = null, rawRequesterHtml = "<span class=\"req-text\">Requested for Listener</span>"),
+                history = "",
+            ),
+            "https://streamingsoundtracks.com/",
+        )
+
+        assertEquals("Track 1", result.upcoming.single().displayTitle)
+        assertNull(result.upcoming.single().requesterName)
     }
 
     @Test
@@ -117,11 +143,20 @@ class PlayerQueueResponseParserTest {
         album: String = "Album $position",
         artist: String = "Artist $position",
         title: String = "Track $position",
-    ) = """
-        <tr>
-          <td><b>$position</b><br>$duration</td>
-          <td><img src="$artwork"></td>
-          <td><b>$album</b> - <i>$artist</i><br>$title<br><span class="req-text">Request By: Listener</span></td>
-        </tr>
-    """.trimIndent()
+        requesterName: String? = "Listener",
+        requestMessage: String? = null,
+        rawRequesterHtml: String? = null,
+    ): String {
+        val requesterHtml = rawRequesterHtml ?: requesterName?.let { name ->
+            val messageHtml = requestMessage?.let { " - <i>$it</i>" }.orEmpty()
+            "<span class=\"req-text\">&nbsp;Request By: <a href=\"/modules.php?name=Your_Account&amp;op=userinfo&amp;username=$name\"><b>$name</b></a>$messageHtml</span>"
+        }.orEmpty()
+        return """
+            <tr>
+              <td><b>$position</b><br>$duration</td>
+              <td><img src="$artwork"></td>
+              <td><b>$album</b> - <i>$artist</i><br>$title<br>$requesterHtml</td>
+            </tr>
+        """.trimIndent()
+    }
 }

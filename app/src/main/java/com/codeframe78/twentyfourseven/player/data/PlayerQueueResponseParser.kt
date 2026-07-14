@@ -25,6 +25,8 @@ internal class PlayerQueueResponseParser {
                     albumTitle = track.albumTitle,
                     durationLabel = track.durationLabel,
                     artworkUrl = track.artworkUrl,
+                    requesterName = track.requesterName,
+                    requestMessage = track.requestMessage,
                 )
             },
             recentlyPlayed = rows(response.getString("played_html"), baseUrl).mapNotNull { row ->
@@ -35,6 +37,8 @@ internal class PlayerQueueResponseParser {
                     albumTitle = track.albumTitle,
                     durationLabel = track.durationLabel,
                     artworkUrl = track.artworkUrl,
+                    requesterName = track.requesterName,
+                    requestMessage = track.requestMessage,
                 )
             },
         )
@@ -67,6 +71,8 @@ internal class PlayerQueueResponseParser {
                     albumTitle = track.albumTitle,
                     durationLabel = track.durationLabel,
                     artworkUrl = track.artworkUrl,
+                    requesterName = track.requesterName,
+                    requestMessage = track.requestMessage,
                 )
             }.take(maxTracks),
             recentlyPlayed = playedTable?.let(::directRows).orEmpty().mapNotNull { row ->
@@ -77,6 +83,8 @@ internal class PlayerQueueResponseParser {
                     albumTitle = track.albumTitle,
                     durationLabel = track.durationLabel,
                     artworkUrl = track.artworkUrl,
+                    requesterName = track.requesterName,
+                    requestMessage = track.requestMessage,
                 )
             }.take(maxTracks),
         )
@@ -124,6 +132,7 @@ internal class PlayerQueueResponseParser {
             .removePrefix("-")
             .trim()
             .takeIf(String::isNotEmpty) ?: return null
+        val attribution = parseRequestAttribution(details)
         return ExtendedTrack(
             position = position,
             displayTitle = title,
@@ -133,6 +142,27 @@ internal class PlayerQueueResponseParser {
             artworkUrl = cells[1].selectFirst("img[src]")
                 ?.absUrl("src")
                 ?.takeIf { isSafeWebUrl(it, baseUrl) },
+            requesterName = attribution?.requesterName,
+            requestMessage = attribution?.message,
+        )
+    }
+
+    private fun parseRequestAttribution(details: Element): RequestAttribution? {
+        val label = details.selectFirst("span.req-text") ?: return null
+        if (!REQUESTER_PREFIX.containsMatchIn(label.text())) return null
+        val requesterName = label.selectFirst("a[href*=username]")?.text()?.trim()
+            ?.takeIf(String::isNotEmpty)
+            ?: label.clone().apply { select("i, img").remove() }.text()
+                .replaceFirst(REQUESTER_PREFIX, "")
+                .trim()
+                .removeSuffix("-")
+                .trim()
+                .takeIf(String::isNotEmpty)
+            ?: return null
+        val message = label.selectFirst("i")?.text()?.trim()?.takeIf(String::isNotEmpty)
+        return RequestAttribution(
+            requesterName = requesterName.take(MAX_REQUESTER_CHARACTERS),
+            message = message?.take(MAX_REQUEST_MESSAGE_CHARACTERS),
         )
     }
 
@@ -150,6 +180,8 @@ internal class PlayerQueueResponseParser {
         val albumTitle: String?,
         val durationLabel: String?,
         val artworkUrl: String?,
+        val requesterName: String? = null,
+        val requestMessage: String? = null,
     )
 
     private data class ExtendedTrack(
@@ -159,10 +191,17 @@ internal class PlayerQueueResponseParser {
         val albumTitle: String,
         val durationLabel: String,
         val artworkUrl: String?,
+        val requesterName: String?,
+        val requestMessage: String?,
     )
+
+    private data class RequestAttribution(val requesterName: String, val message: String?)
 
     private companion object {
         const val MAX_VISIBLE_TRACKS = 30
         val DURATION = Regex("\\b\\d{1,2}:\\d{2}\\b")
+        val REQUESTER_PREFIX = Regex("^\\s*Request\\s+By:\\s*", RegexOption.IGNORE_CASE)
+        const val MAX_REQUESTER_CHARACTERS = 80
+        const val MAX_REQUEST_MESSAGE_CHARACTERS = 240
     }
 }

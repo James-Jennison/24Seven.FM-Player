@@ -172,6 +172,8 @@ class RadioAppTest {
                                     position = 1,
                                     displayTitle = "Upcoming track",
                                     artistName = "Upcoming artist",
+                                    requesterName = "Listener",
+                                    requestMessage = "Enjoy this one",
                                 ),
                             ),
                             recentlyPlayed = listOf(
@@ -191,8 +193,10 @@ class RadioAppTest {
 
         composeRule.onNodeWithText("Up next").assertIsDisplayed()
         composeRule.onNodeWithText("Upcoming track").assertIsDisplayed()
+        composeRule.onNodeWithText("Requested by Listener").assertIsDisplayed()
+        composeRule.onNodeWithText("“Enjoy this one”").assertIsDisplayed()
         composeRule.onNodeWithText("Recently played").assertIsDisplayed()
-        composeRule.onNodeWithText("Played track").assertIsDisplayed()
+        composeRule.onNodeWithText("Played track").performScrollTo().assertIsDisplayed()
     }
 
     @Test

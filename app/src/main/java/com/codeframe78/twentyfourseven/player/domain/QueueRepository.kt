@@ -11,6 +11,8 @@ data class QueueTrack(
     val albumTitle: String? = null,
     val durationLabel: String? = null,
     val artworkUrl: String? = null,
+    val requesterName: String? = null,
+    val requestMessage: String? = null,
 )
 
 data class HistoryTrack(
@@ -19,6 +21,8 @@ data class HistoryTrack(
     val albumTitle: String? = null,
     val durationLabel: String? = null,
     val artworkUrl: String? = null,
+    val requesterName: String? = null,
+    val requestMessage: String? = null,
 )
 
 data class QueueState(

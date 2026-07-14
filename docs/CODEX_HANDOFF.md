@@ -189,7 +189,14 @@ directs the listener to Queue, and suppresses immediate resubmission. See `docs/
 
 See `docs/m4-metadata-research.md` for per-relay ICY headers, field constraints, implementation evidence, and device results.
 
-Future product scope now includes optional member messages on song requests plus requester/message display in Queue, and a native authenticated Private Messages inbox/read/compose/reply/send experience. These are recorded in `docs/future-scope.md`; do not implement PM access until its authorization, refresh limits, retention, deletion, attachment, and station-account behavior are explicitly settled.
+Future product scope now includes optional member messages on new song requests and a native authenticated Private Messages inbox/read/compose/reply/send experience. These are recorded in `docs/future-scope.md`; do not implement PM access until its authorization, refresh limits, retention, deletion, attachment, and station-account behavior are explicitly settled.
+
+M10 request attribution is in progress. The public extended Queue/History interface was verified to expose an
+explicit requester profile link and, when supplied, a separate italic request message. Both are now parsed into
+bounded domain fields and rendered independently of track metadata. Death.FM's compact feed does not expose these
+fields. Optional message submission remains deferred because the authenticated request link does not publish its
+field name or length/content rules; do not guess a mutation parameter. See
+`docs/m10-request-attribution-research.md`.
 
 An API 35 instrumentation test connects through the real `MediaSessionService`, checks that fallback navigation remains hidden, stops the running service, and reconnects after recreation. Run it against an explicit emulator serial with `ANDROID_SERIAL=<emulator>` and `./gradlew connectedDebugAndroidTest` when both an emulator and physical device are connected.
 

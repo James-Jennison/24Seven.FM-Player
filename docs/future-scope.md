@@ -1,8 +1,8 @@
 # Future product scope
 
-## Request messages and requester display
+## Request messages
 
-Members should be able to add an optional message during an explicit, user-initiated song request. The native queue should display the station-provided requester identity and message when present. Before implementation, verify the station form field, length and content rules, server confirmation behavior, and representation across all five stations. Preserve eligibility and cooldown rules, never automate submissions, and do not infer requester data from unrelated page content.
+The native queue now displays the station-provided requester identity and message when present on the verified extended interface. Members should also be able to add an optional message during an explicit, user-initiated song request. Before implementing submission, verify the station form field, length and content rules, and server confirmation behavior. Preserve eligibility and cooldown rules, never automate submissions, and do not infer requester data from unrelated page content. See [m10-request-attribution-research.md](m10-request-attribution-research.md).
 
 ## Private Messages
 

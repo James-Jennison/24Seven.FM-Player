@@ -498,6 +498,8 @@ private fun QueueLists(
                     track.albumTitle,
                     track.durationLabel,
                     track.artworkUrl,
+                    track.requesterName,
+                    track.requestMessage,
                 )
             }
         }
@@ -516,6 +518,8 @@ private fun QueueLists(
                     track.albumTitle,
                     track.durationLabel,
                     track.artworkUrl,
+                    track.requesterName,
+                    track.requestMessage,
                 )
             }
         }
@@ -535,6 +539,8 @@ private fun TrackCard(
     album: String?,
     duration: String?,
     artworkUrl: String? = null,
+    requesterName: String? = null,
+    requestMessage: String? = null,
 ) {
     Card(Modifier.fillMaxWidth()) {
         Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -558,6 +564,24 @@ private fun TrackCard(
                         details.joinToString(" • "),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                requesterName?.let {
+                    Text(
+                        "Requested by $it",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                requestMessage?.let {
+                    Text(
+                        "“$it”",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 3,
                         overflow = TextOverflow.Ellipsis,
                     )
                 }

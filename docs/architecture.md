@@ -44,6 +44,10 @@ The phone shell uses bottom navigation below 600 dp. Wider layouts use a navigat
 
 `PollingQueueRepository` performs one request immediately and then no more than once every 60 seconds. Manual refresh uses the same limiter. The remote adapter supplies bounded I/O, station mapping, and defensive parsing for each station's public queue source. Extended sources display at most 30 upcoming and 30 recently played tracks; compact sources display the rows they provide. The parser preserves explicit track fields, does not guess unavailable fields, and only accepts artwork hosted by the selected station domain. See `docs/m6-queue-research.md`.
 
+Extended queue rows may also expose an explicit `req-text` attribution element. The parser keeps its profile-link
+requester and optional italic message separate from track metadata, bounds both fields, and passes plain immutable
+strings to Compose. It never infers attribution from unrelated links. See `docs/m10-request-attribution-research.md`.
+
 `SongRequestRepository` owns station-scoped transient search, album, eligibility, confirmation, and submission
 state. Catalog reads are user initiated and never polled. The remote adapter accepts only same-origin HTTPS album
 and request actions, and submission requires the M7 protected station session. Compose receives immutable state

@@ -14,7 +14,7 @@ The application is written in Kotlin with Jetpack Compose and Jetpack Media3. It
 
 ## Current progress
 
-M1 through M9 are complete. Playback and every implemented network feature have been exercised on a physical Android 15 Motorola Razr 2023, with automated unit, lint, release-build, and connected-device coverage.
+M1 through M9 are complete. M10 is in progress, with public Queue/History request attribution implemented. Playback and every implemented network feature have been exercised on a physical Android 15 Motorola Razr 2023, with automated unit, lint, release-build, and connected-device coverage.
 
 | Milestone | Status | Delivered |
 | --- | --- | --- |
@@ -27,6 +27,7 @@ M1 through M9 are complete. Playback and every implemented network feature have 
 | M7 | Complete | Native station-scoped authentication, alphanumeric security challenge, and Android-protected session restoration |
 | M8 | Complete | Native station chat reading and protected-session posting, with memory-only history and a 30-second read limit |
 | M9 | Complete | Native catalog search, album/eligibility browsing, explicit confirmation, and one-shot song requests with no automatic retries |
+| M10 | In progress | Explicit requester identity and optional request-message display; message submission awaits the station's authoritative field contract |
 
 The app is fully native and uses immutable Compose UI state, repository boundaries, and station capability flags. It includes play, pause, stop, live metadata and artwork, a persistent mini-player, capability-aware screens, native loading/error/empty states, and Android Keystore-backed account sessions. Remote data stays bounded to the documented station interfaces and their approved refresh rules.
 
@@ -37,7 +38,7 @@ These captures are from the physical API 35 Razr using live StreamingSoundtracks
 <table>
   <tr>
     <td align="center"><img src="docs/screenshots/player.png" alt="Native player with live artwork and playback controls" width="300"><br><strong>Player and live artwork</strong></td>
-    <td align="center"><img src="docs/screenshots/queue.png" alt="Native upcoming queue with track artwork" width="300"><br><strong>Queue and persistent mini-player</strong></td>
+    <td align="center"><img src="docs/screenshots/queue.png" alt="Native upcoming queue with artwork, requester attribution, and request message" width="300"><br><strong>Queue, requester message, and mini-player</strong></td>
   </tr>
   <tr>
     <td align="center"><img src="docs/screenshots/chat.png" alt="Native station chat" width="300"><br><strong>Live native chat</strong></td>
@@ -47,7 +48,7 @@ These captures are from the physical API 35 Razr using live StreamingSoundtracks
 
 Audio stream addresses come from station-provided playlists and remain subject to device verification. Remote interfaces are added only after source verification and permission review. See the milestone research and validation documents under [docs](docs) for authorization, protocol evidence, limits, and device results.
 
-Planned follow-up work includes optional request messages with requester/message display in Queue, plus a native Private Messages experience after its authorization and behavior are settled. See [docs/future-scope.md](docs/future-scope.md).
+Planned follow-up work includes optional messages on new song requests, plus a native Private Messages experience after its authorization and behavior are settled. See [docs/future-scope.md](docs/future-scope.md).
 
 ## Building
 
