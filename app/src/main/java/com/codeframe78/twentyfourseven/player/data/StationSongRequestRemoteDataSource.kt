@@ -2,6 +2,7 @@ package com.codeframe78.twentyfourseven.player.data
 
 import com.codeframe78.twentyfourseven.player.domain.RequestSearchField
 import com.codeframe78.twentyfourseven.player.domain.RequestSearchResult
+import com.codeframe78.twentyfourseven.player.domain.RequestSuggestionMode
 import com.codeframe78.twentyfourseven.player.domain.RequestableTrack
 import com.codeframe78.twentyfourseven.player.domain.StationId
 import com.codeframe78.twentyfourseven.player.domain.MAX_REQUEST_MESSAGE_CHARACTERS
@@ -26,6 +27,7 @@ internal sealed interface RequestSubmissionResult {
 
 internal interface SongRequestRemoteDataSource {
     suspend fun search(stationId: StationId, query: String, field: RequestSearchField): List<RequestSearchResult>
+    suspend fun suggest(stationId: StationId, mode: RequestSuggestionMode): RequestAlbum
     suspend fun loadAlbum(stationId: StationId, albumId: String): RequestAlbum
     suspend fun submit(stationId: StationId, track: RequestableTrack, message: String): RequestSubmissionResult
 }
@@ -60,6 +62,18 @@ internal class StationSongRequestRemoteDataSource(
             parser.parseAlbum(page.html, origin, albumId)
         }
 
+    override suspend fun suggest(
+        stationId: StationId,
+        mode: RequestSuggestionMode,
+    ): RequestAlbum = withContext(Dispatchers.IO) {
+        val origin = origin(stationId)
+        val path = "/modules.php?name=Requests&${mode.wireValue}=1&searchpgstart=1"
+        parser.parseSuggestion(
+            request(stationId, URI(origin).resolve(path), authenticated = false).html,
+            origin,
+        )
+    }
+
     override suspend fun submit(
         stationId: StationId,
         track: RequestableTrack,
@@ -82,7 +96,7 @@ internal class StationSongRequestRemoteDataSource(
             ),
             authenticated = true,
             cookieManager = manager,
-            stopReadingWhen = ::containsCompleteMessageForm,
+            stopReadingWhen = ::containsTerminalRequestResponse,
         )
         val submission = classifySubmission(page.html)
         if (submission !is RequestSubmissionResult.Submitted || message.isBlank()) {
@@ -91,7 +105,7 @@ internal class StationSongRequestRemoteDataSource(
 
         val messageForm = requestMessageForm(stationId, track.albumId, page)
             ?: return@withContext RequestSubmissionResult.Submitted(
-                "Request accepted, but the station did not provide a valid optional-message form. " +
+                "The station reported the request accepted, but did not provide a valid optional-message form. " +
                     "The request was not retried.",
             )
         postOptionalMessage(
@@ -100,7 +114,8 @@ internal class StationSongRequestRemoteDataSource(
             manager,
             messageForm,
         ) ?: RequestSubmissionResult.Submitted(
-            "Request accepted, but the optional message could not be confirmed. The request was not retried.",
+            "The station reported the request accepted, but the optional message could not be confirmed. " +
+                "The request was not retried.",
         )
     }
 
@@ -109,14 +124,18 @@ internal class StationSongRequestRemoteDataSource(
         albumId: String,
         page: AuthenticatedPage,
     ): RequestMessageForm? {
+        val stationOrigin = URI(origin(stationId))
         val referer = runCatching { URI(page.finalUrl) }.getOrNull() ?: return null
+        if (!isSameHttpsOrigin(referer, stationOrigin)) {
+            return null
+        }
         val form = Jsoup.parse(page.html, page.finalUrl).selectFirst(
             "form:has(textarea[name=msg]):has([name=send]):has([name=remLen])",
         ) ?: return null
         if (form.selectFirst("[name=send][value=Send]") == null) return null
-        val action = runCatching { referer.resolve(form.attr("action")) }.getOrNull() ?: return null
-        val expected = URI(origin(stationId))
-        if (action.scheme != "https" || !action.host.equals(expected.host, true) || action.port != expected.port) {
+        val action = runCatching { stationOrigin.resolve(form.attr("action")) }.getOrNull() ?: return null
+        val expected = stationOrigin
+        if (!isSameHttpsOrigin(action, expected)) {
             return null
         }
         val parameters = runCatching { queryParameters(action) }.getOrNull() ?: return null
@@ -127,7 +146,18 @@ internal class StationSongRequestRemoteDataSource(
         ) {
             return null
         }
-        return RequestMessageForm(action, referer)
+        val fields = linkedMapOf<String, String>()
+        form.select("input[name]").forEach { input ->
+            if (!input.hasAttr("disabled") && (input.attr("type") !in setOf("checkbox", "radio") || input.hasAttr("checked"))) {
+                fields.putIfAbsent(input.attr("name"), input.`val`())
+            }
+        }
+        if (setOf("msg", "send", "remLen").any { it !in fields && it != "msg" }) return null
+        return RequestMessageForm(
+            action = action,
+            referer = referer,
+            fields = fields,
+        )
     }
 
     private fun postOptionalMessage(
@@ -143,11 +173,11 @@ internal class StationSongRequestRemoteDataSource(
                 authenticated = true,
                 cookieManager = manager,
                 method = "POST",
-                formFields = linkedMapOf(
-                    "msg" to message,
-                    "send" to "Send",
-                    "remLen" to (MAX_REQUEST_MESSAGE_CHARACTERS - message.length).toString(),
-                ),
+                formFields = form.fields.toMutableMap().apply {
+                    this["msg"] = message
+                    this["send"] = "Send"
+                    this["remLen"] = (MAX_REQUEST_MESSAGE_CHARACTERS - message.length).toString()
+                },
                 referer = form.referer,
                 stopReadingWhen = { it.contains("message has been saved", ignoreCase = true) },
             )
@@ -156,13 +186,17 @@ internal class StationSongRequestRemoteDataSource(
         val messageText = Jsoup.parse(messageResult.html).text().replace(Regex("\\s+"), " ").trim()
         return if (messageText.contains("log in", true) || messageText.contains("login", true)) {
             RequestSubmissionResult.Submitted(
-                "Request accepted, but the optional message was not added because the station sign-in expired.",
+                "The station reported the request accepted, but the optional message was not added because " +
+                    "the station sign-in expired.",
             )
         } else if (messageText.contains("message has been saved", true)) {
-            RequestSubmissionResult.Submitted("Request and optional message sent.")
+            RequestSubmissionResult.Submitted(
+                "The station reported the request and optional message saved. " +
+                    "Confirm it in Queue before requesting again.",
+            )
         } else {
             RequestSubmissionResult.Submitted(
-                "Request accepted, but the optional message response was not recognized. " +
+                "The station reported the request accepted, but the optional message response was not recognized. " +
                     "The request was not retried.",
             )
         }
@@ -191,10 +225,11 @@ internal class StationSongRequestRemoteDataSource(
                 text.take(MAX_NOTICE_CHARACTERS).ifBlank { "The station rejected this request." },
             )
         }
+        if (ACCEPTANCE_PATTERNS.none { it.containsMatchIn(text) }) {
+            throw IOException("Unrecognized station request confirmation")
+        }
         return RequestSubmissionResult.Submitted(
-            text.take(MAX_NOTICE_CHARACTERS).ifBlank {
-                "The station received the request. Check the queue for confirmation."
-            },
+            "The station reported the request accepted. Confirm it in Queue before requesting again.",
         )
     }
 
@@ -225,6 +260,9 @@ internal class StationSongRequestRemoteDataSource(
                 connection.setRequestProperty("Accept", "text/html")
                 connection.setRequestProperty("User-Agent", USER_AGENT)
                 referer?.let { connection.setRequestProperty("Referer", it.toASCIIString()) }
+                if (requestMethod == "POST") {
+                    connection.setRequestProperty("Origin", "${uri.scheme}://${uri.host}")
+                }
                 if (authenticated) {
                     cookieManager?.get(uri, emptyMap())?.forEach { (name, values) ->
                         connection.setRequestProperty(name, values.joinToString("; "))
@@ -272,20 +310,41 @@ internal class StationSongRequestRemoteDataSource(
 
     private fun requireSameOrigin(stationId: StationId, uri: URI) {
         val expected = URI(origin(stationId))
-        if (uri.scheme != "https" || !uri.host.equals(expected.host, true) || uri.port != expected.port) {
-            throw IOException("Untrusted request destination")
-        }
+        if (uri.scheme != "https") throw IOException("Untrusted request scheme")
+        if (!uri.host.equals(expected.host, true)) throw IOException("Untrusted request host")
+        if (effectivePort(uri) != effectivePort(expected)) throw IOException("Untrusted request port")
     }
 
     private fun trustedRedirect(stationId: StationId, redirect: URI): URI {
         val expected = URI(origin(stationId))
+        val trustedHosts = REDIRECT_HOSTS[stationId] ?: setOf(expected.host)
+        if (trustedHosts.none { it.equals(redirect.host, ignoreCase = true) }) return redirect
         if (
-            redirect.scheme == "http" && redirect.host.equals(expected.host, true) &&
-            redirect.port in setOf(-1, 80)
+            (redirect.scheme == "http" && effectivePort(redirect) == 80) ||
+            (redirect.scheme == "https" && effectivePort(redirect) == effectivePort(expected))
         ) {
-            return URI("https", null, redirect.host, -1, redirect.path, redirect.query, redirect.fragment)
+            return URI(
+                "https",
+                null,
+                expected.host,
+                expected.port,
+                redirect.path,
+                redirect.query,
+                redirect.fragment,
+            )
         }
         return redirect
+    }
+
+    private fun isSameHttpsOrigin(candidate: URI, expected: URI): Boolean =
+        candidate.scheme == "https" && candidate.host.equals(expected.host, true) &&
+            effectivePort(candidate) == effectivePort(expected)
+
+    private fun effectivePort(uri: URI): Int = when {
+        uri.port >= 0 -> uri.port
+        uri.scheme.equals("https", true) -> 443
+        uri.scheme.equals("http", true) -> 80
+        else -> -1
     }
 
     private fun responseCharset(contentType: String?): Charset {
@@ -296,6 +355,12 @@ internal class StationSongRequestRemoteDataSource(
     private fun containsCompleteMessageForm(html: String): Boolean {
         val actionIndex = html.indexOf("submitmessage", ignoreCase = true)
         return actionIndex >= 0 && html.indexOf("</form>", startIndex = actionIndex, ignoreCase = true) >= 0
+    }
+
+    private fun containsTerminalRequestResponse(html: String): Boolean {
+        if (containsCompleteMessageForm(html)) return true
+        val text = Jsoup.parse(html).text().replace(Regex("\\s+"), " ").trim()
+        return REJECTION_PATTERNS.any { it.containsMatchIn(text) }
     }
 
     private fun origin(stationId: StationId): String = ORIGINS[stationId] ?: throw IOException("Unsupported station")
@@ -312,11 +377,19 @@ internal class StationSongRequestRemoteDataSource(
         val NUMERIC_ID = Regex("\\d{1,20}")
         val REDIRECT_STATUSES = setOf(301, 302, 303, 307, 308)
         val REJECTION_PATTERNS = listOf(
+            Regex("request failed", RegexOption.IGNORE_CASE),
+            Regex("played recently", RegexOption.IGNORE_CASE),
             Regex("cannot request", RegexOption.IGNORE_CASE),
+            Regex("can only request", RegexOption.IGNORE_CASE),
             Regex("not available", RegexOption.IGNORE_CASE),
             Regex("already (?:in|on) the queue", RegexOption.IGNORE_CASE),
             Regex("(?:wait|cooldown|too soon|request limit)", RegexOption.IGNORE_CASE),
             Regex("not eligible", RegexOption.IGNORE_CASE),
+        )
+        val ACCEPTANCE_PATTERNS = listOf(
+            Regex("request successful", RegexOption.IGNORE_CASE),
+            Regex("request has successfully been delivered", RegexOption.IGNORE_CASE),
+            Regex("request was successfully delivered", RegexOption.IGNORE_CASE),
         )
         val ORIGINS = mapOf(
             StationId("sst") to "https://streamingsoundtracks.com/",
@@ -325,7 +398,14 @@ internal class StationSongRequestRemoteDataSource(
             StationId("death") to "https://death.fm/",
             StationId("entranced") to "https://entranced.fm/",
         )
+        val REDIRECT_HOSTS = mapOf(
+            StationId("sst") to setOf("streamingsoundtracks.com", "www.streamingsoundtracks.com"),
+        )
     }
 
-    private data class RequestMessageForm(val action: URI, val referer: URI)
+    private data class RequestMessageForm(
+        val action: URI,
+        val referer: URI,
+        val fields: Map<String, String>,
+    )
 }

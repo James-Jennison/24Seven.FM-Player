@@ -57,4 +57,28 @@ class SongRequestPageParserTest {
         assertFalse(album.tracks[1].eligible)
         assertEquals("", album.tracks[1].songId)
     }
+
+    @Test
+    fun `parses one same-origin random suggestion`() {
+        val suggestion = parser.parseSuggestion(
+            """
+                <table><tr>
+                  <td><a href="/modules.php?name=Req&amp;asin=ALBUM_1&amp;songID=12345"><img src="/modules/SAM/images/requestbutton_request.png"></a></td>
+                  <td><a href="/modules.php?name=Album&amp;asin=ALBUM_1"><img src="/images/cover/040/ALBUM_1.jpg"></a></td>
+                  <td><b>Example Album - Composer</b><br>8. Suggested Track (1:24)</td>
+                  <td>2016</td><td>3</td>
+                </tr></table>
+            """.trimIndent(),
+            origin,
+        )
+
+        assertEquals("Example Album", suggestion.title)
+        assertEquals(1, suggestion.tracks.size)
+        assertEquals("ALBUM_1", suggestion.tracks.single().albumId)
+        assertEquals("12345", suggestion.tracks.single().songId)
+        assertEquals("Suggested Track", suggestion.tracks.single().title)
+        assertEquals("Composer", suggestion.tracks.single().artist)
+        assertEquals("1:24", suggestion.tracks.single().duration)
+        assertTrue(suggestion.tracks.single().eligible)
+    }
 }

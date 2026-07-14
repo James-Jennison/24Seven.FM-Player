@@ -9,6 +9,11 @@ enum class RequestSearchField(val wireValue: String) {
     Genre("genre"),
 }
 
+enum class RequestSuggestionMode(val wireValue: String) {
+    Random("random"),
+    LeastPlayed("randomleast"),
+}
+
 enum class SongRequestLoadStatus { Idle, Loading, Ready, Submitting, Error }
 
 const val MAX_REQUEST_MESSAGE_CHARACTERS = 80
@@ -45,6 +50,7 @@ data class SongRequestState(
 interface SongRequestRepository {
     fun observeRequests(stationId: StationId): Flow<SongRequestState>
     suspend fun search(stationId: StationId, query: String, field: RequestSearchField)
+    suspend fun suggest(stationId: StationId, mode: RequestSuggestionMode)
     suspend fun openAlbum(stationId: StationId, albumId: String)
     suspend fun prepareRequest(stationId: StationId, songId: String)
     suspend fun cancelRequest(stationId: StationId)

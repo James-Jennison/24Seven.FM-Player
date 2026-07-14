@@ -82,6 +82,7 @@ import com.codeframe78.twentyfourseven.player.domain.StationCapabilities
 import com.codeframe78.twentyfourseven.player.domain.StationId
 import com.codeframe78.twentyfourseven.player.domain.StreamFormat
 import com.codeframe78.twentyfourseven.player.domain.RequestSearchField
+import com.codeframe78.twentyfourseven.player.domain.RequestSuggestionMode
 import com.codeframe78.twentyfourseven.player.domain.SongRequestLoadStatus
 import com.codeframe78.twentyfourseven.player.domain.MAX_REQUEST_MESSAGE_CHARACTERS
 import coil3.compose.AsyncImage
@@ -114,6 +115,7 @@ internal fun RadioApp(
     onSignIn: (String, String, String) -> Unit = { _, _, _ -> },
     onSignOut: () -> Unit = {},
     onSearchRequests: (String, RequestSearchField) -> Unit = { _, _ -> },
+    onSuggestRequest: (RequestSuggestionMode) -> Unit = {},
     onOpenRequestAlbum: (String) -> Unit = {},
     onPrepareRequest: (String) -> Unit = {},
     onCancelRequest: () -> Unit = {},
@@ -121,9 +123,9 @@ internal fun RadioApp(
 ) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
         if (maxWidth >= 600.dp) {
-            TabletShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, onRefreshQueue, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onConfirmRequest)
+            TabletShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, onRefreshQueue, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onConfirmRequest)
         } else {
-            PhoneShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, onRefreshQueue, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onConfirmRequest)
+            PhoneShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, onRefreshQueue, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onConfirmRequest)
         }
     }
 }
@@ -144,6 +146,7 @@ private fun PhoneShell(
     onSignIn: (String, String, String) -> Unit,
     onSignOut: () -> Unit,
     onSearchRequests: (String, RequestSearchField) -> Unit,
+    onSuggestRequest: (RequestSuggestionMode) -> Unit,
     onOpenRequestAlbum: (String) -> Unit,
     onPrepareRequest: (String) -> Unit,
     onCancelRequest: () -> Unit,
@@ -169,7 +172,7 @@ private fun PhoneShell(
             }
         },
     ) { padding ->
-        DestinationContent(state, padding, onPlay, onPause, onStop, onRefreshQueue, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onConfirmRequest)
+        DestinationContent(state, padding, onPlay, onPause, onStop, onRefreshQueue, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onConfirmRequest)
     }
 }
 
@@ -189,6 +192,7 @@ private fun TabletShell(
     onSignIn: (String, String, String) -> Unit,
     onSignOut: () -> Unit,
     onSearchRequests: (String, RequestSearchField) -> Unit,
+    onSuggestRequest: (RequestSuggestionMode) -> Unit,
     onOpenRequestAlbum: (String) -> Unit,
     onPrepareRequest: (String) -> Unit,
     onCancelRequest: () -> Unit,
@@ -216,7 +220,7 @@ private fun TabletShell(
                 }
             },
         ) { padding ->
-            DestinationContent(state, padding, onPlay, onPause, onStop, onRefreshQueue, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onConfirmRequest)
+            DestinationContent(state, padding, onPlay, onPause, onStop, onRefreshQueue, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onConfirmRequest)
         }
     }
 }
@@ -261,6 +265,7 @@ private fun DestinationContent(
     onSignIn: (String, String, String) -> Unit,
     onSignOut: () -> Unit,
     onSearchRequests: (String, RequestSearchField) -> Unit,
+    onSuggestRequest: (RequestSuggestionMode) -> Unit,
     onOpenRequestAlbum: (String) -> Unit,
     onPrepareRequest: (String) -> Unit,
     onCancelRequest: () -> Unit,
@@ -270,7 +275,7 @@ private fun DestinationContent(
         MainDestination.Player -> PlayerScreen(state, padding, onPlay, onPause, onStop)
         MainDestination.Chat -> ChatScreen(state, padding, onRefreshChat, onSendChatMessage)
         MainDestination.Queue -> QueueScreen(state, padding, onRefreshQueue)
-        MainDestination.More -> MoreScreen(state, padding, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onConfirmRequest)
+        MainDestination.More -> MoreScreen(state, padding, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onConfirmRequest)
     }
 }
 
@@ -687,6 +692,7 @@ private fun MoreScreen(
     onSignIn: (String, String, String) -> Unit,
     onSignOut: () -> Unit,
     onSearchRequests: (String, RequestSearchField) -> Unit,
+    onSuggestRequest: (RequestSuggestionMode) -> Unit,
     onOpenRequestAlbum: (String) -> Unit,
     onPrepareRequest: (String) -> Unit,
     onCancelRequest: () -> Unit,
@@ -708,7 +714,7 @@ private fun MoreScreen(
         Text("Feature availability", style = MaterialTheme.typography.titleMedium)
         CapabilityCard(state.selectedStation?.capabilities ?: StationCapabilities())
         AccountSection(state, onRefreshAuth, onSignIn, onSignOut)
-        SongRequestSection(state, onSearchRequests, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onConfirmRequest)
+        SongRequestSection(state, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onConfirmRequest)
         Text(
             "Features remain unavailable until their station-specific sources and behavior are verified.",
             style = MaterialTheme.typography.bodyMedium,
@@ -788,6 +794,7 @@ private fun AccountSection(
 private fun SongRequestSection(
     state: MainUiState,
     onSearch: (String, RequestSearchField) -> Unit,
+    onSuggest: (RequestSuggestionMode) -> Unit,
     onOpenAlbum: (String) -> Unit,
     onPrepareRequest: (String) -> Unit,
     onCancelRequest: () -> Unit,
@@ -875,6 +882,23 @@ private fun SongRequestSection(
                 enabled = requests?.status != SongRequestLoadStatus.Loading &&
                     requests?.status != SongRequestLoadStatus.Submitting,
             ) { Text("Search") }
+
+            Text(
+                "Or let the station choose one available track.",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Button(
+                onClick = { onSuggest(RequestSuggestionMode.Random) },
+                enabled = requests?.status != SongRequestLoadStatus.Loading &&
+                    requests?.status != SongRequestLoadStatus.Submitting,
+                modifier = Modifier.fillMaxWidth(),
+            ) { Text("Suggest a random track") }
+            Button(
+                onClick = { onSuggest(RequestSuggestionMode.LeastPlayed) },
+                enabled = requests?.status != SongRequestLoadStatus.Loading &&
+                    requests?.status != SongRequestLoadStatus.Submitting,
+                modifier = Modifier.fillMaxWidth(),
+            ) { Text("Suggest a least-played random track") }
 
             if (requests?.status == SongRequestLoadStatus.Loading || requests?.status == SongRequestLoadStatus.Submitting) {
                 CircularProgressIndicator()

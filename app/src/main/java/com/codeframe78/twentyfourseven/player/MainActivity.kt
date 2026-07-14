@@ -58,6 +58,7 @@ class MainActivity : ComponentActivity() {
                     onSignIn = viewModel::signIn,
                     onSignOut = viewModel::signOut,
                     onSearchRequests = viewModel::searchRequests,
+                    onSuggestRequest = viewModel::suggestRequest,
                     onOpenRequestAlbum = viewModel::openRequestAlbum,
                     onPrepareRequest = viewModel::prepareSongRequest,
                     onCancelRequest = viewModel::cancelSongRequest,

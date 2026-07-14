@@ -17,6 +17,7 @@ import com.codeframe78.twentyfourseven.player.domain.AuthState
 import com.codeframe78.twentyfourseven.player.domain.ChatRepository
 import com.codeframe78.twentyfourseven.player.domain.ChatState
 import com.codeframe78.twentyfourseven.player.domain.RequestSearchField
+import com.codeframe78.twentyfourseven.player.domain.RequestSuggestionMode
 import com.codeframe78.twentyfourseven.player.domain.SongRequestRepository
 import com.codeframe78.twentyfourseven.player.domain.SongRequestState
 import kotlinx.coroutines.flow.SharingStarted
@@ -160,6 +161,10 @@ class MainViewModel(
 
     fun searchRequests(query: String, field: RequestSearchField) = viewModelScope.launch {
         requests.search(stations.observeSelectedStation().first().id, query, field)
+    }
+
+    fun suggestRequest(mode: RequestSuggestionMode) = viewModelScope.launch {
+        requests.suggest(stations.observeSelectedStation().first().id, mode)
     }
 
     fun openRequestAlbum(albumId: String) = viewModelScope.launch {

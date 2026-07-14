@@ -70,6 +70,47 @@ internal class SongRequestPageParser {
         return RequestAlbum(albumTitle, tracks)
     }
 
+    fun parseSuggestion(html: String, origin: String): RequestAlbum {
+        val expected = URI(origin)
+        val suggestion = Jsoup.parse(html, origin).select("tr").firstNotNullOfOrNull { row ->
+            val requestImage = row.selectFirst("img[src*=requestbutton_request]") ?: return@firstNotNullOfOrNull null
+            val requestUri = requestImage.closest("a[href]")?.absUrl("href")
+                ?.let { runCatching { URI(it) }.getOrNull() }
+                ?.takeIf {
+                    it.scheme == "https" && it.host.equals(expected.host, true) &&
+                        queryValue(it, "name") == "Req"
+                } ?: return@firstNotNullOfOrNull null
+            val albumId = queryValue(requestUri, "asin")?.takeIf { it.isNotBlank() }
+                ?: return@firstNotNullOfOrNull null
+            val songId = queryValue(requestUri, "songID")?.takeIf { it.matches(NUMERIC_ID) }
+                ?: return@firstNotNullOfOrNull null
+            val albumUri = row.select("a[href]").mapNotNull { link ->
+                runCatching { URI(link.absUrl("href")) }.getOrNull()
+            }.firstOrNull {
+                it.scheme == "https" && it.host.equals(expected.host, true) &&
+                    queryValue(it, "name") == "Album" && queryValue(it, "asin") == albumId
+            } ?: return@firstNotNullOfOrNull null
+            if (queryValue(albumUri, "asin") != albumId) return@firstNotNullOfOrNull null
+
+            val details = row.selectFirst("td:has(b)") ?: return@firstNotNullOfOrNull null
+            val descriptor = details.selectFirst("b")?.text()?.clean().orEmpty()
+            val trackText = details.ownText().clean()
+            val duration = DURATION.find(trackText)?.value
+            val title = trackText
+                .replace(LEADING_TRACK_NUMBER, "")
+                .replace(TRAILING_DURATION, "")
+                .clean()
+            if (title.isBlank()) return@firstNotNullOfOrNull null
+            val albumTitle = descriptor.substringBeforeLast(" - ", descriptor).clean().ifBlank { null }
+            val artist = descriptor.substringAfterLast(" - ", "").clean().ifBlank { null }
+            RequestAlbum(
+                albumTitle,
+                listOf(RequestableTrack(albumId, songId, title, artist, duration, eligible = true)),
+            )
+        }
+        return suggestion ?: RequestAlbum(null, emptyList())
+    }
+
     private fun queryValue(uri: URI, name: String): String? = uri.rawQuery.orEmpty().split('&')
         .mapNotNull { pair -> pair.split('=', limit = 2).takeIf { it.size == 2 } }
         .firstOrNull { it[0].equals(name, true) }
@@ -85,6 +126,8 @@ internal class SongRequestPageParser {
         val YEAR = Regex("(?:19|20)\\d{2}")
         val DURATION = Regex("\\d{1,2}:\\d{2}")
         val NUMERIC_ID = Regex("\\d+")
+        val LEADING_TRACK_NUMBER = Regex("^\\d+\\.\\s*")
+        val TRAILING_DURATION = Regex("\\s*\\(\\d{1,2}:\\d{2}\\)\\s*$")
         const val MAX_RESULTS = 100
         const val MAX_TRACKS = 250
     }

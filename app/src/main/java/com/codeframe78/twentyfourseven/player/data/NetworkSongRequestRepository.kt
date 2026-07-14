@@ -1,6 +1,7 @@
 package com.codeframe78.twentyfourseven.player.data
 
 import com.codeframe78.twentyfourseven.player.domain.RequestSearchField
+import com.codeframe78.twentyfourseven.player.domain.RequestSuggestionMode
 import com.codeframe78.twentyfourseven.player.domain.SongRequestLoadStatus
 import com.codeframe78.twentyfourseven.player.domain.SongRequestRepository
 import com.codeframe78.twentyfourseven.player.domain.SongRequestState
@@ -11,6 +12,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.io.IOException
+import java.net.SocketTimeoutException
 import java.util.concurrent.ConcurrentHashMap
 
 internal class NetworkSongRequestRepository(
@@ -47,6 +50,37 @@ internal class NetworkSongRequestRepository(
         Unit
     }
 
+    override suspend fun suggest(stationId: StationId, mode: RequestSuggestionMode): Unit =
+        lock(stationId).withLock {
+            update(stationId) {
+                it.copy(
+                    status = SongRequestLoadStatus.Loading,
+                    searchResults = emptyList(),
+                    tracks = emptyList(),
+                    albumTitle = null,
+                    errorMessage = null,
+                    notice = null,
+                    pendingRequest = null,
+                )
+            }
+            runCatching { remote.suggest(stationId, mode) }
+                .onSuccess { suggestion ->
+                    update(stationId) {
+                        it.copy(
+                            status = SongRequestLoadStatus.Ready,
+                            albumTitle = suggestion.title,
+                            tracks = suggestion.tracks,
+                            notice = if (suggestion.tracks.isEmpty()) {
+                                "The station did not return an available suggestion."
+                            } else {
+                                null
+                            },
+                        )
+                    }
+                }
+                .onFailure { failure(stationId, "Could not load a station suggestion right now.") }
+        }
+
     override suspend fun prepareRequest(stationId: StationId, songId: String) = lock(stationId).withLock {
         val track = state(stationId).value.tracks.firstOrNull { it.songId == songId && it.eligible } ?: return@withLock
         update(stationId) { it.copy(pendingRequest = track, notice = null, errorMessage = null) }
@@ -71,7 +105,7 @@ internal class NetworkSongRequestRepository(
                     RequestSubmissionResult.AuthenticationRequired -> update(stationId) { it.copy(status = SongRequestLoadStatus.Ready, pendingRequest = null, errorMessage = "Sign in to this station before requesting a song.") }
                 }
             }
-            .onFailure {
+            .onFailure { failure ->
                 update(stationId) { current ->
                     current.copy(
                         status = SongRequestLoadStatus.Ready,
@@ -79,7 +113,8 @@ internal class NetworkSongRequestRepository(
                         tracks = current.tracks.map {
                             if (it.songId == pending.songId) it.copy(eligible = false) else it
                         },
-                        errorMessage = "The station may have received this request, but confirmation could not be read. Check Queue before trying again. Nothing was retried.",
+                        errorMessage = "The station may have received this request, but confirmation could not be read. " +
+                            "${confirmationFailureDetail(failure)} Check Queue before trying again. Nothing was retried.",
                     )
                 }
             }
@@ -92,5 +127,23 @@ internal class NetworkSongRequestRepository(
     }
     private fun failure(stationId: StationId, message: String) = update(stationId) {
         it.copy(status = SongRequestLoadStatus.Error, pendingRequest = null, errorMessage = message)
+    }
+
+    private fun confirmationFailureDetail(failure: Throwable): String = when {
+        failure is SocketTimeoutException -> "The confirmation timed out."
+        failure is IOException && failure.message == "Station response was too large" ->
+            "The confirmation page exceeded the safe response limit."
+        failure is IOException && failure.message == "Too many station redirects" ->
+            "The station returned too many confirmation redirects."
+        failure is IOException && failure.message == "Untrusted request scheme" ->
+            "The station redirected confirmation to an unsupported protocol."
+        failure is IOException && failure.message == "Untrusted request host" ->
+            "The station redirected confirmation to an unverified host."
+        failure is IOException && failure.message == "Untrusted request port" ->
+            "The station redirected confirmation to an unverified port."
+        failure is IOException && failure.message == "Unrecognized station request confirmation" ->
+            "The station response did not explicitly confirm the request."
+        failure is IOException -> "The confirmation connection failed."
+        else -> "The confirmation could not be processed."
     }
 }

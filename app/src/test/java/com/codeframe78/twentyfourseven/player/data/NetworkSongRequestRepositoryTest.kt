@@ -2,6 +2,7 @@ package com.codeframe78.twentyfourseven.player.data
 
 import com.codeframe78.twentyfourseven.player.domain.RequestSearchField
 import com.codeframe78.twentyfourseven.player.domain.RequestSearchResult
+import com.codeframe78.twentyfourseven.player.domain.RequestSuggestionMode
 import com.codeframe78.twentyfourseven.player.domain.RequestableTrack
 import com.codeframe78.twentyfourseven.player.domain.StationId
 import kotlinx.coroutines.flow.first
@@ -10,6 +11,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Test
+import java.io.IOException
 
 class NetworkSongRequestRepositoryTest {
     @Test
@@ -51,8 +53,23 @@ class NetworkSongRequestRepositoryTest {
     }
 
     @Test
+    fun `least played suggestion replaces prior browsing results`() = runTest {
+        val remote = FakeRemote()
+        val repository = NetworkSongRequestRepository(remote)
+        repository.search(stationId, "Example", RequestSearchField.Title)
+
+        repository.suggest(stationId, RequestSuggestionMode.LeastPlayed)
+
+        val state = repository.observeRequests(stationId).first()
+        assertEquals(1, remote.suggestCalls)
+        assertEquals(RequestSuggestionMode.LeastPlayed, remote.lastSuggestionMode)
+        assertEquals(emptyList<RequestSearchResult>(), state.searchResults)
+        assertEquals("Suggested track", state.tracks.single().title)
+    }
+
+    @Test
     fun `indeterminate confirmation suppresses retry and directs user to queue`() = runTest {
-        val remote = FakeRemote().apply { submitFailure = true }
+        val remote = FakeRemote().apply { submitFailure = IOException("Station response was too large") }
         val repository = NetworkSongRequestRepository(remote)
         repository.openAlbum(stationId, "ALBUM_1")
         repository.prepareRequest(stationId, "12345")
@@ -65,7 +82,9 @@ class NetworkSongRequestRepositoryTest {
         assertNull(state.pendingRequest)
         assertFalse(state.tracks.single().eligible)
         assertEquals(
-            "The station may have received this request, but confirmation could not be read. Check Queue before trying again. Nothing was retried.",
+            "The station may have received this request, but confirmation could not be read. " +
+                "The confirmation page exceeded the safe response limit. " +
+                "Check Queue before trying again. Nothing was retried.",
             state.errorMessage,
         )
     }
@@ -74,8 +93,10 @@ class NetworkSongRequestRepositoryTest {
         var searchCalls = 0
         var albumCalls = 0
         var submitCalls = 0
-        var submitFailure = false
+        var suggestCalls = 0
+        var submitFailure: Throwable? = null
         var lastMessage: String? = null
+        var lastSuggestionMode: RequestSuggestionMode? = null
 
         override suspend fun search(stationId: StationId, query: String, field: RequestSearchField): List<RequestSearchResult> {
             searchCalls++
@@ -90,6 +111,15 @@ class NetworkSongRequestRepositoryTest {
             )
         }
 
+        override suspend fun suggest(stationId: StationId, mode: RequestSuggestionMode): RequestAlbum {
+            suggestCalls++
+            lastSuggestionMode = mode
+            return RequestAlbum(
+                "Suggested album",
+                listOf(RequestableTrack("ALBUM_2", "67890", "Suggested track", "Composer", "1:24", true)),
+            )
+        }
+
         override suspend fun submit(
             stationId: StationId,
             track: RequestableTrack,
@@ -97,7 +127,7 @@ class NetworkSongRequestRepositoryTest {
         ): RequestSubmissionResult {
             submitCalls++
             lastMessage = message
-            if (submitFailure) error("Confirmation read failed")
+            submitFailure?.let { throw it }
             return RequestSubmissionResult.Submitted("Request accepted")
         }
     }
