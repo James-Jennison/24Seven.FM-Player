@@ -14,7 +14,7 @@ The application is written in Kotlin with Jetpack Compose and Jetpack Media3. It
 
 ## Current progress
 
-M1 through M9 are complete. M10 is in final live validation: requester attribution is working, and the optional-message flow now handles an accepted song request whose response cannot be read without retrying that song. The corrected build is installed on the physical Android 15 Motorola Razr 2023, and automated unit, lint, release-build, and connected-device coverage is green.
+M1 through M9 are complete. M10 is in final live validation: requester attribution is working, and the optional-message recovery flow now loads and validates the station's per-track message form before posting after an unreadable song response, without retrying that song. Automated unit, lint, release-build, and connected-device coverage is green.
 
 | Milestone | Status | Delivered |
 | --- | --- | --- |

@@ -42,9 +42,13 @@ the independently verified HTTPS form. Protected cookies are never sent over HTT
 A second controlled Razr attempt queued the song with requester attribution but without its message. The client had
 received no readable response to the song mutation and therefore exited before its separate message POST. The
 adapter now posts a non-blank confirmed message exactly once after that indeterminate outcome without retrying the
-song. Automated coverage verifies one song GET and one message POST in the timeout path. Final live queue
-confirmation of this sequence remains outstanding, so M10 stays in progress. The already queued song must not be
-resubmitted for validation.
+song. A subsequent live result showed that a direct timeout-recovery POST still did not attach. Read-only inspection
+of the authenticated website confirmed that its workflow includes the per-track `writemessage` form as an
+intermediate step; the direct recovery POST had skipped it. This was the remaining verified browser/app mismatch.
+The recovery path now loads and validates that form before posting, while the normal readable-response path already
+loads it through the station redirect. Automated coverage verifies exactly one song GET, one form GET, and one
+message POST in the timeout path. Final live queue confirmation of this sequence remains outstanding, so M10 stays
+in progress. Already queued songs must not be resubmitted for validation.
 
 Only StreamingSoundtracks.com advertises the request-message capability because that is the station whose exact
 authenticated form contract was inspected. The other four stations retain native song requesting without the

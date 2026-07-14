@@ -92,6 +92,7 @@ internal class StationSongRequestRemoteDataSource(
                 manager,
                 "The request response could not be read, but the optional message form was sent once. " +
                     "Check Queue for both. The song request was not retried.",
+                loadFormFirst = true,
             ) ?: throw failure
         }
         val submission = classifySubmission(page.html)
@@ -116,12 +117,27 @@ internal class StationSongRequestRemoteDataSource(
         message: String,
         manager: CookieManager,
         successNotice: String,
+        loadFormFirst: Boolean = false,
     ): RequestSubmissionResult? {
         val origin = origin(stationId)
         val messageFormUri = URI(origin).resolve(
             "/modules.php?name=Album&action=writemessage" +
                 "&asin=${encode(track.albumId)}&id=${encode(track.songId)}",
         )
+        if (loadFormFirst) {
+            val formPage = runCatching {
+                request(
+                    stationId,
+                    messageFormUri,
+                    authenticated = true,
+                    cookieManager = manager,
+                )
+            }.getOrNull() ?: return null
+            val form = Jsoup.parse(formPage.html).selectFirst(
+                "form[action*=action=submitmessage]:has([name=msg]):has([name=send])",
+            ) ?: return null
+            if (form.selectFirst("[name=remLen]") == null) return null
+        }
         val messageResult = runCatching {
             request(
                 stationId,

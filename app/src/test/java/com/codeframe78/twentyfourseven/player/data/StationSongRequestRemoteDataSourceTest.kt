@@ -76,21 +76,36 @@ class StationSongRequestRemoteDataSourceTest {
         val store = sessionStore()
         val connections = mutableListOf<FakeConnection>()
         val remote = StationSongRequestRemoteDataSource(sessionStore = store) { uri ->
-            if (connections.isEmpty()) {
-                FakeConnection(uri.toURL(), "", responseFailure = SocketTimeoutException("slow response"))
-            } else {
-                FakeConnection(uri.toURL(), "Message accepted")
+            when (connections.size) {
+                0 -> FakeConnection(uri.toURL(), "", responseFailure = SocketTimeoutException("slow response"))
+                1 -> FakeConnection(
+                    uri.toURL(),
+                    """
+                        <form action="/modules.php?name=Album&amp;action=submitmessage&amp;asin=B0F1S53ZB6&amp;id=2055693">
+                          <textarea name="msg"></textarea>
+                          <input name="send" type="submit" value="Send">
+                          <input name="remLen" value="80" readonly>
+                        </form>
+                    """.trimIndent(),
+                )
+                else -> FakeConnection(uri.toURL(), "Message accepted")
             }.also(connections::add)
         }
 
         val result = remote.submit(stationId, track(), "M10 Android app test")
 
         assertTrue(result is RequestSubmissionResult.Submitted)
-        assertEquals(2, connections.size)
+        assertEquals(3, connections.size)
         assertEquals("GET", connections[0].requestMethod)
         assertTrue(connections[0].url.file.contains("name=Req"))
-        assertEquals("POST", connections[1].requestMethod)
-        assertTrue(connections[1].url.file.contains("action=submitmessage"))
+        assertEquals("GET", connections[1].requestMethod)
+        assertTrue(connections[1].url.file.contains("action=writemessage"))
+        assertEquals("POST", connections[2].requestMethod)
+        assertTrue(connections[2].url.file.contains("action=submitmessage"))
+        assertEquals(
+            "msg=M10+Android+app+test&send=Send&remLen=60",
+            connections[2].postedBody.toString(Charsets.UTF_8.name()),
+        )
     }
 
     private fun sessionStore() = InMemoryAuthSessionStore().apply {

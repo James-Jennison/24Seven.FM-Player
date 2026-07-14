@@ -203,7 +203,9 @@ same-host HTTP redirect back to its verified HTTPS page without exposing cookies
 was queued with requester attribution but no message because the accepted song mutation returned no readable response
 and the prior sequence exited before the separate message POST. The adapter now sends a non-blank confirmed message
 once after that indeterminate outcome without ever retrying the song. Unit, lint, release, and all 10 Razr
-instrumentation tests pass, but one future eligible queued-message confirmation remains. See `docs/m10-request-attribution-research.md` and
+instrumentation tests pass. A subsequent live attempt showed the timeout fallback still skipped the per-track
+message-form load present in the authenticated browser workflow; the recovery sequence now performs one authenticated form read, validates its
+three expected controls, and then posts once. One future eligible queued-message confirmation remains. See `docs/m10-request-attribution-research.md` and
 `docs/m10-validation.md`.
 
 An API 35 instrumentation test connects through the real `MediaSessionService`, checks that fallback navigation remains hidden, stops the running service, and reconnects after recreation. Run it against an explicit emulator serial with `ANDROID_SERIAL=<emulator>` and `./gradlew connectedDebugAndroidTest` when both an emulator and physical device are connected.
