@@ -74,7 +74,7 @@ M4 now includes:
 - matching live titles in Compose and Android MediaSession metadata;
 - protocol-verified AAC and advertised 128 kbps quality labels.
 
-The latest successful build validation ran unit tests for debug and release, Android lint, `assembleDebug`, instrumentation APK assembly, and the API 35 connected service test. M3 device validation is complete. See `docs/m1-validation.md`, `docs/m2-validation.md`, and `docs/m3-validation.md` for exact evidence.
+The latest successful build validation ran unit tests for debug and release, Android lint, `assembleDebug`, instrumentation APK assembly, and the API 35 connected service test. M3 and M4 device validation are complete. See `docs/m1-validation.md`, `docs/m2-validation.md`, `docs/m3-validation.md`, and `docs/m4-metadata-research.md` for exact evidence.
 
 ## Physical Razr setup
 
@@ -113,18 +113,13 @@ Primary-to-source fallback was also verified under a controlled primary-only net
 
 Before testing, use `adb devices -l` and pass `-s <device>` to ADB commands when an emulator is also running.
 
-## M3 completion and immediate next objective
+## M3 and M4 completion
 
 M3 background-playback hardening is complete. It verified foreground-to-background playback, lock and idle behavior, task removal, notification continuity, system and real Bluetooth media commands, transient and permanent audio-focus policy, real Bluetooth route-disconnect pausing, protected noisy-output broadcast handling, and automated service stop/reconnect behavior. The transient-focus policy automatically resumes after focus returns; permanent focus loss remains paused until the user explicitly resumes playback.
 
 No physical wired or USB-C accessory was available. Do not claim that physical test occurred. The system headset-hook command, Android's protected noisy-output broadcast, and real Bluetooth disconnect cover the relevant application and Media3 paths; physical wired coverage is non-blocking and can be added later.
 
-Continue M4 Now Playing:
-
-1. Verify that a title change within one continuously playing station updates both Compose and MediaSession state.
-2. Re-run the controlled primary-to-source fallback and confirm live ICY titles continue on the source item.
-3. Treat structured artist, album, composer, duration, and artwork as unavailable until a supported source verifies them.
-4. Keep playback independent from metadata availability or failure.
+M4 Now Playing is complete. A continuous physical-device run verified that a changed raw title updated both Compose and the application MediaSession while playback remained healthy. A controlled API 35 emulator run verified that the source fallback item continued publishing a non-empty ICY title after the expected primary failure. Metadata fields and artwork that are not present in the verified ICY source remain intentionally unavailable, and playback does not depend on metadata.
 
 See `docs/m4-metadata-research.md` for per-relay ICY headers, field constraints, implementation evidence, and device results.
 

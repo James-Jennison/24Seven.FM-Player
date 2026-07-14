@@ -14,7 +14,7 @@ The application is written in Kotlin with Jetpack Compose and Jetpack Media3. It
 
 ## Current milestone
 
-M1 through M3 are complete. M4 Now Playing is in progress with verified live ICY titles and stream-quality evidence.
+M1 through M4 are complete. M4 Now Playing includes verified live ICY titles, stream-quality evidence, continuous title updates, and primary-to-source metadata continuity.
 
 - Station-first domain model
 - MVVM and unidirectional data flow

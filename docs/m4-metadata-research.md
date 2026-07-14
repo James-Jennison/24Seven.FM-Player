@@ -36,3 +36,9 @@ The debug and release unit tests, Android lint, debug APK, and instrumentation A
 On the Motorola Razr 2023, all five stations displayed a fresh title after selection, replaced the previous station's title, remained in `PLAYING`, and completed an isolated rerun with no playback or fatal application errors. A separate check confirmed that the Compose title and Android MediaSession title matched. Playback was stopped after each validation run.
 
 A transient malformed AAC packet occurred during an earlier rapid all-station pass; the existing fallback policy recovered to `PLAYING`, and the error did not reproduce in the isolated rerun. This is recorded as transient stream behavior rather than hidden.
+
+Primary-to-source fallback was verified under a controlled primary-only network failure on a rooted local API 35 emulator. The source item reached `PLAYING`, published a non-empty ICY title through MediaSession, and recorded the expected primary-item failure. Both verified production URLs remained unchanged, and no temporary firewall rule remained after cleanup.
+
+A continuous-playback check on the Motorola Razr 2023 observed one station until its raw title changed. The updated Compose title and the application MediaSession title matched, both remained in `PLAYING`, the session reported no error, and log inspection found no player or fatal application error. The observation allowed up to ten minutes rather than assuming a short track boundary; the verified transition occurred after 40 seconds in this run. The active speaker route was read back at 0/15 before playback, and the original unmuted 7/15 volume plus the original screen timeout were restored afterward.
+
+These results complete M4. Artwork and separately structured artist, album, composer, and duration remain intentionally unavailable because the verified source supplies only one composite ICY title. Playback continues independently when metadata is absent.

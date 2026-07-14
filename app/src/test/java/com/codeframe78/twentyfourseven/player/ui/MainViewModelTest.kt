@@ -9,8 +9,10 @@ import com.codeframe78.twentyfourseven.player.domain.Station
 import com.codeframe78.twentyfourseven.player.domain.StationId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -18,6 +20,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 
@@ -56,8 +59,30 @@ class MainViewModelTest {
         assertEquals(1, playback.stopCalls)
     }
 
+    @Test
+    fun `now playing title updates remain scoped to the selected station`() = runTest(dispatcher) {
+        val nowPlaying = FakeNowPlayingRepository()
+        val viewModel = MainViewModel(BootstrapStationRepository(), FakePlaybackController(), nowPlaying)
+        backgroundScope.launch { viewModel.uiState.collect() }
+        advanceUntilIdle()
+
+        nowPlaying.state.value = NowPlayingState(StationId("sst"), "First raw title")
+        advanceUntilIdle()
+        assertEquals("First raw title", viewModel.uiState.value.nowPlaying.displayTitle)
+
+        nowPlaying.state.value = NowPlayingState(StationId("sst"), "Updated raw title")
+        advanceUntilIdle()
+        assertEquals("Updated raw title", viewModel.uiState.value.nowPlaying.displayTitle)
+
+        viewModel.selectStation(StationId("adagio"))
+        advanceUntilIdle()
+        assertNull(viewModel.uiState.value.nowPlaying.displayTitle)
+    }
+
     private class FakeNowPlayingRepository : NowPlayingRepository {
-        override fun observeNowPlaying() = MutableStateFlow(NowPlayingState())
+        val state = MutableStateFlow(NowPlayingState())
+
+        override fun observeNowPlaying() = state
     }
 
     private class FakePlaybackController : PlaybackController {
