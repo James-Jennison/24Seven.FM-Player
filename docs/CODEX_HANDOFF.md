@@ -162,11 +162,20 @@ uses the strict signed-in classifier to clear an expired anonymous session. Acco
 shared behavior is verified. Chat and request submission remain outside the authorization. See
 `docs/m7-auth-research.md` and `docs/m7-validation.md`.
 
-M8 Chat safe groundwork has started. A station-scoped repository contract, immutable chat state and message
-model, unavailable implementation, and destination-scoped ViewModel observation are present without any network
-transport or posting method. Existing authorization explicitly excludes chat reads and writes, so capability
-flags remain disabled and no chat traffic has been inspected. Continue only after the administrator defines read,
-write, display-field, connection-rate, and least-privileged testing permission. See `docs/m8-chat-research.md`.
+M8 Chat is complete. On July 13, 2026, a station administrator authorized authenticated chat reads,
+participant metadata display, and least-privileged harmless test-message posting across all five stations, with a
+documented production rate and no persisted history. All five public message views returned the same 15-row,
+ISO-8859-1 HTML shape and reload every 30 seconds. The native repository uses that same minimum scheduled/manual
+read interval only while Chat is selected, retains at most 50 parsed messages in memory, renders remote content as
+plain text, and stops collection when the destination changes.
+
+Protected-session posting is implemented with exact same-origin form validation, a 255-character limit, and
+ISO-8859-1 encodability checks. Station-issued posting material stays transient in the data layer and is never
+persisted or logged. One clearly identified harmless post succeeded with the least-privileged
+StreamingSoundtracks.com account. The native app then completed a protected-session post on the Razr, confirmed
+the message in the public feed, and restored both the signed-in composer and live chat after a real force-stop and
+relaunch. Debug and release unit tests, lint, assembly, and all seven API 35 connected tests pass. See
+`docs/m8-chat-research.md` and `docs/m8-validation.md`.
 
 See `docs/m4-metadata-research.md` for per-relay ICY headers, field constraints, implementation evidence, and device results.
 

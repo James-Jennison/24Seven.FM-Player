@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -52,6 +53,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -71,6 +73,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.codeframe78.twentyfourseven.player.domain.PlaybackStatus
 import com.codeframe78.twentyfourseven.player.domain.AuthStatus
+import com.codeframe78.twentyfourseven.player.domain.ChatLoadStatus
 import com.codeframe78.twentyfourseven.player.domain.HistoryTrack
 import com.codeframe78.twentyfourseven.player.domain.QueueLoadStatus
 import com.codeframe78.twentyfourseven.player.domain.QueueTrack
@@ -101,15 +104,17 @@ internal fun RadioApp(
     onPause: () -> Unit,
     onStop: () -> Unit,
     onRefreshQueue: () -> Unit,
+    onRefreshChat: () -> Unit = {},
+    onSendChatMessage: (String) -> Unit = {},
     onRefreshAuth: () -> Unit = {},
     onSignIn: (String, String, String) -> Unit = { _, _, _ -> },
     onSignOut: () -> Unit = {},
 ) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
         if (maxWidth >= 600.dp) {
-            TabletShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, onRefreshQueue, onRefreshAuth, onSignIn, onSignOut)
+            TabletShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, onRefreshQueue, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut)
         } else {
-            PhoneShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, onRefreshQueue, onRefreshAuth, onSignIn, onSignOut)
+            PhoneShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, onRefreshQueue, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut)
         }
     }
 }
@@ -124,6 +129,8 @@ private fun PhoneShell(
     onPause: () -> Unit,
     onStop: () -> Unit,
     onRefreshQueue: () -> Unit,
+    onRefreshChat: () -> Unit,
+    onSendChatMessage: (String) -> Unit,
     onRefreshAuth: () -> Unit,
     onSignIn: (String, String, String) -> Unit,
     onSignOut: () -> Unit,
@@ -148,7 +155,7 @@ private fun PhoneShell(
             }
         },
     ) { padding ->
-        DestinationContent(state, padding, onPlay, onPause, onStop, onRefreshQueue, onRefreshAuth, onSignIn, onSignOut)
+        DestinationContent(state, padding, onPlay, onPause, onStop, onRefreshQueue, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut)
     }
 }
 
@@ -162,6 +169,8 @@ private fun TabletShell(
     onPause: () -> Unit,
     onStop: () -> Unit,
     onRefreshQueue: () -> Unit,
+    onRefreshChat: () -> Unit,
+    onSendChatMessage: (String) -> Unit,
     onRefreshAuth: () -> Unit,
     onSignIn: (String, String, String) -> Unit,
     onSignOut: () -> Unit,
@@ -188,7 +197,7 @@ private fun TabletShell(
                 }
             },
         ) { padding ->
-            DestinationContent(state, padding, onPlay, onPause, onStop, onRefreshQueue, onRefreshAuth, onSignIn, onSignOut)
+            DestinationContent(state, padding, onPlay, onPause, onStop, onRefreshQueue, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut)
         }
     }
 }
@@ -227,24 +236,169 @@ private fun DestinationContent(
     onPause: () -> Unit,
     onStop: () -> Unit,
     onRefreshQueue: () -> Unit,
+    onRefreshChat: () -> Unit,
+    onSendChatMessage: (String) -> Unit,
     onRefreshAuth: () -> Unit,
     onSignIn: (String, String, String) -> Unit,
     onSignOut: () -> Unit,
 ) {
     when (state.destination) {
         MainDestination.Player -> PlayerScreen(state, padding, onPlay, onPause, onStop)
-        MainDestination.Chat -> FeatureScreen(
-            title = "Chat",
-            description = if (state.selectedStation?.capabilities?.supportsChat == true) {
-                "Chat support is available for this station but its verified native transport is not implemented yet."
-            } else {
-                "No supported chat connection has been verified for this station yet."
-            },
-            icon = Icons.AutoMirrored.Filled.Chat,
-            padding = padding,
-        )
+        MainDestination.Chat -> ChatScreen(state, padding, onRefreshChat, onSendChatMessage)
         MainDestination.Queue -> QueueScreen(state, padding, onRefreshQueue)
         MainDestination.More -> MoreScreen(state, padding, onRefreshAuth, onSignIn, onSignOut)
+    }
+}
+
+@Composable
+private fun ChatScreen(
+    state: MainUiState,
+    padding: PaddingValues,
+    onRefresh: () -> Unit,
+    onSendMessage: (String) -> Unit,
+) {
+    val chat = state.chat
+    when {
+        state.selectedStation?.capabilities?.supportsChat != true ||
+            chat == null || chat.status == ChatLoadStatus.Unavailable -> FeatureScreen(
+                title = "Chat",
+                description = "No supported chat connection has been verified for this station yet.",
+                icon = Icons.AutoMirrored.Filled.Chat,
+                padding = padding,
+            )
+        chat.status == ChatLoadStatus.Loading -> Box(
+            Modifier.fillMaxSize().padding(padding),
+            contentAlignment = Alignment.Center,
+        ) {
+            CircularProgressIndicator()
+        }
+        chat.status == ChatLoadStatus.Error -> Column(
+            Modifier.fillMaxSize().padding(padding).padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Text("Chat unavailable", style = MaterialTheme.typography.headlineSmall)
+            Spacer(Modifier.height(8.dp))
+            Text(
+                chat.errorMessage ?: "The station chat could not be refreshed.",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(16.dp))
+            TextButton(onClick = onRefresh) {
+                Icon(Icons.Default.Refresh, contentDescription = null)
+                Text("Try again")
+            }
+        }
+        else -> ChatMessages(state, padding, onRefresh, onSendMessage)
+    }
+}
+
+@Composable
+private fun ChatMessages(
+    state: MainUiState,
+    padding: PaddingValues,
+    onRefresh: () -> Unit,
+    onSendMessage: (String) -> Unit,
+) {
+    val chat = checkNotNull(state.chat)
+    var draft by remember(state.selectedStation?.id) { mutableStateOf("") }
+    var awaitingSend by remember(state.selectedStation?.id) { mutableStateOf(false) }
+    LaunchedEffect(chat.isSending, chat.sendErrorMessage, chat.messages) {
+        if (awaitingSend && !chat.isSending) {
+            if (chat.sendErrorMessage != null) {
+                awaitingSend = false
+            } else if (chat.messages.any { it.messageText == draft }) {
+                draft = ""
+                awaitingSend = false
+            }
+        }
+    }
+    Column(Modifier.fillMaxSize().padding(padding)) {
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text("Station chat", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
+            IconButton(onClick = onRefresh) {
+                Icon(Icons.Default.Refresh, contentDescription = "Refresh chat")
+            }
+        }
+        LazyColumn(
+            modifier = Modifier.weight(1f).fillMaxWidth(),
+            reverseLayout = true,
+            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            if (chat.messages.isEmpty()) {
+                item { EmptyTrackList("No recent chat messages are available.") }
+            } else {
+                itemsIndexed(
+                    chat.messages,
+                    key = { index, message ->
+                        "$index-${message.postedAtLabel}-${message.authorDisplayName}-${message.messageText}"
+                    },
+                ) { _, message ->
+                    Card(Modifier.fillMaxWidth()) {
+                        Column(Modifier.padding(12.dp)) {
+                            Row(Modifier.fillMaxWidth()) {
+                                Text(
+                                    message.authorDisplayName,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.weight(1f),
+                                )
+                                message.postedAtLabel?.let { timestamp ->
+                                    Text(
+                                        timestamp,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.height(4.dp))
+                            Text(message.messageText)
+                        }
+                    }
+                }
+            }
+        }
+        if (state.auth?.status == AuthStatus.SignedIn) {
+            Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+                chat.sendErrorMessage?.let { error ->
+                    Text(error, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                    Spacer(Modifier.height(4.dp))
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedTextField(
+                        value = draft,
+                        onValueChange = { if (it.length <= 255) draft = it },
+                        label = { Text("Message") },
+                        supportingText = { Text("${draft.length}/255") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        enabled = !chat.isSending,
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Button(
+                        onClick = {
+                            awaitingSend = true
+                            onSendMessage(draft)
+                        },
+                        enabled = draft.isNotBlank() && !chat.isSending,
+                    ) {
+                        Text(if (chat.isSending) "Sending" else "Send")
+                    }
+                }
+            }
+        } else {
+            Text(
+                "Sign in from More to send messages.",
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+        }
     }
 }
 

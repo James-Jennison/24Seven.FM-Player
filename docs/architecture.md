@@ -60,10 +60,15 @@ cookie manager and protected storage even if the remote logout request fails. Se
 ## Chat
 
 Chat depends on a station-scoped `ChatRepository`. `MainViewModel` observes it only while Chat is selected and
-cancels collection on destination or station changes. The current implementation remains unavailable and makes
-no network requests because chat reads and writes are not yet authorized. Network research must determine
-whether each station uses WebSocket, server-sent events, long polling, or ordinary polling before a transport is
-selected. See `docs/m8-chat-research.md`.
+cancels collection on destination or station changes. The verified public interface uses a same-origin HTML view
+with a 30-second browser reload, so the repository applies the same minimum interval to scheduled and manual
+reads. Parsed messages are bounded and memory-only. Compose renders plain immutable author, message, and displayed
+timestamp values.
+
+Posting is available only with a protected station session. The data layer obtains the current same-origin form,
+keeps its station-issued account material transient, enforces the 255-character ISO-8859-1 boundary, submits the
+user's message, and performs one confirmation read. Cookies and posting material never reach the ViewModel or UI.
+See `docs/m8-chat-research.md`.
 
 ## Initial modules
 

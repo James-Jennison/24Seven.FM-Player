@@ -30,6 +30,7 @@ class BootstrapStationRepository : StationRepository {
     private companion object {
         val queueCapabilities = StationCapabilities(
             supportsAuthentication = true,
+            supportsChat = true,
             supportsQueue = true,
             supportsHistory = true,
         )

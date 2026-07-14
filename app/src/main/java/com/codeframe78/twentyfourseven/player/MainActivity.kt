@@ -51,6 +51,8 @@ class MainActivity : ComponentActivity() {
                     onPause = viewModel::pause,
                     onStop = viewModel::stop,
                     onRefreshQueue = viewModel::refreshQueue,
+                    onRefreshChat = viewModel::refreshChat,
+                    onSendChatMessage = viewModel::sendChatMessage,
                     onRefreshAuth = viewModel::refreshAuth,
                     onSignIn = viewModel::signIn,
                     onSignOut = viewModel::signOut,

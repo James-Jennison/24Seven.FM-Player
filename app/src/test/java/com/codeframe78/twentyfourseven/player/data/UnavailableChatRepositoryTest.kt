@@ -12,10 +12,12 @@ class UnavailableChatRepositoryTest {
     @Test
     fun `chat remains unavailable without a verified transport`() = runTest {
         val stationId = StationId("sst")
-        val state = UnavailableChatRepository().observeChat(stationId).first()
+        val repository = UnavailableChatRepository()
+        val state = repository.observeChat(stationId).first()
 
         assertEquals(stationId, state.stationId)
         assertEquals(ChatLoadStatus.Unavailable, state.status)
         assertTrue(state.messages.isEmpty())
+        repository.sendMessage(stationId, "Ignored")
     }
 }

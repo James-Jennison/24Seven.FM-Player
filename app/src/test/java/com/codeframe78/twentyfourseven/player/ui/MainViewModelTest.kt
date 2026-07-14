@@ -185,6 +185,13 @@ class MainViewModelTest {
         assertEquals(StationId("sst"), chat.observedStation)
         assertEquals(1, chat.activeObservations)
 
+        viewModel.refreshChat()
+        viewModel.sendChatMessage("Hello")
+        advanceUntilIdle()
+        assertEquals(StationId("sst"), chat.refreshedStation)
+        assertEquals(StationId("sst"), chat.sentStation)
+        assertEquals("Hello", chat.sentMessage)
+
         viewModel.selectStation(StationId("adagio"))
         advanceUntilIdle()
         assertEquals(StationId("adagio"), viewModel.uiState.value.chat?.stationId)
@@ -252,6 +259,9 @@ class MainViewModelTest {
     private class FakeChatRepository : ChatRepository {
         var observedStation: StationId? = null
         var activeObservations = 0
+        var refreshedStation: StationId? = null
+        var sentStation: StationId? = null
+        var sentMessage: String? = null
 
         override fun observeChat(stationId: StationId): Flow<ChatState> {
             observedStation = stationId
@@ -266,6 +276,13 @@ class MainViewModelTest {
             }
         }
 
-        override suspend fun refresh(stationId: StationId) = Unit
+        override suspend fun refresh(stationId: StationId) {
+            refreshedStation = stationId
+        }
+
+        override suspend fun sendMessage(stationId: StationId, message: String) {
+            sentStation = stationId
+            sentMessage = message
+        }
     }
 }

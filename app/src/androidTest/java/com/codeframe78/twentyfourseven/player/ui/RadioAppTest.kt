@@ -13,6 +13,7 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.unit.dp
 import com.codeframe78.twentyfourseven.player.domain.Station
 import com.codeframe78.twentyfourseven.player.domain.StationId
@@ -23,8 +24,12 @@ import com.codeframe78.twentyfourseven.player.domain.QueueTrack
 import com.codeframe78.twentyfourseven.player.domain.StationCapabilities
 import com.codeframe78.twentyfourseven.player.domain.AuthState
 import com.codeframe78.twentyfourseven.player.domain.AuthStatus
+import com.codeframe78.twentyfourseven.player.domain.ChatLoadStatus
+import com.codeframe78.twentyfourseven.player.domain.ChatMessage
+import com.codeframe78.twentyfourseven.player.domain.ChatState
 import org.junit.Rule
 import org.junit.Test
+import org.junit.Assert.assertEquals
 
 class RadioAppTest {
     @get:Rule
@@ -155,6 +160,46 @@ class RadioAppTest {
         composeRule.onNodeWithText("Password").assertExists()
         composeRule.onNodeWithText("Security code").assertExists()
         composeRule.onNodeWithText("Sign in").assertExists()
+    }
+
+    @Test
+    fun readyChatRendersMessagesAndEmitsNativeSendAction() {
+        val sentMessages = mutableListOf<String>()
+        composeRule.setContent {
+            MaterialTheme {
+                RadioApp(
+                    state = sampleState().copy(
+                        destination = MainDestination.Chat,
+                        selectedStation = station.copy(
+                            capabilities = StationCapabilities(
+                                supportsAuthentication = true,
+                                supportsChat = true,
+                            ),
+                        ),
+                        auth = AuthState(station.id, AuthStatus.SignedIn, displayName = "Listener"),
+                        chat = ChatState(
+                            station.id,
+                            ChatLoadStatus.Ready,
+                            messages = listOf(
+                                ChatMessage("Other listener", "Existing message", "13 Jul 26 - 19:04:56"),
+                            ),
+                        ),
+                    ),
+                    onSelectStation = {},
+                    onSelectDestination = {},
+                    onPlay = {},
+                    onPause = {},
+                    onStop = {},
+                    onRefreshQueue = {},
+                    onSendChatMessage = { sentMessages += it },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("Existing message").assertIsDisplayed()
+        composeRule.onNodeWithText("Message").performTextInput("Hello chat")
+        composeRule.onNodeWithText("Send").performClick()
+        composeRule.runOnIdle { assertEquals(listOf("Hello chat"), sentMessages) }
     }
 
     private fun sampleState() = MainUiState(

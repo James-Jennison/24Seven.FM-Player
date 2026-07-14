@@ -10,4 +10,6 @@ class UnavailableChatRepository : ChatRepository {
     override fun observeChat(stationId: StationId): Flow<ChatState> = flowOf(ChatState(stationId))
 
     override suspend fun refresh(stationId: StationId) = Unit
+
+    override suspend fun sendMessage(stationId: StationId, message: String) = Unit
 }

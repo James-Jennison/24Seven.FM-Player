@@ -14,7 +14,7 @@ The application is written in Kotlin with Jetpack Compose and Jetpack Media3. It
 
 ## Current milestone
 
-M1 through M7 are complete. The app includes verified playback and Now Playing behavior, administrator-authorized live Queue and History data, and native station-scoped authentication.
+M1 through M8 are complete. The app includes verified playback and Now Playing behavior, administrator-authorized live Queue and History data, native station-scoped authentication, and native station chat.
 
 - Station-first domain model
 - MVVM and unidirectional data flow
@@ -32,10 +32,11 @@ M1 through M7 are complete. The app includes verified playback and Now Playing b
 - Explicit track title and artist text, station-hosted cover artwork, and a shared 60-second refresh limit
 - Native station-scoped sign-in with a case-sensitive alphanumeric security challenge
 - Android Keystore-protected session restoration, online expiry detection, and sign-out clearing
-- Safe station-scoped M8 chat repository groundwork with no network transport
-- Repository boundaries for future chat protocol and requests
+- Administrator-authorized native station chat with bounded 30-second reads and memory-only history
+- Protected-session message posting with legacy character-set validation
+- Repository boundaries for future requests
 
-Audio stream addresses come from station-provided playlists and remain subject to device verification. Remote interfaces are added only after source verification and permission review. See [docs/m6-queue-research.md](docs/m6-queue-research.md), [docs/m6-validation.md](docs/m6-validation.md), [docs/m7-auth-research.md](docs/m7-auth-research.md), and [docs/m7-validation.md](docs/m7-validation.md) for authorization, protocol evidence, limits, and device results.
+Audio stream addresses come from station-provided playlists and remain subject to device verification. Remote interfaces are added only after source verification and permission review. See the milestone research and validation documents under [docs](docs) for authorization, protocol evidence, limits, and device results.
 
 ## Building
 

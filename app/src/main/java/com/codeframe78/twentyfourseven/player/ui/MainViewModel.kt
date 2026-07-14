@@ -136,6 +136,10 @@ class MainViewModel(
         chat.refresh(stations.observeSelectedStation().first().id)
     }
 
+    fun sendChatMessage(message: String) = viewModelScope.launch {
+        chat.sendMessage(stations.observeSelectedStation().first().id, message)
+    }
+
     fun signIn(username: String, password: String, securityCode: String) = viewModelScope.launch {
         auth.signIn(stations.observeSelectedStation().first().id, username, password, securityCode)
     }
