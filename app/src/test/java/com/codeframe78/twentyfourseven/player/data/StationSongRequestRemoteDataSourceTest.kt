@@ -10,6 +10,7 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.net.HttpCookie
 import java.net.HttpURLConnection
+import java.net.SocketTimeoutException
 import java.net.URI
 import java.net.URL
 
@@ -70,18 +71,56 @@ class StationSongRequestRemoteDataSourceTest {
         )
     }
 
+    @Test
+    fun `indeterminate request sends message once without retrying song`() = runTest {
+        val store = sessionStore()
+        val connections = mutableListOf<FakeConnection>()
+        val remote = StationSongRequestRemoteDataSource(sessionStore = store) { uri ->
+            if (connections.isEmpty()) {
+                FakeConnection(uri.toURL(), "", responseFailure = SocketTimeoutException("slow response"))
+            } else {
+                FakeConnection(uri.toURL(), "Message accepted")
+            }.also(connections::add)
+        }
+
+        val result = remote.submit(stationId, track(), "M10 Android app test")
+
+        assertTrue(result is RequestSubmissionResult.Submitted)
+        assertEquals(2, connections.size)
+        assertEquals("GET", connections[0].requestMethod)
+        assertTrue(connections[0].url.file.contains("name=Req"))
+        assertEquals("POST", connections[1].requestMethod)
+        assertTrue(connections[1].url.file.contains("action=submitmessage"))
+    }
+
+    private fun sessionStore() = InMemoryAuthSessionStore().apply {
+        save(
+            stationId,
+            "streamingsoundtracks.com",
+            listOf(HttpCookie("session", "protected").apply {
+                domain = "streamingsoundtracks.com"
+                path = "/"
+                secure = true
+            }),
+            "Listener",
+        )
+    }
+
+    private fun track() = RequestableTrack("B0F1S53ZB6", "2055693", "Track", eligible = true)
+
     private class FakeConnection(
         url: URL,
         private val response: String,
         private val status: Int = HTTP_OK,
         private val location: String? = null,
+        private val responseFailure: Exception? = null,
     ) : HttpURLConnection(url) {
         val postedBody = ByteArrayOutputStream()
         val capturedRequestProperties = mutableMapOf<String, String>()
         override fun connect() = Unit
         override fun disconnect() = Unit
         override fun usingProxy() = false
-        override fun getResponseCode() = status
+        override fun getResponseCode() = responseFailure?.let { throw it } ?: status
         override fun getContentType() = "text/html; charset=UTF-8"
         override fun getInputStream() = ByteArrayInputStream(response.toByteArray())
         override fun getOutputStream() = postedBody

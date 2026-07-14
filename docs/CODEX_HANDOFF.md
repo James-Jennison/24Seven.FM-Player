@@ -198,9 +198,12 @@ fields. StreamingSoundtracks.com's authenticated post-request form was inspected
 posts `msg` with an 80-character limit only after the song request has already been accepted. The native dialog
 implements that exact two-step contract, keeps the message transient, never retries the song mutation, and gates
 the field behind a station capability so the other four stations are not assumed compatible. The first live message
-attempt did not appear; the corrected build now mirrors the form's `remLen` control and safely upgrades the station's
-same-host HTTP redirect back to its verified HTTPS page without exposing cookies. Unit, lint, release, and all 10
-Razr instrumentation tests pass, but one corrected queued-message confirmation remains. See `docs/m10-request-attribution-research.md` and
+attempt did not appear; the build was corrected to mirror the form's `remLen` control and safely upgrade the station's
+same-host HTTP redirect back to its verified HTTPS page without exposing cookies. A second controlled Razr request
+was queued with requester attribution but no message because the accepted song mutation returned no readable response
+and the prior sequence exited before the separate message POST. The adapter now sends a non-blank confirmed message
+once after that indeterminate outcome without ever retrying the song. Unit, lint, release, and all 10 Razr
+instrumentation tests pass, but one future eligible queued-message confirmation remains. See `docs/m10-request-attribution-research.md` and
 `docs/m10-validation.md`.
 
 An API 35 instrumentation test connects through the real `MediaSessionService`, checks that fallback navigation remains hidden, stops the running service, and reconnects after recreation. Run it against an explicit emulator serial with `ANDROID_SERIAL=<emulator>` and `./gradlew connectedDebugAndroidTest` when both an emulator and physical device are connected.

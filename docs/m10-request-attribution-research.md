@@ -27,19 +27,25 @@ action with the verified album and numeric song identifiers. It names the messag
 value `send=Send`, and its published counter truncates input at 80 characters.
 
 The native confirmation dialog mirrors that 80-character limit. A single explicit confirmation first performs the
-existing one-shot song request; only after the station returns an accepted result does a non-blank message produce
-one same-origin authenticated form post. Blank messages produce no second request. A message-post failure never
-retries the song request and is reported separately from the already accepted request. The message remains
-transient and is neither logged nor persisted.
+existing one-shot song request. A non-blank message then produces at most one same-origin authenticated form post
+after either a readable accepted result or an indeterminate response failure. This accommodates the verified case
+where the station accepted the mutation but did not return a readable response before the client timeout. The song
+mutation is never retried. Blank messages produce no second request, and the message remains transient and is
+neither logged nor persisted.
 
 The first live attempt queued the song but did not display its message. Follow-up inspection found two legacy-form
 details missing from the initial adapter: the browser also submits the read-only remaining-character control, and
 the station redirects the accepted HTTPS request to a same-host HTTP message page. The corrected adapter submits
 all three successful controls (`msg`, `send`, and `remLen`) and upgrades only that same-host legacy redirect back to
-the independently verified HTTPS form. Protected cookies are never sent over HTTP. Final queue confirmation of the
-corrected build remains outstanding, so M10 stays in progress.
+the independently verified HTTPS form. Protected cookies are never sent over HTTP.
+
+A second controlled Razr attempt queued the song with requester attribution but without its message. The client had
+received no readable response to the song mutation and therefore exited before its separate message POST. The
+adapter now posts a non-blank confirmed message exactly once after that indeterminate outcome without retrying the
+song. Automated coverage verifies one song GET and one message POST in the timeout path. Final live queue
+confirmation of this sequence remains outstanding, so M10 stays in progress. The already queued song must not be
+resubmitted for validation.
 
 Only StreamingSoundtracks.com advertises the request-message capability because that is the station whose exact
 authenticated form contract was inspected. The other four stations retain native song requesting without the
-message field until their post-request forms are independently verified. No additional live song request was
-submitted during this research.
+message field until their post-request forms are independently verified.

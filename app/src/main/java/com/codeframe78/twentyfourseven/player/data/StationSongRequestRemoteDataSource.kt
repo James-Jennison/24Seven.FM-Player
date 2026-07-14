@@ -74,19 +74,50 @@ internal class StationSongRequestRemoteDataSource(
         val origin = origin(stationId)
         val manager = authenticatedCookieManager(stationId, origin)
         if (manager.cookieStore.cookies.isEmpty()) return@withContext RequestSubmissionResult.AuthenticationRequired
-        val page = request(
-            stationId,
-            URI(origin).resolve(
-                "/modules.php?name=Req&asin=${encode(track.albumId)}&songID=${encode(track.songId)}",
-            ),
-            authenticated = true,
-            cookieManager = manager,
-        )
+        val page = try {
+            request(
+                stationId,
+                URI(origin).resolve(
+                    "/modules.php?name=Req&asin=${encode(track.albumId)}&songID=${encode(track.songId)}",
+                ),
+                authenticated = true,
+                cookieManager = manager,
+            )
+        } catch (failure: IOException) {
+            if (message.isBlank()) throw failure
+            return@withContext postOptionalMessage(
+                stationId,
+                track,
+                message,
+                manager,
+                "The request response could not be read, but the optional message form was sent once. " +
+                    "Check Queue for both. The song request was not retried.",
+            ) ?: throw failure
+        }
         val submission = classifySubmission(page.html)
         if (submission !is RequestSubmissionResult.Submitted || message.isBlank()) {
             return@withContext submission
         }
 
+        postOptionalMessage(
+            stationId,
+            track,
+            message,
+            manager,
+            "Request and optional message sent.",
+        ) ?: RequestSubmissionResult.Submitted(
+            "Request accepted, but the optional message could not be confirmed. The request was not retried.",
+        )
+    }
+
+    private fun postOptionalMessage(
+        stationId: StationId,
+        track: RequestableTrack,
+        message: String,
+        manager: CookieManager,
+        successNotice: String,
+    ): RequestSubmissionResult? {
+        val origin = origin(stationId)
         val messageFormUri = URI(origin).resolve(
             "/modules.php?name=Album&action=writemessage" +
                 "&asin=${encode(track.albumId)}&id=${encode(track.songId)}",
@@ -109,18 +140,14 @@ internal class StationSongRequestRemoteDataSource(
                 referer = messageFormUri,
             )
         }.getOrNull()
-        if (messageResult == null) {
-            return@withContext RequestSubmissionResult.Submitted(
-                "Request accepted, but the optional message could not be confirmed. The request was not retried.",
-            )
-        }
+        if (messageResult == null) return null
         val messageText = Jsoup.parse(messageResult.html).text().replace(Regex("\\s+"), " ").trim()
-        if (messageText.contains("log in", true) || messageText.contains("login", true)) {
+        return if (messageText.contains("log in", true) || messageText.contains("login", true)) {
             RequestSubmissionResult.Submitted(
                 "Request accepted, but the optional message was not added because the station sign-in expired.",
             )
         } else {
-            RequestSubmissionResult.Submitted("Request and optional message sent.")
+            RequestSubmissionResult.Submitted(successNotice)
         }
     }
 
@@ -161,8 +188,8 @@ internal class StationSongRequestRemoteDataSource(
             requireSameOrigin(stationId, uri)
             val connection = connectionFactory(uri)
             try {
-                connection.connectTimeout = REQUEST_TIMEOUT_MILLIS
-                connection.readTimeout = REQUEST_TIMEOUT_MILLIS
+                connection.connectTimeout = CONNECT_TIMEOUT_MILLIS
+                connection.readTimeout = READ_TIMEOUT_MILLIS
                 connection.instanceFollowRedirects = false
                 connection.requestMethod = requestMethod
                 connection.setRequestProperty("Accept", "text/html")
@@ -241,7 +268,8 @@ internal class StationSongRequestRemoteDataSource(
 
     private companion object {
         const val USER_AGENT = "24Seven.FM-Player/0.1 (Android; unofficial non-commercial client)"
-        const val REQUEST_TIMEOUT_MILLIS = 10_000
+        const val CONNECT_TIMEOUT_MILLIS = 15_000
+        const val READ_TIMEOUT_MILLIS = 30_000
         const val MAX_RESPONSE_CHARACTERS = 1_000_000
         const val MAX_REDIRECTS = 5
         const val MAX_NOTICE_CHARACTERS = 240
