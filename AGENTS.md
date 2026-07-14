@@ -7,3 +7,13 @@
 - Never commit cookies, credentials, CSRF tokens, private endpoints, or HAR files.
 - Do not add a stream URL until it has been verified and its use is permitted.
 
+## Android validation
+
+- Never run `gradlew clean` during routine development or validation. Preserve Gradle caches, incremental outputs, and existing build products.
+- Use the smallest relevant `:app` task. For code-only changes, start with `./gradlew :app:compileDebugKotlin` (or `.\gradlew.bat :app:compileDebugKotlin` on Windows).
+- Run unit tests only for affected modules when possible, and run lint only when the change can affect lint results.
+- Use `:app:assembleDebug` only when an APK is needed. Reserve the full build for milestones, release preparation, or an explicit request.
+- Do not reinstall or update Android SDK packages during normal validation.
+- Do not repeat a successful validator unless later changes could affect its result.
+- Combine overlapping Gradle tasks into one invocation when that avoids duplicate configuration and work.
+

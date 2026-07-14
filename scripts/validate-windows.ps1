@@ -44,7 +44,7 @@ Write-Host "Build output: $env:TWENTYFOURSEVEN_ANDROID_BUILD_DIR"
 
 Push-Location $repositoryRoot
 try {
-    & .\gradlew.bat test lint assembleDebug --console=plain --no-daemon --max-workers=2 --no-problems-report '-Pkotlin.compiler.execution.strategy=in-process'
+    & .\gradlew.bat test lint assembleDebug --console=plain --no-problems-report
     if ($LASTEXITCODE -ne 0) {
         throw "Gradle validation failed with exit code $LASTEXITCODE."
     }
