@@ -13,5 +13,5 @@ class UnavailableSongRequestRepository : SongRequestRepository {
     override suspend fun openAlbum(stationId: StationId, albumId: String) = Unit
     override suspend fun prepareRequest(stationId: StationId, songId: String) = Unit
     override suspend fun cancelRequest(stationId: StationId) = Unit
-    override suspend fun confirmRequest(stationId: StationId) = Unit
+    override suspend fun confirmRequest(stationId: StationId, message: String) = Unit
 }

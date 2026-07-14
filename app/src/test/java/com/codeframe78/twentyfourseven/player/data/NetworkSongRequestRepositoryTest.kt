@@ -40,11 +40,12 @@ class NetworkSongRequestRepositoryTest {
 
         repository.prepareRequest(stationId, "12345")
         assertEquals("12345", repository.observeRequests(stationId).first().pendingRequest?.songId)
-        repository.confirmRequest(stationId)
+        repository.confirmRequest(stationId, "For the evening listeners")
         repository.confirmRequest(stationId)
 
         val state = repository.observeRequests(stationId).first()
         assertEquals(1, remote.submitCalls)
+        assertEquals("For the evening listeners", remote.lastMessage)
         assertNull(state.pendingRequest)
         assertFalse(state.tracks.single().eligible)
     }
@@ -74,6 +75,7 @@ class NetworkSongRequestRepositoryTest {
         var albumCalls = 0
         var submitCalls = 0
         var submitFailure = false
+        var lastMessage: String? = null
 
         override suspend fun search(stationId: StationId, query: String, field: RequestSearchField): List<RequestSearchResult> {
             searchCalls++
@@ -88,8 +90,13 @@ class NetworkSongRequestRepositoryTest {
             )
         }
 
-        override suspend fun submit(stationId: StationId, track: RequestableTrack): RequestSubmissionResult {
+        override suspend fun submit(
+            stationId: StationId,
+            track: RequestableTrack,
+            message: String,
+        ): RequestSubmissionResult {
             submitCalls++
+            lastMessage = message
             if (submitFailure) error("Confirmation read failed")
             return RequestSubmissionResult.Submitted("Request accepted")
         }

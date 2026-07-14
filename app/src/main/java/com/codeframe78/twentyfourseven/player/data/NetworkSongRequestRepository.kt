@@ -5,6 +5,7 @@ import com.codeframe78.twentyfourseven.player.domain.SongRequestLoadStatus
 import com.codeframe78.twentyfourseven.player.domain.SongRequestRepository
 import com.codeframe78.twentyfourseven.player.domain.SongRequestState
 import com.codeframe78.twentyfourseven.player.domain.StationId
+import com.codeframe78.twentyfourseven.player.domain.MAX_REQUEST_MESSAGE_CHARACTERS
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -55,10 +56,12 @@ internal class NetworkSongRequestRepository(
         update(stationId) { it.copy(pendingRequest = null) }
     }
 
-    override suspend fun confirmRequest(stationId: StationId) = lock(stationId).withLock {
+    override suspend fun confirmRequest(stationId: StationId, message: String) = lock(stationId).withLock {
         val pending = state(stationId).value.pendingRequest ?: return@withLock
+        val normalizedMessage = message.trim()
+        require(normalizedMessage.length <= MAX_REQUEST_MESSAGE_CHARACTERS) { "Request message is too long" }
         update(stationId) { it.copy(status = SongRequestLoadStatus.Submitting, errorMessage = null, notice = null) }
-        runCatching { remote.submit(stationId, pending) }
+        runCatching { remote.submit(stationId, pending, normalizedMessage) }
             .onSuccess { result ->
                 when (result) {
                     is RequestSubmissionResult.Submitted -> update(stationId) { current ->

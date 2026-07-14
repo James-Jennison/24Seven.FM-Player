@@ -174,8 +174,8 @@ class MainViewModel(
         requests.cancelRequest(stations.observeSelectedStation().first().id)
     }
 
-    fun confirmSongRequest() = viewModelScope.launch {
-        requests.confirmRequest(stations.observeSelectedStation().first().id)
+    fun confirmSongRequest(message: String) = viewModelScope.launch {
+        requests.confirmRequest(stations.observeSelectedStation().first().id, message)
     }
 
     class Factory(

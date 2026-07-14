@@ -14,7 +14,7 @@ The application is written in Kotlin with Jetpack Compose and Jetpack Media3. It
 
 ## Current progress
 
-M1 through M9 are complete. M10 is in progress, with public Queue/History request attribution implemented. Playback and every implemented network feature have been exercised on a physical Android 15 Motorola Razr 2023, with automated unit, lint, release-build, and connected-device coverage.
+M1 through M9 are complete. M10 is in final live validation: requester attribution is working, and the corrected optional-message flow is installed on the physical Android 15 Motorola Razr 2023. Automated unit, lint, release-build, and connected-device coverage is green.
 
 | Milestone | Status | Delivered |
 | --- | --- | --- |
@@ -27,7 +27,7 @@ M1 through M9 are complete. M10 is in progress, with public Queue/History reques
 | M7 | Complete | Native station-scoped authentication, alphanumeric security challenge, and Android-protected session restoration |
 | M8 | Complete | Native station chat reading and protected-session posting, with memory-only history and a 30-second read limit |
 | M9 | Complete | Native catalog search, album/eligibility browsing, explicit confirmation, and one-shot song requests with no automatic retries |
-| M10 | In progress | Explicit requester identity and optional request-message display; message submission awaits the station's authoritative field contract |
+| M10 | In progress | Explicit requester identity/message display and an exact 80-character StreamingSoundtracks.com message form; final queued-message confirmation remains |
 
 The app is fully native and uses immutable Compose UI state, repository boundaries, and station capability flags. It includes play, pause, stop, live metadata and artwork, a persistent mini-player, capability-aware screens, native loading/error/empty states, and Android Keystore-backed account sessions. Remote data stays bounded to the documented station interfaces and their approved refresh rules.
 
@@ -48,7 +48,7 @@ These captures are from the physical API 35 Razr using live StreamingSoundtracks
 
 Audio stream addresses come from station-provided playlists and remain subject to device verification. Remote interfaces are added only after source verification and permission review. See the milestone research and validation documents under [docs](docs) for authorization, protocol evidence, limits, and device results.
 
-Planned follow-up work includes optional messages on new song requests, plus a native Private Messages experience after its authorization and behavior are settled. See [docs/future-scope.md](docs/future-scope.md).
+Planned follow-up work includes final live request-message confirmation and a native Private Messages experience after its authorization and behavior are settled. See [docs/future-scope.md](docs/future-scope.md).
 
 ## Building
 

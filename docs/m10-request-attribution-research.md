@@ -20,7 +20,26 @@ feed, which does not expose per-row attribution.
 
 ## Optional message submission
 
-The authenticated album page and its request link do not publish a message input, parameter name, or length rule.
-No additional live request was submitted during research. Adding a message to a new request remains deferred until
-the station supplies or exposes an authoritative request field contract; the app will not guess a mutation
-parameter.
+On July 14, 2026, the administrator exposed the authenticated StreamingSoundtracks.com screen shown immediately
+after a request is accepted. Its visible confirmation states that the request has already been delivered, then
+offers a separate optional message form. The form uses `POST` to the same-origin Album module's `submitmessage`
+action with the verified album and numeric song identifiers. It names the message field `msg`, includes the submit
+value `send=Send`, and its published counter truncates input at 80 characters.
+
+The native confirmation dialog mirrors that 80-character limit. A single explicit confirmation first performs the
+existing one-shot song request; only after the station returns an accepted result does a non-blank message produce
+one same-origin authenticated form post. Blank messages produce no second request. A message-post failure never
+retries the song request and is reported separately from the already accepted request. The message remains
+transient and is neither logged nor persisted.
+
+The first live attempt queued the song but did not display its message. Follow-up inspection found two legacy-form
+details missing from the initial adapter: the browser also submits the read-only remaining-character control, and
+the station redirects the accepted HTTPS request to a same-host HTTP message page. The corrected adapter submits
+all three successful controls (`msg`, `send`, and `remLen`) and upgrades only that same-host legacy redirect back to
+the independently verified HTTPS form. Protected cookies are never sent over HTTP. Final queue confirmation of the
+corrected build remains outstanding, so M10 stays in progress.
+
+Only StreamingSoundtracks.com advertises the request-message capability because that is the station whose exact
+authenticated form contract was inspected. The other four stations retain native song requesting without the
+message field until their post-request forms are independently verified. No additional live song request was
+submitted during this research.

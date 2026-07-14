@@ -274,7 +274,7 @@ class RadioAppTest {
     @Test
     fun songRequestRequiresExplicitConfirmation() {
         val prepared = mutableListOf<String>()
-        var confirmed = 0
+        val confirmedMessages = mutableListOf<String>()
         val track = RequestableTrack("ALBUM_1", "12345", "Requestable track", "Composer", "3:21", true)
         composeRule.setContent {
             var pending by remember { mutableStateOf(false) }
@@ -283,7 +283,11 @@ class RadioAppTest {
                     state = sampleState().copy(
                         destination = MainDestination.More,
                         selectedStation = station.copy(
-                            capabilities = StationCapabilities(supportsAuthentication = true, supportsRequests = true),
+                            capabilities = StationCapabilities(
+                                supportsAuthentication = true,
+                                supportsRequests = true,
+                                supportsRequestMessages = true,
+                            ),
                         ),
                         auth = AuthState(station.id, AuthStatus.SignedIn, displayName = "Listener"),
                         requests = SongRequestState(
@@ -304,17 +308,19 @@ class RadioAppTest {
                         prepared += it
                         pending = true
                     },
-                    onConfirmRequest = { confirmed++ },
+                    onConfirmRequest = { confirmedMessages += it },
                 )
             }
         }
 
         composeRule.onNodeWithText("Request").performScrollTo().performClick()
         composeRule.onNodeWithText("Request this track?").assertIsDisplayed()
+        composeRule.onNodeWithText("Message (optional)").performTextInput("Enjoy this one")
+        composeRule.onNodeWithText("14/80").assertIsDisplayed()
         composeRule.onNodeWithText("Send request").performClick()
         composeRule.runOnIdle {
             assertEquals(listOf("12345"), prepared)
-            assertEquals(1, confirmed)
+            assertEquals(listOf("Enjoy this one"), confirmedMessages)
         }
     }
 

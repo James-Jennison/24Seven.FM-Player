@@ -4,6 +4,7 @@ import com.codeframe78.twentyfourseven.player.domain.RequestSearchField
 import com.codeframe78.twentyfourseven.player.domain.RequestSearchResult
 import com.codeframe78.twentyfourseven.player.domain.RequestableTrack
 import com.codeframe78.twentyfourseven.player.domain.StationId
+import com.codeframe78.twentyfourseven.player.domain.MAX_REQUEST_MESSAGE_CHARACTERS
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
@@ -25,12 +26,15 @@ internal sealed interface RequestSubmissionResult {
 internal interface SongRequestRemoteDataSource {
     suspend fun search(stationId: StationId, query: String, field: RequestSearchField): List<RequestSearchResult>
     suspend fun loadAlbum(stationId: StationId, albumId: String): RequestAlbum
-    suspend fun submit(stationId: StationId, track: RequestableTrack): RequestSubmissionResult
+    suspend fun submit(stationId: StationId, track: RequestableTrack, message: String): RequestSubmissionResult
 }
 
 internal class StationSongRequestRemoteDataSource(
     private val parser: SongRequestPageParser = SongRequestPageParser(),
     private val sessionStore: AuthSessionStore = InMemoryAuthSessionStore(),
+    private val connectionFactory: (URI) -> HttpURLConnection = {
+        it.toURL().openConnection() as HttpURLConnection
+    },
 ) : SongRequestRemoteDataSource {
     override suspend fun search(
         stationId: StationId,
@@ -58,9 +62,14 @@ internal class StationSongRequestRemoteDataSource(
     override suspend fun submit(
         stationId: StationId,
         track: RequestableTrack,
+        message: String,
     ): RequestSubmissionResult = withContext(Dispatchers.IO) {
         require(track.eligible && track.songId.matches(NUMERIC_ID) && track.albumId.matches(SAFE_ALBUM_ID)) {
             "Track is not eligible for requests"
+        }
+        require(message.length <= MAX_REQUEST_MESSAGE_CHARACTERS) { "Request message is too long" }
+        require(message.isBlank() || stationId == StationId("sst")) {
+            "Request messages have not been verified for this station"
         }
         val origin = origin(stationId)
         val manager = authenticatedCookieManager(stationId, origin)
@@ -73,7 +82,46 @@ internal class StationSongRequestRemoteDataSource(
             authenticated = true,
             cookieManager = manager,
         )
-        classifySubmission(page.html)
+        val submission = classifySubmission(page.html)
+        if (submission !is RequestSubmissionResult.Submitted || message.isBlank()) {
+            return@withContext submission
+        }
+
+        val messageFormUri = URI(origin).resolve(
+            "/modules.php?name=Album&action=writemessage" +
+                "&asin=${encode(track.albumId)}&id=${encode(track.songId)}",
+        )
+        val messageResult = runCatching {
+            request(
+                stationId,
+                URI(origin).resolve(
+                    "/modules.php?name=Album&action=submitmessage" +
+                        "&asin=${encode(track.albumId)}&id=${encode(track.songId)}",
+                ),
+                authenticated = true,
+                cookieManager = manager,
+                method = "POST",
+                formFields = linkedMapOf(
+                    "msg" to message,
+                    "send" to "Send",
+                    "remLen" to (MAX_REQUEST_MESSAGE_CHARACTERS - message.length).toString(),
+                ),
+                referer = messageFormUri,
+            )
+        }.getOrNull()
+        if (messageResult == null) {
+            return@withContext RequestSubmissionResult.Submitted(
+                "Request accepted, but the optional message could not be confirmed. The request was not retried.",
+            )
+        }
+        val messageText = Jsoup.parse(messageResult.html).text().replace(Regex("\\s+"), " ").trim()
+        if (messageText.contains("log in", true) || messageText.contains("login", true)) {
+            RequestSubmissionResult.Submitted(
+                "Request accepted, but the optional message was not added because the station sign-in expired.",
+            )
+        } else {
+            RequestSubmissionResult.Submitted("Request and optional message sent.")
+        }
     }
 
     private fun classifySubmission(html: String): RequestSubmissionResult {
@@ -99,28 +147,50 @@ internal class StationSongRequestRemoteDataSource(
         initialUri: URI,
         authenticated: Boolean,
         cookieManager: CookieManager? = null,
+        method: String = "GET",
+        formFields: Map<String, String> = emptyMap(),
+        referer: URI? = null,
     ): AuthenticatedPage {
         var uri = initialUri
+        var requestMethod = method
+        var requestBody = formFields.takeIf { it.isNotEmpty() }
+            ?.entries
+            ?.joinToString("&") { (name, value) -> "${encode(name)}=${encode(value)}" }
+            ?.toByteArray(StandardCharsets.UTF_8)
         repeat(MAX_REDIRECTS + 1) { redirectCount ->
             requireSameOrigin(stationId, uri)
-            val connection = uri.toURL().openConnection() as HttpURLConnection
+            val connection = connectionFactory(uri)
             try {
                 connection.connectTimeout = REQUEST_TIMEOUT_MILLIS
                 connection.readTimeout = REQUEST_TIMEOUT_MILLIS
                 connection.instanceFollowRedirects = false
-                connection.requestMethod = "GET"
+                connection.requestMethod = requestMethod
                 connection.setRequestProperty("Accept", "text/html")
                 connection.setRequestProperty("User-Agent", USER_AGENT)
+                referer?.let { connection.setRequestProperty("Referer", it.toASCIIString()) }
                 if (authenticated) {
                     cookieManager?.get(uri, emptyMap())?.forEach { (name, values) ->
                         connection.setRequestProperty(name, values.joinToString("; "))
                     }
                 }
+                requestBody?.let { body ->
+                    connection.doOutput = true
+                    connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+                    connection.setFixedLengthStreamingMode(body.size)
+                    connection.outputStream.use { it.write(body) }
+                }
                 val status = connection.responseCode
                 if (authenticated) cookieManager?.put(uri, connection.headerFields.filterKeys { it != null })
                 if (status in REDIRECT_STATUSES) {
                     if (redirectCount == MAX_REDIRECTS) throw IOException("Too many station redirects")
-                    uri = uri.resolve(connection.getHeaderField("Location") ?: throw IOException("Invalid redirect"))
+                    uri = trustedRedirect(
+                        stationId,
+                        uri.resolve(connection.getHeaderField("Location") ?: throw IOException("Invalid redirect")),
+                    )
+                    if (status == 303 || requestMethod == "POST" && status in setOf(301, 302)) {
+                        requestMethod = "GET"
+                        requestBody = null
+                    }
                     return@repeat
                 }
                 if (status !in 200..299) throw IOException("Station returned HTTP $status")
@@ -148,6 +218,17 @@ internal class StationSongRequestRemoteDataSource(
         if (uri.scheme != "https" || !uri.host.equals(expected.host, true) || uri.port != expected.port) {
             throw IOException("Untrusted request destination")
         }
+    }
+
+    private fun trustedRedirect(stationId: StationId, redirect: URI): URI {
+        val expected = URI(origin(stationId))
+        if (
+            redirect.scheme == "http" && redirect.host.equals(expected.host, true) &&
+            redirect.port in setOf(-1, 80)
+        ) {
+            return URI("https", null, redirect.host, -1, redirect.path, redirect.query, redirect.fragment)
+        }
+        return redirect
     }
 
     private fun responseCharset(contentType: String?): Charset {

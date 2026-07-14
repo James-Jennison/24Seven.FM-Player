@@ -11,6 +11,8 @@ enum class RequestSearchField(val wireValue: String) {
 
 enum class SongRequestLoadStatus { Idle, Loading, Ready, Submitting, Error }
 
+const val MAX_REQUEST_MESSAGE_CHARACTERS = 80
+
 data class RequestSearchResult(
     val albumId: String,
     val trackTitle: String,
@@ -46,5 +48,5 @@ interface SongRequestRepository {
     suspend fun openAlbum(stationId: StationId, albumId: String)
     suspend fun prepareRequest(stationId: StationId, songId: String)
     suspend fun cancelRequest(stationId: StationId)
-    suspend fun confirmRequest(stationId: StationId)
+    suspend fun confirmRequest(stationId: StationId, message: String = "")
 }

@@ -39,10 +39,15 @@ class BootstrapStationRepositoryTest {
 
     @Test
     fun `every station exposes the administrator authorized queue and history capabilities`() = runTest {
-        repository.observeStations().first().forEach { station ->
+        val stations = repository.observeStations().first()
+        stations.forEach { station ->
             assertEquals(true, station.capabilities.supportsQueue)
             assertEquals(true, station.capabilities.supportsHistory)
             assertEquals(true, station.capabilities.supportsRequests)
         }
+        assertEquals(
+            listOf("sst"),
+            stations.filter { it.capabilities.supportsRequestMessages }.map { it.id.value },
+        )
     }
 }

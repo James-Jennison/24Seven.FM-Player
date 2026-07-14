@@ -2,7 +2,7 @@
 
 ## Request messages
 
-The native queue now displays the station-provided requester identity and message when present on the verified extended interface. Members should also be able to add an optional message during an explicit, user-initiated song request. Before implementing submission, verify the station form field, length and content rules, and server confirmation behavior. Preserve eligibility and cooldown rules, never automate submissions, and do not infer requester data from unrelated page content. See [m10-request-attribution-research.md](m10-request-attribution-research.md).
+StreamingSoundtracks.com's exact optional-message form is implemented behind a station capability, but the corrected legacy-redirect handling still needs one queued-message confirmation. The other four stations remain disabled until their own post-request forms are independently verified.
 
 ## Private Messages
 

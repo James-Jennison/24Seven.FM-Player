@@ -52,7 +52,10 @@ strings to Compose. It never infers attribution from unrelated links. See `docs/
 state. Catalog reads are user initiated and never polled. The remote adapter accepts only same-origin HTTPS album
 and request actions, and submission requires the M7 protected station session. Compose receives immutable state
 and emits search, album, prepare, cancel, and confirm actions upward. A state-changing request is made only after
-two explicit actions and is never retried. See `docs/m9-request-research.md`.
+two explicit actions and is never retried. StreamingSoundtracks.com's separately verified request-message
+capability adds a transient 80-character field to confirmation; a non-blank value is posted only after the song
+request is accepted, and a message failure cannot repeat the song mutation. See `docs/m9-request-research.md` and
+`docs/m10-request-attribution-research.md`.
 
 ## Authentication
 

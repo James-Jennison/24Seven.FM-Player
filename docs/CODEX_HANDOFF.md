@@ -189,14 +189,19 @@ directs the listener to Queue, and suppresses immediate resubmission. See `docs/
 
 See `docs/m4-metadata-research.md` for per-relay ICY headers, field constraints, implementation evidence, and device results.
 
-Future product scope now includes optional member messages on new song requests and a native authenticated Private Messages inbox/read/compose/reply/send experience. These are recorded in `docs/future-scope.md`; do not implement PM access until its authorization, refresh limits, retention, deletion, attachment, and station-account behavior are explicitly settled.
+Future product scope includes a native authenticated Private Messages inbox/read/compose/reply/send experience. It is recorded in `docs/future-scope.md`; do not implement PM access until its authorization, refresh limits, retention, deletion, attachment, and station-account behavior are explicitly settled.
 
-M10 request attribution is in progress. The public extended Queue/History interface was verified to expose an
+M10 request attribution and optional request messages is in final validation. The public extended Queue/History interface exposes an
 explicit requester profile link and, when supplied, a separate italic request message. Both are now parsed into
 bounded domain fields and rendered independently of track metadata. Death.FM's compact feed does not expose these
-fields. Optional message submission remains deferred because the authenticated request link does not publish its
-field name or length/content rules; do not guess a mutation parameter. See
-`docs/m10-request-attribution-research.md`.
+fields. StreamingSoundtracks.com's authenticated post-request form was inspected without another submission: it
+posts `msg` with an 80-character limit only after the song request has already been accepted. The native dialog
+implements that exact two-step contract, keeps the message transient, never retries the song mutation, and gates
+the field behind a station capability so the other four stations are not assumed compatible. The first live message
+attempt did not appear; the corrected build now mirrors the form's `remLen` control and safely upgrades the station's
+same-host HTTP redirect back to its verified HTTPS page without exposing cookies. Unit, lint, release, and all 10
+Razr instrumentation tests pass, but one corrected queued-message confirmation remains. See `docs/m10-request-attribution-research.md` and
+`docs/m10-validation.md`.
 
 An API 35 instrumentation test connects through the real `MediaSessionService`, checks that fallback navigation remains hidden, stops the running service, and reconnects after recreation. Run it against an explicit emulator serial with `ANDROID_SERIAL=<emulator>` and `./gradlew connectedDebugAndroidTest` when both an emulator and physical device are connected.
 

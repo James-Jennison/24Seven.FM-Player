@@ -6,6 +6,7 @@ data class StationCapabilities(
     val supportsAuthentication: Boolean = false,
     val supportsChat: Boolean = false,
     val supportsRequests: Boolean = false,
+    val supportsRequestMessages: Boolean = false,
     val supportsQueue: Boolean = false,
     val supportsHistory: Boolean = false,
 )

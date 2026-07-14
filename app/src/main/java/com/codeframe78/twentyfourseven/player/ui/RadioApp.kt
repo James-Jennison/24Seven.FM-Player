@@ -83,6 +83,7 @@ import com.codeframe78.twentyfourseven.player.domain.StationId
 import com.codeframe78.twentyfourseven.player.domain.StreamFormat
 import com.codeframe78.twentyfourseven.player.domain.RequestSearchField
 import com.codeframe78.twentyfourseven.player.domain.SongRequestLoadStatus
+import com.codeframe78.twentyfourseven.player.domain.MAX_REQUEST_MESSAGE_CHARACTERS
 import coil3.compose.AsyncImage
 
 private val navigationItems = listOf(
@@ -116,7 +117,7 @@ internal fun RadioApp(
     onOpenRequestAlbum: (String) -> Unit = {},
     onPrepareRequest: (String) -> Unit = {},
     onCancelRequest: () -> Unit = {},
-    onConfirmRequest: () -> Unit = {},
+    onConfirmRequest: (String) -> Unit = {},
 ) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
         if (maxWidth >= 600.dp) {
@@ -146,7 +147,7 @@ private fun PhoneShell(
     onOpenRequestAlbum: (String) -> Unit,
     onPrepareRequest: (String) -> Unit,
     onCancelRequest: () -> Unit,
-    onConfirmRequest: () -> Unit,
+    onConfirmRequest: (String) -> Unit,
 ) {
     Scaffold(
         topBar = { StationTopBar(state, onSelectStation) },
@@ -191,7 +192,7 @@ private fun TabletShell(
     onOpenRequestAlbum: (String) -> Unit,
     onPrepareRequest: (String) -> Unit,
     onCancelRequest: () -> Unit,
-    onConfirmRequest: () -> Unit,
+    onConfirmRequest: (String) -> Unit,
 ) {
     Row(Modifier.fillMaxSize()) {
         NavigationRail(Modifier.fillMaxHeight().testTag("tablet_navigation_rail")) {
@@ -263,7 +264,7 @@ private fun DestinationContent(
     onOpenRequestAlbum: (String) -> Unit,
     onPrepareRequest: (String) -> Unit,
     onCancelRequest: () -> Unit,
-    onConfirmRequest: () -> Unit,
+    onConfirmRequest: (String) -> Unit,
 ) {
     when (state.destination) {
         MainDestination.Player -> PlayerScreen(state, padding, onPlay, onPause, onStop)
@@ -689,7 +690,7 @@ private fun MoreScreen(
     onOpenRequestAlbum: (String) -> Unit,
     onPrepareRequest: (String) -> Unit,
     onCancelRequest: () -> Unit,
-    onConfirmRequest: () -> Unit,
+    onConfirmRequest: (String) -> Unit,
 ) {
     Column(
         Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(24.dp),
@@ -790,7 +791,7 @@ private fun SongRequestSection(
     onOpenAlbum: (String) -> Unit,
     onPrepareRequest: (String) -> Unit,
     onCancelRequest: () -> Unit,
-    onConfirmRequest: () -> Unit,
+    onConfirmRequest: (String) -> Unit,
 ) {
     val requests = state.requests
     var query by remember(state.selectedStation?.id) { mutableStateOf("") }
@@ -799,21 +800,33 @@ private fun SongRequestSection(
     val signedIn = state.auth?.status == AuthStatus.SignedIn
 
     requests?.pendingRequest?.let { track ->
+        var requestMessage by remember(track.albumId, track.songId) { mutableStateOf("") }
         AlertDialog(
             onDismissRequest = onCancelRequest,
             title = { Text("Request this track?") },
             text = {
-                Text(
-                    buildString {
-                        append(track.title)
-                        track.artist?.let { append(" — $it") }
-                        append("\n\nThe station enforces queue, artist, album, eligibility, and cooldown rules. This sends one request and will not retry automatically.")
-                    },
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        buildString {
+                            append(track.title)
+                            track.artist?.let { append(" — $it") }
+                            append("\n\nThe station enforces queue, artist, album, eligibility, and cooldown rules. This sends one request and will not retry automatically.")
+                        },
+                    )
+                    if (state.selectedStation?.capabilities?.supportsRequestMessages == true) {
+                        OutlinedTextField(
+                            value = requestMessage,
+                            onValueChange = { requestMessage = it.take(MAX_REQUEST_MESSAGE_CHARACTERS) },
+                            label = { Text("Message (optional)") },
+                            supportingText = { Text("${requestMessage.length}/$MAX_REQUEST_MESSAGE_CHARACTERS") },
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
+                }
             },
             confirmButton = {
                 Button(
-                    onClick = onConfirmRequest,
+                    onClick = { onConfirmRequest(requestMessage) },
                     enabled = requests.status != SongRequestLoadStatus.Submitting,
                 ) { Text("Send request") }
             },
@@ -933,6 +946,7 @@ private fun CapabilityCard(capabilities: StationCapabilities) {
             CapabilityRow("Queue", capabilities.supportsQueue)
             CapabilityRow("History", capabilities.supportsHistory)
             CapabilityRow("Requests", capabilities.supportsRequests)
+            CapabilityRow("Request messages", capabilities.supportsRequestMessages)
         }
     }
 }
