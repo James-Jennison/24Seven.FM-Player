@@ -232,4 +232,40 @@ class BootstrapStationRepositoryTest {
             station.secondaryPages.all { StationPageTrustPolicy.trustedUrl(station, it) == it.url },
         )
     }
+
+    @Test
+    fun `entranced certification contract does not inherit SST only capabilities`() = runTest {
+        val station = repository.observeStations().first().single { it.id == StationId("entranced") }
+
+        with(station.capabilities) {
+            assertEquals(true, supportsAuthentication)
+            assertEquals(true, supportsChat)
+            assertEquals(true, supportsFavorites)
+            assertEquals(true, supportsQueue)
+            assertEquals(true, supportsHistory)
+            assertEquals(true, supportsRequests)
+            assertEquals(true, supportsSecondaryContent)
+            assertEquals(false, supportsRequestMessages)
+            assertEquals(false, supportsListenerActivity)
+        }
+        assertEquals("https://entranced.fm/", station.websiteUrl)
+        assertEquals(
+            listOf(
+                StationPageKind.Website,
+                StationPageKind.Forums,
+                StationPageKind.Members,
+                StationPageKind.Statistics,
+                StationPageKind.TopTracks,
+                StationPageKind.Contact,
+                StationPageKind.Membership,
+            ),
+            station.secondaryPages.map { it.kind },
+        )
+        assertEquals("VIP membership", station.secondaryPages.last().title)
+        assertEquals("https://entranced.fm/modules.php?name=VIP_Subscribe", station.secondaryPages.last().url)
+        assertEquals(
+            true,
+            station.secondaryPages.all { StationPageTrustPolicy.trustedUrl(station, it) == it.url },
+        )
+    }
 }

@@ -144,10 +144,52 @@ private fun MediaItem.stationId(): StationId? = mediaId
 
 @androidx.annotation.OptIn(markerClass = [UnstableApi::class])
 internal fun Metadata.toNowPlayingState(stationId: StationId): NowPlayingState? {
-    val title = getFirstEntryOfType(IcyInfo::class.java)?.title?.trim()?.takeIf(String::isNotEmpty)
+    val title = getFirstEntryOfType(IcyInfo::class.java)
+        ?.title
+        ?.trim()
+        ?.normalizeLegacyIcyPunctuation()
+        ?.takeIf(String::isNotEmpty)
         ?: return null
     return NowPlayingState(stationId = stationId, displayTitle = title)
 }
+
+/**
+ * Media3 exposes legacy ICY title bytes as ISO-8859-1 text. Some station catalog entries were authored with
+ * Windows-1252 punctuation, whose bytes otherwise become C1 control characters such as U+0092. Map only those
+ * defined code points so unrelated Unicode metadata remains untouched.
+ */
+internal fun String.normalizeLegacyIcyPunctuation(): String = map { character ->
+    when (character) {
+        '\u0080' -> '€'
+        '\u0082' -> '‚'
+        '\u0083' -> 'ƒ'
+        '\u0084' -> '„'
+        '\u0085' -> '…'
+        '\u0086' -> '†'
+        '\u0087' -> '‡'
+        '\u0088' -> 'ˆ'
+        '\u0089' -> '‰'
+        '\u008A' -> 'Š'
+        '\u008B' -> '‹'
+        '\u008C' -> 'Œ'
+        '\u008E' -> 'Ž'
+        '\u0091' -> '‘'
+        '\u0092' -> '’'
+        '\u0093' -> '“'
+        '\u0094' -> '”'
+        '\u0095' -> '•'
+        '\u0096' -> '–'
+        '\u0097' -> '—'
+        '\u0098' -> '˜'
+        '\u0099' -> '™'
+        '\u009A' -> 'š'
+        '\u009B' -> '›'
+        '\u009C' -> 'œ'
+        '\u009E' -> 'ž'
+        '\u009F' -> 'Ÿ'
+        else -> character
+    }
+}.joinToString("")
 
 internal fun MediaMetadata.withNowPlayingTitle(displayTitle: String): MediaMetadata {
     val stationName = albumTitle ?: title

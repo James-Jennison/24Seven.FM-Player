@@ -31,6 +31,22 @@ class IcyMetadataMappingTest {
     }
 
     @Test
+    fun `windows 1252 punctuation in legacy ICY metadata is normalized without transcoding unicode`() {
+        val metadata = Metadata(
+            IcyInfo(
+                byteArrayOf(),
+                "Tycho - 東京 - Coastal Brake (Hatchback\u0092s Cosmic Caviar Dub)",
+                null,
+            ),
+        )
+
+        assertEquals(
+            "Tycho - 東京 - Coastal Brake (Hatchback’s Cosmic Caviar Dub)",
+            metadata.toNowPlayingState(StationId("entranced"))?.displayTitle,
+        )
+    }
+
+    @Test
     fun `live title preserves station identity in session metadata`() {
         val stationMetadata = MediaMetadata.Builder()
             .setTitle("StreamingSoundtracks.com")
