@@ -1,14 +1,14 @@
-# M20 Adagio.FM certification — in progress
+# M20 Adagio.FM certification — complete
 
-Public and wired-device certification work was performed July 15, 2026 on
-`agent/initial-android-scaffold`. M20 is not complete until its representative authenticated gate is resolved.
+Public, physical-device, and representative authenticated certification was completed July 15, 2026 on
+`agent/initial-android-scaffold`.
 
 ## Task assessment
 
 - Task Complexity Level: 2 — Feature Logic & API Integration
 - T-shirt size: M
 - Estimated active duration: 4–7 hours
-- Primary confidence variable: availability of a representative Adagio.FM account and user-entered CAPTCHA
+- Primary confidence variable: resolved with a representative Adagio.FM account and user-entered CAPTCHA
 
 ## Completed public and device evidence
 
@@ -21,13 +21,29 @@ Public and wired-device certification work was performed July 15, 2026 on
 | Public Chat | Native Adagio Chat loaded current public messages without error and showed the correct signed-out posting boundary; the shared 30-second/memory-only behavior remains intact | Pass |
 | Favorites boundary | Native Favorites is reachable and shows the Adagio-qualified sign-in requirement without leaking another station's data | Pass |
 | Request browsing | The native least-played suggestion returned an album and track choices while retaining the signed-out submission boundary; no request was submitted | Pass |
-| Authentication challenge | Native username/password fields, same-station CAPTCHA image, alphanumeric security-code field, sign-in action, and new-code action loaded without an error | Pass for read-only challenge; authenticated gate remains |
+| Authentication | Native username/password fields, same-station CAPTCHA image, alphanumeric security-code field, and new-code action loaded without error. A representative MorG session signed in, restored after a forced process restart without Keystore errors, remained isolated from the other stations, and cleared through explicit station-only logout across another restart. | Pass |
 | Capability differences | Request messages and listener activity remain explicit `Not verified`; they do not inherit SST-only capability flags | Pass |
 | Secondary pages | The trusted directory exposes the seven common Adagio pages; Forums opened at `adagio.fm` in a Chrome Custom Tab and Back returned to the native app | Pass |
 | Navigation/accessibility | Player, Favorites, Chat, Queue, and More remain present with station-qualified semantics and the persistent mini-player on secondary destinations | Pass |
 
-No production Chat post, song request, form submission, account mutation, or membership action was performed.
+No production Chat post, song request, account mutation beyond sign-in/logout, or membership action was performed.
 No credentials, CAPTCHA value, session material, private response, participant content, or captured HTML was stored.
+
+## Representative authenticated evidence
+
+| Check | Physical Razr result |
+| --- | --- |
+| Native sign-in | MorG signed in through Adagio.FM's own native username/password/alphanumeric-CAPTCHA form. |
+| Protected restoration | A forced app stop/relaunch produced a new process and restored only the Adagio.FM session; no Android Keystore error was observed. |
+| Station isolation | 1980s.FM, Death.FM, and Entranced.FM remained visibly signed out while Adagio.FM was signed in. |
+| Favorites | The authenticated Adagio.FM Favorites surface loaded a valid empty list and retained its filter without an error. |
+| Chat | The authenticated Adagio.FM Chat composer and Send action became available; no test message was needed or posted. |
+| Requests | Least-played browsing returned one green requestable track and enabled `Request Now`; no request was submitted. |
+| Logout | `Sign out of Adagio` cleared the station immediately. After another forced stop/relaunch, `Load Adagio sign in` remained visible and no station showed a signed-in identity. |
+
+Natural server-side session expiry was not induced. The app's expiration classification remains covered by the
+shared authentication implementation and tests; this certification used explicit logout to avoid waiting for or
+artificially manipulating a production session.
 
 ## Focused hardening
 
@@ -47,7 +63,7 @@ The focused unit test passes.
 - All 21 connected instrumentation tests passed on the wired Android 16 Razr (128 total tests across both suites).
 - The standalone debug APK was reinstalled after the connected-test harness and launched successfully.
 
-## Wired evidence
+## Physical-device evidence
 
 The physical run left playback paused and restored the original media volume. No fatal application exception was
 observed. The screenshot records the live classical title and same-station artwork after playback was paused; it
@@ -55,17 +71,13 @@ contains no account data.
 
 ![Adagio.FM Player evidence on the wired Razr](screenshots/m20-adagio-certification.png)
 
-## Remaining authenticated gate
+The account screenshot shows the independent Adagio.FM session while the other visible station accounts remain
+signed out. It contains only the administrator-approved test identity and no credentials, CAPTCHA, or session data.
 
-A representative Adagio.FM account and user-entered alphanumeric CAPTCHA are still required to prove, independently
-of SST and 1980s.FM:
+![Independent Adagio.FM account signed in on the Razr](screenshots/m20-adagio-authenticated.png)
 
-1. native sign-in, protected process-restart restoration, expiration classification, and station-only logout;
-2. the signed-in member's own Favorites discovery and memory-only loading;
-3. authenticated Chat composer and one harmless post only if a new post is necessary and explicitly appropriate;
-4. request eligibility/cooldown behavior and one explicit user-approved request only if prior station evidence is
-   insufficient;
-5. whether Adagio.FM exposes reliable membership, personal request activity, or optional request-message behavior.
+## Certified limits
 
-Until that gate is resolved, M20 remains in progress and the three unverified capabilities stay disabled rather
-than being inferred from StreamingSoundtracks.com, 1980s.FM, or similar page structure.
+Adagio.FM request messages, listener request activity, and station membership remain explicitly `Not verified`.
+They are not inferred from StreamingSoundtracks.com or similar page structure, and M20 introduced no capability
+flag or production network mutation for them. Native Private Messages remain deferred under M17.

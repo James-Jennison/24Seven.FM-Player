@@ -2,18 +2,18 @@
 
 ## Resume status — July 15, 2026
 
-- Current milestone: M20 Adagio.FM authenticated completion gate. M19 is complete; M21 awaits its representative account, M22 public/device work is preserved, and M17 remains deferred for server repair.
-- Last completed milestone: M18 StreamingSoundtracks.com certification in `docs/m18-sst-certification.md`. The latest production implementation remains M16 `90a7f98`; M18 required no code or stream change.
+- Current milestone: M21 Death.FM authenticated completion gate. M19–M20 are complete; M22 public/device work is preserved, and M17 remains deferred for server repair.
+- Last completed milestone: M20 Adagio.FM certification in `docs/m20-adagio-certification.md`. Its authenticated completion required evidence and documentation only; the latest production implementation remains the M21 public checkpoint `67e6d7a`.
 - Latest successful validation: debug compile, all 108 debug unit tests, lint, Windows validation, wireless debug install, and 21/21 Android 16 Razr instrumentation tests after the M21 public/device gate (129 tests total); fresh physical Death.FM checks also reconfirmed playback, sparse metadata/artwork, compact Queue/History, Chat, Favorites/request gating, login challenge, RIP pages, and all five navigation targets.
 - Architecture: one native Compose app module; immutable state/actions; station-scoped repository contracts; one Media3 service-owned player/session; Android Keystore-backed per-station sessions.
 - Decisions: queued and recently played tracks share visible red `Track Recently Played`; reasons remain distinct internally. Available tracks use green `Request Now`. Other restrictions retain accurate separate labels. Revalidation must fail closed before mutation.
-- Known blockers: Queue rows lack stable track IDs; M17 Private Messages remains deferred for server fixes; representative authenticated accounts are still needed to close M20–M22. The Play developer account is approved; signing/configuration work remains intentionally sequenced at M23–M24.
+- Known blockers: Queue rows lack stable track IDs; M17 Private Messages remains deferred for server fixes; representative authenticated accounts are still needed to close M21–M22. The Play developer account is approved; signing/configuration work remains intentionally sequenced at M23–M24.
 - Roadmap model: M13–M17 shared features, M18–M22 individual station certification, and M23–M24 distribution/publication. Certification milestones harden the shared app and must not create station-specific forks.
-- Next concrete task: load the Adagio.FM native sign-in challenge and obtain user-entered representative credentials/CAPTCHA, then verify restoration, isolation, authenticated Favorites/Chat/request access, and station-only logout before returning to M21.
-- Likely next files: M20 authenticated certification evidence and roadmap matrices; preserve the separate in-progress M22 ICY metadata hardening until the M20/M21 login gates close.
+- Next concrete task: load the Death.FM native sign-in challenge and obtain user-entered representative credentials/CAPTCHA, then verify restoration, isolation, authenticated Favorites/Chat/request access, RIP membership boundaries, and station-only logout before returning to M22.
+- Likely next files: M21 authenticated certification evidence and roadmap matrices; preserve the separate in-progress M22 ICY metadata hardening until the M21 login gate closes.
 - Branch: `agent/initial-android-scaffold`.
-- Latest implementation commit: `90a7f98`.
-- Latest production implementation/evidence checkpoints are `67e6d7a` and `5a4bdb7`. M19 authentication completion is an evidence-only checkpoint and does not change production code or stream configuration.
+- Latest implementation commit: `67e6d7a`.
+- Latest production implementation/evidence checkpoints are `67e6d7a` and `5a4bdb7`. M19–M20 authentication completions are evidence-only checkpoints and do not change production code or stream configuration.
 - Required planning documents: `CURRENT_STATE_AUDIT.md`, `NETWORK_FEATURE_MATRIX.md`, `ENDPOINT_INVENTORY.md`, `AUTHENTICATION_MATRIX.md`, and `IMPLEMENTATION_PLAN.md`.
 
 ## Mission and repository
@@ -305,16 +305,18 @@ cleared after another restart. Request messages and listener activity stay `Not 
 `docs/m19-1980s-certification.md`, `docs/screenshots/m19-1980s-certification.png`, and
 `docs/screenshots/m19-1980s-authenticated.png`.
 
-M20 Adagio.FM certification is in progress. The unchanged primary relay reached live playback on the wired Razr,
+M20 Adagio.FM certification is complete. The unchanged primary relay reached live playback on the physical Razr,
 and both station-supplied relays delivered live audio bytes. A fresh classical ICY sample rendered the composer plus
 complete work/ensemble title and same-station artwork without changing the raw metadata contract. The bounded public
 Queue/Played feed returned HTTP 200, native Chat loaded, Favorites and request submission retained their signed-out
 boundaries, a least-played suggestion returned album/track content without mutation, and the native alphanumeric
 CAPTCHA challenge loaded. Forums opened at `adagio.fm` in a Chrome Custom Tab and Back returned. A focused contract
-test prevents Adagio from inheriting SST-only request-message or listener-activity flags. Final certification still
-needs a representative Adagio account for protected sign-in, restore/logout, Favorites, authenticated Chat/requests,
-and membership/request-activity determination; see `docs/m20-adagio-certification.md` and
-`docs/screenshots/m20-adagio-certification.png`.
+test prevents Adagio from inheriting SST-only request-message or listener-activity flags. A representative MorG
+session signed in natively, restored after a forced process restart without Keystore errors, remained isolated from
+the other stations, loaded authenticated empty Favorites, exposed the Chat composer and one green requestable
+least-played track without mutation, and cleared through station-only logout across another restart. Request messages,
+listener activity, and membership remain explicitly unverified. See `docs/m20-adagio-certification.md`,
+`docs/screenshots/m20-adagio-certification.png`, and `docs/screenshots/m20-adagio-authenticated.png`.
 
 ## Station stream evidence
 

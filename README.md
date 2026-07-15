@@ -14,7 +14,7 @@ The application is written in Kotlin with Jetpack Compose and Jetpack Media3. It
 
 ## Alpha status
 
-Milestones M1–M16, M18, and M19 are complete on the development branch. M17 Private Messages remains deferred for legacy server repair. M20 Adagio.FM and M21 Death.FM have passed their public/device gates and await representative account evidence. M22 Entranced.FM public/device work is preserved, but station certification now proceeds only after each station's native login gate passes. Alpha distribution/publication remains last at M23–M24.
+Milestones M1–M16 and M18–M20 are complete on the development branch. M17 Private Messages remains deferred for legacy server repair. M21 Death.FM has passed its public/device gate and is next for representative account evidence. M22 Entranced.FM public/device work is preserved, but station certification proceeds only after each station's native login gate passes. Alpha distribution/publication remains last at M23–M24.
 
 The current Alpha provides a responsive native player, service-owned Media3 playback, five-station navigation, device-local startup/last-station preferences, live metadata and artwork, queue/history, an independent five-station account dashboard with Android-protected sessions, chat, song requests, signed-in favorite-track browsing, a verified SST request-history/cooldown/membership surface, and a trusted browser directory for selected public station content. Request availability is conservatively revalidated against fresh station and Queue data before submission. All 108 unit tests, lint, debug assembly/install, 21/21 wired Razr tests (129 total tests), and physical Razr inspection are green.
 
@@ -57,11 +57,11 @@ These milestones harden and certify the shared app against each station; they do
 | --- | --- | --- | --- | --- |
 | M18 StreamingSoundtracks.com | S | 2–4 hours | ✅ Complete ([evidence](docs/m18-sst-certification.md)) | VIP/non-admin behavior, 30-row Queue, request messages, Favorites, chat, and authenticated workflows |
 | M19 1980s.FM | M | 4–7 hours | ✅ Complete ([evidence](docs/m19-1980s-certification.md)) | Independent sign-in/restore/logout, authenticated Favorites/Chat/requests, station rules, metadata, Queue, and fallback |
-| M20 Adagio.FM | M | 4–7 hours | 🚧 Public/device pass; account evidence pending ([evidence](docs/m20-adagio-certification.md)) | Classical metadata presentation, independent account/session behavior, requests, Favorites, chat, and fallback |
+| M20 Adagio.FM | M | 4–7 hours | ✅ Complete ([evidence](docs/m20-adagio-certification.md)) | Classical metadata presentation, independent sign-in/restore/logout, authenticated Favorites/Chat/requests, Queue, and fallback |
 | M21 Death.FM | L | 6–10 hours | 🚧 Public/device pass; account evidence pending ([evidence](docs/m21-death-certification.md)) | Compact Queue feed, sparse metadata/artwork, RIP membership behavior, requests, chat, and fallback |
-| M22 Entranced.FM | M | 4–7 hours | ▶️ Next unblocked | Independent account/session behavior, station rules, requests, Favorites, chat, metadata, and fallback |
+| M22 Entranced.FM | M | 4–7 hours | ⏳ Public/device work preserved; authentication queued | Independent account/session behavior, station rules, requests, Favorites, chat, metadata, and fallback |
 
-Each station gate covers playback and fallback, metadata/artwork, Queue/history, authentication, chat, Favorites, requests, membership differences, Private Messages when available, wired-device smoke testing, documentation, tests, and remote publication. Unblocked certification work may proceed while M17 is deferred, but final station completion requires every in-scope capability to pass or an explicit scope decision.
+Each station gate covers playback and fallback, metadata/artwork, Queue/history, authentication, chat, Favorites, requests, membership differences, Private Messages when available, physical-device smoke testing, documentation, tests, and remote publication. Unblocked certification work may proceed while M17 is deferred, but final station completion requires every in-scope capability to pass or an explicit scope decision.
 
 ### Phase 4 — Distribution
 
@@ -76,7 +76,7 @@ The app is fully native and uses immutable Compose UI state, repository boundari
 
 ## Screenshots
 
-These captures are from the physical Razr. Most use live station data, so track and chat content will naturally change over time; the M15 request-activity capture intentionally shows the safe signed-out state after a fresh debug install. The Player and Queue captures show the M11 Alpha shell; Chat and Requests retain their already-working native M8–M10 content presentation. The M16 capture shows the original trusted browser directory, while M18, M19, and M21 include station-certification evidence.
+These captures are from the physical Razr. Most use live station data, so track and chat content will naturally change over time; the M15 request-activity capture intentionally shows the safe signed-out state after a fresh debug install. The Player and Queue captures show the M11 Alpha shell; Chat and Requests retain their already-working native M8–M10 content presentation. The M16 capture shows the original trusted browser directory, while M18–M21 include station-certification evidence.
 
 <table>
   <tr>
@@ -104,6 +104,9 @@ These captures are from the physical Razr. Most use live station data, so track 
   </tr>
   <tr>
     <td align="center" colspan="2"><img src="docs/screenshots/m19-1980s-authenticated.png" alt="Independent 1980s.FM account signed in as MorG while other visible station accounts remain signed out" width="300"><br><strong>M19 verified independent 1980s.FM login</strong></td>
+  </tr>
+  <tr>
+    <td align="center" colspan="2"><img src="docs/screenshots/m20-adagio-authenticated.png" alt="Independent Adagio.FM account signed in as MorG while other visible station accounts remain signed out" width="300"><br><strong>M20 verified independent Adagio.FM login</strong></td>
   </tr>
   <tr>
     <td align="center"><img src="docs/screenshots/m21-death-certification.png" alt="Death.FM Player with live title, artist, station artwork, station carousel, and playback controls" width="300"><br><strong>M21 Death.FM Player evidence</strong></td>

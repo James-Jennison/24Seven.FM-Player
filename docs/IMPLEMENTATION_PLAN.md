@@ -1,6 +1,6 @@
 # Implementation plan
 
-Updated July 15, 2026 during the Death.FM certification gate. Estimates are active Codex elapsed time in this environment, including inspection, implementation, Gradle validation, documentation, Git, and remote confirmation—not traditional human developer time.
+Updated July 15, 2026 after completing the Adagio.FM authenticated certification gate. Estimates are active Codex elapsed time in this environment, including inspection, implementation, Gradle validation, documentation, Git, and remote confirmation—not traditional human developer time.
 
 ## Planning model
 
@@ -24,27 +24,27 @@ This classification supplements the required XS–XXL T-shirt size, rationale, e
 
 ## Current milestone
 
-### M20 — Adagio.FM authenticated completion gate
+### M21 — Death.FM authenticated completion gate
 
 - Task Complexity Level: 2 — Feature Logic & API Integration
-- Size: M overall; approximately 1–3 active hours remain after the account/CAPTCHA is available
-- Estimated elapsed time: 4–7 hours overall
+- Size: L overall; approximately 1–3 active hours remain after the account/CAPTCHA is available
+- Estimated elapsed time: 6–10 hours overall
 - Usage intensity: High
 - Confidence: Medium-Low
-- Outcome: close the already-passing Adagio.FM public/device milestone with independent native sign-in, protected restoration, station isolation, authenticated Favorites/Chat/request behavior, and station-only logout without inheriting SST or 1980s rules.
+- Outcome: close the already-passing Death.FM public/device milestone with independent native sign-in, protected restoration, station isolation, authenticated Favorites/Chat/request behavior, RIP membership boundaries, and station-only logout without inheriting other stations' rules.
 - Expected layers: user-entered sign-in/CAPTCHA, protected process-restart restoration, independent station selection, signed-in surface checks without unnecessary mutations, explicit logout, evidence reconciliation, and publication.
-- Dependencies: the existing verified Adagio playback/metadata/Queue/chat interfaces plus a representative Adagio.FM account and user-entered CAPTCHA.
-- Principal risk: account availability and undocumented Adagio membership/request behavior after sign-in.
-- Completion gate: playback/fallback, metadata/artwork, Queue/History, account isolation, chat, Favorites, requests, membership/request-activity support, secondary pages, and explicit unavailable states are independently evidenced; validators, wired-device verification, documentation, and publication pass.
-- Status: interaction-ready. M19 is complete after representative MorG sign-in/restore/isolation/Favorites/Chat/
-  request/logout evidence. M20's public playback, metadata/artwork, Queue/History, Chat, request browsing, native login
-  challenge, capability boundaries, and trusted pages already pass; only its hard authenticated gate remains. See
-  [m20-adagio-certification.md](m20-adagio-certification.md). M21 follows only after M20 closes; in-progress M22
-  metadata hardening remains preserved but will not be advanced out of order.
+- Dependencies: the existing verified Death.FM playback/sparse-metadata/compact-Queue/chat interfaces plus a representative Death.FM account and user-entered CAPTCHA.
+- Principal risk: account availability and Death.FM's reduced identifiers plus station-specific RIP membership behavior after sign-in.
+- Completion gate: playback/fallback, metadata/artwork, Queue/History, account isolation, chat, Favorites, requests, membership/request-activity support, secondary pages, and explicit unavailable states are independently evidenced; validators, physical-device verification, documentation, and publication pass.
+- Status: interaction-ready. M20 is complete after representative MorG sign-in/restore/isolation/Favorites/Chat/
+  request/logout evidence. M21's public playback, sparse metadata/artwork, compact Queue/History, Chat, request browsing,
+  native login challenge, capability boundaries, and trusted RIP page already pass; only its hard authenticated gate
+  remains. See [m21-death-certification.md](m21-death-certification.md). In-progress M22 metadata hardening remains
+  preserved but will not be advanced out of order.
 
 ## Latest completed milestone
 
-M19 1980s.FM certification completed July 15, 2026 after its existing public/device pass was closed with a representative MorG session. Native sign-in, Android-protected process-restart restoration, station isolation, authenticated empty Favorites loading, Chat composer availability, green request eligibility, explicit station-only logout, and persistent signed-out state after another restart all pass. No credential, CAPTCHA, session value, Chat post, or song request was retained or submitted. See [m19-1980s-certification.md](m19-1980s-certification.md).
+M20 Adagio.FM certification completed July 15, 2026 after its existing public/device pass was closed with a representative MorG session. Native sign-in, Android-protected process-restart restoration, station isolation, authenticated empty Favorites loading, Chat composer availability, green request eligibility, explicit station-only logout, and persistent signed-out state after another restart all pass. No credential, CAPTCHA, session value, Chat post, or song request was retained or submitted. Request messages, listener activity, and membership remain explicitly unverified. See [m20-adagio-certification.md](m20-adagio-certification.md).
 
 ## Shared feature milestones
 
@@ -74,7 +74,7 @@ The certification program would be XL if treated as one unit, so it is split int
 4. Verify chat read/post limits, Favorites discovery, requests, eligibility, cooldown, attribution/messages, and Private Messages when available.
 5. Preserve unsupported differences as explicit capability-unavailable states; never guess endpoints or rules.
 6. Add or update parser, repository, ViewModel, Compose, accessibility, and isolation tests for station-specific evidence.
-7. Run focused and broad validators, perform a wired Razr smoke test, update matrices/handoff, commit, push, and confirm the remote branch.
+7. Run focused and broad validators, perform a physical Razr smoke test, update matrices/handoff, commit, push, and confirm the remote branch.
 
 Unblocked M19–M22 work may proceed while M17 is deferred, but a station cannot receive final certification until every in-scope capability passes or the user explicitly changes Alpha scope.
 
