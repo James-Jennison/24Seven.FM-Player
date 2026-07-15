@@ -8,6 +8,7 @@ data class StationCapabilities(
     val supportsFavorites: Boolean = false,
     val supportsRequests: Boolean = false,
     val supportsRequestMessages: Boolean = false,
+    val supportsListenerActivity: Boolean = false,
     val supportsQueue: Boolean = false,
     val supportsHistory: Boolean = false,
 )

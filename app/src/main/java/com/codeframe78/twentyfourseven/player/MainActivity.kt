@@ -51,6 +51,7 @@ class MainActivity : ComponentActivity() {
                     container.chatRepository,
                     container.songRequestRepository,
                     container.favoriteTracksRepository,
+                    container.listenerActivityRepository,
                 ),
             )
             val state = viewModel.uiState.collectAsStateWithLifecycle().value
@@ -78,6 +79,7 @@ class MainActivity : ComponentActivity() {
                     onRefreshQueue = viewModel::refreshQueue,
                     onRefreshChat = viewModel::refreshChat,
                     onRefreshFavorites = viewModel::refreshFavorites,
+                    onRefreshListenerActivity = viewModel::refreshListenerActivity,
                     onSendChatMessage = viewModel::sendChatMessage,
                     onRefreshAuth = viewModel::refreshAuth,
                     onSignIn = viewModel::signIn,

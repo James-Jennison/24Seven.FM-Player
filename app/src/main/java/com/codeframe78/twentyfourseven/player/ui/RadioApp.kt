@@ -77,12 +77,15 @@ import com.codeframe78.twentyfourseven.player.domain.AuthStatus
 import com.codeframe78.twentyfourseven.player.domain.ChatLoadStatus
 import com.codeframe78.twentyfourseven.player.domain.HistoryTrack
 import com.codeframe78.twentyfourseven.player.domain.FavoriteTrack
+import com.codeframe78.twentyfourseven.player.domain.ListenerActivityLoadStatus
+import com.codeframe78.twentyfourseven.player.domain.MembershipTier
 import com.codeframe78.twentyfourseven.player.domain.QueueLoadStatus
 import com.codeframe78.twentyfourseven.player.domain.QueueTrack
 import com.codeframe78.twentyfourseven.player.domain.StationCapabilities
 import com.codeframe78.twentyfourseven.player.domain.StationId
 import com.codeframe78.twentyfourseven.player.domain.RequestSearchField
 import com.codeframe78.twentyfourseven.player.domain.RequestSuggestionMode
+import com.codeframe78.twentyfourseven.player.domain.RequestReadiness
 import com.codeframe78.twentyfourseven.player.domain.SongRequestLoadStatus
 import com.codeframe78.twentyfourseven.player.domain.StartupStationMode
 import coil3.compose.AsyncImage
@@ -113,6 +116,7 @@ internal fun RadioApp(
     onStop: () -> Unit,
     onRefreshQueue: () -> Unit,
     onRefreshFavorites: () -> Unit = {},
+    onRefreshListenerActivity: () -> Unit = {},
     onRefreshChat: () -> Unit = {},
     onSendChatMessage: (String) -> Unit = {},
     onRefreshAuth: (StationId) -> Unit = {},
@@ -130,9 +134,9 @@ internal fun RadioApp(
 ) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
         if (maxWidth >= 600.dp) {
-            TabletShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, onRefreshQueue, onRefreshFavorites, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation)
+            TabletShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation)
         } else {
-            PhoneShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, onRefreshQueue, onRefreshFavorites, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation)
+            PhoneShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation)
         }
     }
 }
@@ -148,6 +152,7 @@ private fun PhoneShell(
     onStop: () -> Unit,
     onRefreshQueue: () -> Unit,
     onRefreshFavorites: () -> Unit,
+    onRefreshListenerActivity: () -> Unit,
     onRefreshChat: () -> Unit,
     onSendChatMessage: (String) -> Unit,
     onRefreshAuth: (StationId) -> Unit,
@@ -183,7 +188,7 @@ private fun PhoneShell(
             }
         },
     ) { padding ->
-        DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, onRefreshQueue, onRefreshFavorites, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation)
+        DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation)
     }
 }
 
@@ -198,6 +203,7 @@ private fun TabletShell(
     onStop: () -> Unit,
     onRefreshQueue: () -> Unit,
     onRefreshFavorites: () -> Unit,
+    onRefreshListenerActivity: () -> Unit,
     onRefreshChat: () -> Unit,
     onSendChatMessage: (String) -> Unit,
     onRefreshAuth: (StationId) -> Unit,
@@ -235,7 +241,7 @@ private fun TabletShell(
                 }
             },
         ) { padding ->
-            DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, onRefreshQueue, onRefreshFavorites, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation)
+            DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation)
         }
     }
 }
@@ -289,6 +295,7 @@ private fun DestinationContent(
     onStop: () -> Unit,
     onRefreshQueue: () -> Unit,
     onRefreshFavorites: () -> Unit,
+    onRefreshListenerActivity: () -> Unit,
     onRefreshChat: () -> Unit,
     onSendChatMessage: (String) -> Unit,
     onRefreshAuth: (StationId) -> Unit,
@@ -317,7 +324,7 @@ private fun DestinationContent(
         )
         MainDestination.Chat -> ChatScreen(state, padding, onRefreshChat, onSendChatMessage)
         MainDestination.Queue -> QueueScreen(state, padding, onRefreshQueue)
-        MainDestination.More -> MoreScreen(state, padding, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation)
+        MainDestination.More -> MoreScreen(state, padding, onRefreshAuth, onSignIn, onSignOut, onRefreshListenerActivity, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation)
     }
 }
 
@@ -686,6 +693,7 @@ private fun MoreScreen(
     onRefreshAuth: (StationId) -> Unit,
     onSignIn: (StationId, String, String, String) -> Unit,
     onSignOut: (StationId) -> Unit,
+    onRefreshListenerActivity: () -> Unit,
     onSearchRequests: (String, RequestSearchField) -> Unit,
     onSuggestRequest: (RequestSuggestionMode) -> Unit,
     onOpenRequestAlbum: (String) -> Unit,
@@ -712,6 +720,7 @@ private fun MoreScreen(
         CapabilityCard(state.selectedStation?.capabilities ?: StationCapabilities())
         DevicePreferencesSection(state, onUseLastStationAtStartup, onSetStartupStation)
         AccountSection(state, onRefreshAuth, onSignIn, onSignOut)
+        ListenerActivitySection(state, onRefreshListenerActivity)
         SongRequestSection(state, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onConfirmRequest)
         PrivacySection()
         Text(
@@ -818,6 +827,124 @@ private fun AccountSection(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ListenerActivitySection(
+    state: MainUiState,
+    onRefresh: () -> Unit,
+) {
+    val station = state.selectedStation ?: return
+    if (!station.capabilities.supportsListenerActivity) return
+    val activity = state.listenerActivity
+    val membershipLabel = when (activity?.membershipTier) {
+        MembershipTier.Standard -> "Standard member"
+        MembershipTier.Vip -> "VIP member"
+        MembershipTier.Rip -> "RIP member"
+        MembershipTier.Unknown, null -> "Not reported by station"
+    }
+    val readinessLabel = when (activity?.requestReadiness) {
+        RequestReadiness.Ready -> "Ready to request"
+        RequestReadiness.Waiting -> activity.waitMinutes?.let { "Wait $it minutes" }
+            ?: "Request cooldown active"
+        RequestReadiness.Unknown, null -> "Not reported by station"
+    }
+
+    Text("Request activity", style = MaterialTheme.typography.titleMedium)
+    Card(Modifier.fillMaxWidth().testTag("listener_activity_card")) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(station.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        "Authenticated history and station-reported request status",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+                IconButton(
+                    onClick = onRefresh,
+                    enabled = state.auth?.status == AuthStatus.SignedIn &&
+                        activity?.status != ListenerActivityLoadStatus.Loading,
+                    modifier = Modifier.testTag("refresh_listener_activity"),
+                ) {
+                    Icon(Icons.Default.Refresh, contentDescription = "Refresh request activity")
+                }
+            }
+            when {
+                state.auth?.status != AuthStatus.SignedIn -> Text(
+                    "Sign in to ${station.shortName} from its account card above to load this private activity.",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                activity == null || activity.status == ListenerActivityLoadStatus.Idle -> Text(
+                    "Request activity has not been loaded yet.",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                activity.status == ListenerActivityLoadStatus.Loading -> Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    CircularProgressIndicator(Modifier.size(28.dp))
+                    Spacer(Modifier.width(12.dp))
+                    Text("Loading request activity…")
+                }
+                activity.status == ListenerActivityLoadStatus.Error -> Text(
+                    activity.errorMessage ?: "Request activity could not be loaded right now.",
+                    color = MaterialTheme.colorScheme.error,
+                )
+                else -> {
+                    ListenerStatusRow("Membership", membershipLabel)
+                    ListenerStatusRow("Request status", readinessLabel)
+                    Text("Your last requests", style = MaterialTheme.typography.titleSmall)
+                    if (activity.recentRequests.isEmpty()) {
+                        Text(
+                            "No recent requests were reported by this station.",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    } else {
+                        activity.recentRequests.forEach { request ->
+                            Row(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .testTag("request_history_${request.position}")
+                                    .semantics {
+                                        contentDescription = "Request ${request.position}: ${request.trackSummary}; ${request.requestedAtLabel}"
+                                    },
+                                verticalAlignment = Alignment.Top,
+                            ) {
+                                Text(
+                                    request.position.toString(),
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.width(28.dp),
+                                )
+                                Column(Modifier.weight(1f)) {
+                                    Text(request.trackSummary, style = MaterialTheme.typography.bodyMedium)
+                                    Text(
+                                        request.requestedAtLabel,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ListenerStatusRow(label: String, value: String) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .semantics { contentDescription = "$label: $value" },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
+        Text(value, fontWeight = FontWeight.SemiBold)
     }
 }
 
@@ -1144,6 +1271,7 @@ private fun CapabilityCard(capabilities: StationCapabilities) {
             CapabilityRow("Authentication", capabilities.supportsAuthentication)
             CapabilityRow("Chat", capabilities.supportsChat)
             CapabilityRow("Favorites", capabilities.supportsFavorites)
+            CapabilityRow("Request activity", capabilities.supportsListenerActivity)
             CapabilityRow("Queue", capabilities.supportsQueue)
             CapabilityRow("History", capabilities.supportsHistory)
             CapabilityRow("Requests", capabilities.supportsRequests)

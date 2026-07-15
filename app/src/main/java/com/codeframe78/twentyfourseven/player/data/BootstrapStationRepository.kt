@@ -18,7 +18,7 @@ class BootstrapStationRepository(
     private val preferences: StationPreferencesRepository = InMemoryStationPreferencesRepository(),
 ) : StationRepository {
     private val stations = listOf(
-        Station(StationId("sst"), "StreamingSoundtracks.com", "SST", "Movie, game, TV and anime scores", "https://www.streamingsoundtracks.com/", streams("streamingsoundtracks.com"), queueCapabilities.copy(supportsRequestMessages = true)),
+        Station(StationId("sst"), "StreamingSoundtracks.com", "SST", "Movie, game, TV and anime scores", "https://www.streamingsoundtracks.com/", streams("streamingsoundtracks.com"), queueCapabilities.copy(supportsRequestMessages = true, supportsListenerActivity = true)),
         Station(StationId("1980s"), "1980s.FM", "1980s", "Music from the 1980s", "https://1980s.fm/", streams("1980s.fm"), queueCapabilities),
         Station(StationId("adagio"), "Adagio.FM", "Adagio", "Classical and light music", "https://adagio.fm/", streams("adagio.fm"), queueCapabilities),
         Station(StationId("death"), "Death.FM", "Death", "Extreme metal", "https://death.fm/", streams("death.fm"), queueCapabilities),

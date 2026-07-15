@@ -46,6 +46,11 @@ import com.codeframe78.twentyfourseven.player.domain.TrackRequestAvailability
 import com.codeframe78.twentyfourseven.player.domain.TrackRequestStatus
 import com.codeframe78.twentyfourseven.player.domain.LocalStationPreferences
 import com.codeframe78.twentyfourseven.player.domain.StartupStationMode
+import com.codeframe78.twentyfourseven.player.domain.ListenerActivityLoadStatus
+import com.codeframe78.twentyfourseven.player.domain.ListenerActivityState
+import com.codeframe78.twentyfourseven.player.domain.MembershipTier
+import com.codeframe78.twentyfourseven.player.domain.RequestHistoryEntry
+import com.codeframe78.twentyfourseven.player.domain.RequestReadiness
 import org.junit.Rule
 import org.junit.Test
 import org.junit.Assert.assertEquals
@@ -406,6 +411,60 @@ class RadioAppTest {
             assertEquals(1, useLastCalls.size)
             assertEquals(listOf(StationId("adagio")), fixedStations)
         }
+    }
+
+    @Test
+    fun verifiedListenerActivityShowsMembershipCooldownAndRequestHistory() {
+        var refreshCalls = 0
+        val activityStation = station.copy(
+            capabilities = StationCapabilities(
+                supportsAuthentication = true,
+                supportsRequests = true,
+                supportsListenerActivity = true,
+            ),
+        )
+        composeRule.setContent {
+            MaterialTheme {
+                RadioApp(
+                    state = sampleState().copy(
+                        destination = MainDestination.More,
+                        stations = listOf(activityStation),
+                        selectedStation = activityStation,
+                        auth = AuthState(activityStation.id, AuthStatus.SignedIn, displayName = "Listener"),
+                        listenerActivity = ListenerActivityState(
+                            stationId = activityStation.id,
+                            status = ListenerActivityLoadStatus.Ready,
+                            membershipTier = MembershipTier.Vip,
+                            requestReadiness = RequestReadiness.Waiting,
+                            waitMinutes = 37,
+                            recentRequests = listOf(
+                                RequestHistoryEntry(
+                                    position = 1,
+                                    trackSummary = "For The Love Of Spock - Clipped Ears - Nicholas Pike",
+                                    requestedAtLabel = "14 Jul 26 - 17:38",
+                                ),
+                            ),
+                        ),
+                    ),
+                    onSelectStation = {},
+                    onSelectDestination = {},
+                    onPlay = {},
+                    onPause = {},
+                    onStop = {},
+                    onRefreshQueue = {},
+                    onRefreshListenerActivity = { refreshCalls++ },
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag("listener_activity_card").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Membership: VIP member").assertExists()
+        composeRule.onNodeWithContentDescription("Request status: Wait 37 minutes").assertExists()
+        composeRule.onNodeWithContentDescription(
+            "Request 1: For The Love Of Spock - Clipped Ears - Nicholas Pike; 14 Jul 26 - 17:38",
+        ).assertExists()
+        composeRule.onNodeWithTag("refresh_listener_activity").performClick()
+        composeRule.runOnIdle { assertEquals(1, refreshCalls) }
     }
 
     @Test

@@ -15,11 +15,14 @@ import com.codeframe78.twentyfourseven.player.data.StationFavoriteTracksRemoteDa
 import com.codeframe78.twentyfourseven.player.data.StationSongRequestRemoteDataSource
 import com.codeframe78.twentyfourseven.player.data.StationNowPlayingArtworkRepository
 import com.codeframe78.twentyfourseven.player.data.SharedPreferencesStationPreferencesRepository
+import com.codeframe78.twentyfourseven.player.data.NetworkListenerActivityRepository
+import com.codeframe78.twentyfourseven.player.data.StationListenerActivityRemoteDataSource
 import com.codeframe78.twentyfourseven.player.domain.NowPlayingArtworkRepository
 import com.codeframe78.twentyfourseven.player.domain.NowPlayingPublisher
 import com.codeframe78.twentyfourseven.player.domain.NowPlayingRepository
 import com.codeframe78.twentyfourseven.player.domain.SongRequestRepository
 import com.codeframe78.twentyfourseven.player.domain.FavoriteTracksRepository
+import com.codeframe78.twentyfourseven.player.domain.ListenerActivityRepository
 import com.codeframe78.twentyfourseven.player.playback.Media3PlaybackController
 
 class RadioApplication : Application() {
@@ -48,6 +51,9 @@ class AppContainer(application: Application) {
     )
     val favoriteTracksRepository: FavoriteTracksRepository = NetworkFavoriteTracksRepository(
         StationFavoriteTracksRemoteDataSource(sessionStore = authSessionStore),
+    )
+    val listenerActivityRepository: ListenerActivityRepository = NetworkListenerActivityRepository(
+        StationListenerActivityRemoteDataSource(sessionStore = authSessionStore),
     )
 }
 

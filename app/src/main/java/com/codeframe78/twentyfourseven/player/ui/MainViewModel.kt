@@ -29,6 +29,9 @@ import com.codeframe78.twentyfourseven.player.domain.TrackRequestAvailability
 import com.codeframe78.twentyfourseven.player.domain.TrackRequestAvailabilityResolver
 import com.codeframe78.twentyfourseven.player.domain.TrackRequestStatus
 import com.codeframe78.twentyfourseven.player.domain.LocalStationPreferences
+import com.codeframe78.twentyfourseven.player.domain.ListenerActivityLoadStatus
+import com.codeframe78.twentyfourseven.player.domain.ListenerActivityRepository
+import com.codeframe78.twentyfourseven.player.domain.ListenerActivityState
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -53,6 +56,7 @@ data class MainUiState(
     val chat: ChatState? = null,
     val requests: SongRequestState? = null,
     val favorites: FavoriteTracksState? = null,
+    val listenerActivity: ListenerActivityState? = null,
     val stationPreferences: LocalStationPreferences = LocalStationPreferences(),
     val destination: MainDestination = MainDestination.Player,
 )
@@ -72,6 +76,7 @@ class MainViewModel(
     private val chat: ChatRepository,
     private val requests: SongRequestRepository,
     private val favorites: FavoriteTracksRepository,
+    private val listenerActivity: ListenerActivityRepository,
 ) : ViewModel() {
     private val destination = MutableStateFlow(MainDestination.Player)
 
@@ -114,6 +119,20 @@ class MainViewModel(
 
     private val authContent = combine(selectedAuth, accounts, ::AuthContent)
 
+    private val selectedListenerActivity = combine(
+        stations.observeSelectedStation(),
+        destination,
+    ) { station, selectedDestination -> station to selectedDestination }
+        .flatMapLatest { (station, selectedDestination) ->
+            if (selectedDestination == MainDestination.More && station.capabilities.supportsListenerActivity) {
+                listenerActivity.observeActivity(station.id)
+            } else {
+                flowOf(ListenerActivityState(station.id))
+            }
+        }
+
+    private val accountContent = combine(authContent, selectedListenerActivity, ::AccountContent)
+
     private val selectedChat = combine(
         stations.observeSelectedStation(),
         destination,
@@ -146,7 +165,7 @@ class MainViewModel(
     private val stationContent = combine(
         nowPlaying.observeNowPlaying(),
         selectedQueue,
-        authContent,
+        accountContent,
         selectedChat,
         requestContent,
         ::StationContent,
@@ -161,7 +180,7 @@ class MainViewModel(
         val selected = selection.selected
         val selectedQueueState = content.queue.takeIf { it.stationId == selected.id }
             ?: QueueState(selected.id)
-        val selectedAuthState = content.auth.selected.takeIf { it.stationId == selected.id }
+        val selectedAuthState = content.account.auth.selected.takeIf { it.stationId == selected.id }
         val resolvedRequests = content.requestContent.requests
             .takeIf { it.stationId == selected.id }
             ?.resolveAvailability(selected.id, selectedQueueState, selectedAuthState?.status == AuthStatus.SignedIn)
@@ -176,10 +195,11 @@ class MainViewModel(
                 ?: NowPlayingState(stationId = selected.id),
             queue = selectedQueueState,
             auth = selectedAuthState,
-            accounts = content.auth.accounts,
+            accounts = content.account.auth.accounts,
             chat = content.chat.takeIf { it.stationId == selected.id },
             requests = resolvedRequests,
             favorites = resolvedFavorites,
+            listenerActivity = content.account.listenerActivity.takeIf { it.stationId == selected.id },
             stationPreferences = selection.preferences,
             destination = selectedDestination,
         )
@@ -213,6 +233,18 @@ class MainViewModel(
                 }
             }
         }
+        if (destination == MainDestination.More) {
+            viewModelScope.launch {
+                val station = stations.observeSelectedStation().first()
+                if (
+                    station.capabilities.supportsListenerActivity &&
+                    auth.observeAuth(station.id).first().status == AuthStatus.SignedIn &&
+                    listenerActivity.observeActivity(station.id).first().status == ListenerActivityLoadStatus.Idle
+                ) {
+                    listenerActivity.refresh(station.id)
+                }
+            }
+        }
     }
 
     fun refreshQueue() = viewModelScope.launch {
@@ -231,17 +263,28 @@ class MainViewModel(
         favorites.refresh(stations.observeSelectedStation().first().id)
     }
 
+    fun refreshListenerActivity() = viewModelScope.launch {
+        listenerActivity.refresh(stations.observeSelectedStation().first().id)
+    }
+
     fun sendChatMessage(message: String) = viewModelScope.launch {
         chat.sendMessage(stations.observeSelectedStation().first().id, message)
     }
 
     fun signIn(stationId: StationId, username: String, password: String, securityCode: String) = viewModelScope.launch {
         auth.signIn(stationId, username, password, securityCode)
+        if (
+            stations.observeStations().first().firstOrNull { it.id == stationId }?.capabilities?.supportsListenerActivity == true &&
+            auth.observeAuth(stationId).first().status == AuthStatus.SignedIn
+        ) {
+            listenerActivity.refresh(stationId)
+        }
     }
 
     fun signOut(stationId: StationId) = viewModelScope.launch {
         auth.signOut(stationId)
         favorites.clear(stationId)
+        listenerActivity.clear(stationId)
     }
 
     fun searchRequests(query: String, field: RequestSearchField) = viewModelScope.launch {
@@ -283,17 +326,18 @@ class MainViewModel(
         private val chat: ChatRepository,
         private val requests: SongRequestRepository,
         private val favorites: FavoriteTracksRepository,
+        private val listenerActivity: ListenerActivityRepository,
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =
-            MainViewModel(stations, playback, nowPlaying, queue, auth, chat, requests, favorites) as T
+            MainViewModel(stations, playback, nowPlaying, queue, auth, chat, requests, favorites, listenerActivity) as T
     }
 }
 
 private data class StationContent(
     val nowPlaying: NowPlayingState,
     val queue: QueueState,
-    val auth: AuthContent,
+    val account: AccountContent,
     val chat: ChatState,
     val requestContent: RequestContent,
 )
@@ -307,6 +351,11 @@ private data class StationSelectionContent(
 private data class AuthContent(
     val selected: AuthState,
     val accounts: List<StationAccountUiState>,
+)
+
+private data class AccountContent(
+    val auth: AuthContent,
+    val listenerActivity: ListenerActivityState,
 )
 
 private data class RequestContent(

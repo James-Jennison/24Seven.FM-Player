@@ -6,6 +6,7 @@ import com.codeframe78.twentyfourseven.player.data.UnavailableAuthRepository
 import com.codeframe78.twentyfourseven.player.data.UnavailableChatRepository
 import com.codeframe78.twentyfourseven.player.data.UnavailableSongRequestRepository
 import com.codeframe78.twentyfourseven.player.data.UnavailableFavoriteTracksRepository
+import com.codeframe78.twentyfourseven.player.data.UnavailableListenerActivityRepository
 import com.codeframe78.twentyfourseven.player.domain.ChatRepository
 import com.codeframe78.twentyfourseven.player.domain.ChatState
 import com.codeframe78.twentyfourseven.player.domain.AuthRepository
@@ -29,6 +30,12 @@ import com.codeframe78.twentyfourseven.player.domain.Station
 import com.codeframe78.twentyfourseven.player.domain.StationId
 import com.codeframe78.twentyfourseven.player.domain.LocalStationPreferences
 import com.codeframe78.twentyfourseven.player.domain.StartupStationMode
+import com.codeframe78.twentyfourseven.player.domain.ListenerActivityLoadStatus
+import com.codeframe78.twentyfourseven.player.domain.ListenerActivityRepository
+import com.codeframe78.twentyfourseven.player.domain.ListenerActivityState
+import com.codeframe78.twentyfourseven.player.domain.MembershipTier
+import com.codeframe78.twentyfourseven.player.domain.RequestHistoryEntry
+import com.codeframe78.twentyfourseven.player.domain.RequestReadiness
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -77,6 +84,7 @@ class MainViewModelTest {
             UnavailableChatRepository(),
             UnavailableSongRequestRepository(),
             UnavailableFavoriteTracksRepository(),
+            UnavailableListenerActivityRepository(),
         )
         advanceUntilIdle()
 
@@ -108,6 +116,7 @@ class MainViewModelTest {
             UnavailableChatRepository(),
             UnavailableSongRequestRepository(),
             UnavailableFavoriteTracksRepository(),
+            UnavailableListenerActivityRepository(),
         )
         backgroundScope.launch { viewModel.uiState.collect() }
         advanceUntilIdle()
@@ -136,6 +145,7 @@ class MainViewModelTest {
             UnavailableChatRepository(),
             UnavailableSongRequestRepository(),
             UnavailableFavoriteTracksRepository(),
+            UnavailableListenerActivityRepository(),
         )
         backgroundScope.launch { viewModel.uiState.collect() }
         advanceUntilIdle()
@@ -161,6 +171,7 @@ class MainViewModelTest {
             UnavailableChatRepository(),
             UnavailableSongRequestRepository(),
             UnavailableFavoriteTracksRepository(),
+            UnavailableListenerActivityRepository(),
         )
         backgroundScope.launch { viewModel.uiState.collect() }
         advanceUntilIdle()
@@ -201,6 +212,7 @@ class MainViewModelTest {
             UnavailableChatRepository(),
             UnavailableSongRequestRepository(),
             UnavailableFavoriteTracksRepository(),
+            UnavailableListenerActivityRepository(),
         )
         advanceUntilIdle()
 
@@ -219,6 +231,7 @@ class MainViewModelTest {
             UnavailableChatRepository(),
             UnavailableSongRequestRepository(),
             UnavailableFavoriteTracksRepository(),
+            UnavailableListenerActivityRepository(),
         )
         backgroundScope.launch { viewModel.uiState.collect() }
         advanceUntilIdle()
@@ -266,6 +279,7 @@ class MainViewModelTest {
             UnavailableChatRepository(),
             UnavailableSongRequestRepository(),
             UnavailableFavoriteTracksRepository(),
+            UnavailableListenerActivityRepository(),
         )
         backgroundScope.launch { viewModel.uiState.collect() }
         advanceUntilIdle()
@@ -285,6 +299,56 @@ class MainViewModelTest {
     }
 
     @Test
+    fun `listener activity is refreshed and observed only for verified signed-in station`() = runTest(dispatcher) {
+        val auth = FakeAuthRepository().apply {
+            emit(AuthState(StationId("sst"), AuthStatus.SignedIn, displayName = "Listener"))
+        }
+        val listenerActivity = FakeListenerActivityRepository()
+        val viewModel = MainViewModel(
+            BootstrapStationRepository(),
+            FakePlaybackController(),
+            FakeNowPlayingRepository(),
+            FakeQueueRepository(),
+            auth,
+            UnavailableChatRepository(),
+            UnavailableSongRequestRepository(),
+            UnavailableFavoriteTracksRepository(),
+            listenerActivity,
+        )
+        backgroundScope.launch { viewModel.uiState.collect() }
+        advanceUntilIdle()
+
+        viewModel.selectDestination(MainDestination.More)
+        advanceUntilIdle()
+
+        assertEquals(StationId("sst"), listenerActivity.observedStation)
+        assertEquals(listOf(StationId("sst")), listenerActivity.refreshedStations)
+        assertEquals(1, listenerActivity.activeObservations)
+
+        listenerActivity.emit(
+            ListenerActivityState(
+                stationId = StationId("sst"),
+                status = ListenerActivityLoadStatus.Ready,
+                membershipTier = MembershipTier.Vip,
+                requestReadiness = RequestReadiness.Ready,
+                recentRequests = listOf(RequestHistoryEntry(1, "Album - Track - Artist", "14 Jul 26 - 17:38")),
+            ),
+        )
+        advanceUntilIdle()
+        assertEquals(MembershipTier.Vip, viewModel.uiState.value.listenerActivity?.membershipTier)
+
+        viewModel.selectStation(StationId("adagio"))
+        advanceUntilIdle()
+        assertEquals(0, listenerActivity.activeObservations)
+        assertEquals(StationId("adagio"), viewModel.uiState.value.listenerActivity?.stationId)
+        assertEquals(listOf(StationId("sst")), listenerActivity.refreshedStations)
+
+        viewModel.signOut(StationId("sst"))
+        advanceUntilIdle()
+        assertEquals(listOf(StationId("sst")), listenerActivity.clearedStations)
+    }
+
+    @Test
     fun `queue state follows selected station and stays immutable`() = runTest(dispatcher) {
         val queue = FakeQueueRepository()
         val viewModel = MainViewModel(
@@ -296,6 +360,7 @@ class MainViewModelTest {
             UnavailableChatRepository(),
             UnavailableSongRequestRepository(),
             UnavailableFavoriteTracksRepository(),
+            UnavailableListenerActivityRepository(),
         )
         backgroundScope.launch { viewModel.uiState.collect() }
         advanceUntilIdle()
@@ -334,6 +399,7 @@ class MainViewModelTest {
             chat,
             UnavailableSongRequestRepository(),
             UnavailableFavoriteTracksRepository(),
+            UnavailableListenerActivityRepository(),
         )
         backgroundScope.launch { viewModel.uiState.collect() }
         advanceUntilIdle()
@@ -400,6 +466,7 @@ class MainViewModelTest {
             UnavailableChatRepository(),
             UnavailableSongRequestRepository(),
             favorites,
+            UnavailableListenerActivityRepository(),
         )
         backgroundScope.launch { viewModel.uiState.collect() }
         viewModel.selectDestination(MainDestination.Favorites)
@@ -540,6 +607,43 @@ class MainViewModelTest {
         override suspend fun refresh(stationId: StationId) = Unit
         override suspend fun clear(stationId: StationId) {
             state.value = FavoriteTracksState(stationId)
+        }
+    }
+
+    private class FakeListenerActivityRepository : ListenerActivityRepository {
+        private val states = mutableMapOf<StationId, MutableStateFlow<ListenerActivityState>>()
+        var observedStation: StationId? = null
+        var activeObservations = 0
+        val refreshedStations = mutableListOf<StationId>()
+        val clearedStations = mutableListOf<StationId>()
+
+        override fun observeActivity(stationId: StationId): Flow<ListenerActivityState> {
+            observedStation = stationId
+            return flow {
+                activeObservations++
+                try {
+                    state(stationId).collect { emit(it) }
+                } finally {
+                    activeObservations--
+                }
+            }
+        }
+
+        override suspend fun refresh(stationId: StationId) {
+            refreshedStations += stationId
+        }
+
+        override suspend fun clear(stationId: StationId) {
+            clearedStations += stationId
+            state(stationId).value = ListenerActivityState(stationId)
+        }
+
+        fun emit(activity: ListenerActivityState) {
+            state(activity.stationId).value = activity
+        }
+
+        private fun state(stationId: StationId) = states.getOrPut(stationId) {
+            MutableStateFlow(ListenerActivityState(stationId))
         }
     }
 
