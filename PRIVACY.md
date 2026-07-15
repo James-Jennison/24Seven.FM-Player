@@ -23,6 +23,9 @@ The application does not include advertising, analytics, crash-reporting, tracki
 - **Network state:** Used by the media/network libraries to detect connectivity changes and present connection or retry states.
 - **Foreground media playback:** Required to continue audio while the app is in the background and to expose system media controls.
 - **Notifications:** On Android 13 and newer, used for the media-playback notification. Denying it may reduce visible background playback controls.
+- **Wake lock:** Used only by the media playback stack to keep an active live stream from being suspended while the screen is off. The app does not use it to keep the display awake.
+
+Android also adds an app-specific, signature-protected dynamic-receiver permission during the build. It is an internal platform safety mechanism that prevents other apps from sending to non-exported receivers; users are not asked to grant it and it does not provide access to user data.
 
 The app does not request contacts, location, microphone, camera, photos, phone, SMS, or broad file-storage access.
 
