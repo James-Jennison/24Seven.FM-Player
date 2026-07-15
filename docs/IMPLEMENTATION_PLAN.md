@@ -1,15 +1,15 @@
 # Implementation plan
 
-Updated July 14, 2026 after renumbering the roadmap so Alpha distribution follows the remaining feature milestones. Estimates are active Codex elapsed time in this environment, including inspection, implementation, Gradle validation, documentation, Git, and remote confirmation—not traditional human developer time.
+Updated July 14, 2026 after adopting explicit certification milestones for all five stations. Estimates are active Codex elapsed time in this environment, including inspection, implementation, Gradle validation, documentation, Git, and remote confirmation—not traditional human developer time.
 
-## Milestone state
+## Planning model
 
-- M1–M10 retain their existing names, evidence, and completed/pushed status.
-- M11 Adaptive Alpha UI is complete and published in `4735f13`.
-- M12 Queue-aware request availability is complete, validated, and published in `4735f13`.
-- M13 is the next milestone and has not started.
-- M17 Private Messages is restored to the numbered roadmap but remains deferred pending legacy server fixes and verified production limits.
-- Early M18 Alpha Test Distribution Readiness artifacts are preserved and published, but the milestone is deferred until M13–M17 are complete. External completion also depends on Play Console activation and final upload signing.
+- M1–M12 are complete and retain their existing evidence and published commits.
+- M13–M17 complete shared product capabilities once, using immutable Compose state, repository contracts, capability flags, and station-isolated protected sessions.
+- M18–M22 certify the shared implementation against each station. They are hardening and evidence gates, not station-specific application forks.
+- M23–M24 are the final distribution and publication gates.
+- Private Messages remains numbered as M17 but deferred pending legacy server repair and verified production limits.
+- Early M23 readiness artifacts are preserved, but they must be refreshed after M13–M22. Play activation and final upload signing remain external dependencies.
 
 ## Current milestone
 
@@ -26,15 +26,46 @@ Updated July 14, 2026 after renumbering the roadmap so Alpha distribution follow
 - Completion gate: every station state remains independently visible and actionable; sign-out/expiration on one host cannot affect another; restoration is host scoped; unit/UI tests and available device smoke tests pass; documentation, focused commit, push, and remote confirmation are complete.
 - Status: preflight ready; implementation has not started.
 
-## Upcoming milestones
+## Shared feature milestones
 
-| Milestone | Size | Estimate | Usage | Objective | Dependencies/status |
+| Milestone | Size | Estimate | Usage | Rationale and outcome | Primary confidence variable |
 | --- | --- | --- | --- | --- | --- |
-| M14 Local personalization and station preferences | M | 2–4 hours | Medium | Persist default/last station and clearly labeled local favorites without merging server collections | Storage design; planned |
-| M15 Request history, cooldown, and membership state | L | 4–8 hours | High | Add station-scoped request history and accurate cooldown/VIP/RIP labels where verified | Further endpoint/account evidence; planned |
-| M16 Secondary community/content access | M | 2–4 hours | Medium | Add safe capability-aware Custom Tab routes for selected public content without a WebView replacement | Product prioritization of modules; planned |
-| M17 Private Messages | L (provisional) | 4–8 hours after server fix | High | Native station-isolated inbox/read/compose/reply and explicit user-initiated send | Website server issues and production limits; deferred |
-| M18 Alpha Test Distribution Readiness | M | 1–2 focused days | Medium | Refresh and finalize privacy, signing, tester, bundle, and Play-readiness work after feature completion | Early artifacts preserved; deferred until M13–M17 complete and Play activation |
-| M19 Alpha publication completion | M | 1–3 hours after activation | Medium | Create/verify signed Play bundle and internal/closed test release | Google developer account activation and explicit release authorization; blocked |
+| M14 Local personalization and station preferences | M | 2–4 hours | Medium | Add bounded local persistence for default/last station and clearly distinguish device preferences from station-owned Favorites | Persistence migration and restoration behavior |
+| M15 Request history, cooldown, and membership state | L | 4–8 hours | High | Model station-scoped history, cooldown, VIP/RIP, and membership presentation without inferring unsupported state | Verified authenticated evidence and per-station rule differences |
+| M16 Secondary community/content access | M | 2–4 hours | Medium | Add capability-aware native or Custom Tab routes for selected verified public modules without using a WebView replacement | Product prioritization and safe route verification |
+| M17 Private Messages | L (provisional) | 4–8 hours after server repair | High | Add native station-isolated inbox/read/compose/reply/refresh and explicit user-initiated send over existing protected sessions | Website repair, production limits, and consistent authenticated forms |
+
+Each shared milestone includes repository/ViewModel/UI work as applicable, lifecycle-safe state, accessibility semantics, focused tests, affected-module validation, wired Razr inspection, documentation, a focused commit, push, and remote confirmation.
+
+## Station certification milestones
+
+The certification program would be XL if treated as one unit, so it is split into five reviewable S–L milestones. Total expected active elapsed time is 20–35 hours, approximately 3–6 focused days. Confidence is Medium-Low because live accounts, CAPTCHA, station rules, rate limits, metadata quality, and legacy server behavior can differ.
+
+| Milestone | Size | Estimate | Usage | Rationale and focus | Primary confidence variable |
+| --- | --- | --- | --- | --- | --- |
+| M18 StreamingSoundtracks.com certification | S | 2–4 hours | Medium | Most live coverage already exists; certify VIP/non-admin behavior, 30-row Queue, request messages, Favorites, chat, and authenticated workflows | Legacy PM stability and privileged accounts masking ordinary-member restrictions |
+| M19 1980s.FM certification | M | 4–7 hours | High | Establish equivalent live evidence for playback/fallback, metadata, account isolation, Queue/history, chat, Favorites, requests, and membership behavior | Availability of a representative station account and undocumented rules |
+| M20 Adagio.FM certification | M | 4–7 hours | High | Certify classical metadata presentation plus playback/fallback, account isolation, Queue/history, chat, Favorites, requests, and membership behavior | Metadata shape and availability of a representative station account |
+| M21 Death.FM certification | L | 6–10 hours | High | Harden the compact Queue feed, sparse metadata/artwork behavior, RIP membership differences, playback/fallback, chat, Favorites, and requests | Reduced identifiers/metadata and station-specific membership behavior |
+| M22 Entranced.FM certification | M | 4–7 hours | High | Establish live evidence for playback/fallback, metadata, account isolation, Queue/history, chat, Favorites, requests, and membership behavior | Availability of a representative station account and undocumented rules |
+
+### Common station task breakdown and completion gate
+
+1. Reconfirm permitted primary/fallback playback and Media3 behavior without changing working URLs casually.
+2. Verify metadata, artwork, Queue/history limits, stale/error handling, and station-scoped parsing.
+3. Verify independent authentication, restoration, expiration, logout, and account capability presentation.
+4. Verify chat read/post limits, Favorites discovery, requests, eligibility, cooldown, attribution/messages, and Private Messages when available.
+5. Preserve unsupported differences as explicit capability-unavailable states; never guess endpoints or rules.
+6. Add or update parser, repository, ViewModel, Compose, accessibility, and isolation tests for station-specific evidence.
+7. Run focused and broad validators, perform a wired Razr smoke test, update matrices/handoff, commit, push, and confirm the remote branch.
+
+Unblocked M18–M22 work may proceed while M17 is deferred, but a station cannot receive final certification until every in-scope capability passes or the user explicitly changes Alpha scope.
+
+## Distribution milestones
+
+| Milestone | Size | Estimate | Usage | Rationale and outcome | Primary confidence variable |
+| --- | --- | --- | --- | --- | --- |
+| M23 Alpha Test Distribution Readiness | M | 1–2 focused days | Medium | Refresh privacy, tester guidance, signing guardrails, versioning, release artifacts, bundle checks, and Play readiness after M13–M22 | Google activation and custody/configuration of the upload signing identity |
+| M24 Alpha publication completion | M | 1–3 hours after activation | Medium | Produce and verify the authorized signed Play bundle and internal/closed test release | Play Console availability, signing authorization, and release review outcome |
 
 No item is classified XL. Any future phase that exceeds L will be divided before implementation.

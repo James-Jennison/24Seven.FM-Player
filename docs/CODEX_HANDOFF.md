@@ -3,11 +3,12 @@
 ## Resume status — July 14, 2026
 
 - Current milestone: M13 Independent Accounts UX and isolation tests (preflight ready; implementation not started).
-- Last completed and pushed milestone: M12 Queue-aware request availability in `4735f13`. M11 and early M18/Favorites preparation were preserved and published in the same checkpoint; M18 remains deferred until M13–M17 are complete.
+- Last completed and pushed milestone: M12 Queue-aware request availability in `4735f13`. M11 and early M23/Favorites preparation were preserved and published in the same checkpoint; M23 remains deferred until M13–M22 are complete.
 - Latest successful validation: full debug unit suite, lint, debug assembly, focused Compose test, and 13/13 API 35 instrumentation tests after M12; physical Razr Favorites inspection also passed.
 - Architecture: one native Compose app module; immutable state/actions; station-scoped repository contracts; one Media3 service-owned player/session; Android Keystore-backed per-station sessions.
 - Decisions: queued and recently played tracks share visible red `Track Recently Played`; reasons remain distinct internally. Available tracks use green `Request Now`. Other restrictions retain accurate separate labels. Revalidation must fail closed before mutation.
 - Known blockers: Queue rows lack stable track IDs; M17 Private Messages remains deferred for server fixes; Play developer activation blocks external Alpha.
+- Roadmap model: M13–M17 shared features, M18–M22 individual station certification, and M23–M24 distribution/publication. Certification milestones harden the shared app and must not create station-specific forks.
 - Next concrete task: begin M13 only after presenting its preflight, then add an aggregate five-station Accounts surface and pairwise session/logout/expiration isolation coverage without changing station-scoped protected storage.
 - Likely next files: authentication/session domain models and repository contracts, `MainViewModel`, account composables, authentication repository/ViewModel/UI tests, and authentication documentation.
 - Branch: `agent/initial-android-scaffold`.
@@ -240,14 +241,14 @@ existing contracts and routes. Unit tests, lint, debug assembly, and all 11 Razr
 `docs/m11-ui-preservation-plan.md` and `docs/m11-validation.md`. The original no-publish restriction was later
 superseded by explicit milestone publishing authorization.
 
-Early M18 Alpha distribution preparation is preserved and published at version `0.1.0-alpha01` / version code 2. Privacy disclosure,
+Early M23 Alpha distribution preparation is preserved and published at version `0.1.0-alpha01` / version code 2. Privacy disclosure,
 native privacy-notice access, tester instructions, release notes, permission review, Play upload-signing guardrails,
 unsigned release APK/AAB builds, debug-signature verification, an in-place debug upgrade from version code 1 to 2,
 and all 12 Razr tests are complete. Google Play internal/closed testing with Play App Signing is selected; external
 distribution waits for Google to activate the developer account. Never distribute the machine-local debug APK, and
 never commit signing files, passwords, aliases, or local signing-property paths. See `PRIVACY.md`,
 `docs/alpha-testing.md`, `docs/play-console-checklist.md`, `docs/releases/0.1.0-alpha01.md`, and
-`docs/m18-alpha-readiness.md`. M18 remains deferred until M13–M17 are complete, at which point these artifacts must be refreshed and revalidated.
+`docs/m23-alpha-readiness.md`. M23 remains deferred until M13–M22 are complete, at which point these artifacts must be refreshed and revalidated.
 
 The published Alpha branch also adds native authenticated Favorites browsing for all five stations. The
 adapter discovers the signed-in member's numeric Favorites-list identifier from each station's own authenticated

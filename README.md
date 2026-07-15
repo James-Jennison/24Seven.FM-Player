@@ -14,15 +14,15 @@ The application is written in Kotlin with Jetpack Compose and Jetpack Media3. It
 
 ## Alpha status
 
-Milestones M1–M12 are complete and published on the development branch. M13 Independent Accounts UX is next and has not started. Private Messages are restored to the roadmap as M17, while Alpha distribution and Play publication are deferred to M18–M19.
+Milestones M1–M12 are complete and published on the development branch. M13 Independent Accounts UX is next and has not started. Shared feature work continues through M17, each station receives an explicit M18–M22 certification milestone, and Alpha distribution/publication remain last at M23–M24.
 
 The current Alpha provides a responsive native player, service-owned Media3 playback, five-station navigation, live metadata and artwork, queue/history, station-scoped authentication, chat, song requests, and signed-in favorite-track browsing. Request availability is conservatively revalidated against fresh station and Queue data before submission. Unit tests, lint, debug assembly, 13/13 API 35 emulator tests, and physical Razr inspection are green.
 
 ## Project Roadmap
 
-Detailed scope, estimates, dependencies, and risks are maintained in [the implementation plan](docs/IMPLEMENTATION_PLAN.md).
+This is the single milestone sequence for the project. Detailed completion gates, estimates, dependencies, and confidence risks are maintained in [the implementation plan](docs/IMPLEMENTATION_PLAN.md).
 
-### Completed Milestones
+### Phase 1 — Completed foundation
 
 | Milestone | Status | Completed | Commit | Outcome |
 | --- | --- | --- | --- | --- |
@@ -39,24 +39,38 @@ Detailed scope, estimates, dependencies, and risks are maintained in [the implem
 | M11 Adaptive Alpha UI | ✅ Complete | 2026-07-14 | [`4735f13`](https://github.com/codeframe78/24Seven.FM-Player/commit/4735f13) | Responsive branded UI, previews, accessibility, and exit flow |
 | M12 Queue-aware request availability | ✅ Complete | 2026-07-14 | [`4735f13`](https://github.com/codeframe78/24Seven.FM-Player/commit/4735f13) | Conservative station-scoped availability, accessible exact labels, and fresh pre-submit checks |
 
-### Current Milestone
+### Phase 2 — Shared feature completion
 
-| Milestone | Size | Status | Objective | Estimate | Usage | Blockers |
-| --- | --- | --- | --- | --- | --- | --- |
-| M13 Independent Accounts UX | L | ⏳ Preflight ready; not started | Show all five independent account states and strengthen pairwise isolation coverage | 4–8 hours | High | Live verification depends on station-specific test accounts and challenge flows |
+| Milestone | Size | Estimate | Status | Outcome |
+| --- | --- | --- | --- | --- |
+| M13 Independent Accounts UX | L | 4–8 hours | 🚧 Current; preflight ready | Five separately visible account states with pairwise session/logout/expiration isolation |
+| M14 Local personalization | M | 2–4 hours | ⏳ Planned | Persist default/last station and clearly distinguish local preferences from station-owned data |
+| M15 Request history and membership | L | 4–8 hours | ⏳ Planned | Station-specific request history, cooldown, VIP/RIP, and membership presentation where verified |
+| M16 Secondary content access | M | 2–4 hours | ⏳ Planned | Capability-aware native or Custom Tab access to selected verified public modules |
+| M17 Private Messages | L provisional | 4–8 hours after server repair | 🧊 Deferred | Native station-isolated inbox, read, compose, reply, refresh, and explicit user-initiated send |
 
-Early Alpha distribution preparation is preserved on this branch, but M18 will not be considered active or complete until M13–M17 are finished. Google Play activation remains an external dependency for the final M18–M19 release work.
+### Phase 3 — Station certification
 
-### Upcoming Milestones
+These milestones harden and certify the shared app against each station; they do not create five forks. Station-specific behavior remains behind capability flags and repository contracts.
 
-| Milestone | Size | Estimate | Objective | Dependencies | Status |
-| --- | --- | --- | --- | --- | --- |
-| M14 Local personalization | M | 2–4 hours | Default/last station and clearly local favorites/preferences | Persistence design | ⏳ Planned |
-| M15 Request history/membership | L | 4–8 hours | Station-specific history, cooldown, VIP/RIP state | Further verified account evidence | ⏳ Planned |
-| M16 Secondary content access | M | 2–4 hours | Capability-aware Custom Tab routes for selected public modules | Product prioritization | ⏳ Planned |
-| M17 Private Messages | L provisional | 4–8 hours after server repair | Native station-isolated inbox, read, compose, reply, and explicit send | Legacy server fixes and verified production limits | 🧊 Deferred |
-| M18 Alpha distribution readiness | M | 1–2 focused days | Refresh and finalize privacy, signing, tester, bundle, and Play-readiness work after feature completion | M13–M17 complete and Play activation | ⏸ Deferred |
-| M19 Alpha publication | M | 1–3 hours after activation | Signed Play bundle and internal/closed test release | Play activation and explicit release approval | ⛔ Blocked |
+| Milestone | Size | Estimate | Status | Certification emphasis |
+| --- | --- | --- | --- | --- |
+| M18 StreamingSoundtracks.com | S | 2–4 hours | ⏳ Planned | VIP/non-admin behavior, 30-row Queue, request messages, Favorites, chat, and authenticated workflows |
+| M19 1980s.FM | M | 4–7 hours | ⏳ Planned | Independent account/session behavior, station rules, requests, Favorites, chat, metadata, and fallback |
+| M20 Adagio.FM | M | 4–7 hours | ⏳ Planned | Classical metadata presentation, independent account/session behavior, requests, Favorites, chat, and fallback |
+| M21 Death.FM | L | 6–10 hours | ⏳ Planned | Compact Queue feed, sparse metadata/artwork, RIP membership behavior, requests, chat, and fallback |
+| M22 Entranced.FM | M | 4–7 hours | ⏳ Planned | Independent account/session behavior, station rules, requests, Favorites, chat, metadata, and fallback |
+
+Each station gate covers playback and fallback, metadata/artwork, Queue/history, authentication, chat, Favorites, requests, membership differences, Private Messages when available, wired-device smoke testing, documentation, tests, and remote publication. Unblocked certification work may proceed while M17 is deferred, but final station completion requires every in-scope capability to pass or an explicit scope decision.
+
+### Phase 4 — Distribution
+
+| Milestone | Size | Estimate | Status | Outcome |
+| --- | --- | --- | --- | --- |
+| M23 Alpha distribution readiness | M | 1–2 focused days | ⏸ Deferred | Refresh and finalize privacy, signing, tester, bundle, and Play-readiness work after M13–M22 |
+| M24 Alpha publication | M | 1–3 hours after activation | ⛔ Blocked | Verify the signed Play bundle and publish the authorized internal/closed test release |
+
+Early M23 preparation is preserved on this branch, but it will be refreshed only after feature and station certification work. Google Play activation remains an external dependency for M23–M24.
 
 The app is fully native and uses immutable Compose UI state, repository boundaries, and station capability flags. It includes play, pause, stop, live metadata and artwork, a persistent mini-player, signed-in favorite-track browsing/filtering, capability-aware screens, native loading/error/empty states, and Android Keystore-backed account sessions. Remote data stays bounded to the documented station interfaces and their approved refresh rules.
 
@@ -83,7 +97,7 @@ Audio stream addresses come from station-provided playlists and remain subject t
 
 M17 tracks the native Private Messages experience, which remains deferred until the website's underlying server issues and production behavior are settled. See [docs/future-scope.md](docs/future-scope.md).
 
-Alpha testers and distributors should read [the privacy notice](PRIVACY.md), [Alpha testing guide](docs/alpha-testing.md), [release notes](docs/releases/0.1.0-alpha01.md), [Play Console checklist](docs/play-console-checklist.md), and [M18 signing handoff](docs/m18-alpha-readiness.md). Development debug APKs are not intended for external distribution.
+Alpha testers and distributors should read [the privacy notice](PRIVACY.md), [Alpha testing guide](docs/alpha-testing.md), [release notes](docs/releases/0.1.0-alpha01.md), [Play Console checklist](docs/play-console-checklist.md), and [M23 signing handoff](docs/m23-alpha-readiness.md). Development debug APKs are not intended for external distribution.
 
 ## Building
 
