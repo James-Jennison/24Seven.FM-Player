@@ -9,6 +9,7 @@ local.properties
 *.keystore
 keystore.properties
 signing.properties
+*.24seven-recovery
 captures/
 *.har
 .codex-remote-attachments/

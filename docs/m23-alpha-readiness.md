@@ -38,7 +38,8 @@ current M23 distribution-readiness gate.
 - Before upload signing was configured, signature inspection confirmed the debug APK had only the standard local Android Debug identity and the release outputs were unsigned as intended.
 - The unsigned release baseline built successfully without signing inputs and was correctly rejected by the signing validator. That historical artifact was 17,304,660 bytes with SHA-256 `9C7128A422BCE81351A40FFCE239F941CD584C62D3993209AFC0CB35F8A4D1D8`; it has since been replaced by the signed candidate below.
 - A separate 4096-bit RSA Play upload key now exists outside Git. Its generated credentials are held in a current-user Windows DPAPI envelope, are injected only into a child build process, and are cleared afterward. The initializer is atomic and refuses to replace an existing identity.
-- The signed `0.1.0-alpha01` AAB validates with SHA-256 `5D8CB6FEA4455DF2745FF97248721CC2C9DE585F85E1F7F03585FDE5FE66C5FE`; its signer exactly matches upload-certificate SHA-256 `F6E8E81271964FFC3F8A0D548B49B4DB93AEFC48CCB74B8744512670F4279E3F`.
+- The signed `0.1.0-alpha01` AAB validates; the latest signing run reported SHA-256 `74A5F256111F4562453523899346610DA3B3B462C10E569B43A3C08372A27CFB`, and its signer exactly matches upload-certificate SHA-256 `F6E8E81271964FFC3F8A0D548B49B4DB93AEFC48CCB74B8744512670F4279E3F`. AAB hashes are recorded per build because signed output contains per-build data.
+- The PowerShell 7 recovery workflow exports a PBKDF2/AES-256-GCM package, rejects wrong passphrases and repository-local targets, validates the recovered keystore/certificate, and restores a new DPAPI envelope. Its tested round trip reproduced the keystore byte-for-byte and signed/verified a release AAB from the restored copy; all temporary test artifacts were removed.
 - The signed release APK was installed cleanly on the API 35 emulator, cold-launched as version code 2, exposed the expected adaptive Player semantics, and reached `Playing live` on StreamingSoundtracks with the Pause action available. The emulator was restored to the debug build afterward; the wirelessly connected Razr and its sessions were not modified.
 - The release dependency graph contains no advertising, analytics, Crashlytics, App Center, or Sentry SDK.
 - Google Play's current target-level requirement accepts new mobile apps targeting API 35 or higher, so the unchanged target SDK 35 is compliant as checked July 15, 2026.
@@ -70,7 +71,7 @@ Signing files and secrets must never be committed. Gradle should receive their p
 
 - Google approved the personal Play developer account on July 14, 2026; the app and initial legal/signing declarations are now established in Console.
 - Because this is a newly activated personal account, plan for a closed test with at least 12 testers continuously opted in for 14 days before applying for production access. Internal testing itself has no access requirement.
-- Back up the upload keystore and recoverable credentials to an owner-controlled location separate from this PC; the local DPAPI envelope is not sufficient for machine-loss recovery.
+- Use the tested interactive recovery exporter to create and verify the actual backup on an owner-selected off-PC destination, then store its passphrase separately. The local DPAPI envelope is not sufficient for machine-loss recovery.
 - Upload the verified signed AAB to Play and confirm that Console reports the expected upload-certificate fingerprint.
 - Verify Play-delivered installation on the physical Razr and a same-key Play update after a subsequent version code exists.
 - Host `PRIVACY.md` at a stable public web URL before submitting the app in Play Console.

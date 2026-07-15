@@ -13,6 +13,7 @@ The Google Play developer account was approved on July 14, 2026. Use this during
 - `scripts/validate-play-bundle.ps1` builds the release AAB, requires a real signature, and prints its SHA-256 without revealing signing inputs.
 - `scripts/initialize-play-upload-key.ps1` creates the separate upload key outside Git and stores its credentials in a Windows-current-user DPAPI envelope. It refuses to overwrite either artifact.
 - `scripts/validate-protected-play-bundle.ps1` decrypts that envelope only in memory, supplies process-scoped Gradle inputs, restores the previous process environment, verifies the JAR signature and exact signer certificate, and can optionally build the signed release APK with `-BuildApk`.
+- `scripts/manage-play-upload-recovery.ps1` uses PowerShell 7, PBKDF2-HMAC-SHA256, and AES-256-GCM to export, authenticate, and restore a passphrase-protected recovery package. It refuses repository-local and overwrite targets, verifies the embedded keystore/certificate, and recreates a new current-user DPAPI envelope after restore.
 
 ## Play Console setup
 
@@ -21,12 +22,28 @@ The Google Play developer account was approved on July 14, 2026. Use this during
 3. **Complete:** Initial Play App Signing Terms accepted. Prefer the default Google-generated app-signing key at first release; retain only the separate upload key under project-controlled secure backup.
 4. **Complete locally:** A separate 4096-bit RSA upload key was created outside the repository. Its generated password and metadata are stored only in a current-user DPAPI envelope; no plaintext signing environment is persisted.
 5. **Complete locally:** `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate-protected-play-bundle.ps1 -BuildApk` built the signed APK/AAB, verified the AAB signature, and confirmed that the bundle signer matches the configured upload certificate.
-6. Back up the upload keystore and a recoverable copy of its credentials to an owner-controlled location separate from this PC before uploading. The DPAPI envelope alone is not a machine-loss backup.
+6. Export and verify the encrypted recovery package to an owner-controlled location separate from this PC before uploading. The recovery workflow is tested, but the owner must choose the destination and enter a passphrase interactively; the local DPAPI envelope alone is not a machine-loss backup.
 7. Upload the verified AAB, then start with Internal testing. It supports up to 100 testers and uses a private opt-in/share link rather than public search discovery.
 8. Add a feedback email or URL and a tester email list in Console. Do not commit tester identities.
 9. Complete the store listing and App content declarations needed by the selected track.
 
-The validated July 15 candidate AAB has SHA-256 `5D8CB6FEA4455DF2745FF97248721CC2C9DE585F85E1F7F03585FDE5FE66C5FE`; its upload-certificate SHA-256 is `F6E8E81271964FFC3F8A0D548B49B4DB93AEFC48CCB74B8744512670F4279E3F`. The AAB hash changes whenever the candidate changes; the certificate fingerprint is the identity to compare with Play Console.
+The latest validated July 15 signing run reported AAB SHA-256 `74A5F256111F4562453523899346610DA3B3B462C10E569B43A3C08372A27CFB`; its upload-certificate SHA-256 is `F6E8E81271964FFC3F8A0D548B49B4DB93AEFC48CCB74B8744512670F4279E3F`. AAB signatures include per-build data, so record the hash printed by the final upload build; the stable certificate fingerprint is the identity to compare with Play Console.
+
+### Off-PC recovery handoff
+
+Run these commands from the repository with PowerShell 7. The script prompts for the passphrase without echoing it; do not place the passphrase on the command line, in Git, or beside the package.
+
+```powershell
+pwsh.exe -NoProfile -File .\scripts\manage-play-upload-recovery.ps1 `
+  -Action Export `
+  -PackagePath E:\Backups\24seven-upload.24seven-recovery
+
+pwsh.exe -NoProfile -File .\scripts\manage-play-upload-recovery.ps1 `
+  -Action Verify `
+  -PackagePath E:\Backups\24seven-upload.24seven-recovery
+```
+
+Replace `E:\Backups` with the selected external drive or encrypted synced folder. Store the passphrase separately in the owner's password manager. On a replacement Windows profile, `-Action Restore` verifies the package, restores the keystore outside Git, and creates a new DPAPI envelope without printing credentials.
 
 ### App-content declarations completed July 15, 2026
 
