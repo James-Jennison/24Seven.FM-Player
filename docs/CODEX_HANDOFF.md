@@ -2,18 +2,18 @@
 
 ## Resume status — July 14, 2026
 
-- Current milestone: M14 Local personalization and station preferences (preflight next; implementation not started).
-- Last completed milestone: M13 Independent Accounts UX and isolation tests in `9ef1f1c`. M11–M12 and early M23/Favorites preparation remain preserved; M23 remains deferred until M14–M22 are complete.
-- Latest successful validation: full debug unit suite, lint, debug assembly, and 15/15 wired Android 16 Razr instrumentation tests after M13; physical inspection reached all five account cards.
+- Current milestone: M15 Request history, cooldown, and membership state (preflight next; implementation not started).
+- Last completed milestone: M14 Local personalization and station preferences in `81c2c4e`. M11–M13 and early M23/Favorites preparation remain preserved; M23 remains deferred until M15–M22 are complete.
+- Latest successful validation: full debug unit suite, lint, debug assembly, and 18/18 wired Android 16 Razr instrumentation tests after M14; physical inspection confirmed the Device preferences card.
 - Architecture: one native Compose app module; immutable state/actions; station-scoped repository contracts; one Media3 service-owned player/session; Android Keystore-backed per-station sessions.
 - Decisions: queued and recently played tracks share visible red `Track Recently Played`; reasons remain distinct internally. Available tracks use green `Request Now`. Other restrictions retain accurate separate labels. Revalidation must fail closed before mutation.
 - Known blockers: Queue rows lack stable track IDs; M17 Private Messages remains deferred for server fixes. The Play developer account is approved; signing/configuration work remains intentionally sequenced at M23–M24.
 - Roadmap model: M13–M17 shared features, M18–M22 individual station certification, and M23–M24 distribution/publication. Certification milestones harden the shared app and must not create station-specific forks.
-- Next concrete task: present the M14 Task Complexity Level plus T-shirt preflight, then add bounded local default/last-station persistence without conflating device preferences with station-owned Favorites or accounts.
-- Likely next files: preference repository/domain contracts and implementation, station-selection ViewModel flow, Settings/More composables, restoration/migration tests, and personalization documentation.
+- Next concrete task: present the M15 Task Complexity Level plus T-shirt preflight, then audit permitted authenticated request-history/membership evidence before adding any source or UI state.
+- Likely next files: request/account domain contracts, authenticated remote adapters and parsers only where verified, `MainViewModel`, capability-aware More/Requests composables, tests, and protocol documentation.
 - Branch: `agent/initial-android-scaffold`.
-- Latest implementation commit: `9ef1f1c`.
-- Latest successfully pushed implementation commit: `9ef1f1c` on `origin/agent/initial-android-scaffold`; the branch is published through the accompanying M13 documentation checkpoint.
+- Latest implementation commit: `81c2c4e`.
+- Latest successfully pushed implementation commit: `81c2c4e` on `origin/agent/initial-android-scaffold`; the branch is published through the accompanying M14 documentation checkpoint.
 - Required planning documents: `CURRENT_STATE_AUDIT.md`, `NETWORK_FEATURE_MATRIX.md`, `ENDPOINT_INVENTORY.md`, `AUTHENTICATION_MATRIX.md`, and `IMPLEMENTATION_PLAN.md`.
 
 ## Mission and repository
@@ -248,7 +248,7 @@ and all 12 Razr tests are complete. Google Play internal/closed testing with Pla
 approved the developer account on July 14, 2026, while app/signing setup remains sequenced after feature work. Never distribute the machine-local debug APK, and
 never commit signing files, passwords, aliases, or local signing-property paths. See `PRIVACY.md`,
 `docs/alpha-testing.md`, `docs/play-console-checklist.md`, `docs/releases/0.1.0-alpha01.md`, and
-`docs/m23-alpha-readiness.md`. M23 remains deferred until M14–M22 are complete, at which point these artifacts must be refreshed and revalidated.
+`docs/m23-alpha-readiness.md`. M23 remains deferred until M15–M22 are complete, at which point these artifacts must be refreshed and revalidated.
 
 The published Alpha branch also adds native authenticated Favorites browsing for all five stations. The
 adapter discovers the signed-in member's numeric Favorites-list identifier from each station's own authenticated

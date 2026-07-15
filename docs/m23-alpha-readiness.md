@@ -1,6 +1,6 @@
 # M23 Alpha Test Distribution readiness
 
-Prepared early on July 14, 2026. Final milestone review is deferred until M14–M22 are complete.
+Prepared early on July 14, 2026. Final milestone review is deferred until M15–M22 are complete.
 
 ## Estimate
 

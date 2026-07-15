@@ -1,12 +1,12 @@
 # Current state audit
 
-Updated July 14, 2026 on `agent/initial-android-scaffold` after M13 implementation commit `9ef1f1c`, with all existing tracked and untracked work preserved.
+Updated July 14, 2026 on `agent/initial-android-scaffold` after M14 implementation commit `81c2c4e`, with all existing tracked and untracked work preserved.
 
 ## Repository and environment
 
 - Expected and configured remote: `https://github.com/codeframe78/24Seven.FM-Player.git` for fetch and push.
 - Active branch: `agent/initial-android-scaffold`.
-- Latest implementation commit: `9ef1f1c` (`Add independent station account dashboard`), published with the accompanying M13 documentation checkpoint.
+- Latest implementation commit: `81c2c4e` (`Persist local startup station preferences`), published with the accompanying M14 documentation checkpoint.
 - One Android application module, `:app`; application ID `com.codeframe78.twentyfourseven.player`.
 - Kotlin 2.2.21, AGP 8.13.2, JDK 17, Compose BOM 2026.06.00, Media3 1.10.1, minSdk 26, targetSdk 35, compileSdk 36.
 - The current environment has unrestricted filesystem access, network access, no sandbox, and approval mode `never`.
@@ -42,8 +42,9 @@ At the time of this audit, the working tree contained the complete M11 adaptive 
 | M10 | Request attribution/messages and random suggestions, `m10-*` | Complete and pushed |
 | M11 | Adaptive UI, theme, logo, previews, double-Back exit, `m11-*` | Complete and pushed |
 | M12 | Queue-aware request eligibility, fresh pre-submit checks, `m12-validation.md` | Complete and pushed |
-| M13 | Five-station Accounts dashboard, expiration state, pairwise session isolation, `m13-validation.md` | Complete locally; publication in progress |
-| M23 (prepared early) | Alpha version/privacy/signing guardrails plus Favorites integration | Preserved for refresh after M14–M22; Play account approved, with signing and Console setup still pending |
+| M13 | Five-station Accounts dashboard, expiration state, pairwise session isolation, `m13-validation.md` | Complete and pushed |
+| M14 | Device-local fixed/last startup station, safe restoration, explicit local-data UI, `m14-validation.md` | Complete locally; publication in progress |
+| M23 (prepared early) | Alpha version/privacy/signing guardrails plus Favorites integration | Preserved for refresh after M15–M22; Play account approved, with signing and Console setup still pending |
 
 ## Existing screens and navigation
 
@@ -60,22 +61,22 @@ At the time of this audit, the working tree contained the complete M11 adaptive 
 - ICY metadata is playback-event driven; current artwork comes from the station JSON interface.
 - Queue/History uses the extended public Queue page on four stations and the compact player JSON feed on Death.FM.
 - Authentication, chat posting, requests, and Favorites reuse station-specific protected sessions.
-- Selected station, queue, chat, request catalog results, Favorites lists, and request messages are in memory. Authentication sessions persist encrypted. There is no Room database, local listening history, or local track-favorites collection.
+- Queue, chat, request catalog results, Favorites lists, and request messages are in memory. The last/fixed startup station persists as non-sensitive device-local preferences, while authentication sessions persist encrypted. There is no Room database, local listening history, or local track-favorites collection.
 
 ## Tests and latest baseline
 
-- 101 `@Test` declarations currently cover parsers, repositories, station definitions, session isolation primitives, playback metadata, ViewModel behavior, Compose navigation/actions, protected storage, and the MediaSession service.
-- Latest full local evidence: debug compile, debug unit tests, lint, and debug assembly pass; 15/15 wired Android 16 Razr instrumentation tests pass.
-- M13's full validation and physical-device evidence are recorded in `m13-validation.md`.
+- 109 `@Test` declarations currently cover parsers, repositories, station definitions, session isolation primitives, startup preference restoration, playback metadata, ViewModel behavior, Compose navigation/actions, protected storage, and the MediaSession service.
+- Latest full local evidence: debug compile, debug unit tests, lint, and debug assembly pass; 18/18 wired Android 16 Razr instrumentation tests pass.
+- M14's full validation and physical-device evidence are recorded in `m14-validation.md`.
 
 ## Known defects and technical debt
 
 - Queue and history models do not preserve stable station track IDs. Safe fallback matching therefore needs title, artist/composer, and album—not title alone.
 - Station origins are repeated across several adapters; consolidation is desirable but not required for M12.
-- The selected/default station is not durably persisted. Sleep timer, local favorites, request history, and membership status are not implemented.
+- Sleep timer, local favorites, request history, and membership status are not implemented.
 - Live authentication differences across 1980s.FM, Adagio.FM, Death.FM, and Entranced.FM still need representative user-entered account/CAPTCHA verification during their certification milestones.
 - M17 Private Messages is deliberately deferred because of known legacy server issues.
-- Google approved the Play developer account on July 14, 2026. External Alpha distribution remains sequenced after M14–M22 and still requires Play App Signing setup, a securely held upload key, final release validation, and explicit publication authorization.
+- Google approved the Play developer account on July 14, 2026. External Alpha distribution remains sequenced after M15–M22 and still requires Play App Signing setup, a securely held upload key, final release validation, and explicit publication authorization.
 
 ## Public five-station audit summary
 

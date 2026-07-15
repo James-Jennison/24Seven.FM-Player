@@ -4,12 +4,12 @@ Updated July 14, 2026 after adopting explicit certification milestones for all f
 
 ## Planning model
 
-- M1–M13 are complete and retain their existing evidence and published commits.
-- M14–M17 complete the remaining shared product capabilities once, using immutable Compose state, repository contracts, capability flags, and station-isolated protected sessions.
+- M1–M14 are complete and retain their existing evidence and published commits.
+- M15–M17 complete the remaining shared product capabilities once, using immutable Compose state, repository contracts, capability flags, and station-isolated protected sessions.
 - M18–M22 certify the shared implementation against each station. They are hardening and evidence gates, not station-specific application forks.
 - M23–M24 are the final distribution and publication gates.
 - Private Messages remains numbered as M17 but deferred pending legacy server repair and verified production limits.
-- Early M23 readiness artifacts are preserved, but they must be refreshed after M14–M22. The Play developer account is approved; Play App Signing/app setup, final upload signing, and explicit publication authorization remain dependencies.
+- Early M23 readiness artifacts are preserved, but they must be refreshed after M15–M22. The Play developer account is approved; Play App Signing/app setup, final upload signing, and explicit publication authorization remain dependencies.
 
 ## Task complexity protocol
 
@@ -19,33 +19,32 @@ Before code changes for every roadmap task, state its Task Complexity Level and 
 - Level 2 — Feature Logic & API Integration: medium reasoning; emphasize robust errors, immutable ViewModel state, coroutine/thread safety, implementation detail, test recommendations, and clear state-flow explanation.
 - Level 3 — Architectural Refactoring & System Design: high reasoning; compare alternatives, justify the chosen scalable pattern, and assess performance, dependency-injection, maintenance, and side effects.
 
-This classification supplements the required XS–XXL T-shirt size, rationale, estimated duration, confidence check, and high-level task breakdown.
+This classification supplements the required XS–XXL T-shirt size, rationale, estimated duration, confidence check, and high-level task breakdown. Every roadmap completion update must also include repository and Discord screenshots for significant visual changes. A backend-only milestone should explicitly state that it introduced no meaningful visual surface instead of reusing an unrelated image.
 
 ## Current milestone
 
-### M14 — Local personalization and station preferences
+### M15 — Request history, cooldown, and membership state
 
 - Task Complexity Level: 2 — Feature Logic & API Integration
-- Size: M
-- Estimated elapsed time: 2–4 hours
-- Usage intensity: Medium
+- Size: L
+- Estimated elapsed time: 4–8 hours
+- Usage intensity: High
 - Confidence: Medium
-- Outcome: persist bounded device-local default/last-station preferences and clearly distinguish those preferences from station-owned Favorites and account data.
-- Expected layers: preference repository contract and implementation, immutable ViewModel state/actions, settings/personalization UI, restoration tests, accessibility/UI tests, documentation, and wired-device smoke tests.
-- Dependencies: the existing station catalog, selected-station source of truth, and Compose Settings/More surfaces.
-- Principal risk: migration/restoration ordering must never briefly select or start the wrong station, and corrupt/removed station IDs must fall back safely.
-- Completion gate: default and last-station behavior is explicit, lifecycle-safe, tested, and does not alter authentication, Favorites, playback ownership, or station-scoped remote state.
+- Outcome: model and present station-scoped request history, cooldown, and VIP/RIP membership state only where authenticated evidence supports it.
+- Expected layers: protocol research and authorization inventory, station-scoped repository contracts, immutable ViewModel state, capability-aware UI, conservative parsing/error states, tests, documentation, and wired-device smoke tests.
+- Dependencies: existing protected sessions, request repository behavior, account UI, and representative authenticated station evidence.
+- Principal risk: legacy pages may expose inconsistent membership/cooldown wording or identifiers, and administrator/VIP behavior must not be generalized to ordinary users or other stations.
+- Completion gate: verified states are station scoped and understandable; unsupported/unknown states remain explicit; no polling or mutation is introduced without permission; tests and available device verification pass; documentation and publication are complete.
 - Status: preflight is next; implementation has not started.
 
 ## Latest completed milestone
 
-M13 Independent Accounts UX and isolation tests completed July 14, 2026 in `9ef1f1c`. All five states are independently visible and actionable; explicit expiration and pairwise logout/restoration isolation are covered at repository, ViewModel, Compose, in-memory store, and Android Keystore layers. Unit tests, lint, debug assembly, and 15/15 wired Razr instrumentation tests pass. See [m13-validation.md](m13-validation.md).
+M14 Local personalization completed July 14, 2026 in `81c2c4e`. Startup resolution occurs before the first playback selection, valid last/fixed station IDs persist locally, corrupt or removed IDs fall back safely, and the native UI distinguishes device settings from station accounts, Favorites, and membership. Unit tests, lint, debug assembly, and 18/18 wired Razr instrumentation tests pass. See [m14-validation.md](m14-validation.md).
 
 ## Shared feature milestones
 
 | Milestone | Size | Estimate | Usage | Rationale and outcome | Primary confidence variable |
 | --- | --- | --- | --- | --- | --- |
-| M15 Request history, cooldown, and membership state | L | 4–8 hours | High | Model station-scoped history, cooldown, VIP/RIP, and membership presentation without inferring unsupported state | Verified authenticated evidence and per-station rule differences |
 | M16 Secondary community/content access | M | 2–4 hours | Medium | Add capability-aware native or Custom Tab routes for selected verified public modules without using a WebView replacement | Product prioritization and safe route verification |
 | M17 Private Messages | L (provisional) | 4–8 hours after server repair | High | Add native station-isolated inbox/read/compose/reply/refresh and explicit user-initiated send over existing protected sessions | Website repair, production limits, and consistent authenticated forms |
 
@@ -79,7 +78,7 @@ Unblocked M18–M22 work may proceed while M17 is deferred, but a station cannot
 
 | Milestone | Size | Estimate | Usage | Rationale and outcome | Primary confidence variable |
 | --- | --- | --- | --- | --- | --- |
-| M23 Alpha Test Distribution Readiness | M | 1–2 focused days | Medium | Refresh privacy, tester guidance, signing guardrails, versioning, release artifacts, bundle checks, and Play readiness after M14–M22 | Custody/configuration of the upload signing identity and Console declarations |
+| M23 Alpha Test Distribution Readiness | M | 1–2 focused days | Medium | Refresh privacy, tester guidance, signing guardrails, versioning, release artifacts, bundle checks, and Play readiness after M15–M22 | Custody/configuration of the upload signing identity and Console declarations |
 | M24 Alpha publication completion | M | 1–3 hours after Console setup | Medium | Produce and verify the authorized signed Play bundle and internal/closed test release | Signing authorization, tester-track configuration, and release review outcome |
 
 No item is classified XL. Any future phase that exceeds L will be divided before implementation.
