@@ -18,11 +18,19 @@ Updated July 14, 2026. The five account systems are independent even where their
 - Signing out clears only the selected station's cookie manager and protected record. Other station sessions remain intact.
 - Passwords and CAPTCHA answers are transient method parameters and are not written to Room, DataStore, preferences, logs, resources, build files, or documentation.
 - Chat, requests, and Favorites load only the selected station's protected session for that station's expected host.
+- The native Accounts surface renders all five station states at once. Every refresh, sign-in, and sign-out action carries an explicit `StationId` and does not implicitly target the playback selection.
+- A successful protected-session restore remains signed in during a temporary network failure, while a successful station response that proves the saved session invalid produces an explicit `Expired` state and clears only that station.
 
-## Current gaps and required tests
+## M13 verification
 
-- The UI shows the selected station's account rather than a consolidated five-account dashboard.
+- Unit tests cover all-five restoration, explicit-station actions, expiration, one-station logout, and preservation of another signed-in station.
+- In-memory and Android Keystore tests cover one-station clear behavior without disturbing another protected session.
+- Compose instrumentation covers all five cards, independent status semantics, station-qualified controls, compact scrolling, and explicit action routing.
+- All 15 connected instrumentation tests pass on the wired Motorola Razr 2023 running Android 16; physical inspection reached every station card after a fresh install.
+
+## Current gaps
+
 - Registration, recovery, and account-management actions are not yet native destinations or documented Custom Tab actions.
-- Session expiration is detected during restore/login-dependent operations, but explicit cross-station expiration and logout regression coverage must be expanded.
 - Membership/VIP status and per-station request cooldown state are not modeled.
-- Required future security coverage: pairwise host/session isolation, one-station logout preservation, one-station expiration, station-scoped Favorites/request history, and station-scoped queue effects.
+- Live sign-in and restored-session behavior still require representative accounts and user-entered security challenges during M18–M22 station certification; no credentials or challenge answers belong in test fixtures.
+- Required future security coverage: station-scoped Favorites/request history and station-scoped queue effects as those features evolve.

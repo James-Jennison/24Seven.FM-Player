@@ -14,9 +14,9 @@ The application is written in Kotlin with Jetpack Compose and Jetpack Media3. It
 
 ## Alpha status
 
-Milestones M1–M12 are complete and published on the development branch. M13 Independent Accounts UX is next and has not started. Shared feature work continues through M17, each station receives an explicit M18–M22 certification milestone, and Alpha distribution/publication remain last at M23–M24.
+Milestones M1–M13 are complete on the development branch. M14 Local personalization is next. Shared feature work continues through M17, each station receives an explicit M18–M22 certification milestone, and Alpha distribution/publication remain last at M23–M24.
 
-The current Alpha provides a responsive native player, service-owned Media3 playback, five-station navigation, live metadata and artwork, queue/history, station-scoped authentication, chat, song requests, and signed-in favorite-track browsing. Request availability is conservatively revalidated against fresh station and Queue data before submission. Unit tests, lint, debug assembly, 13/13 API 35 emulator tests, and physical Razr inspection are green.
+The current Alpha provides a responsive native player, service-owned Media3 playback, five-station navigation, live metadata and artwork, queue/history, an independent five-station account dashboard with Android-protected sessions, chat, song requests, and signed-in favorite-track browsing. Request availability is conservatively revalidated against fresh station and Queue data before submission. Unit tests, lint, debug assembly, 15/15 wired Razr tests, and physical Razr inspection are green.
 
 ## Project Roadmap
 
@@ -43,8 +43,8 @@ This is the single milestone sequence for the project. Detailed completion gates
 
 | Milestone | Size | Estimate | Status | Outcome |
 | --- | --- | --- | --- | --- |
-| M13 Independent Accounts UX | L | 4–8 hours | 🚧 Current; preflight ready | Five separately visible account states with pairwise session/logout/expiration isolation |
-| M14 Local personalization | M | 2–4 hours | ⏳ Planned | Persist default/last station and clearly distinguish local preferences from station-owned data |
+| M13 Independent Accounts UX | L | 4–8 hours | ✅ Complete ([`9ef1f1c`](https://github.com/codeframe78/24Seven.FM-Player/commit/9ef1f1c)) | Five separately visible account states with pairwise session/logout/expiration isolation |
+| M14 Local personalization | M | 2–4 hours | 🚧 Current; preflight next | Persist default/last station and clearly distinguish local preferences from station-owned data |
 | M15 Request history and membership | L | 4–8 hours | ⏳ Planned | Station-specific request history, cooldown, VIP/RIP, and membership presentation where verified |
 | M16 Secondary content access | M | 2–4 hours | ⏳ Planned | Capability-aware native or Custom Tab access to selected verified public modules |
 | M17 Private Messages | L provisional | 4–8 hours after server repair | 🧊 Deferred | Native station-isolated inbox, read, compose, reply, refresh, and explicit user-initiated send |
@@ -67,10 +67,10 @@ Each station gate covers playback and fallback, metadata/artwork, Queue/history,
 
 | Milestone | Size | Estimate | Status | Outcome |
 | --- | --- | --- | --- | --- |
-| M23 Alpha distribution readiness | M | 1–2 focused days | ⏸ Deferred | Refresh and finalize privacy, signing, tester, bundle, and Play-readiness work after M13–M22 |
-| M24 Alpha publication | M | 1–3 hours after activation | ⛔ Blocked | Verify the signed Play bundle and publish the authorized internal/closed test release |
+| M23 Alpha distribution readiness | M | 1–2 focused days | ⏸ Deferred | Refresh and finalize privacy, signing, tester, bundle, and Play-readiness work after M14–M22 |
+| M24 Alpha publication | M | 1–3 hours after Console setup | ⏳ Planned | Verify the signed Play bundle and publish the authorized internal/closed test release |
 
-Early M23 preparation is preserved on this branch, but it will be refreshed only after feature and station certification work. Google Play activation remains an external dependency for M23–M24.
+Early M23 preparation is preserved on this branch, but it will be refreshed only after feature and station certification work. The Google Play developer account was approved on July 14, 2026; remaining release dependencies are app/Play App Signing setup, secure upload-key custody, final validation, and explicit publication authorization.
 
 The app is fully native and uses immutable Compose UI state, repository boundaries, and station capability flags. It includes play, pause, stop, live metadata and artwork, a persistent mini-player, signed-in favorite-track browsing/filtering, capability-aware screens, native loading/error/empty states, and Android Keystore-backed account sessions. Remote data stays bounded to the documented station interfaces and their approved refresh rules.
 
@@ -90,6 +90,10 @@ These captures are from the physical API 35 Razr using live StreamingSoundtracks
   <tr>
     <td align="center"><img src="docs/screenshots/favorites.png" alt="Native favorite-track list with accessible green available and red unavailable stoplights" width="300"><br><strong>Favorite tracks and request availability</strong></td>
     <td align="center"><img src="docs/screenshots/vip-request-message-success.png" alt="Verified native VIP request with requester attribution and exact message in Queue" width="300"><br><strong>Verified request attribution and message</strong></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/accounts.png" alt="Native station accounts dashboard explaining independent protected sessions and showing the selected station account" width="300"><br><strong>Independent station accounts</strong></td>
+    <td></td>
   </tr>
 </table>
 

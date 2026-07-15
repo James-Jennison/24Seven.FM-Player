@@ -1,6 +1,6 @@
 # M23 Alpha Test Distribution readiness
 
-Prepared early on July 14, 2026. Final milestone review is deferred until M13–M22 are complete.
+Prepared early on July 14, 2026. Final milestone review is deferred until M14–M22 are complete.
 
 ## Estimate
 
@@ -35,7 +35,7 @@ Signing files and secrets must never be committed. Gradle should receive their p
 
 ## Remaining completion work
 
-- Wait for Google to activate the developer account, then create the app and accept Play App Signing.
+- Google approved the Play developer account on July 14, 2026. Create the app and accept Play App Signing when M23 begins.
 - Create and securely back up the separate upload key outside the repository.
 - Produce and verify the signed release APK or AAB.
 - Record SHA-256 and signing-certificate fingerprints in the private release record or distribution service.

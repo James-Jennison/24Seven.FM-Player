@@ -1,6 +1,6 @@
-# Google Play Alpha activation checklist
+# Google Play Alpha setup checklist
 
-Use this after the Google Play developer account is activated. Do not place Console credentials, reviewer credentials, upload keys, passwords, or tester email lists in Git.
+The Google Play developer account was approved on July 14, 2026. Use this during M23–M24; do not place Console credentials, reviewer credentials, upload keys, passwords, or tester email lists in Git.
 
 ## Local preparation already complete
 
@@ -11,7 +11,7 @@ Use this after the Google Play developer account is activated. Do not place Cons
 - Gradle accepts Play upload signing only from four `TWENTYFOURSEVEN_UPLOAD_*` environment variables. Supplying a partial set fails configuration.
 - `scripts/validate-play-bundle.ps1` builds the release AAB, requires a real signature, and prints its SHA-256 without revealing signing inputs.
 
-## After account activation
+## Play Console setup
 
 1. Create the app in Play Console with the intended public name, app/game classification, free pricing, support email, and required declarations.
 2. Accept Play App Signing. Prefer a Google-generated app-signing key; retain only the separate upload key under project-controlled secure backup.
