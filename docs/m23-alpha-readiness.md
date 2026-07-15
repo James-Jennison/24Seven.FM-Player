@@ -50,7 +50,7 @@ current M23 distribution-readiness gate.
 - Play Console App content now records the four evidence-backed objective declarations: no ads, not a government app, no financial features, and no health features. The changes are saved in Publishing overview but have not been sent for review.
 - GitHub Pages now publishes the canonical privacy notice at `https://codeframe78.github.io/24Seven.FM-Player/`; HTTPS is enforced, the live page returns HTTP 200, and the URL is saved in Play Console. The public support email and Music & Audio category are also saved.
 - Console requires reusable reviewer sign-in details before Target audience can be completed. The app has restricted, station-specific account features, so the declaration must contain least-privileged credentials and instructions sufficient to review those surfaces across the station family.
-- The owner requested all-ages availability, but selecting child age bands is not currently a truthful no-code declaration: Google Play Families rules apply, and the present chat surface lacks the required child-directed age screening, online-safety reminder, and adult controls. The target-audience form remains intentionally unsaved pending that product/policy decision.
+- The owner selected an **18+** target audience on July 15, consistent with the predominantly adult legacy-station membership and the existing authenticated freeform chat. The app is not designed as a children's product, and no child age band will be claimed without a separate Families-compliance milestone. Console entry remains locked until reviewer-access details are saved.
 - Console confirms the account-specific production gate: publish a closed-test release, keep at least 12 testers opted in continuously for at least 14 days, then apply for production access.
 - The policy-conscious default store copy, category/contact proposal, asset inventory, and accessibility-text draft are recorded in `docs/play-store-listing.md`.
 - Play-ready icon, feature graphic, four phone screenshots, medium/expanded tablet screenshots, and an expanded
@@ -77,5 +77,5 @@ Signing files and secrets must never be committed. Gradle should receive their p
 - Because this is a newly activated personal account, plan for a closed test with at least 12 testers continuously opted in for 14 days before applying for production access. Internal testing itself has no access requirement.
 - Upload the verified signed AAB to Play and confirm that Console reports the expected upload-certificate fingerprint.
 - Verify Play-delivered installation on the physical Razr and a same-key Play update after a subsequent version code exists.
-- Complete the owner-input Console forms: least-privileged reviewer credentials/instructions, policy-compatible target audience, content rating, and final Data Safety answers.
+- Complete the owner-input Console forms: least-privileged reviewer credentials/instructions, save the selected 18+ target audience, content rating, and final Data Safety answers.
 - Publish only after explicit authorization.
