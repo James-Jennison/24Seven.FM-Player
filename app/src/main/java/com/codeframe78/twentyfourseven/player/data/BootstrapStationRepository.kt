@@ -32,15 +32,6 @@ class BootstrapStationRepository(
                 supportsListenerActivity = true,
                 supportsSecondaryContent = true,
             ),
-            extraPages = listOf(
-                page(
-                    "streamingsoundtracks.com",
-                    StationPageKind.SoundtrackOfTheMonth,
-                    "Soundtrack of the Month",
-                    "Featured soundtrack community selection",
-                    "STM",
-                ),
-            ),
         ),
         station(
             id = "1980s",
@@ -49,10 +40,6 @@ class BootstrapStationRepository(
             description = "Music from the 1980s",
             domain = "1980s.fm",
             capabilities = queueCapabilities.copy(supportsSecondaryContent = true),
-            extraPages = listOf(
-                page("1980s.fm", StationPageKind.Games, "Games", "Station community games", "Games"),
-                page("1980s.fm", StationPageKind.Awards, "80s Awards", "Community 1980s awards", "80s_Awards"),
-            ),
         ),
         station(
             id = "adagio",
@@ -134,7 +121,6 @@ class BootstrapStationRepository(
             domain: String,
             websiteDomain: String = domain,
             capabilities: StationCapabilities,
-            extraPages: List<StationPage> = emptyList(),
             membershipTitle: String = "VIP membership",
             membershipModule: String = "VIP_Subscribe",
         ) = Station(
@@ -146,18 +132,13 @@ class BootstrapStationRepository(
             streams = streams(domain),
             capabilities = capabilities,
             secondaryPages = if (capabilities.supportsSecondaryContent) {
-                secondaryPages(domain, membershipTitle, membershipModule) + extraPages
+                secondaryPages(domain, membershipTitle, membershipModule)
             } else {
                 emptyList()
             },
         )
 
         fun secondaryPages(domain: String, membershipTitle: String, membershipModule: String) = listOf(
-            StationPage(StationPageKind.Website, "Station website", "News and station announcements", "https://$domain/"),
-            page(domain, StationPageKind.Forums, "Forums", "Community discussions", "Forums"),
-            page(domain, StationPageKind.Members, "Members", "Public member directory", "Members_List"),
-            page(domain, StationPageKind.Statistics, "Station statistics", "Public station listening statistics", "Stats"),
-            page(domain, StationPageKind.TopTracks, "Top 100", "The station's most-played tracks", "Top100"),
             page(domain, StationPageKind.Contact, "Contact", "Contact the station team", "Contact_Us"),
             page(domain, StationPageKind.Membership, membershipTitle, "Station membership information", membershipModule),
         )

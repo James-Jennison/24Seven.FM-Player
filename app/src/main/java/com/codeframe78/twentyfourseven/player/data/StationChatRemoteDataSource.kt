@@ -24,9 +24,10 @@ internal class StationChatRemoteDataSource(
 ) : ChatRemoteDataSource {
     override suspend fun fetch(stationId: StationId): List<ChatMessage> = withContext(Dispatchers.IO) {
         val origin = origin(stationId)
+        val viewUri = URI(origin).resolve(VIEW_PATH)
         responseParser.parse(
-            request(stationId, URI(origin).resolve(VIEW_PATH), cookieManager = null),
-            origin,
+            request(stationId, viewUri, cookieManager = null),
+            viewUri.toString(),
         )
     }
 
@@ -53,11 +54,11 @@ internal class StationChatRemoteDataSource(
             )
             val messages = responseParser.parse(
                 request(stationId, URI(origin).resolve(VIEW_PATH), cookieManager = null),
-                origin,
+                URI(origin).resolve(VIEW_PATH).toString(),
             )
             if (messages.none {
                     it.authorDisplayName.equals(credentials.username, ignoreCase = true) &&
-                        it.messageText == message
+                        it.messageText == message.toSubmittedChatVisibleText()
                 }
             ) {
                 throw IOException("Station did not confirm the message")

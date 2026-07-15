@@ -25,7 +25,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.MoreVert
@@ -56,10 +55,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.text.InlineTextContent
+import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.background
@@ -70,19 +72,24 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.Placeholder
+import androidx.compose.ui.text.PlaceholderVerticalAlign
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import com.codeframe78.twentyfourseven.player.domain.AuthStatus
 import com.codeframe78.twentyfourseven.player.domain.ChatLoadStatus
+import com.codeframe78.twentyfourseven.player.domain.ChatMessage
+import com.codeframe78.twentyfourseven.player.domain.ChatMessagePart
 import com.codeframe78.twentyfourseven.player.domain.HistoryTrack
 import com.codeframe78.twentyfourseven.player.domain.FavoriteTrack
 import com.codeframe78.twentyfourseven.player.domain.ListenerActivityLoadStatus
 import com.codeframe78.twentyfourseven.player.domain.MembershipTier
 import com.codeframe78.twentyfourseven.player.domain.QueueLoadStatus
 import com.codeframe78.twentyfourseven.player.domain.QueueTrack
-import com.codeframe78.twentyfourseven.player.domain.StationCapabilities
 import com.codeframe78.twentyfourseven.player.domain.StationId
 import com.codeframe78.twentyfourseven.player.domain.StationPage
 import com.codeframe78.twentyfourseven.player.domain.RequestSearchField
@@ -441,7 +448,7 @@ private fun ChatMessages(
                                 }
                             }
                             Spacer(Modifier.height(4.dp))
-                            Text(message.messageText)
+                            ChatMessageText(message)
                         }
                     }
                 }
@@ -484,6 +491,37 @@ private fun ChatMessages(
             )
         }
     }
+}
+
+@Composable
+private fun ChatMessageText(message: ChatMessage) {
+    val inlineContent = remember(message.parts) {
+        message.parts.mapIndexedNotNull { index, part ->
+            if (part !is ChatMessagePart.Emoticon) return@mapIndexedNotNull null
+            val id = "chat-emoticon-$index"
+            id to InlineTextContent(
+                placeholder = Placeholder(1.15.em, 1.15.em, PlaceholderVerticalAlign.TextCenter),
+            ) {
+                AsyncImage(
+                    model = part.imageUrl,
+                    contentDescription = "${part.altText} emoticon",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.fillMaxSize().testTag(id),
+                )
+            }
+        }.toMap()
+    }
+    val annotated = remember(message.parts) {
+        buildAnnotatedString {
+            message.parts.forEachIndexed { index, part ->
+                when (part) {
+                    is ChatMessagePart.Text -> append(part.value)
+                    is ChatMessagePart.Emoticon -> appendInlineContent("chat-emoticon-$index", part.altText)
+                }
+            }
+        }
+    }
+    Text(annotated, inlineContent = inlineContent)
 }
 
 @Composable
@@ -714,29 +752,73 @@ private fun MoreScreen(
         Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.Info, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-            Spacer(Modifier.width(12.dp))
-            Column {
-                Text("About this station", style = MaterialTheme.typography.titleLarge)
-                Text(state.selectedStation?.name.orEmpty(), color = MaterialTheme.colorScheme.onSurfaceVariant)
+        AccountSection(state, onRefreshAuth, onSignIn, onSignOut)
+        MoreDisclosure(
+            title = "Song requests",
+            summary = "Search or ask the station for an available track.",
+            testTag = "more_song_requests",
+        ) {
+            SongRequestSection(state, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onConfirmRequest, showTitle = false)
+        }
+        if (state.selectedStation?.capabilities?.supportsListenerActivity == true) {
+            MoreDisclosure(
+                title = "Request activity",
+                summary = "View membership, cooldown, and recent requests.",
+                testTag = "more_request_activity",
+            ) {
+                ListenerActivitySection(state, onRefreshListenerActivity, showTitle = false)
             }
         }
-        Text(state.selectedStation?.description.orEmpty(), style = MaterialTheme.typography.bodyLarge)
-        Text("Feature availability", style = MaterialTheme.typography.titleMedium)
-        CapabilityCard(state.selectedStation?.capabilities ?: StationCapabilities())
-        DevicePreferencesSection(state, onUseLastStationAtStartup, onSetStartupStation)
-        AccountSection(state, onRefreshAuth, onSignIn, onSignOut)
-        ListenerActivitySection(state, onRefreshListenerActivity)
-        SongRequestSection(state, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onConfirmRequest)
+        MoreDisclosure(
+            title = "Device preferences",
+            summary = "Choose which station opens at startup.",
+            testTag = "more_device_preferences",
+        ) {
+            DevicePreferencesSection(state, onUseLastStationAtStartup, onSetStartupStation, showTitle = false)
+        }
         SecondaryContentSection(state, onOpenStationPage)
         PrivacySection()
-        Text(
-            "Features remain unavailable until their station-specific sources and behavior are verified.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
     }
+}
+
+@Composable
+private fun MoreDisclosure(
+    title: String,
+    summary: String,
+    testTag: String,
+    content: @Composable () -> Unit,
+) {
+    var expanded by rememberSaveable(testTag) { mutableStateOf(false) }
+    Card(
+        onClick = { expanded = !expanded },
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(testTag)
+            .semantics {
+                contentDescription = "$title, ${if (expanded) "expanded" else "collapsed"}"
+            },
+    ) {
+        Row(
+            Modifier.fillMaxWidth().padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                Text(
+                    summary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Spacer(Modifier.width(12.dp))
+            Text(
+                if (expanded) "Hide" else "Open",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
+    }
+    if (expanded) content()
 }
 
 @Composable
@@ -745,22 +827,15 @@ private fun SecondaryContentSection(
     onOpenStationPage: (StationPage) -> Unit,
 ) {
     val station = state.selectedStation ?: return
-    Text("More from ${station.shortName}", style = MaterialTheme.typography.titleMedium)
+    if (!station.capabilities.supportsSecondaryContent || station.secondaryPages.isEmpty()) {
+        return
+    }
+    Text("Station links", style = MaterialTheme.typography.titleMedium)
     Text(
-        "Selected public station pages open in a secure browser tab. Browser sign-in is separate from the app's protected station session.",
+        "Opens securely in your browser.",
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
-    if (!station.capabilities.supportsSecondaryContent || station.secondaryPages.isEmpty()) {
-        Card(Modifier.fillMaxWidth().testTag("secondary_content_unavailable")) {
-            Text(
-                "No secure secondary pages are verified for this station yet.",
-                modifier = Modifier.padding(16.dp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        return
-    }
     Column(
         Modifier.fillMaxWidth().testTag("secondary_content_directory"),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -800,6 +875,7 @@ private fun DevicePreferencesSection(
     state: MainUiState,
     onUseLastStationAtStartup: () -> Unit,
     onSetStartupStation: (StationId) -> Unit,
+    showTitle: Boolean = true,
 ) {
     val preferences = state.stationPreferences
     val fixedStation = state.stations.firstOrNull { it.id == preferences.defaultStationId }
@@ -811,13 +887,9 @@ private fun DevicePreferencesSection(
             ?: "Saved startup station is unavailable; using the safe catalog fallback"
     }
 
-    Text("Device preferences", style = MaterialTheme.typography.titleMedium)
+    if (showTitle) Text("Device preferences", style = MaterialTheme.typography.titleMedium)
     Card(Modifier.fillMaxWidth().testTag("device_station_preferences")) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(
-                "These settings stay on this Android device. They do not change station accounts, server Favorites, or membership settings.",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
             Text(
                 summary,
                 fontWeight = FontWeight.SemiBold,
@@ -832,11 +904,6 @@ private fun DevicePreferencesSection(
                 enabled = state.selectedStation != null,
                 modifier = Modifier.testTag("startup_use_current_station"),
             ) { Text("Use current station at startup") }
-            Text(
-                "Choose a station on Player first if you want a different fixed startup station.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
         }
     }
 }
@@ -853,16 +920,22 @@ private fun AccountSection(
             listOf(StationAccountUiState(selected, state.auth ?: com.codeframe78.twentyfourseven.player.domain.AuthState(selected.id)))
         }.orEmpty()
     }
-    Text("Station accounts", style = MaterialTheme.typography.titleMedium)
+    val selectedAccount = accountStates.firstOrNull { it.station.id == state.selectedStation?.id }
+        ?: accountStates.firstOrNull()
+    val otherAccounts = accountStates.filterNot { it.station.id == selectedAccount?.station?.id }
+    var showOtherAccounts by remember(state.selectedStation?.id) { mutableStateOf(false) }
+    val visibleAccounts = listOfNotNull(selectedAccount) + if (showOtherAccounts) otherAccounts else emptyList()
+
+    Text("Account", style = MaterialTheme.typography.titleMedium)
     Text(
-        "Each station has an independent account and protected session. Signing out of one station does not sign you out of another.",
+        "Accounts and sign-in sessions are station-specific.",
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         if (maxWidth >= 720.dp) {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                accountStates.chunked(2).forEach { rowAccounts ->
+                visibleAccounts.chunked(2).forEach { rowAccounts ->
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         rowAccounts.forEach { account ->
                             AccountCard(
@@ -880,7 +953,7 @@ private fun AccountSection(
             }
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                accountStates.forEach { account ->
+                visibleAccounts.forEach { account ->
                     AccountCard(
                         account = account,
                         isSelectedStation = account.station.id == state.selectedStation?.id,
@@ -892,12 +965,21 @@ private fun AccountSection(
             }
         }
     }
+    if (otherAccounts.isNotEmpty()) {
+        TextButton(
+            onClick = { showOtherAccounts = !showOtherAccounts },
+            modifier = Modifier.testTag("toggle_other_station_accounts"),
+        ) {
+            Text(if (showOtherAccounts) "Hide other station accounts" else "Manage other station accounts")
+        }
+    }
 }
 
 @Composable
 private fun ListenerActivitySection(
     state: MainUiState,
     onRefresh: () -> Unit,
+    showTitle: Boolean = true,
 ) {
     val station = state.selectedStation ?: return
     if (!station.capabilities.supportsListenerActivity) return
@@ -915,7 +997,7 @@ private fun ListenerActivitySection(
         RequestReadiness.Unknown, null -> "Not reported by station"
     }
 
-    Text("Request activity", style = MaterialTheme.typography.titleMedium)
+    if (showTitle) Text("Request activity", style = MaterialTheme.typography.titleMedium)
     Card(Modifier.fillMaxWidth().testTag("listener_activity_card")) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1190,6 +1272,7 @@ private fun SongRequestSection(
     onPrepareRequest: (String) -> Unit,
     onCancelRequest: () -> Unit,
     onConfirmRequest: (String) -> Unit,
+    showTitle: Boolean = true,
 ) {
     val requests = state.requests
     var query by remember(state.selectedStation?.id) { mutableStateOf("") }
@@ -1199,7 +1282,7 @@ private fun SongRequestSection(
 
     RequestConfirmationDialog(state, onCancelRequest, onConfirmRequest)
 
-    Text("Song requests", style = MaterialTheme.typography.titleMedium)
+    if (showTitle) Text("Song requests", style = MaterialTheme.typography.titleMedium)
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (state.selectedStation?.capabilities?.supportsRequests != true) {
@@ -1325,34 +1408,5 @@ private fun SongRequestSection(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun CapabilityCard(capabilities: StationCapabilities) {
-    Card(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            CapabilityRow("Authentication", capabilities.supportsAuthentication)
-            CapabilityRow("Chat", capabilities.supportsChat)
-            CapabilityRow("Favorites", capabilities.supportsFavorites)
-            CapabilityRow("Request activity", capabilities.supportsListenerActivity)
-            CapabilityRow("Queue", capabilities.supportsQueue)
-            CapabilityRow("History", capabilities.supportsHistory)
-            CapabilityRow("Requests", capabilities.supportsRequests)
-            CapabilityRow("Request messages", capabilities.supportsRequestMessages)
-            CapabilityRow("Secondary station pages", capabilities.supportsSecondaryContent)
-        }
-    }
-}
-
-@Composable
-private fun CapabilityRow(label: String, supported: Boolean) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(label)
-        Text(
-            if (supported) "Available" else "Not verified",
-            color = if (supported) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-            fontWeight = FontWeight.Medium,
-        )
     }
 }

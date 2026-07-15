@@ -8,7 +8,17 @@ data class ChatMessage(
     val authorDisplayName: String,
     val messageText: String,
     val postedAtLabel: String? = null,
+    val parts: List<ChatMessagePart> = listOf(ChatMessagePart.Text(messageText)),
 )
+
+sealed interface ChatMessagePart {
+    data class Text(val value: String) : ChatMessagePart
+
+    data class Emoticon(
+        val altText: String,
+        val imageUrl: String,
+    ) : ChatMessagePart
+}
 
 data class ChatState(
     val stationId: StationId,

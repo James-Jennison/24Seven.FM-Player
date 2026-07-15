@@ -28,12 +28,7 @@ internal fun PrivacySection() {
     Text("Privacy", style = MaterialTheme.typography.titleMedium)
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("No advertising, analytics, tracking, or developer-operated data server.")
-            Text(
-                "Station sessions are encrypted on this device. Chat history, favorite-track lists, request activity, membership indicators, and pending request text are not retained by the app.",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyMedium,
-            )
+            Text("No ads, analytics, tracking, or developer-operated data server.")
             TextButton(onClick = { showNotice = true }) { Text("Read privacy notice") }
         }
     }

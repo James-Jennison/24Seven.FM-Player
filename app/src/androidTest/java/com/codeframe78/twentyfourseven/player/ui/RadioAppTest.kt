@@ -40,6 +40,7 @@ import com.codeframe78.twentyfourseven.player.domain.AuthState
 import com.codeframe78.twentyfourseven.player.domain.AuthStatus
 import com.codeframe78.twentyfourseven.player.domain.ChatLoadStatus
 import com.codeframe78.twentyfourseven.player.domain.ChatMessage
+import com.codeframe78.twentyfourseven.player.domain.ChatMessagePart
 import com.codeframe78.twentyfourseven.player.domain.ChatState
 import com.codeframe78.twentyfourseven.player.domain.RequestableTrack
 import com.codeframe78.twentyfourseven.player.domain.SongRequestLoadStatus
@@ -91,7 +92,7 @@ class RadioAppTest {
             .assertIsDisplayed()
 
         composeRule.onNodeWithText("More").performClick()
-        composeRule.onNodeWithText("Feature availability").assertIsDisplayed()
+        composeRule.onNodeWithText("Account").assertIsDisplayed()
 
         composeRule.onNodeWithText("Player").performClick()
         composeRule.onNodeWithText("LIVE • Not connected").assertIsDisplayed()
@@ -437,6 +438,8 @@ class RadioAppTest {
         }
 
         composeRule.onAllNodesWithTag("account_card_sst").assertCountEquals(1)
+        composeRule.onAllNodesWithTag("account_card_1980s").assertCountEquals(0)
+        composeRule.onNodeWithTag("toggle_other_station_accounts").performScrollTo().performClick()
         composeRule.onAllNodesWithTag("account_card_1980s").assertCountEquals(1)
         composeRule.onAllNodesWithTag("account_card_adagio").assertCountEquals(1)
         composeRule.onAllNodesWithTag("account_card_death").assertCountEquals(1)
@@ -486,10 +489,8 @@ class RadioAppTest {
         }
 
         composeRule.onNodeWithText("Device preferences").assertIsDisplayed()
+        composeRule.onNodeWithTag("more_device_preferences").performScrollTo().performClick()
         composeRule.onNodeWithText("Always start with Adagio.FM").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText(
-            "These settings stay on this Android device. They do not change station accounts, server Favorites, or membership settings.",
-        ).assertIsDisplayed()
         composeRule.onNodeWithTag("startup_use_last_station").performScrollTo().performClick()
         composeRule.onNodeWithTag("startup_use_current_station").performScrollTo().performClick()
 
@@ -543,6 +544,7 @@ class RadioAppTest {
             }
         }
 
+        composeRule.onNodeWithTag("more_request_activity").performScrollTo().performClick()
         composeRule.onNodeWithTag("listener_activity_card").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Membership: VIP member").assertExists()
         composeRule.onNodeWithContentDescription("Request status: Wait 37 minutes").assertExists()
@@ -577,15 +579,15 @@ class RadioAppTest {
     @Test
     fun verifiedSecondaryContentIsReachableAndEmitsTheSelectedPage() {
         val opened = mutableListOf<StationPage>()
-        val forums = StationPage(
-            StationPageKind.Forums,
-            "Forums",
-            "Community discussions",
-            "https://streamingsoundtracks.com/modules.php?name=Forums",
+        val contact = StationPage(
+            StationPageKind.Contact,
+            "Contact",
+            "Contact the station team",
+            "https://streamingsoundtracks.com/modules.php?name=Contact_Us",
         )
         val contentStation = station.copy(
             capabilities = StationCapabilities(supportsSecondaryContent = true),
-            secondaryPages = listOf(forums),
+            secondaryPages = listOf(contact),
         )
         composeRule.setContent {
             MaterialTheme {
@@ -608,13 +610,13 @@ class RadioAppTest {
 
         composeRule.onNodeWithTag("secondary_content_directory").assertExists()
         composeRule.onNodeWithContentDescription(
-            "Open Forums for StreamingSoundtracks.com in browser",
+            "Open Contact for StreamingSoundtracks.com in browser",
         ).performScrollTo().assertIsDisplayed().performClick()
-        composeRule.runOnIdle { assertEquals(listOf(forums), opened) }
+        composeRule.runOnIdle { assertEquals(listOf(contact), opened) }
     }
 
     @Test
-    fun unverifiedSecondaryContentShowsAnExplicitUnavailableState() {
+    fun unverifiedSecondaryContentIsOmittedFromCompactMore() {
         composeRule.setContent {
             MaterialTheme {
                 RadioApp(
@@ -629,8 +631,8 @@ class RadioAppTest {
             }
         }
 
-        composeRule.onNodeWithTag("secondary_content_unavailable").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("No secure secondary pages are verified for this station yet.").assertIsDisplayed()
+        composeRule.onNodeWithTag("secondary_content_directory").assertDoesNotExist()
+        composeRule.onNodeWithText("Station links").assertDoesNotExist()
     }
 
     @Test
@@ -653,6 +655,17 @@ class RadioAppTest {
                             ChatLoadStatus.Ready,
                             messages = listOf(
                                 ChatMessage("Other listener", "Existing message", "13 Jul 26 - 19:04:56"),
+                                ChatMessage(
+                                    "MorG",
+                                    "heart",
+                                    "15 Jul 26 - 17:13:13",
+                                    parts = listOf(
+                                        ChatMessagePart.Emoticon(
+                                            "heart",
+                                            "https://streamingsoundtracks.com/modules/ClearChat/common/smilies/default/heart.gif",
+                                        ),
+                                    ),
+                                ),
                             ),
                         ),
                     ),
@@ -668,6 +681,7 @@ class RadioAppTest {
         }
 
         composeRule.onNodeWithText("Existing message").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("heart emoticon").assertIsDisplayed()
         composeRule.onNodeWithText("Message").performTextInput("Hello chat")
         composeRule.onNodeWithText("Send").performClick()
         composeRule.runOnIdle { assertEquals(listOf("Hello chat"), sentMessages) }
@@ -715,6 +729,7 @@ class RadioAppTest {
             }
         }
 
+        composeRule.onNodeWithTag("more_song_requests").performScrollTo().performClick()
         composeRule.onAllNodesWithText("Request Now").assertCountEquals(2)[1].performScrollTo().performClick()
         composeRule.onNodeWithText("Request this track?").assertIsDisplayed()
         composeRule.onNodeWithText("Message (optional)").performTextInput("Enjoy this one")
