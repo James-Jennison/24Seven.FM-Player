@@ -180,16 +180,41 @@ class MainViewModel(
             }
         }
 
-    private val requestContent = combine(selectedRequests, selectedFavorites, ::RequestContent)
+    private val resolvedFavorites = combine(
+        selectedFavorites,
+        selectedQueue,
+    ) { favoriteState, queueState ->
+        ResolvedFavoritesContent(
+            favorites = favoriteState.resolveAvailability(favoriteState.stationId, queueState),
+            queue = queueState,
+        )
+    }
+
+    private val requestContent = combine(
+        selectedRequests,
+        resolvedFavorites,
+    ) { requestState, favoriteContent ->
+        RequestContent(
+            requests = requestState,
+            favorites = favoriteContent.favorites,
+            queue = favoriteContent.queue,
+        )
+    }
 
     private val stationContent = combine(
         nowPlaying.observeNowPlaying(),
-        selectedQueue,
         accountContent,
         selectedChat,
         requestContent,
-        ::StationContent,
-    )
+    ) { nowPlayingState, accountState, chatState, requestsState ->
+        StationContent(
+            nowPlaying = nowPlayingState,
+            queue = requestsState.queue,
+            account = accountState,
+            chat = chatState,
+            requestContent = requestsState,
+        )
+    }
 
     private val safetyContent = combine(
         safetyState,
@@ -213,7 +238,6 @@ class MainViewModel(
             ?.resolveAvailability(selected.id, selectedQueueState, selectedAuthState?.status == AuthStatus.SignedIn)
         val resolvedFavorites = content.requestContent.favorites
             .takeIf { it.stationId == selected.id }
-            ?.resolveAvailability(selected.id, selectedQueueState)
         MainUiState(
             stations = selection.all,
             selectedStation = selected,
@@ -442,6 +466,12 @@ private data class AccountContent(
 private data class RequestContent(
     val requests: SongRequestState,
     val favorites: FavoriteTracksState,
+    val queue: QueueState,
+)
+
+private data class ResolvedFavoritesContent(
+    val favorites: FavoriteTracksState,
+    val queue: QueueState,
 )
 
 private data class SafetyContent(
@@ -503,29 +533,28 @@ private fun FavoriteTracksState.resolveAvailability(stationId: StationId, queue:
         tracks.map { TrackRequestCandidate(it.identity, it.availability) },
         queue,
     )
-    return copy(
-        tracks = tracks.mapIndexed { index, track ->
-            val resolved = resolvedAvailability[index]
-            val requestTrack = track.requestTrack
-            val requestNeedsUpdate = requestTrack != null && (
-                requestTrack.eligible != resolved.canRequest ||
-                    requestTrack.albumTitle != track.album ||
-                    requestTrack.availability != resolved
-                )
-            val resolvedRequestTrack = if (requestNeedsUpdate) {
-                requestTrack?.copy(
-                    eligible = resolved.canRequest,
-                    albumTitle = track.album,
-                    availability = resolved,
-                )
-            } else {
-                requestTrack
-            }
-            if (track.availability == resolved && track.requestTrack == resolvedRequestTrack) {
-                track
-            } else {
-                track.copy(availability = resolved, requestTrack = resolvedRequestTrack)
-            }
-        },
-    )
+    var updatedTracks: MutableList<FavoriteTrack>? = null
+    tracks.forEachIndexed { index, track ->
+        val resolved = resolvedAvailability[index]
+        val requestTrack = track.requestTrack
+        val requestNeedsUpdate = requestTrack != null && (
+            requestTrack.eligible != resolved.canRequest ||
+                requestTrack.albumTitle != track.album ||
+                requestTrack.availability != resolved
+            )
+        val resolvedRequestTrack = if (requestNeedsUpdate) {
+            requestTrack?.copy(
+                eligible = resolved.canRequest,
+                albumTitle = track.album,
+                availability = resolved,
+            )
+        } else {
+            requestTrack
+        }
+        if (track.availability != resolved || track.requestTrack != resolvedRequestTrack) {
+            if (updatedTracks == null) updatedTracks = tracks.toMutableList()
+            updatedTracks[index] = track.copy(availability = resolved, requestTrack = resolvedRequestTrack)
+        }
+    }
+    return updatedTracks?.let { copy(tracks = it) } ?: this
 }

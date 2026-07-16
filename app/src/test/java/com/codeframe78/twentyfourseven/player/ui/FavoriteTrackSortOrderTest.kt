@@ -4,9 +4,19 @@ import com.codeframe78.twentyfourseven.player.domain.FavoriteTrack
 import com.codeframe78.twentyfourseven.player.domain.TrackRequestAvailability
 import com.codeframe78.twentyfourseven.player.domain.TrackRequestStatus
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertSame
 import org.junit.Test
 
 class FavoriteTrackSortOrderTest {
+    @Test
+    fun `station position order reuses an already ordered large list`() {
+        val ordered = (1..1_500).map { position ->
+            FavoriteTrack(position, "Track $position", "Album", "Artist")
+        }
+
+        assertSame(ordered, ordered.sortedForFavorites(FavoriteTrackSortOrder.Position))
+    }
+
     @Test
     fun `favorites sort by every displayed metadata field`() {
         assertOrder(FavoriteTrackSortOrder.Position, 1, 2, 3)

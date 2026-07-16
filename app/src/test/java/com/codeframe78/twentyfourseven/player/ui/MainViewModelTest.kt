@@ -57,6 +57,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Before
 import org.junit.Test
 
@@ -602,6 +603,44 @@ class MainViewModelTest {
 
         assertEquals(TrackRequestStatus.InCurrentQueue, viewModel.uiState.value.favorites?.tracks?.single()?.availability?.status)
         assertEquals(1, queue.activeObservations)
+    }
+
+    @Test
+    fun `unrelated metadata updates preserve a full favorites list instance`() = runTest(dispatcher) {
+        val stationId = StationId("sst")
+        val sourceTracks = (1..1_500).map { position ->
+            FavoriteTrack(position, "Favorite $position", "Album $position", "Artist $position")
+        }
+        val favorites = FakeFavoriteTracksRepository(
+            FavoriteTracksState(
+                stationId,
+                FavoriteTracksLoadStatus.Ready,
+                tracks = sourceTracks,
+            ),
+        )
+        val nowPlaying = FakeNowPlayingRepository()
+        val viewModel = MainViewModel(
+            BootstrapStationRepository(),
+            FakePlaybackController(),
+            nowPlaying,
+            FakeQueueRepository(),
+            UnavailableAuthRepository(),
+            UnavailableChatRepository(),
+            UnavailableSongRequestRepository(),
+            favorites,
+            UnavailableListenerActivityRepository(),
+            enabledSafetyRepository(),
+        )
+        backgroundScope.launch { viewModel.uiState.collect() }
+        viewModel.selectDestination(MainDestination.Favorites)
+        advanceUntilIdle()
+        val beforeMetadataUpdate = viewModel.uiState.value.favorites?.tracks
+
+        nowPlaying.state.value = NowPlayingState(stationId, "A newly reported track")
+        advanceUntilIdle()
+
+        assertSame(sourceTracks, beforeMetadataUpdate)
+        assertSame(beforeMetadataUpdate, viewModel.uiState.value.favorites?.tracks)
     }
 
     private fun enabledSafetyRepository() = InMemoryCommunitySafetyRepository(

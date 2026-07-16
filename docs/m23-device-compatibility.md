@@ -28,7 +28,7 @@ not a list of hard-coded device models.
 | API 35 Pixel Fold emulator, open inner display | 2208×1840 physical display | 36/36 current-head connected tests plus live emulator inspection | Expanded layout and the complete current feature suite pass on the genuine foldable inner display. |
 | API 35 Pixel Fold emulator, half-open inner display | Device-state 1; 2208×1840 physical display | Earlier 33/33 full suite; 2/2 current-head More/disclosure tests | The full feature suite and the current-head More-menu paths pass across the hinge-state transition. Intermittent gfxstream black tiles observed in the earlier pass cleared after an activity rerender and produced no application crash or semantic-test failure. |
 | API 35 Pixel Fold emulator, closed outer display | Device-state 0; 1080×2092 physical display, inner display off | Earlier 33/33 full suite; 2/2 current-head More/disclosure tests; cold-launch inspection | Compact Player controls and the horizontally reachable station carousel are visible; the full feature suite and current-head More-menu paths pass on the genuine outer display. |
-| API 35 Pixel Tablet emulator, native landscape | 2560×1600 physical display; 1280×800dp | 36/36 current-head connected tests plus cold-launch inspection | Expanded two-pane Player, navigation rail, artwork, controls, station carousel, and complete current feature suite pass. |
+| API 35 Pixel Tablet emulator, native landscape | 2560×1600 physical display; 1280×800dp | 40/40 current-head connected tests plus cold-launch inspection | Expanded two-pane Player, navigation rail, artwork, controls, station carousel, full 1,500-track Favorites traversal, and the complete current feature suite pass. |
 | API 35 Pixel Tablet emulator, native portrait | 1600×2560 physical display; 800×1280dp | Earlier 34/34 full suite; 1/1 current-head open-source disclosure test; rotation inspection | Medium-width rail layout retains visible artwork, controls, and a horizontally reachable station carousel after rotation; the current legal-disclosure path is also scroll-reachable. |
 | API 36 phone AVD targeting API 36 | 411×914dp compact portrait | 36/36 current-head connected tests plus cold-launch/two-Back inspection | Adaptive navigation, UGC safety, legal disclosures, Favorites lazy scrolling, MediaSession service, edge-to-edge Player, and the exit dialog pass under Android 16 target behavior. |
 
@@ -69,8 +69,10 @@ changes cancel a pending recovery.
   16 KB runtime, Pixel Fold open, and Pixel Tablet native landscape. The current More-menu preference and legal-disclosure paths also pass after
   live transitions to the Fold half-open and closed/outer-display states, and the disclosure path passes after rotating
   the Tablet to portrait.
-- A generated 1,500-track Favorites list remains browsable and supports stable play-state sorting; the preserved full
-  MorG list remained responsive during physical Razr inspection.
+- A generated 1,500-track Favorites list scrolls to track 1,500, returns to its controls, and supports stable sorting;
+  unchanged availability and default position order reuse the exact list instance. The preserved full MorG list
+  remained responsive during physical Razr inspection. Startup/memory diagnostics and boundaries are recorded in
+  [the performance checkpoint](m23-performance-validation.md).
 - Existing previews cover compact playing, phone landscape, expanded buffering, long metadata, missing artwork,
   fallback reconnection, offline automatic recovery, errors, light mode, and large type.
 - Earlier full posture suites remain recorded above. The July 16 current-head pass adds the packaged open-source notice,

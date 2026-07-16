@@ -61,12 +61,15 @@ internal fun FavoriteTracksScreen(
     var filter by remember(state.selectedStation?.id) { mutableStateOf("") }
     var sortOrder by remember(state.selectedStation?.id) { mutableStateOf(FavoriteTrackSortOrder.Position) }
     var sortMenuOpen by remember { mutableStateOf(false) }
-    val visibleTracks = remember(favorites?.tracks, filter, sortOrder) {
+    val allTracks = favorites?.tracks.orEmpty()
+    val visibleTracks = remember(allTracks, filter, sortOrder) {
         val query = filter.trim()
-        favorites?.tracks.orEmpty().filter { track ->
-            query.isBlank() || sequenceOf(track.title, track.album, track.artist, track.genre.orEmpty())
-                .any { it.contains(query, ignoreCase = true) }
-        }.sortedForFavorites(sortOrder)
+        val matchingTracks = if (query.isBlank()) {
+            allTracks
+        } else {
+            allTracks.filter { track -> track.matchesFilter(query) }
+        }
+        matchingTracks.sortedForFavorites(sortOrder)
     }
 
     Box(Modifier.fillMaxSize()) {
@@ -193,6 +196,12 @@ internal fun FavoriteTracksScreen(
     }
 }
 
+private fun FavoriteTrack.matchesFilter(query: String): Boolean =
+    title.contains(query, ignoreCase = true) ||
+        album.contains(query, ignoreCase = true) ||
+        artist.contains(query, ignoreCase = true) ||
+        genre?.contains(query, ignoreCase = true) == true
+
 @Composable
 private fun FavoriteRequestFeedback(
     notice: String?,
@@ -222,7 +231,7 @@ private fun FavoriteTrackCard(
     onPrepareRequest: (FavoriteTrack) -> Unit,
 ) {
     val available = track.availability.canRequest
-    Card(Modifier.fillMaxWidth()) {
+    Card(Modifier.fillMaxWidth().testTag("favorite_track_${track.position}")) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 RequestStatusIndicator(track.availability)

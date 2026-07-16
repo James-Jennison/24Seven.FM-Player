@@ -14,7 +14,7 @@ internal enum class FavoriteTrackSortOrder(val label: String) {
 }
 
 internal fun List<FavoriteTrack>.sortedForFavorites(order: FavoriteTrackSortOrder): List<FavoriteTrack> = when (order) {
-    FavoriteTrackSortOrder.Position -> sortedBy(FavoriteTrack::position)
+    FavoriteTrackSortOrder.Position -> if (isSortedByPosition()) this else sortedBy(FavoriteTrack::position)
     FavoriteTrackSortOrder.TrackName -> sortedWith(textComparator(FavoriteTrack::title))
     FavoriteTrackSortOrder.Album -> sortedWith(textComparator(FavoriteTrack::album))
     FavoriteTrackSortOrder.Artist -> sortedWith(textComparator(FavoriteTrack::artist))
@@ -28,6 +28,13 @@ internal fun List<FavoriteTrack>.sortedForFavorites(order: FavoriteTrackSortOrde
             .thenBy(FavoriteTrack::position),
     )
     FavoriteTrackSortOrder.PlayState -> sortedForDisplay(TrackSortOrder.PlayState, FavoriteTrack::availability)
+}
+
+private fun List<FavoriteTrack>.isSortedByPosition(): Boolean {
+    for (index in 1 until size) {
+        if (this[index - 1].position > this[index].position) return false
+    }
+    return true
 }
 
 private fun textComparator(selector: (FavoriteTrack) -> String?): Comparator<FavoriteTrack> =
