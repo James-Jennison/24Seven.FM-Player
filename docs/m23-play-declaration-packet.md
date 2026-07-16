@@ -104,7 +104,8 @@ rating. Save the generated multi-authority rating result with the private releas
 Use `m23-data-safety.md` for the field-by-field worksheet and `../PRIVACY.md` for the canonical public disclosure.
 The remaining owner/station answer is whether and for how long station systems retain login submissions, search terms,
 Chat/request submissions, request actions, and abuse reports. Do not claim end-to-end ephemeral processing without that
-answer.
+answer. A copy-ready retention table, reviewer-account confirmation, rights grant, report-receipt response, and PM-repair
+confirmation are consolidated in `m23-owner-response-packet.md`.
 
 ## Official references
 
