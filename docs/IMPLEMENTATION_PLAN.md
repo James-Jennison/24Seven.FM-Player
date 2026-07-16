@@ -20,7 +20,7 @@ Before code changes for every roadmap task, state its Task Complexity Level and 
 - Level 2 — Feature Logic & API Integration: medium reasoning; emphasize robust errors, immutable ViewModel state, coroutine/thread safety, implementation detail, test recommendations, and clear state-flow explanation.
 - Level 3 — Architectural Refactoring & System Design: high reasoning; compare alternatives, justify the chosen scalable pattern, and assess performance, dependency-injection, maintenance, and side effects.
 
-This classification supplements the required XS–XXL T-shirt size, rationale, estimated duration, confidence check, and high-level task breakdown. Every roadmap completion update must also include repository and Discord screenshots for significant visual changes. A backend-only milestone should explicitly state that it introduced no meaningful visual surface instead of reusing an unrelated image.
+This classification supplements the required XS–XXL T-shirt size, rationale, estimated duration, confidence check, and high-level task breakdown. Every completed roadmap milestone must be posted as a concise progress update to the configured Discord project thread, with delivery verified before final handoff. Significant visual changes must also include repository and Discord screenshots. A backend-only milestone should explicitly state that it introduced no meaningful visual surface instead of reusing an unrelated image.
 
 ## Current milestone
 

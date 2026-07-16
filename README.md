@@ -22,6 +22,14 @@ The current Alpha provides a responsive native player, service-owned Media3 play
 
 This is the single milestone sequence for the project. Detailed completion gates, estimates, dependencies, and confidence risks are maintained in [the implementation plan](docs/IMPLEMENTATION_PLAN.md).
 
+### Current progression
+
+- **Completed:** M1–M16, all five station certifications (M18–M22), and M23.3 Android 16 / API 36 readiness.
+- **Active:** M23 Play-testing readiness, with 1 of 7 reviewable sub-milestones complete.
+- **Next focus:** M23.2 UGC safety and moderation research, followed by implementation only when an authorized reporting/moderation destination is established.
+- **Remaining release gates:** M23.1 current-head signed candidate, M23.4 Play declarations, M23.5 rights evidence, M23.6 release-device/Play pre-launch coverage, M23.7 launcher/store polish, then the explicitly authorized M24 Alpha publication.
+- **Deferred:** M17 Private Messages remains excluded from the shipping build until the reproduced server-side delivery failure is repaired and verified.
+
 ### Phase 1 — Completed foundation
 
 | Milestone | Status | Completed | Commit | Outcome |
@@ -145,7 +153,7 @@ Alpha testers and distributors should read [the privacy notice](PRIVACY.md), [Al
 
 ## Building
 
-Open the repository in a current Android Studio release with JDK 17. The project targets Android 15 (API 35), compiles against API 36 as required by its AndroidX dependencies, and is currently validated on the primary Motorola Razr 2023 running Android 16. It supports Android 8.0 (API 26) and newer.
+Open the repository in a current Android Studio release with JDK 17. The project targets and compiles against Android 16 (API 36), and is currently validated on the primary Motorola Razr 2023 running Android 16. It supports Android 8.0 (API 26) and newer.
 
 From PowerShell, validate the project with:
 

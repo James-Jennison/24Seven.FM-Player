@@ -17,3 +17,7 @@
 - Do not repeat a successful validator unless later changes could affect its result.
 - Combine overlapping Gradle tasks into one invocation when that avoids duplicate configuration and work.
 
+## Milestone communication
+
+- After completing and committing a roadmap milestone, post a concise completion update to the configured Discord project thread and verify delivery before reporting the milestone complete.
+- Keep Discord milestone updates free of secrets, credentials, tester identities, private endpoint details, and other sensitive data.
