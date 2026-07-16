@@ -7,6 +7,9 @@ The Google Play developer account was approved on July 14, 2026. Use this during
 - Application ID: `com.codeframe78.twentyfourseven.player`
 - Candidate: `0.1.0-alpha01`, version code 2
 - Target SDK: 36; compile SDK: 36; minimum SDK: 26
+- The current non-secret M23.1 audit verifies the production manifest, dependencies/licenses, explicit backup
+  exclusions, unsigned release outputs, and 16 KB APK/ELF packaging. The native notice is under More → Privacy →
+  Open-source licenses; see `docs/m23-release-candidate-audit.md`.
 - Current Play target-level check (July 15, 2026): target API 35 remains accepted until August 31, 2026, when new mobile apps and updates must target API 36. M23.3 migrated early so the closed-test and update path do not depend on that deadline.
 - Privacy notice, Alpha testing guide, release notes, permission review, and device validation are complete.
 - Gradle accepts Play upload signing only from four `TWENTYFOURSEVEN_UPLOAD_*` environment variables. Supplying a partial set fails configuration.
@@ -27,7 +30,7 @@ The Google Play developer account was approved on July 14, 2026. Use this during
 8. Add a feedback email or URL and a tester email list in Console. Do not commit tester identities.
 9. Complete the store listing and App content declarations needed by the selected track.
 
-The latest validated July 15 signing run reported AAB SHA-256 `74A5F256111F4562453523899346610DA3B3B462C10E569B43A3C08372A27CFB`; its upload-certificate SHA-256 is `F6E8E81271964FFC3F8A0D548B49B4DB93AEFC48CCB74B8744512670F4279E3F`. AAB signatures include per-build data, so record the hash printed by the final upload build; the stable certificate fingerprint is the identity to compare with Play Console.
+The last protected July 15 signing run reported AAB SHA-256 `74A5F256111F4562453523899346610DA3B3B462C10E569B43A3C08372A27CFB`; it predates later product and Play-readiness changes and must not be uploaded as the current candidate. Its upload-certificate SHA-256 is `F6E8E81271964FFC3F8A0D548B49B4DB93AEFC48CCB74B8744512670F4279E3F`. AAB signatures include per-build data, so record the hash printed by the final protected build; the stable certificate fingerprint is the identity to compare with Play Console.
 
 ### Off-PC recovery handoff
 

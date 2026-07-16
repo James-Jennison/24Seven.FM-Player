@@ -668,6 +668,28 @@ class RadioAppTest {
     }
 
     @Test
+    fun openSourceLicensesArePackagedAndReachableFromMore() {
+        composeRule.setContent {
+            MaterialTheme {
+                RadioApp(
+                    state = sampleState().copy(destination = MainDestination.More),
+                    onSelectStation = {},
+                    onSelectDestination = {},
+                    onPlay = {},
+                    onPause = {},
+                    onStop = {},
+                    onRefreshQueue = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("Open-source licenses").performScrollTo().performClick()
+        composeRule.onNodeWithText("third-party software notices", substring = true).assertIsDisplayed()
+        composeRule.onNodeWithText("jsoup 1.22.2", substring = true, ignoreCase = true).assertIsDisplayed()
+        composeRule.onNodeWithText("Close").assertIsDisplayed()
+    }
+
+    @Test
     fun verifiedSecondaryContentIsReachableAndEmitsTheSelectedPage() {
         val opened = mutableListOf<StationPage>()
         val contact = StationPage(

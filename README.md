@@ -27,7 +27,7 @@ This is the single milestone sequence for the project. Detailed completion gates
 - **Completed:** M1–M16, all five station certifications (M18–M22), M23.3 Android 16 / API 36 readiness, and M23.7 adaptive launcher/store polish.
 - **Active:** M23 Play-testing readiness, with 2 of 7 reviewable sub-milestones complete.
 - **Active focus:** M23.2 UGC safety and moderation. Administrator authorization is recorded and the [native implementation](docs/m23-ugc-safety-validation.md) is test-green; completion is waiting only for confirmation that the single harmless report reached the moderator inbox and reconciliation of that server response.
-- **Remaining release gates:** M23.1 current-head signed candidate, M23.2 report-receipt reconciliation, M23.4 Play declarations, M23.5 rights evidence, M23.6 physical/Play pre-launch coverage, then the explicitly authorized M24 Alpha publication.
+- **Remaining release gates:** M23.1 protected signing and Play-delivered validation after its [local audit](docs/m23-release-candidate-audit.md), M23.2 report-receipt reconciliation, M23.4 Play declarations, M23.5 rights evidence, M23.6 physical/Play pre-launch coverage, then the explicitly authorized M24 Alpha publication.
 - **Deferred:** M17 Private Messages remains excluded from the shipping build until the reproduced server-side delivery failure is repaired and verified.
 
 ### Phase 1 — Completed foundation
@@ -82,7 +82,7 @@ Each station gate covers playback and fallback, metadata/artwork, Queue/history,
 
 | Milestone | Size | Codex estimate | Status | Required outcome |
 | --- | --- | --- | --- | --- |
-| M23.1 Current-head signed release candidate | M | 2–4 hours | ⏳ Planned | Sign and inspect the exact current source, verify upload identity/versioning/16 KB packaging, complete dependency and third-party-license notices, and validate Play installation |
+| M23.1 Current-head signed release candidate | M | 2–4 hours | 🚧 Local audit green; protected signing/Play pending ([evidence](docs/m23-release-candidate-audit.md)) | Production identity, manifest, dependencies/notices, explicit backup exclusions, release builds, and 16 KB APK/ELF packaging pass; regenerate with the protected upload identity, confirm version-code availability, and validate Play delivery/update |
 | M23.2 UGC safety and moderation | L, split into research and implementation | 6–12 hours after station input | 🚧 Implementation green; receipt pending ([evidence](docs/m23-ugc-safety-validation.md)) | Authorized native age/Terms/reveal gates, separate report and block actions, local block management, privacy boundaries, and duplicate-safe indeterminate delivery are implemented; administrator receipt confirmation remains |
 | M23.3 Android 16 / API 36 readiness | M | 2–4 hours | ✅ Complete ([evidence](docs/m23-api36-readiness.md)) | Targets API 36; 117 unit tests, lint/release bundle, 27/27 API 36 connected tests, and cold-launch/two-Back visual inspection pass |
 | M23.4 Play review declarations | M | 2–4 hours plus owner input | 🚧 Local packet prepared ([evidence](docs/m23-play-declaration-packet.md)) | Accurate listing and copy-ready foreground-service/reviewer instructions are prepared; reusable reviewer credentials, final video link, content-rating answers, station retention, and Console submission remain owner-controlled |

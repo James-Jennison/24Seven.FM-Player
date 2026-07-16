@@ -1,0 +1,38 @@
+24Seven.FM Player — third-party software notices
+
+This inventory reflects the release runtime audited on July 15, 2026.
+
+APACHE LICENSE 2.0
+
+AndroidX (Activity 1.11.0; Browser 1.10.0; Compose UI 1.11.3; Material icons 1.7.8; Material 3 1.4.0; Core 1.16.0; Lifecycle 2.9.4; Media3 1.10.1; Window 1.5.0; and transitive AndroidX modules), Accompanist Drawable Painter 0.37.3, Coil 3.4.0, Guava 33.3.1-android and FailureAccess 1.0.2, JetBrains Compose/AndroidX transitive modules, Kotlin standard library 2.3.10, kotlinx.coroutines 1.10.2, kotlinx.serialization 1.7.3, OkHttp 4.12.0, Okio 3.16.4, JetBrains Annotations 23.0.0, and jspecify 1.0.0 are provided under the Apache License, Version 2.0.
+
+License: https://www.apache.org/licenses/LICENSE-2.0
+
+JSOUP 1.22.2 — MIT LICENSE
+
+Copyright (c) 2009-2026 Jonathan Hedley <https://jsoup.org/>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Source: https://github.com/jhy/jsoup
+
+DESUGAR_JDK_LIBS 2.1.5 — GPLv2 WITH THE CLASSPATH EXCEPTION
+
+Android's Java API desugaring library declares the GNU General Public License, version 2, with the Classpath Exception. The exception permits linking the library with independent modules and distributing the resulting executable under terms of choice, subject to the license terms of each independent module.
+
+Complete license and exception: https://github.com/google/desugar_jdk_libs/blob/master/LICENSE
+Source: https://github.com/google/desugar_jdk_libs
+
+No local modifications are made to this library. It is processed by the Android Gradle Plugin as part of core library desugaring.
+
+PUBLIC SUFFIX LIST DATA — MOZILLA PUBLIC LICENSE 2.0
+
+OkHttp contains publicsuffixes.gz, compiled from the Public Suffix List at https://publicsuffix.org/list/public_suffix_list.dat. The data is subject to the Mozilla Public License, Version 2.0: https://www.mozilla.org/MPL/2.0/.
+
+The upstream notice is retained in the release artifact at okhttp3/internal/publicsuffix/NOTICE.
+
+Project-level notice and source links: https://github.com/codeframe78/24Seven.FM-Player/blob/main/THIRD_PARTY_NOTICES.md

@@ -74,7 +74,7 @@ import androidx.compose.foundation.background
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.painterResource
@@ -783,9 +783,9 @@ private fun CommunityTermsDialog(
     onAgree: () -> Unit,
     onDecline: () -> Unit,
 ) {
-    val context = LocalContext.current
-    val terms = remember(context) {
-        context.resources.openRawResource(R.raw.terms_of_participation)
+    val resources = LocalResources.current
+    val terms = remember(resources) {
+        resources.openRawResource(R.raw.terms_of_participation)
             .bufferedReader()
             .use { it.readText() }
     }

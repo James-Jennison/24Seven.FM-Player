@@ -11,6 +11,7 @@ Last updated: July 15, 2026.
 - **Station sessions:** Successful station cookies and the returned display identity are encrypted locally using an Android Keystore key. Sessions are scoped to the exact station and can be removed with Sign out or by clearing the app's data.
 - **User submissions:** Chat posts, song requests, and optional request messages are sent only after an explicit user action. The app does not automate or bulk-submit requests.
 - **Community safety preferences:** The app stores the adult/not-adult result from its age screen, the accepted Terms version, the mature-community-content visibility choice, and station-scoped blocked display identities on the device. It does not save the date of birth entered on the age screen.
+- **Android backup and transfer:** All app-private data is excluded from Android cloud backup and device-to-device transfer. Protected station sessions and local safety preferences are not migrated through those Android mechanisms.
 - **Abuse reports:** After an explicit **Send report** action, the app sends the selected station, report category, reported username, displayed timestamp, a bounded Chat/request snapshot, reporter name and email, and optional details directly to that station's authorized administrators through its HTTPS Contact Us form. Report form data, CAPTCHA values, submitted reports, and station responses are not persisted by the app. The station administration may retain and process a received report under its own moderation and privacy practices.
 - **Chat history:** Chat messages are kept in memory for the current app session and are not persisted by the app.
 - **Favorite tracks:** Favorite lists are loaded only after station sign-in, kept in memory, and cleared from the interface when the user signs out. They are not written to app storage.
@@ -33,7 +34,7 @@ The app does not request contacts, location, microphone, camera, photos, phone, 
 
 ## Retention and deletion
 
-Protected station sessions, the adult age-screen result, accepted Terms version, community-content visibility preference, and local block list remain on the device until the relevant in-app action, app-data clearing, or uninstall removes them. Chat, favorite-track lists, request activity, membership indicators, pending song-request text, and abuse-report form/submission data are transient. Android's app settings can clear all locally retained application data.
+Protected station sessions, the adult age-screen result, accepted Terms version, community-content visibility preference, and local block list remain on the originating device until the relevant in-app action, app-data clearing, or uninstall removes them. They are excluded from Android cloud backup and device-to-device transfer. Chat, favorite-track lists, request activity, membership indicators, pending song-request text, and abuse-report form/submission data are transient. Android's app settings can clear all locally retained application data.
 
 ## Alpha limitations
 

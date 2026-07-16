@@ -53,6 +53,11 @@ as already complete.
 - The actual encrypted recovery package is now stored on the owner-selected off-PC volume and independently validated with the owner-held passphrase. The encrypted package SHA-256 is `361E6A85452DBF9ACDC816F554569E3B7DBA0F98B60C30DB255E54C2644C4D1C`; neither its location nor its passphrase is committed.
 - The signed release APK was installed cleanly on the API 35 emulator, cold-launched as version code 2, exposed the expected adaptive Player semantics, and reached `Playing live` on StreamingSoundtracks with the Pause action available. The emulator was restored to the debug build afterward; the wirelessly connected Razr and its sessions were not modified.
 - The release dependency graph contains no advertising, analytics, Crashlytics, App Center, or Sentry SDK.
+- M23.1's current local release audit confirms the production manifest, complete resolved dependency inventory, 16 KB
+  APK/ELF packaging, explicit cloud/device-transfer backup exclusions, and intentionally unsigned release AAB/APK.
+  Apache-2.0, MIT, GPLv2-with-Classpath-Exception, and MPL-2.0 notices are recorded in
+  `THIRD_PARTY_NOTICES.md` and are reachable inside the app under More → Privacy → Open-source licenses. See
+  `m23-release-candidate-audit.md`; protected current-head signing and Play-delivered installation remain open.
 - Google Play accepts target API 35 on July 15, 2026 but requires API 36 for new apps and updates beginning August 31, 2026. M23.3 therefore migrates before the closed-test/update window instead of treating API 35 as the final Alpha target.
 - The project-specific provisional Data Safety worksheet is recorded in `docs/m23-data-safety.md`; it includes the M23.2 age/Terms/block preferences and transient abuse-report fields. Final answers remain gated on the active Play Console form and station retention confirmation.
 - The non-secret M23.4 declaration packet now contains copy-ready media-playback foreground-service text, an exact demonstration shot list, reviewer navigation instructions, content-rating evidence boundaries, and owner-only fields. The draft store listing was corrected to remove unimplemented sleep timer, shortcuts, sharing, appearance preferences, and diagnostics.
@@ -113,6 +118,8 @@ Signing files and secrets must never be committed. Gradle should receive their p
 - Google approved the personal Play developer account on July 14, 2026; the app and initial legal/signing declarations are now established in Console.
 - Because this is a newly activated personal account, plan for a closed test with at least 12 testers continuously opted in for 14 days before applying for production access. Internal testing itself has no access requirement.
 - Upload the verified signed AAB to Play and confirm that Console reports the expected upload-certificate fingerprint.
+- Before that upload, regenerate the protected artifact from the selected current commit and confirm whether version
+  code 2 remains available; the earlier signed hash predates later product and Play-readiness changes.
 - Verify Play-delivered installation on the physical Razr and a same-key Play update after a subsequent version code exists.
 - Complete the owner-input Console forms: least-privileged reviewer credentials/instructions, save the selected 18+ target audience, content rating, and final Data Safety answers.
 - Confirm administrator receipt of the single authorized M23.2 harmless report. Native age/Terms/mature-content gates, separate report-content/report-user/block-user actions, local block management, and duplicate-safe report handling are implemented and test-green.
