@@ -4,13 +4,21 @@ Updated July 16, 2026 after completing the protected Linux signing checkpoint fo
 
 ## Planning model
 
-- M1–M16 and M18 are complete and retain their existing evidence and published checkpoints.
+- M1–M16 and M18–M22 are complete and retain their existing evidence and published checkpoints.
 - M17 is the remaining shared capability, using immutable Compose state, repository contracts, capability flags, and station-isolated protected sessions once its external blocker clears.
 - M18–M22 certify the shared implementation against each station. They are hardening and evidence gates, not station-specific application forks.
 - Each station's representative native login, protected restoration, isolation, authenticated surface, and logout flow is now a hard completion gate. Public/device evidence may be gathered early but does not advance the active station order.
 - M23 is an XL Play-testing readiness program divided into M23.1–M23.7 below; M23.3 and M23.7 are complete, and M24 remains the authorized publication gate.
 - Private Messages remains numbered as M17 but deferred pending legacy server repair and verified production limits. Inbox and Sent Box discovery worked, while New Message selection remained suspect and a profile-originated MorgHubby test appeared to submit without delivery; the site owner has the reproduced result.
 - Early M23 readiness artifacts are preserved. M23.1's current audit covers the production manifest, dependency/license inventory, explicit backup exclusions, 16 KB APK/ELF packaging, and a protected Ubuntu build from commit `2086ab9` whose AAB/APK signer matches the registered upload certificate. Version-code eligibility and Play delivery remain open. The Play developer account is approved; UGC reconciliation, Play review declarations, explicit rights evidence, release-device closure, and publication authorization remain dependencies.
+
+## Verified completion order
+
+The completed milestone sequence, derived from commit timestamps and milestone evidence, is:
+
+`M1 → M2 → M3 → M4 → M5 → M6 → M7 → M8 → M9 → M10 → M11/M12 (joint checkpoint) → M13 → M14 → M15 → M16 → M18 → M19 → M20 → M21 → M22 → M23.3 → M23.7`
+
+M17 is intentionally absent because it remains deferred. The other M23 IDs are active workstreams with partial checkpoints, not completed milestones. The README contains the commit-linked chronological record; milestone IDs remain stable so existing validation documents and requirements do not need to be renumbered.
 
 ## Task complexity protocol
 
@@ -52,7 +60,9 @@ This classification supplements the required XS–XXL T-shirt size, rationale, e
 
 ## Latest completed checkpoint
 
-The M23.6 startup and large-Favorites performance checkpoint completed July 16, 2026. Availability resolution is isolated from unrelated metadata/request emissions, unchanged 1,500-track state and default ordering reuse their existing list instances, and the connected test now traverses to track 1,500 before returning to sort. Five API 35 debug-emulator cold launches measured 948–986 ms with a 969 ms median; this is diagnostic evidence rather than a Play/physical performance claim. The 132-test unit suite, 40/40 Tablet connected suite, and debug lint pass. See [m23-performance-validation.md](m23-performance-validation.md).
+The latest completed checkpoint is M23.1 protected Linux signing on July 16, 2026. Commit `2086ab9` produced the signed current-product AAB/APK through the memory-backed Ubuntu path, and commit `3b775b7` corrected self-signed upload-certificate verification while preserving exact certificate pinning. The focused signing suite passes 8/8, both artifact signatures match the registered upload certificate, and the release evidence and hashes are recorded in [m23-release-candidate-audit.md](m23-release-candidate-audit.md). M23.1 remains active until version-code eligibility and Play-delivered install/update checks pass.
+
+The earlier M23.6 startup and large-Favorites performance checkpoint completed July 16, 2026. Availability resolution is isolated from unrelated metadata/request emissions, unchanged 1,500-track state and default ordering reuse their existing list instances, and the connected test now traverses to track 1,500 before returning to sort. Five API 35 debug-emulator cold launches measured 948–986 ms with a 969 ms median; this is diagnostic evidence rather than a Play/physical performance claim. The 132-test unit suite, 40/40 Tablet connected suite, and debug lint pass. See [m23-performance-validation.md](m23-performance-validation.md).
 
 The earlier M23.6 network-loss and playback-reconnection checkpoint remains green; see [m23-network-recovery-validation.md](m23-network-recovery-validation.md).
 
@@ -96,7 +106,7 @@ M18–M22 are complete while M17 remains deferred; every in-scope station capabi
 
 | Milestone | Size | Estimate | Usage | Rationale and outcome | Primary confidence variable |
 | --- | --- | --- | --- | --- | --- |
-| M23 Alpha Test Distribution Readiness | M | 1–2 focused days | Medium | Refresh privacy, tester guidance, signing guardrails, versioning, release artifacts, bundle checks, and Play readiness after M15–M22 | Custody/configuration of the upload signing identity and Console declarations |
+| M23 Play-Testing Readiness Program | XL umbrella split into M23.1–M23.7 | 3–6 focused days plus external input | Medium–High | Close release-artifact, UGC, API 36, Play-review, rights, device, and launcher-quality gates as separate reviewable workstreams | Owner/station responses and Play delivery results |
 | M24 Alpha publication completion | M | 1–3 hours after Console setup | Medium | Produce and verify the authorized signed Play bundle and internal/closed test release | Signing authorization, tester-track configuration, and release review outcome |
 
-No item is classified XL. Any future phase that exceeds L will be divided before implementation.
+M23 is the sole XL umbrella and is already divided into seven reviewable S–L workstreams. Any future phase that exceeds L will likewise be divided before implementation.

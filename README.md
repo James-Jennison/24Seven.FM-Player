@@ -20,7 +20,7 @@ The current Alpha provides a responsive native player, service-owned Media3 play
 
 ## Project Roadmap
 
-This is the single milestone sequence for the project. Detailed completion gates, estimates, dependencies, and confidence risks are maintained in [the implementation plan](docs/IMPLEMENTATION_PLAN.md).
+This roadmap separates the order work was actually completed from the stable milestone IDs used for requirements and evidence. The achievement history below is chronological and authoritative; detailed completion gates, estimates, dependencies, and confidence risks are maintained in [the implementation plan](docs/IMPLEMENTATION_PLAN.md).
 
 ### Current progression
 
@@ -30,55 +30,52 @@ This is the single milestone sequence for the project. Detailed completion gates
 - **Remaining release gates:** M23.1 version-code eligibility and Play-delivered validation after its [protected current-head build](docs/m23-release-candidate-audit.md), M23.2 report-receipt reconciliation, M23.4 Play declarations, M23.5 rights evidence, M23.6 Play delivery/update and pre-launch coverage, then the explicitly authorized M24 Alpha publication.
 - **Deferred:** M17 Private Messages remains excluded from the shipping build until the reproduced server-side delivery failure is repaired and verified.
 
-### Phase 1 — Completed foundation
+### Completed milestones — actual achievement order
 
-| Milestone | Status | Completed | Commit | Outcome |
-| --- | --- | --- | --- | --- |
-| M1 Buildable baseline | ✅ Complete | 2026-07-12 | [`9184afd`](https://github.com/codeframe78/24Seven.FM-Player/commit/9184afd) | Native Gradle/Compose baseline and Windows build path |
-| M2 Five-station playback | ✅ Complete | 2026-07-13 | [`5cdade0`](https://github.com/codeframe78/24Seven.FM-Player/commit/5cdade0) | Verified streams, atomic switching, and fallback |
-| M3 Background/system media | ✅ Complete | 2026-07-13 | [`4206fee`](https://github.com/codeframe78/24Seven.FM-Player/commit/4206fee) | Service-owned playback, MediaSession, focus, and route controls |
-| M4 Now playing | ✅ Complete | 2026-07-13 | [`0d9e6b3`](https://github.com/codeframe78/24Seven.FM-Player/commit/0d9e6b3) | Live ICY metadata and station artwork |
-| M5 Native navigation | ✅ Complete | 2026-07-13 | [`8133695`](https://github.com/codeframe78/24Seven.FM-Player/commit/8133695) | Adaptive native destinations and mini-player |
-| M6 Queue and history | ✅ Complete | 2026-07-13 | [`3babdf9`](https://github.com/codeframe78/24Seven.FM-Player/commit/3babdf9) | Bounded station-scoped Queue/History polling |
-| M7 Authentication | ✅ Complete | 2026-07-13 | [`a897794`](https://github.com/codeframe78/24Seven.FM-Player/commit/a897794) | Native station login and protected sessions |
-| M8 Chat | ✅ Complete | 2026-07-13 | [`f99635d`](https://github.com/codeframe78/24Seven.FM-Player/commit/f99635d) | Native memory-only station chat |
-| M9 Song requests | ✅ Complete | 2026-07-13 | [`e748f27`](https://github.com/codeframe78/24Seven.FM-Player/commit/e748f27) | Native search, confirmation, and one-shot submission |
-| M10 Request attribution/messages | ✅ Complete | 2026-07-14 | [`73a0d89`](https://github.com/codeframe78/24Seven.FM-Player/commit/73a0d89) | Queue attribution and verified SST request messages |
-| M11 Adaptive Alpha UI | ✅ Complete | 2026-07-14 | [`4735f13`](https://github.com/codeframe78/24Seven.FM-Player/commit/4735f13) | Responsive branded UI, previews, accessibility, and exit flow |
-| M12 Queue-aware request availability | ✅ Complete | 2026-07-14 | [`4735f13`](https://github.com/codeframe78/24Seven.FM-Player/commit/4735f13) | Conservative station-scoped availability, accessible exact labels, and fresh pre-submit checks |
+The sequence number is the order in which Git history and milestone evidence show the work reaching its completion gate. M11 and M12 closed together in one checkpoint. M17 is absent from this table because it remains deferred rather than completed.
 
-### Phase 2 — Shared feature completion
+| Achieved | Date | Milestone | Evidence | Outcome |
+| ---: | --- | --- | --- | --- |
+| 1 | 2026-07-12 | M1 Buildable baseline | [`9184afd`](https://github.com/codeframe78/24Seven.FM-Player/commit/9184afd) | Native Gradle/Compose baseline and Windows build path |
+| 2 | 2026-07-13 | M2 Five-station playback | [`5cdade0`](https://github.com/codeframe78/24Seven.FM-Player/commit/5cdade0) | Verified streams, atomic switching, and fallback |
+| 3 | 2026-07-13 | M3 Background/system media | [`4206fee`](https://github.com/codeframe78/24Seven.FM-Player/commit/4206fee) | Service-owned playback, MediaSession, focus, and route controls |
+| 4 | 2026-07-13 | M4 Now playing | [`0d9e6b3`](https://github.com/codeframe78/24Seven.FM-Player/commit/0d9e6b3) | Live ICY metadata and station artwork |
+| 5 | 2026-07-13 | M5 Native navigation | [`8133695`](https://github.com/codeframe78/24Seven.FM-Player/commit/8133695) | Adaptive native destinations and mini-player |
+| 6 | 2026-07-13 | M6 Queue and history | [`3babdf9`](https://github.com/codeframe78/24Seven.FM-Player/commit/3babdf9) | Bounded station-scoped Queue/History polling |
+| 7 | 2026-07-13 | M7 Authentication | [`a897794`](https://github.com/codeframe78/24Seven.FM-Player/commit/a897794) | Native station login and protected sessions |
+| 8 | 2026-07-13 | M8 Chat | [`f99635d`](https://github.com/codeframe78/24Seven.FM-Player/commit/f99635d) | Native memory-only station chat |
+| 9 | 2026-07-13 | M9 Song requests | [`e748f27`](https://github.com/codeframe78/24Seven.FM-Player/commit/e748f27) | Native search, confirmation, and one-shot submission |
+| 10 | 2026-07-14 | M10 Request attribution/messages | [`73a0d89`](https://github.com/codeframe78/24Seven.FM-Player/commit/73a0d89) | Queue attribution and verified SST request messages |
+| 11 (joint) | 2026-07-14 | M11 Adaptive Alpha UI | [`4735f13`](https://github.com/codeframe78/24Seven.FM-Player/commit/4735f13) | Responsive branded UI, previews, accessibility, and exit flow |
+| 12 (joint) | 2026-07-14 | M12 Queue-aware request availability | [`4735f13`](https://github.com/codeframe78/24Seven.FM-Player/commit/4735f13) | Conservative station-scoped availability and fresh pre-submit checks |
+| 13 | 2026-07-14 | M13 Independent Accounts UX | [`9ef1f1c`](https://github.com/codeframe78/24Seven.FM-Player/commit/9ef1f1c) | Five separately visible account states with session isolation |
+| 14 | 2026-07-14 | M14 Local personalization | [`81c2c4e`](https://github.com/codeframe78/24Seven.FM-Player/commit/81c2c4e) | Default/last-station preferences separated from station-owned data |
+| 15 | 2026-07-14 | M15 Request history and membership | [`b19d5fe`](https://github.com/codeframe78/24Seven.FM-Player/commit/b19d5fe) | SST request history, cooldown/readiness, and membership state |
+| 16 | 2026-07-14 | M16 Secondary content access | [`90a7f98`](https://github.com/codeframe78/24Seven.FM-Player/commit/90a7f98) | Allowlisted same-station HTTPS Custom Tabs |
+| 17 | 2026-07-14 | M18 StreamingSoundtracks.com certification | [`02dffa2`](https://github.com/codeframe78/24Seven.FM-Player/commit/02dffa2) | VIP/non-admin, Queue, request message, Favorites, chat, and authenticated coverage |
+| 18 | 2026-07-15 | M19 1980s.FM certification | [`11f1ee3`](https://github.com/codeframe78/24Seven.FM-Player/commit/11f1ee3) | Independent authenticated workflows and station behavior certified |
+| 19 | 2026-07-15 | M20 Adagio.FM certification | [`5e985ae`](https://github.com/codeframe78/24Seven.FM-Player/commit/5e985ae) | Classical metadata and authenticated workflows certified |
+| 20 | 2026-07-15 | M21 Death.FM certification | [`6757680`](https://github.com/codeframe78/24Seven.FM-Player/commit/6757680) | Compact Queue, sparse metadata, RIP boundaries, and authenticated workflows certified |
+| 21 | 2026-07-15 | M22 Entranced.FM certification | [`1e20eea`](https://github.com/codeframe78/24Seven.FM-Player/commit/1e20eea) | Extended Queue, legacy ICY punctuation, and authenticated workflows certified |
+| 22 | 2026-07-15 | M23.3 Android 16 / API 36 readiness | [`44632f1`](https://github.com/codeframe78/24Seven.FM-Player/commit/44632f1) | Target API 36 migration and device regression coverage |
+| 23 | 2026-07-15 | M23.7 Adaptive launcher/store polish | [`924a38c`](https://github.com/codeframe78/24Seven.FM-Player/commit/924a38c) | Legacy, adaptive, and monochrome launcher resources validated |
 
-| Milestone | Size | Estimate | Status | Outcome |
-| --- | --- | --- | --- | --- |
-| M13 Independent Accounts UX | L | 4–8 hours | ✅ Complete ([`9ef1f1c`](https://github.com/codeframe78/24Seven.FM-Player/commit/9ef1f1c)) | Five separately visible account states with pairwise session/logout/expiration isolation |
-| M14 Local personalization | M | 2–4 hours | ✅ Complete ([`81c2c4e`](https://github.com/codeframe78/24Seven.FM-Player/commit/81c2c4e)) | Persist default/last station and clearly distinguish local preferences from station-owned data |
-| M15 Request history and membership | L | 4–8 hours | ✅ Complete ([`b19d5fe`](https://github.com/codeframe78/24Seven.FM-Player/commit/b19d5fe)) | Memory-only SST last-ten history, cooldown/readiness, and explicit membership with conservative unknown states |
-| M16 Secondary content access | M | 2–4 hours | ✅ Complete ([`90a7f98`](https://github.com/codeframe78/24Seven.FM-Player/commit/90a7f98)) | Allowlisted same-station HTTPS Custom Tabs for selected public modules; the original Death.FM TLS boundary was safely deferred and later reverified in M21 |
-| M17 Private Messages | L provisional | 4–8 hours after server repair | 🧊 Deferred | Inbox and Sent Box discovery succeeded, but New Message selection remains suspect and a profile-originated MorgHubby test was not delivered; the site owner has the reproduced result |
+### Deferred milestone
 
-### Phase 3 — Station certification
+| Milestone | Size | Status | Current boundary |
+| --- | --- | --- | --- |
+| M17 Private Messages | L provisional | 🧊 Deferred | Inbox and Sent Box discovery succeeded, but New Message selection remains suspect and a profile-originated MorgHubby test was not delivered; the site owner has the reproduced result |
 
-These milestones harden and certify the shared app against each station; they do not create five forks. Station-specific behavior remains behind capability flags and repository contracts.
-
-| Milestone | Size | Estimate | Status | Certification emphasis |
-| --- | --- | --- | --- | --- |
-| M18 StreamingSoundtracks.com | S | 2–4 hours | ✅ Complete ([evidence](docs/m18-sst-certification.md)) | VIP/non-admin behavior, 30-row Queue, request messages, Favorites, chat, and authenticated workflows |
-| M19 1980s.FM | M | 4–7 hours | ✅ Complete ([evidence](docs/m19-1980s-certification.md)) | Independent sign-in/restore/logout, authenticated Favorites/Chat/requests, station rules, metadata, Queue, and fallback |
-| M20 Adagio.FM | M | 4–7 hours | ✅ Complete ([evidence](docs/m20-adagio-certification.md)) | Classical metadata presentation, independent sign-in/restore/logout, authenticated Favorites/Chat/requests, Queue, and fallback |
-| M21 Death.FM | L | 6–10 hours | ✅ Complete ([evidence](docs/m21-death-certification.md)) | Compact Queue feed, sparse metadata/artwork, independent sign-in/restore/logout, authenticated Favorites/Chat/requests, RIP boundaries, and fallback |
-| M22 Entranced.FM | M | 4–7 hours | ✅ Complete ([evidence](docs/m22-entranced-certification.md)) | Independent sign-in/restore/logout, authenticated Favorites/Chat/requests, extended Queue, fallback, and legacy ICY punctuation hardening |
-
-Each station gate covers playback and fallback, metadata/artwork, Queue/history, authentication, chat, Favorites, requests, membership differences, Private Messages when available, physical-device smoke testing, documentation, tests, and remote publication. Unblocked certification work may proceed while M17 is deferred, but final station completion requires every in-scope capability to pass or an explicit scope decision.
-
-### Phase 4 — Distribution
+### Active distribution roadmap
 
 | Milestone | Size | Estimate | Status | Outcome |
 | --- | --- | --- | --- | --- |
 | M23 Play-testing readiness program | XL, split below | 3–6 focused days plus owner/external input | 🚧 In progress | Preserve the completed distribution preparation while closing release-artifact, UGC, API 36, review, rights, device, and launcher-quality gates as separate reviewable milestones |
 | M24 Alpha publication | M | 1–3 hours after Console setup | ⏳ Planned | Verify the signed Play bundle and publish the authorized internal/closed test release |
 
-#### M23 reviewable sub-milestones
+#### M23 workstreams
+
+The IDs below are stable requirement identifiers, not an implied completion order. Only M23.3 and M23.7 have reached their full completion gates; the other rows record partial checkpoints and remaining dependencies.
 
 | Milestone | Size | Codex estimate | Status | Required outcome |
 | --- | --- | --- | --- | --- |
