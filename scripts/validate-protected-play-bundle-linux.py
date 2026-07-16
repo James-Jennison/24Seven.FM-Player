@@ -18,7 +18,7 @@ import sys
 import tempfile
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import Iterator
+from typing import Iterator, Mapping
 
 try:
     from cryptography.exceptions import InvalidTag
@@ -257,7 +257,32 @@ def _assert_external_package(package_path: Path, repository_root: Path) -> None:
         raise SigningError("The encrypted recovery package must remain outside the repository.")
 
 
-def check_environment(repository_root: Path) -> None:
+def resolve_android_sdk(
+    environment: Mapping[str, str] | None = None,
+    home: Path | None = None,
+) -> Path:
+    values = environment if environment is not None else os.environ
+    home_directory = home if home is not None else Path.home()
+    candidates = [
+        values.get("ANDROID_HOME"),
+        values.get("ANDROID_SDK_ROOT"),
+        str(home_directory / "Android/Sdk"),
+    ]
+    for candidate in candidates:
+        if not candidate:
+            continue
+        sdk = Path(candidate).expanduser()
+        if (
+            (sdk / "platforms/android-36/android.jar").is_file()
+            and (sdk / "build-tools/36.1.0").is_dir()
+        ):
+            return sdk.resolve()
+    raise SigningError(
+        "Android SDK Platform 36 and Build Tools 36.1.0 could not be located."
+    )
+
+
+def check_environment(repository_root: Path) -> Path:
     if sys.platform != "linux":
         raise SigningError("This protected signing helper supports Linux only.")
     if not (repository_root / "gradlew").is_file():
@@ -270,10 +295,12 @@ def check_environment(repository_root: Path) -> None:
     memory_filesystem = _run_captured(["findmnt", "-n", "-o", "FSTYPE", "/dev/shm"]).strip()
     if memory_filesystem != "tmpfs":
         raise SigningError("Protected signing requires /dev/shm to be mounted as tmpfs.")
+    return resolve_android_sdk()
 
 
 def _build_signed_artifacts(
     repository_root: Path,
+    android_sdk: Path,
     keystore_path: Path,
     payload: RecoveryPayload,
     build_apk: bool,
@@ -281,6 +308,8 @@ def _build_signed_artifacts(
     environment = os.environ.copy()
     environment.update(
         {
+            "ANDROID_HOME": str(android_sdk),
+            "ANDROID_SDK_ROOT": str(android_sdk),
             "TWENTYFOURSEVEN_UPLOAD_STORE_FILE": str(keystore_path),
             "TWENTYFOURSEVEN_UPLOAD_STORE_PASSWORD": payload.store_password,
             "TWENTYFOURSEVEN_UPLOAD_KEY_ALIAS": payload.key_alias,
@@ -353,7 +382,7 @@ def main() -> int:
     arguments = parse_arguments()
     repository_root = Path(__file__).resolve().parent.parent
     try:
-        check_environment(repository_root)
+        android_sdk = check_environment(repository_root)
         if arguments.check_environment:
             print("Protected Linux signing environment is ready.")
             return 0
@@ -368,7 +397,11 @@ def main() -> int:
             with materialized_keystore(payload) as keystore_path:
                 certificate_sha256 = verify_keystore_certificate(keystore_path, payload)
                 _build_signed_artifacts(
-                    repository_root, keystore_path, payload, arguments.build_apk
+                    repository_root,
+                    android_sdk,
+                    keystore_path,
+                    payload,
+                    arguments.build_apk,
                 )
             bundle_sha256, bundle_certificate_sha256 = _verify_signed_bundle(
                 repository_root, certificate_sha256

@@ -152,6 +152,24 @@ class LinuxPlaySigningTest(unittest.TestCase):
         with self.assertRaisesRegex(signing.SigningError, "outside the repository"):
             signing._assert_external_package(repository / "upload.24seven-recovery", repository)
 
+    def test_android_sdk_falls_back_to_the_standard_home_location(self) -> None:
+        home = self.root / "synthetic-home"
+        sdk = home / "Android/Sdk"
+        platform = sdk / "platforms/android-36"
+        build_tools = sdk / "build-tools/36.1.0"
+        platform.mkdir(parents=True)
+        build_tools.mkdir(parents=True)
+        (platform / "android.jar").touch()
+
+        self.assertEqual(
+            sdk.resolve(),
+            signing.resolve_android_sdk(environment={}, home=home),
+        )
+
+    def test_incomplete_android_sdk_is_rejected(self) -> None:
+        with self.assertRaisesRegex(signing.SigningError, "could not be located"):
+            signing.resolve_android_sdk(environment={}, home=self.root / "missing-home")
+
 
 if __name__ == "__main__":
     unittest.main()
