@@ -922,6 +922,14 @@ class RadioAppTest {
                         prepared += it
                         state = state.copy(requests = state.requests?.copy(pendingRequest = it.requestTrack))
                     },
+                    onConfirmRequest = {
+                        state = state.copy(
+                            requests = state.requests?.copy(
+                                pendingRequest = null,
+                                notice = "Your request has successfully been delivered to the DJ application.",
+                            ),
+                        )
+                    },
                 )
             }
         }
@@ -941,6 +949,11 @@ class RadioAppTest {
         composeRule.onAllNodesWithText("Request Now").assertCountEquals(2)[1].performScrollTo().performClick()
         composeRule.onNodeWithText("Request this track?").assertIsDisplayed()
         composeRule.runOnIdle { assertEquals(listOf(available), prepared) }
+        composeRule.onNodeWithText("Send request").performClick()
+        composeRule.onNodeWithTag("favorite_request_notice").assertIsDisplayed()
+        composeRule.onNodeWithText("Request sent").assertIsDisplayed()
+        composeRule.onNodeWithText("Your request has successfully been delivered to the DJ application.").assertIsDisplayed()
+        composeRule.onNodeWithTag("favorite_tracks_list").assertExists()
     }
 
     @Test

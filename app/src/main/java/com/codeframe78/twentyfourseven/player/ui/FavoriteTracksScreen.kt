@@ -69,115 +69,148 @@ internal fun FavoriteTracksScreen(
         }.sortedForDisplay(sortOrder, FavoriteTrack::availability)
     }
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize().padding(padding).testTag("favorite_tracks_list"),
-        contentPadding = PaddingValues(20.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        item {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Favorite, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                Spacer(Modifier.width(12.dp))
-                Column(Modifier.weight(1f)) {
-                    Text("Favorite tracks", style = MaterialTheme.typography.headlineSmall)
-                    Text(
-                        state.selectedStation?.name.orEmpty(),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                if (signedIn) {
-                    IconButton(onClick = onRefresh, enabled = favorites?.status != FavoriteTracksLoadStatus.Loading) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Refresh favorite tracks")
-                    }
-                }
-            }
-        }
-
-        if (state.selectedStation?.capabilities?.supportsFavorites != true) {
-            item { Text("Favorite tracks have not been verified for this station.") }
-            return@LazyColumn
-        }
-
-        if (!signedIn) {
+    Box(Modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().padding(padding).testTag("favorite_tracks_list"),
+            contentPadding = PaddingValues(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
             item {
-                Card(Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text("Station sign-in required", fontWeight = FontWeight.Bold)
-                        Text("Sign in to this station to discover and browse your own favorite-track list.")
-                        Button(onClick = onOpenAccount) { Text("Open account") }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Favorite, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Spacer(Modifier.width(12.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text("Favorite tracks", style = MaterialTheme.typography.headlineSmall)
+                        Text(
+                            state.selectedStation?.name.orEmpty(),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     }
-                }
-            }
-            return@LazyColumn
-        }
-
-        when (favorites?.status ?: FavoriteTracksLoadStatus.Idle) {
-            FavoriteTracksLoadStatus.Idle, FavoriteTracksLoadStatus.Loading -> item {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    CircularProgressIndicator(Modifier.size(28.dp))
-                    Text("Loading your favorite tracks…")
-                }
-            }
-            FavoriteTracksLoadStatus.Error -> item {
-                Card(Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(favorites?.errorMessage ?: "Favorite tracks could not be loaded.", color = MaterialTheme.colorScheme.error)
-                        TextButton(onClick = onRefresh) { Text("Try again") }
-                    }
-                }
-            }
-            FavoriteTracksLoadStatus.Ready -> {
-                item {
-                    OutlinedTextField(
-                        value = filter,
-                        onValueChange = { filter = it.take(100) },
-                        label = { Text("Filter favorites") },
-                        supportingText = {
-                            Text(if (filter.isBlank()) "${visibleTracks.size} tracks" else "${visibleTracks.size} of ${favorites?.tracks?.size ?: 0} tracks")
-                        },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
-                item {
-                    Box {
-                        TextButton(
-                            onClick = { sortMenuOpen = true },
-                            modifier = Modifier.testTag("favorite_track_sort"),
-                        ) {
-                            Text("Sort: ${sortOrder.label}")
+                    if (signedIn) {
+                        IconButton(onClick = onRefresh, enabled = favorites?.status != FavoriteTracksLoadStatus.Loading) {
+                            Icon(Icons.Default.Refresh, contentDescription = "Refresh favorite tracks")
                         }
-                        DropdownMenu(
-                            expanded = sortMenuOpen,
-                            onDismissRequest = { sortMenuOpen = false },
-                        ) {
-                            TrackSortOrder.entries.forEach { option ->
-                                DropdownMenuItem(
-                                    text = { Text(option.label) },
-                                    onClick = {
-                                        sortOrder = option
-                                        sortMenuOpen = false
-                                    },
-                                )
+                    }
+                }
+            }
+
+            if (state.selectedStation?.capabilities?.supportsFavorites != true) {
+                item { Text("Favorite tracks have not been verified for this station.") }
+                return@LazyColumn
+            }
+
+            if (!signedIn) {
+                item {
+                    Card(Modifier.fillMaxWidth()) {
+                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Text("Station sign-in required", fontWeight = FontWeight.Bold)
+                            Text("Sign in to this station to discover and browse your own favorite-track list.")
+                            Button(onClick = onOpenAccount) { Text("Open account") }
+                        }
+                    }
+                }
+                return@LazyColumn
+            }
+
+            when (favorites?.status ?: FavoriteTracksLoadStatus.Idle) {
+                FavoriteTracksLoadStatus.Idle, FavoriteTracksLoadStatus.Loading -> item {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        CircularProgressIndicator(Modifier.size(28.dp))
+                        Text("Loading your favorite tracks…")
+                    }
+                }
+                FavoriteTracksLoadStatus.Error -> item {
+                    Card(Modifier.fillMaxWidth()) {
+                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(favorites?.errorMessage ?: "Favorite tracks could not be loaded.", color = MaterialTheme.colorScheme.error)
+                            TextButton(onClick = onRefresh) { Text("Try again") }
+                        }
+                    }
+                }
+                FavoriteTracksLoadStatus.Ready -> {
+                    item {
+                        OutlinedTextField(
+                            value = filter,
+                            onValueChange = { filter = it.take(100) },
+                            label = { Text("Filter favorites") },
+                            supportingText = {
+                                Text(if (filter.isBlank()) "${visibleTracks.size} tracks" else "${visibleTracks.size} of ${favorites?.tracks?.size ?: 0} tracks")
+                            },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
+                    item {
+                        Box {
+                            TextButton(
+                                onClick = { sortMenuOpen = true },
+                                modifier = Modifier.testTag("favorite_track_sort"),
+                            ) {
+                                Text("Sort: ${sortOrder.label}")
+                            }
+                            DropdownMenu(
+                                expanded = sortMenuOpen,
+                                onDismissRequest = { sortMenuOpen = false },
+                            ) {
+                                TrackSortOrder.entries.forEach { option ->
+                                    DropdownMenuItem(
+                                        text = { Text(option.label) },
+                                        onClick = {
+                                            sortOrder = option
+                                            sortMenuOpen = false
+                                        },
+                                    )
+                                }
                             }
                         }
                     }
-                }
-                if (visibleTracks.isEmpty()) {
-                    item { Text(if (filter.isBlank()) "No favorite tracks were found." else "No favorites match this filter.") }
-                }
-                items(
-                    items = visibleTracks,
-                    key = { track -> "${track.position}-${track.requestTrack?.songId ?: track.title}" },
-                ) { track ->
-                    FavoriteTrackCard(
-                        track = track,
-                        canRequest = state.selectedStation?.capabilities?.supportsRequests == true &&
-                            state.requests?.status != SongRequestLoadStatus.Submitting,
-                        onPrepareRequest = onPrepareRequest,
-                    )
+                    if (visibleTracks.isEmpty()) {
+                        item { Text(if (filter.isBlank()) "No favorite tracks were found." else "No favorites match this filter.") }
+                    }
+                    items(
+                        items = visibleTracks,
+                        key = { track -> "${track.position}-${track.requestTrack?.songId ?: track.title}" },
+                    ) { track ->
+                        FavoriteTrackCard(
+                            track = track,
+                            canRequest = state.selectedStation?.capabilities?.supportsRequests == true &&
+                                state.requests?.status != SongRequestLoadStatus.Submitting,
+                            onPrepareRequest = onPrepareRequest,
+                        )
+                    }
                 }
             }
+        }
+
+        FavoriteRequestFeedback(
+            notice = state.requests?.notice,
+            errorMessage = state.requests?.errorMessage,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(padding)
+                .padding(20.dp),
+        )
+    }
+}
+
+@Composable
+private fun FavoriteRequestFeedback(
+    notice: String?,
+    errorMessage: String?,
+    modifier: Modifier = Modifier,
+) {
+    val message = errorMessage ?: notice ?: return
+    val isError = errorMessage != null
+    Card(
+        modifier = modifier.fillMaxWidth().testTag(if (isError) "favorite_request_error" else "favorite_request_notice"),
+    ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                if (isError) "Request status" else "Request sent",
+                color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold,
+            )
+            Text(message)
         }
     }
 }
