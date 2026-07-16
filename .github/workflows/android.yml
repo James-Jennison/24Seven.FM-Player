@@ -34,3 +34,32 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew test lint assembleDebug --no-daemon --console=plain
+
+  notify-discord:
+    name: Notify Discord
+    needs: build
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post Android CI result
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          BUILD_RESULT: ${{ needs.build.result }}
+          REPOSITORY: ${{ github.repository }}
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+          ACTOR: ${{ github.actor }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [[ -z "${DISCORD_WEBHOOK_URL}" ]]; then
+            echo "Discord webhook is not available; skipping notification."
+            exit 0
+          fi
+
+          message=$(printf '**24Seven.FM Android CI: %s**\nRepository: `%s`\nBranch: `%s`\nTriggered by: `%s`\nRun: %s' \
+            "${BUILD_RESULT}" "${REPOSITORY}" "${BRANCH_NAME}" "${ACTOR}" "${RUN_URL}")
+
+          jq --null-input --arg content "${message}" '{content: $content}' \
+            | curl --fail-with-body --silent --show-error --retry 3 --retry-all-errors \
+                --header 'Content-Type: application/json' \
+                --data-binary @- \
+                "${DISCORD_WEBHOOK_URL}"
