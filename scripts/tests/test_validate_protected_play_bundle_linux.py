@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import zipfile
 
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
@@ -169,6 +170,33 @@ class LinuxPlaySigningTest(unittest.TestCase):
     def test_incomplete_android_sdk_is_rejected(self) -> None:
         with self.assertRaisesRegex(signing.SigningError, "could not be located"):
             signing.resolve_android_sdk(environment={}, home=self.root / "missing-home")
+
+    def test_self_signed_upload_certificate_passes_jar_verification(self) -> None:
+        bundle = self.root / "self-signed-test.aab"
+        with zipfile.ZipFile(bundle, "w") as archive:
+            archive.writestr("base/manifest/AndroidManifest.xml", "synthetic")
+        subprocess.run(
+            [
+                "jarsigner",
+                "-keystore",
+                str(self.keystore),
+                "-storepass",
+                self.password,
+                "-keypass",
+                self.password,
+                "-storetype",
+                "PKCS12",
+                str(bundle),
+                self.alias,
+            ],
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+
+        verification = signing._verify_jar_signature(bundle)
+
+        self.assertRegex(verification, r"(?im)^\s*jar verified\.?\s*$")
 
 
 if __name__ == "__main__":

@@ -335,16 +335,7 @@ def _verify_signed_bundle(
     bundle = repository_root / "app/build/outputs/bundle/release/app-release.aab"
     if not bundle.is_file():
         raise SigningError("The release bundle was not produced at the expected path.")
-    verification = _run_captured([
-        shutil.which("jarsigner") or "jarsigner",
-        "-verify",
-        "-strict",
-        "-verbose",
-        "-certs",
-        str(bundle),
-    ])
-    if not re.search(r"(?im)^\s*jar verified\.?\s*$", verification):
-        raise SigningError("The release bundle does not contain a verified JAR signature.")
+    _verify_jar_signature(bundle)
     certificate_pem = _run_captured(
         [shutil.which("keytool") or "keytool", "-printcert", "-rfc", "-jarfile", str(bundle)]
     )
@@ -354,6 +345,21 @@ def _verify_signed_bundle(
             "The release bundle signer does not match the registered Play upload certificate."
         )
     return hashlib.sha256(bundle.read_bytes()).hexdigest().upper(), certificate_sha256
+
+
+def _verify_jar_signature(bundle: Path) -> str:
+    # Play upload certificates are normally self-signed. Avoid jarsigner's strict
+    # public-trust-chain check and pin the exact expected certificate separately.
+    verification = _run_captured([
+        shutil.which("jarsigner") or "jarsigner",
+        "-verify",
+        "-verbose",
+        "-certs",
+        str(bundle),
+    ])
+    if not re.search(r"(?im)^\s*jar verified\.?\s*$", verification):
+        raise SigningError("The release bundle does not contain a verified JAR signature.")
+    return verification
 
 
 def parse_arguments() -> argparse.Namespace:
