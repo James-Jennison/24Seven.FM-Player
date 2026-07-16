@@ -100,48 +100,44 @@ These captures are from the physical Razr. Most use live station data, so track 
 
 <table>
   <tr>
-    <td align="center"><img src="docs/screenshots/player.png" alt="Adaptive native player with 24Seven.FM artwork, station carousel, and live controls" width="300"><br><strong>Adaptive Player and station carousel</strong></td>
-    <td align="center"><img src="docs/screenshots/queue.png" alt="Native upcoming queue with artwork and the persistent M11 mini-player" width="300"><br><strong>Queue and persistent mini-player</strong></td>
+    <td width="50%" align="center" valign="top"><img src="docs/screenshots/player.png" alt="Adaptive native player with 24Seven.FM artwork, station carousel, and live controls" width="300"><br><strong>Adaptive Player</strong><br><sub>Live artwork, track metadata, station carousel, and playback controls.</sub></td>
+    <td width="50%" align="center" valign="top"><img src="docs/screenshots/queue.png" alt="Native upcoming queue with artwork and the persistent M11 mini-player" width="300"><br><strong>Queue</strong><br><sub>Upcoming tracks alongside the persistent mini-player.</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="docs/screenshots/chat.png" alt="Native station chat" width="300"><br><strong>Live native chat</strong></td>
-    <td align="center"><img src="docs/screenshots/requests.png" alt="Native station library search" width="300"><br><strong>Song-request library search</strong></td>
+    <td width="50%" align="center" valign="top"><img src="docs/screenshots/chat.png" alt="Native station chat" width="300"><br><strong>Live Chat</strong><br><sub>Native station-scoped community conversation.</sub></td>
+    <td width="50%" align="center" valign="top"><img src="docs/screenshots/requests.png" alt="Native station library search" width="300"><br><strong>Song Requests</strong><br><sub>Multi-field station-library search and request workflow.</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="docs/screenshots/favorites.png" alt="Native favorite-track list with accessible green available and red unavailable stoplights" width="300"><br><strong>Favorite tracks and request availability</strong></td>
-    <td align="center"><img src="docs/screenshots/vip-request-message-success.png" alt="Verified native VIP request with requester attribution and exact message in Queue" width="300"><br><strong>Verified request attribution and message</strong></td>
+    <td width="50%" align="center" valign="top"><img src="docs/screenshots/favorites.png" alt="Native favorite-track list with accessible green available and red unavailable stoplights" width="300"><br><strong>Favorite Tracks</strong><br><sub>Accessible request availability across large station-owned lists.</sub></td>
+    <td width="50%" align="center" valign="top"><img src="docs/screenshots/vip-request-message-success.png" alt="Verified native VIP request with requester attribution and exact message in Queue" width="300"><br><strong>VIP Request Message</strong><br><sub>Verified requester attribution and message shown in Queue.</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="docs/screenshots/accounts.png" alt="Native station accounts dashboard explaining independent protected sessions and showing the selected station account" width="300"><br><strong>Independent station accounts</strong></td>
-    <td align="center"><img src="docs/screenshots/preferences.png" alt="Native device preferences card for resuming the last station or fixing the current station at startup" width="300"><br><strong>Device-local startup preferences</strong></td>
+    <td width="50%" align="center" valign="top"><img src="docs/screenshots/accounts.png" alt="Native station accounts dashboard explaining independent protected sessions and showing the selected station account" width="300"><br><strong>Independent Accounts</strong><br><sub>Protected, separately visible sessions for each station.</sub></td>
+    <td width="50%" align="center" valign="top"><img src="docs/screenshots/preferences.png" alt="Native device preferences card for resuming the last station or fixing the current station at startup" width="300"><br><strong>Startup Preferences</strong><br><sub>Device-local resume and default-station behavior.</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="docs/screenshots/m15-request-activity.png" alt="Native SST request activity card in its explicit signed-out state" width="300"><br><strong>Request history, cooldown, and membership</strong></td>
-    <td align="center"><img src="docs/screenshots/m16-secondary-content.png" alt="Native SST secondary-content directory with same-station browser cards and persistent player navigation" width="300"><br><strong>Trusted secondary station content</strong></td>
+    <td width="50%" align="center" valign="top"><img src="docs/screenshots/m15-request-activity.png" alt="Native SST request activity card in its explicit signed-out state" width="300"><br><strong>Request Activity</strong><br><sub>Request history, cooldown, readiness, and membership state.</sub></td>
+    <td width="50%" align="center" valign="top"><img src="docs/screenshots/m16-secondary-content.png" alt="Native SST secondary-content directory with same-station browser cards and persistent player navigation" width="300"><br><strong>Trusted Station Content</strong><br><sub>Allowlisted same-station pages opened through a secure browser.</sub></td>
   </tr>
   <tr>
-    <td align="center" colspan="2"><img src="docs/screenshots/m18-sst-certification.png" alt="Certified SST Player state with live title, artist, album artwork, station carousel, and all five navigation destinations" width="300"><br><strong>M18 StreamingSoundtracks.com certification</strong></td>
+    <td width="50%" align="center" valign="top"><img src="docs/screenshots/m18-sst-certification.png" alt="Certified SST Player state with live title, artist, album artwork, station carousel, and all five navigation destinations" width="300"><br><strong>M18 SST Certification</strong><br><sub>Certified live Player state and complete native navigation.</sub></td>
+    <td width="50%" align="center" valign="top"><img src="docs/screenshots/m19-1980s-authenticated.png" alt="Independent 1980s.FM account signed in as MorG while other visible station accounts remain signed out" width="300"><br><strong>M19 1980s.FM Certification</strong><br><sub>Verified independent 1980s.FM authentication.</sub></td>
   </tr>
   <tr>
-    <td align="center" colspan="2"><img src="docs/screenshots/m19-1980s-authenticated.png" alt="Independent 1980s.FM account signed in as MorG while other visible station accounts remain signed out" width="300"><br><strong>M19 verified independent 1980s.FM login</strong></td>
+    <td width="50%" align="center" valign="top"><img src="docs/screenshots/m20-adagio-authenticated.png" alt="Independent Adagio.FM account signed in as MorG while other visible station accounts remain signed out" width="300"><br><strong>M20 Adagio.FM Certification</strong><br><sub>Verified independent Adagio.FM authentication.</sub></td>
+    <td width="50%" align="center" valign="top"><img src="docs/screenshots/m21-death-certification.png" alt="Death.FM Player with live title, artist, station artwork, station carousel, and playback controls" width="300"><br><strong>M21 Death.FM Player</strong><br><sub>Certified sparse-metadata playback and station navigation.</sub></td>
   </tr>
   <tr>
-    <td align="center" colspan="2"><img src="docs/screenshots/m20-adagio-authenticated.png" alt="Independent Adagio.FM account signed in as MorG while other visible station accounts remain signed out" width="300"><br><strong>M20 verified independent Adagio.FM login</strong></td>
+    <td width="50%" align="center" valign="top"><img src="docs/screenshots/m21-death-rip-pages.png" alt="Death.FM trusted station-page directory including RIP membership" width="300"><br><strong>Death.FM RIP Pages</strong><br><sub>Trusted station pages and RIP membership access.</sub></td>
+    <td width="50%" align="center" valign="top"><img src="docs/screenshots/m21-death-authenticated.png" alt="Independent Death.FM account signed in as Morgue while other visible station accounts remain signed out" width="300"><br><strong>M21 Death.FM Authentication</strong><br><sub>Verified station-isolated Death.FM account session.</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="docs/screenshots/m21-death-certification.png" alt="Death.FM Player with live title, artist, station artwork, station carousel, and playback controls" width="300"><br><strong>M21 Death.FM Player evidence</strong></td>
-    <td align="center"><img src="docs/screenshots/m21-death-rip-pages.png" alt="Death.FM trusted station-page directory including RIP membership" width="300"><br><strong>Death.FM trusted pages and RIP membership</strong></td>
+    <td width="50%" align="center" valign="top"><img src="docs/screenshots/m22-entranced-certification.png" alt="Entranced.FM Player with live title, artist, same-station artwork, selected station card, and playback controls" width="300"><br><strong>M22 Entranced.FM Player</strong><br><sub>Certified artwork, metadata, playback, and station selection.</sub></td>
+    <td width="50%" align="center" valign="top"><img src="docs/screenshots/m22-entranced-authenticated.png" alt="Independent Entranced.FM account signed in as MorG while 1980s.FM, Adagio.FM, and Death.FM remain signed out" width="300"><br><strong>M22 Entranced.FM Authentication</strong><br><sub>Verified station-isolated Entranced.FM account session.</sub></td>
   </tr>
   <tr>
-    <td align="center" colspan="2"><img src="docs/screenshots/m21-death-authenticated.png" alt="Independent Death.FM account signed in as Morgue while other visible station accounts remain signed out" width="300"><br><strong>M21 verified independent Death.FM login</strong></td>
-  </tr>
-  <tr>
-    <td align="center"><img src="docs/screenshots/m22-entranced-certification.png" alt="Entranced.FM Player with live title, artist, same-station artwork, selected station card, and playback controls" width="300"><br><strong>M22 Entranced.FM Player evidence</strong></td>
-    <td align="center"><img src="docs/screenshots/m22-entranced-authenticated.png" alt="Independent Entranced.FM account signed in as MorG while 1980s.FM, Adagio.FM, and Death.FM remain signed out" width="300"><br><strong>M22 verified independent Entranced.FM login</strong></td>
-  </tr>
-  <tr>
-    <td align="center"><img src="docs/play-store-assets/screenshots/phone-player-live-playing.png" alt="Compact physical Razr Player with live Entranced.FM artwork, metadata, playback controls, and bottom navigation" width="300"><br><strong>M23 compact Android evidence</strong></td>
-    <td align="center"><img src="docs/play-store-assets/screenshots/tablet-landscape-player.png" alt="Expanded landscape Player with navigation rail, two-pane now-playing content, controls, and all five station cards" width="400"><br><strong>M23 expanded landscape evidence</strong></td>
+    <td width="50%" align="center" valign="top"><img src="docs/play-store-assets/screenshots/phone-player-live-playing.png" alt="Compact physical Razr Player with live Entranced.FM artwork, metadata, playback controls, and bottom navigation" width="300"><br><strong>M23 Compact Layout</strong><br><sub>Physical Razr evidence with live playback and bottom navigation.</sub></td>
+    <td width="50%" align="center" valign="top"><img src="docs/play-store-assets/screenshots/tablet-landscape-player.png" alt="Expanded landscape Player with navigation rail, two-pane now-playing content, controls, and all five station cards" width="300"><br><strong>M23 Expanded Layout</strong><br><sub>Landscape two-pane Player with navigation rail and station carousel.</sub></td>
   </tr>
 </table>
 
