@@ -65,4 +65,4 @@ Never include passwords, security-code answers or images, cookies, session value
 - Sleep timer, Cast/audio-output selection, and diagnostics are not implemented.
 - Station accounts are currently station-specific.
 - Public station interfaces can change independently of the app.
-- Hinge-specific physical fold testing remains outstanding; layouts adapt to the available window area.
+- Physical Razr playback and UI survive a measured open/tabletop/closed/reopened hinge cycle. Play-delivered install/update validation, the Play pre-launch report, and a complete spoken TalkBack pass remain release checks.

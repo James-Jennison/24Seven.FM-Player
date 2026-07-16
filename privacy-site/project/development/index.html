@@ -1,0 +1,129 @@
+---
+layout: project
+title: Development process · 24Seven.FM Player
+description: See the architecture, repository boundaries, implementation workflow, safety discipline, and source organization behind 24Seven.FM Player.
+permalink: /project/development/
+section: development
+---
+<section class="page-hero">
+  <div>
+    <p class="eyebrow">Engineering the player</p>
+    <h1>How the project is built</h1>
+    <p class="page-lede">Development proceeds in evidence-backed vertical slices: research the station contract, define domain boundaries, implement native behavior, validate narrowly, then record the result before moving on.</p>
+  </div>
+  <aside class="page-summary" aria-label="Architecture summary">
+    <span>Architecture</span>
+    <strong>Native MVVM</strong>
+    <dl>
+      <div><dt>UI</dt><dd>Compose</dd></div>
+      <div><dt>Playback</dt><dd>Media3</dd></div>
+      <div><dt>State</dt><dd>Immutable</dd></div>
+    </dl>
+  </aside>
+</section>
+
+<nav class="section-jump" aria-label="On this page">
+  <a href="#architecture">Architecture</a>
+  <a href="#boundaries">Boundaries</a>
+  <a href="#workflow">Workflow</a>
+  <a href="#source-map">Source map</a>
+  <a href="#toolchain">Toolchain</a>
+  <a href="#contribute">Contribute</a>
+</nav>
+
+<section class="content-section" id="architecture">
+  <div class="content-intro wide">
+    <p class="eyebrow">Dependency direction</p>
+    <h2>Interfaces point inward</h2>
+    <p>Compose never imports network, cookie, WebSocket, ExoPlayer, or station protocol implementations. Screens receive immutable state and emit actions upward; ViewModels depend on domain repository and playback interfaces.</p>
+  </div>
+  <div class="architecture-flow" role="img" aria-label="Compose UI emits actions to a ViewModel, which depends on domain repository and playback interfaces implemented by data adapters and Media3">
+    <div class="architecture-node ui"><span>Presentation</span><strong>Compose UI</strong><small>Immutable state · actions upward</small></div>
+    <div class="architecture-arrow" aria-hidden="true">→</div>
+    <div class="architecture-node vm"><span>State owner</span><strong>ViewModels</strong><small>Coroutines · station scope</small></div>
+    <div class="architecture-arrow" aria-hidden="true">→</div>
+    <div class="architecture-node domain"><span>Domain</span><strong>Interfaces + models</strong><small>Capabilities · policies · contracts</small></div>
+    <div class="architecture-split" aria-hidden="true">↙ &nbsp; ↘</div>
+    <div class="architecture-implementations">
+      <div class="architecture-node"><span>Data</span><strong>Station adapters</strong><small>Bounded I/O · defensive parsing</small></div>
+      <div class="architecture-node"><span>Playback</span><strong>Media3 service</strong><small>ExoPlayer · MediaSession</small></div>
+    </div>
+  </div>
+</section>
+
+<section class="content-section" id="boundaries">
+  <div class="content-intro">
+    <p class="eyebrow">Design principles</p>
+    <h2>Constraints that keep the app trustworthy</h2>
+  </div>
+  <div class="principle-grid">
+    <article><span>01</span><h3>Station scope is explicit</h3><p>Metadata, Queue, History, Chat, requests, Favorites, activity, and sessions all carry a station identity. State cannot silently leak between stations.</p></article>
+    <article><span>02</span><h3>Capabilities replace assumptions</h3><p>A feature appears only when the station contract says it is supported. Missing evidence produces an unavailable or unknown state, never invented behavior.</p></article>
+    <article><span>03</span><h3>Remote traffic is bounded</h3><p>Polling intervals, response sizes, row counts, character limits, same-origin rules, and redirect policies are enforced by the data layer.</p></article>
+    <article><span>04</span><h3>Mutations are deliberate</h3><p>Chat, song requests, request messages, and abuse reports require explicit user actions and are not retried automatically when the result is indeterminate.</p></article>
+    <article><span>05</span><h3>Secrets stay outside Git</h3><p>Credentials, cookies, CSRF values, signing material, reviewer accounts, HAR files, and unsanitized captures never belong in repository history.</p></article>
+    <article><span>06</span><h3>Native remains native</h3><p>App features use Compose and repository contracts. Selected public pages may open in a trusted Custom Tab, but the application itself is not a WebView shell.</p></article>
+  </div>
+</section>
+
+<section class="content-section" id="workflow">
+  <div class="content-intro wide">
+    <p class="eyebrow">Milestone lifecycle</p>
+    <h2>From question to verified checkpoint</h2>
+    <p>Each milestone is sized before work begins and closes only after implementation, proportionate validation, evidence, documentation, and focused Git history are complete.</p>
+  </div>
+  <ol class="process-timeline">
+    <li><span>1</span><div><h3>Establish current behavior</h3><p>Read the smallest relevant source and evidence set. Reproduce the behavior before editing, and preserve unrelated user work.</p></div></li>
+    <li><span>2</span><div><h3>Research the contract</h3><p>Verify station responses, Android behavior, policy boundaries, and capability differences. Unknowns remain explicit.</p></div></li>
+    <li><span>3</span><div><h3>Define the vertical slice</h3><p>Model immutable state and repository contracts, then identify UI actions, data adapters, playback boundaries, and failure states.</p></div></li>
+    <li><span>4</span><div><h3>Implement through the layers</h3><p>Compose renders state, ViewModels coordinate, repository implementations own protocols, and Media3 remains service-owned.</p></div></li>
+    <li><span>5</span><div><h3>Validate narrowly first</h3><p>Target affected unit tests and Kotlin compilation before broader lint, bundle, emulator, or physical-device checks.</p></div></li>
+    <li><span>6</span><div><h3>Record evidence</h3><p>Update milestone documents and the chronological README roadmap with verified results, limitations, and remaining device or owner checks.</p></div></li>
+    <li><span>7</span><div><h3>Publish and observe</h3><p>Create a focused commit and PR, let GitHub Actions validate it, post the change summary to Discord, and verify the merged result.</p></div></li>
+  </ol>
+</section>
+
+<section class="content-section" id="source-map">
+  <div class="content-intro">
+    <p class="eyebrow">Repository map</p>
+    <h2>Where responsibilities live</h2>
+  </div>
+  <div class="source-map">
+    <article><code>app/src/main/.../ui</code><h3>Compose and ViewModels</h3><p>Adaptive screens, immutable UI state, actions, navigation shell, dialogs, and Material theme.</p></article>
+    <article><code>app/src/main/.../domain</code><h3>Models and contracts</h3><p>Station identities, capabilities, repository interfaces, playback boundary, and trust policies.</p></article>
+    <article><code>app/src/main/.../data</code><h3>Station implementations</h3><p>Remote adapters, defensive parsers, encrypted session persistence, polling limits, and local preferences.</p></article>
+    <article><code>app/src/main/.../playback</code><h3>Media service</h3><p>ExoPlayer, MediaSession, MediaController adapter, notification behavior, stream fallback, and recovery.</p></article>
+    <article><code>app/src/test</code><h3>Local behavior tests</h3><p>Domain rules, parsers, repositories, ViewModels, state transitions, and release helpers.</p></article>
+    <article><code>app/src/androidTest</code><h3>Connected UI tests</h3><p>Compose semantics, adaptive layouts, navigation, accessibility, screenshots, and device-state behavior.</p></article>
+    <article><code>docs</code><h3>Research and evidence</h3><p>Protocol research, validation records, station certifications, device matrices, Play readiness, and release notes.</p></article>
+    <article><code>.github/workflows</code><h3>Continuous validation</h3><p>Android build/test/lint assembly, Pages generation/deployment, and Discord result notification.</p></article>
+  </div>
+</section>
+
+<section class="content-section" id="toolchain">
+  <div class="content-intro">
+    <p class="eyebrow">Current candidate toolchain</p>
+    <h2>Modern Android, narrow dependencies</h2>
+  </div>
+  <div class="toolchain-grid">
+    <div><span>Language</span><strong>Kotlin 2.2.21</strong></div>
+    <div><span>UI</span><strong>Jetpack Compose</strong></div>
+    <div><span>Playback</span><strong>Media3 1.10.1</strong></div>
+    <div><span>Images</span><strong>Coil 3.4.0</strong></div>
+    <div><span>Android</span><strong>API 26–36</strong></div>
+    <div><span>Packaging</span><strong>16 KB ready</strong></div>
+  </div>
+  <p class="context-note">The project remains a single Android application module. It will split only when stable boundaries justify the added Gradle complexity.</p>
+</section>
+
+<section class="cta" id="contribute" aria-labelledby="contribute-title">
+  <div>
+    <p class="eyebrow">Contribute responsibly</p>
+    <h2 id="contribute-title">Focused changes, clear evidence.</h2>
+    <p>Open an issue before a large feature or protocol change, branch from <code>main</code>, preserve layer boundaries, add tests, and never publish protected station or signing data.</p>
+  </div>
+  <div class="actions">
+    <a class="button primary" href="https://github.com/codeframe78/24Seven.FM-Player/blob/main/CONTRIBUTING.md">Contribution guide</a>
+    <a class="button secondary" href="https://github.com/codeframe78/24Seven.FM-Player/issues">Open issues</a>
+  </div>
+</section>

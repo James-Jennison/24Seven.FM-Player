@@ -1,0 +1,144 @@
+---
+layout: project
+title: Features · 24Seven.FM Player
+description: Explore the native playback, station, account, request, community, safety, and adaptive-device features in the 24Seven.FM Player Alpha.
+permalink: /project/features/
+section: features
+---
+<section class="page-hero">
+  <div>
+    <p class="eyebrow">Product experience</p>
+    <h1>What the Alpha can do</h1>
+    <p class="page-lede">The player combines five distinct station experiences in one native Android application without flattening their differences or replacing them with a WebView.</p>
+  </div>
+  <aside class="page-summary" aria-label="Current product summary">
+    <span>Current candidate</span>
+    <strong>0.1.0-alpha01</strong>
+    <dl>
+      <div><dt>Stations</dt><dd>5</dd></div>
+      <div><dt>Minimum</dt><dd>Android 8</dd></div>
+      <div><dt>Target</dt><dd>Android 16</dd></div>
+    </dl>
+  </aside>
+</section>
+
+<nav class="section-jump" aria-label="On this page">
+  <a href="#listening">Listening</a>
+  <a href="#discovery">Discovery</a>
+  <a href="#accounts">Accounts</a>
+  <a href="#community">Community</a>
+  <a href="#station-matrix">Stations</a>
+  <a href="#boundaries">Boundaries</a>
+</nav>
+
+<section class="content-section" id="listening">
+  <div class="content-intro">
+    <p class="eyebrow">01 · Listening</p>
+    <h2>Playback belongs to the service</h2>
+    <p>A single Media3 player and MediaSession own the live stream beyond the Activity lifecycle. The UI connects through a domain-facing controller, so playback survives navigation and backgrounding without coupling Compose to ExoPlayer.</p>
+  </div>
+  <div class="detail-grid three">
+    <article><h3>Atomic station switching</h3><p>Selecting a station replaces the live item and its ordered fallback as one operation. Two stations cannot play simultaneously.</p></article>
+    <article><h3>System integration</h3><p>Notification, lock-screen, headset, Bluetooth, audio-focus, and play/pause controls stay synchronized through MediaSession.</p></article>
+    <article><h3>Network recovery</h3><p>An offline terminal failure becomes an explicit waiting state. One automatic prepare occurs after validated connectivity returns; pause, stop, or switching cancels it.</p></article>
+  </div>
+</section>
+
+<section class="content-section" id="discovery">
+  <div class="content-intro">
+    <p class="eyebrow">02 · Discovery</p>
+    <h2>Live context without invented metadata</h2>
+    <p>Station responses are treated as evidence. The app displays fields the station actually provides, enriches artwork only from the selected station, and leaves unavailable values unavailable.</p>
+  </div>
+  <div class="experience-layout">
+    <div class="experience-copy">
+      <ul class="check-list">
+        <li><strong>Now playing:</strong> ICY title, station artwork, and current-track enrichment.</li>
+        <li><strong>Queue and History:</strong> bounded upcoming and recently played tracks with requester attribution where explicit.</li>
+        <li><strong>Library search:</strong> Title, Album, Artist, and Genre modes with station-order or play-state sorting.</li>
+        <li><strong>Favorites:</strong> number, name, album, artist, genre, year, length, and play-state sorting across lists as large as 1,500 tracks.</li>
+        <li><strong>Request availability:</strong> conservative Queue/recent-play checks repeated against fresh data before confirmation.</li>
+      </ul>
+    </div>
+    <figure class="feature-shot">
+      <img src="{{ '/assets/project/screenshots/stations.png' | relative_url }}" alt="Station selection screen showing the five supported stations" loading="lazy">
+      <figcaption><strong>Five-station navigation</strong><span>One adaptive native shell, station-scoped state</span></figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="content-section" id="accounts">
+  <div class="content-intro">
+    <p class="eyebrow">03 · Accounts and requests</p>
+    <h2>Protected sessions remain independent</h2>
+    <p>Each station has a separately visible session. Credentials remain transient during sign-in, returned cookies are encrypted with Android Keystore, and sign-out clears only the selected station.</p>
+  </div>
+  <div class="detail-grid two">
+    <article>
+      <h3>Explicit request workflow</h3>
+      <p>Search, album browsing, least-played and random suggestions lead to a separate confirmation step. State-changing requests are one-shot and never automatically retried.</p>
+      <ul><li>Fresh eligibility check before submission</li><li>Station success, rejection, or indeterminate result</li><li>Verified optional SST request message</li></ul>
+    </article>
+    <article>
+      <h3>Listener activity</h3>
+      <p>Verified stations can expose memory-only recent request summaries, cooldown/readiness, and explicit membership evidence. Generic page wording never implies VIP or RIP status.</p>
+      <ul><li>No background polling</li><li>Cleared on station sign-out</li><li>Unsupported states remain explicit</li></ul>
+    </article>
+  </div>
+</section>
+
+<section class="content-section" id="community">
+  <div class="content-intro">
+    <p class="eyebrow">04 · Community and safety</p>
+    <h2>Participation is gated and user-controlled</h2>
+    <p>Public community content is hidden until the adult age screen, current Terms, and a separate mature-content reveal are satisfied. Reporting and blocking are native actions, not buried browser destinations.</p>
+  </div>
+  <div class="experience-layout reverse">
+    <figure class="feature-shot">
+      <img src="{{ '/assets/project/screenshots/more.png' | relative_url }}" alt="More screen with account, community, privacy, and station resources" loading="lazy">
+      <figcaption><strong>Capability-aware More</strong><span>Account, safety, privacy, and verified station resources</span></figcaption>
+    </figure>
+    <div class="experience-copy">
+      <ul class="check-list">
+        <li><strong>Chat:</strong> bounded, station-scoped, memory-only messages with a 30-second minimum refresh interval.</li>
+        <li><strong>Report content or user:</strong> bounded evidence sent only after an explicit action through an authorized same-station Contact Us form.</li>
+        <li><strong>Local blocking:</strong> station-scoped identity filtering for Chat and requester attribution with a native management surface.</li>
+        <li><strong>Terms and privacy:</strong> native access to the participation terms, privacy notice, and open-source licenses.</li>
+        <li><strong>Trusted station pages:</strong> exact same-station HTTPS links open in a browser Custom Tab without copying protected app sessions.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="content-section" id="station-matrix">
+  <div class="content-intro wide">
+    <p class="eyebrow">Station certification</p>
+    <h2>Shared architecture, verified differences</h2>
+    <p>Every station uses the same domain contracts and UI. Capability flags expose only behavior supported by evidence from that station.</p>
+  </div>
+  <div class="table-wrap" tabindex="0" role="region" aria-label="Station capability matrix">
+    <table class="capability-table">
+      <thead><tr><th>Station</th><th>Shared certified surface</th><th>Notable verified boundary</th></tr></thead>
+      <tbody>
+        <tr><th>StreamingSoundtracks.com</th><td>Playback, metadata, Queue/History, account, Chat, Favorites, requests, pages</td><td>Request messages, last-ten request activity, VIP evidence</td></tr>
+        <tr><th>1980s.FM</th><td>Playback, metadata, Queue/History, account, Chat, Favorites, requests, pages</td><td>Independent session and verified Games/Awards pages</td></tr>
+        <tr><th>Adagio.FM</th><td>Playback, classical metadata, Queue/History, account, Chat, Favorites, requests, pages</td><td>Classical field presentation without guessed values</td></tr>
+        <tr><th>Death.FM</th><td>Playback, sparse metadata, compact Queue/History, account, Chat, Favorites, requests, pages</td><td>RIP membership route instead of VIP wording</td></tr>
+        <tr><th>Entranced.FM</th><td>Playback, metadata, extended Queue/History, account, Chat, Favorites, requests, pages</td><td>Narrowly scoped legacy ICY punctuation normalization</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="content-section boundary-section" id="boundaries">
+  <div class="content-intro">
+    <p class="eyebrow">Honest Alpha boundaries</p>
+    <h2>What is deliberately not shipped</h2>
+  </div>
+  <div class="boundary-grid">
+    <article><span>M17</span><h3>Private Messages</h3><p>Deferred after Inbox/Sent discovery and a reproduced profile-originated message that appeared to submit but was not delivered. It remains excluded until the legacy server path is repaired and verified.</p></article>
+    <article><span>Future</span><h3>Convenience features</h3><p>Sleep timer, Cast or dedicated audio-output selection, and an in-app diagnostics surface are not part of this Alpha candidate.</p></article>
+    <article><span>External</span><h3>Station availability</h3><p>The app depends on independently operated public station interfaces. Protocol or content changes can require renewed research and certification.</p></article>
+  </div>
+  <p class="section-action"><a class="text-link" href="{{ '/project/roadmap/' | relative_url }}">See the complete roadmap and remaining release gates <span aria-hidden="true">→</span></a></p>
+</section>

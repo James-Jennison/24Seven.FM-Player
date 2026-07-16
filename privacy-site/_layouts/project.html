@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#090c15">
     <meta name="description" content="{{ page.description | default: site.description | escape }}">
-    <meta property="og:title" content="24Seven.FM Player">
-    <meta property="og:description" content="A fully native Android player for five 24seven.FM stations.">
+    <meta property="og:title" content="{{ page.title | default: site.title | escape }}">
+    <meta property="og:description" content="{{ page.description | default: site.description | escape }}">
     <meta property="og:image" content="{{ '/assets/project/feature-graphic.png' | absolute_url }}">
     <meta property="og:type" content="website">
     <title>{{ page.title | default: site.title | escape }}</title>
@@ -18,13 +18,14 @@
     <header class="project-header">
       <a class="project-brand" href="{{ '/project/' | relative_url }}" aria-label="24Seven.FM Player home">
         <img src="{{ '/assets/project/app-icon.png' | relative_url }}" alt="" width="44" height="44">
-        <span>24Seven.FM Player</span>
+        <span><strong>24Seven.FM Player</strong><small>Project portal</small></span>
       </a>
       <nav aria-label="Primary navigation">
-        <a aria-current="page" href="{{ '/project/' | relative_url }}">Project</a>
-        <a href="{{ '/' | relative_url }}">Privacy</a>
-        <a href="https://github.com/codeframe78/24Seven.FM-Player">GitHub</a>
+        {% for item in site.data.project.navigation %}
+        <a{% if page.section == item.section %} aria-current="page"{% endif %} href="{{ item.path | relative_url }}">{{ item.label }}</a>
+        {% endfor %}
       </nav>
+      <a class="header-github" href="https://github.com/codeframe78/24Seven.FM-Player">GitHub <span aria-hidden="true">↗</span></a>
     </header>
     <main id="main-content">
       {{ content }}
@@ -35,6 +36,8 @@
         <p>An unofficial, non-commercial community project. Not affiliated with or endorsed by 24seven.FM or its stations.</p>
       </div>
       <nav aria-label="Footer navigation">
+        <a href="{{ '/project/development/' | relative_url }}">Development process</a>
+        <a href="{{ '/project/roadmap/' | relative_url }}">Roadmap</a>
         <a href="{{ '/' | relative_url }}">Privacy notice</a>
         <a href="https://github.com/codeframe78/24Seven.FM-Player/issues">Report an app issue</a>
         <a href="https://github.com/users/codeframe78/projects/1">Build dashboard</a>

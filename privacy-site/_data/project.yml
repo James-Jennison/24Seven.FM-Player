@@ -1,0 +1,205 @@
+navigation:
+  - section: overview
+    label: Overview
+    path: /project/
+  - section: features
+    label: Features
+    path: /project/features/
+  - section: development
+    label: Development
+    path: /project/development/
+  - section: testing
+    label: Testing
+    path: /project/testing/
+  - section: roadmap
+    label: Roadmap
+    path: /project/roadmap/
+  - section: resources
+    label: Resources
+    path: /project/resources/
+
+milestones:
+  - order: 1
+    id: M1
+    name: Buildable baseline
+    date: 2026-07-12
+    commit: 9184afd
+    outcome: Native Gradle and Compose baseline with a verified Windows build path.
+  - order: 2
+    id: M2
+    name: Five-station playback
+    date: 2026-07-13
+    commit: 5cdade0
+    outcome: Verified streams, atomic station switching, and one primary-to-fallback transition.
+  - order: 3
+    id: M3
+    name: Background and system media
+    date: 2026-07-13
+    commit: 4206fee
+    outcome: Service-owned playback, MediaSession integration, audio focus, and route controls.
+  - order: 4
+    id: M4
+    name: Now playing
+    date: 2026-07-13
+    commit: 0d9e6b3
+    outcome: Live ICY metadata with same-station artwork enrichment.
+  - order: 5
+    id: M5
+    name: Native navigation
+    date: 2026-07-13
+    commit: 8133695
+    outcome: Adaptive native destinations with a persistent mini-player.
+  - order: 6
+    id: M6
+    name: Queue and history
+    date: 2026-07-13
+    commit: 3babdf9
+    outcome: Bounded, station-scoped Queue and History polling.
+  - order: 7
+    id: M7
+    name: Authentication
+    date: 2026-07-13
+    commit: a897794
+    outcome: Native station sign-in and Android Keystore-protected sessions.
+  - order: 8
+    id: M8
+    name: Chat
+    date: 2026-07-13
+    commit: f99635d
+    outcome: Native, memory-only, station-scoped community chat.
+  - order: 9
+    id: M9
+    name: Song requests
+    date: 2026-07-13
+    commit: e748f27
+    outcome: Native library search, confirmation, and one-shot request submission.
+  - order: 10
+    id: M10
+    name: Request attribution and messages
+    date: 2026-07-14
+    commit: 73a0d89
+    outcome: Queue attribution and the verified SST request-message workflow.
+  - order: 11
+    id: M11
+    name: Adaptive Alpha UI
+    date: 2026-07-14
+    commit: 4735f13
+    outcome: Responsive branded UI, previews, accessibility semantics, and exit flow.
+    joint: true
+  - order: 12
+    id: M12
+    name: Queue-aware request availability
+    date: 2026-07-14
+    commit: 4735f13
+    outcome: Conservative station-scoped availability and fresh pre-submit checks.
+    joint: true
+  - order: 13
+    id: M13
+    name: Independent Accounts UX
+    date: 2026-07-14
+    commit: 9ef1f1c
+    outcome: Five separately visible account states with session isolation.
+  - order: 14
+    id: M14
+    name: Local personalization
+    date: 2026-07-14
+    commit: 81c2c4e
+    outcome: Default and last-station preferences separated from station-owned data.
+  - order: 15
+    id: M15
+    name: Request history and membership
+    date: 2026-07-14
+    commit: b19d5fe
+    outcome: SST request history, cooldown, readiness, and explicit membership evidence.
+  - order: 16
+    id: M16
+    name: Secondary content access
+    date: 2026-07-14
+    commit: 90a7f98
+    outcome: Allowlisted same-station HTTPS pages opened in Android Custom Tabs.
+  - order: 17
+    id: M18
+    name: StreamingSoundtracks.com certification
+    date: 2026-07-14
+    commit: 02dffa2
+    outcome: Representative public, authenticated, VIP, request, Favorites, and Chat coverage.
+  - order: 18
+    id: M19
+    name: 1980s.FM certification
+    date: 2026-07-15
+    commit: 11f1ee3
+    outcome: Independent authenticated workflows and station behavior certified.
+  - order: 19
+    id: M20
+    name: Adagio.FM certification
+    date: 2026-07-15
+    commit: 5e985ae
+    outcome: Classical metadata and authenticated workflows certified.
+  - order: 20
+    id: M21
+    name: Death.FM certification
+    date: 2026-07-15
+    commit: 6757680
+    outcome: Compact Queue, sparse metadata, RIP boundaries, and authenticated workflows certified.
+  - order: 21
+    id: M22
+    name: Entranced.FM certification
+    date: 2026-07-15
+    commit: 1e20eea
+    outcome: Extended Queue, legacy ICY punctuation, and authenticated workflows certified.
+  - order: 22
+    id: M23.3
+    name: Android 16 and API 36 readiness
+    date: 2026-07-15
+    commit: 44632f1
+    outcome: Target API 36 migration, predictive Back, edge-to-edge, and device regression coverage.
+  - order: 23
+    id: M23.7
+    name: Adaptive launcher and store polish
+    date: 2026-07-15
+    commit: 924a38c
+    outcome: Legacy, adaptive, and monochrome launcher resources validated.
+
+workstreams:
+  - id: M23.1
+    name: Signed release candidate
+    state: active
+    state_label: In progress
+    summary: Protected Linux AAB/APK signing and exact upload-certificate checks pass; Play version eligibility and delivered-install validation remain.
+    evidence: docs/m23-release-candidate-audit.md
+  - id: M23.2
+    name: UGC safety and moderation
+    state: waiting
+    state_label: Waiting externally
+    summary: Native age, Terms, reveal, report, and block safeguards pass; administrator receipt reconciliation remains.
+    evidence: docs/m23-ugc-safety-validation.md
+  - id: M23.3
+    name: Android 16 and API 36
+    state: done
+    state_label: Complete
+    summary: API 36 targeting, predictive Back, edge-to-edge behavior, and connected-device validation are complete.
+    evidence: docs/m23-api36-readiness.md
+  - id: M23.4
+    name: Play review declarations
+    state: waiting
+    state_label: Waiting externally
+    summary: Local declaration packet and notification-video rehearsal are prepared; protected reviewer inputs and Console submission remain.
+    evidence: docs/m23-play-declaration-packet.md
+  - id: M23.5
+    name: Brand and content rights
+    state: waiting
+    state_label: Waiting externally
+    summary: Authorization request and private evidence-handling packet are prepared; written rights-holder confirmation remains.
+    evidence: docs/m23-owner-response-packet.md
+  - id: M23.6
+    name: Release device matrix
+    state: active
+    state_label: In progress
+    summary: Local emulator, accessibility, network, performance, and Razr hinge checks pass; Play delivery, pre-launch, and spoken TalkBack remain.
+    evidence: docs/m23-device-compatibility.md
+  - id: M23.7
+    name: Launcher and store polish
+    state: done
+    state_label: Complete
+    summary: Density-specific legacy, adaptive, and Android 13 monochrome launcher resources are complete.
+    evidence: docs/m23-launcher-polish.md

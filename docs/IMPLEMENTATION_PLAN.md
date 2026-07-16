@@ -1,6 +1,6 @@
 # Implementation plan
 
-Updated July 16, 2026 after completing the protected Linux signing checkpoint for M23.1. Estimates are active Codex elapsed time in this environment, including inspection, implementation, Gradle validation, documentation, Git, and remote confirmation—not traditional human developer time.
+Updated July 16, 2026 after adding M25 Chat Mention Notifications to the post-Alpha roadmap. Estimates are active Codex elapsed time in this environment, including inspection, implementation, Gradle validation, documentation, Git, and remote confirmation—not traditional human developer time.
 
 ## Planning model
 
@@ -9,6 +9,7 @@ Updated July 16, 2026 after completing the protected Linux signing checkpoint fo
 - M18–M22 certify the shared implementation against each station. They are hardening and evidence gates, not station-specific application forks.
 - Each station's representative native login, protected restoration, isolation, authenticated surface, and logout flow is now a hard completion gate. Public/device evidence may be gathered early but does not advance the active station order.
 - M23 is an XL Play-testing readiness program divided into M23.1–M23.7 below; M23.3 and M23.7 are complete, and M24 remains the authorized publication gate.
+- M25 is a post-Alpha, discovery-first Chat Mention Notifications milestone. It requires an authorized server-side event source or push relay before implementation; continuous background Chat polling is not an acceptable substitute for push delivery.
 - Private Messages remains numbered as M17 but deferred pending legacy server repair and verified production limits. Inbox and Sent Box discovery worked, while New Message selection remained suspect and a profile-originated MorgHubby test appeared to submit without delivery; the site owner has the reproduced result.
 - Early M23 readiness artifacts are preserved. M23.1's current audit covers the production manifest, dependency/license inventory, explicit backup exclusions, 16 KB APK/ELF packaging, and a protected Ubuntu build from commit `2086ab9` whose AAB/APK signer matches the registered upload certificate. Version-code eligibility and Play delivery remain open. The Play developer account is approved; UGC reconciliation, Play review declarations, explicit rights evidence, release-device closure, and publication authorization remain dependencies.
 
@@ -110,3 +111,11 @@ M18–M22 are complete while M17 remains deferred; every in-scope station capabi
 | M24 Alpha publication completion | M | 1–3 hours after Console setup | Medium | Produce and verify the authorized signed Play bundle and internal/closed test release | Signing authorization, tester-track configuration, and release review outcome |
 
 M23 is the sole XL umbrella and is already divided into seven reviewable S–L workstreams. Any future phase that exceeds L will likewise be divided before implementation.
+
+## Post-Alpha feature milestones
+
+| Milestone | Size | Estimate | Usage | Rationale and outcome | Primary confidence variable |
+| --- | --- | --- | --- | --- | --- |
+| M25 Chat Mention Notifications | L, discovery-first | 6–12 hours after delivery authorization | High | Add opt-in notifications when an exact signed-in display identity is mentioned in station Chat. Require station scope, safe mention tokenization, blocked-user filtering, per-station controls, a dedicated notification channel, deep linking to the originating Chat, duplicate suppression, privacy/Data Safety review, and battery/traffic validation | Availability and authorization of a server event source, webhook, or privacy-compatible push relay; identity and delivery semantics across all five stations |
+
+M25 must begin with protocol and product research. The current app has no developer-operated backend and observes Chat only while its screen is selected, so reliable mention delivery cannot be implemented as true push without a newly authorized event path. The milestone must not introduce perpetual background polling, expose station sessions to a relay, or claim reliable delivery from periodic work. Any proposed relay must document payload minimization, authentication, retention, deletion, abuse protection, outage behavior, and Google Play Data Safety impact before architecture is approved.

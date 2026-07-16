@@ -4,7 +4,9 @@ An unofficial, community-built native Android client for the 24seven.FM internet
 
 The application is written in Kotlin with Jetpack Compose and Jetpack Media3. It does not use a WebView and is not affiliated with or endorsed by 24seven.FM or its stations.
 
-[Project website](https://codeframe78.github.io/24Seven.FM-Player/project/) · [Live build dashboard](https://github.com/users/codeframe78/projects/1) · [Privacy notice](https://codeframe78.github.io/24Seven.FM-Player/)
+[Comprehensive project portal](https://codeframe78.github.io/24Seven.FM-Player/project/) · [Live build dashboard](https://github.com/users/codeframe78/projects/1) · [Privacy notice](https://codeframe78.github.io/24Seven.FM-Player/)
+
+The project portal documents the product experience, native architecture, development workflow, validation evidence, chronological milestone history, release readiness, and contribution resources.
 
 ## Supported stations
 
@@ -16,7 +18,7 @@ The application is written in Kotlin with Jetpack Compose and Jetpack Media3. It
 
 ## Alpha status
 
-Milestones M1–M16 and M18–M22 are complete on the development branch. M17 Private Messages remains deferred for legacy server repair. All five station-certification gates now pass; the expanded M23 Play-testing readiness program is in progress and publication remains at M24.
+Milestones M1–M16 and M18–M22 are complete in project history. M17 Private Messages remains deferred for legacy server repair. All five station-certification gates now pass; the expanded M23 Play-testing readiness program is in progress and publication remains at M24.
 
 The current Alpha provides a responsive native player, service-owned Media3 playback, five-station navigation, device-local startup/last-station preferences, live metadata and artwork, queue/history, an independent five-station account dashboard with Android-protected sessions, chat, song requests, signed-in favorite-track browsing, a verified SST request-history/cooldown/membership surface, and a trusted browser directory for selected public station content. The media notification body reopens the existing player task, station-library search supports title/album/artist/genre, Library results can be sorted by station order or play state, and Favorites can be sorted by number, track name, album, artist, genre, year, length, or play state. Request availability is conservatively revalidated against fresh station and Queue data before submission, with indexed and stable-state resolution keeping a full 1,500-track VIP/RIP Favorites list responsive; requests sent from Favorites now show the station's success, rejection, or indeterminate-confirmation result without leaving the list. Public community content is now hidden behind an adult age screen, versioned Terms acceptance, and a separate mature-content reveal, with native report-content/report-user/block-user actions and station-scoped local block management. Navigation, Player station cards, and account headers reflow at Android's 2× text setting with an enlarged display while preserving explicit destination semantics. An offline terminal playback failure now presents a clear waiting state and performs one automatic Media3 prepare when validated connectivity returns; pause, stop, or a station change cancels that recovery. All 132 unit tests, debug lint, release bundle checks, the current 40/40 connected suite on the API 35 Pixel Tablet at normal settings, the prior 39/39 suite at maximum tested accessibility settings, prior 36/36 connected suites on API 26, API 36, the API 35 16 KB runtime, Pixel Fold open, and Pixel Tablet landscape, focused current-head phone/Fold/accessibility checks, live phone and Tablet network cut/restore cycles, the earlier 21/21 physical Razr suite, Windows validation, and a complete physical Razr open/tabletop/closed/reopened playback cycle are green. Startup, memory, and large-Favorites diagnostics are recorded in [the M23 performance validation](docs/m23-performance-validation.md), with the adaptive device contract in [the M23 compatibility matrix](docs/m23-device-compatibility.md).
 
@@ -31,6 +33,8 @@ This roadmap separates the order work was actually completed from the stable mil
 - **Active focus:** M23.2 UGC safety and moderation. Administrator authorization is recorded and the [native implementation](docs/m23-ugc-safety-validation.md) is test-green; completion is waiting only for confirmation that the single harmless report reached the moderator inbox and reconciliation of that server response.
 - **Remaining release gates:** M23.1 version-code eligibility and Play-delivered validation after its [protected current-head build](docs/m23-release-candidate-audit.md), M23.2 report-receipt reconciliation, M23.4 Play declarations, M23.5 rights evidence, M23.6 Play delivery/update and pre-launch coverage, then the explicitly authorized M24 Alpha publication.
 - **Deferred:** M17 Private Messages remains excluded from the shipping build until the reproduced server-side delivery failure is repaired and verified.
+- **Planned after Alpha publication:** M25 Chat Mention Notifications will add opt-in station-scoped notifications when the signed-in display identity is mentioned. Discovery must first establish an authorized server event source or push relay; the app will not imitate push with perpetual background Chat polling.
+- **Project documentation:** The GitHub Pages [project portal](https://codeframe78.github.io/24Seven.FM-Player/project/) now connects the product, architecture, development process, testing evidence, roadmap, and contributor resources while preserving the canonical privacy-policy URL ([validation and screenshots](docs/project-portal-validation.md)).
 
 ### Completed milestones — actual achievement order
 
@@ -68,12 +72,13 @@ The sequence number is the order in which Git history and milestone evidence sho
 | --- | --- | --- | --- |
 | M17 Private Messages | L provisional | 🧊 Deferred | Inbox and Sent Box discovery succeeded, but New Message selection remains suspect and a profile-originated MorgHubby test was not delivered; the site owner has the reproduced result |
 
-### Active distribution roadmap
+### Active distribution and planned feature roadmap
 
 | Milestone | Size | Estimate | Status | Outcome |
 | --- | --- | --- | --- | --- |
 | M23 Play-testing readiness program | XL, split below | 3–6 focused days plus owner/external input | 🚧 In progress | Preserve the completed distribution preparation while closing release-artifact, UGC, API 36, review, rights, device, and launcher-quality gates as separate reviewable milestones |
 | M24 Alpha publication | M | 1–3 hours after Console setup | ⏳ Planned | Verify the signed Play bundle and publish the authorized internal/closed test release |
+| M25 Chat Mention Notifications | L, discovery-first | 6–12 hours after a delivery path is authorized | ⏳ Planned after M24 | Add opt-in, station-scoped notifications for exact signed-in-name mentions, blocked-user filtering, notification deep links, user controls, and privacy/Data Safety updates without continuous background polling |
 
 #### M23 workstreams
 

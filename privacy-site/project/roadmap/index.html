@@ -1,0 +1,90 @@
+---
+layout: project
+title: Roadmap and milestone history · 24Seven.FM Player
+description: Follow the verified achievement order, active Play-testing workstreams, deferred Private Messages boundary, and planned Alpha publication for 24Seven.FM Player.
+permalink: /project/roadmap/
+section: roadmap
+---
+<section class="page-hero">
+  <div>
+    <p class="eyebrow">Project progression</p>
+    <h1>Roadmap with evidence</h1>
+    <p class="page-lede">Milestone IDs remain stable requirement references. The timeline below separately records when each completed milestone actually reached its gate, so project history stays accurate even when work finishes out of numeric order.</p>
+  </div>
+  <aside class="page-summary" aria-label="Roadmap summary">
+    <span>Achievement record</span>
+    <strong>23 complete</strong>
+    <dl>
+      <div><dt>M23 done</dt><dd>2/7</dd></div>
+      <div><dt>Active</dt><dd>2</dd></div>
+      <div><dt>External</dt><dd>3</dd></div>
+    </dl>
+  </aside>
+</section>
+
+<nav class="section-jump" aria-label="On this page">
+  <a href="#now">Current program</a>
+  <a href="#history">Achievement history</a>
+  <a href="#deferred">Deferred M17</a>
+  <a href="#next">M24–M25</a>
+  <a href="https://github.com/users/codeframe78/projects/1">Live dashboard ↗</a>
+</nav>
+
+<section class="content-section" id="now">
+  <div class="content-intro wide">
+    <p class="eyebrow">M23 · Play-testing readiness</p>
+    <h2>Seven reviewable release gates</h2>
+    <p>M23 is an umbrella program, not one opaque task. Work can progress locally while owner, administrator, or Play Console dependencies remain visible.</p>
+  </div>
+  <div class="workstream-grid">
+    {% for item in site.data.project.workstreams %}
+    <article class="roadmap-card {{ item.state }}">
+      <p class="status"><span></span>{{ item.state_label }}</p>
+      <p class="milestone-id">{{ item.id }}</p>
+      <h3>{{ item.name }}</h3>
+      <p>{{ item.summary }}</p>
+      <a href="https://github.com/codeframe78/24Seven.FM-Player/blob/main/{{ item.evidence }}">View evidence <span aria-hidden="true">↗</span></a>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="content-section" id="history">
+  <div class="content-intro wide">
+    <p class="eyebrow">Verified chronology</p>
+    <h2>How the Alpha was achieved</h2>
+    <p>The application moved from a buildable native shell through playback, station data, authenticated participation, adaptive UX, five-station certification, and platform/store hardening.</p>
+  </div>
+  <ol class="milestone-history">
+    {% for item in site.data.project.milestones %}
+    <li>
+      <div class="history-order">{{ item.order }}</div>
+      <div class="history-date"><time datetime="{{ item.date }}">{{ item.date | date: "%b %-d, %Y" }}</time>{% if item.joint %}<span>Joint checkpoint</span>{% endif %}</div>
+      <div class="history-copy"><p class="milestone-id">{{ item.id }}</p><h3>{{ item.name }}</h3><p>{{ item.outcome }}</p></div>
+      <a class="commit-link" href="https://github.com/codeframe78/24Seven.FM-Player/commit/{{ item.commit }}"><code>{{ item.commit }}</code><span class="sr-only"> commit</span></a>
+    </li>
+    {% endfor %}
+  </ol>
+</section>
+
+<section class="content-section" id="deferred">
+  <div class="roadmap-callout deferred-callout">
+    <div><p class="eyebrow">M17 · Deferred</p><h2>Private Messages are not in the shipping Alpha</h2></div>
+    <div><p>Inbox and Sent Box discovery succeeded, but New Message selection remained suspect and a profile-originated MorgHubby test appeared to submit without delivery. The site owner has the reproduced result.</p><p>Development resumes only after the legacy server path is repaired and its production limits can be verified. The existing app does not pretend this capability works.</p></div>
+  </div>
+</section>
+
+<section class="content-section" id="next">
+  <div class="roadmap-callout next-callout">
+    <div><p class="eyebrow">M24 · Planned</p><h2>Authorized Alpha publication</h2></div>
+    <div><p>M24 begins after every required M23 gate closes and the owner explicitly authorizes publication. It verifies the selected signed bundle, tester-track configuration, reviewer access, Play delivery, and final release outcome.</p><div class="actions"><a class="button primary" href="https://github.com/users/codeframe78/projects/1">Open live dashboard</a><a class="button secondary" href="https://github.com/codeframe78/24Seven.FM-Player/blob/main/docs/IMPLEMENTATION_PLAN.md">Implementation plan</a></div></div>
+  </div>
+  <div class="roadmap-callout future-callout">
+    <div><p class="eyebrow">M25 · Planned after M24</p><h2>Chat Mention Notifications</h2></div>
+    <div>
+      <p>Add opt-in notifications when the signed-in member's exact station display identity is mentioned in Chat. The experience will be station-scoped, filter locally blocked authors, suppress duplicates, expose per-station controls and a dedicated notification channel, and deep-link through the existing community-safety gates.</p>
+      <p><strong>Discovery gate:</strong> the current app has no developer backend and reads Chat only while the screen is selected. Reliable push requires an authorized station event source, webhook, or privacy-compatible relay. Continuous background polling will not be presented as push.</p>
+      <ul class="inline-requirements"><li>Authorized event delivery</li><li>Minimal payloads</li><li>No session forwarding</li><li>Privacy and Data Safety update</li><li>Battery and traffic validation</li></ul>
+    </div>
+  </div>
+</section>

@@ -51,6 +51,8 @@ jobs:
           cp docs/play-store-assets/feature-graphic-1024x500.png privacy-site/assets/project/feature-graphic.png
           cp docs/play-store-assets/screenshots/phone-player-live-playing.png privacy-site/assets/project/screenshots/player.png
           cp docs/play-store-assets/screenshots/phone-queue-live.png privacy-site/assets/project/screenshots/queue.png
+          cp docs/play-store-assets/screenshots/phone-stations.png privacy-site/assets/project/screenshots/stations.png
+          cp docs/play-store-assets/screenshots/phone-more.png privacy-site/assets/project/screenshots/more.png
           cp docs/play-store-assets/screenshots/tablet-landscape-player.png privacy-site/assets/project/screenshots/tablet.png
 
       - name: Build Pages site with Jekyll

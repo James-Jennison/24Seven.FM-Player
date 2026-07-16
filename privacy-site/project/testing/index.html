@@ -1,0 +1,127 @@
+---
+layout: project
+title: Testing and evidence · 24Seven.FM Player
+description: Review the automated, emulator, physical-device, accessibility, network, performance, signing, and release validation behind the 24Seven.FM Player Alpha.
+permalink: /project/testing/
+section: testing
+---
+<section class="page-hero">
+  <div>
+    <p class="eyebrow">Quality and evidence</p>
+    <h1>Test the behavior, not the claim</h1>
+    <p class="page-lede">The project combines fast local tests with connected Compose coverage, real emulator configurations, a physical Motorola Razr, release-artifact audits, and written evidence that records what passed and what remains.</p>
+  </div>
+  <aside class="page-summary" aria-label="Current test summary">
+    <span>Current green baseline</span>
+    <strong>172 checks</strong>
+    <dl>
+      <div><dt>Unit</dt><dd>132</dd></div>
+      <div><dt>Connected</dt><dd>40</dd></div>
+      <div><dt>Stations</dt><dd>5/5</dd></div>
+    </dl>
+  </aside>
+</section>
+
+<nav class="section-jump" aria-label="On this page">
+  <a href="#strategy">Strategy</a>
+  <a href="#device-matrix">Devices</a>
+  <a href="#specialized">Specialized checks</a>
+  <a href="#ci">Continuous integration</a>
+  <a href="#evidence">Evidence</a>
+  <a href="#remaining">Remaining</a>
+</nav>
+
+<section class="content-section" id="strategy">
+  <div class="content-intro wide">
+    <p class="eyebrow">Validation strategy</p>
+    <h2>Start narrow, broaden with risk</h2>
+    <p>Routine development preserves Gradle caches and starts with the smallest affected task. Broader checks are added only after targeted behavior passes or when integration risk requires them.</p>
+  </div>
+  <div class="validation-layers">
+    <article><span>Fast</span><h3>Local unit tests</h3><p>132 tests cover models, parsers, policies, repository behavior, ViewModel state, availability indexing, report classification, and release helpers.</p><code>./gradlew :app:testDebugUnitTest</code></article>
+    <article><span>Integration</span><h3>Connected Compose tests</h3><p>The current 40-test Tablet suite exercises UI semantics, navigation, dialogs, adaptive layouts, accessibility reflow, Favorites traversal, and device behavior.</p><code>./gradlew :app:connectedDebugAndroidTest</code></article>
+    <article><span>Static</span><h3>Compilation and lint</h3><p>Kotlin compilation catches layer and type failures early; Android lint checks resources, manifests, API usage, accessibility, and packaging concerns.</p><code>./gradlew :app:compileDebugKotlin :app:lintDebug</code></article>
+    <article><span>Release</span><h3>Artifact validation</h3><p>Release AAB/APK signatures, registered upload certificate, production manifest, dependencies, backup exclusions, and 16 KB packaging are audited separately.</p><code>validate-protected-play-bundle-linux.py</code></article>
+  </div>
+</section>
+
+<section class="content-section" id="device-matrix">
+  <div class="content-intro wide">
+    <p class="eyebrow">Device coverage</p>
+    <h2>Real Android configurations</h2>
+    <p>Window width, platform level, runtime page size, accessibility scale, network state, and physical hinge posture are separate test dimensions—not aliases for a single phone emulator.</p>
+  </div>
+  <div class="table-wrap" tabindex="0" role="region" aria-label="Device validation matrix">
+    <table class="device-table">
+      <thead><tr><th>Configuration</th><th>Purpose</th><th>Verified result</th></tr></thead>
+      <tbody>
+        <tr><th>API 26 phone</th><td>Minimum supported Android 8 runtime</td><td><span class="result-pass">Pass</span> prior 36/36 connected coverage</td></tr>
+        <tr><th>API 36 phone</th><td>Target Android 16 behavior, edge-to-edge, predictive Back</td><td><span class="result-pass">Pass</span> 27/27 readiness suite</td></tr>
+        <tr><th>API 35 · 16 KB</th><td>Modern runtime memory-page compatibility</td><td><span class="result-pass">Pass</span> APK, ELF, and runtime checks</td></tr>
+        <tr><th>Pixel Fold</th><td>Foldable window states and compact/expanded transitions</td><td><span class="result-pass">Pass</span> open-state suite and focused regressions</td></tr>
+        <tr><th>Pixel Tablet</th><td>Expanded portrait/landscape and two-pane behavior</td><td><span class="result-pass">Pass</span> current 40/40 connected suite</td></tr>
+        <tr><th>Motorola Razr 2023 · Android 16</th><td>OEM behavior, notification navigation, and physical hinge lifecycle</td><td><span class="result-pass">Pass</span> earlier 21/21 suite plus open/tabletop/closed/reopened playback cycle</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="content-section" id="specialized">
+  <div class="content-intro">
+    <p class="eyebrow">Specialized evidence</p>
+    <h2>Stress the boundaries users notice</h2>
+  </div>
+  <div class="evidence-grid">
+    <article><span class="evidence-icon" aria-hidden="true">Aa</span><h3>Accessibility and reflow</h3><p>Navigation, Player station cards, account headers, dialogs, and list content remain operable at Android's 2× text setting with enlarged display size. Prior maximum-settings coverage passes 39/39.</p><a href="https://github.com/codeframe78/24Seven.FM-Player/blob/main/docs/m23-accessibility-validation.md">Read accessibility evidence</a></article>
+    <article><span class="evidence-icon" aria-hidden="true">↻</span><h3>Network loss and recovery</h3><p>Live phone and Tablet cut/restore cycles show a clear offline waiting state and exactly one automatic prepare after validated connectivity returns.</p><a href="https://github.com/codeframe78/24Seven.FM-Player/blob/main/docs/m23-network-recovery-validation.md">Read recovery evidence</a></article>
+    <article><span class="evidence-icon" aria-hidden="true">1500</span><h3>Large Favorites performance</h3><p>A full VIP/RIP list preserves stable list instances, avoids unrelated recomputation, and traverses end to end while keeping sort and request state responsive.</p><a href="https://github.com/codeframe78/24Seven.FM-Player/blob/main/docs/m23-performance-validation.md">Read performance evidence</a></article>
+    <article><span class="evidence-icon" aria-hidden="true">969</span><h3>Startup diagnostics</h3><p>Five API 35 debug-emulator cold launches measured 948–986 ms with a 969 ms median. This is diagnostic evidence, not a physical-device or Play performance claim.</p><a href="https://github.com/codeframe78/24Seven.FM-Player/blob/main/docs/m23-performance-validation.md">See measurements</a></article>
+    <article><span class="evidence-icon" aria-hidden="true">✓</span><h3>Station certification</h3><p>All five stations have representative public and authenticated validation covering their supported metadata, Queue, account, Chat, Favorites, request, and secondary-page boundaries.</p><a href="{{ '/project/resources/' | relative_url }}#station-certification">Browse station evidence</a></article>
+    <article><span class="evidence-icon" aria-hidden="true">AAB</span><h3>Protected signing</h3><p>The Ubuntu path keeps the keystore in memory-backed storage, uses non-persistent Gradle inputs, verifies the exact registered upload certificate, and removes temporary material.</p><a href="https://github.com/codeframe78/24Seven.FM-Player/blob/main/docs/m23-release-candidate-audit.md">Read release audit</a></article>
+  </div>
+</section>
+
+<section class="content-section" id="ci">
+  <div class="content-intro wide">
+    <p class="eyebrow">GitHub Actions</p>
+    <h2>Every PR gets an independent build</h2>
+    <p>The Android workflow checks out the candidate, configures JDK 17 and Android 36, and runs tests, lint, and debug assembly. A separate Pages workflow builds the canonical privacy notice and project portal with Jekyll before deployment from <code>main</code>.</p>
+  </div>
+  <div class="ci-flow" aria-label="Continuous integration sequence">
+    <div><span>1</span><strong>Pull request</strong><small>Focused change and evidence</small></div>
+    <div class="flow-arrow" aria-hidden="true">→</div>
+    <div><span>2</span><strong>Android CI</strong><small>Test · lint · assemble</small></div>
+    <div class="flow-arrow" aria-hidden="true">→</div>
+    <div><span>3</span><strong>Review and merge</strong><small>Protected main history</small></div>
+    <div class="flow-arrow" aria-hidden="true">→</div>
+    <div><span>4</span><strong>Discord update</strong><small>Change and verification summary</small></div>
+  </div>
+  <p class="section-action"><a class="text-link" href="https://github.com/codeframe78/24Seven.FM-Player/actions">View current workflow runs <span aria-hidden="true">↗</span></a></p>
+</section>
+
+<section class="content-section" id="evidence">
+  <div class="content-intro">
+    <p class="eyebrow">Evidence library</p>
+    <h2>Results remain inspectable</h2>
+    <p>Milestone records distinguish automated results, emulator observations, physical-device checks, assumptions, and work that still requires Play or owner access.</p>
+  </div>
+  <div class="link-cards">
+    <a href="https://github.com/codeframe78/24Seven.FM-Player/blob/main/docs/m23-device-compatibility.md"><strong>Device compatibility matrix</strong><span>Runtime, layout, accessibility, network, and foldable coverage</span></a>
+    <a href="https://github.com/codeframe78/24Seven.FM-Player/blob/main/docs/m23-api36-readiness.md"><strong>API 36 readiness</strong><span>Platform migration and Android 16 results</span></a>
+    <a href="https://github.com/codeframe78/24Seven.FM-Player/blob/main/docs/m23-ugc-safety-validation.md"><strong>UGC safety validation</strong><span>Age, Terms, report, block, privacy, and delivery boundaries</span></a>
+    <a href="https://github.com/codeframe78/24Seven.FM-Player/blob/main/docs/m23-release-candidate-audit.md"><strong>Release-candidate audit</strong><span>Manifest, dependencies, signing, backup, and 16 KB checks</span></a>
+  </div>
+</section>
+
+<section class="content-section boundary-section" id="remaining">
+  <div class="content-intro">
+    <p class="eyebrow">Open validation gates</p>
+    <h2>Green locally does not mean published</h2>
+  </div>
+  <div class="boundary-grid">
+    <article><span>Play</span><h3>Delivered artifact</h3><p>Confirm version-code eligibility, install/update behavior from Play, and the generated delivery artifact.</p></article>
+    <article><span>Pre-launch</span><h3>Google device report</h3><p>Review and remediate the Play pre-launch crawler results once protected reviewer access is available.</p></article>
+    <article><span>Accessibility</span><h3>Spoken TalkBack pass</h3><p>Automated semantics and large-text reflow pass; a complete spoken physical-device traversal remains a release check.</p></article>
+  </div>
+  <p class="section-action"><a class="text-link" href="{{ '/project/roadmap/' | relative_url }}">See how these checks map to M23 and M24 <span aria-hidden="true">→</span></a></p>
+</section>

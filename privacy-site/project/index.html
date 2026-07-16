@@ -3,6 +3,7 @@ layout: project
 title: 24Seven.FM Player · Native Android radio
 description: An unofficial, community-built native Android player for five 24seven.FM radio stations.
 permalink: /project/
+section: overview
 ---
 <section class="hero" aria-labelledby="hero-title">
   <div class="hero-copy">
@@ -67,6 +68,20 @@ permalink: /project/
   </div>
 </section>
 
+<section class="section portal-map" aria-labelledby="portal-title">
+  <div class="section-heading">
+    <p class="eyebrow">Inside the project</p>
+    <h2 id="portal-title">Follow the product and the process</h2>
+    <p>This portal connects the user experience to the architecture, validation evidence, milestone history, and release work behind it.</p>
+  </div>
+  <div class="portal-grid">
+    <a href="{{ '/project/features/' | relative_url }}"><span>Product</span><strong>Explore every major Alpha capability</strong><small>Playback, station data, accounts, requests, community, and safeguards</small></a>
+    <a href="{{ '/project/development/' | relative_url }}"><span>Engineering</span><strong>See how the native app is built</strong><small>Architecture, repository boundaries, workflow, and source map</small></a>
+    <a href="{{ '/project/testing/' | relative_url }}"><span>Quality</span><strong>Read the validation evidence</strong><small>Automated tests, emulator matrix, Razr testing, and release checks</small></a>
+    <a href="{{ '/project/roadmap/' | relative_url }}"><span>Progress</span><strong>Trace the actual development journey</strong><small>23 achieved checkpoints, active M23 gates, M17, and M24</small></a>
+  </div>
+</section>
+
 <section class="showcase section" aria-labelledby="showcase-title">
   <div class="section-heading">
     <p class="eyebrow">Adaptive by design</p>
@@ -109,7 +124,7 @@ permalink: /project/
       <p class="eyebrow">Toward Google Play testing</p>
       <h2 id="roadmap-title">Current roadmap</h2>
     </div>
-    <a class="text-link" href="https://github.com/users/codeframe78/projects/1">Open the live dashboard <span aria-hidden="true">→</span></a>
+    <a class="text-link" href="{{ '/project/roadmap/' | relative_url }}">Explore the full roadmap <span aria-hidden="true">→</span></a>
   </div>
   <div class="roadmap-grid">
     <article class="roadmap-card done">
@@ -142,8 +157,13 @@ permalink: /project/
       <h3>M24 · Alpha publication</h3>
       <p>Authorized internal or closed Google Play testing follows completion of the remaining readiness gates.</p>
     </article>
+    <article class="roadmap-card planned">
+      <p class="status"><span></span>Post-Alpha</p>
+      <h3>M25 · Mention notifications</h3>
+      <p>Opt-in station-scoped Chat mention notifications begin with discovery of an authorized true-push delivery path.</p>
+    </article>
   </div>
-  <p class="roadmap-note">Private Messages (M17) remain deliberately deferred and are not included in the shipping Alpha until the legacy server delivery failure is repaired and verified.</p>
+  <p class="roadmap-note">Private Messages (M17) remain deliberately deferred and are not included in the shipping Alpha until the legacy server delivery failure is repaired and verified. M25 is planned after the M24 publication gate and will not replace true push with continuous background Chat polling.</p>
 </section>
 
 <section class="cta" aria-labelledby="cta-title">
@@ -154,6 +174,6 @@ permalink: /project/
   </div>
   <div class="actions">
     <a class="button primary" href="https://github.com/codeframe78/24Seven.FM-Player">GitHub repository</a>
-    <a class="button secondary" href="{{ '/' | relative_url }}">Read the privacy notice</a>
+    <a class="button secondary" href="{{ '/project/resources/' | relative_url }}">Browse project resources</a>
   </div>
 </section>
