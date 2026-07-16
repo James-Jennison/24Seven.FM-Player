@@ -4,7 +4,7 @@ The migrated project includes an idempotent Ubuntu bootstrap at
 `scripts/bootstrap-ubuntu.sh`. It supports x86_64 Ubuntu-family distributions
 and installs the complete local development environment for this repository:
 
-- OpenJDK 17, Git, Git LFS, GitHub CLI, Node.js, Python, and common build tools;
+- OpenJDK 17, Git, Git LFS, GitHub CLI, Node.js, Python with AES-GCM support, and common build tools;
 - Android SDK command-line tools revision 14742923;
 - Android SDK Platforms 35 and 36, Build Tools 36.1.0, and Platform Tools;
 - Google APIs x86_64 emulator images and AVDs for API 35 and API 36;
@@ -61,6 +61,28 @@ The installer deliberately does not create `local.properties`; Gradle inherits
 the persistent `ANDROID_HOME` configuration. It also does not migrate signing
 keys, recovery passphrases, station credentials, cookies, or Codex credentials.
 
+## Protected Play signing on Ubuntu
+
+Routine Play upload signing can use the existing encrypted recovery package without restoring a permanent plaintext
+keystore to the unencrypted Ubuntu filesystems. Check the non-secret prerequisites with:
+
+```bash
+python3 scripts/validate-protected-play-bundle-linux.py --check-environment
+```
+
+For an authorized release build, keep the `.24seven-recovery` package outside the repository and run:
+
+```bash
+python3 scripts/validate-protected-play-bundle-linux.py \
+  --recovery-package /absolute/path/outside-the-repository/24seven-upload.24seven-recovery \
+  --build-apk
+```
+
+Enter the owner-held passphrase only at the hidden terminal prompt. The helper enforces the registered upload
+certificate, keeps the recovered keystore under memory-backed `/dev/shm` for the duration of a single non-daemon Gradle
+build, and removes it before reporting the AAB hash. It never stores or prints the passphrase, passwords, alias, or
+keystore path. The encrypted off-PC recovery package and Windows DPAPI copy remain independent backups.
+
 Official references:
 
 - [Android Studio downloads and command-line tools](https://developer.android.com/studio)
@@ -69,4 +91,3 @@ Official references:
 - [Android hardware-device setup on Ubuntu](https://developer.android.com/studio/run/device)
 - [Codex CLI](https://developers.openai.com/codex/cli)
 - [Codex authentication](https://developers.openai.com/codex/auth)
-

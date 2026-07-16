@@ -2,7 +2,7 @@
 
 Date: July 16, 2026
 
-Status: local, non-secret audit complete; protected signing and Play-delivered installation remain open
+Status: local non-secret audit and Linux signing helper complete; protected signing run and Play-delivered installation remain open
 
 ## Outcome
 
@@ -13,8 +13,9 @@ or distributed.
 
 M23.1 completes only after the owner regenerates the protected signed artifacts from the selected final commit, verifies
 the stable upload certificate, confirms that version code 2 is still eligible in Play Console, and validates a
-Play-delivered install/update. The protected signing identity is Windows DPAPI-backed and was not accessed or copied by
-this Linux audit.
+Play-delivered install/update. The established Windows DPAPI copy remains intact. Routine signing can now use the
+existing authenticated recovery package through the Linux helper without persisting a plaintext keystore or credential
+file; no production signing material was accessed while implementing or testing that path.
 
 ## Release identity and manifest
 
@@ -94,7 +95,28 @@ or Play-readiness error; dependency/toolchain upgrades remain intentionally outs
 
 ## Protected completion procedure
 
-From the owner-controlled Windows profile, after confirming the final commit and version-code availability:
+From Ubuntu, first verify the non-secret prerequisites:
+
+```bash
+python3 scripts/validate-protected-play-bundle-linux.py --check-environment
+```
+
+Then, after confirming the final commit and version-code availability, run the protected build from an interactive
+terminal. Keep the encrypted package outside the repository and enter its passphrase only at the hidden prompt:
+
+```bash
+python3 scripts/validate-protected-play-bundle-linux.py \
+  --recovery-package /absolute/path/outside-the-repository/24seven-upload.24seven-recovery \
+  --build-apk
+```
+
+The helper authenticates the AES-256-GCM recovery envelope, verifies the embedded keystore hash and the exact registered
+upload certificate, materializes the JKS only in memory-backed `/dev/shm`, launches a non-persistent Gradle process,
+removes the temporary material, and verifies the signed AAB certificate. It prints only the resulting AAB hash and
+certificate fingerprint. Five synthetic tests cover success, wrong passphrase, wrong registered certificate,
+mismatched keystore hash, repository-local package rejection, temporary mode `600`, and cleanup.
+
+The owner-controlled Windows DPAPI path remains a backup:
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `

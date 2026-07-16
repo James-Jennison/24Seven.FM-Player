@@ -16,6 +16,7 @@ The Google Play developer account was approved on July 14, 2026. Use this during
 - `scripts/validate-play-bundle.ps1` builds the release AAB, requires a real signature, and prints its SHA-256 without revealing signing inputs.
 - `scripts/initialize-play-upload-key.ps1` creates the separate upload key outside Git and stores its credentials in a Windows-current-user DPAPI envelope. It refuses to overwrite either artifact.
 - `scripts/validate-protected-play-bundle.ps1` decrypts that envelope only in memory, supplies process-scoped Gradle inputs, restores the previous process environment, verifies the JAR signature and exact signer certificate, and can optionally build the signed release APK with `-BuildApk`.
+- `scripts/validate-protected-play-bundle-linux.py` authenticates the same encrypted off-PC recovery format, enforces the registered certificate, materializes the keystore only in `/dev/shm`, uses a non-persistent Gradle process, and removes temporary material before reporting the signed AAB hash. Its passphrase is accepted only through an interactive hidden prompt.
 - `scripts/manage-play-upload-recovery.ps1` uses PowerShell 7, PBKDF2-HMAC-SHA256, and AES-256-GCM to export, authenticate, and restore a passphrase-protected recovery package. It refuses repository-local and overwrite targets, verifies the embedded keystore/certificate, and recreates a new current-user DPAPI envelope after restore.
 
 ## Play Console setup

@@ -145,6 +145,7 @@ required_packages=(
     openjdk-17-jdk
     openssh-client
     python3
+    python3-cryptography
     python3-venv
     # Ubuntu 26.04 exposes qemu-kvm only as a virtual package. This explicit
     # provider also exists on older supported Ubuntu releases.
