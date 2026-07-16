@@ -18,7 +18,7 @@ not a list of hard-coded device models.
 
 | Device/runtime | Effective window | Evidence | Result |
 | --- | --- | --- | --- |
-| Motorola Razr 2023, Android 16 / API 36 | 411×731dp compact portrait | `phone-player-live-playing.png`, `phone-queue-live.png`, `phone-stations.png` | Bottom navigation, artwork, metadata, playback, mini-player, live Queue, and horizontally scrollable station cards remain reachable. |
+| Motorola Razr 2023, Android 16 / API 36 | 1080×2640 at 420dpi main display; 194×368 system-controlled external display | Current-head in-place install; measured 180° `OPENED`, 110° `HALF_OPENED_MAIN`, and 0° `CLOSED_HALL` cycle; `phone-player-live-playing.png`, `phone-queue-live.png`, `phone-stations.png` | Playback, the existing process/task, and live metadata remain continuous through open, tabletop, fully closed, and reopened states. Main-display artwork, metadata, controls, carousel, and navigation remain reachable without clipping; the small external display does not host normal app activities. No crash or ANR occurred. |
 | API 35 Pixel 7 emulator | 411×731dp compact portrait | `phone-more.png`; connected UI suite | Compact navigation and supporting destinations render at an exact 1080×1920 Play screenshot size. |
 | API 26 phone AVD | Minimum supported runtime | 36/36 current-head connected tests | Minimum-SDK installation, launch, compact navigation, playback UI, UGC safety, legal disclosures, and the established feature suite pass without changing SDK packages or clearing build caches. One test was corrected to scroll to a More-menu disclosure before asserting viewport visibility. |
 | API 35 16 KB phone AVD | 411×731dp compact portrait; 16,384-byte runtime page size | 36/36 current-head connected tests; `PAGE_SIZE=16384` | The app installs, launches, and passes the complete current suite on a genuine 16 KB runtime. |
@@ -59,13 +59,14 @@ emulator returned to 1080×2400 and 420dpi after capture.
 
 ## Foldable and OEM boundary
 
-The Razr validates the app on current foldable hardware in its normal main-display state. The API 35 Pixel Fold now
-validates the open inner display, half-open state, and fully closed outer display, while the dedicated Pixel Tablet
-validates its native landscape and portrait windows. The layout responds to the available window and naturally leaves
-the center gutter between expanded Player panes. A mechanically changed physical Razr half-open/tabletop posture was
-not available during this pass, so that OEM-specific hinge inspection remains an Alpha test item and is not represented
-as independently certified here. Play-delivered installation/update and the Play pre-launch report also remain external
-M23.6 gates.
+The Razr validates the current app on physical foldable hardware through a measured 180° open → 110° tabletop → 0°
+closed → 180° reopened cycle. Playback, the Media3 session, process, task, and full-screen Player survive the complete
+cycle without a crash, ANR, restart, or clipped main-display controls. The Razr 2023's 194×368 external display is an
+OEM-controlled presentation display that does not host normal app activities; continuing audio is therefore the app's
+supported fully folded behavior on this model. The API 35 Pixel Fold validates the open inner display, half-open state,
+and fully closed outer display, while the dedicated Pixel Tablet validates its native landscape and portrait windows.
+The layout responds to the available window and naturally leaves the center gutter between expanded Player panes.
+Play-delivered installation/update and the Play pre-launch report remain external M23.6 gates.
 
 No application can guarantee behavior on every future OEM configuration. For Alpha, "all modern Android devices"
 means the supported API range and adaptive window classes above are release requirements, regressions in those classes
