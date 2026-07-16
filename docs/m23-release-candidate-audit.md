@@ -6,7 +6,7 @@ Status: local, non-secret audit complete; protected signing and Play-delivered i
 
 ## Outcome
 
-Commit `3e80007` builds cleanly without signing inputs and has the expected production identity, permissions,
+Commit `041a811` builds cleanly without signing inputs and has the expected production identity, permissions,
 Media3 service declaration, dependency set, license notices, backup exclusions, and 16 KB packaging. The generated AAB
 and APK are intentionally unsigned local inspection artifacts. They are not tester candidates and must not be uploaded
 or distributed.
@@ -40,8 +40,8 @@ session state and local safety preferences, is excluded.
 
 | Artifact | Size | SHA-256 | Signing state |
 | --- | ---: | --- | --- |
-| `app-release.aab` | 17,486,467 bytes | `12dc0e1ac94ed05c89c0bdf6a24951dfe5a08dc92f232e8230bec088179276bb` | Intentionally unsigned |
-| `app-release-unsigned.apk` | 17,967,922 bytes | `93dc7ca9adb62ea08f7911e039242b3927764591539a9a5fa48a287eccaaec71` | Intentionally unsigned |
+| `app-release.aab` | 17,489,217 bytes | `3ddf85453d423642a5b7a511cbaa6a0478a362112306836f05038b2e6fe9c2fd` | Intentionally unsigned |
+| `app-release-unsigned.apk` | 17,967,922 bytes | `3ad68fdd18936620cdf4556805325ca488da9acb067e3a1be92f69958abe46c0` | Intentionally unsigned |
 
 `jarsigner -verify -strict -verbose -certs` explicitly classified the AAB as unsigned, which is the expected result when
 the four `TWENTYFOURSEVEN_UPLOAD_*` values are absent. The textual classification is authoritative because `jarsigner`
@@ -75,12 +75,14 @@ licenses**. The upstream jsoup license and OkHttp Public Suffix List notice are 
 ## Verification
 
 - `:app:compileDebugKotlin` and `:app:compileDebugAndroidTestKotlin` — passed.
-- `:app:testDebugUnitTest` — 127/127 passed.
+- `:app:testDebugUnitTest` — 132/132 passed.
 - Focused `openSourceLicensesArePackagedAndReachableFromMore` on the API 35 Pixel Tablet — passed after final changes.
 - `:app:lintDebug` — passed with 0 errors and 27 non-blocking warnings; the new resource-access and backup-rule
   warnings were resolved.
-- Combined `:app:bundleRelease :app:assembleRelease` and release lint-vital — passed from commit `3e80007` after the
-  Favorites request-result and expanded sorting changes.
+- `:app:connectedDebugAndroidTest` — 40/40 passed on the API 35 Pixel Tablet, including full 1,500-track Favorites
+  traversal.
+- Combined `:app:bundleRelease :app:assembleRelease` and release lint-vital — passed from commit `041a811` after the
+  Favorites performance and playback-recovery changes.
 - Release APK 16 KB ZIP alignment — passed.
 - AAB resource inspection — packaged license notice and both backup-rule resources present.
 - Merged release manifest inspection — identity, target, permissions, launcher, backup, and service declarations passed.
