@@ -7,13 +7,15 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thank you for testing 24Seven.FM Player. GitHub issues are public. Do not include passwords, security answers, cookies, session values, private messages, abuse-report content, private endpoints, signing material, full network captures, or unredacted personal screenshots.
+        Thank you for testing 24Seven.FM Player. Choose a case from the [complete manual acceptance catalog](https://codeframe78.github.io/24Seven.FM-Player/project/product-testing/) and enter its PT ID below.
+
+        GitHub issues are public. Do not include passwords, security answers, cookies, session values, private messages, abuse-report content, private endpoints, signing material, full network captures, or unredacted personal screenshots.
   - type: input
     id: build
     attributes:
       label: App version and version code
       description: Copy both values from Android app information or the approved test release notes.
-      placeholder: "0.1.0-alpha01 (version code 1)"
+      placeholder: "0.1.0-alpha01 (version code 2)"
     validations:
       required: true
   - type: dropdown
@@ -81,20 +83,29 @@ body:
         - Blocked by setup or access
     validations:
       required: true
+  - type: input
+    id: test-case
+    attributes:
+      label: Test case ID
+      description: Enter the PT case from the product-testing catalog. Use one primary case per report.
+      placeholder: "PT-03"
+    validations:
+      required: true
   - type: checkboxes
     id: areas
     attributes:
       label: Areas exercised
       options:
-        - label: Launch and navigation
-        - label: Playback and station switching
-        - label: Background media and notification
-        - label: Metadata, Queue, or History
-        - label: Library search, sorting, Favorites, or requests
-        - label: Account and session isolation
-        - label: Chat or community safeguards
-        - label: Accessibility or adaptive layout
-        - label: Network, route, or lifecycle recovery
+        - label: Delivery, launch, navigation, preferences, or exit
+        - label: Playback, metadata, background media, or system controls
+        - label: Sleep Timer, audio output, or accessory route
+        - label: Queue, History, station data, or network recovery
+        - label: Account, session isolation, or Favorites
+        - label: Library search, song request, activity, or membership
+        - label: Community gates, Chat, reporting, or blocking
+        - label: Notifications or trusted station pages
+        - label: Diagnostics, privacy, or legal disclosures
+        - label: Adaptive layout, lifecycle, large text, or TalkBack
   - type: textarea
     id: scenario
     attributes:

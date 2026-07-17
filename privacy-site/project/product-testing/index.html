@@ -1,93 +1,252 @@
 ---
 layout: project
 title: Product testing · 24Seven.FM Player
-description: Run a focused 24Seven.FM Player test session and submit a structured, privacy-safe result to the public project tracker.
+description: Run the complete manual test catalog for the 24Seven.FM Player and submit structured, privacy-safe results.
 permalink: /project/product-testing/
 section: product-testing
 ---
 <section class="page-hero">
   <div>
     <p class="eyebrow">Tester workspace</p>
-    <h1>Test the player. Report what happened.</h1>
-    <p class="page-lede">Choose a focused session, record the build and device before you begin, and submit a pass, failure, pass-with-notes, or blocked result. Every useful outcome strengthens the Alpha evidence.</p>
+    <h1>Test the player. Record every result.</h1>
+    <p class="page-lede">This is the complete manual acceptance catalog for the Alpha. A coordinator assigns the cases, stations, accounts, devices, and accessories needed for each run; no single tester is expected to own the entire matrix.</p>
     <div class="actions">
       <a class="button primary" href="https://github.com/codeframe78/24Seven.FM-Player/issues/new?template=product-test.yml">Submit a test result</a>
       <a class="button secondary" href="https://github.com/codeframe78/24Seven.FM-Player/issues?q=is%3Aissue+label%3Atesting-feedback">Browse tester reports</a>
     </div>
   </div>
   <aside class="page-summary" aria-label="Testing workspace summary">
-    <span>Report destination</span>
-    <strong>Public GitHub issue</strong>
+    <span>Manual acceptance catalog</span>
+    <strong>22 test cases</strong>
     <dl>
-      <div><dt>Minimum</dt><dd>Android 8</dd></div>
+      <div><dt>Stations</dt><dd>5</dd></div>
       <div><dt>Outcomes</dt><dd>4</dd></div>
-      <div><dt>Accounts</dt><dd>Optional</dd></div>
+      <div><dt>Accounts</dt><dd>Assigned</dd></div>
     </dl>
   </aside>
 </section>
 
 <nav class="section-jump" aria-label="On this page">
   <a href="#start">Before testing</a>
-  <a href="#sessions">Choose a session</a>
-  <a href="#coverage">Record evidence</a>
+  <a href="#listening-tests">Listening</a>
+  <a href="#member-tests">Account and community</a>
+  <a href="#device-tests">Devices and access</a>
+  <a href="#coverage">Coverage matrix</a>
   <a href="#report">Report a result</a>
-  <a href="#safety">Protect your privacy</a>
+  <a href="#safety">Safety</a>
 </nav>
 
 <section class="content-section" id="start">
   <div class="content-intro wide">
     <p class="eyebrow">Prepare once</p>
-    <h2>Make the result reproducible</h2>
-    <p>Before touching the controls, record the exact build source, app version and version code, device model, Android version, form factor, and connection type. A result without its environment is difficult to compare or repeat.</p>
+    <h2>Make every result reproducible</h2>
+    <p>Record the build and environment before touching the controls. Run only assigned account, posting, request, report, accessory, and future-delivery cases; mark a missing prerequisite Blocked rather than improvising around it.</p>
   </div>
   <ol class="process-timeline">
-    <li><span>1</span><div><h3>Use an approved build</h3><p>Install only from the project-approved Play testing track or supplied release channel. Identify local debug or release APKs explicitly; their signatures and behavior can differ from Play delivery.</p></div></li>
-    <li><span>2</span><div><h3>Choose a bounded session</h3><p>Pick one route below. Complete it in order, note the first unexpected result, and avoid changing several device conditions at once.</p></div></li>
-    <li><span>3</span><div><h3>Report success as well as failure</h3><p>A clean pass on a named device and Android version is useful evidence. Select Pass with notes when behavior works but feels confusing, slow, or inconsistent.</p></div></li>
+    <li><span>1</span><div><h3>Identify the build</h3><p>Use an approved Play testing track or supplied release channel. Record the app version and code, installation source, device model, Android/API version, form factor, connection, theme, font/display scale, and relevant accessories.</p></div></li>
+    <li><span>2</span><div><h3>Take an assignment</h3><p>Record the PT case ID, station, and configuration. One report covers one case on one environment; repeat a case on another station or device only as assigned.</p></div></li>
+    <li><span>3</span><div><h3>Use safe test data</h3><p>Use only approved test accounts and synthetic dates or messages. Never disclose a real date of birth, tester identity, password, security answer, private conversation, or session value.</p></div></li>
+    <li><span>4</span><div><h3>Stop at the first unsafe boundary</h3><p>Do not send a Chat post, song request, abuse report, or external share unless that exact mutation is authorized. Do not repeat an indeterminate mutation; inspect the visible destination and report what happened.</p></div></li>
   </ol>
+  <div class="roadmap-callout tester-safety-callout tester-assignment-callout">
+    <div><p class="eyebrow">Outcome vocabulary</p><h2>Pass, notes, fail, or blocked</h2></div>
+    <div><p><strong>Pass</strong> means every observable boundary in the case occurred. Use <strong>Pass with notes</strong> when it worked but was confusing, slow, or inconsistent; <strong>Fail</strong> when an expected boundary did not occur; and <strong>Blocked</strong> when the build, account, permission, station, network control, device, or accessory was unavailable.</p></div>
+  </div>
 </section>
 
-<section class="content-section" id="sessions">
+<section class="content-section" id="listening-tests">
   <div class="content-intro wide">
-    <p class="eyebrow">Choose one route</p>
-    <h2>Small sessions produce clearer findings</h2>
-    <p>Run the shortest route that covers the behavior you want to evaluate. Repeat on a second station or configuration only after recording the first result.</p>
+    <p class="eyebrow">PT-01–PT-08 · Foundation and listening</p>
+    <h2>Prove the app can arrive, play, and recover</h2>
+    <p>These cases cover delivery, navigation, every station, the MediaSession, the service-owned timer, Android output routing, station data, and bounded network recovery.</p>
   </div>
-  <div class="test-session-grid">
-    <article>
-      <span>10 minutes</span>
-      <h3>Listening smoke test</h3>
-      <ol><li>Launch and select a station.</li><li>Start playback and verify title/artwork.</li><li>Switch stations while playing.</li><li>Background the app and use play/pause.</li><li>Tap the notification body and confirm the existing player task opens.</li><li>Stop playback intentionally.</li></ol>
+  <div class="test-session-grid comprehensive-test-grid">
+    <article id="pt-01">
+      <span>PT-01 · Assigned install tester</span>
+      <h3>Install, update, and first launch</h3>
+      <ol><li>Install the assigned Play-delivered build or approved release APK and confirm the launcher icon, app label, version, and version code. On Android 13+, also enable themed icons and inspect the monochrome variant.</li><li>Cold-launch once and exercise both notification-permission outcomes across the assigned Android 13+ devices; public playback must remain usable if permission is denied.</li><li>Update an eligible earlier Alpha in place and verify local settings and protected station sessions remain available.</li><li>On the designated clean-install device, uninstall and reinstall; confirm protected sessions and app-local choices are not restored from Android backup.</li><li>Confirm launch has no crash, ANR, unexpected browser surface, or automatic audio start.</li></ol>
+      <p class="test-pass"><strong>Pass:</strong> install and update complete under the expected identity; retained data survives only an in-place update, and a fresh install starts clean.</p>
     </article>
-    <article>
-      <span>20–30 minutes</span>
-      <h3>Discovery and member test</h3>
-      <ol><li>Review Queue and History.</li><li>Search by Title, Album, Artist, and Genre.</li><li>Check Library and play-state sorting.</li><li>With an approved test account, inspect Favorites and account restoration.</li><li>Submit a song request only when the test plan explicitly calls for one and the station cooldown permits it.</li></ol>
+    <article id="pt-02">
+      <span>PT-02 · All configurations</span>
+      <h3>Navigation, preferences, and exit</h3>
+      <ol><li>Reach Player, Favorites, Chat, Queue, and More; confirm all five station cards are horizontally reachable.</li><li>From each non-Player destination, use the persistent mini-player and return to the full Player.</li><li>Choose station A, set <strong>Resume last station</strong>, select station B, then force-stop/relaunch; confirm station B opens selected without auto-playing.</li><li>With station B selected, set <strong>Use current station at startup</strong> and record B as the fixed station. Select a different station C, then force-stop/relaunch; confirm station B—not the newer station C—opens selected without auto-playing.</li><li>Exercise the two-Back exit flow. Verify both <strong>Keep listening</strong> and <strong>Stop and exit</strong> outcomes in separate runs.</li></ol>
+      <p class="test-pass"><strong>Pass:</strong> navigation and selected state stay coherent, startup choices restore exactly, and exit never stops audio without an explicit choice.</p>
     </article>
-    <article>
-      <span>15–25 minutes</span>
-      <h3>Device and resilience test</h3>
-      <ol><li>Rotate or resize the app.</li><li>On a foldable, exercise open, tabletop, closed, and reopened states.</li><li>Increase font and display size.</li><li>Connect and remove a headset or Bluetooth route.</li><li>Interrupt connectivity once, restore it, and verify only one recovery attempt.</li></ol>
+    <article id="pt-03">
+      <span>PT-03 · Every station across the cohort</span>
+      <h3>Foreground playback and station switching</h3>
+      <ol><li>For the assigned station, start playback and observe Idle/Buffering/Playing or an understandable error.</li><li>Confirm audible live audio, selected-station styling, title presentation, artwork behavior, format/bitrate when supplied, and matching mini-player/system metadata.</li><li>Pause and resume, then move to the previous and next station, including wraparound at the ends.</li><li>Switch stations while playing and confirm the prior stream and metadata do not continue as a second logical player.</li><li>Stop, then start again deliberately. Repeat PT-03 until all five stations have a result.</li></ol>
+      <p class="test-pass"><strong>Pass:</strong> controls and visible state agree, metadata is station-scoped, and only the selected station is audible.</p>
+    </article>
+    <article id="pt-04">
+      <span>PT-04 · System-media tester</span>
+      <h3>Background playback and media controls</h3>
+      <ol><li>Start playback, press Home, lock/unlock the device, and leave it playing for the assigned soak period.</li><li>Use notification, lock-screen, Bluetooth/headset, and hardware play/pause controls where available.</li><li>Tap the notification body and confirm the existing Player task opens instead of creating a duplicate task.</li><li>Remove the app task from Recents while listening; verify the service/session and system media surface remain coherent.</li><li>Exercise an assigned transient audio-focus interruption and a permanent interruption; verify resume occurs only when appropriate.</li><li>Stop playback and confirm the system media state no longer implies that audio is active.</li></ol>
+      <p class="test-pass"><strong>Pass:</strong> one MediaSession owns every control, background audio survives lifecycle changes, and foreground/system state never contradicts playback.</p>
+    </article>
+    <article id="pt-05">
+      <span>PT-05 · Sleep-timer tester</span>
+      <h3>Sleep Timer lifecycle</h3>
+      <ol><li>While playing, open Sleep Timer and exercise a preset plus valid custom 1- and 720-minute boundaries; verify invalid values cannot start a timer.</li><li>Confirm the live countdown, then pause/resume, switch stations, background/lock the app, remove and reopen the task, and return; the original deadline continues.</li><li>Adjust the active timer and verify it replaces the prior deadline.</li><li>Cancel the timer and confirm playback continues; start another timer and use manual Stop to confirm both playback and timer clear.</li><li>Run a one-minute locked-device expiry and confirm the existing player stops once, the timer clears, and any available system cancel action disappears.</li><li>On the assigned reboot subcase, reboot with a timer active and confirm it fails safe instead of unexpectedly extending the deadline.</li></ol>
+      <p class="test-pass"><strong>Pass:</strong> the service owns one bounded deadline that restores in the UI and never creates or controls a second player.</p>
+    </article>
+    <article id="pt-06">
+      <span>PT-06 · Accessory tester</span>
+      <h3>Audio-output selection and route loss</h3>
+      <ol><li>Confirm the Player's current output name agrees with the device actually producing media.</li><li>Open <strong>Audio output</strong>, dismiss it, and confirm the same Player task remains.</li><li>With assigned Bluetooth, wired/USB, hearing-aid, HDMI, automotive, or remote hardware, switch routes and verify Android System UI and the Player agree.</li><li>Switch back to the device speaker, then disconnect the active accessory and observe the selected fallback route and playback state.</li><li>If the system chooser is unavailable, confirm the app reports that boundary without breaking playback.</li></ol>
+      <p class="test-pass"><strong>Pass:</strong> Android owns discovery/handoff, the displayed active route stays accurate, and route loss leaves a usable, truthful state. Google Cast is not claimed by this case.</p>
+    </article>
+    <article id="pt-07">
+      <span>PT-07 · Every station across the cohort</span>
+      <h3>Queue, History, and station data</h3>
+      <ol><li>Open Queue for the assigned station and verify ordered upcoming tracks plus recently played content.</li><li>Check only supplied title, artist/composer, album, duration, artwork, requester, and request-message values appear; missing fields remain absent.</li><li>Before community access is enabled, confirm public requester identity and messages remain hidden; after PT-14, confirm permitted attribution appears separately from track metadata.</li><li>Refresh once, switch stations, and confirm old rows, artwork, requester identity, and error state do not leak into the new station.</li><li>Cover SST/1980s/Adagio/Entranced extended lists and Death.FM's compact list across the cohort.</li></ol>
+      <p class="test-pass"><strong>Pass:</strong> Queue and History remain bounded, ordered, capability-aware, station-scoped, and honest about unavailable data.</p>
+    </article>
+    <article id="pt-08">
+      <span>PT-08 · Network-control tester</span>
+      <h3>Network loss, cancellation, and recovery</h3>
+      <ol><li>Start live playback, disable the active connection, and wait through buffering/fallback to the explicit offline waiting state.</li><li>Restore validated connectivity and verify playback prepares once and returns without another Play action.</li><li>In separate runs, pause, stop, or switch stations while waiting; restoring connectivity must not restart the cancelled intent.</li><li>Repeat one Wi-Fi/mobile-data handoff without a full outage.</li><li>While offline, try Queue refresh, Chat refresh, account loading, Favorites, and library search. Confirm generic errors reveal no endpoint details; cached Queue data is marked stale and request actions fail closed.</li><li>Restore service and confirm a deliberate refresh recovers the affected content.</li></ol>
+      <p class="test-pass"><strong>Pass:</strong> recovery is bounded and intent-aware, cached state is labeled, mutations stay disabled without fresh evidence, and no private network detail reaches the UI.</p>
+    </article>
+  </div>
+</section>
+
+<section class="content-section" id="member-tests">
+  <div class="content-intro wide">
+    <p class="eyebrow">PT-09–PT-19 · Accounts, participation, and support</p>
+    <h2>Test protected and state-changing paths deliberately</h2>
+    <p>Read-only portions may be run by any assigned tester. Posting, request, moderation-delivery, and cross-account mention checks require explicit approval and disposable test data.</p>
+  </div>
+  <div class="test-session-grid comprehensive-test-grid">
+    <article id="pt-09">
+      <span>PT-09 · Approved station account</span>
+      <h3>Sign-in, restoration, and isolation</h3>
+      <ol><li>In More, confirm all five station account states are visible without changing the listening station.</li><li>Load the assigned station's native sign-in challenge, refresh the security code once, and sign in with the approved account.</li><li>Force-stop and relaunch; confirm only that station restores its display identity without requesting the password again.</li><li>Sign in to a second assigned station or inspect its signed-out boundary, then sign out of the first; confirm the other station is unchanged.</li><li>Force-stop/relaunch again and verify the signed-out station remains cleared. If natural expiry occurs, record the explicit expired/recovery state.</li></ol>
+      <p class="test-pass"><strong>Pass:</strong> credentials remain transient, protected sessions restore only for their originating station, and station-only logout remains isolated.</p>
+    </article>
+    <article id="pt-10">
+      <span>PT-10 · Approved account with Favorites</span>
+      <h3>Favorites filtering, sorting, and availability</h3>
+      <ol><li>Confirm the signed-out station-qualified gate, then sign in and load only the selected station's Favorite tracks.</li><li>Filter by visible metadata and verify the result count and empty-filter state.</li><li>Exercise all sorts: #, Track Name, Album, Artist, Genre, Year, Length, and Play state.</li><li>On the assigned large SST list, traverse from the first to the last of approximately 1,500 tracks and keep filtering/sorting responsive.</li><li>Verify an available track shows green <strong>Request Now</strong>; queued/recent tracks show red <strong>Track Recently Played</strong> and cannot be selected; stale or ambiguous data fails closed.</li><li>Switch station and sign out; confirm the list and account-derived state clear without leaking.</li></ol>
+      <p class="test-pass"><strong>Pass:</strong> the server-owned list is complete, responsive, sortable, station-scoped, and never enables an unsafe request.</p>
+    </article>
+    <article id="pt-11">
+      <span>PT-11 · Read-only request browsing</span>
+      <h3>Library search and pre-submit checks</h3>
+      <ol><li>While signed out, browse the library and confirm request submission remains gated.</li><li>Search useful assigned queries by Title, Album, Artist, and Genre; open results and verify album/track metadata.</li><li>Exercise random and least-played suggestions, plus Library order and Play state sorting.</li><li>Open an available track's confirmation, verify station/track details, then Cancel and confirm no request appears in Queue.</li><li>Confirm queued, recently played, cooldown, membership, limit, stale, ambiguous, and unavailable states use distinct text and do not expose an enabled action.</li></ol>
+      <p class="test-pass"><strong>Pass:</strong> browsing works without mutation, Cancel is safe, and confirmation is reachable only after fresh, station-scoped eligibility.</p>
+    </article>
+    <article id="pt-12">
+      <span>PT-12 · Explicit mutation approval required</span>
+      <h3>One-shot song request</h3>
+      <ol><li>Confirm the coordinator-approved station/account is signed in, ready, outside cooldown, and allowed exactly one request.</li><li>Select one green eligible track and verify the confirmation identifies the intended station and track.</li><li>On SST, exercise the optional request message within its 80-character limit; on other stations confirm the SST-only field is absent.</li><li>Confirm once and record the exact success, rejection, or indeterminate result. Never tap Confirm twice.</li><li>Inspect Queue before any further action. Verify a received request appears once, with requester and optional message separate from metadata.</li><li>If the result is indeterminate, do not retry. If a cooldown becomes visible, confirm it prevents another request.</li></ol>
+      <p class="test-pass"><strong>Pass:</strong> one explicit confirmation causes at most one mutation, the UI reports uncertainty honestly, and no automatic or tester retry duplicates it.</p>
+    </article>
+    <article id="pt-13">
+      <span>PT-13 · SST account only</span>
+      <h3>Request activity and membership evidence</h3>
+      <ol><li>Confirm Request activity is unavailable while signed out and is not inherited by another station.</li><li>Sign in to SST, open More → Request activity, and refresh manually.</li><li>Record the explicit membership state, station-reported readiness/cooldown, and up to ten recent request summaries without inferring a tier from generic wording.</li><li>Cross-check the latest authorized PT-12 request when available.</li><li>Sign out and confirm the memory-only activity, readiness, and membership presentation clear.</li></ol>
+      <p class="test-pass"><strong>Pass:</strong> SST evidence is explicit, read-only, bounded, manually refreshed, and cleared with the SST session.</p>
+    </article>
+    <article id="pt-14">
+      <span>PT-14 · Fresh-data safety profiles</span>
+      <h3>Age, Terms, reveal, and legal disclosures</h3>
+      <ol><li>On a clean profile, confirm Chat and requester attribution are hidden before the age screen. Use assigned synthetic dates only; verify an invalid date is rejected.</li><li>On the designated underage branch, confirm community features remain unavailable while playback and non-community station data still work.</li><li>On a separate clean adult branch, review Terms, Decline once, then verify Agree stays disabled until <strong>I Agree</strong> is checked.</li><li>Accept Terms and confirm mature content remains hidden until separately revealed; hide it again and verify the gate returns.</li><li>Relaunch and confirm only the adult/not-adult result, Terms version, and reveal choice persist—not the entered date.</li><li>In More, open and scroll the Terms, privacy notice, and open-source licenses; close each and return to the same app state.</li></ol>
+      <p class="test-pass"><strong>Pass:</strong> each gate is independent and persistent as documented, underage users retain listening access, and legal text is readable without disclosing a real birth date.</p>
+    </article>
+    <article id="pt-15">
+      <span>PT-15 · Posting requires approval</span>
+      <h3>Chat reading and posting</h3>
+      <ol><li>After PT-14, load the assigned station's Chat and verify bounded author, message, timestamp, and smiley-alt presentation.</li><li>Refresh once, switch station, and confirm messages and errors remain station-scoped. Relaunch to confirm prior Chat history is not presented as persisted app data.</li><li>While signed out, confirm reading remains available but the composer does not.</li><li>With an approved account, verify the 255-character counter and that unsupported legacy characters are rejected rather than silently changed.</li><li>Only when authorized, send one harmless approved message, confirm it appears once, and do not retry an indeterminate post.</li></ol>
+      <p class="test-pass"><strong>Pass:</strong> Chat is gated, bounded, memory-only, correctly encoded, station-scoped, and posts only after one explicit Send.</p>
+    </article>
+    <article id="pt-16">
+      <span>PT-16 · Delivery requires approval</span>
+      <h3>Report, block, and unblock safeguards</h3>
+      <ol><li>From both Chat and request attribution, inspect the separate Report content, Report user, and Block user actions.</li><li>Open a report and verify the intended station/user, bounded content preview, category, name/email, optional details, CAPTCHA, disclosure, and disabled-until-complete Send action.</li><li>Cancel and reopen; confirm entered report fields were not persisted.</li><li>Only the designated moderation tester may send one authorized harmless report. Record submitted, rejected/retryable, or indeterminate/non-retryable behavior and never resend an indeterminate report.</li><li>Block an approved test identity; confirm its Chat messages and request attribution disappear immediately only for that station, then relaunch and confirm the local block persists.</li><li>In More → Community safety, unblock it and confirm permitted content returns. Cross-check that blocked authors cannot trigger PT-17.</li></ol>
+      <p class="test-pass"><strong>Pass:</strong> reporting is explicit and one-shot, form data remains transient, and local station-scoped blocks consistently filter every supported surface.</p>
+    </article>
+    <article id="pt-17">
+      <span>PT-17 · Two approved Chat accounts</span>
+      <h3>Local Chat-mention notifications</h3>
+      <ol><li>Across assigned Android 13+ devices, test notification permission allowed and denied; denial must not block Chat.</li><li>Sign in, complete community gates, enable mentions for one station, relaunch, and confirm the station-scoped choice persists.</li><li>Keep that station's Chat selected and allow the first snapshot to baseline without alerting for old messages.</li><li>From another approved account, post an exact full display-name mention. Verify one private notification names the station and sender but contains no message text.</li><li>Verify self-authored, longer embedded-name, substring, blocked-author, historical, and duplicate snapshots do not alert.</li><li>Tap the notification and confirm it selects the originating station and opens native Chat without bypassing any gate; then turn the option off.</li></ol>
+      <p class="test-pass"><strong>Pass:</strong> exact eligible mentions alert once with a minimal payload. The current preview observes only actively refreshing Chat; no alert while closed or away from Chat is expected yet.</p>
+    </article>
+    <article id="pt-18">
+      <span>PT-18 · Every station across the cohort</span>
+      <h3>Trusted station pages and browser isolation</h3>
+      <ol><li>For the assigned station, open both entries currently shipped under <strong>Station links</strong>: Contact and the station's VIP or RIP membership page.</li><li>Confirm Android uses a secure browser Custom Tab at the expected HTTPS station host, never an in-app WebView.</li><li>Press Back and verify the existing app task, selected station, navigation state, timer, and playback remain intact.</li><li>If a station website requests sign-in, confirm its browser session is separate from the protected native app session.</li><li>Record a clear unavailable/rejected/no-browser state rather than navigating to an unexpected host.</li></ol>
+      <p class="test-pass"><strong>Pass:</strong> only the allowlisted same-station pages open, browser and app sessions remain isolated, and Back returns to the live native task.</p>
+    </article>
+    <article id="pt-19">
+      <span>PT-19 · Release-build support check</span>
+      <h3>Privacy-safe diagnostics</h3>
+      <ol><li>Create a few playback, network, and route transitions, then open More → In-app diagnostics.</li><li>Review version/build type, coarse device/API, station, bounded playback/error/network/output categories, and no more than five recent enum-only transitions.</li><li>Confirm there is no account identity, station/community content, title/artist, route display name, endpoint, stable device identifier, raw error, or log.</li><li>Tap Copy and verify the clipboard text matches the visible preview.</li><li>Tap Share, verify Android's chooser contains the reviewed text, then dismiss it without sending; confirm the app never chooses a recipient.</li><li>Reopen after process recreation and confirm the app did not persist an exported report.</li></ol>
+      <p class="test-pass"><strong>Pass:</strong> the visible fixed-allowlist snapshot is accurate and private, and export occurs only through an explicit user-controlled Android action.</p>
+    </article>
+  </div>
+</section>
+
+<section class="content-section" id="device-tests">
+  <div class="content-intro wide">
+    <p class="eyebrow">PT-20–PT-22 · Device, accessibility, and delivery</p>
+    <h2>Cover configurations that automation cannot judge</h2>
+    <p>PT-20 and PT-21 are current physical/manual acceptance gates. PT-22 is published now so the future closed-app notification build has an explicit acceptance contract; it is Blocked—not failed—against the current active-Chat preview.</p>
+  </div>
+  <div class="test-session-grid comprehensive-test-grid">
+    <article id="pt-20">
+      <span>PT-20 · Assigned form factor</span>
+      <h3>Adaptive UI, theme, and lifecycle continuity</h3>
+      <ol><li>Exercise assigned compact portrait/landscape, tablet portrait/landscape, multi-window/freeform, and foldable open/tabletop/closed/reopened windows.</li><li>Verify bottom navigation, rail, and two-pane Player appear at suitable widths without hiding any destination, station card, primary control, dialog action, or list content.</li><li>Rotate or resize while playing and while viewing an expanded More section; confirm meaningful selected state and the existing player remain coherent.</li><li>Check system bars, cutouts, keyboard, light/dark themes, and Android 16 edge-to-edge/predictive-Back behavior.</li><li>On a physical foldable, run the full hinge cycle while playing and confirm task, audio, selected station, metadata, and controls survive without crash or ANR.</li></ol>
+      <p class="test-pass"><strong>Pass:</strong> content reflows instead of clipping, lifecycle changes preserve one task/player, and every primary action remains visible and operable.</p>
+    </article>
+    <article id="pt-21">
+      <span>PT-21 · Human accessibility tester</span>
+      <h3>Large text and spoken TalkBack traversal</h3>
+      <ol><li>At the assigned maximum font and enlarged display settings, traverse Player, Favorites, Chat, Queue, More, account cards, dialogs, and long/empty/error lists.</li><li>With TalkBack on a physical device, start from launch and reach all five destinations, station radio choices, playback, Sleep Timer, Audio output, community gates, request status/actions, and diagnostics.</li><li>Listen for meaningful names, roles, selected/disabled/state announcements, focus order, pronunciation, pacing, and the Terms <strong>I Agree</strong> checkbox.</li><li>Confirm green/red request states also have exact text, artwork is not a duplicate focus trap, and no actionable node is unlabeled.</li><li>Repeat the assigned orientation or fold posture and confirm focus does not strand the tester or hide an action.</li></ol>
+      <p class="test-pass"><strong>Pass:</strong> every task is understandable and completable through spoken feedback at enlarged settings, without relying on color, position, or sight alone.</p>
+    </article>
+    <article class="future-test-case" id="pt-22">
+      <span>PT-22 · Future M27.2 build only</span>
+      <h3>Closed-app notification delivery</h3>
+      <ol><li>Do not run this case against the current active-Chat preview. Mark it Blocked until an authorized true-push build and event source are supplied.</li><li>When supplied, test permission allow/deny, foreground, background, task-removed/closed, device-idle, reboot, reinstall/token rotation, and network outage/recovery states.</li><li>Across assigned station/account pairs, verify exact-name mapping, self/blocked/duplicate suppression, station-specific opt-in/out, sign-out, and minimal private lock-screen payloads.</li><li>Tap an alert and verify station selection plus gated native Chat navigation; no protected session or message text may pass through a relay.</li><li>Record delivery delay, duplicate count, data/battery observations, and outage behavior. Private Message delivery remains excluded until M17 is repaired and verified.</li></ol>
+      <p class="test-pass"><strong>Pass:</strong> authorized events arrive once under the documented lifecycle states, respect privacy and user controls, and never depend on continuous background polling.</p>
     </article>
   </div>
 </section>
 
 <section class="content-section" id="coverage">
   <div class="content-intro wide">
-    <p class="eyebrow">Evidence contract</p>
-    <h2>Record the observation, not a conclusion</h2>
-    <p>Use exact visible text and state changes. “Playback failed” is less useful than the selected station, displayed state, time to failure, whether audio continued, and what happened after one retry.</p>
+    <p class="eyebrow">Cohort assignment matrix</p>
+    <h2>Complete means every row has evidence</h2>
+    <p>A coordinator distributes this matrix across testers. A case may have several reports when station, OS, form factor, account state, or accessory is the variable under test.</p>
   </div>
-  <div class="table-wrap" tabindex="0" role="region" aria-label="Product testing evidence matrix">
-    <table class="device-table">
-      <thead><tr><th>Area</th><th>Record</th><th>Pass boundary</th></tr></thead>
+  <div class="table-wrap" tabindex="0" role="region" aria-label="Station-specific product testing coverage">
+    <table class="device-table tester-coverage-table">
+      <thead><tr><th>Target</th><th>Required cases</th><th>Distinct evidence to capture</th></tr></thead>
       <tbody>
-        <tr><th>Playback</th><td>Station, visible state, audio, title/artwork, primary or fallback indication</td><td>One logical stream; controls and visible state agree</td></tr>
-        <tr><th>Background media</th><td>Notification controls, notification-body navigation, lock/headset behavior</td><td>Controls affect the existing player and reopen the existing task</td></tr>
-        <tr><th>Station data</th><td>Queue, History, search mode/query, sorting, missing or stale fields</td><td>Only station-provided values appear; unavailable data stays explicit</td></tr>
-        <tr><th>Account</th><td>Station, signed-in/out state, restoration, logout isolation</td><td>Only the selected station session changes</td></tr>
-        <tr><th>Adaptive UI</th><td>Window size, orientation, hinge state, font/display scale, clipped control</td><td>Primary controls remain visible, readable, and operable</td></tr>
-        <tr><th>Recovery</th><td>Connection before/after, displayed error, automatic attempt count, manual action</td><td>One bounded recovery after validated connectivity returns</td></tr>
+        <tr><th>All five stations</th><td>PT-03, PT-07, signed-out PT-09–PT-11, PT-15 read, PT-18</td><td>One clean station-scoped result for playback/metadata, Queue/History, public/member gates, Chat read, and both shipped station links.</td></tr>
+        <tr><th>StreamingSoundtracks.com</th><td>PT-03, PT-07, PT-09–PT-19 as assigned</td><td>Extended Queue, large Favorites, one-shot optional request message, request activity/cooldown, explicit membership evidence, and Contact/VIP membership links.</td></tr>
+        <tr><th>1980s.FM</th><td>PT-03, PT-07, PT-09–PT-12, PT-15, PT-18</td><td>Independent authenticated session, request capability without SST-only fields, and the shipped Contact/VIP membership links.</td></tr>
+        <tr><th>Adagio.FM</th><td>PT-03, PT-07, PT-09–PT-12, PT-15, PT-18</td><td>Composer/work/ensemble presentation without invented fields, independent session, requests, and Contact/VIP membership links.</td></tr>
+        <tr><th>Death.FM</th><td>PT-03, PT-07, PT-09–PT-12, PT-15, PT-18</td><td>Sparse metadata, compact Queue/History, independent session, requests, and Contact/RIP membership links with RIP—not VIP—wording.</td></tr>
+        <tr><th>Entranced.FM</th><td>PT-03, PT-07, PT-09–PT-12, PT-15, PT-18</td><td>Legacy ICY punctuation presentation, extended Queue/History, independent session, requests, and Contact/VIP membership links.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="table-wrap coverage-table-spacing" tabindex="0" role="region" aria-label="Device and environment product testing coverage">
+    <table class="device-table tester-coverage-table">
+      <thead><tr><th>Configuration</th><th>Required cases</th><th>Assignment boundary</th></tr></thead>
+      <tbody>
+        <tr><th>Play fresh install and update pair</th><td>PT-01 plus a PT-02/PT-03 smoke pass</td><td>Use the actual testing-track artifact; local APK evidence does not replace Play delivery.</td></tr>
+        <tr><th>Android 8 / API 26</th><td>PT-01–PT-03, PT-07, PT-14, PT-20</td><td>Minimum-runtime launch, navigation, community gates, and core listening/data behavior.</td></tr>
+        <tr><th>Android 13+ and Android 16 / API 36</th><td>PT-01, PT-04–PT-06, PT-17, PT-20</td><td>Notification permission, system media/output surfaces, edge-to-edge, and predictive Back.</td></tr>
+        <tr><th>Phone, tablet, multi-window, foldable</th><td>PT-20 plus assigned feature smoke cases</td><td>Cover compact/medium/expanded widths, both orientations, resize, and genuine hinge states.</td></tr>
+        <tr><th>Wi-Fi, mobile data, full outage</th><td>PT-08</td><td>One cut/restore and one handoff; do not manipulate networks carrying unrelated critical work.</td></tr>
+        <tr><th>Bluetooth and available wired/USB output</th><td>PT-04, PT-06</td><td>Record exact hardware category, Android chooser behavior, media buttons, and disconnect state.</td></tr>
+        <tr><th>Maximum text plus physical TalkBack</th><td>PT-21</td><td>A human audible/intelligibility result is required; automated semantics alone do not close this row.</td></tr>
+        <tr><th>Authorized true-push build</th><td>PT-22</td><td>Remain Blocked until M27.2 supplies an authorized event source and test build.</td></tr>
       </tbody>
     </table>
   </div>
@@ -96,17 +255,17 @@ section: product-testing
 <section class="content-section" id="report">
   <div class="content-intro wide">
     <p class="eyebrow">Structured intake</p>
-    <h2>Submit one result per behavior</h2>
-    <p>The public form captures environment, station, outcome, affected areas, expected and actual behavior, repeatability, reproduction steps, and redacted evidence. Separate unrelated findings so each can be verified and closed independently.</p>
+    <h2>Submit one case, station, and environment per result</h2>
+    <p>The public form captures the PT case ID, build, device, station, outcome, affected areas, expected and actual behavior, repeatability, reproduction steps, and redacted evidence. A clean pass is evidence. Split unrelated failures or observations into separate reports.</p>
   </div>
   <div class="detail-grid three severity-grid">
-    <article><span>Critical</span><h3>Safety or data exposure</h3><p>Credential/session exposure, unintended private content, destructive account behavior, or a repeatable crash that prevents use. Stop testing and report immediately without attaching the sensitive material.</p></article>
-    <article><span>High / Medium</span><h3>Core function failure</h3><p>Playback, navigation, account isolation, requests, community safeguards, or an adaptive layout cannot complete its intended job. Record exact steps and repeatability.</p></article>
-    <article><span>Low / Note</span><h3>Usability or polish</h3><p>The task completes, but wording, spacing, latency, feedback, or consistency should improve. Select Pass with notes when the expected result still occurred.</p></article>
+    <article><span>Critical</span><h3>Safety or data exposure</h3><p>Credential/session exposure, unintended private content, destructive account behavior, or a repeatable crash that prevents use. Stop testing and report immediately without attaching sensitive material.</p></article>
+    <article><span>High / Medium</span><h3>Core function failure</h3><p>Playback, navigation, account isolation, requests, community safeguards, delivery, or an adaptive layout cannot complete its intended job. Record exact steps and repeatability.</p></article>
+    <article><span>Low / Note</span><h3>Usability or polish</h3><p>The task completes, but wording, spacing, latency, spoken feedback, or consistency should improve. Select Pass with notes when the expected result still occurred.</p></article>
   </div>
   <div class="actions">
     <a class="button primary" href="https://github.com/codeframe78/24Seven.FM-Player/issues/new?template=product-test.yml">Open structured result form</a>
-    <a class="button secondary" href="https://github.com/codeframe78/24Seven.FM-Player/blob/main/docs/alpha-testing.md">Read the complete tester guide</a>
+    <a class="button secondary" href="https://github.com/codeframe78/24Seven.FM-Player/blob/main/docs/alpha-testing.md">Read installation and reporting guidance</a>
   </div>
 </section>
 
@@ -114,14 +273,14 @@ section: product-testing
   <div class="roadmap-callout tester-safety-callout">
     <div><p class="eyebrow">Public report</p><h2>Redact before submitting</h2></div>
     <div>
-      <p>GitHub issues are public. Never include passwords, security answers or CAPTCHA images, cookies, session values, email addresses, private messages, abuse-report content, signing material, private endpoints, full network captures, or screenshots containing personal information.</p>
-      <p>Do not repeatedly submit song requests while investigating an indeterminate response; inspect Queue first. Do not send moderation test reports unless the administrator has explicitly authorized that exact test.</p>
-      <ul class="inline-requirements"><li>Public metadata only</li><li>One finding per issue</li><li>Redacted screenshots</li><li>No account secrets</li><li>No private conversations</li><li>No raw traffic captures</li></ul>
+      <p>GitHub issues are public. Never include passwords, security answers or CAPTCHA images, cookies, session values, account email addresses, real dates of birth, private messages, abuse-report content, signing material, private endpoints, full network captures, or screenshots containing personal information.</p>
+      <p>Do not repeatedly submit a song request, Chat post, or moderation report while investigating an indeterminate response. Inspect Queue or the relevant visible state once, record the outcome, and stop. Do not test closed-app push against PT-17 or Google Cast/Private Messages as if they are shipped capabilities.</p>
+      <ul class="inline-requirements"><li>Case ID included</li><li>Public metadata only</li><li>One environment per result</li><li>Redacted screenshots</li><li>No account secrets</li><li>No raw traffic captures</li></ul>
     </div>
   </div>
 </section>
 
 <section class="cta" aria-labelledby="submit-result-title">
-  <div><p class="eyebrow">Finished a session?</p><h2 id="submit-result-title">Record the result while it is fresh.</h2><p>Passes establish coverage. Failures establish work. Blocked tests identify missing access or setup without being mistaken for product defects.</p></div>
+  <div><p class="eyebrow">Finished a case?</p><h2 id="submit-result-title">Record the result while it is fresh.</h2><p>Passes establish coverage. Failures establish work. Blocked cases identify a missing build, account, permission, station, device, or accessory without being mistaken for a product defect.</p></div>
   <div class="actions"><a class="button primary" href="https://github.com/codeframe78/24Seven.FM-Player/issues/new?template=product-test.yml">Submit result</a></div>
 </section>
