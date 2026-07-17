@@ -895,6 +895,73 @@ class RadioAppTest {
     }
 
     @Test
+    fun diagnosticsPreviewUsesRedactedStateAndEmitsExplicitCopyAndShareActions() {
+        var copied: String? = null
+        var shared: String? = null
+        composeRule.setContent {
+            MaterialTheme {
+                RadioApp(
+                    state = sampleState().copy(
+                        destination = MainDestination.More,
+                        playback = PlaybackState(
+                            status = PlaybackStatus.Error,
+                            errorMessage = "https://private.example/?token=do-not-share",
+                            networkAvailable = true,
+                            audioOutput = AudioOutputState("James's private JBL", AudioOutputKind.Bluetooth),
+                        ),
+                        diagnosticTransitions = listOf(
+                            DiagnosticTransition(PlaybackStatus.Buffering, true, AudioOutputKind.Device),
+                            DiagnosticTransition(PlaybackStatus.Error, true, AudioOutputKind.Bluetooth),
+                        ),
+                    ),
+                    onSelectStation = {},
+                    onSelectDestination = {},
+                    onPlay = {},
+                    onPause = {},
+                    onStop = {},
+                    onRefreshQueue = {},
+                    diagnosticUi = DiagnosticUi(
+                        environment = DiagnosticEnvironment(
+                            appVersion = "0.1.0-alpha01-debug",
+                            versionCode = 2,
+                            buildType = "debug",
+                            androidRelease = "16",
+                            apiLevel = 36,
+                            deviceManufacturer = "motorola",
+                            deviceModel = "razr plus 2024",
+                        ),
+                        actions = DiagnosticActions(
+                            onCopy = { copied = it },
+                            onShare = { shared = it },
+                        ),
+                    ),
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag("more_diagnostics").performScrollTo().performClick()
+        composeRule.onNodeWithText("App version: 0.1.0-alpha01-debug (2)", substring = true)
+            .performScrollTo()
+            .assertIsDisplayed()
+        composeRule.onNodeWithText("Error category: Playback failure", substring = true)
+            .performScrollTo()
+            .assertIsDisplayed()
+        composeRule.onNodeWithText("Audio output: Bluetooth", substring = true)
+            .performScrollTo()
+            .assertIsDisplayed()
+        composeRule.onNodeWithTag("diagnostics_copy").performScrollTo().performClick()
+        composeRule.onNodeWithTag("diagnostics_share").performScrollTo().performClick()
+
+        composeRule.runOnIdle {
+            assertEquals(copied, shared)
+            assertTrue(copied?.contains("StreamingSoundtracks.com") == true)
+            assertTrue(copied?.contains("private.example") == false)
+            assertTrue(copied?.contains("do-not-share") == false)
+            assertTrue(copied?.contains("James") == false)
+        }
+    }
+
+    @Test
     fun openSourceLicensesArePackagedAndReachableFromMore() {
         composeRule.setContent {
             MaterialTheme {

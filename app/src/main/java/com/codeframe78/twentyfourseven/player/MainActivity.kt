@@ -2,7 +2,11 @@ package com.codeframe78.twentyfourseven.player
 
 import android.Manifest
 import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.pm.ApplicationInfo
 import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
@@ -13,6 +17,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.browser.customtabs.CustomTabsIntent
+import androidx.core.content.pm.PackageInfoCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -27,6 +32,9 @@ import androidx.compose.runtime.setValue
 import com.codeframe78.twentyfourseven.player.domain.StationPageTrustPolicy
 import com.codeframe78.twentyfourseven.player.ui.DoubleBackExitGate
 import com.codeframe78.twentyfourseven.player.ui.AudioOutputActions
+import com.codeframe78.twentyfourseven.player.ui.DiagnosticActions
+import com.codeframe78.twentyfourseven.player.ui.DiagnosticEnvironment
+import com.codeframe78.twentyfourseven.player.ui.DiagnosticUi
 import com.codeframe78.twentyfourseven.player.ui.MainViewModel
 import com.codeframe78.twentyfourseven.player.ui.RadioApp
 import com.codeframe78.twentyfourseven.player.ui.SleepTimerActions
@@ -94,6 +102,13 @@ class MainActivity : ComponentActivity() {
                     ),
                     audioOutputActions = AudioOutputActions(
                         onOpenChooser = { showAudioOutputSwitcher(viewModel::refreshAudioOutput) },
+                    ),
+                    diagnosticUi = DiagnosticUi(
+                        environment = diagnosticEnvironment(),
+                        actions = DiagnosticActions(
+                            onCopy = ::copyDiagnostics,
+                            onShare = ::shareDiagnostics,
+                        ),
                     ),
                     onRefreshQueue = viewModel::refreshQueue,
                     onRefreshChat = viewModel::refreshChat,
@@ -189,6 +204,39 @@ class MainActivity : ComponentActivity() {
                 delay(500L)
                 refreshAudioOutput()
             }
+        }
+    }
+
+    private fun copyDiagnostics(report: String) {
+        getSystemService(ClipboardManager::class.java)
+            .setPrimaryClip(ClipData.newPlainText("24Seven.FM Player diagnostics", report))
+        Toast.makeText(this, "Diagnostics copied", Toast.LENGTH_SHORT).show()
+    }
+
+    @Suppress("DEPRECATION")
+    private fun diagnosticEnvironment(): DiagnosticEnvironment {
+        val packageInfo = packageManager.getPackageInfo(packageName, 0)
+        return DiagnosticEnvironment(
+            appVersion = packageInfo.versionName ?: "Unknown",
+            versionCode = PackageInfoCompat.getLongVersionCode(packageInfo),
+            buildType = if (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0) "debug" else "release",
+            androidRelease = Build.VERSION.RELEASE,
+            apiLevel = Build.VERSION.SDK_INT,
+            deviceManufacturer = Build.MANUFACTURER,
+            deviceModel = Build.MODEL,
+        )
+    }
+
+    private fun shareDiagnostics(report: String) {
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_SUBJECT, "24Seven.FM Player diagnostics")
+            putExtra(Intent.EXTRA_TEXT, report)
+        }
+        try {
+            startActivity(Intent.createChooser(shareIntent, "Share diagnostics"))
+        } catch (_: ActivityNotFoundException) {
+            Toast.makeText(this, "No sharing app is available on this device.", Toast.LENGTH_SHORT).show()
         }
     }
 }

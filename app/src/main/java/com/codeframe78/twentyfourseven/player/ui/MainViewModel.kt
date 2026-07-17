@@ -47,6 +47,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -68,6 +69,7 @@ data class MainUiState(
     val communitySafety: CommunitySafetyState = CommunitySafetyState(),
     val abuseReport: AbuseReportState = AbuseReportState(),
     val stationPreferences: LocalStationPreferences = LocalStationPreferences(),
+    val diagnosticTransitions: List<DiagnosticTransition> = emptyList(),
     val destination: MainDestination = MainDestination.Player,
 )
 
@@ -90,6 +92,12 @@ class MainViewModel(
     private val communitySafety: CommunitySafetyRepository,
 ) : ViewModel() {
     private val destination = MutableStateFlow(MainDestination.Player)
+    private val diagnosticTransitions = MutableStateFlow<List<DiagnosticTransition>>(emptyList())
+    private val playbackContent = combine(
+        playback.state,
+        diagnosticTransitions,
+        ::PlaybackContent,
+    )
 
     private val stationSelection = combine(
         stations.observeStations(),
@@ -224,11 +232,11 @@ class MainViewModel(
 
     val uiState: StateFlow<MainUiState> = combine(
         stationSelection,
-        playback.state,
+        playbackContent,
         stationContent,
         destination,
         safetyContent,
-    ) { selection, playbackState, content, selectedDestination, safety ->
+    ) { selection, playbackContent, content, selectedDestination, safety ->
         val selected = selection.selected
         val selectedQueueState = content.queue.takeIf { it.stationId == selected.id }
             ?: QueueState(selected.id)
@@ -241,7 +249,7 @@ class MainViewModel(
         MainUiState(
             stations = selection.all,
             selectedStation = selected,
-            playback = playbackState,
+            playback = playbackContent.state,
             nowPlaying = content.nowPlaying.takeIf { it.stationId == selected.id }
                 ?: NowPlayingState(stationId = selected.id),
             queue = selectedQueueState.withCommunityVisibility(selected.id, safety.safety),
@@ -254,12 +262,27 @@ class MainViewModel(
             communitySafety = safety.safety,
             abuseReport = safety.report,
             stationPreferences = selection.preferences,
+            diagnosticTransitions = playbackContent.transitions,
             destination = selectedDestination,
         )
     }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), MainUiState())
 
     init {
+        viewModelScope.launch {
+            playback.state
+                .map { state ->
+                    DiagnosticTransition(
+                        playbackStatus = state.status,
+                        networkAvailable = state.networkAvailable,
+                        audioOutputKind = state.audioOutput.kind,
+                    )
+                }
+                .distinctUntilChanged()
+                .collect { transition ->
+                    diagnosticTransitions.value = (diagnosticTransitions.value + transition).takeLast(5)
+                }
+        }
         viewModelScope.launch {
             stations.observeSelectedStation().collect(playback::selectStation)
         }
@@ -480,6 +503,11 @@ private data class ResolvedFavoritesContent(
 private data class SafetyContent(
     val safety: CommunitySafetyState,
     val report: AbuseReportState,
+)
+
+private data class PlaybackContent(
+    val state: PlaybackState,
+    val transitions: List<DiagnosticTransition>,
 )
 
 private fun QueueState.withCommunityVisibility(

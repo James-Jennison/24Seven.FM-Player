@@ -33,7 +33,9 @@ class Media3PlaybackController(context: Context) : PlaybackController {
     private val mainExecutor = ContextCompat.getMainExecutor(appContext)
     private val connectivityManager = appContext.getSystemService(ConnectivityManager::class.java)
     private val networkRecovery = NetworkPlaybackRecovery(connectivityManager.hasValidatedDefaultNetwork())
-    private val stateFlow = MutableStateFlow(PlaybackState())
+    private val stateFlow = MutableStateFlow(
+        PlaybackState(networkAvailable = networkRecovery.isNetworkUsable),
+    )
     private val audioOutputMonitor = AndroidAudioOutputMonitor(appContext) { output ->
         stateFlow.value = stateFlow.value.copy(audioOutput = output)
     }
@@ -69,6 +71,7 @@ class Media3PlaybackController(context: Context) : PlaybackController {
             stateFlow.value = stateFlow.value.copy(
                 status = if (waitingForNetwork) PlaybackStatus.WaitingForNetwork else PlaybackStatus.Error,
                 errorMessage = error.message,
+                networkAvailable = networkRecovery.isNetworkUsable,
             )
         }
     }
@@ -234,6 +237,7 @@ class Media3PlaybackController(context: Context) : PlaybackController {
             stationId = stationId,
             status = status,
             errorMessage = connected.playerError?.message,
+            networkAvailable = networkRecovery.isNetworkUsable,
         )
     }
 

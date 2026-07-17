@@ -17,6 +17,7 @@ data class PlaybackState(
     val stationId: StationId? = null,
     val status: PlaybackStatus = PlaybackStatus.Idle,
     val errorMessage: String? = null,
+    val networkAvailable: Boolean = false,
     val sleepTimer: SleepTimerState = SleepTimerState(),
     val audioOutput: AudioOutputState = AudioOutputState(),
 )

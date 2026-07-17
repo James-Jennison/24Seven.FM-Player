@@ -68,6 +68,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.background
@@ -80,6 +81,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.buildAnnotatedString
@@ -176,13 +178,14 @@ internal fun RadioApp(
     communitySafetyActions: CommunitySafetyActions = CommunitySafetyActions(),
     sleepTimerActions: SleepTimerActions = SleepTimerActions(),
     audioOutputActions: AudioOutputActions = AudioOutputActions(),
+    diagnosticUi: DiagnosticUi = DiagnosticUi(),
 ) {
     var showTerms by rememberSaveable { mutableStateOf(false) }
     BoxWithConstraints(Modifier.fillMaxSize()) {
         if (maxWidth >= 600.dp) {
-            TabletShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions) { showTerms = true }
+            TabletShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions) { showTerms = true }
         } else {
-            PhoneShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions) { showTerms = true }
+            PhoneShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions) { showTerms = true }
         }
     }
     if (showTerms) {
@@ -208,6 +211,7 @@ private fun PhoneShell(
     onStop: () -> Unit,
     sleepTimerActions: SleepTimerActions,
     audioOutputActions: AudioOutputActions,
+    diagnosticUi: DiagnosticUi,
     onRefreshQueue: () -> Unit,
     onRefreshFavorites: () -> Unit,
     onRefreshListenerActivity: () -> Unit,
@@ -261,7 +265,7 @@ private fun PhoneShell(
             }
         },
     ) { padding ->
-        DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onReviewTerms)
+        DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onReviewTerms)
     }
 }
 
@@ -276,6 +280,7 @@ private fun TabletShell(
     onStop: () -> Unit,
     sleepTimerActions: SleepTimerActions,
     audioOutputActions: AudioOutputActions,
+    diagnosticUi: DiagnosticUi,
     onRefreshQueue: () -> Unit,
     onRefreshFavorites: () -> Unit,
     onRefreshListenerActivity: () -> Unit,
@@ -331,7 +336,7 @@ private fun TabletShell(
                 }
             },
         ) { padding ->
-            DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onReviewTerms)
+            DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onReviewTerms)
         }
     }
 }
@@ -385,6 +390,7 @@ private fun DestinationContent(
     onStop: () -> Unit,
     sleepTimerActions: SleepTimerActions,
     audioOutputActions: AudioOutputActions,
+    diagnosticUi: DiagnosticUi,
     onRefreshQueue: () -> Unit,
     onRefreshFavorites: () -> Unit,
     onRefreshListenerActivity: () -> Unit,
@@ -429,7 +435,7 @@ private fun DestinationContent(
         )
         MainDestination.Chat -> ChatScreen(state, padding, onRefreshChat, onSendChatMessage, communitySafetyActions, onReviewTerms)
         MainDestination.Queue -> QueueScreen(state, padding, onRefreshQueue, communitySafetyActions)
-        MainDestination.More -> MoreScreen(state, padding, onRefreshAuth, onSignIn, onSignOut, onRefreshListenerActivity, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onReviewTerms)
+        MainDestination.More -> MoreScreen(state, padding, onRefreshAuth, onSignIn, onSignOut, onRefreshListenerActivity, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, diagnosticUi, onReviewTerms)
     }
 }
 
@@ -1297,6 +1303,7 @@ private fun MoreScreen(
     onSetStartupStation: (StationId) -> Unit,
     onOpenStationPage: (StationPage) -> Unit,
     communitySafetyActions: CommunitySafetyActions,
+    diagnosticUi: DiagnosticUi,
     onReviewTerms: () -> Unit,
 ) {
     Column(
@@ -1328,8 +1335,76 @@ private fun MoreScreen(
         ) {
             DevicePreferencesSection(state, onUseLastStationAtStartup, onSetStartupStation, showTitle = false)
         }
+        DiagnosticsSection(state, diagnosticUi)
         SecondaryContentSection(state, onOpenStationPage)
         PrivacySection()
+    }
+}
+
+@Composable
+private fun DiagnosticsSection(
+    state: MainUiState,
+    diagnosticUi: DiagnosticUi,
+) {
+    val report = remember(
+        diagnosticUi.environment,
+        state.selectedStation?.name,
+        state.playback,
+        state.diagnosticTransitions,
+    ) {
+        buildDiagnosticReport(
+            environment = diagnosticUi.environment,
+            stationName = state.selectedStation?.name,
+            playback = state.playback,
+            transitions = state.diagnosticTransitions,
+        )
+    }
+    MoreDisclosure(
+        title = "In-app diagnostics",
+        summary = "Preview and explicitly copy or share a privacy-safe support snapshot.",
+        testTag = "more_diagnostics",
+    ) {
+        Card(Modifier.fillMaxWidth().testTag("diagnostics_card")) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    "Review before sharing",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Text(
+                    "The snapshot uses a fixed allowlist. It does not include account details, messages, report content, URLs, device identifiers, raw errors, or logs.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Surface(
+                    modifier = Modifier.fillMaxWidth().testTag("diagnostics_report"),
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                ) {
+                    SelectionContainer {
+                        Text(
+                            report,
+                            modifier = Modifier.padding(12.dp),
+                            style = MaterialTheme.typography.bodySmall,
+                            fontFamily = FontFamily.Monospace,
+                        )
+                    }
+                }
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Button(
+                        onClick = { diagnosticUi.actions.onCopy(report) },
+                        modifier = Modifier.weight(1f).testTag("diagnostics_copy"),
+                    ) { Text("Copy") }
+                    Button(
+                        onClick = { diagnosticUi.actions.onShare(report) },
+                        modifier = Modifier.weight(1f).testTag("diagnostics_share"),
+                    ) { Text("Share") }
+                }
+            }
+        }
     }
 }
 
