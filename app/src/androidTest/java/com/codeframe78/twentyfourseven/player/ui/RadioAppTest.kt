@@ -55,6 +55,7 @@ import com.codeframe78.twentyfourseven.player.domain.AbuseReportTarget
 import com.codeframe78.twentyfourseven.player.domain.BlockedCommunityUser
 import com.codeframe78.twentyfourseven.player.domain.AgeGateStatus
 import com.codeframe78.twentyfourseven.player.domain.CommunitySafetyState
+import com.codeframe78.twentyfourseven.player.domain.CommunityNotificationState
 import com.codeframe78.twentyfourseven.player.domain.CURRENT_COMMUNITY_TERMS_VERSION
 import com.codeframe78.twentyfourseven.player.domain.AuthStatus
 import com.codeframe78.twentyfourseven.player.domain.ChatLoadStatus
@@ -1374,6 +1375,49 @@ class RadioAppTest {
         composeRule.onNodeWithText("Mature community content is hidden").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithTag("show_community_content").performScrollTo().performClick()
         composeRule.onNodeWithText("Visible only after access").assertIsDisplayed()
+    }
+
+    @Test
+    fun signedInAdultCanEnableStationScopedChatMentionNotifications() {
+        var selectedSetting: Pair<StationId, Boolean>? = null
+        composeRule.setContent {
+            var state by remember {
+                mutableStateOf(
+                    sampleState().copy(
+                        destination = MainDestination.More,
+                        auth = AuthState(station.id, AuthStatus.SignedIn, displayName = "MorG"),
+                    ),
+                )
+            }
+            MaterialTheme {
+                RadioApp(
+                    state = state,
+                    onSelectStation = {},
+                    onSelectDestination = {},
+                    onPlay = {},
+                    onPause = {},
+                    onStop = {},
+                    onRefreshQueue = {},
+                    communitySafetyActions = CommunitySafetyActions(
+                        onSetChatMentionsEnabled = { stationId, enabled ->
+                            selectedSetting = stationId to enabled
+                            state = state.copy(
+                                communityNotifications = CommunityNotificationState(
+                                    if (enabled) setOf(stationId) else emptySet(),
+                                ),
+                            )
+                        },
+                    ),
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag("more_community_notifications").performScrollTo().performClick()
+        composeRule.onNodeWithTag("chat_mention_notifications_toggle").performScrollTo().performClick()
+        composeRule.runOnIdle {
+            assertEquals(station.id to true, selectedSetting)
+        }
+        composeRule.onNodeWithText("Chat mentions enabled for SST").assertIsDisplayed()
     }
 
     @Test

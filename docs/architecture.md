@@ -107,6 +107,14 @@ keeps its station-issued account material transient, enforces the 255-character 
 user's message, and performs one confirmation read. Cookies and posting material never reach the ViewModel or UI.
 See `docs/m8-chat-research.md`.
 
+The opt-in M27.1 notification slice remains behind `CommunityNotificationRepository`. `MainViewModel` supplies only
+the signed-in station identity, immutable Chat snapshot, and station-local block identities while Chat is selected. The
+first snapshot establishes a no-alert baseline; later exact-name matches exclude the signed-in author and locally blocked
+authors while still fingerprinting blocked messages so unblocking cannot surface stale alerts. Duplicate suppression keeps at most 200 SHA-256 message fingerprints per enabled station in memory and never
+persists Chat text. The Android implementation stores only enabled station IDs, posts a dedicated private-channel
+notification containing station and sender but no message body, and deep-links through the existing community gates.
+It does not expand Chat polling or claim closed-app push delivery. See `docs/m27-community-notification-validation.md`.
+
 ## Community safety and moderation
 
 Community access and moderation live behind `CommunitySafetyRepository`. `MainViewModel` depends only on that domain

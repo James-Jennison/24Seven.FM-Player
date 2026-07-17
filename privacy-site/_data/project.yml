@@ -183,6 +183,12 @@ milestones:
     commit: 7aedbfc
     evidence: docs/m26-diagnostics-validation.md
     outcome: User-reviewed fixed-allowlist support snapshot, bounded transitions, explicit Android copy/share, and physical-Razr privacy validation.
+  - order: 27
+    id: M27.1
+    name: Local Chat-Mention Foundation
+    date: 2026-07-16
+    evidence: docs/m27-community-notification-validation.md
+    outcome: Station opt-ins, exact-name matching, baseline and duplicate suppression, blocked-author filtering, private Android alerts, and gated Chat navigation for the actively observed feed.
 
 workstreams:
   - id: M23.1
@@ -249,10 +255,10 @@ pre_alpha:
     evidence: docs/m26-diagnostics-validation.md
   - id: M27
     name: Community Push Notifications
-    state: planned
-    state_label: Discovery first
-    summary: Add opt-in station-scoped true push for exact signed-in-name Chat mentions and, once M17 delivery works, new Private Messages, with separate controls, safe deep links, blocked-user filtering, and duplicate suppression.
-    evidence: docs/future-scope.md
+    state: active
+    state_label: M27.1 complete · delivery pending
+    summary: The local exact-name detector, station controls, filtering, dedupe, private channel, and Chat navigation are complete for actively observed Chat. M27.2 true closed-app push and future PM delivery still require an authorized event source.
+    evidence: docs/m27-community-notification-validation.md
   - id: M28
     name: Alpha Publication
     state: planned

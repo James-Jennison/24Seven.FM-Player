@@ -26,10 +26,13 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.codeframe78.twentyfourseven.player.domain.StationPageTrustPolicy
+import com.codeframe78.twentyfourseven.player.domain.StationId
+import com.codeframe78.twentyfourseven.player.data.AndroidCommunityNotificationRepository
 import com.codeframe78.twentyfourseven.player.ui.DoubleBackExitGate
 import com.codeframe78.twentyfourseven.player.ui.AudioOutputActions
 import com.codeframe78.twentyfourseven.player.ui.DiagnosticActions
@@ -42,15 +45,18 @@ import com.codeframe78.twentyfourseven.player.ui.theme.TwentyFourSevenTheme
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.MutableStateFlow
 
 class MainActivity : ComponentActivity() {
     private var audioOutputRefreshJob: Job? = null
+    private val requestedChatStationId = MutableStateFlow<String?>(null)
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) { }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        requestedChatStationId.value = intent.chatStationId()
         if (
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
@@ -72,9 +78,17 @@ class MainActivity : ComponentActivity() {
                     container.favoriteTracksRepository,
                     container.listenerActivityRepository,
                     container.communitySafetyRepository,
+                    container.communityNotificationRepository,
                 ),
             )
             val state = viewModel.uiState.collectAsStateWithLifecycle().value
+            val chatStationId = requestedChatStationId.collectAsStateWithLifecycle().value
+            LaunchedEffect(chatStationId) {
+                val stationId = chatStationId?.let(::StationId) ?: return@LaunchedEffect
+                viewModel.selectStation(stationId)
+                viewModel.selectDestination(com.codeframe78.twentyfourseven.player.ui.MainDestination.Chat)
+                requestedChatStationId.value = null
+            }
             TwentyFourSevenTheme {
                 var showExitConfirmation by remember { mutableStateOf(false) }
                 val exitGate = remember { DoubleBackExitGate() }
@@ -125,6 +139,7 @@ class MainActivity : ComponentActivity() {
                         onRetryReport = viewModel::retryAbuseReport,
                         onSubmitReport = viewModel::submitAbuseReport,
                         onDismissReport = viewModel::dismissAbuseReport,
+                        onSetChatMentionsEnabled = viewModel::setChatMentionNotificationsEnabled,
                     ),
                     onRefreshAuth = viewModel::refreshAuth,
                     onSignIn = viewModel::signIn,
@@ -186,6 +201,12 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        requestedChatStationId.value = intent.chatStationId()
+    }
+
     private fun showAudioOutputSwitcher(refreshAudioOutput: () -> Unit) {
         val shown = runCatching {
             SystemOutputSwitcherDialogController.showDialog(this)
@@ -240,3 +261,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
+private fun Intent.chatStationId(): String? =
+    getStringExtra(AndroidCommunityNotificationRepository.EXTRA_CHAT_STATION_ID)
+        ?.takeIf(String::isNotBlank)

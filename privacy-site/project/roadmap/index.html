@@ -13,7 +13,7 @@ section: roadmap
   </div>
   <aside class="page-summary" aria-label="Roadmap summary">
     <span>Achievement record</span>
-    <strong>25 complete</strong>
+    <strong>27 achieved</strong>
     <dl>
       <div><dt>M23 done</dt><dd>2/7</dd></div>
       <div><dt>Active</dt><dd>2</dd></div>
@@ -81,8 +81,8 @@ section: roadmap
 <section class="content-section" id="next">
   <div class="content-intro wide">
     <p class="eyebrow">Before Alpha publication</p>
-    <h2>Sleep Timer, audio output, and diagnostics complete; one product milestone remains</h2>
-    <p>M24–M26 are complete with service, route, privacy, and physical-Razr evidence. M27 remains the ordered feature gate ahead of M28 and must be authorized, implemented, validated, documented, and committed before the release candidate can advance. Google Cast remains intentionally gated behind receiver compatibility and permitted stream use.</p>
+    <h2>Local mention delivery is working; true push remains</h2>
+    <p>M24–M26 and M27.1 are complete with service, route, privacy, notification, and physical-Razr evidence. M27.2 remains the ordered feature gate ahead of M28: it needs an authorized event source for reliable closed-app delivery. Google Cast remains intentionally gated behind receiver compatibility and permitted stream use.</p>
   </div>
   <div class="workstream-grid">
     {% for item in site.data.project.pre_alpha %}
@@ -98,8 +98,8 @@ section: roadmap
   <div class="roadmap-callout future-callout">
     <div><p class="eyebrow">M27 · Delivery boundary</p><h2>One safe notification foundation</h2></div>
     <div>
-      <p>Chat mentions are required before M28. New Private Message notifications share the same station-scoped controls, channels, filtering, duplicate suppression, and safety-gated deep links, but live PM delivery activates only after M17 is repaired and verified.</p>
-      <p><strong>Discovery gate:</strong> the app has no developer-operated backend and currently observes Chat only while its screen is selected. Reliable notification delivery requires an authorized station event source or privacy-compatible relay. Continuous background polling will not be presented as push.</p>
+      <p>M27.1 now detects exact signed-in-name mentions from actively observed Chat, baselines existing messages, ignores blocked authors, suppresses duplicates, posts privacy-minimized Android alerts, and returns to gated station Chat. New Private Message notifications will reuse this contract only after M17 is repaired and verified.</p>
+      <p><strong>M27.2 delivery gate:</strong> the app has no developer-operated backend and currently observes Chat only while its screen is selected. Reliable closed-app delivery requires an authorized station event source or privacy-compatible relay. Continuous background polling will not be presented as push.</p>
       <ul class="inline-requirements"><li>Authorized true push</li><li>Minimal payloads</li><li>Separate Chat and PM controls</li><li>No session forwarding</li><li>Privacy and Data Safety review</li><li>Battery and traffic validation</li></ul>
       <div class="actions"><a class="button primary" href="https://github.com/users/codeframe78/projects/1">Open live dashboard</a><a class="button secondary" href="https://github.com/codeframe78/24Seven.FM-Player/blob/main/docs/IMPLEMENTATION_PLAN.md">Implementation plan</a></div>
     </div>

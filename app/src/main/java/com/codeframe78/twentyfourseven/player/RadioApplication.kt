@@ -6,6 +6,7 @@ import com.codeframe78.twentyfourseven.player.data.InMemoryNowPlayingRepository
 import com.codeframe78.twentyfourseven.player.data.PollingQueueRepository
 import com.codeframe78.twentyfourseven.player.data.NetworkAuthRepository
 import com.codeframe78.twentyfourseven.player.data.AndroidKeystoreAuthSessionStore
+import com.codeframe78.twentyfourseven.player.data.AndroidCommunityNotificationRepository
 import com.codeframe78.twentyfourseven.player.data.PollingChatRepository
 import com.codeframe78.twentyfourseven.player.data.StationAuthRemoteDataSource
 import com.codeframe78.twentyfourseven.player.data.StationChatRemoteDataSource
@@ -35,6 +36,7 @@ class AppContainer(application: Application) {
     private val authSessionStore = AndroidKeystoreAuthSessionStore(application)
     private val stationPreferences = SharedPreferencesStationPreferencesRepository(application)
     val communitySafetyRepository = SharedPreferencesCommunitySafetyRepository(application)
+    val communityNotificationRepository = AndroidCommunityNotificationRepository(application)
 
     val stationRepository = BootstrapStationRepository(stationPreferences)
     val playbackController by lazy { Media3PlaybackController(application) }

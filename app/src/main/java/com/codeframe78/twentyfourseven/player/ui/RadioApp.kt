@@ -147,6 +147,7 @@ internal data class CommunitySafetyActions(
     val onRetryReport: () -> Unit = {},
     val onSubmitReport: (AbuseReportSubmission) -> Unit = {},
     val onDismissReport: () -> Unit = {},
+    val onSetChatMentionsEnabled: (StationId, Boolean) -> Unit = { _, _ -> },
 )
 
 @Composable
@@ -1312,6 +1313,7 @@ private fun MoreScreen(
     ) {
         AccountSection(state, onRefreshAuth, onSignIn, onSignOut)
         CommunitySafetySection(state, communitySafetyActions, onReviewTerms)
+        CommunityNotificationSection(state, communitySafetyActions.onSetChatMentionsEnabled)
         MoreDisclosure(
             title = "Song requests",
             summary = "Search or ask the station for an available track.",
@@ -1338,6 +1340,63 @@ private fun MoreScreen(
         DiagnosticsSection(state, diagnosticUi)
         SecondaryContentSection(state, onOpenStationPage)
         PrivacySection()
+    }
+}
+
+@Composable
+private fun CommunityNotificationSection(
+    state: MainUiState,
+    onSetChatMentionsEnabled: (StationId, Boolean) -> Unit,
+) {
+    val station = state.selectedStation ?: return
+    val enabled = state.communityNotifications.chatMentionsEnabled(station.id)
+    val eligible = state.auth?.status == AuthStatus.SignedIn && state.communitySafety.canViewCommunityContent
+    val canChangeSetting = eligible || enabled
+    MoreDisclosure(
+        title = "Community notifications",
+        summary = if (enabled) "Chat mentions enabled for ${station.shortName}" else "Off for ${station.shortName}",
+        testTag = "more_community_notifications",
+    ) {
+        Card(Modifier.fillMaxWidth().testTag("community_notification_controls")) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Checkbox(
+                        checked = enabled,
+                        onCheckedChange = { onSetChatMentionsEnabled(station.id, it) },
+                        enabled = canChangeSetting,
+                        modifier = Modifier.testTag("chat_mention_notifications_toggle"),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text("Notify when my station name is mentioned", fontWeight = FontWeight.SemiBold)
+                        Text(
+                            "Uses your signed-in ${station.shortName} display name and ignores users blocked on this device.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+                if (!eligible) {
+                    Text(
+                        if (enabled) {
+                            "Alerts are paused until you sign in and enable community content for this station. You can still turn this setting off."
+                        } else {
+                            "Sign in and enable community content for this station before turning on mention notifications."
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Text(
+                    "Current preview: mentions can be detected only while this app is open and Chat is actively refreshing. Closed-app delivery will require station or push-relay support. Message text is not included in the notification.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
     }
 }
 

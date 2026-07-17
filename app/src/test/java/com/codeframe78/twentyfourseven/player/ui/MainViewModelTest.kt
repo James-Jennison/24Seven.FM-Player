@@ -11,6 +11,9 @@ import com.codeframe78.twentyfourseven.player.data.UnavailableListenerActivityRe
 import com.codeframe78.twentyfourseven.player.domain.ChatRepository
 import com.codeframe78.twentyfourseven.player.domain.ChatMessage
 import com.codeframe78.twentyfourseven.player.domain.ChatState
+import com.codeframe78.twentyfourseven.player.domain.ChatMentionSnapshot
+import com.codeframe78.twentyfourseven.player.domain.CommunityNotificationRepository
+import com.codeframe78.twentyfourseven.player.domain.CommunityNotificationState
 import com.codeframe78.twentyfourseven.player.domain.AuthRepository
 import com.codeframe78.twentyfourseven.player.domain.AgeGateStatus
 import com.codeframe78.twentyfourseven.player.domain.CommunitySafetyState
@@ -544,6 +547,47 @@ class MainViewModelTest {
     }
 
     @Test
+    fun `ready chat sends station block identities to notification contract`() = runTest(dispatcher) {
+        val stationId = StationId("sst")
+        val auth = FakeAuthRepository().apply {
+            emit(AuthState(stationId, AuthStatus.SignedIn, displayName = "MorG"))
+        }
+        val chat = FakeChatRepository()
+        val safety = enabledSafetyRepository().apply { blockUser(stationId, "Blocked Listener") }
+        val notifications = FakeCommunityNotificationRepository()
+        val viewModel = MainViewModel(
+            BootstrapStationRepository(),
+            FakePlaybackController(),
+            FakeNowPlayingRepository(),
+            FakeQueueRepository(),
+            auth,
+            chat,
+            UnavailableSongRequestRepository(),
+            UnavailableFavoriteTracksRepository(),
+            UnavailableListenerActivityRepository(),
+            safety,
+            notifications,
+        )
+        backgroundScope.launch { viewModel.uiState.collect() }
+        viewModel.selectDestination(MainDestination.Chat)
+        chat.emit(
+            ChatState(
+                stationId,
+                com.codeframe78.twentyfourseven.player.domain.ChatLoadStatus.Ready,
+                listOf(
+                    ChatMessage("Blocked Listener", "MorG should not see this", "12:00"),
+                    ChatMessage("Visible Listener", "Hello MorG", "12:01"),
+                ),
+            ),
+        )
+        advanceUntilIdle()
+
+        assertEquals(listOf("Blocked Listener", "Visible Listener"), notifications.snapshots.last().messages.map(ChatMessage::authorDisplayName))
+        assertEquals(setOf("Blocked Listener"), notifications.snapshots.last().blockedAuthorDisplayNames)
+        assertEquals("MorG", notifications.snapshots.last().signedInDisplayName)
+    }
+
+    @Test
     fun `favorites recalculate when selected station queue changes`() = runTest(dispatcher) {
         val stationId = StationId("sst")
         val queue = FakeQueueRepository()
@@ -852,6 +896,23 @@ class MainViewModelTest {
 
         private fun state(stationId: StationId) = states.getOrPut(stationId) {
             MutableStateFlow(ChatState(stationId))
+        }
+    }
+
+    private class FakeCommunityNotificationRepository : CommunityNotificationRepository {
+        private val settings = MutableStateFlow(CommunityNotificationState())
+        val snapshots = mutableListOf<ChatMentionSnapshot>()
+
+        override fun observeSettings(): Flow<CommunityNotificationState> = settings
+
+        override suspend fun setChatMentionsEnabled(stationId: StationId, enabled: Boolean) {
+            settings.value = CommunityNotificationState(
+                if (enabled) setOf(stationId) else emptySet(),
+            )
+        }
+
+        override fun processChatSnapshot(snapshot: ChatMentionSnapshot) {
+            snapshots += snapshot
         }
     }
 }
