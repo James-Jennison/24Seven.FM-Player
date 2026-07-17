@@ -29,8 +29,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Bedtime
+import androidx.compose.material.icons.filled.BluetoothAudio
+import androidx.compose.material.icons.filled.CastConnected
+import androidx.compose.material.icons.filled.Headphones
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Speaker
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -54,6 +58,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -70,6 +75,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.codeframe78.twentyfourseven.player.R
+import com.codeframe78.twentyfourseven.player.domain.AudioOutputKind
 import com.codeframe78.twentyfourseven.player.domain.PlaybackStatus
 import com.codeframe78.twentyfourseven.player.domain.Station
 import com.codeframe78.twentyfourseven.player.domain.StationId
@@ -89,6 +95,11 @@ internal data class SleepTimerActions(
     val onCancel: () -> Unit = {},
 )
 
+@Immutable
+internal data class AudioOutputActions(
+    val onOpenChooser: () -> Unit = {},
+)
+
 @Composable
 internal fun AdaptivePlayerScreen(
     state: MainUiState,
@@ -98,6 +109,7 @@ internal fun AdaptivePlayerScreen(
     onPause: () -> Unit,
     onStop: () -> Unit,
     sleepTimerActions: SleepTimerActions = SleepTimerActions(),
+    audioOutputActions: AudioOutputActions = AudioOutputActions(),
 ) {
     val palette = stationPalette(state.selectedStation?.id)
     BoxWithConstraints(
@@ -115,7 +127,7 @@ internal fun AdaptivePlayerScreen(
             ),
     ) {
         if (maxWidth >= ExpandedPlayerBreakpoint) {
-            ExpandedPlayerContent(state, palette, onSelectStation, onPlay, onPause, onStop, sleepTimerActions)
+            ExpandedPlayerContent(state, palette, onSelectStation, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions)
         } else {
             val availableArtworkWidth = maxWidth - 40.dp
             val availableArtworkHeight = (maxHeight - CompactPlayerReservedHeight)
@@ -125,7 +137,7 @@ internal fun AdaptivePlayerScreen(
                 availableArtworkHeight,
                 MaximumCompactArtworkSize,
             )
-            CompactPlayerContent(state, palette, artworkSize, onSelectStation, onPlay, onPause, onStop, sleepTimerActions)
+            CompactPlayerContent(state, palette, artworkSize, onSelectStation, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions)
         }
     }
 }
@@ -140,6 +152,7 @@ private fun CompactPlayerContent(
     onPause: () -> Unit,
     onStop: () -> Unit,
     sleepTimerActions: SleepTimerActions,
+    audioOutputActions: AudioOutputActions,
 ) {
     Column(
         Modifier
@@ -154,7 +167,7 @@ private fun CompactPlayerContent(
         NowPlayingDetails(state, palette)
         PrimaryPlayerControls(state, onSelectStation, onPlay, onPause)
         StationSelector(state, onSelectStation)
-        PlaybackDetails(state, onStop, sleepTimerActions)
+        PlaybackDetails(state, onStop, sleepTimerActions, audioOutputActions)
     }
 }
 
@@ -167,6 +180,7 @@ private fun ExpandedPlayerContent(
     onPause: () -> Unit,
     onStop: () -> Unit,
     sleepTimerActions: SleepTimerActions,
+    audioOutputActions: AudioOutputActions,
 ) {
     Row(
         Modifier.fillMaxSize().padding(32.dp),
@@ -188,7 +202,7 @@ private fun ExpandedPlayerContent(
             Spacer(Modifier.height(28.dp))
             PrimaryPlayerControls(state, onSelectStation, onPlay, onPause)
             Spacer(Modifier.height(8.dp))
-            PlaybackDetails(state, onStop, sleepTimerActions)
+            PlaybackDetails(state, onStop, sleepTimerActions, audioOutputActions)
             Spacer(Modifier.height(32.dp))
             Text("Choose a station", style = MaterialTheme.typography.titleMedium)
             Spacer(Modifier.height(12.dp))
@@ -366,6 +380,7 @@ private fun PlaybackDetails(
     state: MainUiState,
     onStop: () -> Unit,
     sleepTimerActions: SleepTimerActions,
+    audioOutputActions: AudioOutputActions,
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
@@ -381,8 +396,43 @@ private fun PlaybackDetails(
             }
             SleepTimerControl(state, sleepTimerActions)
         }
+        AudioOutputControl(state, audioOutputActions)
     }
 }
+
+@Composable
+private fun AudioOutputControl(state: MainUiState, actions: AudioOutputActions) {
+    val output = state.playback.audioOutput
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        TextButton(
+            onClick = actions.onOpenChooser,
+            modifier = Modifier
+                .semantics { stateDescription = "Current output: ${output.displayName}" }
+                .testTag("audio_output_open"),
+        ) {
+            Icon(output.kind.icon, contentDescription = null)
+            Spacer(Modifier.width(6.dp))
+            Text("Audio output")
+        }
+        Text(
+            "Using ${output.displayName}",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.testTag("audio_output_current"),
+        )
+    }
+}
+
+private val AudioOutputKind.icon: ImageVector
+    get() = when (this) {
+        AudioOutputKind.Device -> Icons.Default.Speaker
+        AudioOutputKind.Bluetooth -> Icons.Default.BluetoothAudio
+        AudioOutputKind.Wired -> Icons.Default.Headphones
+        AudioOutputKind.Remote -> Icons.Default.CastConnected
+    }
 
 @Composable
 private fun SleepTimerControl(state: MainUiState, actions: SleepTimerActions) {

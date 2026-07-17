@@ -15,6 +15,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.mediarouter.app.SystemOutputSwitcherDialogController
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -24,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.codeframe78.twentyfourseven.player.domain.StationPageTrustPolicy
 import com.codeframe78.twentyfourseven.player.ui.DoubleBackExitGate
+import com.codeframe78.twentyfourseven.player.ui.AudioOutputActions
 import com.codeframe78.twentyfourseven.player.ui.MainViewModel
 import com.codeframe78.twentyfourseven.player.ui.RadioApp
 import com.codeframe78.twentyfourseven.player.ui.SleepTimerActions
@@ -84,6 +86,9 @@ class MainActivity : ComponentActivity() {
                     sleepTimerActions = SleepTimerActions(
                         onSet = viewModel::setSleepTimer,
                         onCancel = viewModel::cancelSleepTimer,
+                    ),
+                    audioOutputActions = AudioOutputActions(
+                        onOpenChooser = ::showAudioOutputSwitcher,
                     ),
                     onRefreshQueue = viewModel::refreshQueue,
                     onRefreshChat = viewModel::refreshChat,
@@ -158,6 +163,19 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             }
+        }
+    }
+
+    private fun showAudioOutputSwitcher() {
+        val shown = runCatching {
+            SystemOutputSwitcherDialogController.showDialog(this)
+        }.getOrDefault(false)
+        if (!shown) {
+            Toast.makeText(
+                this,
+                "Audio output selection is unavailable on this device.",
+                Toast.LENGTH_SHORT,
+            ).show()
         }
     }
 }

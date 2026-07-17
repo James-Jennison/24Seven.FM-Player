@@ -44,6 +44,8 @@ import com.codeframe78.twentyfourseven.player.domain.StationPage
 import com.codeframe78.twentyfourseven.player.domain.StationPageKind
 import com.codeframe78.twentyfourseven.player.domain.StreamVariant
 import com.codeframe78.twentyfourseven.player.domain.AuthState
+import com.codeframe78.twentyfourseven.player.domain.AudioOutputKind
+import com.codeframe78.twentyfourseven.player.domain.AudioOutputState
 import com.codeframe78.twentyfourseven.player.domain.AbuseReportKind
 import com.codeframe78.twentyfourseven.player.domain.AbuseReportSource
 import com.codeframe78.twentyfourseven.player.domain.AbuseReportState
@@ -516,6 +518,38 @@ class RadioAppTest {
             assertEquals(30L * 60L * 1_000L, selectedDuration)
             assertEquals(1, cancelCount)
         }
+    }
+
+    @Test
+    fun audioOutputDisplaysCurrentRouteAndEmitsChooserAction() {
+        var chooserOpenCount = 0
+        composeRule.setContent {
+            MaterialTheme {
+                RadioApp(
+                    state = sampleState().copy(
+                        playback = PlaybackState(
+                            audioOutput = AudioOutputState(
+                                displayName = "Razr Buds",
+                                kind = AudioOutputKind.Bluetooth,
+                            ),
+                        ),
+                    ),
+                    onSelectStation = {},
+                    onSelectDestination = {},
+                    onPlay = {},
+                    onPause = {},
+                    onStop = {},
+                    onRefreshQueue = {},
+                    audioOutputActions = AudioOutputActions(
+                        onOpenChooser = { chooserOpenCount += 1 },
+                    ),
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag("audio_output_open").performScrollTo().assertIsDisplayed().performClick()
+        composeRule.onNodeWithText("Using Razr Buds").assertIsDisplayed()
+        composeRule.runOnIdle { assertEquals(1, chooserOpenCount) }
     }
 
     @Test

@@ -18,6 +18,19 @@ data class PlaybackState(
     val status: PlaybackStatus = PlaybackStatus.Idle,
     val errorMessage: String? = null,
     val sleepTimer: SleepTimerState = SleepTimerState(),
+    val audioOutput: AudioOutputState = AudioOutputState(),
+)
+
+enum class AudioOutputKind {
+    Device,
+    Bluetooth,
+    Wired,
+    Remote,
+}
+
+data class AudioOutputState(
+    val displayName: String = "This device",
+    val kind: AudioOutputKind = AudioOutputKind.Device,
 )
 
 data class SleepTimerState(
