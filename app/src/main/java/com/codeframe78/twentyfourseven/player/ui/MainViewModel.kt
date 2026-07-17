@@ -16,7 +16,12 @@ import com.codeframe78.twentyfourseven.player.domain.AuthRepository
 import com.codeframe78.twentyfourseven.player.domain.AuthState
 import com.codeframe78.twentyfourseven.player.domain.AuthStatus
 import com.codeframe78.twentyfourseven.player.domain.ChatRepository
+import com.codeframe78.twentyfourseven.player.domain.ChatLoadStatus
+import com.codeframe78.twentyfourseven.player.domain.ChatMentionSnapshot
 import com.codeframe78.twentyfourseven.player.domain.ChatState
+import com.codeframe78.twentyfourseven.player.domain.CommunityNotificationRepository
+import com.codeframe78.twentyfourseven.player.domain.CommunityNotificationState
+import com.codeframe78.twentyfourseven.player.domain.UnavailableCommunityNotificationRepository
 import com.codeframe78.twentyfourseven.player.domain.RequestSearchField
 import com.codeframe78.twentyfourseven.player.domain.RequestSearchTarget
 import com.codeframe78.twentyfourseven.player.domain.RequestSuggestionMode
@@ -68,6 +73,7 @@ data class MainUiState(
     val listenerActivity: ListenerActivityState? = null,
     val communitySafety: CommunitySafetyState = CommunitySafetyState(),
     val abuseReport: AbuseReportState = AbuseReportState(),
+    val communityNotifications: CommunityNotificationState = CommunityNotificationState(),
     val stationPreferences: LocalStationPreferences = LocalStationPreferences(),
     val diagnosticTransitions: List<DiagnosticTransition> = emptyList(),
     val destination: MainDestination = MainDestination.Player,
@@ -90,6 +96,7 @@ class MainViewModel(
     private val favorites: FavoriteTracksRepository,
     private val listenerActivity: ListenerActivityRepository,
     private val communitySafety: CommunitySafetyRepository,
+    private val communityNotifications: CommunityNotificationRepository = UnavailableCommunityNotificationRepository,
 ) : ViewModel() {
     private val destination = MutableStateFlow(MainDestination.Player)
     private val diagnosticTransitions = MutableStateFlow<List<DiagnosticTransition>>(emptyList())
@@ -158,15 +165,39 @@ class MainViewModel(
         stations.observeSelectedStation(),
         destination,
         safetyState,
-    ) { station, selectedDestination, safety -> Triple(station, selectedDestination, safety) }
-        .flatMapLatest { (station, selectedDestination, safety) ->
+        selectedAuth,
+    ) { station, selectedDestination, safety, authState ->
+        SelectedChatContext(station, selectedDestination, safety, authState)
+    }
+        .flatMapLatest { (station, selectedDestination, safety, authState) ->
             if (selectedDestination == MainDestination.Chat && safety.canViewCommunityContent) {
                 chat.observeChat(station.id).map { state ->
-                    state.copy(
+                    val filtered = state.copy(
                         messages = state.messages.filterNot { message ->
                             safety.isBlocked(station.id, message.authorDisplayName)
                         },
                     )
+                    val displayName = authState.displayName
+                    if (
+                        filtered.status == ChatLoadStatus.Ready &&
+                        authState.status == AuthStatus.SignedIn &&
+                        !displayName.isNullOrBlank()
+                    ) {
+                        communityNotifications.processChatSnapshot(
+                            ChatMentionSnapshot(
+                                stationId = station.id,
+                                stationName = station.name,
+                                signedInDisplayName = displayName,
+                                messages = state.messages,
+                                blockedAuthorDisplayNames = safety.blockedUsers
+                                    .asSequence()
+                                    .filter { it.stationId == station.id }
+                                    .map { it.displayName }
+                                    .toSet(),
+                            ),
+                        )
+                    }
+                    filtered
                 }
             } else {
                 flowOf(ChatState(station.id))
@@ -227,6 +258,7 @@ class MainViewModel(
     private val safetyContent = combine(
         safetyState,
         communitySafety.observeReport(),
+        communityNotifications.observeSettings(),
         ::SafetyContent,
     )
 
@@ -261,6 +293,7 @@ class MainViewModel(
             listenerActivity = content.account.listenerActivity.takeIf { it.stationId == selected.id },
             communitySafety = safety.safety,
             abuseReport = safety.report,
+            communityNotifications = safety.notifications,
             stationPreferences = selection.preferences,
             diagnosticTransitions = playbackContent.transitions,
             destination = selectedDestination,
@@ -364,6 +397,10 @@ class MainViewModel(
         communitySafety.setCommunityContentVisible(visible)
     }
 
+    fun setChatMentionNotificationsEnabled(stationId: StationId, enabled: Boolean) = viewModelScope.launch {
+        communityNotifications.setChatMentionsEnabled(stationId, enabled)
+    }
+
     fun blockCommunityUser(stationId: StationId, displayName: String) = viewModelScope.launch {
         communitySafety.blockUser(stationId, displayName)
     }
@@ -447,6 +484,7 @@ class MainViewModel(
         private val favorites: FavoriteTracksRepository,
         private val listenerActivity: ListenerActivityRepository,
         private val communitySafety: CommunitySafetyRepository,
+        private val communityNotifications: CommunityNotificationRepository,
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =
@@ -461,6 +499,7 @@ class MainViewModel(
                 favorites,
                 listenerActivity,
                 communitySafety,
+                communityNotifications,
             ) as T
     }
 }
@@ -503,6 +542,14 @@ private data class ResolvedFavoritesContent(
 private data class SafetyContent(
     val safety: CommunitySafetyState,
     val report: AbuseReportState,
+    val notifications: CommunityNotificationState,
+)
+
+private data class SelectedChatContext(
+    val station: Station,
+    val destination: MainDestination,
+    val safety: CommunitySafetyState,
+    val auth: AuthState,
 )
 
 private data class PlaybackContent(
