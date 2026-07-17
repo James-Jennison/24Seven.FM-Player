@@ -169,6 +169,13 @@ milestones:
     commit: b713783
     evidence: docs/m24-sleep-timer-validation.md
     outcome: Service-owned presets/custom countdown, restoration, system state, and deterministic expiry.
+  - order: 25
+    id: M25
+    name: Cast / Audio-Output Selection
+    date: 2026-07-16
+    commit: 183ccc0
+    evidence: docs/m25-audio-output-validation.md
+    outcome: Native Android output chooser, accurate current-route state, phone/Bluetooth handoff and recovery, and an explicit capability-gated Cast boundary.
 
 workstreams:
   - id: M23.1
@@ -223,10 +230,10 @@ pre_alpha:
     evidence: docs/m24-sleep-timer-validation.md
   - id: M25
     name: Cast / Audio-Output Selection
-    state: planned
-    state_label: Discovery first
-    summary: Verify the permitted routing architecture, stream authorization, and dependency impact before adding supported Cast and/or dedicated output selection with explicit handoff and recovery behavior.
-    evidence: docs/future-scope.md
+    state: done
+    state_label: Complete
+    summary: Android's native output switcher and live route state cover system-managed device, Bluetooth, wired/USB, and remote routes without a relay or new endpoint; Google Cast remains capability-gated.
+    evidence: docs/m25-audio-output-validation.md
   - id: M26
     name: In-App Diagnostics
     state: planned

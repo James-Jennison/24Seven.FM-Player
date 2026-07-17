@@ -15,7 +15,7 @@ section: testing
     <span>Current green baseline</span>
     <strong>172 checks</strong>
     <dl>
-      <div><dt>Unit</dt><dd>136</dd></div>
+      <div><dt>Unit</dt><dd>139</dd></div>
       <div><dt>Connected</dt><dd>40</dd></div>
       <div><dt>Stations</dt><dd>5/5</dd></div>
     </dl>
@@ -38,7 +38,7 @@ section: testing
     <p>Routine development preserves Gradle caches and starts with the smallest affected task. Broader checks are added only after targeted behavior passes or when integration risk requires them.</p>
   </div>
   <div class="validation-layers">
-    <article><span>Fast</span><h3>Local unit tests</h3><p>136 tests cover models, parsers, policies, repository behavior, ViewModel state, timer restoration/formatting, availability indexing, report classification, and release helpers.</p><code>./gradlew :app:testDebugUnitTest</code></article>
+    <article><span>Fast</span><h3>Local unit tests</h3><p>139 tests cover models, parsers, policies, repository behavior, ViewModel state, timer restoration/formatting, audio-route classification, availability indexing, report classification, and release helpers.</p><code>./gradlew :app:testDebugUnitTest</code></article>
     <article><span>Integration</span><h3>Connected Compose tests</h3><p>The current 40-test Tablet suite exercises UI semantics, navigation, dialogs, adaptive layouts, accessibility reflow, Favorites traversal, and device behavior.</p><code>./gradlew :app:connectedDebugAndroidTest</code></article>
     <article><span>Static</span><h3>Compilation and lint</h3><p>Kotlin compilation catches layer and type failures early; Android lint checks resources, manifests, API usage, accessibility, and packaging concerns.</p><code>./gradlew :app:compileDebugKotlin :app:lintDebug</code></article>
     <article><span>Release</span><h3>Artifact validation</h3><p>Release AAB/APK signatures, registered upload certificate, production manifest, dependencies, backup exclusions, and 16 KB packaging are audited separately.</p><code>validate-protected-play-bundle-linux.py</code></article>

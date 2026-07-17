@@ -56,4 +56,4 @@ The playback service owns the deadline and expiry action. It publishes immutable
 
 ## Remaining release checks
 
-The MediaSession cancellation command is connected-device tested, but its exact notification-button placement should be included in the broader M28 system-UI matrix because Android and OEM media surfaces choose how custom commands are rendered. M28 must also re-run release-candidate packaging and the wider emulator/device suite after M25–M27 are complete.
+The MediaSession cancellation command is connected-device tested, but its exact notification-button placement should be included in the broader M28 system-UI matrix because Android and OEM media surfaces choose how custom commands are rendered. M28 must also re-run release-candidate packaging and the wider emulator/device suite after M26–M27 are complete.

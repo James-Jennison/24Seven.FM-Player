@@ -14,9 +14,9 @@ When M17 becomes available, new-message events must integrate with the opt-in M2
 
 The service-owned sleep countdown is complete with accessible presets and custom duration, remaining-time state, adjust/cancel actions, MediaSession/system cancellation state, service-recreation recovery, and deterministic expiry through the existing player. Pause and station switches preserve the deadline; manual Stop cancels it; monotonic elapsed time includes device sleep; inconsistent post-reboot/wall-clock state fails safe. See [M24 validation](m24-sleep-timer-validation.md).
 
-## M25 — Cast / Audio-Output Selection
+## Completed M25 — Cast / Audio-Output Selection
 
-Research the supported Android media-routing and Cast paths before selecting an implementation. The milestone should expose current-route state and an explicit chooser/handoff for supported local or remote routes, preserve MediaSession/audio-focus behavior, recover cleanly on disconnect, and avoid adding Cast controls when station stream authorization, receiver compatibility, or dependency requirements are not verified. Routing must not be described as securing or proxying the station source: the current Media3 player connects directly to station-provided HTTP audio relays, while non-audio station traffic remains HTTPS. Any encrypted relay or rebroadcast proxy requires separately verified station support or explicit owner authorization plus privacy, bandwidth, and reliability review.
+The dedicated Android audio-output path is complete. The Player exposes immutable current-route state and opens Android's native system chooser for device, Bluetooth, wired/USB, and system-managed remote routes while preserving the existing MediaSession and audio-focus owner. No active discovery scan, relay, proxy, or new endpoint was added. Google Cast remains intentionally capability-gated because its separate receiver compatibility and permitted stream use are not verified. Routing is not described as securing or proxying the source: Media3 still connects directly to the station-provided HTTP audio relays, while non-audio station traffic remains HTTPS. See [M25 validation](m25-audio-output-validation.md).
 
 ## M26 — In-App Diagnostics
 

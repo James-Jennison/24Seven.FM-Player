@@ -28,11 +28,12 @@ Do not distribute the development debug APK as the public Alpha. Its machine-loc
 4. Start one station, verify audio and artwork/title behavior, then switch stations.
 5. Leave the app and verify the media notification and background controls. Tap the notification body outside
    play/pause and confirm it returns to the existing player task.
-6. Check Queue and recently played content.
-7. If using a test account, verify sign in, session restoration, Chat, and Favorites. On SST, open More and refresh Request activity to verify recent requests, readiness, and the explicit membership indicator. Confirm eligible Favorites show a green `Request Now`; recently played or queued tracks show a red `Track Recently Played` and cannot be selected. Switch Favorites between Library order and Play state, including on a large list when available.
-8. Search the station library by Title, Album, Artist, and Genre. Submit an eligible favorite or catalog track only through the explicit confirmation while respecting station cooldowns.
-9. In More, open one verified **More from…** card. Confirm it opens in a browser tab and Back returns to the app. Browser sign-in is intentionally separate from the protected app session.
-10. Press Back twice and verify the exit confirmation. Choose **Keep listening** unless intentionally stopping playback.
+6. On the Player, confirm **Audio output** reports the current route and opens Android's system output chooser. If an accessory is available, switch to it, disconnect it, and confirm playback returns to an available local route.
+7. Check Queue and recently played content.
+8. If using a test account, verify sign in, session restoration, Chat, and Favorites. On SST, open More and refresh Request activity to verify recent requests, readiness, and the explicit membership indicator. Confirm eligible Favorites show a green `Request Now`; recently played or queued tracks show a red `Track Recently Played` and cannot be selected. Switch Favorites between Library order and Play state, including on a large list when available.
+9. Search the station library by Title, Album, Artist, and Genre. Submit an eligible favorite or catalog track only through the explicit confirmation while respecting station cooldowns.
+10. In More, open one verified **More from…** card. Confirm it opens in a browser tab and Back returns to the app. Browser sign-in is intentionally separate from the protected app session.
+11. Press Back twice and verify the exit confirmation. Choose **Keep listening** unless intentionally stopping playback.
 
 ## Suggested configuration coverage
 
@@ -64,7 +65,7 @@ Never include passwords, security-code answers or images, cookies, session value
   but New Message selection remains suspect and a profile-originated MorgHubby test was not delivered; the site owner
   has the reproduced result.
 - Representative authenticated certification is complete for all five stations; natural server-side session expiry was not forcibly induced.
-- The current candidate does not yet include M24 Sleep Timer, M25 Cast / Audio-Output Selection, M26 In-App Diagnostics, or M27 Community Push Notifications. These are required before the renumbered M28 publication gate.
+- M24 Sleep Timer and M25's dedicated Android audio-output path are included. Google Cast is not exposed because receiver compatibility and permitted stream use remain unverified. M26 In-App Diagnostics and M27 Community Push Notifications remain required before the renumbered M28 publication gate.
 - Station accounts are currently station-specific.
 - Public station interfaces can change independently of the app.
 - Physical Razr playback and UI survive a measured open/tabletop/closed/reopened hinge cycle. Play-delivered install/update validation, the Play pre-launch report, and a complete spoken TalkBack pass remain release checks.
