@@ -10,6 +10,9 @@ The Google Play developer account was approved on July 14, 2026. Use this during
 - The current M23.1 audit verifies the production manifest, dependencies/licenses, explicit backup exclusions,
   protected signed release outputs, the exact registered upload certificate, and 16 KB APK/ELF packaging. The native notice is under More → Privacy →
   Open-source licenses; see `docs/m23-release-candidate-audit.md`.
+- Google's July 16 Android developer-verification email confirms that the account's Play apps were automatically
+  registered to the verified developer account. Sanitized evidence is retained in the M23.1 audit; per-app status must
+  still be confirmed in Play Console Home.
 - Current Play target-level check (July 15, 2026): target API 35 remains accepted until August 31, 2026, when new mobile apps and updates must target API 36. M23.3 migrated early so the closed-test and update path do not depend on that deadline.
 - Privacy notice, Alpha testing guide, release notes, permission review, and device validation are complete.
 - Gradle accepts Play upload signing only from four `TWENTYFOURSEVEN_UPLOAD_*` environment variables. Supplying a partial set fails configuration.
@@ -28,9 +31,13 @@ The Google Play developer account was approved on July 14, 2026. Use this during
 5. **Complete locally:** `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate-protected-play-bundle.ps1 -BuildApk` built the signed APK/AAB, verified the AAB signature, and confirmed that the bundle signer matches the configured upload certificate.
 6. **Complete:** the encrypted recovery package was exported to an owner-controlled off-PC volume and independently verified with the owner-held passphrase. Its encrypted-package SHA-256 is `361E6A85452DBF9ACDC816F554569E3B7DBA0F98B60C30DB255E54C2644C4D1C`; the passphrase is stored separately and is not in Git.
 7. **Complete locally:** the Linux helper built the current protected AAB/APK from commit `2086ab9` without persisting plaintext signing material; subsequent AAB and APK verification matched both signatures to the registered upload certificate.
-8. Upload the verified AAB, then start with Internal testing. It supports up to 100 testers and uses a private opt-in/share link rather than public search discovery.
-9. Add a feedback email or URL and a tester email list in Console. Do not commit tester identities.
-10. Complete the store listing and App content declarations needed by the selected track.
+8. **Complete by account email; Console confirmation remains:** Google's July 16 notice says the account's Play apps
+   were automatically registered for Android developer verification. Confirm this app's registration in Play Console
+   Home. If the release is distributed outside Play, separately register its package-and-signing-key pair on the
+   Android developer verification page.
+9. Upload the verified AAB, then start with Internal testing. It supports up to 100 testers and uses a private opt-in/share link rather than public search discovery.
+10. Add a feedback email or URL and a tester email list in Console. Do not commit tester identities.
+11. Complete the store listing and App content declarations needed by the selected track.
 
 The current protected July 16 AAB from commit `2086ab9` has SHA-256 `1C6C43BF947B844F5D8708DF368635CFE34B6A690DD826B87663B66C5C6C518F`; the companion APK has SHA-256 `923C26621FC998CAA4D1099B7BCA5A118C7EB8256057D96E9971C4AFE29825D0`. Both match upload-certificate SHA-256 `F6E8E81271964FFC3F8A0D548B49B4DB93AEFC48CCB74B8744512670F4279E3F`. AAB signatures include per-build data, so compare the selected artifact hash with the audit record and the stable certificate fingerprint with Play Console before upload.
 

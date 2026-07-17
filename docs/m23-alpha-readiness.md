@@ -60,6 +60,9 @@ as already complete.
   `THIRD_PARTY_NOTICES.md` and are reachable inside the app under More → Privacy → Open-source licenses. See
   `m23-release-candidate-audit.md`; protected current-head signing is complete, while version-code eligibility and
   Play-delivered installation remain open.
+- Google's July 16 Android developer-verification email confirms that the account's Play apps were automatically
+  registered to the verified developer account. The sanitized confirmation is preserved in the M23.1 audit; exact
+  per-app Play Console status, version-code eligibility, and Play-delivered installation remain open.
 - Google Play accepts target API 35 on July 15, 2026 but requires API 36 for new apps and updates beginning August 31, 2026. M23.3 therefore migrates before the closed-test/update window instead of treating API 35 as the final Alpha target.
 - The project-specific provisional Data Safety worksheet is recorded in `docs/m23-data-safety.md`; it includes the M23.2 age/Terms/block preferences and transient abuse-report fields. Final answers remain gated on the active Play Console form and station retention confirmation.
 - The non-secret M23.4 declaration packet now contains copy-ready media-playback foreground-service text, an exact demonstration shot list, reviewer navigation instructions, content-rating evidence boundaries, and owner-only fields. The draft store listing was corrected to remove unimplemented sleep timer, shortcuts, sharing, appearance preferences, and diagnostics.

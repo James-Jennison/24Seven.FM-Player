@@ -2,7 +2,7 @@
 
 Date: July 16, 2026
 
-Status: protected Ubuntu AAB/APK build and exact signer verification complete; version-code eligibility and Play-delivered installation remain open
+Status: protected Ubuntu AAB/APK build, exact signer verification, and Android developer-verification registration confirmation complete; version-code eligibility and Play-delivered installation remain open
 
 ## Outcome
 
@@ -11,9 +11,27 @@ declaration, dependency set, license notices, backup exclusions, and 16 KB packa
 all current product fixes, then produced a protected signed AAB and APK on Ubuntu from the authenticated recovery
 package without persisting signing material. Both artifacts match the registered Play upload certificate.
 
+Google's July 16 account email also confirms that the account's Play apps were automatically registered to the verified
+developer account for Android developer verification. This closes the email-confirmation checkpoint, but not the two
+remaining M23.1 delivery gates: the owner must still confirm the app's per-app registration and version-code status
+in Play Console, then validate a Play-delivered install/update.
+
 M23.1 completes only after the owner confirms that version code 2 is still eligible in Play Console and validates a
 Play-delivered install/update. The established Windows DPAPI copy remains intact. Routine signing can use the existing
 authenticated recovery package through the Linux helper without persisting a plaintext keystore or credential file.
+
+## Android developer-verification evidence
+
+![Sanitized Google confirmation showing automatic Android developer-verification registration](screenshots/m23-android-developer-verification-registration.png)
+
+*Sanitized owner-provided confirmation received July 16, 2026. The personalized greeting and surrounding browser,
+mailbox, account, and desktop UI were removed before repository storage.*
+
+The confirmation says that the account's Play apps were registered automatically and directs the owner to Play Console
+Home for per-app status confirmation. It also distinguishes Play-distributed apps from apps signed and distributed
+outside Google Play: any outside-Play package-and-key pair must be registered separately on the Android developer
+verification page. No credential, signing material, private Console URL, or mailbox metadata is retained in this
+evidence image.
 
 ## Release identity and manifest
 

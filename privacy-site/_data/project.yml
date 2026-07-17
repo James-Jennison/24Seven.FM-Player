@@ -195,7 +195,7 @@ workstreams:
     name: Signed release candidate
     state: active
     state_label: In progress
-    summary: Protected Linux AAB/APK signing and exact upload-certificate checks pass; Play version eligibility and delivered-install validation remain.
+    summary: Protected Linux signing, exact upload-certificate checks, and Android developer-verification email confirmation pass; per-app Console status, version eligibility, and delivered-install validation remain.
     evidence: docs/m23-release-candidate-audit.md
   - id: M23.2
     name: UGC safety and moderation
