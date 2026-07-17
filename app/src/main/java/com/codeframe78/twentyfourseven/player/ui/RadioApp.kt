@@ -854,7 +854,9 @@ private fun CommunityTermsDialog(
                     Checkbox(
                         checked = agreed,
                         onCheckedChange = { agreed = it },
-                        modifier = Modifier.testTag("agree_community_terms"),
+                        modifier = Modifier
+                            .testTag("agree_community_terms")
+                            .semantics { contentDescription = "I Agree" },
                     )
                     Text("I Agree")
                 }
@@ -1367,7 +1369,11 @@ private fun CommunityNotificationSection(
                         checked = enabled,
                         onCheckedChange = { onSetChatMentionsEnabled(station.id, it) },
                         enabled = canChangeSetting,
-                        modifier = Modifier.testTag("chat_mention_notifications_toggle"),
+                        modifier = Modifier
+                            .testTag("chat_mention_notifications_toggle")
+                            .semantics {
+                                contentDescription = "Notify when my station name is mentioned"
+                            },
                     )
                     Spacer(Modifier.width(8.dp))
                     Column(Modifier.weight(1f)) {

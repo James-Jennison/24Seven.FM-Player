@@ -1370,6 +1370,7 @@ class RadioAppTest {
         composeRule.onNodeWithTag("submit_age_screen").performClick()
         composeRule.onNodeWithText("Terms required").assertIsDisplayed()
         composeRule.onNodeWithTag("review_community_terms").performClick()
+        composeRule.onNodeWithContentDescription("I Agree").assertHasClickAction()
         composeRule.onNodeWithTag("agree_community_terms").performScrollTo().performClick()
         composeRule.onNodeWithTag("accept_community_terms").performClick()
         composeRule.onNodeWithText("Mature community content is hidden").performScrollTo().assertIsDisplayed()
@@ -1413,6 +1414,9 @@ class RadioAppTest {
         }
 
         composeRule.onNodeWithTag("more_community_notifications").performScrollTo().performClick()
+        composeRule.onNodeWithContentDescription(
+            "Notify when my station name is mentioned",
+        ).assertHasClickAction()
         composeRule.onNodeWithTag("chat_mention_notifications_toggle").performScrollTo().performClick()
         composeRule.runOnIdle {
             assertEquals(station.id to true, selectedSetting)

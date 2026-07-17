@@ -17,6 +17,7 @@ Status: **Complete for the existing actively observed Chat feed. Reliable closed
   mature-content, authentication, or block gates.
 - Station opt-ins survive app recreation and remain excluded from Android backup/device transfer under the existing
   app-private backup rules.
+- The opt-in checkbox exposes an explicit TalkBack description instead of an unlabeled actionable node.
 
 ## Intentional limitations
 
@@ -33,6 +34,9 @@ be represented as push. Private Message events remain capability-gated with M17'
 
 - `./gradlew :app:testDebugUnitTest :app:lintDebug` — passed; 146/146 unit tests and zero lint errors.
 - `./gradlew :app:compileDebugAndroidTestKotlin` — passed.
+- Current-head accessibility regression — 146/146 unit tests, 48/48 API 35 Tablet connected tests, and debug lint pass.
+  Exact and case-insensitive synthetic `MorG` mentions alert once, while `MorgHubby`, embedded-name, self-authored,
+  blocked-author, historical, and duplicate cases remain suppressed.
 - Focused physical Motorola Razr 2023 / Android 16 instrumentation — 2/2 passed:
   - station opt-in persistence, first-snapshot baseline, exact matching, and duplicate suppression;
   - signed-in adult More-menu opt-in rendering and action propagation.

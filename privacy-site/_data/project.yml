@@ -225,7 +225,7 @@ workstreams:
     name: Release device matrix
     state: active
     state_label: In progress
-    summary: Local emulator, accessibility, network, performance, and Razr hinge checks pass; Play delivery, pre-launch, and spoken TalkBack remain.
+    summary: Local emulator, real TalkBack service, network, performance, and Razr hinge checks pass; human audible review, Play delivery, and pre-launch remain.
     evidence: docs/m23-device-compatibility.md
   - id: M23.7
     name: Launcher and store polish

@@ -44,6 +44,18 @@ not a list of hard-coded device models.
 All display and font overrides were temporary. The Razr retained its physical 1080×2640 display and 420dpi density;
 the final API 35 Tablet normal-settings regression used font scale 1.0 and its default 320dpi density.
 
+### Google TalkBack service traversal
+
+The built-in Google TalkBack service traversed the current debug candidate on the API 35 phone, Pixel Fold open,
+half-open and closed/outer states, and Pixel Tablet landscape and portrait. Accessibility focus reached all five native
+destinations, playback controls, station cards, Sleep Timer, Audio output, gated community controls, More disclosures,
+and diagnostics actions as appropriate to each surface. Two unlabeled checkbox nodes were corrected: Community Terms
+now announces `I Agree`, and the station-scoped Chat setting announces `Notify when my station name is mentioned`.
+UIAutomator reported no remaining `NAF=true` actionable node on the inspected surfaces after that correction.
+
+This is real accessibility-service traversal, not semantics-only inference. A human audible/intelligibility check on
+physical hardware still remains for Alpha because automated inspection cannot judge speech pronunciation or clarity.
+
 ### Network-loss and restoration evidence
 
 | Device | Sequence | Result |
@@ -64,7 +76,7 @@ changes cancel a pending recovery.
 - 2× font scale with an enlarged display keeps compact and medium navigation, playback actions, station descriptions,
   and account identity/status content reachable.
 - Folded portrait keeps playback controls and the complete station carousel visible without scrolling.
-- The current 40-test connected suite passes on the API 35 Pixel Tablet at restored normal settings; the prior 39-test
+- The current 48-test connected suite passes on the API 35 Pixel Tablet at restored normal settings; the prior 39-test
   suite passes at maximum tested accessibility settings. The previous complete 36-test current-head suite passes on API 26, API 36, the API 35
   16 KB runtime, Pixel Fold open, and Pixel Tablet native landscape. The current More-menu preference and legal-disclosure paths also pass after
   live transitions to the Fold half-open and closed/outer-display states, and the disclosure path passes after rotating
@@ -81,7 +93,9 @@ changes cancel a pending recovery.
 - The API 36 connected suite now passes 36/36; the installed candidate reports target API 36 and the earlier cold-launch
   two-Back flow reaches the expected exit dialog.
 - Automated semantics verify descriptive click targets for all five navigation items even when enlarged text requires
-  labels to yield their limited navigation-bar space. A spoken TalkBack traversal remains a physical-device Alpha check.
+  labels to yield their limited navigation-bar space. Real Google TalkBack service traversal passes across the API 35
+  phone, Fold open/half-open/closed, and Tablet landscape/portrait matrix; human audible review remains a physical-device
+  Alpha check.
 - Three recovery-policy tests cover offline one-shot recovery, online server-error suppression, and pause/cancel intent;
   a connected Compose test verifies the waiting explanation and available Pause action.
 
