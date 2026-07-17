@@ -39,21 +39,16 @@ jobs:
           ./gradlew test lint assembleDebug --no-daemon --console=plain
 
   notify-discord:
-    name: Notify Discord
+    name: Post milestone update to Discord
     needs: build
-    if: ${{ always() }}
+    if: ${{ always() && vars.DISCORD_PROJECT_UPDATE != '' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Post Android CI result
+      - name: Post configured milestone update
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           DISCORD_THREAD_ID: ${{ vars.DISCORD_THREAD_ID }}
           DISCORD_PROJECT_UPDATE: ${{ vars.DISCORD_PROJECT_UPDATE }}
-          BUILD_RESULT: ${{ needs.build.result }}
-          REPOSITORY: ${{ github.repository }}
-          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
-          ACTOR: ${{ github.actor }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           if [[ -z "${DISCORD_WEBHOOK_URL}" ]]; then
             echo "Discord webhook is not available; skipping notification."
@@ -77,10 +72,4 @@ jobs:
                   "${DISCORD_WEBHOOK_URL}"
           }
 
-          ci_message=$(printf '**24Seven.FM Android CI: %s**\nRepository: `%s`\nBranch: `%s`\nTriggered by: `%s`\nRun: %s' \
-            "${BUILD_RESULT}" "${REPOSITORY}" "${BRANCH_NAME}" "${ACTOR}" "${RUN_URL}")
-          post_to_discord "${ci_message}"
-
-          if [[ -n "${DISCORD_PROJECT_UPDATE}" ]]; then
-            post_to_discord "${DISCORD_PROJECT_UPDATE}"
-          fi
+          post_to_discord "${DISCORD_PROJECT_UPDATE}"
