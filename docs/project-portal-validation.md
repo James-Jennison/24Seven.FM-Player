@@ -10,8 +10,8 @@ The GitHub Pages surface now provides a comprehensive, responsive, interactive p
 - an interactive native architecture explorer, source organization, engineering principles, and milestone workflow;
 - automated, emulator, physical-device, accessibility, network, performance, signing, and CI evidence with copyable commands and inspectable table rows;
 - a tester-facing product workspace with local search, status filters, device-only checklist progress, bounded smoke/member/device/resilience/adaptive sessions, and a structured public result form for passes, failures, notes, and blocked tests;
-- all 27 achieved milestones in verified chronological order, including completed M24 Sleep Timer, M25 Audio-Output Selection, M26 In-App Diagnostics, and the M27 local Chat-mention foundation;
-- the eight M28–M35 Alpha-readiness gates, deferred M47 boundary, completed M24–M27 work, M36–M38 closed-app delivery gates, and M39–M41 Alpha-delivery program;
+- all 28 achieved milestones in verified chronological order, including completed M24 Sleep Timer, M25 Audio-Output Selection, M26 In-App Diagnostics, M27 local Chat mentions, and M28 UGC safety;
+- the seven remaining M29–M35 Alpha-readiness gates, deferred M47 boundary, completed M24–M28 work, M36–M38 closed-app delivery gates, and M39–M41 Alpha-delivery program;
 - a searchable, category-filtered public resource index for architecture, protocol research, station certification, Play readiness, release notes, testing, and contribution;
 - a searchable privacy notice with a generated on-page table of contents while keeping all canonical notice text visible without JavaScript.
 

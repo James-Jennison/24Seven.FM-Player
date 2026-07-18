@@ -20,15 +20,15 @@ section: roadmap
       <div><dt>Stations</dt><dd>5</dd></div>
     </dl>
     <div class="program-progress">
-      <div><span>Canonical milestones achieved</span><strong>47%</strong></div>
-      <progress value="27" max="57">27 of 57 achieved</progress>
+      <div><span>Canonical milestones achieved</span><strong>49%</strong></div>
+      <progress value="28" max="57">28 of 57 achieved</progress>
     </div>
   </aside>
 </section>
 
 <nav class="section-jump" aria-label="On this page">
   <a href="#current">Alpha readiness</a>
-  <a href="#history">M01–M27 achieved</a>
+  <a href="#history">M01–M28 achieved</a>
   <a href="#notifications">Notifications</a>
   <a href="#alpha">Alpha delivery</a>
   <a href="#production">Production</a>
@@ -41,7 +41,7 @@ section: roadmap
   <div class="content-intro wide">
     <p class="eyebrow">{{ site.data.project.roadmap_meta.active_phase }} · Current program</p>
     <h2>{{ site.data.project.roadmap_meta.active_label }}</h2>
-    <p>Eight independently reviewable gates replace the former umbrella milestone. External dependencies stay visible while local security, transaction, device, and release-tooling work progresses.</p>
+    <p>Seven independently reviewable gates remain in the Alpha-readiness program. External dependencies stay visible while local security, transaction, device, and release-tooling work progresses.</p>
   </div>
   <div class="roadmap-tools" data-filter-controls data-target="#alpha-readiness-grid">
     <label class="filter-search" for="alpha-readiness-search">Find an Alpha-readiness gate<input id="alpha-readiness-search" type="search" placeholder="Search ID, policy, security, device…" autocomplete="off" data-filter-query></label>
@@ -70,13 +70,13 @@ section: roadmap
 
 <section class="content-section" id="history">
   <div class="content-intro wide">
-    <p class="eyebrow">M01–M27 · Verified chronology</p>
+    <p class="eyebrow">M01–M28 · Verified chronology</p>
     <h2>Completed work remains evidence-backed</h2>
     <p>Renumbering changed references, not history. The original commit, date, achievement order, and validation remain attached to each completed milestone.</p>
   </div>
   <div class="roadmap-tools" data-filter-controls data-target="#milestone-history">
     <label class="filter-search" for="history-search">Search achieved milestones<input id="history-search" type="search" placeholder="Try M08, playback, accessibility…" autocomplete="off" data-filter-query></label>
-    <p class="filter-count" aria-live="polite"><strong data-filter-count>27</strong> visible</p>
+    <p class="filter-count" aria-live="polite"><strong data-filter-count>{{ site.data.project.roadmap_meta.achieved_count }}</strong> visible</p>
   </div>
   <ol class="milestone-history" id="milestone-history" data-filter-scope>
     {% for item in site.data.project.milestones %}

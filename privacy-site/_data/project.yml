@@ -34,9 +34,9 @@ navigation:
 
 roadmap_meta:
   updated: 2026-07-18
-  achieved_count: 27
+  achieved_count: 28
   total_count: 57
-  active_phase: M28–M35
+  active_phase: M29–M35
   active_label: Alpha readiness and release integrity
 
 milestones:
@@ -275,19 +275,17 @@ milestones:
     evidence: "docs/m27-community-notification-validation.md"
     outcome: "Opt-in exact-name alerts for actively observed Chat with safe filtering and navigation."
 
+  - order: 28
+    id: "M28"
+    legacy_id: "M23.2"
+    name: "UGC Safety and Ongoing Moderation"
+    date: "2026-07-18"
+    commit: "465cb4d"
+    evidence: "docs/m23-ugc-safety-validation.md"
+    outcome: "Fixed-recipient native Contact and report handoff with physical Razr validation and owner-confirmed one-shot receipt."
+
 
 roadmap:
-  - id: "M28"
-    legacy_id: "M23.2"
-    phase: "alpha-readiness"
-    name: "UGC Safety and Ongoing Moderation"
-    state: "active"
-    state_label: "In progress"
-    blocking: true
-    dependencies: "Physical email-composer validation and one fresh receipt check"
-    evidence: "docs/m23-ugc-safety-validation.md"
-    summary: "A fixed-recipient native email handoff is implemented; device validation and one fresh receipt check remain."
-
   - id: "M29"
     legacy_id: "M23.4"
     phase: "alpha-readiness"

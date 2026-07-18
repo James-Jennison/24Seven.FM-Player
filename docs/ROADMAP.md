@@ -66,7 +66,7 @@ allow, but no partial checkpoint should be described as release-ready.
 
 | ID | Milestone | State | Required gate |
 | --- | --- | --- | --- |
-| M28 | UGC Safety and Ongoing Moderation | In progress | Existing safeguards plus fixed-recipient Contact/report email handoff, physical composer validation, and one fresh one-shot receipt check |
+| M28 | UGC Safety and Ongoing Moderation | Complete | Existing safeguards plus fixed-recipient Contact/report email handoff, physical composer validation, and one owner-confirmed one-shot receipt check |
 | M29 | Play Declarations, Privacy, and Data Safety | Waiting externally | Exact-artifact declarations, reviewer access, content rating, retention/deletion answers, final media-playback video, and privacy consistency |
 | M30 | Brand, Content, and Distribution Rights | Waiting externally | Written authorization for app/station naming, logos, artwork/metadata, streams, screenshots, and Play testing/distribution |
 | M31 | Payments, External Links, and Account Lifecycle Compliance | Planned | Audit every Custom Tab destination; remove or lawfully implement transaction/account-creation routes; reconcile deletion and Play declarations |
@@ -124,7 +124,7 @@ None of these milestones blocks M41 unless a later owner decision explicitly mov
 
 ## Program dependencies
 
-1. M28–M35 close the Alpha policy, security, correctness, accessibility, and release-tooling gaps.
+1. M28 is complete; M29–M35 close the remaining Alpha policy, security, correctness, accessibility, and release-tooling gaps.
 2. M36 authorizes the event source before M37 implementation; M38 certifies the result.
 3. M39 freezes the exact candidate only after all intended Alpha code has landed.
 4. M40 proves Play delivery and resolves automated/reviewer findings.

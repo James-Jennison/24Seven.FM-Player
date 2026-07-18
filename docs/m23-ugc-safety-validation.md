@@ -2,7 +2,7 @@
 
 Date: July 18, 2026
 
-Status: fixed-recipient email handoff implemented; automated and physical acceptance in progress
+Status: complete
 
 ## Delivered native safeguards
 
@@ -47,10 +47,11 @@ Not persisted:
 - M28-focused Razr connected suite: 6/6 passed, covering transient repository state, bounded fixed-recipient drafts, Contact Us semantics, report input, and honest email-handoff copy.
 - A broader 48-test Razr run passed 47 tests; the sole failure was the existing simulated 701 dp tablet-navigation assertion running under the phone's physical root constraints. It is tracked as M34 device-matrix evidence and did not affect the six M28 checks.
 - Physical Contact Us handoff: the Razr offered compatible email apps; Gmail displayed the exact monitored recipient, `StreamingSoundtracks.com` subject/body context, and editable draft. The first probe exposed Gmail ignoring plain intent extras, so the implementation was corrected to encoded `mailto:` subject/body parameters and retested successfully. The draft was discarded without sending, and the existing Player task/station state remained intact on return.
+- Physical report delivery: on July 18, 2026, the owner authorized one clearly labeled harmless M28 report from the installed Razr build. The fixed recipient, station-scoped subject, bounded report body, and explicit user-controlled Send action were reviewed; the message was sent exactly once, the Player made no delivery claim, and the owner confirmed receipt at the monitored destination. No retry was performed.
 
-## Remaining completion gate
+## Completion decision
 
-- Submit one newly authorized harmless report through the Player, review the recipient/subject/body, send it exactly once from the email app, and reconcile actual destination receipt.
-- Repository evidence must remain sanitized and must not contain mailbox headers, sender identity, report content, or private correspondence.
+- M28 is accepted complete. The native safeguards, fixed-recipient handoff, privacy boundary, honest composer state, physical-device behavior, one-shot sending rule, and monitored-destination receipt have all been validated.
+- Repository evidence remains sanitized and contains no mailbox headers, sender identity, report content, or private correspondence.
 
 This evidence supports implementation readiness but does not itself constitute legal advice, a guarantee of Google Play approval, or completion of the owner-controlled Play Console declarations.

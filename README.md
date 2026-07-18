@@ -33,10 +33,10 @@ The [comprehensive project portal](https://codeframe78.github.io/24Seven.FM-Play
 
 ## Alpha status
 
-The canonical roadmap now runs from **M01 through M57**. **M01–M27 are complete**, preserving all 27 verified achievements. The active Alpha-readiness program is **M28–M35**; authorized closed-app community delivery is **M36–M38**; candidate delivery and publication are **M39–M41**.
+The canonical roadmap now runs from **M01 through M57**. **M01–M28 are complete**, preserving all 28 verified achievements. The active Alpha-readiness program is **M29–M35**; authorized closed-app community delivery is **M36–M38**; candidate delivery and publication are **M39–M41**.
 
 > [!IMPORTANT]
-> **Current focus:** close M28–M35 without weakening external approval, security, accessibility, signing, or request-integrity gates. M36–M38 cannot begin until an authorized event source exists, and M41 requires explicit publication authorization.
+> **Current focus:** close M29–M35 without weakening external approval, security, accessibility, signing, or request-integrity gates. M36–M38 cannot begin until an authorized event source exists, and M41 requires explicit publication authorization.
 
 <details>
 <summary><strong>Explore the current Alpha capability and validation summary</strong></summary>
@@ -55,8 +55,8 @@ The roadmap was renumbered into one dependency-ordered sequence on July 18, 2026
 
 | Phase | Milestones | State | Required outcome |
 | --- | --- | :---: | --- |
-| Verified product baseline | M01–M27 | ✅ Complete | Native foundation, five certified stations, API/launcher readiness, Sleep Timer, system audio output, diagnostics, and local Chat mentions |
-| Alpha readiness | M28–M35 | 🚧 Active | Moderation, Play declarations, rights, payments/account lifecycle, security, request integrity, device/accessibility, and signing |
+| Verified product baseline | M01–M28 | ✅ Complete | Native foundation, five certified stations, API/launcher readiness, Sleep Timer, system audio output, diagnostics, local Chat mentions, and validated UGC safeguards |
+| Alpha readiness | M29–M35 | 🚧 Active | Play declarations, rights, payments/account lifecycle, security, request integrity, device/accessibility, and signing |
 | Community delivery | M36–M38 | ⏳ Authorization-gated | Authorized event source, secure delivery, and lifecycle/privacy certification |
 | Alpha delivery | M39–M41 | ⏳ Planned | Candidate freeze, Play-delivered remediation, and explicitly authorized Alpha publication |
 | Production readiness | M42–M45 | ⏳ Planned | Closed-test stabilization, production access, staged rollout, and operations |
@@ -64,8 +64,8 @@ The roadmap was renumbered into one dependency-ordered sequence on July 18, 2026
 
 ### Current progression
 
-- **Completed:** M01–M27. This preserves the original 27 achievement checkpoints; no completed work was reclassified or claimed anew.
-- **Active:** M28 UGC safety through M35 release signing and Console eligibility. Each milestone has an independent acceptance gate.
+- **Completed:** M01–M28. M28 adds validated fixed-recipient Contact/report handoff, one-shot physical sending, and owner-confirmed receipt to the prior 27 achievement checkpoints.
+- **Active:** M29 Play declarations through M35 release signing and Console eligibility. Each milestone has an independent acceptance gate.
 - **Authorization-gated:** M36–M38 require an approved station-side event source or privacy-compatible relay before implementation.
 - **Publication:** M39–M41 deliberately separate candidate freeze, Play delivery, and the final user-authorized Alpha action.
 - **Production:** M42–M45 add stabilization, production-access evidence, staged release, and operational recertification.
