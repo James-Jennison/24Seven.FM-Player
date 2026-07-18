@@ -64,15 +64,22 @@ as already complete.
   registered to the verified developer account. The sanitized confirmation is preserved in the M35 audit; exact
   per-app Play Console status, version-code eligibility, and Play-delivered installation remain open.
 - Google Play accepts target API 35 on July 15, 2026 but requires API 36 for new apps and updates beginning August 31, 2026. M22 therefore migrates before the closed-test/update window instead of treating API 35 as the final Alpha target.
-- The project-specific provisional Data Safety worksheet is recorded in `docs/m23-data-safety.md`; it includes the M28 age/Terms/block preferences and transient abuse-report fields. Final answers remain gated on the active Play Console form and station retention confirmation.
-- The non-secret M29 declaration packet now contains copy-ready media-playback foreground-service text, an exact demonstration shot list, reviewer navigation instructions, content-rating evidence boundaries, and owner-only fields. The draft store listing was corrected to remove unimplemented sleep timer, shortcuts, sharing, appearance preferences, and diagnostics.
+- The July 18 exact-artifact Data Safety worksheet is recorded in `docs/m23-data-safety.md`; it covers optional
+  account/community/request data, explicit external-app handoffs, source-IP handling, local-only state, HTTPS user-data
+  paths, and the public unauthenticated stream boundary. Final answers remain gated on active Console wording and
+  station retention, processor, deletion, and IP-use facts.
+- The non-secret M29 declaration packet now contains the release manifest/dependency/data-flow audit, a field-by-field
+  Console decision ledger, five-station reviewer instructions, account-creation/deletion boundary, audience/content/UGC
+  classification, conditional Child Safety Standards gate, copy-ready media-playback text, and exact video shot list.
+  PT-35 is the corresponding coordinator acceptance case.
 - A credential-free M29 media-playback video rehearsal passed frame inspection on the API 35 Pixel Tablet: start,
   buffering/playback, Home, expanded media notification, notification-body return, pause, resume, and stop are visible.
   It remains an uncommitted debug-build rehearsal; the final hosted video must use the protected signed candidate after
   M35 and M30 close.
-- The non-secret `m23-owner-response-packet.md` now provides exact report-receipt choices, a rights/stream/distribution
-  authorization request, a station-retention table, reviewer-account confirmation, and the evidence required before
-  Private Messaging research can resume. No private response, credential, or rights evidence is committed.
+- The non-secret `m23-owner-response-packet.md` records sanitized completion of the M28 handoff and provides a
+  rights/stream/distribution request, station retention/deletion/IP table, reviewer-account confirmation, and the
+  evidence required before Private Messaging research can resume. No private response, credential, or rights evidence
+  is committed.
 - The activated Play Console was inspected read-only on July 15: it is a newly activated personal account with no existing apps. The intended public name `24Seven.FM Player` fits the 30-character limit, and Console reports `com.codeframe78.twentyfourseven.player` as available.
 - The Play Console app was created on July 15 as an English (United States), App, Free listing with the intended package. The owner explicitly accepted the Developer Program Policies, Play App Signing Terms, and US export declaration; automatic installer protection was disabled to preserve approved sideload testing.
 - Play Console App content now records the four evidence-backed objective declarations: no ads, not a government app, no financial features, and no health features. The changes are saved in Publishing overview but have not been sent for review.
@@ -133,8 +140,11 @@ Signing files and secrets must never be committed. Gradle should receive their p
 - Before upload, confirm whether version code 2 remains available and verify that the selected artifact hash matches the
   protected candidate recorded in `m23-release-candidate-audit.md`.
 - Verify Play-delivered installation on the physical Razr and a same-key Play update after a subsequent version code exists.
-- Complete the owner-input Console forms: least-privileged reviewer credentials/instructions, save the selected 18+ target audience, content rating, and final Data Safety answers.
-- Confirm administrator receipt of the single authorized M28 harmless report. Native age/Terms/mature-content gates, separate report-content/report-user/block-user actions, local block management, and duplicate-safe report handling are implemented and test-green.
+- Complete PT-35 and the owner-input Console forms: five least-privileged reviewer accounts/instructions, verify the
+  saved 18+ audience and Restrict Minor Access decision, content/UGC classification, account-deletion treatment, and
+  final Data Safety answers. If Child Safety Standards apply, require an operational process and designated contact.
+- **Complete:** the single authorized M28 harmless report was sent once from the physical Razr and owner receipt was
+  confirmed on July 18, 2026. Do not repeat it without a new coordinator assignment.
 - **Complete:** API 36 target migration and Android 16 regression pass; see `m23-api36-readiness.md`.
 - Save the media-playback foreground-service declaration with its description, interruption impact, use case, and demonstration video.
 - Privately confirm written rights for the app/station branding, artwork, streams, screenshots, and Play distribution.

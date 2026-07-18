@@ -26,7 +26,7 @@ The active program is M29–M35 Alpha readiness:
 
 | ID | Size | State | Implementation focus | Principal dependency |
 | --- | --- | --- | --- | --- |
-| M29 Play Declarations, Privacy, and Data Safety | M | Waiting externally | Exact-artifact privacy/Data Safety, content rating, reviewer access, retention/deletion, and foreground-media evidence | Owner answers and Play Console |
+| M29 Play Declarations, Privacy, and Data Safety | M | Waiting externally | PT-35 exact-artifact privacy/Data Safety; five-station reviewer access; audience/content/UGC classification; retention, deletion, processor, and IP facts; account boundary; foreground-media evidence | Station/operator facts, final candidate, and Play Console |
 | M30 Brand, Content, and Distribution Rights | S | Waiting externally | Preserve private rights evidence and record only sanitized completion facts | Written rights-holder authorization |
 | M31 Payments, External Links, and Account Lifecycle | M | Planned | Audit every shipped Custom Tab and downstream purchase/account path; remove, gate, or lawfully implement any incompatible route | Live destination behavior and Play program eligibility |
 | M32 Session, Controller, Network, and Supply-Chain Security | XL, split | Planned | Controller command policy, protected-session coherence, trusted redirects, station-ID migration, dependency/action integrity, and adversarial tests | Sol security decisions and representative server behavior |

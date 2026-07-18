@@ -9,7 +9,7 @@ The GitHub Pages surface now provides a comprehensive, responsive, interactive p
 - a product overview with an accessible screenshot lightbox and detailed feature/station boundaries;
 - an interactive native architecture explorer, source organization, engineering principles, and milestone workflow;
 - automated, emulator, physical-device, accessibility, network, performance, signing, and CI evidence with copyable commands and inspectable table rows;
-- a tester-facing product workspace with local search, status filters, device-only checklist progress, bounded smoke/member/device/resilience/adaptive sessions, and a structured public result form for passes, failures, notes, and blocked tests;
+- a tester-facing 35-case product workspace with local search, status filters, device-only checklist progress, bounded smoke/member/device/resilience/adaptive sessions, a dedicated M29 Play-policy coordinator case, and a structured public result form for passes, failures, notes, and blocked tests;
 - all 28 achieved milestones in verified chronological order, including completed M24 Sleep Timer, M25 Audio-Output Selection, M26 In-App Diagnostics, M27 local Chat mentions, and M28 UGC safety;
 - the seven remaining M29–M35 Alpha-readiness gates, deferred M47 boundary, completed M24–M28 work, M36–M38 closed-app delivery gates, and M39–M41 Alpha-delivery program;
 - a searchable, category-filtered public resource index for architecture, protocol research, station certification, Play readiness, release notes, testing, and contribution;
@@ -24,7 +24,7 @@ Repeated navigation and milestone history are generated from `privacy-site/_data
 - Internal page, asset, and fragment link contract: pass.
 - Liquid rendering and active navigation markers in both the shared header and site explorer: pass.
 - JavaScript syntax, no-JavaScript fallback, and progressive-enhancement contract: pass.
-- Workflow/data YAML parsing and 27-entry chronological milestone contract: pass.
+- Workflow/data YAML parsing and 28-entry chronological milestone contract: pass.
 - Chromium review at 1440 px and 390 px with no horizontal overflow: pass.
 - Theme selection and persistence, mobile navigation, site explorer search/keyboard controls, privacy search/table of contents, architecture exploration, command copying, tester checklist/filtering, roadmap filtering, resource filtering, inspectable tables, and screenshot lightboxes: pass.
 - All interactive checks completed with no uncaught browser exceptions or console errors: pass.
@@ -33,7 +33,7 @@ Repeated navigation and milestone history are generated from `privacy-site/_data
 - All local stylesheets, scripts, icons, and screenshots resolved with no missing assets.
 - `git diff --check`: pass.
 
-This is a static documentation change. It does not alter Android application behavior, station traffic, permissions, signing material, or the release candidate.
+The M29 synchronization changes static documentation plus explanatory text in the native privacy notice. It does not alter Android functionality, station traffic, permissions, signing material, or the release candidate.
 
 ## Visual evidence
 

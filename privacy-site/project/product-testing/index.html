@@ -17,7 +17,7 @@ section: product-testing
   </div>
   <aside class="page-summary" aria-label="Testing workspace summary">
     <span>Manual acceptance catalog</span>
-    <strong>34 test cases</strong>
+    <strong>35 test cases</strong>
     <dl>
       <div><dt>Stations</dt><dd>5</dd></div>
       <div><dt>Outcomes</dt><dd>4</dd></div>
@@ -47,10 +47,10 @@ section: product-testing
     <button type="button" data-test-filter="future" aria-pressed="false">Future</button>
   </div>
   <div class="tester-catalog-progress">
-    <span data-test-progress-text>0 of 34 checked</span>
-    <progress max="34" value="0" data-test-progress aria-label="Tester catalog progress">0 of 34</progress>
+    <span data-test-progress-text>0 of 35 checked</span>
+    <progress max="35" value="0" data-test-progress aria-label="Tester catalog progress">0 of 35</progress>
   </div>
-  <p class="catalog-visible-count" data-test-visible-count role="status" aria-live="polite">34 test cases visible</p>
+  <p class="catalog-visible-count" data-test-visible-count role="status" aria-live="polite">35 test cases visible</p>
   <button type="button" class="catalog-clear" data-test-clear-progress>Clear progress</button>
 </div>
 <p class="catalog-empty-state" data-test-empty-state hidden>No test cases match the current search and filter.</p>
@@ -210,9 +210,9 @@ section: product-testing
 
 <section class="content-section" id="device-tests">
   <div class="content-intro wide">
-    <p class="eyebrow">PT-20–PT-25 · Device, accessibility, delivery, and release integrity</p>
+    <p class="eyebrow">PT-20–PT-25 and PT-35 · Device, accessibility, policy, and release integrity</p>
     <h2>Cover human and specialist boundaries</h2>
-    <p>PT-20 and PT-21 are current physical/manual acceptance gates. PT-22–PT-25 define blocked future or specialist evidence for M31, M32, and M38; do not improvise a harness or authorization that has not been supplied.</p>
+    <p>PT-20 and PT-21 are current physical/manual acceptance gates. PT-22–PT-25 define blocked future or specialist evidence for M31, M32, and M38. PT-35 is the active M29 Play-policy reconciliation case. Do not improvise a harness, credential, Console fact, operator policy, or authorization that has not been supplied.</p>
   </div>
   <div class="test-session-grid comprehensive-test-grid">
     <article id="pt-20">
@@ -250,6 +250,12 @@ section: product-testing
       <h3>External controller and station-network trust</h3>
       <ol><li>Use the approved foreign-controller test app to connect to the exported MediaSession.</li><li>Verify system/foreign controllers receive only approved transport commands and cannot replace media, inject a stream, or set/cancel the sleep timer.</li><li>Use approved mock station responses to exercise same-origin redirects, cross-origin redirects, HTTPS downgrade, unexpected ports, excess redirects, and malformed destinations for Queue/artwork/public reads.</li><li>Confirm untrusted targets fail closed with generic UI errors and no endpoint detail.</li><li>Verify the trusted local controller and approved station redirects still preserve normal playback and data behavior.</li></ol>
       <p class="test-pass"><strong>Pass:</strong> controller authority and network redirects stay within the explicit M32 trust policy without regressing approved system controls.</p>
+    </article>
+    <article id="pt-35">
+      <span>PT-35 · M29 Play coordinator only</span>
+      <h3>Play declarations, privacy, reviewer access, and foreground media</h3>
+      <ol><li>Identify the exact signed candidate, package/version code, merged release manifest, runtime dependency graph, backup rules, and approved network policy. Confirm no permission, SDK, endpoint class, or data flow is absent from the M29 packet.</li><li>Trace credentials, sessions, Chat/request messages, library search terms, report/diagnostic handoffs, and source-IP handling. Confirm explicit user payloads use approved same-station HTTPS paths; public cleartext live audio must contain no Player-added credential, cookie, message, report, or diagnostic data.</li><li>From a clean install and non-owner network, validate one reusable least-privileged reviewer account for each station using the English Console instructions. Keep all identities and passwords only in Play Console; record only a sanitized five-station pass/block result.</li><li>Reconcile the public and native privacy notices, Data Safety form, developer identity/contact, operator retention/processors/IP use, and actual deletion boundary. Sign out must be described only as local-session removal, never station-account/content deletion.</li><li>Audit every shipped external route under PT-23. If any route enables account creation, stop and require the M31-approved in-app and web account-deletion paths before saving the declaration.</li><li>Verify the saved 18+ audience, explicit Restrict Minor Access decision, accurate IARC/UGC answers for public text Chat/request attribution and mature content, and the Music & Audio versus Social/anonymous/random-chat classification. If Child Safety Standards apply, require verified public CSAE standards, an operational CSAM response/reporting process, and a designated contact before self-certification.</li><li>Save only evidence-backed Console answers. Record one credential-free video from the exact signed candidate showing explicit Play, background playback, ongoing media notification, notification return to the existing task, Pause, Resume, and Stop; keep its private URL outside Git.</li></ol>
+      <p class="test-pass"><strong>Pass:</strong> the exact artifact, five-station reviewer access, privacy/Data Safety/account boundaries, audience/content/UGC classifications, and media-playback declaration agree with the saved Console state, with only sanitized evidence recorded. Any missing operator fact, credential, candidate video, applicable child-safety process, or Console answer is <strong>Blocked</strong>, not a pass.</p>
     </article>
   </div>
 </section>
@@ -349,7 +355,7 @@ section: product-testing
         <tr><th>Bluetooth and available wired/USB output</th><td>PT-04, PT-06</td><td>Record exact hardware category, Android chooser behavior, media buttons, and disconnect state.</td></tr>
         <tr><th>Maximum text plus physical TalkBack</th><td>PT-21</td><td>A human audible/intelligibility result is required; automated semantics alone do not close this row.</td></tr>
         <tr><th>Authorized closed-app delivery build</th><td>PT-22</td><td>Remain Blocked until M36–M38 supply an authorized source, implementation, and certification build.</td></tr>
-        <tr><th>Release-security harness</th><td>PT-23–PT-25</td><td>Run only with M31/M32 coordinator approval, controlled accounts, mock routes, and the supplied foreign-controller/expiry tools.</td></tr>
+        <tr><th>Play policy and release-security coordination</th><td>PT-23–PT-25 and PT-35</td><td>Run only with the named M29/M31/M32 coordinator, controlled accounts, current Console/operator facts, mock routes, and supplied security tools.</td></tr>
       </tbody>
     </table>
   </div>
@@ -357,6 +363,7 @@ section: product-testing
     <table class="device-table tester-coverage-table">
       <thead><tr><th>Roadmap campaign</th><th>Required catalog</th><th>Exit evidence</th></tr></thead>
       <tbody>
+        <tr><th>M29 Play declarations</th><td>PT-35 plus PT-23 account-route cross-check</td><td>Exact-artifact reconciliation, five reusable reviewer accounts, operator facts, saved Console answers, and final-candidate media video agree without exposing private evidence.</td></tr>
         <tr><th>M39 candidate freeze</th><td>All currently applicable PT cases on the exact candidate</td><td>Every required case has Pass, Pass with notes, resolved Fail, or justified Blocked evidence tied to version/code.</td></tr>
         <tr><th>M40 Play Alpha delivery</th><td>PT-01 plus PT-02/PT-03/PT-04 and risk-based changed-feature smoke</td><td>Play-generated fresh install/update, pre-launch findings, reviewer access, and split behavior reconciled.</td></tr>
         <tr><th>M41 Alpha publication</th><td>Owner-authorized post-publication smoke</td><td>Tester availability, install, playback, support route, and rollback record verified.</td></tr>
@@ -390,7 +397,7 @@ section: product-testing
     <div><p class="eyebrow">Public report</p><h2>Redact before submitting</h2></div>
     <div>
       <p>GitHub issues are public. Never include passwords, security answers or CAPTCHA images, cookies, session values, account email addresses, real dates of birth, private messages, abuse-report content, signing material, private endpoints, full network captures, or screenshots containing personal information.</p>
-      <p>Do not repeatedly submit a song request, Chat post, Forum post, Private Message, or moderation report while investigating an indeterminate response. Inspect the relevant visible destination once, record the outcome, and stop. Do not test PT-22–PT-34 as shipped capabilities until their named roadmap milestones provide an authorized build and assignment.</p>
+      <p>Do not repeatedly submit a song request, Chat post, Forum post, Private Message, or moderation report while investigating an indeterminate response. Inspect the relevant visible destination once, record the outcome, and stop. Do not test PT-22–PT-34 as shipped capabilities until their named roadmap milestones provide an authorized build and assignment. PT-35 may be run only by the M29 Play coordinator with current candidate, Console, and operator evidence.</p>
       <ul class="inline-requirements"><li>Case ID included</li><li>Public metadata only</li><li>One environment per result</li><li>Redacted screenshots</li><li>No account secrets</li><li>No raw traffic captures</li></ul>
     </div>
   </div>

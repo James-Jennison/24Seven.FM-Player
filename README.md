@@ -70,7 +70,7 @@ The roadmap was renumbered into one dependency-ordered sequence on July 18, 2026
 - **Publication:** M39–M41 deliberately separate candidate freeze, Play delivery, and the final user-authorized Alpha action.
 - **Production:** M42–M45 add stabilization, production-access evidence, staged release, and operational recertification.
 - **Deferred/future:** Private Messages remain excluded until M47 repairs and verifies server delivery. Native Forum access is split across M51–M54. Google Cast remains a feasibility gate at M55.
-- **Testing:** the [Product Testing catalog](https://codeframe78.github.io/24Seven.FM-Player/project/product-testing/) now contains 34 stable test cases covering the current product, Alpha gates, release campaigns, and capability-gated future slices.
+- **Testing:** the [Product Testing catalog](https://codeframe78.github.io/24Seven.FM-Player/project/product-testing/) now contains 35 stable test cases covering the current product, Alpha gates, release campaigns, and capability-gated future slices. PT-35 is the exact-artifact M29 Play declaration/privacy/reviewer-access case.
 
 Use these sources as the current planning authority:
 

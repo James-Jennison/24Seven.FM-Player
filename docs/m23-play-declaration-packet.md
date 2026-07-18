@@ -1,12 +1,44 @@
 # M29 Google Play declaration packet
 
-Date: July 15, 2026
+Date: July 18, 2026
 
-Status: non-secret local preparation complete; owner-controlled Console inputs remain
+Status: exact-artifact and current-policy audit complete; owner, station, final-candidate, and Play Console gates remain
 
-This packet contains copy-ready evidence for the current artifact. Reconcile every answer with the exact active Play
-Console wording and signed AAB immediately before submission. Never commit reviewer credentials, Console screenshots
-containing private data, or an unlisted video URL that exposes account information.
+This packet is the non-secret working record for M29. Reconcile every answer with the exact signed AAB and active Play
+Console wording immediately before saving or submitting it. Never commit reviewer credentials, Console captures containing
+private data, private correspondence, or an unlisted reviewer-video URL that exposes account information.
+
+## Exact artifact audit — July 18, 2026
+
+The audit used the current `main` source and release variant. `:app:processReleaseMainManifest` and the
+`releaseRuntimeClasspath` dependency report both passed.
+
+| Surface | Audited fact | Declaration consequence |
+| --- | --- | --- |
+| Identity | Package `com.codeframe78.twentyfourseven.player`; version `0.1.0-alpha01` (2); min SDK 26; target/compile SDK 36 | Re-run against the exact M39 candidate because later source or version changes supersede this checkpoint |
+| Permissions | Internet, network state, media foreground service, media-playback foreground-service permission, notifications, Media3 wake lock, and Android's signature-protected dynamic-receiver permission | No location, contacts, microphone, camera, photos, phone, SMS, advertising ID, or broad-storage declaration is supported by the artifact |
+| Foreground service | One Media3 `MediaSessionService`, declared `mediaPlayback`, owns user-started live radio | Declare only the Media playback use case and supply its final-candidate demonstration video |
+| Dependencies | AndroidX, Compose, Media3, Jsoup, Coil, OkHttp, Kotlin/coroutines, and test libraries | No ads, analytics, crash-reporting, tracking, billing, social-login, or developer-backend SDK is present |
+| Storage | Station sessions/display identities use Android Keystore protection; preferences are local; app-private data is excluded from Android backup and device transfer | Describe local retention accurately and do not imply that Sign out deletes station-side accounts or content |
+| Network | Credentials, sessions, Chat, search, Favorites, request, Queue, History, artwork, and other app data use approved same-station HTTPS paths with same-origin enforcement | Final probes must confirm that every user-data path and redirect remains HTTPS before answering that all collected data is encrypted in transit |
+| Live audio | Only the five verified public live-radio hosts are permitted cleartext; those requests carry no Player-added credentials, cookies, Chat/request text, or report content | Do not describe all network traffic as HTTPS; distinguish unauthenticated public live audio from user-data transmission |
+| External handoffs | Contact/report opens a fixed-recipient email draft; diagnostics Copy/Share uses Android clipboard/chooser; approved station pages use same-station Custom Tabs | Reconcile on-device transfer to another app and the specific user-initiated sharing exception in the active Data Safety form |
+| Accounts | The app signs into independently existing station accounts and has no native account-creation or station-side deletion operation | M31 must verify that no shipped external route enables account creation before the account-deletion declaration is finalized |
+
+## Console decision ledger
+
+| Console area | Current evidence-backed posture | Remaining gate |
+| --- | --- | --- |
+| Ads, government, financial, health | Saved as No/None; artifact audit agrees | Recheck only if the candidate or Console wording changes |
+| App access | Public playback, Queue, and History work signed out; protected features require one station-specific session at a time | Supply and validate five reusable, least-privileged reviewer accounts only in Play Console |
+| Target audience | Owner selected 18+; the app uses a neutral age screen and is not designed for children | Verify the saved selection and decide whether to enable Restrict Minor Access |
+| Content rating | Music & Audio app with public text Chat, requester identity/message, possible mature themes/profanity, and no user image/video upload | Owner must answer actual content frequency/intensity and submit the generated IARC ratings |
+| UGC | M28 provides Terms acceptance, objectionable-content rules, content/user reporting, blocking, ongoing monitored moderation, and a separate mature-content reveal | Reconcile the exact UGC and incidental-content answers with the candidate and active questionnaire |
+| Child Safety Standards | Current category is Music & Audio; the app does not declare itself Social and its authenticated station Chat is neither anonymous nor random | If Play classification or functionality puts the app in scope, do not self-certify until public CSAE standards, an operational CSAM response/reporting process, and a designated point of contact are verified |
+| Data Safety | Field inventory is complete in `m23-data-safety.md`; there is no developer backend or telemetry SDK | Station retention/deletion/IP-use facts, final TLS probes, and owner review remain |
+| Account deletion | No account creation in the native app; Sign out removes only the local protected session | M31 must audit every external route; if any route enables account creation, provide the required in-app and web deletion paths before release |
+| Privacy policy | Public HTTPS policy and native notice exist and disclose the station/operator boundary | Align the exact Play developer identity/contact and station retention/deletion path; keep native and public wording consistent |
+| Foreground service | Manifest, service ownership, copy, and rehearsal sequence are ready | Record and host the final protected-candidate video, then save the declaration in Console |
 
 ## Foreground service permission
 
@@ -50,8 +82,8 @@ Record one continuous, unedited demonstration with no credentials or public Chat
 7. Return to the app, resume once, then use **Stop** to end the session.
 
 Host the final video at a stable reviewer-accessible URL that requires no account or permission request. Add that URL
-only in Play Console or the private release record. The foreground-service declaration video is separate from an
-optional public store-listing preview video.
+only in Play Console or the private release record. The declaration video is separate from an optional public
+store-listing preview video.
 
 **Local rehearsal evidence — July 15, 2026**
 
@@ -60,8 +92,8 @@ A credential-free rehearsal was captured on the API 35 Pixel Tablet emulator and
 notification, a notification-body tap returning to the same Player task, pause, resume, and stop/not-connected state.
 No credentials or Chat content appear. The recording remains a transient local draft and is not committed or hosted.
 It is not the final reviewer video because its notification identifies the debug build and its live station artwork
-can change. Repeat the same sequence using the protected signed candidate after M35 and M30 are resolved, inspect
-the final frames, and then host only that final copy at the reviewer-accessible URL.
+can change. Repeat the same sequence using the protected M39 candidate after M30–M35 close, inspect the final frames,
+and host only that final copy.
 
 ## App access and reviewer instructions
 
@@ -72,9 +104,9 @@ English. Provide credentials only through Play Console's protected App access fo
 
 - Create or designate a least-privileged, non-administrator reviewer account for each of StreamingSoundtracks.com,
   1980s.FM, Adagio.FM, Death.FM, and Entranced.FM.
-- Prefer the same reviewer username/password across the five station accounts if the network permits it, but confirm
+- Prefer the same reviewer username/password across the five station accounts if the network permits it, but validate
   each account independently.
-- Do not require an expiring password, email OTP, IP allowlist, or moderator role.
+- Do not require an expiring password, email OTP, IP allowlist, location restriction, or moderator role.
 - Keep the accounts active throughout review and future updates.
 - Preconfigure a small harmless Favorites list where possible so the reviewer sees a non-empty authenticated surface.
 - The station CAPTCHA is not a secret or second factor: reviewers read the current three-character image in the app
@@ -87,42 +119,74 @@ English. Provide credentials only through Play Console's protected App access fo
 **Owner-only fields still required**
 
 - reviewer usernames/passwords for all five stations;
-- confirmation that every supplied account can sign in from a clean install and non-owner network;
+- confirmation that every account signs in from a clean install and non-owner network;
 - a private maintenance owner for password/account expiry; and
-- any Console-specific field limits that require shortening the instructions.
+- any Console field limit that requires shortening the instructions without removing access steps.
 
-## Target audience and content rating evidence
+## Target audience, content rating, and UGC evidence
 
-The owner selected an 18+ target audience. Do not infer the content-rating questionnaire answers solely from that
-selection. Answer the active questionnaire accurately from these artifact facts:
+The owner selected an 18+ target audience. Do not infer the content-rating answers solely from that selection. Answer
+the active questionnaire accurately from these artifact facts:
 
 - The app is a Music & Audio radio client, not a game and not designed for children.
-- Users can exchange public text through station Chat and can publish a requester identity and optional request message.
-- Community content can contain mature themes or explicit language and is hidden by default behind an adult age screen,
-  Terms acceptance, and a separate reveal action.
-- The app supplies in-app report-content, report-user, block-user, and block-management functionality backed by the
-  authorized station moderation route.
-- The app opens only fixed, allowlisted same-station HTTPS pages in the user's browser; it is not a general web browser.
-- The app has no ads, purchases, gambling, simulated gambling, location features, violence mechanics, or user image/video uploads.
+- Users can exchange public text through station Chat and publish a requester identity and optional request message.
+- Community content can contain mature themes or explicit language and is hidden by default behind a neutral adult age
+  screen, Terms acceptance, and a separate reveal action.
+- The app supplies report-content, report-user, block-user, and local block-management functionality backed by a
+  monitored moderation handoff.
+- The app opens only fixed, allowlisted same-station HTTPS pages in the user's browser; it is not a general browser.
+- The app has no ads, purchases, gambling, simulated gambling, location features, violence mechanics, or user
+  image/video uploads.
 
-The owner must answer any questionnaire questions about the real frequency/intensity of sexual themes, profanity,
-drug references, violence, or other mature station/community content. Do not minimize those answers to obtain a lower
-rating. Save the generated multi-authority rating result with the private release record.
+The owner must answer questions about the real frequency/intensity of sexual themes, profanity, drug references,
+violence, or other mature station/community content. Do not minimize those answers to obtain a lower rating. Retain
+the generated multi-authority rating result privately.
 
-## Data Safety and retention
+Google currently defines a Social app for Child Safety Standards as an app that declares itself Social in Play
+Console. The saved category is Music & Audio, and this app is not an anonymous or random chat service. Treat Child
+Safety Standards as a classification gate: re-evaluate it against the active Console and current functionality. If it
+becomes applicable, an 18+ target and age gate do not exempt the app.
+
+## Data Safety, privacy, and deletion
 
 Use `m23-data-safety.md` for the field-by-field worksheet and `../PRIVACY.md` for the canonical public disclosure.
-The remaining owner/station answer is whether and for how long station systems retain login submissions, search terms,
-Chat/request submissions, request actions, and abuse reports received through the monitored email destination. Do not claim end-to-end ephemeral processing without that
-answer. A copy-ready retention table, reviewer-account confirmation, rights grant, report-receipt response, and PM-repair
-confirmation are consolidated in `m23-owner-response-packet.md`.
+The remaining station/operator answers are:
+
+- whether and for how long login submissions, sessions/access logs, IP/security logs, search terms, Chat/request
+  submissions, request actions, and abuse reports are retained;
+- whether IP addresses or other network identifiers are used to infer location or for another declared purpose;
+- which processors or other parties receive those data;
+- which contact or mechanism handles station-side access, correction, or deletion; and
+- the exact developer identity/contact shown on the Play listing.
+
+Do not claim end-to-end ephemeral processing, broad station-side deletion, or a Data Safety deletion badge without
+those facts. The app does not create station accounts. **Sign out** removes the protected local session; it does not
+delete the pre-existing station account, public posts, request history, server logs, or sent email.
+
+## M29 completion gate
+
+M29 remains **Waiting externally** until all of the following are true:
+
+1. PT-35 is run against the exact signed candidate and its release manifest/dependencies/data flows match this packet.
+2. Five reusable reviewer accounts and English access instructions pass a clean-install/non-owner-network check.
+3. Station retention, deletion/contact, processor, and IP-use facts are received and reflected in the privacy policy
+   and Data Safety form.
+4. Ads, app access, target audience, Restrict Minor Access decision, content rating, UGC, account deletion, privacy,
+   and Data Safety answers are saved and reviewed in the active Console.
+5. Any applicable Child Safety Standards self-certification has an actual operational process and designated contact;
+   otherwise the documented out-of-scope classification is verified.
+6. The final signed-candidate foreground-media video is hosted privately and its declaration is saved.
+7. Only sanitized evidence is committed; credentials, correspondence, private Console captures, and unlisted URLs
+   remain outside the repository.
 
 ## Official references
 
 - [Foreground service declaration requirements](https://support.google.com/googleplay/android-developer/answer/13392821)
 - [Permissions for Foreground Services policy](https://support.google.com/googleplay/android-developer/answer/16559646)
 - [Requirements for providing sign-in details](https://support.google.com/googleplay/android-developer/answer/15748846)
+- [Target audience and app content](https://support.google.com/googleplay/android-developer/answer/9867159)
 - [Content rating requirements](https://support.google.com/googleplay/android-developer/answer/9859655)
 - [Data Safety requirements](https://support.google.com/googleplay/android-developer/answer/10787469)
-- [Store listing best practices](https://support.google.com/googleplay/android-developer/answer/13393723)
-- [Metadata policy](https://support.google.com/googleplay/android-developer/answer/9898842)
+- [User Data and UGC policies](https://support.google.com/googleplay/android-developer/answer/17190352)
+- [Account deletion requirements](https://support.google.com/googleplay/android-developer/answer/13327111)
+- [Child Safety Standards guidance](https://support.google.com/googleplay/android-developer/answer/14747720)

@@ -67,7 +67,7 @@ allow, but no partial checkpoint should be described as release-ready.
 | ID | Milestone | State | Required gate |
 | --- | --- | --- | --- |
 | M28 | UGC Safety and Ongoing Moderation | Complete | Existing safeguards plus fixed-recipient Contact/report email handoff, physical composer validation, and one owner-confirmed one-shot receipt check |
-| M29 | Play Declarations, Privacy, and Data Safety | Waiting externally | Exact-artifact declarations, reviewer access, content rating, retention/deletion answers, final media-playback video, and privacy consistency |
+| M29 | Play Declarations, Privacy, and Data Safety | Waiting externally | PT-35 exact-artifact reconciliation, five-station reviewer access, audience/content/UGC classification, retention/deletion/processor/IP facts, account-boundary audit, final media-playback video, and saved Console/privacy consistency |
 | M30 | Brand, Content, and Distribution Rights | Waiting externally | Written authorization for app/station naming, logos, artwork/metadata, streams, screenshots, and Play testing/distribution |
 | M31 | Payments, External Links, and Account Lifecycle Compliance | Planned | Audit every Custom Tab destination; remove or lawfully implement transaction/account-creation routes; reconcile deletion and Play declarations |
 | M32 | Session, Controller, Network, and Supply-Chain Security | Planned | MediaSession controller policy, coherent cookie rotation/expiry, trusted redirects, canonical station-ID migration, dependency/action integrity, and adversarial tests |

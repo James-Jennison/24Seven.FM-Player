@@ -1,6 +1,6 @@
 # Google Play Alpha setup checklist
 
-The Google Play developer account was approved on July 14, 2026. Use this during M28–M35 and M39–M41; do not place Console credentials, reviewer credentials, upload keys, passwords, or tester email lists in Git.
+The Google Play developer account was approved on July 14, 2026. Use this during M29–M35 and M39–M41; do not place Console credentials, reviewer credentials, upload keys, passwords, private Console captures, unlisted reviewer-video URLs, or tester email lists in Git.
 
 ## Local preparation already complete
 
@@ -14,7 +14,10 @@ The Google Play developer account was approved on July 14, 2026. Use this during
   registered to the verified developer account. Sanitized evidence is retained in the M35 audit; per-app status must
   still be confirmed in Play Console Home.
 - Current Play target-level check (July 15, 2026): target API 35 remains accepted until August 31, 2026, when new mobile apps and updates must target API 36. M22 migrated early so the closed-test and update path do not depend on that deadline.
-- Privacy notice, Alpha testing guide, release notes, permission review, and device validation are complete.
+- The July 18 M29 release-variant audit reconciles the manifest, dependency graph, network/data paths, external
+  handoffs, and account boundary in `docs/m23-play-declaration-packet.md`. Repeat it against the exact M39 candidate.
+- Privacy notice, Alpha testing guide, release notes, permission review, and current device validation evidence exist;
+  owner/station retention and deletion facts still need reconciliation before M29 closes.
 - Gradle accepts Play upload signing only from four `TWENTYFOURSEVEN_UPLOAD_*` environment variables. Supplying a partial set fails configuration.
 - `scripts/validate-play-bundle.ps1` builds the release AAB, requires a real signature, and prints its SHA-256 without revealing signing inputs.
 - `scripts/initialize-play-upload-key.ps1` creates the separate upload key outside Git and stores its credentials in a Windows-current-user DPAPI envelope. It refuses to overwrite either artifact.
@@ -68,7 +71,10 @@ The following objective declarations and listing settings are saved in Play Cons
 - **Privacy policy:** `https://codeframe78.github.io/24Seven.FM-Player/`; the HTTPS page is public and returns the canonical `PRIVACY.md` content.
 - **Store contact/category:** public support email `24sevenplayer@jamesjennison.net`; category **Music & Audio**.
 
-These saved declarations have not been sent for review. The remaining App content forms require owner-provided or policy-sensitive inputs and must not be guessed: reviewer credentials/instructions for restricted station features, a policy-compatible target audience, content-rating answers, and final Data Safety confirmation.
+These saved declarations have not been sent for review. The remaining App content forms require owner-provided or
+policy-sensitive inputs and must not be guessed: reviewer credentials/instructions, final target-audience and Restrict
+Minor Access settings, content-rating/UGC answers, account-deletion treatment, Data Safety confirmation, and the
+media-playback foreground-service declaration/video.
 
 The copy-ready, non-secret portion of those declarations is maintained in `docs/m23-play-declaration-packet.md`.
 
@@ -76,10 +82,11 @@ The copy-ready, non-secret portion of those declarations is maintained in `docs/
 
 - **App access:** Public playback, Queue, and History do not require login. Authentication, Chat posting, Favorites, and requests do. Console requires reusable sign-in details that give reviewers full access and will not unlock Target audience until this declaration is complete. Because accounts are station-specific, provide least-privileged non-administrator reviewer details for every station needed to exercise the restricted features, only through Play Console's protected reviewer form. Do not place them in Git or chat.
 - **Ads:** Completed as **No** on July 15, 2026; the app contains no advertising SDK or advertising behavior.
-- **Data safety:** Internal-only testing is currently exempt, but closed/open/production releases require an accurate declaration. Use `docs/m23-data-safety.md` as the project worksheet rather than answering from memory. Account credentials are submitted directly to the selected station. Explicit abuse reports are prepared as transient fixed-recipient drafts and handed to the user's email app for review and sending. Station sessions are encrypted locally, report drafts are not persisted by the Player, and the app has no analytics or developer backend.
-- **Privacy policy:** Completed on July 15, 2026. The active public HTTPS page is `https://codeframe78.github.io/24Seven.FM-Player/`; the same canonical policy remains available as native text under More in the app.
-- **Account deletion:** The app does not create station accounts; it only signs into pre-existing station accounts and can remove the local session with Sign out. Confirm the appropriate Console declaration when completing App content.
-- **Target audience/content rating:** The owner selected **18+** on July 15, 2026. The service community is predominantly long-standing adult members, and the app is not designed or presented as a children's product. M28 now hides community content by default behind an adult age screen, versioned Terms acceptance, and a separate reveal action; accurate content-rating answers are still required. Console entry remains blocked until reusable reviewer-access details are saved.
+- **Data safety:** Internal-only testing is currently exempt, but closed/open/production releases require an accurate declaration. Use `docs/m23-data-safety.md` rather than memory. Explicit user-data paths are same-station HTTPS; only public live audio is allowlisted cleartext and carries no Player-added user payload. The station/CDN still receives network information such as source IP. Contact/report and diagnostic exports transfer data to another app only after an explicit user action; reconcile the specific user-initiated sharing exception instead of assuming it. The Player has no analytics or developer backend. Station retention, processors, deletion paths, and IP use remain owner/operator facts.
+- **Privacy policy:** The active public HTTPS page is `https://codeframe78.github.io/24Seven.FM-Player/`; a consistent native notice is under More. Before saving M29, align the exact Play developer identity/contact and station-side retention/deletion path in both surfaces.
+- **Account deletion:** The app does not create station accounts and Sign out removes only the local protected session. M31 must audit every shipped external page: if the app directs users to an account-creation path, Play also requires an in-app and web account-deletion path. Do not claim station-account/post/log deletion until a verified mechanism exists.
+- **Target audience/content rating:** The owner selected **18+** on July 15, 2026. Verify that saved selection and make an explicit Restrict Minor Access decision. Community content is hidden by default behind a neutral adult age screen, versioned Terms acceptance, and a separate reveal action. Accurately declare public text Chat, requester identity/messages, and the observed frequency/intensity of profanity or mature themes; retain the generated IARC result privately.
+- **UGC and Child Safety:** M28 supplies Terms, objectionable-content rules, report content/user, block/unblock, monitored moderation, and a mature-content reveal. The current category is **Music & Audio**, not Social, and station Chat is neither anonymous nor random. Re-evaluate the classification in the active Console. If Child Safety Standards apply, do not self-certify without public CSAE standards, an operational CSAM response/reporting process, and a designated child-safety contact; an 18+ target does not provide an exemption.
 - **Foreground service:** Declare only **Media playback** for `FOREGROUND_SERVICE_MEDIA_PLAYBACK`. Use the copy and demonstration sequence in `docs/m23-play-declaration-packet.md`; upload or link the final reviewer-accessible video through Console without committing account data.
 
 ## Release progression
@@ -97,3 +104,6 @@ Official references:
 - [Play App Signing](https://support.google.com/googleplay/android-developer/answer/9842756)
 - [Manage target audience and app content](https://support.google.com/googleplay/android-developer/answer/9867159)
 - [Google Play Families policies](https://support.google.com/googleplay/android-developer/answer/9893335)
+- [Account deletion requirements](https://support.google.com/googleplay/android-developer/answer/13327111)
+- [User Data and UGC policies](https://support.google.com/googleplay/android-developer/answer/17190352)
+- [Child Safety Standards guidance](https://support.google.com/googleplay/android-developer/answer/14747720)

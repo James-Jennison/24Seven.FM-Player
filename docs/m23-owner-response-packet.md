@@ -2,7 +2,7 @@
 
 Prepared July 18, 2026
 
-Status: monitored moderation destination confirmed; physical Player email-handoff receipt check required
+Status: M28 moderation destination and receipt confirmed; M29, M30, and M47 owner facts remain
 
 This packet consolidates the factual confirmations still needed from an authorized 24seven.FM representative. Send it
 privately. Retain the original response and its sender/date privately; commit only a sanitized completion note. Do not
@@ -12,26 +12,18 @@ Git, Discord, or a public issue.
 The moderation authorization already supplied for M28 authorizes app-originated abuse reports. It does not, by
 itself, establish permission to use third-party names, logos, artwork, streams, screenshots, or to distribute the app.
 
-## 1. Complete the selected Player email handoff
+## 1. Completed M28 Player email handoff
 
-On July 18, 2026, the project owner confirmed that a dedicated destination is monitored for 24Seven.FM Player moderation reports and received a separately sent sanitized harmless report. Original correspondence is retained privately. The repository intentionally omits the address, message headers, sender identity, and report body.
+On July 18, 2026, the project owner confirmed that a dedicated destination is monitored for 24Seven.FM Player
+moderation reports. The installed physical-Razr build then prepared one newly authorized, clearly labeled harmless
+report for that fixed destination. The user reviewed and sent it exactly once from the email app, and the owner
+confirmed receipt. Original correspondence is retained privately. The repository intentionally omits the address,
+message headers, sender identity, and report body.
 
-The owner subsequently directed the Player's Contact Us and moderation-report actions to use that monitored email destination. This keeps administrator behavior outside the Player while giving users an explicit, reviewable native handoff.
-
-After an authorized build is installed on the physical test device:
-
-1. Open Contact Us for one assigned station. Verify the fixed recipient and station-specific subject, then cancel without sending.
-2. From an approved synthetic Chat/request target, prepare one newly authorized harmless report.
-3. Verify the recipient, station-specific subject, bounded body, and no unexpected private data in the email app.
-4. Send it exactly once and confirm one factual outcome:
-
-> I received the clearly labeled M28 harmless report sent through the Player email handoff on [date].
-
-or:
-
-> I did not receive the clearly labeled M28 harmless report sent through the Player email handoff on [date].
-
-The Player must never claim delivery based only on opening the composer. Do not add administrator access, SMTP credentials, silent email delivery, or email-account access to the Player.
+The owner directed both Contact Us and moderation-report actions to that monitored destination. The Player continues to
+describe composer opening only as a handoff; it never claims delivery, reads the user's email account, embeds SMTP
+credentials, or adds administrator access. Do not repeat the physical delivery subcase without a new coordinator
+assignment.
 
 ## 2. Brand, content, stream, screenshot, and distribution permission
 
@@ -100,9 +92,10 @@ implemented from a success page alone; both sender and recipient delivery must b
 - Keep reviewer credentials only in Play Console and the owner's password manager.
 - Record only a sanitized repository note such as: “Written authorization covering the documented M30 scope was
   received from an authorized network representative on [date]; original evidence retained privately.”
-- M28 completes only after the fixed-recipient implementation passes automated/device checks and one fresh authorized Player email handoff is reconciled with actual receipt.
-- M29 completes only after reviewer access, retention facts, the foreground-service video, and the active Console
-  questionnaires are saved and reviewed.
+- M28 is complete: the fixed-recipient implementation passed automated/device checks and one authorized Player email
+  handoff was reconciled with owner-confirmed receipt on July 18, 2026.
+- M29 completes only after reviewer access; retention, deletion, processor, and IP-use facts; exact privacy/Data Safety
+  reconciliation; the final foreground-service video; and all active Console questionnaires are saved and reviewed.
 - M30 completes only after the full rights statement or an equivalent written grant is received and any exclusions are
   reflected in the artifact/listing.
 - M47 restarts only after verified PM delivery and limits are supplied.

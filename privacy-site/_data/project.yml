@@ -293,9 +293,9 @@ roadmap:
     state: "waiting"
     state_label: "Waiting externally"
     blocking: true
-    dependencies: "Owner answers and Play Console"
+    dependencies: "Station/operator facts, final candidate, and Play Console"
     evidence: "docs/m23-play-declaration-packet.md"
-    summary: "Local packet exists; exact-artifact reviewer access declarations retention and final video remain."
+    summary: "Artifact/policy audit is current; five-station access, operator data facts, saved declarations, and final media video remain."
 
   - id: "M30"
     legacy_id: "M23.5"
