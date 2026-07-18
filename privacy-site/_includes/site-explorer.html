@@ -1,0 +1,39 @@
+<button class="site-explorer-toggle" type="button" aria-haspopup="dialog" aria-controls="site-explorer">
+  <span class="explorer-mark" aria-hidden="true">⌕</span>
+  <span>Explore</span>
+  <kbd>/</kbd>
+</button>
+<dialog class="site-explorer" id="site-explorer" aria-labelledby="site-explorer-title">
+  <div class="site-explorer-header">
+    <div>
+      <p class="eyebrow">Project navigator</p>
+      <h2 id="site-explorer-title">Where would you like to go?</h2>
+    </div>
+    <button class="site-explorer-close" type="button" aria-label="Close project navigator">×</button>
+  </div>
+  <label class="explorer-search" for="site-explorer-search">
+    <span>Search pages and this page</span>
+    <input id="site-explorer-search" type="search" placeholder="Try testing, privacy, architecture…" autocomplete="off" data-explorer-query>
+  </label>
+  <div class="site-explorer-grid">
+    <section aria-labelledby="explorer-pages-title">
+      <h3 id="explorer-pages-title">Website</h3>
+      <nav class="explorer-results" aria-label="Website pages" data-explorer-results>
+        {% for item in site.data.project.navigation %}
+        <a{% if page.section == item.section or page.layout == 'default' and item.section == 'privacy' %} aria-current="page"{% endif %} href="{{ item.path | relative_url }}" data-explorer-item>
+          <strong>{{ item.label }}</strong>
+          <span>{{ item.description }}</span>
+        </a>
+        {% endfor %}
+      </nav>
+    </section>
+    <section aria-labelledby="explorer-sections-title">
+      <h3 id="explorer-sections-title">On this page</h3>
+      <nav class="explorer-sections" aria-label="Sections on this page" data-explorer-sections>
+        <p>Section links appear here when the page opens.</p>
+      </nav>
+    </section>
+  </div>
+  <p class="explorer-empty" data-explorer-empty hidden>No page or section matches that search.</p>
+  <p class="explorer-hint"><kbd>↑</kbd><kbd>↓</kbd> move <kbd>Enter</kbd> open <kbd>Esc</kbd> close</p>
+</dialog>

@@ -13,7 +13,6 @@
     <title>{{ page.title | default: site.title | escape }}</title>
     <link rel="icon" type="image/png" href="{{ '/assets/project/app-icon.png' | relative_url }}">
     <script>
-      document.documentElement.classList.add('js');
       try {
         var savedTheme = localStorage.getItem('project-theme');
         var preferredTheme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
@@ -24,8 +23,9 @@
     </script>
     <link rel="stylesheet" href="{{ '/assets/project.css' | relative_url }}">
   </head>
-  <body>
+  <body class="project-page" data-page-section="{{ page.section }}">
     <a class="skip-link" href="#main-content">Skip to content</a>
+    <div class="ambient-stage" aria-hidden="true"><span></span><span></span></div>
     <div class="scroll-progress" aria-hidden="true"><span></span></div>
     <header class="project-header" data-site-header>
       <a class="project-brand" href="{{ '/project/' | relative_url }}" aria-label="24Seven.FM Player home">
@@ -73,6 +73,7 @@
       <img src="" alt="">
       <p id="media-dialog-title"></p>
     </dialog>
+    {% include site-explorer.html %}
     <script src="{{ '/assets/project.js' | relative_url }}" defer></script>
   </body>
 </html>

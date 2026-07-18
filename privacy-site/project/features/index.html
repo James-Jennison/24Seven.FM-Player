@@ -62,7 +62,9 @@ section: features
       </ul>
     </div>
     <figure class="feature-shot">
-      <img src="{{ '/assets/project/screenshots/stations.png' | relative_url }}" alt="Station selection screen showing the five supported stations" loading="lazy">
+      <a class="gallery-open" href="{{ '/assets/project/screenshots/stations.png' | relative_url }}" data-lightbox="{{ '/assets/project/screenshots/stations.png' | relative_url }}" data-lightbox-alt="Station selection screen showing the five supported stations" data-lightbox-caption="Five-station navigation · One adaptive native shell, station-scoped state" aria-label="Open larger five-station navigation screenshot">
+        <img src="{{ '/assets/project/screenshots/stations.png' | relative_url }}" alt="Station selection screen showing the five supported stations" loading="lazy">
+      </a>
       <figcaption><strong>Five-station navigation</strong><span>One adaptive native shell, station-scoped state</span></figcaption>
     </figure>
   </div>
@@ -96,7 +98,9 @@ section: features
   </div>
   <div class="experience-layout reverse">
     <figure class="feature-shot">
-      <img src="{{ '/assets/project/screenshots/more.png' | relative_url }}" alt="More screen with account, community, privacy, and station resources" loading="lazy">
+      <a class="gallery-open" href="{{ '/assets/project/screenshots/more.png' | relative_url }}" data-lightbox="{{ '/assets/project/screenshots/more.png' | relative_url }}" data-lightbox-alt="More screen with account, community, privacy, and station resources" data-lightbox-caption="Capability-aware More · Account, safety, privacy, and verified station resources" aria-label="Open larger capability-aware More screenshot">
+        <img src="{{ '/assets/project/screenshots/more.png' | relative_url }}" alt="More screen with account, community, privacy, and station resources" loading="lazy">
+      </a>
       <figcaption><strong>Capability-aware More</strong><span>Account, safety, privacy, and verified station resources</span></figcaption>
     </figure>
     <div class="experience-copy">
@@ -118,12 +122,12 @@ section: features
     <h2>Shared architecture, verified differences</h2>
     <p>Every station uses the same domain contracts and UI. Capability flags expose only behavior supported by evidence from that station.</p>
   </div>
-  <div class="table-wrap" tabindex="0" role="region" aria-label="Station capability matrix">
+  <div class="table-wrap" tabindex="0" role="region" aria-label="Station capability matrix" data-interactive-table>
     <table class="capability-table">
       <thead><tr><th>Station</th><th>Shared certified surface</th><th>Notable verified boundary</th></tr></thead>
       <tbody>
         <tr><th>StreamingSoundtracks.com</th><td>Playback, metadata, Queue/History, account, Chat, Favorites, requests, pages</td><td>Request messages, last-ten request activity, VIP evidence</td></tr>
-        <tr><th>1980s.FM</th><td>Playback, metadata, Queue/History, account, Chat, Favorites, requests, pages</td><td>Independent session and verified Games/Awards pages</td></tr>
+        <tr><th>1980s.FM</th><td>Playback, metadata, Queue/History, account, Chat, Favorites, requests, pages</td><td>Independent session and verified Contact/Membership pages</td></tr>
         <tr><th>Adagio.FM</th><td>Playback, classical metadata, Queue/History, account, Chat, Favorites, requests, pages</td><td>Classical field presentation without guessed values</td></tr>
         <tr><th>Death.FM</th><td>Playback, sparse metadata, compact Queue/History, account, Chat, Favorites, requests, pages</td><td>RIP membership route instead of VIP wording</td></tr>
         <tr><th>Entranced.FM</th><td>Playback, metadata, extended Queue/History, account, Chat, Favorites, requests, pages</td><td>Narrowly scoped legacy ICY punctuation normalization</td></tr>

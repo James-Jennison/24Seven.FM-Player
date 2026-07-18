@@ -2,24 +2,35 @@ navigation:
   - section: overview
     label: Overview
     path: /project/
+    description: Product overview, current program, screenshots, and project entry points.
   - section: features
     label: Features
     path: /project/features/
+    description: Playback, discovery, accounts, community, stations, and boundaries.
   - section: development
     label: Development
     path: /project/development/
+    description: Native architecture, engineering principles, workflow, and source map.
   - section: testing
     label: Testing
     path: /project/testing/
+    description: Automated, emulator, physical-device, accessibility, and release evidence.
   - section: product-testing
     label: Test the Player
     path: /project/product-testing/
+    description: Searchable acceptance catalog with a private browser-local progress checklist.
   - section: roadmap
     label: Roadmap
     path: /project/roadmap/
+    description: Achieved milestones, active release gates, evidence, and future work.
   - section: resources
     label: Resources
     path: /project/resources/
+    description: Searchable architecture, research, testing, release, and contributor library.
+  - section: privacy
+    label: Privacy
+    path: /
+    description: Canonical app privacy notice with searchable sections and plain-language boundaries.
 
 milestones:
   - order: 1

@@ -13,10 +13,10 @@ section: testing
   </div>
   <aside class="page-summary" aria-label="Current test summary">
     <span>Current green baseline</span>
-    <strong>172 checks</strong>
+    <strong>194 checks</strong>
     <dl>
       <div><dt>Unit</dt><dd>146</dd></div>
-      <div><dt>Connected</dt><dd>40</dd></div>
+      <div><dt>Connected</dt><dd>48</dd></div>
       <div><dt>Stations</dt><dd>5/5</dd></div>
     </dl>
   </aside>
@@ -37,9 +37,9 @@ section: testing
     <h2>Start narrow, broaden with risk</h2>
     <p>Routine development preserves Gradle caches and starts with the smallest affected task. Broader checks are added only after targeted behavior passes or when integration risk requires them.</p>
   </div>
-  <div class="validation-layers">
+  <div class="validation-layers" data-command-library>
     <article><span>Fast</span><h3>Local unit tests</h3><p>146 tests cover models, parsers, policies, repository behavior, ViewModel state, timer restoration/formatting, audio-route classification, diagnostic allowlisting/redaction, Chat-mention matching/deduplication, availability indexing, report classification, and release helpers.</p><code>./gradlew :app:testDebugUnitTest</code></article>
-    <article><span>Integration</span><h3>Connected Compose tests</h3><p>The current 40-test Tablet suite exercises UI semantics, navigation, dialogs, adaptive layouts, accessibility reflow, Favorites traversal, and device behavior.</p><code>./gradlew :app:connectedDebugAndroidTest</code></article>
+    <article><span>Integration</span><h3>Connected Compose tests</h3><p>The current 48-test Tablet suite exercises UI semantics, navigation, dialogs, adaptive layouts, accessibility reflow, Favorites traversal, and device behavior.</p><code>./gradlew :app:connectedDebugAndroidTest</code></article>
     <article><span>Static</span><h3>Compilation and lint</h3><p>Kotlin compilation catches layer and type failures early; Android lint checks resources, manifests, API usage, accessibility, and packaging concerns.</p><code>./gradlew :app:compileDebugKotlin :app:lintDebug</code></article>
     <article><span>Release</span><h3>Artifact validation</h3><p>Release AAB/APK signatures, registered upload certificate, production manifest, dependencies, backup exclusions, and 16 KB packaging are audited separately.</p><code>validate-protected-play-bundle-linux.py</code></article>
   </div>
@@ -51,7 +51,7 @@ section: testing
     <h2>Real Android configurations</h2>
     <p>Window width, platform level, runtime page size, accessibility scale, network state, and physical hinge posture are separate test dimensions—not aliases for a single phone emulator.</p>
   </div>
-  <div class="table-wrap" tabindex="0" role="region" aria-label="Device validation matrix">
+  <div class="table-wrap" tabindex="0" role="region" aria-label="Device validation matrix" data-interactive-table>
     <table class="device-table">
       <thead><tr><th>Configuration</th><th>Purpose</th><th>Verified result</th></tr></thead>
       <tbody>
@@ -59,7 +59,7 @@ section: testing
         <tr><th>API 36 phone</th><td>Target Android 16 behavior, edge-to-edge, predictive Back</td><td><span class="result-pass">Pass</span> 27/27 readiness suite</td></tr>
         <tr><th>API 35 · 16 KB</th><td>Modern runtime memory-page compatibility</td><td><span class="result-pass">Pass</span> APK, ELF, and runtime checks</td></tr>
         <tr><th>Pixel Fold</th><td>Foldable window states and compact/expanded transitions</td><td><span class="result-pass">Pass</span> open-state suite and focused regressions</td></tr>
-        <tr><th>Pixel Tablet</th><td>Expanded portrait/landscape and two-pane behavior</td><td><span class="result-pass">Pass</span> current 40/40 connected suite</td></tr>
+        <tr><th>Pixel Tablet</th><td>Expanded portrait/landscape and two-pane behavior</td><td><span class="result-pass">Pass</span> current 48/48 connected suite</td></tr>
         <tr><th>Motorola Razr 2023 · Android 16</th><td>OEM behavior, notification navigation, local mention controls, and physical hinge lifecycle</td><td><span class="result-pass">Pass</span> focused M27.1 2/2 checks, earlier 21/21 suite, and open/tabletop/closed/reopened playback cycle</td></tr>
       </tbody>
     </table>

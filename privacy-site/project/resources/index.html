@@ -22,7 +22,30 @@ section: resources
   </aside>
 </section>
 
-<section class="content-section resource-section">
+<nav class="section-jump" aria-label="On this page">
+  <a href="#orientation">Orientation</a>
+  <a href="#research">Research</a>
+  <a href="#station-certification">Stations</a>
+  <a href="#readiness">Readiness</a>
+  <a href="#participation">Participation</a>
+</nav>
+
+<div class="catalog-toolbar resource-catalog-toolbar" data-resource-catalog aria-label="Resource catalog controls">
+  <label for="resource-catalog-search">Search resources</label>
+  <input id="resource-catalog-search" type="search" placeholder="Search documents, topics, or milestones" autocomplete="off" data-resource-search>
+  <div class="catalog-filters" role="group" aria-label="Filter resources">
+    <button type="button" data-resource-filter="all" aria-pressed="true">All</button>
+    <button type="button" data-resource-filter="orientation" aria-pressed="false">Orientation</button>
+    <button type="button" data-resource-filter="research" aria-pressed="false">Research</button>
+    <button type="button" data-resource-filter="stations" aria-pressed="false">Stations</button>
+    <button type="button" data-resource-filter="readiness" aria-pressed="false">Readiness</button>
+    <button type="button" data-resource-filter="participation" aria-pressed="false">Participation</button>
+  </div>
+  <p class="catalog-visible-count" data-resource-visible-count role="status" aria-live="polite">32 resources visible</p>
+</div>
+<p class="catalog-empty-state" data-resource-empty-state hidden>No resources match the current search and filter.</p>
+
+<section class="content-section resource-section" id="orientation" data-resource-category="orientation">
   <div class="content-intro">
     <p class="eyebrow">Start here</p>
     <h2>Project orientation</h2>
@@ -37,7 +60,7 @@ section: resources
   </div>
 </section>
 
-<section class="content-section resource-section">
+<section class="content-section resource-section" id="research" data-resource-category="research">
   <div class="content-intro"><p class="eyebrow">Research</p><h2>Station and protocol contracts</h2></div>
   <div class="document-list">
     <a href="https://github.com/codeframe78/24Seven.FM-Player/blob/main/docs/ENDPOINT_INVENTORY.md"><strong>Endpoint inventory</strong><span>Reviewed public sources and station boundaries</span></a>
@@ -51,7 +74,7 @@ section: resources
   </div>
 </section>
 
-<section class="content-section resource-section" id="station-certification">
+<section class="content-section resource-section" id="station-certification" data-resource-category="stations">
   <div class="content-intro"><p class="eyebrow">M18–M22</p><h2>Station certification</h2></div>
   <div class="document-list station-docs">
     <a href="https://github.com/codeframe78/24Seven.FM-Player/blob/main/docs/m18-sst-certification.md"><strong>StreamingSoundtracks.com</strong><span>M18 · public, authenticated, VIP, request-message, Favorites, and Chat evidence</span></a>
@@ -62,7 +85,7 @@ section: resources
   </div>
 </section>
 
-<section class="content-section resource-section">
+<section class="content-section resource-section" id="readiness" data-resource-category="readiness">
   <div class="content-intro"><p class="eyebrow">M23</p><h2>Testing and Play readiness</h2></div>
   <div class="document-list">
     <a href="https://github.com/codeframe78/24Seven.FM-Player/blob/main/docs/m23-release-candidate-audit.md"><strong>Release-candidate audit</strong><span>Manifest, dependency, backup, signing, certificate, and 16 KB evidence</span></a>
@@ -77,7 +100,7 @@ section: resources
   </div>
 </section>
 
-<section class="content-section resource-section">
+<section class="content-section resource-section" id="participation" data-resource-category="participation">
   <div class="content-intro"><p class="eyebrow">Test and participate</p><h2>Guides and community</h2></div>
   <div class="resource-grid">
     <a href="{{ '/project/product-testing/' | relative_url }}"><span>Testers</span><strong>Product testing workspace</strong><small>Guided sessions, expected evidence, severity, privacy rules, and structured result submission.</small></a>

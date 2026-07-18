@@ -36,6 +36,24 @@ section: product-testing
   <a href="#safety">Safety</a>
 </nav>
 
+<div class="catalog-toolbar tester-catalog-toolbar" data-test-catalog aria-label="Tester catalog controls">
+  <label for="tester-catalog-search">Search test cases</label>
+  <input id="tester-catalog-search" type="search" placeholder="Search by case, feature, or requirement" autocomplete="off" data-test-search>
+  <div class="catalog-filters" role="group" aria-label="Filter test cases">
+    <button type="button" data-test-filter="all" aria-pressed="true">All</button>
+    <button type="button" data-test-filter="remaining" aria-pressed="false">Remaining</button>
+    <button type="button" data-test-filter="checked" aria-pressed="false">Checked</button>
+    <button type="button" data-test-filter="future" aria-pressed="false">Future</button>
+  </div>
+  <div class="tester-catalog-progress">
+    <span data-test-progress-text>0 of 22 checked</span>
+    <progress max="22" value="0" data-test-progress aria-label="Tester catalog progress">0 of 22</progress>
+  </div>
+  <p class="catalog-visible-count" data-test-visible-count role="status" aria-live="polite">22 test cases visible</p>
+  <button type="button" class="catalog-clear" data-test-clear-progress>Clear progress</button>
+</div>
+<p class="catalog-empty-state" data-test-empty-state hidden>No test cases match the current search and filter.</p>
+
 <section class="content-section" id="start">
   <div class="content-intro wide">
     <p class="eyebrow">Prepare once</p>

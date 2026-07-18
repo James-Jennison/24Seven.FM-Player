@@ -37,18 +37,19 @@ section: development
     <h2>Interfaces point inward</h2>
     <p>Compose never imports network, cookie, WebSocket, ExoPlayer, or station protocol implementations. Screens receive immutable state and emit actions upward; ViewModels depend on domain repository and playback interfaces.</p>
   </div>
-  <div class="architecture-flow" role="img" aria-label="Compose UI emits actions to a ViewModel, which depends on domain repository and playback interfaces implemented by data adapters and Media3">
-    <div class="architecture-node ui"><span>Presentation</span><strong>Compose UI</strong><small>Immutable state · actions upward</small></div>
+  <div class="architecture-flow" role="group" aria-label="Compose UI emits actions to a ViewModel, which depends on domain repository and playback interfaces implemented by data adapters and Media3">
+    <div class="architecture-node ui" data-architecture-detail="Renders immutable UI state and emits user actions upward without importing network or Media3 implementations."><span>Presentation</span><strong>Compose UI</strong><small>Immutable state · actions upward</small></div>
     <div class="architecture-arrow" aria-hidden="true">→</div>
-    <div class="architecture-node vm"><span>State owner</span><strong>ViewModels</strong><small>Coroutines · station scope</small></div>
+    <div class="architecture-node vm" data-architecture-detail="Owns screen state and coroutine coordination while depending only on domain-facing repository and playback contracts."><span>State owner</span><strong>ViewModels</strong><small>Coroutines · station scope</small></div>
     <div class="architecture-arrow" aria-hidden="true">→</div>
-    <div class="architecture-node domain"><span>Domain</span><strong>Interfaces + models</strong><small>Capabilities · policies · contracts</small></div>
+    <div class="architecture-node domain" data-architecture-detail="Defines immutable models, station capability flags, policies, and interfaces without Android UI or protocol implementations."><span>Domain</span><strong>Interfaces + models</strong><small>Capabilities · policies · contracts</small></div>
     <div class="architecture-split" aria-hidden="true">↙ &nbsp; ↘</div>
     <div class="architecture-implementations">
-      <div class="architecture-node"><span>Data</span><strong>Station adapters</strong><small>Bounded I/O · defensive parsing</small></div>
-      <div class="architecture-node"><span>Playback</span><strong>Media3 service</strong><small>ExoPlayer · MediaSession</small></div>
+      <div class="architecture-node" data-architecture-detail="Implements reviewed station contracts with bounded I/O, station isolation, and defensive parsing."><span>Data</span><strong>Station adapters</strong><small>Bounded I/O · defensive parsing</small></div>
+      <div class="architecture-node" data-architecture-detail="Owns the single ExoPlayer and MediaSession so playback survives navigation and Activity lifecycle changes."><span>Playback</span><strong>Media3 service</strong><small>ExoPlayer · MediaSession</small></div>
     </div>
   </div>
+  <p class="architecture-detail-panel" data-architecture-detail-panel aria-live="polite">Select an architecture layer to explore its responsibility.</p>
 </section>
 
 <section class="content-section" id="boundaries">
