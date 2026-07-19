@@ -53,6 +53,33 @@ data class RequestableTrack(
     )
 }
 
+/**
+ * The immutable identity captured when a listener opens the request confirmation.
+ * A request may only be sent for this station/account/track combination.
+ */
+data class PreparedSongRequest(
+    val stationId: StationId,
+    val accountDisplayName: String,
+    val track: RequestableTrack,
+) {
+    /** Convenience accessors keep request-state consumers focused on the confirmed track. */
+    val songId: String get() = track.songId
+}
+
+/** Fresh state collected immediately before the single request submission. */
+data class RequestConfirmationContext(
+    val auth: AuthState,
+    val queue: QueueState,
+    val listenerActivity: ListenerActivityState? = null,
+    val requiresListenerActivity: Boolean = false,
+)
+
+/** A bounded, in-memory safety block after a request result is uncertain or rejected. */
+data class RequestTransactionBlock(
+    val availability: TrackRequestAvailability,
+    val identity: RequestTrackIdentity? = null,
+)
+
 data class SongRequestState(
     val stationId: StationId,
     val status: SongRequestLoadStatus = SongRequestLoadStatus.Idle,
@@ -61,7 +88,8 @@ data class SongRequestState(
     val searchResults: List<RequestSearchResult> = emptyList(),
     val albumTitle: String? = null,
     val tracks: List<RequestableTrack> = emptyList(),
-    val pendingRequest: RequestableTrack? = null,
+    val pendingRequest: PreparedSongRequest? = null,
+    val transactionBlocks: List<RequestTransactionBlock> = emptyList(),
     val notice: String? = null,
     val errorMessage: String? = null,
 )
@@ -71,8 +99,14 @@ interface SongRequestRepository {
     suspend fun search(stationId: StationId, query: String, field: RequestSearchField)
     suspend fun suggest(stationId: StationId, mode: RequestSuggestionMode)
     suspend fun openSearchResult(stationId: StationId, target: RequestSearchTarget)
-    suspend fun prepareRequest(stationId: StationId, songId: String)
-    suspend fun prepareRequest(stationId: StationId, track: RequestableTrack)
+    suspend fun prepareRequest(stationId: StationId, songId: String, accountDisplayName: String)
+    suspend fun prepareRequest(stationId: StationId, track: RequestableTrack, accountDisplayName: String)
     suspend fun cancelRequest(stationId: StationId)
-    suspend fun confirmRequest(stationId: StationId, queue: QueueState, message: String = "")
+    /** Clears pending state and in-memory request-result blocks for one station session. */
+    suspend fun clear(stationId: StationId)
+    suspend fun confirmRequest(
+        stationId: StationId,
+        context: RequestConfirmationContext,
+        message: String = "",
+    )
 }

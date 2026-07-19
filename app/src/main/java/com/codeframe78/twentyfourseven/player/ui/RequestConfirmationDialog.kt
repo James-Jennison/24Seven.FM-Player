@@ -27,7 +27,8 @@ internal fun RequestConfirmationDialog(
     onReviewTerms: () -> Unit,
 ) {
     val requests = state.requests ?: return
-    val track = requests.pendingRequest ?: return
+    val prepared = requests.pendingRequest ?: return
+    val track = prepared.track
     val availability = requests.tracks.firstOrNull { it.songId == track.songId }?.availability
         ?: track.availability
     var requestMessage by remember(track.albumId, track.songId) { mutableStateOf("") }
@@ -40,6 +41,10 @@ internal fun RequestConfirmationDialog(
                     buildString {
                         append(track.title)
                         track.artist?.let { append(" — $it") }
+                        append("\n\nStation: ")
+                        append(state.selectedStation?.name ?: "Selected station")
+                        append("\nSigned in as: ")
+                        append(prepared.accountDisplayName)
                         append("\n\nThe station enforces queue, artist, album, eligibility, and cooldown rules. This sends one request and will not retry automatically.")
                     },
                 )
@@ -79,7 +84,9 @@ internal fun RequestConfirmationDialog(
             Button(
                 onClick = { onConfirmRequest(requestMessage) },
                 enabled = requests.status != SongRequestLoadStatus.Submitting &&
-                    availability.canRequest && state.communitySafety.canContributeCommunityContent,
+                    availability.canRequest && state.communitySafety.canContributeCommunityContent &&
+                    state.selectedStation?.id == prepared.stationId &&
+                    state.auth?.displayName?.trim() == prepared.accountDisplayName,
             ) { Text("Send request") }
         },
         dismissButton = { TextButton(onClick = onCancelRequest) { Text("Cancel") } },

@@ -44,6 +44,12 @@ import com.codeframe78.twentyfourseven.player.domain.ListenerActivityState
 import com.codeframe78.twentyfourseven.player.domain.MembershipTier
 import com.codeframe78.twentyfourseven.player.domain.RequestHistoryEntry
 import com.codeframe78.twentyfourseven.player.domain.RequestReadiness
+import com.codeframe78.twentyfourseven.player.domain.RequestConfirmationContext
+import com.codeframe78.twentyfourseven.player.domain.RequestSearchField
+import com.codeframe78.twentyfourseven.player.domain.RequestSearchTarget
+import com.codeframe78.twentyfourseven.player.domain.RequestSuggestionMode
+import com.codeframe78.twentyfourseven.player.domain.SongRequestRepository
+import com.codeframe78.twentyfourseven.player.domain.SongRequestState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -413,6 +419,53 @@ class MainViewModelTest {
         viewModel.signOut(StationId("sst"))
         advanceUntilIdle()
         assertEquals(listOf(StationId("sst")), listenerActivity.clearedStations)
+    }
+
+    @Test
+    fun `request confirmation refreshes and forwards station scoped preflight context`() = runTest(dispatcher) {
+        val stationId = StationId("sst")
+        val queue = FakeQueueRepository().apply {
+            emit(QueueState(stationId, QueueLoadStatus.Ready))
+        }
+        val auth = FakeAuthRepository().apply {
+            emit(AuthState(stationId, AuthStatus.SignedIn, "Test Listener"))
+        }
+        val activity = FakeListenerActivityRepository().apply {
+            emit(
+                ListenerActivityState(
+                    stationId = stationId,
+                    status = ListenerActivityLoadStatus.Ready,
+                    membershipTier = MembershipTier.Standard,
+                    requestReadiness = RequestReadiness.Ready,
+                ),
+            )
+        }
+        val requests = RecordingSongRequestRepository()
+        val viewModel = MainViewModel(
+            BootstrapStationRepository(),
+            FakePlaybackController(),
+            FakeNowPlayingRepository(),
+            queue,
+            auth,
+            UnavailableChatRepository(),
+            requests,
+            UnavailableFavoriteTracksRepository(),
+            activity,
+            enabledSafetyRepository(),
+        )
+
+        viewModel.confirmSongRequest("One request")
+        advanceUntilIdle()
+
+        assertEquals(stationId, queue.refreshedStation)
+        assertEquals(listOf(stationId), activity.refreshedStations)
+        assertEquals(stationId, requests.confirmedStation)
+        assertEquals("One request", requests.confirmedMessage)
+        assertEquals(AuthStatus.SignedIn, requests.confirmedContext?.auth?.status)
+        assertEquals("Test Listener", requests.confirmedContext?.auth?.displayName)
+        assertEquals(QueueLoadStatus.Ready, requests.confirmedContext?.queue?.status)
+        assertEquals(RequestReadiness.Ready, requests.confirmedContext?.listenerActivity?.requestReadiness)
+        assertEquals(true, requests.confirmedContext?.requiresListenerActivity)
     }
 
     @Test
@@ -870,6 +923,34 @@ class MainViewModelTest {
         override suspend fun clear(stationId: StationId) {
             clearedStations += stationId
             state.value = FavoriteTracksState(stationId)
+        }
+    }
+
+    private class RecordingSongRequestRepository : SongRequestRepository {
+        private val states = mutableMapOf<StationId, MutableStateFlow<SongRequestState>>()
+        var confirmedStation: StationId? = null
+        var confirmedContext: RequestConfirmationContext? = null
+        var confirmedMessage: String? = null
+
+        override fun observeRequests(stationId: StationId): Flow<SongRequestState> =
+            states.getOrPut(stationId) { MutableStateFlow(SongRequestState(stationId)) }
+
+        override suspend fun search(stationId: StationId, query: String, field: RequestSearchField) = Unit
+        override suspend fun suggest(stationId: StationId, mode: RequestSuggestionMode) = Unit
+        override suspend fun openSearchResult(stationId: StationId, target: RequestSearchTarget) = Unit
+        override suspend fun prepareRequest(stationId: StationId, songId: String, accountDisplayName: String) = Unit
+        override suspend fun prepareRequest(stationId: StationId, track: RequestableTrack, accountDisplayName: String) = Unit
+        override suspend fun cancelRequest(stationId: StationId) = Unit
+        override suspend fun clear(stationId: StationId) = Unit
+
+        override suspend fun confirmRequest(
+            stationId: StationId,
+            context: RequestConfirmationContext,
+            message: String,
+        ) {
+            confirmedStation = stationId
+            confirmedContext = context
+            confirmedMessage = message
         }
     }
 

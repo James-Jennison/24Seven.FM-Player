@@ -64,6 +64,7 @@ import com.codeframe78.twentyfourseven.player.domain.ChatMessage
 import com.codeframe78.twentyfourseven.player.domain.ChatMessagePart
 import com.codeframe78.twentyfourseven.player.domain.ChatState
 import com.codeframe78.twentyfourseven.player.domain.RequestableTrack
+import com.codeframe78.twentyfourseven.player.domain.PreparedSongRequest
 import com.codeframe78.twentyfourseven.player.domain.SongRequestLoadStatus
 import com.codeframe78.twentyfourseven.player.domain.SongRequestState
 import com.codeframe78.twentyfourseven.player.domain.FavoriteTrack
@@ -1148,7 +1149,9 @@ class RadioAppTest {
                             SongRequestLoadStatus.Ready,
                             albumTitle = "Example album",
                             tracks = listOf(track),
-                            pendingRequest = track.takeIf { pending },
+                            pendingRequest = track.takeIf { pending }?.let {
+                                PreparedSongRequest(station.id, "Listener", it)
+                            },
                         ),
                     ),
                     onSelectStation = {},
@@ -1172,6 +1175,8 @@ class RadioAppTest {
         composeRule.onNodeWithText("Sort: Play state").assertIsDisplayed()
         composeRule.onAllNodesWithText("Request Now").assertCountEquals(2)[1].performScrollTo().performClick()
         composeRule.onNodeWithText("Request this track?").assertIsDisplayed()
+        composeRule.onNodeWithText("Station: StreamingSoundtracks.com", substring = true).assertIsDisplayed()
+        composeRule.onNodeWithText("Signed in as: Listener", substring = true).assertIsDisplayed()
         composeRule.onNodeWithText("Message (optional)").performTextInput("Enjoy this one")
         composeRule.onNodeWithText("14/80").assertIsDisplayed()
         composeRule.onNodeWithText("Send request").performClick()
@@ -1245,7 +1250,11 @@ class RadioAppTest {
                     onRefreshQueue = {},
                     onPrepareFavoriteRequest = {
                         prepared += it
-                        state = state.copy(requests = state.requests?.copy(pendingRequest = it.requestTrack))
+                        state = state.copy(requests = state.requests?.copy(
+                            pendingRequest = it.requestTrack?.let { track ->
+                                PreparedSongRequest(station.id, "Listener", track)
+                            },
+                        ))
                     },
                     onConfirmRequest = {
                         state = state.copy(

@@ -35,6 +35,8 @@ import com.codeframe78.twentyfourseven.player.domain.TrackRequestAvailability
 import com.codeframe78.twentyfourseven.player.domain.TrackRequestAvailabilityResolver
 import com.codeframe78.twentyfourseven.player.domain.TrackRequestCandidate
 import com.codeframe78.twentyfourseven.player.domain.TrackRequestStatus
+import com.codeframe78.twentyfourseven.player.domain.RequestConfirmationContext
+import com.codeframe78.twentyfourseven.player.domain.RequestTransactionBlock
 import com.codeframe78.twentyfourseven.player.domain.LocalStationPreferences
 import com.codeframe78.twentyfourseven.player.domain.ListenerActivityLoadStatus
 import com.codeframe78.twentyfourseven.player.domain.ListenerActivityRepository
@@ -223,9 +225,14 @@ class MainViewModel(
     private val resolvedFavorites = combine(
         selectedFavorites,
         selectedQueue,
-    ) { favoriteState, queueState ->
+        selectedRequests,
+    ) { favoriteState, queueState, requestState ->
         ResolvedFavoritesContent(
-            favorites = favoriteState.resolveAvailability(favoriteState.stationId, queueState),
+            favorites = favoriteState.resolveAvailability(
+                favoriteState.stationId,
+                queueState,
+                requestState.transactionBlocks,
+            ),
             queue = queueState,
         )
     }
@@ -276,7 +283,12 @@ class MainViewModel(
         val selectedAuthState = content.account.auth.selected.takeIf { it.stationId == selected.id }
         val resolvedRequests = content.requestContent.requests
             .takeIf { it.stationId == selected.id }
-            ?.resolveAvailability(selected.id, selectedQueueState, selectedAuthState?.status == AuthStatus.SignedIn)
+            ?.resolveAvailability(
+                selected.id,
+                selectedQueueState,
+                selectedAuthState?.status == AuthStatus.SignedIn,
+                content.requestContent.requests.transactionBlocks,
+            )
         val resolvedFavorites = content.requestContent.favorites
             .takeIf { it.stationId == selected.id }
         MainUiState(
@@ -333,7 +345,7 @@ class MainViewModel(
                                     if (status == AuthStatus.Expired) {
                                         favorites.clear(station.id)
                                         listenerActivity.clear(station.id)
-                                        requests.cancelRequest(station.id)
+                                        requests.clear(station.id)
                                     }
                                 }
                         }
@@ -343,7 +355,11 @@ class MainViewModel(
         }
     }
 
-    fun selectStation(id: StationId) = viewModelScope.launch { stations.selectStation(id) }
+    fun selectStation(id: StationId) = viewModelScope.launch {
+        val current = stations.observeSelectedStation().first()
+        if (current.id != id) requests.cancelRequest(current.id)
+        stations.selectStation(id)
+    }
     fun useLastStationAtStartup() = viewModelScope.launch { stations.useLastStationAtStartup() }
     fun setStartupStation(id: StationId) = viewModelScope.launch { stations.setStartupStation(id) }
     fun play() = playback.play()
@@ -461,6 +477,7 @@ class MainViewModel(
         auth.signOut(stationId)
         favorites.clear(stationId)
         listenerActivity.clear(stationId)
+        requests.clear(stationId)
     }
 
     fun searchRequests(query: String, field: RequestSearchField) = viewModelScope.launch {
@@ -476,11 +493,19 @@ class MainViewModel(
     }
 
     fun prepareSongRequest(songId: String) = viewModelScope.launch {
-        requests.prepareRequest(stations.observeSelectedStation().first().id, songId)
+        val station = stations.observeSelectedStation().first()
+        val account = auth.observeAuth(station.id).first()
+        if (station.capabilities.supportsRequests && account.status == AuthStatus.SignedIn && !account.displayName.isNullOrBlank()) {
+            requests.prepareRequest(station.id, songId, account.displayName)
+        }
     }
 
     fun prepareFavoriteRequest(track: FavoriteTrack) = viewModelScope.launch {
-        track.requestTrack?.let { requests.prepareRequest(stations.observeSelectedStation().first().id, it) }
+        val station = stations.observeSelectedStation().first()
+        val account = auth.observeAuth(station.id).first()
+        if (station.capabilities.supportsRequests && account.status == AuthStatus.SignedIn && !account.displayName.isNullOrBlank()) {
+            track.requestTrack?.let { requests.prepareRequest(station.id, it, account.displayName) }
+        }
     }
 
     fun cancelSongRequest() = viewModelScope.launch {
@@ -489,9 +514,24 @@ class MainViewModel(
 
     fun confirmSongRequest(message: String) = viewModelScope.launch {
         if (!communitySafety.observeSafety().first().canContributeCommunityContent) return@launch
-        val stationId = stations.observeSelectedStation().first().id
+        val station = stations.observeSelectedStation().first()
+        val stationId = station.id
         queue.refresh(stationId)
-        requests.confirmRequest(stationId, queue.currentQueue(stationId), message)
+        if (station.capabilities.supportsListenerActivity) listenerActivity.refresh(stationId)
+        if (stations.observeSelectedStation().first().id != stationId) {
+            requests.cancelRequest(stationId)
+            return@launch
+        }
+        requests.confirmRequest(
+            stationId,
+            RequestConfirmationContext(
+                auth = auth.observeAuth(stationId).first(),
+                queue = queue.currentQueue(stationId),
+                listenerActivity = listenerActivity.observeActivity(stationId).first(),
+                requiresListenerActivity = station.capabilities.supportsListenerActivity,
+            ),
+            message,
+        )
     }
 
     class Factory(
@@ -596,15 +636,19 @@ private fun SongRequestState.resolveAvailability(
     stationId: StationId,
     queue: QueueState,
     signedIn: Boolean,
+    blocks: List<RequestTransactionBlock>,
 ): SongRequestState = copy(
-    tracks = tracks.map { track -> track.resolveAvailability(stationId, queue, signedIn) },
-    pendingRequest = pendingRequest?.resolveAvailability(stationId, queue, signedIn),
+    tracks = tracks.map { track -> track.resolveAvailability(stationId, queue, signedIn, blocks) },
+    pendingRequest = pendingRequest?.let { prepared ->
+        prepared.copy(track = prepared.track.resolveAvailability(stationId, queue, signedIn, blocks))
+    },
 )
 
 private fun com.codeframe78.twentyfourseven.player.domain.RequestableTrack.resolveAvailability(
     stationId: StationId,
     queue: QueueState,
     signedIn: Boolean,
+    blocks: List<RequestTransactionBlock>,
 ): com.codeframe78.twentyfourseven.player.domain.RequestableTrack {
         val queueAvailability = TrackRequestAvailabilityResolver.resolve(
             stationId,
@@ -612,7 +656,9 @@ private fun com.codeframe78.twentyfourseven.player.domain.RequestableTrack.resol
             availability,
             queue,
         )
-        val resolved = if (
+        val resolved = blocks.firstOrNull { block ->
+            block.identity == null || TrackRequestAvailabilityResolver.matches(identity, block.identity)
+        }?.availability ?: if (
             !signedIn && queueAvailability.status !in setOf(
                 TrackRequestStatus.StationUnavailable,
                 TrackRequestStatus.RequestsUnavailable,
@@ -626,7 +672,11 @@ private fun com.codeframe78.twentyfourseven.player.domain.RequestableTrack.resol
         return copy(eligible = resolved.canRequest, availability = resolved)
 }
 
-private fun FavoriteTracksState.resolveAvailability(stationId: StationId, queue: QueueState): FavoriteTracksState {
+private fun FavoriteTracksState.resolveAvailability(
+    stationId: StationId,
+    queue: QueueState,
+    blocks: List<RequestTransactionBlock>,
+): FavoriteTracksState {
     val resolvedAvailability = TrackRequestAvailabilityResolver.resolveAll(
         stationId,
         tracks.map { TrackRequestCandidate(it.identity, it.availability) },
@@ -634,7 +684,11 @@ private fun FavoriteTracksState.resolveAvailability(stationId: StationId, queue:
     )
     var updatedTracks: MutableList<FavoriteTrack>? = null
     tracks.forEachIndexed { index, track ->
-        val resolved = resolvedAvailability[index]
+        val queueResolved = resolvedAvailability[index]
+        val blocked = blocks.firstOrNull { block ->
+            block.identity == null || TrackRequestAvailabilityResolver.matches(track.identity, block.identity)
+        }?.availability
+        val resolved = blocked ?: queueResolved
         val requestTrack = track.requestTrack
         val requestNeedsUpdate = requestTrack != null && (
             requestTrack.eligible != resolved.canRequest ||
