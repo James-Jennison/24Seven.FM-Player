@@ -70,6 +70,19 @@ Console form immediately before submission.
 - **Independent security review:** No.
 - **Ads/analytics:** None.
 
+## Interim five-station TLS probe — July 19, 2026
+
+A credential-free, body-discarding probe exercised 36 public/read-only entry points across all five station origins.
+It covered each HTTPS root, login-challenge page, request-search page, Chat-read page, current-artwork path, Queue/History
+path, Favorites entry page, Death.FM's compact Queue path, and SST's request-activity entry page as applicable. Every
+request negotiated HTTPS with TLS 1.2 or newer, returned HTTP 200 at the expected station origin, and produced no
+redirect or scheme downgrade. No cookie, credential, CAPTCHA response, account identifier, response body, or private
+content was supplied or retained.
+
+This strengthens the provisional transport finding but is not the final encrypted-in-transit attestation. The exact
+protected candidate must still validate authenticated, server-discovered form actions and redirects without recording
+secrets before the Console answer is saved.
+
 ## Owner/station fact table
 
 The final answer is blocked until the authorized operator provides these facts for all five stations, or explicitly
