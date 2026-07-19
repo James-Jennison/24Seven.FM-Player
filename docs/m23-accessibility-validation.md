@@ -70,8 +70,9 @@ permission was deliberately declined because it is not required to operate the P
 The user confirmed that Voice Access activated the primary Player commands after the control semantics correction in
 `03a310b`: Play/Pause, Previous station, and Next station. A direct UIAutomator inspection of that same Razr build
 records each as a named, clickable Android button rather than a named non-clickable child. This is human-device
-evidence for the primary playback controls, not a substitute for the remaining full alternative-input traversal of
-station selection, destinations, dialogs, settings, and community surfaces.
+evidence for the primary playback controls. The follow-up command sequence also selected 1980s.FM, opened Favorites,
+and returned to Player successfully. It is not a substitute for the remaining full alternative-input traversal of
+dialogs, settings, and community surfaces.
 
 ## Verification
 

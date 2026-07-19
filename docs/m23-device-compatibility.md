@@ -61,8 +61,8 @@ physical hardware still remains for Alpha because automated inspection cannot ju
 
 The physical Razr also has Google Voice Access enabled with microphone access and without optional phone-call control.
 Following `03a310b`, the user confirmed Play/Pause, Previous station, and Next station by voice. The current device
-tree exposes those controls as named clickable buttons. This is a focused primary-playback result; full alternative
-input traversal remains an M34 gate.
+tree exposes those controls as named clickable buttons. The user also selected 1980s.FM and moved between Favorites
+and Player by voice. Full alternative-input traversal remains an M34 gate.
 
 ### Network-loss and restoration evidence
 
