@@ -116,7 +116,8 @@ OEM-controlled presentation display that does not host normal app activities; co
 supported fully folded behavior on this model. The API 35 Pixel Fold validates the open inner display, half-open state,
 and fully closed outer display, while the dedicated Pixel Tablet validates its native landscape and portrait windows.
 The layout responds to the available window and naturally leaves the center gutter between expanded Player panes.
-Play-delivered installation/update and the Play pre-launch report remain external M34 gates.
+Play-delivered installation/update and the Play pre-launch report are deferred to M40 after M39 freezes the exact
+candidate; they are not M34 completion gates.
 
 No application can guarantee behavior on every future OEM configuration. For Alpha, "all modern Android devices"
 means the supported API range and adaptive window classes above are release requirements, regressions in those classes

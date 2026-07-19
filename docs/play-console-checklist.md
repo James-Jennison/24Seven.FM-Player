@@ -34,16 +34,16 @@ The Google Play developer account was approved on July 14, 2026. Use this during
 4. **Complete locally:** A separate 4096-bit RSA upload key was created outside the repository. Its generated password and metadata are stored only in a current-user DPAPI envelope; no plaintext signing environment is persisted.
 5. **Complete locally:** `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate-protected-play-bundle.ps1 -BuildApk` built the signed APK/AAB, verified the AAB signature, and confirmed that the bundle signer matches the configured upload certificate.
 6. **Complete:** the encrypted recovery package was exported to an owner-controlled off-PC volume and independently verified with the owner-held passphrase. Its encrypted-package SHA-256 is `361E6A85452DBF9ACDC816F554569E3B7DBA0F98B60C30DB255E54C2644C4D1C`; the passphrase is stored separately and is not in Git.
-7. **Complete locally:** the Linux helper built the current protected AAB/APK from commit `2086ab9` without persisting plaintext signing material; subsequent AAB and APK verification matched both signatures to the registered upload certificate.
+7. **Complete locally:** the Linux helper built the current protected AAB/APK from commit `2e43a2b` without persisting plaintext signing material; subsequent AAB/APK verification and local physical-Razr clean-install/update checks matched the registered upload identity.
 8. **Complete by account email; Console confirmation remains:** Google's July 16 notice says the account's Play apps
    were automatically registered for Android developer verification. Confirm this app's registration in Play Console
    Home. If the release is distributed outside Play, separately register its package-and-signing-key pair on the
    Android developer verification page.
-9. Upload the verified AAB, then start with Internal testing. It supports up to 100 testers and uses a private opt-in/share link rather than public search discovery.
+9. **M40 after M39:** upload the verified AAB, then start with Internal testing. It supports up to 100 testers and uses a private opt-in/share link rather than public search discovery.
 10. Add a feedback email or URL and a tester email list in Console. Do not commit tester identities.
 11. Complete the store listing and App content declarations needed by the selected track.
 
-The current protected July 16 AAB from commit `2086ab9` has SHA-256 `1C6C43BF947B844F5D8708DF368635CFE34B6A690DD826B87663B66C5C6C518F`; the companion APK has SHA-256 `923C26621FC998CAA4D1099B7BCA5A118C7EB8256057D96E9971C4AFE29825D0`. Both match upload-certificate SHA-256 `F6E8E81271964FFC3F8A0D548B49B4DB93AEFC48CCB74B8744512670F4279E3F`. AAB signatures include per-build data, so compare the selected artifact hash with the audit record and the stable certificate fingerprint with Play Console before upload.
+The current protected July 18 AAB from commit `2e43a2b` has SHA-256 `FA923DB3C7CC8C44661030F5DCCE594B0415C676A718E358E105ADD772483CB5`; the companion APK has SHA-256 `D49FBD7454B8BBE4E58C2C3513074FA1370C22CDD9139DDB92CD28DBD928BA7A`. Both match upload-certificate SHA-256 `F6E8E81271964FFC3F8A0D548B49B4DB93AEFC48CCB74B8744512670F4279E3F`. AAB signatures include per-build data, so compare the selected artifact hash with the audit record and the stable certificate fingerprint with Play Console before M40 upload. The July 16 artifacts remain historical evidence in the M35 audit.
 
 ### Off-PC recovery handoff
 

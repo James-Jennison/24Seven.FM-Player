@@ -31,11 +31,14 @@ The active program is M29–M35 Alpha readiness:
 | M31 Payments, External Links, and Account Lifecycle | M | Complete | Contact-only external catalog; membership/account browser routes removed; privacy, declarations, release notes, testing, and evidence reconciled | Re-audit before M51, M57, or M58–M60 ships |
 | M32 Session, Controller, Network, and Supply-Chain Security | XL, split | Complete | Controller command policy, protected-session coherence, trusted redirects, station-ID migration, dependency/action integrity, and adversarial tests | Re-audit when controller, session, redirect, station-ID, or build-input boundaries change |
 | M33 Request Transaction Integrity | L | Complete | Fresh station/Queue/account/membership/cooldown/limit checks, exact status contract, station/account/track identity, and bounded one-shot submission | Re-audit when request, Queue, account, readiness, or station capability contracts change; see `m33-request-transaction-validation.md` |
-| M34 Device, Accessibility, and Pre-launch Acceptance | L | In progress | Human audible TalkBack, alternative input, adaptive/device coverage, Play delivery/update, and pre-launch evidence | Test hardware, humans, and Play artifact |
-| M35 Release Signing and Console Eligibility | M | In progress | Protected signer path, physical-device verification, package registration, version-code eligibility, and repeatable signed build | Owner-only Console state |
+| M34 Device and Accessibility Acceptance | L | In progress | Human audible TalkBack, fair alternative-input checks, adaptive/multi-window/foldable coverage, and local physical-device acceptance | Test hardware and humans |
+| M35 Release Signing and Console Eligibility | M | In progress | Current-head protected signer path, local physical clean-install/update verification, package registration, version-code eligibility, and repeatable signed build | Owner-only Console state |
 
-M31–M33 are complete. M34's M33 confirmation-dialog follow-up passes focused 2×-text Razr and Tablet checks; human audible/alternative-input and Play-controlled acceptance remain open. M35's current signing checkpoint is valuable evidence, but it is not a final candidate because the
-codebase has changed since that artifact was built.
+M31–M33 are complete. M34's M33 confirmation-dialog follow-up passes focused 2×-text Razr and Tablet checks, and its
+focused Voice Access playback/navigation pass is recorded; human audible TalkBack and broader fair alternative-input,
+adaptive, and local-device acceptance remain open. M35's current-head protected build and local Razr clean/update path
+pass; per-app registration and version-code eligibility remain owner-only Console gates. Play-generated delivery,
+update, and pre-launch evidence belong exclusively to M40 after M39 freezes the exact candidate.
 
 ## Notification delivery program
 

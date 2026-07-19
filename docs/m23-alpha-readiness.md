@@ -48,21 +48,21 @@ as already complete.
 - Before upload signing was configured, signature inspection confirmed the debug APK had only the standard local Android Debug identity and the release outputs were unsigned as intended.
 - The unsigned release baseline built successfully without signing inputs and was correctly rejected by the signing validator. That historical artifact was 17,304,660 bytes with SHA-256 `9C7128A422BCE81351A40FFCE239F941CD584C62D3993209AFC0CB35F8A4D1D8`; it has since been replaced by the signed candidate below.
 - A separate 4096-bit RSA Play upload key now exists outside Git. Its generated credentials are held in a current-user Windows DPAPI envelope, are injected only into a child build process, and are cleared afterward. The initializer is atomic and refuses to replace an existing identity.
-- The current protected `0.1.0-alpha01` AAB from commit `2086ab9` validates with SHA-256 `1C6C43BF947B844F5D8708DF368635CFE34B6A690DD826B87663B66C5C6C518F`; its signer exactly matches upload-certificate SHA-256 `F6E8E81271964FFC3F8A0D548B49B4DB93AEFC48CCB74B8744512670F4279E3F`. The companion signed APK has SHA-256 `923C26621FC998CAA4D1099B7BCA5A118C7EB8256057D96E9971C4AFE29825D0` and verifies with the same certificate. AAB hashes are recorded per build because signed output contains per-build data.
+- The current-head protected `0.1.0-alpha01` AAB from commit `2e43a2b` validates with SHA-256 `FA923DB3C7CC8C44661030F5DCCE594B0415C676A718E358E105ADD772483CB5`; its signer exactly matches upload-certificate SHA-256 `F6E8E81271964FFC3F8A0D548B49B4DB93AEFC48CCB74B8744512670F4279E3F`. The companion signed APK has SHA-256 `D49FBD7454B8BBE4E58C2C3513074FA1370C22CDD9139DDB92CD28DBD928BA7A` and verifies with the same certificate. AAB hashes are recorded per build because signed output contains per-build data; the July 16 `2086ab9` artifacts remain historical evidence in the release-candidate audit.
 - The PowerShell 7 recovery workflow exports a PBKDF2/AES-256-GCM package, rejects wrong passphrases and repository-local targets, validates the recovered keystore/certificate, and restores a new DPAPI envelope. Its tested round trip reproduced the keystore byte-for-byte and signed/verified a release AAB from the restored copy; all temporary test artifacts were removed.
 - The Ubuntu protected-signing helper consumed that same authenticated recovery format without changing the upload identity, rejected the wrong passphrase/hash/certificate and repository-local packages, kept its mode-`600` keystore only on memory-backed `/dev/shm`, used a non-persistent Gradle process, and produced the current signed AAB/APK. Eight focused tests pass, including realistic verification of a bundle using a self-signed upload certificate.
 - The actual encrypted recovery package is now stored on the owner-selected off-PC volume and independently validated with the owner-held passphrase. The encrypted package SHA-256 is `361E6A85452DBF9ACDC816F554569E3B7DBA0F98B60C30DB255E54C2644C4D1C`; neither its location nor its passphrase is committed.
-- The signed release APK was installed cleanly on the API 35 emulator, cold-launched as version code 2, exposed the expected adaptive Player semantics, and reached `Playing live` on StreamingSoundtracks with the Pause action available. The emulator was restored to the debug build afterward; the wirelessly connected Razr and its sessions were not modified.
+- The current-head signed release APK was installed cleanly beside the debug package on the physical Android 16 Razr, cold-launched as version code 2, exposed the expected native Player semantics, and reached Media3 `PLAYING` with live StreamingSoundtracks metadata. A local same-signer `adb install -r` of that exact APK succeeded while preserving first-install lineage. This is local M35 evidence, not a substitute for M40's Play-generated install/update evidence.
 - The release dependency graph contains no advertising, analytics, Crashlytics, App Center, or Sentry SDK.
 - M35's current local release audit confirms the production manifest, complete resolved dependency inventory, 16 KB
-  APK/ELF packaging, explicit cloud/device-transfer backup exclusions, and intentionally unsigned release AAB/APK.
+  APK/ELF packaging, explicit cloud/device-transfer backup exclusions, and protected signed release AAB/APK.
   Apache-2.0, MIT, GPLv2-with-Classpath-Exception, and MPL-2.0 notices are recorded in
   `THIRD_PARTY_NOTICES.md` and are reachable inside the app under More → Privacy → Open-source licenses. See
-  `m23-release-candidate-audit.md`; protected current-head signing is complete, while version-code eligibility and
-  Play-delivered installation remain open.
+  `m23-release-candidate-audit.md`; protected current-head signing and local Razr clean-install/update verification are
+  complete, while per-app registration and version-code eligibility remain open.
 - Google's July 16 Android developer-verification email confirms that the account's Play apps were automatically
   registered to the verified developer account. The sanitized confirmation is preserved in the M35 audit; exact
-  per-app Play Console status, version-code eligibility, and Play-delivered installation remain open.
+  per-app Play Console status and version-code eligibility remain open. Play delivery belongs to M40 after M39.
 - Google Play accepts target API 35 on July 15, 2026 but requires API 36 for new apps and updates beginning August 31, 2026. M22 therefore migrates before the closed-test/update window instead of treating API 35 as the final Alpha target.
 - The July 18 exact-artifact Data Safety worksheet is recorded in `docs/m23-data-safety.md`; it covers optional
   account/community/request data, explicit external-app handoffs, source-IP handling, local-only state, HTTPS user-data
@@ -137,10 +137,10 @@ Signing files and secrets must never be committed. Gradle should receive their p
 
 - Google approved the personal Play developer account on July 14, 2026; the app and initial legal/signing declarations are now established in Console.
 - Because this is a newly activated personal account, plan for a closed test with at least 12 testers continuously opted in for 14 days before applying for production access. Internal testing itself has no access requirement.
-- Upload the verified signed AAB to Play and confirm that Console reports the expected upload-certificate fingerprint.
-- Before upload, confirm whether version code 2 remains available and verify that the selected artifact hash matches the
-  protected candidate recorded in `m23-release-candidate-audit.md`.
-- Verify Play-delivered installation on the physical Razr and a same-key Play update after a subsequent version code exists.
+- For M35, confirm this app's Android developer-verification registration and that version code 2 remains eligible and
+  unused in Play Console.
+- For M40 after M39 freezes the exact candidate, upload the verified AAB, confirm the expected upload-certificate
+  fingerprint, inspect Play-generated splits, and verify Play-delivered fresh installation and a later same-key update.
 - Complete PT-35 and the owner-input Console forms: five least-privileged reviewer accounts/instructions, verify the
   saved 18+ audience and Restrict Minor Access decision, content/UGC classification, account-deletion treatment, and
   final Data Safety answers. If Child Safety Standards apply, require an operational process and designated contact.

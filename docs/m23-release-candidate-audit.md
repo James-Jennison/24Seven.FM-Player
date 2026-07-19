@@ -1,24 +1,25 @@
 # M35 current-head release-candidate audit
 
-Date: July 16, 2026
+Date: July 18, 2026
 
-Status: protected Ubuntu AAB/APK build, exact signer verification, and Android developer-verification registration confirmation complete; version-code eligibility and Play-delivered installation remain open
+Status: current-head protected Ubuntu AAB/APK build, exact signer verification, and local Razr clean-install/update verification complete; per-app Android developer-verification registration and version-code eligibility remain open
 
 ## Outcome
 
 The non-secret audit at commit `041a811` established the expected production identity, permissions, Media3 service
-declaration, dependency set, license notices, backup exclusions, and 16 KB packaging. Commit `2086ab9`, which includes
-all current product fixes, then produced a protected signed AAB and APK on Ubuntu from the authenticated recovery
-package without persisting signing material. Both artifacts match the registered Play upload certificate.
+declaration, dependency set, license notices, backup exclusions, and 16 KB packaging. The protected Ubuntu helper then
+built commit `2e43a2b`, the current code head at the time of this refresh, from the authenticated recovery package
+without persisting signing material. Both artifacts match the registered Play upload certificate.
 
 Google's July 16 account email also confirms that the account's Play apps were automatically registered to the verified
 developer account for Android developer verification. This closes the email-confirmation checkpoint, but not the two
-remaining M35 delivery gates: the owner must still confirm the app's per-app registration and version-code status
-in Play Console, then validate a Play-delivered install/update.
+remaining M35 Console gates: the owner must still confirm this app's per-app registration and that version code 2 is
+eligible and unused in Play Console.
 
-M35 completes only after the owner confirms that version code 2 is still eligible in Play Console and validates a
-Play-delivered install/update. The established Windows DPAPI copy remains intact. Routine signing can use the existing
-authenticated recovery package through the Linux helper without persisting a plaintext keystore or credential file.
+Play-generated delivery, update, split inspection, and pre-launch evidence belong exclusively to M40 after M39 freezes
+the exact candidate; they are not M35 completion gates. The established Windows DPAPI copy remains intact. Routine
+signing can use the existing authenticated recovery package through the Linux helper without persisting a plaintext
+keystore or credential file.
 
 ## Android developer-verification evidence
 
@@ -65,7 +66,26 @@ the four `TWENTYFOURSEVEN_UPLOAD_*` values are absent. The textual classificatio
 can return exit code 0 for an unsigned JAR. These hashes identify only this local audit snapshot; the final protected
 build has its own hash below.
 
-## Protected signed candidate evidence
+## July 18 current-head protected refresh
+
+| Artifact | Size | SHA-256 | Signing state |
+| --- | ---: | --- | --- |
+| `app-release.aab` | 18,821,803 bytes | `FA923DB3C7CC8C44661030F5DCCE594B0415C676A718E358E105ADD772483CB5` | Verified JAR signature; exact registered upload certificate |
+| `app-release.apk` | 19,496,093 bytes | `D49FBD7454B8BBE4E58C2C3513074FA1370C22CDD9139DDB92CD28DBD928BA7A` | Verified APK Signature Scheme v2; exact registered upload certificate |
+
+The authenticated recovery package matched its documented encrypted-package hash before use. The Linux signing tests
+passed 8/8, the helper left no signing material in `/dev/shm`, and both outputs match upload-certificate SHA-256
+`F6E8E81271964FFC3F8A0D548B49B4DB93AEFC48CCB74B8744512670F4279E3F`. The APK also passed Android's 16 KB ZIP
+alignment verification.
+
+The release APK was installed cleanly beside the debug package on the physical Android 16 Razr, cold-launched as
+`0.1.0-alpha01` / version code 2, and verified through the native accessibility tree. Direct Play control reached
+Media3 `PLAYING` state with live StreamingSoundtracks metadata, then paused correctly. Installing the exact same signed
+APK again with `adb install -r` succeeded and preserved its first-install time while advancing its last-update time.
+This proves local package identity and same-signer update behavior; it does not substitute for M40's Play-generated
+delivery evidence. This refresh introduced no meaningful visual change and is not the M39-frozen final candidate.
+
+## Historical July 16 protected signed checkpoint
 
 | Artifact | Size | SHA-256 | Signing state |
 | --- | ---: | --- | --- |
@@ -83,7 +103,7 @@ and exercises that path.
 - Android `zipalign -c -P 16 -v 4` passed for the release APK.
 - The AAB contains only `libandroidx.graphics.path.so`, for `arm64-v8a`, `armeabi-v7a`, `x86`, and `x86_64`.
 - Every ELF `LOAD` segment in every ABI reports `0x4000` alignment.
-- The established API 35 16 KB runtime suite also remains green; Play-generated split delivery remains an M34 gate.
+- The established API 35 16 KB runtime suite also remains green; Play-generated split delivery remains an M40 gate.
 
 ## Dependencies and notices
 
@@ -111,8 +131,8 @@ licenses**. The upstream jsoup license and OkHttp Public Suffix List notice are 
   warnings were resolved.
 - `:app:connectedDebugAndroidTest` — 40/40 passed on the API 35 Pixel Tablet, including full 1,500-track Favorites
   traversal.
-- Protected combined `:app:bundleRelease :app:assembleRelease` and release lint-vital — passed from commit `2086ab9`
-  after the Favorites performance, playback-recovery, and Linux SDK-resolution changes.
+- Protected combined `:app:bundleRelease :app:assembleRelease` and release lint-vital — passed from current-head commit
+  `2e43a2b`; the July 16 checkpoint from `2086ab9` remains historical evidence.
 - Existing signed AAB verification — passed after correcting the verifier's self-signed-certificate trust semantics;
   exact upload-certificate fingerprint matched.
 - Signed APK `apksigner verify --verbose --print-certs` — passed with APK Signature Scheme v2 and the exact same
@@ -136,7 +156,7 @@ From Ubuntu, first verify the non-secret prerequisites:
 python3 scripts/validate-protected-play-bundle-linux.py --check-environment
 ```
 
-Then, after confirming the final commit and version-code availability, run the protected build from an interactive
+Then, after confirming the intended commit and version-code availability, run the protected build from an interactive
 terminal. Keep the encrypted package outside the repository and enter its passphrase only at the hidden prompt:
 
 ```bash
