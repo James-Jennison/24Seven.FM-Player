@@ -71,7 +71,7 @@ allow, but no partial checkpoint should be described as release-ready.
 | M30 | Brand, Content, and Distribution Rights | Waiting externally | Written authorization for app/station naming, logos, artwork/metadata, streams, screenshots, and Play testing/distribution |
 | M31 | Payments, External Links, and Account Lifecycle Compliance | Complete | Contact-only external catalog; VIP/RIP purchase/registration and direct privacy browser routes removed; declarations and account boundary reconciled in `9e340b9` |
 | M32 | Session, Controller, Network, and Supply-Chain Security | Complete | Least-privilege MediaSession controller policy, coherent station-isolated cookie rotation/absolute expiry, trusted redirects, canonical station-ID migration, pinned/verified build inputs, and adversarial Razr harness evidence in `2bc45f7` |
-| M33 | Request Transaction Integrity | Planned | Fresh station/Queue/account/membership/cooldown/limit/identity validation, exact availability semantics, station confirmation, and one-shot result handling |
+| M33 | Request Transaction Integrity | Complete | Fresh station/Queue/account/membership/cooldown/limit/identity validation, exact availability semantics, explicit station/account confirmation, and bounded one-shot result handling in `572d419` |
 | M34 | Device, Accessibility, and Pre-launch Acceptance | In progress | Human audible TalkBack, keyboard/pointer/assistive access, multi-window/foldable coverage, Play delivery/update, and pre-launch evidence |
 | M35 | Release Signing and Console Eligibility | In progress | Protected upload identity, new-account physical-device verification, package registration, eligible version code, and reproducible signed build path |
 
@@ -127,8 +127,8 @@ None of these milestones blocks M41 unless a later owner decision explicitly mov
 
 ## Program dependencies
 
-1. M28 and M31–M32 are complete; M29, M30, and M33–M35 close the remaining Alpha policy, rights, correctness,
-   accessibility, and release-tooling gaps.
+1. M28 and M31–M33 are complete; M29, M30, M34, and M35 close the remaining Alpha policy, rights, accessibility,
+   and release-tooling gaps.
 2. M36 authorizes the event source before M37 implementation; M38 certifies the result.
 3. M39 freezes the exact candidate only after all intended Alpha code has landed.
 4. M40 proves Play delivery and resolves automated/reviewer findings.

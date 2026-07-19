@@ -34,7 +34,7 @@ navigation:
 
 roadmap_meta:
   updated: 2026-07-18
-  achieved_count: 30
+  achieved_count: 31
   total_count: 60
   active_phase: M29–M35
   active_label: Alpha readiness and release integrity
@@ -300,6 +300,14 @@ milestones:
     evidence: "docs/m32-security-validation.md"
     outcome: "Least-privilege controller authority, coherent station-isolated sessions, trusted redirects, canonical station IDs, and verified build inputs."
 
+  - order: 31
+    id: "M33"
+    name: "Request Transaction Integrity"
+    date: "2026-07-18"
+    commit: "572d419"
+    evidence: "docs/m33-request-transaction-validation.md"
+    outcome: "Fresh station, account, Queue, readiness, and stable track identity checks with bounded cross-surface duplicate suppression."
+
 
 roadmap:
   - id: "M29"
@@ -347,12 +355,12 @@ roadmap:
   - id: "M33"
     phase: "alpha-readiness"
     name: "Request Transaction Integrity"
-    state: "planned"
-    state_label: "Planned"
+    state: "done"
+    state_label: "Complete"
     blocking: true
-    dependencies: "Verified station capability data"
-    evidence: "docs/ROADMAP.md"
-    summary: "Revalidate station Queue account membership cooldown limits and identity before one-shot submit."
+    dependencies: "Re-audit on request Queue account readiness or capability change"
+    evidence: "docs/m33-request-transaction-validation.md"
+    summary: "Fresh station account Queue readiness and stable track identity checks now guard every bounded one-shot submit."
 
   - id: "M34"
     legacy_id: "M23.6"

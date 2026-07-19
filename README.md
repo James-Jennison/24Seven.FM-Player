@@ -33,7 +33,7 @@ The [comprehensive project portal](https://codeframe78.github.io/24Seven.FM-Play
 
 ## Alpha status
 
-The canonical roadmap now runs from **M01 through M60**. **M01–M28 and M31–M32 are complete**, preserving 30 verified achievements. The active Alpha-readiness program is **M29–M35** with five gates still open; authorized closed-app community delivery is **M36–M38**; candidate delivery and publication are **M39–M41**.
+The canonical roadmap now runs from **M01 through M60**. **M01–M28 and M31–M33 are complete**, preserving 31 verified achievements. The active Alpha-readiness program is **M29–M35** with four gates still open; authorized closed-app community delivery is **M36–M38**; candidate delivery and publication are **M39–M41**.
 
 > [!IMPORTANT]
 > **Current focus:** close M29–M35 without weakening external approval, security, accessibility, signing, or request-integrity gates. M36–M38 cannot begin until an authorized event source exists, and M41 requires explicit publication authorization.
@@ -45,7 +45,7 @@ The current Alpha provides a responsive native player, service-owned Media3 play
 
 Public community content remains behind the adult age screen, versioned Terms acceptance, and separate mature-content reveal. Native report actions prepare bounded, station-scoped email drafts addressed to the monitored moderation contact for user review and explicit sending; Contact Us uses the same fixed-recipient handoff. Station-scoped local block controls are implemented. M27 supplies opt-in exact-name Chat-mention detection only while the existing Chat feed is actively observed; it is not closed-app push. Reliable delivery remains M36–M38 and will not be imitated with perpetual background polling.
 
-The validated baseline includes 157 unit tests, debug lint and release checks, API 26–36 coverage, a 16 KB runtime, Pixel Fold and Tablet layouts, large-text and accessibility checks, network loss/recovery, and physical Motorola Razr lifecycle checks. M32 also adds a genuine foreign-package controller harness and focused 20/20 Razr security regression evidence. Evidence remains in the milestone documents linked from the [canonical roadmap](docs/ROADMAP.md).
+The validated baseline includes 163 unit tests, debug lint and release checks, API 26–36 coverage, a 16 KB runtime, Pixel Fold and Tablet layouts, large-text and accessibility checks, network loss/recovery, and physical Motorola Razr lifecycle checks. M32 adds a genuine foreign-package controller harness and focused 20/20 Razr security evidence; M33 adds fresh station/account/Queue/readiness request validation, bounded duplicate suppression, and a focused physical-Razr confirmation check. Evidence remains in the milestone documents linked from the [canonical roadmap](docs/ROADMAP.md).
 
 </details>
 
@@ -64,8 +64,8 @@ The roadmap was renumbered into one dependency-ordered sequence on July 18, 2026
 
 ### Current progression
 
-- **Completed:** M01–M28 and M31–M32. M31 establishes the Contact-only Play boundary and moves any future native VIP/RIP purchase and activation into M58–M60; M32 hardens controller authority, protected sessions, redirects, canonical station IDs, and build integrity.
-- **Active:** five M29–M35 gates remain: M29, M30, and M33–M35. Each milestone has an independent acceptance gate.
+- **Completed:** M01–M28 and M31–M33. M31 establishes the Contact-only Play boundary and moves any future native VIP/RIP purchase and activation into M58–M60; M32 hardens controller authority, protected sessions, redirects, canonical station IDs, and build integrity; M33 binds every one-shot request to fresh station, account, Queue, readiness, and track identity.
+- **Active:** four M29–M35 gates remain: M29, M30, M34, and M35. Each milestone has an independent acceptance gate.
 - **Authorization-gated:** M36–M38 require an approved station-side event source or privacy-compatible relay before implementation.
 - **Publication:** M39–M41 deliberately separate candidate freeze, Play delivery, and the final user-authorized Alpha action.
 - **Production:** M42–M45 add stabilization, production-access evidence, staged release, and operational recertification.
