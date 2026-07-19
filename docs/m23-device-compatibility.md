@@ -57,6 +57,13 @@ UIAutomator reported no remaining `NAF=true` actionable node on the inspected su
 This is real accessibility-service traversal, not semantics-only inference. A human audible/intelligibility check on
 physical hardware still remains for Alpha because automated inspection cannot judge speech pronunciation or clarity.
 
+### Voice Access physical follow-up
+
+The physical Razr also has Google Voice Access enabled with microphone access and without optional phone-call control.
+Following `03a310b`, the user confirmed Play/Pause, Previous station, and Next station by voice. The current device
+tree exposes those controls as named clickable buttons. This is a focused primary-playback result; full alternative
+input traversal remains an M34 gate.
+
 ### Network-loss and restoration evidence
 
 | Device | Sequence | Result |

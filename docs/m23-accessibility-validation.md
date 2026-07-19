@@ -61,6 +61,18 @@ and both actions remain reachable at maximum text scale rather than being clippe
 These fixture-only checks do not submit a request or expose an account. They close the current M33 dialog's automated
 large-text reachability follow-up; the human audible/intelligibility and alternative-input M34 gates remain open.
 
+## Voice Access physical follow-up
+
+On July 18, 2026, the Google Voice Access service was installed from its Play listing and explicitly enabled on the
+physical Motorola Razr 2023 running Android 16. Its microphone permission was granted; its optional phone-call control
+permission was deliberately declined because it is not required to operate the Player.
+
+The user confirmed that Voice Access activated the primary Player commands after the control semantics correction in
+`03a310b`: Play/Pause, Previous station, and Next station. A direct UIAutomator inspection of that same Razr build
+records each as a named, clickable Android button rather than a named non-clickable child. This is human-device
+evidence for the primary playback controls, not a substitute for the remaining full alternative-input traversal of
+station selection, destinations, dialogs, settings, and community surfaces.
+
 ## Verification
 
 - `:app:connectedDebugAndroidTest`: 39/39 at maximum tested Tablet accessibility settings.
