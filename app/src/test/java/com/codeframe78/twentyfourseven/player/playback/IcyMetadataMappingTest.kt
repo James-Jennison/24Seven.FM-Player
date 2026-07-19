@@ -42,7 +42,7 @@ class IcyMetadataMappingTest {
 
         assertEquals(
             "Tycho - 東京 - Coastal Brake (Hatchback’s Cosmic Caviar Dub)",
-            metadata.toNowPlayingState(StationId("entranced"))?.displayTitle,
+            metadata.toNowPlayingState(StationId("efm"))?.displayTitle,
         )
     }
 

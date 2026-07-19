@@ -26,7 +26,6 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class RadioPlaybackServiceTest {
     private val context = ApplicationProvider.getApplicationContext<Context>()
-
     @Test
     fun sessionHidesFallbackNavigationAndReconnectsAfterServiceStop() {
         val serviceIntent = Intent(context, RadioPlaybackService::class.java)
@@ -156,7 +155,9 @@ class RadioPlaybackServiceTest {
         }
     }
 
-    private fun connectController(listener: MediaController.Listener? = null): MediaController {
+    private fun connectController(
+        listener: MediaController.Listener? = null,
+    ): MediaController {
         val token = SessionToken(context, ComponentName(context, RadioPlaybackService::class.java))
         val builder = MediaController.Builder(context, token)
         if (listener != null) builder.setListener(listener)

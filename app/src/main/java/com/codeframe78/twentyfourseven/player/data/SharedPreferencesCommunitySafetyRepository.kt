@@ -15,6 +15,7 @@ import com.codeframe78.twentyfourseven.player.domain.abuseReportEmailDraft
 import com.codeframe78.twentyfourseven.player.domain.isAdultOnDate
 import com.codeframe78.twentyfourseven.player.domain.normalizedCommunityIdentity
 import com.codeframe78.twentyfourseven.player.domain.validatedBirthDate
+import com.codeframe78.twentyfourseven.player.domain.toSupportedStationIdOrNull
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -183,7 +184,10 @@ class SharedPreferencesCommunitySafetyRepository internal constructor(
     private fun decodeBlockedUser(value: String): BlockedCommunityUser? {
         val (station, displayName) = value.split('|', limit = 2).takeIf { it.size == 2 } ?: return null
         return runCatching {
-            BlockedCommunityUser(StationId(decodePreference(station)), decodePreference(displayName))
+            BlockedCommunityUser(
+                decodePreference(station).toSupportedStationIdOrNull() ?: return null,
+                decodePreference(displayName),
+            )
         }.getOrNull()?.takeIf { it.stationId.value.isNotBlank() && it.displayName.isNotBlank() }
     }
 

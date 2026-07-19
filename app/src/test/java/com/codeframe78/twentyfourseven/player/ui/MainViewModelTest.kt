@@ -52,6 +52,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -99,7 +100,7 @@ class MainViewModelTest {
 
         assertEquals("sst", playback.selectedStation?.id?.value)
 
-        viewModel.selectStation(StationId("adagio"))
+        viewModel.selectStation(StationId("afm"))
         viewModel.play()
         viewModel.pause()
         viewModel.stop()
@@ -108,13 +109,13 @@ class MainViewModelTest {
         viewModel.refreshQueue()
         advanceUntilIdle()
 
-        assertEquals("adagio", playback.selectedStation?.id?.value)
+        assertEquals("afm", playback.selectedStation?.id?.value)
         assertEquals(1, playback.playCalls)
         assertEquals(1, playback.pauseCalls)
         assertEquals(1, playback.stopCalls)
         assertEquals(listOf(30L * 60L * 1_000L), playback.sleepTimerDurations)
         assertEquals(1, playback.cancelSleepTimerCalls)
-        assertEquals(StationId("adagio"), queue.refreshedStation)
+        assertEquals(StationId("afm"), queue.refreshedStation)
     }
 
     @Test
@@ -143,7 +144,7 @@ class MainViewModelTest {
         advanceUntilIdle()
         assertEquals("Updated raw title", viewModel.uiState.value.nowPlaying.displayTitle)
 
-        viewModel.selectStation(StationId("adagio"))
+        viewModel.selectStation(StationId("afm"))
         advanceUntilIdle()
         assertNull(viewModel.uiState.value.nowPlaying.displayTitle)
     }
@@ -192,20 +193,20 @@ class MainViewModelTest {
         backgroundScope.launch { viewModel.uiState.collect() }
         advanceUntilIdle()
 
-        viewModel.setStartupStation(StationId("death"))
+        viewModel.setStartupStation(StationId("dfm"))
         advanceUntilIdle()
 
         assertEquals(StartupStationMode.Fixed, viewModel.uiState.value.stationPreferences.startupMode)
-        assertEquals(StationId("death"), viewModel.uiState.value.stationPreferences.defaultStationId)
+        assertEquals(StationId("dfm"), viewModel.uiState.value.stationPreferences.defaultStationId)
         assertEquals(StationId("sst"), viewModel.uiState.value.selectedStation?.id)
         assertEquals(listOf(StationId("sst")), playback.selectedStations)
 
-        viewModel.selectStation(StationId("adagio"))
+        viewModel.selectStation(StationId("afm"))
         viewModel.useLastStationAtStartup()
         advanceUntilIdle()
 
         assertEquals(StartupStationMode.LastSelected, viewModel.uiState.value.stationPreferences.startupMode)
-        assertEquals(StationId("adagio"), viewModel.uiState.value.stationPreferences.lastStationId)
+        assertEquals(StationId("afm"), viewModel.uiState.value.stationPreferences.lastStationId)
         assertEquals(null, viewModel.uiState.value.stationPreferences.defaultStationId)
     }
 
@@ -214,7 +215,7 @@ class MainViewModelTest {
         val preferences = InMemoryStationPreferencesRepository(
             LocalStationPreferences(
                 startupMode = StartupStationMode.Fixed,
-                defaultStationId = StationId("death"),
+                defaultStationId = StationId("dfm"),
             ),
         )
         val playback = FakePlaybackController()
@@ -233,7 +234,7 @@ class MainViewModelTest {
         )
         advanceUntilIdle()
 
-        assertEquals(listOf(StationId("death")), playback.selectedStations)
+        assertEquals(listOf(StationId("dfm")), playback.selectedStations)
     }
 
     @Test
@@ -255,25 +256,25 @@ class MainViewModelTest {
         advanceUntilIdle()
 
         assertEquals(
-            listOf("sst", "1980s", "adagio", "death", "entranced"),
+            listOf("sst", "1980s", "afm", "dfm", "efm"),
             viewModel.uiState.value.accounts.map { it.station.id.value },
         )
         assertEquals(
-            setOf("sst", "1980s", "adagio", "death", "entranced"),
+            setOf("sst", "1980s", "afm", "dfm", "efm"),
             auth.restoredStations.map { it.value }.toSet(),
         )
 
         auth.emit(AuthState(StationId("sst"), AuthStatus.SignedIn, displayName = "SST listener"))
-        auth.emit(AuthState(StationId("adagio"), AuthStatus.Expired, errorMessage = "Expired"))
+        auth.emit(AuthState(StationId("afm"), AuthStatus.Expired, errorMessage = "Expired"))
         advanceUntilIdle()
 
         assertEquals(AuthStatus.SignedIn, viewModel.uiState.value.auth?.status)
         assertEquals(
             AuthStatus.Expired,
-            viewModel.uiState.value.accounts.first { it.station.id == StationId("adagio") }.auth.status,
+            viewModel.uiState.value.accounts.first { it.station.id == StationId("afm") }.auth.status,
         )
 
-        viewModel.selectStation(StationId("adagio"))
+        viewModel.selectStation(StationId("afm"))
         advanceUntilIdle()
         assertEquals(AuthStatus.Expired, viewModel.uiState.value.auth?.status)
         assertEquals(
@@ -286,7 +287,7 @@ class MainViewModelTest {
     fun `account actions target explicit station without changing another session`() = runTest(dispatcher) {
         val auth = FakeAuthRepository().apply {
             emit(AuthState(StationId("sst"), AuthStatus.SignedIn, displayName = "SST listener"))
-            emit(AuthState(StationId("adagio"), AuthStatus.SignedIn, displayName = "Adagio listener"))
+            emit(AuthState(StationId("afm"), AuthStatus.SignedIn, displayName = "Adagio listener"))
         }
         val viewModel = MainViewModel(
             BootstrapStationRepository(),
@@ -303,18 +304,64 @@ class MainViewModelTest {
         backgroundScope.launch { viewModel.uiState.collect() }
         advanceUntilIdle()
 
-        viewModel.refreshAuth(StationId("death"))
-        viewModel.signIn(StationId("entranced"), "Listener", "transient", "A1B2C3")
+        viewModel.refreshAuth(StationId("dfm"))
+        viewModel.signIn(StationId("efm"), "Listener", "transient", "A1B2C3")
         viewModel.signOut(StationId("sst"))
         advanceUntilIdle()
 
-        assertEquals(listOf(StationId("death")), auth.refreshedStations)
-        assertEquals(listOf(StationId("entranced")), auth.signedInStations)
+        assertEquals(listOf(StationId("dfm")), auth.refreshedStations)
+        assertEquals(listOf(StationId("efm")), auth.signedInStations)
         assertEquals(listOf(StationId("sst")), auth.signedOutStations)
         assertEquals(
             AuthStatus.SignedIn,
-            viewModel.uiState.value.accounts.first { it.station.id == StationId("adagio") }.auth.status,
+            viewModel.uiState.value.accounts.first { it.station.id == StationId("afm") }.auth.status,
         )
+    }
+
+    @Test
+    fun `expired session clears only that station protected memory state`() = runTest(dispatcher) {
+        val stationId = StationId("sst")
+        val auth = FakeAuthRepository().apply {
+            emit(AuthState(stationId, AuthStatus.SignedIn, displayName = "Listener"))
+            emit(AuthState(StationId("afm"), AuthStatus.SignedIn, displayName = "Other listener"))
+        }
+        val favorites = FakeFavoriteTracksRepository(
+            FavoriteTracksState(
+                stationId,
+                FavoriteTracksLoadStatus.Ready,
+                tracks = listOf(FavoriteTrack(1, "Protected favorite", "Album", "Artist")),
+            ),
+        )
+        val listenerActivity = FakeListenerActivityRepository().apply {
+            emit(
+                ListenerActivityState(
+                    stationId,
+                    ListenerActivityLoadStatus.Ready,
+                    membershipTier = MembershipTier.Vip,
+                ),
+            )
+        }
+        val viewModel = MainViewModel(
+            BootstrapStationRepository(),
+            FakePlaybackController(),
+            FakeNowPlayingRepository(),
+            FakeQueueRepository(),
+            auth,
+            UnavailableChatRepository(),
+            UnavailableSongRequestRepository(),
+            favorites,
+            listenerActivity,
+            enabledSafetyRepository(),
+        )
+        backgroundScope.launch { viewModel.uiState.collect() }
+        advanceUntilIdle()
+
+        auth.emit(AuthState(stationId, AuthStatus.Expired, errorMessage = "Expired"))
+        advanceUntilIdle()
+
+        assertEquals(listOf(stationId), favorites.clearedStations)
+        assertEquals(listOf(stationId), listenerActivity.clearedStations)
+        assertEquals(AuthStatus.SignedIn, auth.observeAuth(StationId("afm")).first().status)
     }
 
     @Test
@@ -357,10 +404,10 @@ class MainViewModelTest {
         advanceUntilIdle()
         assertEquals(MembershipTier.Vip, viewModel.uiState.value.listenerActivity?.membershipTier)
 
-        viewModel.selectStation(StationId("adagio"))
+        viewModel.selectStation(StationId("afm"))
         advanceUntilIdle()
         assertEquals(0, listenerActivity.activeObservations)
-        assertEquals(StationId("adagio"), viewModel.uiState.value.listenerActivity?.stationId)
+        assertEquals(StationId("afm"), viewModel.uiState.value.listenerActivity?.stationId)
         assertEquals(listOf(StationId("sst")), listenerActivity.refreshedStations)
 
         viewModel.signOut(StationId("sst"))
@@ -394,13 +441,13 @@ class MainViewModelTest {
         assertEquals(StationId("sst"), queue.observedStation)
         assertEquals(1, queue.activeObservations)
 
-        viewModel.selectStation(StationId("death"))
+        viewModel.selectStation(StationId("dfm"))
         advanceUntilIdle()
 
-        assertEquals(StationId("death"), viewModel.uiState.value.queue?.stationId)
-        assertEquals(StationId("death"), viewModel.uiState.value.auth?.stationId)
+        assertEquals(StationId("dfm"), viewModel.uiState.value.queue?.stationId)
+        assertEquals(StationId("dfm"), viewModel.uiState.value.auth?.stationId)
         assertEquals(QueueLoadStatus.Unavailable, viewModel.uiState.value.queue?.status)
-        assertEquals(StationId("death"), queue.observedStation)
+        assertEquals(StationId("dfm"), queue.observedStation)
         assertEquals(1, queue.activeObservations)
 
         viewModel.selectDestination(MainDestination.Player)
@@ -441,10 +488,10 @@ class MainViewModelTest {
         assertEquals(StationId("sst"), chat.sentStation)
         assertEquals("Hello", chat.sentMessage)
 
-        viewModel.selectStation(StationId("adagio"))
+        viewModel.selectStation(StationId("afm"))
         advanceUntilIdle()
-        assertEquals(StationId("adagio"), viewModel.uiState.value.chat?.stationId)
-        assertEquals(StationId("adagio"), chat.observedStation)
+        assertEquals(StationId("afm"), viewModel.uiState.value.chat?.stationId)
+        assertEquals(StationId("afm"), chat.observedStation)
         assertEquals(1, chat.activeObservations)
 
         viewModel.selectDestination(MainDestination.Player)
@@ -817,9 +864,11 @@ class MainViewModelTest {
 
     private class FakeFavoriteTracksRepository(initial: FavoriteTracksState) : FavoriteTracksRepository {
         private val state = MutableStateFlow(initial)
+        val clearedStations = mutableListOf<StationId>()
         override fun observeFavorites(stationId: StationId): Flow<FavoriteTracksState> = state
         override suspend fun refresh(stationId: StationId) = Unit
         override suspend fun clear(stationId: StationId) {
+            clearedStations += stationId
             state.value = FavoriteTracksState(stationId)
         }
     }

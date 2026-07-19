@@ -5,9 +5,11 @@ import com.codeframe78.twentyfourseven.player.domain.AuthRepository
 import com.codeframe78.twentyfourseven.player.domain.AuthState
 import com.codeframe78.twentyfourseven.player.domain.AuthStatus
 import com.codeframe78.twentyfourseven.player.domain.StationId
+import com.codeframe78.twentyfourseven.player.domain.canonicalized
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.net.URI
@@ -26,27 +28,50 @@ class NetworkAuthRepository internal constructor(
         StationAuthRemoteDataSource(sessionStore = AndroidKeystoreAuthSessionStore(context)),
     )
 
-    override fun observeAuth(stationId: StationId): Flow<AuthState> = state(stationId).asStateFlow()
-
-    override suspend fun restoreSession(stationId: StationId): Unit = lock(stationId).withLock {
-        if (state(stationId).value.status != AuthStatus.Unavailable) return@withLock
-        when (val restored = remote.restoredSession(stationId)) {
-            RestoredAuthSession.None -> Unit
-            RestoredAuthSession.Expired -> state(stationId).value = AuthState(
-                stationId = stationId,
-                status = AuthStatus.Expired,
-                errorMessage = "Your saved station session expired. Sign in again.",
-            )
-            is RestoredAuthSession.SignedIn -> state(stationId).value = AuthState(
-                stationId,
-                AuthStatus.SignedIn,
-                displayName = restored.displayName,
-            )
+    override fun observeAuth(stationId: StationId): Flow<AuthState> {
+        val canonical = stationId.canonicalized()
+        return combine(
+            state(canonical).asStateFlow(),
+            remote.observeSessionValidity(canonical),
+        ) { state, validity ->
+            if (
+                validity == ProtectedSessionValidity.Expired &&
+                state.status in setOf(AuthStatus.Unavailable, AuthStatus.SignedIn)
+            ) {
+                AuthState(
+                    stationId = canonical,
+                    status = AuthStatus.Expired,
+                    errorMessage = "Your saved station session expired. Sign in again.",
+                )
+            } else {
+                state
+            }
         }
     }
 
-    override suspend fun refreshChallenge(stationId: StationId) = lock(stationId).withLock {
-        loadChallenge(stationId, errorMessage = null)
+    override suspend fun restoreSession(stationId: StationId) {
+        val canonical = stationId.canonicalized()
+        lock(canonical).withLock {
+            if (state(canonical).value.status != AuthStatus.Unavailable) return@withLock
+            when (val restored = remote.restoredSession(canonical)) {
+                RestoredAuthSession.None -> Unit
+                RestoredAuthSession.Expired -> state(canonical).value = AuthState(
+                    stationId = canonical,
+                    status = AuthStatus.Expired,
+                    errorMessage = "Your saved station session expired. Sign in again.",
+                )
+                is RestoredAuthSession.SignedIn -> state(canonical).value = AuthState(
+                    canonical,
+                    AuthStatus.SignedIn,
+                    displayName = restored.displayName,
+                )
+            }
+        }
+    }
+
+    override suspend fun refreshChallenge(stationId: StationId) {
+        val canonical = stationId.canonicalized()
+        lock(canonical).withLock { loadChallenge(canonical, errorMessage = null) }
     }
 
     override suspend fun signIn(
@@ -54,31 +79,37 @@ class NetworkAuthRepository internal constructor(
         username: String,
         password: String,
         securityCode: String,
-    ) = lock(stationId).withLock {
-        val challenge = challenges[stationId]
-        if (username.isBlank() || password.isBlank() || securityCode.isBlank() || challenge == null) {
-            loadChallenge(stationId, "Enter your username, password, and security code.")
-            return@withLock
-        }
-        state(stationId).value = AuthState(stationId, AuthStatus.SigningIn)
-        runCatching {
-            val page = remote.signIn(stationId, challenge, username, password, securityCode)
-            val action = URI(challenge.actionUrl)
-            val origin = "${action.scheme}://${action.authority}/"
-            resultParser.parseSignedInDisplayName(page.html, origin, username)
-        }.onSuccess { displayName ->
-            remote.persistSession(stationId, displayName)
-            challenges.remove(stationId)
-            state(stationId).value = AuthState(stationId, AuthStatus.SignedIn, displayName = displayName)
-        }.onFailure {
-            loadChallenge(stationId, "Sign in failed. Check your details and the new security code.")
+    ) {
+        val canonical = stationId.canonicalized()
+        lock(canonical).withLock {
+            val challenge = challenges[canonical]
+            if (username.isBlank() || password.isBlank() || securityCode.isBlank() || challenge == null) {
+                loadChallenge(canonical, "Enter your username, password, and security code.")
+                return@withLock
+            }
+            state(canonical).value = AuthState(canonical, AuthStatus.SigningIn)
+            runCatching {
+                val page = remote.signIn(canonical, challenge, username, password, securityCode)
+                val action = URI(challenge.actionUrl)
+                val origin = "${action.scheme}://${action.authority}/"
+                resultParser.parseSignedInDisplayName(page.html, origin, username)
+            }.onSuccess { displayName ->
+                remote.persistSession(canonical, displayName)
+                challenges.remove(canonical)
+                state(canonical).value = AuthState(canonical, AuthStatus.SignedIn, displayName = displayName)
+            }.onFailure {
+                loadChallenge(canonical, "Sign in failed. Check your details and the new security code.")
+            }
         }
     }
 
-    override suspend fun signOut(stationId: StationId) = lock(stationId).withLock {
-        runCatching { remote.signOut(stationId) }
-        challenges.remove(stationId)
-        loadChallenge(stationId, errorMessage = null)
+    override suspend fun signOut(stationId: StationId) {
+        val canonical = stationId.canonicalized()
+        lock(canonical).withLock {
+            runCatching { remote.signOut(canonical) }
+            challenges.remove(canonical)
+            loadChallenge(canonical, errorMessage = null)
+        }
     }
 
     private suspend fun loadChallenge(stationId: StationId, errorMessage: String?) {

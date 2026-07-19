@@ -2,11 +2,11 @@ package com.codeframe78.twentyfourseven.player.data
 
 import com.codeframe78.twentyfourseven.player.domain.ChatMessage
 import com.codeframe78.twentyfourseven.player.domain.StationId
+import com.codeframe78.twentyfourseven.player.domain.canonicalized
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.net.CookieManager
-import java.net.CookiePolicy
 import java.net.HttpURLConnection
 import java.net.URI
 import java.net.URLEncoder
@@ -21,6 +21,7 @@ internal class StationChatRemoteDataSource(
     private val sessionStore: AuthSessionStore = InMemoryAuthSessionStore(),
     private val responseParser: ChatResponseParser = ChatResponseParser(),
     private val postFormParser: ChatPostFormParser = ChatPostFormParser(),
+    private val sessions: StationAuthSessionCoordinator = StationAuthSessionCoordinator(sessionStore),
 ) : ChatRemoteDataSource {
     override suspend fun fetch(stationId: StationId): List<ChatMessage> = withContext(Dispatchers.IO) {
         val origin = origin(stationId)
@@ -67,11 +68,8 @@ internal class StationChatRemoteDataSource(
         }
 
     private fun authenticatedCookieManager(stationId: StationId, origin: String): CookieManager {
-        val uri = URI(origin)
-        val cookies = sessionStore.load(stationId, uri.host)
-        if (cookies.isEmpty()) throw IOException("Station sign-in is required")
-        return CookieManager(null, CookiePolicy.ACCEPT_ORIGINAL_SERVER).also { manager ->
-            cookies.forEach { manager.cookieStore.add(uri, it) }
+        return sessions.cookieManager(stationId, origin).also { manager ->
+            if (manager.cookieStore.cookies.isEmpty()) throw IOException("Station sign-in is required")
         }
     }
 
@@ -88,7 +86,9 @@ internal class StationChatRemoteDataSource(
                 connection.setRequestProperty(name, values.joinToString("; "))
             }
             val status = connection.responseCode
-            cookieManager?.put(uri, connection.headerFields.filterKeys { it != null })
+            if (cookieManager != null) {
+                sessions.captureResponse(stationId, origin(stationId), uri, connection.headerFields)
+            }
             if (status in 300..399) throw IOException("Unexpected station redirect")
             if (status !in 200..299) throw IOException("Station returned HTTP $status")
             connection.inputStream.bufferedReader(StandardCharsets.ISO_8859_1).use { reader ->
@@ -101,12 +101,15 @@ internal class StationChatRemoteDataSource(
 
     private fun requireSameOrigin(stationId: StationId, uri: URI) {
         val expected = URI(origin(stationId))
-        if (uri.scheme != "https" || !uri.host.equals(expected.host, true) || uri.port != expected.port) {
+        if (
+            uri.scheme != "https" || uri.userInfo != null ||
+            !uri.host.equals(expected.host, true) || uri.port != expected.port
+        ) {
             throw IOException("Untrusted chat destination")
         }
     }
 
-    private fun origin(stationId: StationId): String = ORIGINS[stationId]
+    private fun origin(stationId: StationId): String = ORIGINS[stationId.canonicalized()]
         ?: throw IOException("Unsupported station")
 
     private fun encode(value: String): String = URLEncoder.encode(value, StandardCharsets.ISO_8859_1.name())
@@ -120,9 +123,9 @@ internal class StationChatRemoteDataSource(
         val ORIGINS = mapOf(
             StationId("sst") to "https://streamingsoundtracks.com/",
             StationId("1980s") to "https://1980s.fm/",
-            StationId("adagio") to "https://adagio.fm/",
-            StationId("death") to "https://death.fm/",
-            StationId("entranced") to "https://entranced.fm/",
+            StationId("afm") to "https://adagio.fm/",
+            StationId("dfm") to "https://death.fm/",
+            StationId("efm") to "https://entranced.fm/",
         )
     }
 }

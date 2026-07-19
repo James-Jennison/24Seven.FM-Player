@@ -5,4 +5,4 @@ dependencyResolutionManagement {
 }
 rootProject.name = "24Seven.FM Player"
 include(":app")
-
+include(":security-harness")

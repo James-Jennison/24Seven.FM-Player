@@ -43,7 +43,7 @@ class TrackRequestAvailabilityResolverTest {
     @Test
     fun `matching is station scoped and never uses title alone`() {
         val otherStationQueue = QueueState(
-            StationId("death"),
+            StationId("dfm"),
             QueueLoadStatus.Ready,
             upcoming = listOf(QueueTrack(1, "Example Track", albumId = "ALBUM_1")),
         )

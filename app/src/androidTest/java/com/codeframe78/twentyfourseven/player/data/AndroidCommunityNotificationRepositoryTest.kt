@@ -55,7 +55,27 @@ class AndroidCommunityNotificationRepositoryTest {
                 AndroidCommunityNotificationRepository(context, events::add, preferencesName)
                     .observeSettings().first().chatMentionsEnabled(stationId),
             )
-            assertFalse(repository.observeSettings().first().chatMentionsEnabled(StationId("adagio")))
+            assertFalse(repository.observeSettings().first().chatMentionsEnabled(StationId("afm")))
+        } finally {
+            preferences.edit().clear().commit()
+        }
+    }
+
+    @Test
+    fun legacyMentionOptInMigratesToCanonicalStationId() = runTest {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val preferencesName = "m32-community-notification-migration-test"
+        val preferences = context.getSharedPreferences(preferencesName, Context.MODE_PRIVATE)
+        preferences.edit().clear().putStringSet("chat_mention_stations", setOf("adagio")).commit()
+        try {
+            val restored = AndroidCommunityNotificationRepository(
+                context,
+                notifier = {},
+                preferencesName = preferencesName,
+            ).observeSettings().first()
+
+            assertTrue(restored.chatMentionsEnabled(StationId("afm")))
+            assertEquals(setOf("afm"), preferences.getStringSet("chat_mention_stations", emptySet()))
         } finally {
             preferences.edit().clear().commit()
         }

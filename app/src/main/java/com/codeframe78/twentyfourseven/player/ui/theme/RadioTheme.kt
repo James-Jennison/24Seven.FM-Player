@@ -94,17 +94,17 @@ fun stationPalette(stationId: StationId?): StationPalette = when (stationId?.val
         secondary = Color(0xFF35DFFF),
         glow = Color(0xFF3A1647),
     )
-    "adagio" -> StationPalette(
+    "afm" -> StationPalette(
         accent = Color(0xFFFFB35C),
         secondary = Color(0xFFFF755F),
         glow = Color(0xFF432519),
     )
-    "death" -> StationPalette(
+    "dfm" -> StationPalette(
         accent = Color(0xFFB69CFF),
         secondary = Color(0xFF6E74E8),
         glow = Color(0xFF251B49),
     )
-    "entranced" -> StationPalette(
+    "efm" -> StationPalette(
         accent = Color(0xFF55D9A4),
         secondary = Color(0xFF2EB8B2),
         glow = Color(0xFF123D38),

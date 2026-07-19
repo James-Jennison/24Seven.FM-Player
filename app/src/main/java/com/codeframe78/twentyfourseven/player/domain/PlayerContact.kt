@@ -23,7 +23,8 @@ fun abuseReportEmailDraft(
     target: AbuseReportTarget,
     submission: AbuseReportSubmission,
 ): PlayerEmailDraft {
-    val stationName = STATION_NAMES[stationId] ?: throw IllegalArgumentException("Unsupported station.")
+    val stationName = STATION_NAMES[stationId.canonicalized()]
+        ?: throw IllegalArgumentException("Unsupported station.")
     val reporterName = submission.reporterName.trim().take(MAX_REPORTER_NAME_CHARACTERS)
     val details = submission.optionalDetails.trim().replace(Regex("\\s+"), " ").take(MAX_DETAILS_CHARACTERS)
     require(reporterName.length >= 2) { "Enter your name or station nickname." }
@@ -66,7 +67,7 @@ private const val MAX_REPORT_BODY_CHARACTERS = 2_000
 private val STATION_NAMES = mapOf(
     StationId("sst") to "StreamingSoundtracks.com",
     StationId("1980s") to "1980s.FM",
-    StationId("adagio") to "Adagio.FM",
-    StationId("death") to "Death.FM",
-    StationId("entranced") to "Entranced.FM",
+    StationId("afm") to "Adagio.FM",
+    StationId("dfm") to "Death.FM",
+    StationId("efm") to "Entranced.FM",
 )

@@ -33,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.codeframe78.twentyfourseven.player.domain.StationPageTrustPolicy
 import com.codeframe78.twentyfourseven.player.domain.StationId
+import com.codeframe78.twentyfourseven.player.domain.toSupportedStationIdOrNull
 import com.codeframe78.twentyfourseven.player.domain.PlayerEmailDraft
 import com.codeframe78.twentyfourseven.player.domain.StationPageKind
 import com.codeframe78.twentyfourseven.player.domain.stationContactEmailDraft
@@ -88,7 +89,7 @@ class MainActivity : ComponentActivity() {
             val state = viewModel.uiState.collectAsStateWithLifecycle().value
             val chatStationId = requestedChatStationId.collectAsStateWithLifecycle().value
             LaunchedEffect(chatStationId) {
-                val stationId = chatStationId?.let(::StationId) ?: return@LaunchedEffect
+                val stationId = chatStationId?.toSupportedStationIdOrNull() ?: return@LaunchedEffect
                 viewModel.selectStation(stationId)
                 viewModel.selectDestination(com.codeframe78.twentyfourseven.player.ui.MainDestination.Chat)
                 requestedChatStationId.value = null

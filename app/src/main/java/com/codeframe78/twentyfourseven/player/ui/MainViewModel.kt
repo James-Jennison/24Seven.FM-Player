@@ -98,6 +98,7 @@ class MainViewModel(
     private val communitySafety: CommunitySafetyRepository,
     private val communityNotifications: CommunityNotificationRepository = UnavailableCommunityNotificationRepository,
 ) : ViewModel() {
+    private val observedSessionStations = mutableSetOf<StationId>()
     private val destination = MutableStateFlow(MainDestination.Player)
     private val diagnosticTransitions = MutableStateFlow<List<DiagnosticTransition>>(emptyList())
     private val playbackContent = combine(
@@ -321,7 +322,23 @@ class MainViewModel(
         }
         viewModelScope.launch {
             stations.observeStations().collect { all ->
-                all.forEach { station -> auth.restoreSession(station.id) }
+                all.forEach { station ->
+                    auth.restoreSession(station.id)
+                    if (observedSessionStations.add(station.id)) {
+                        launch {
+                            auth.observeAuth(station.id)
+                                .map { state -> state.status }
+                                .distinctUntilChanged()
+                                .collect { status ->
+                                    if (status == AuthStatus.Expired) {
+                                        favorites.clear(station.id)
+                                        listenerActivity.clear(station.id)
+                                        requests.cancelRequest(station.id)
+                                    }
+                                }
+                        }
+                    }
+                }
             }
         }
     }

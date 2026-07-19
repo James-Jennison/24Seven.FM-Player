@@ -12,6 +12,7 @@ import com.codeframe78.twentyfourseven.player.domain.StationPreferencesRepositor
 import com.codeframe78.twentyfourseven.player.domain.StartupStationMode
 import com.codeframe78.twentyfourseven.player.domain.StreamFormat
 import com.codeframe78.twentyfourseven.player.domain.StreamVariant
+import com.codeframe78.twentyfourseven.player.domain.canonicalized
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -43,7 +44,7 @@ class BootstrapStationRepository(
             capabilities = queueCapabilities.copy(supportsSecondaryContent = true),
         ),
         station(
-            id = "adagio",
+            id = "afm",
             name = "Adagio.FM",
             shortName = "Adagio",
             description = "Classical and light music",
@@ -51,7 +52,7 @@ class BootstrapStationRepository(
             capabilities = queueCapabilities.copy(supportsSecondaryContent = true),
         ),
         station(
-            id = "death",
+            id = "dfm",
             name = "Death.FM",
             shortName = "Death",
             description = "Extreme metal",
@@ -59,7 +60,7 @@ class BootstrapStationRepository(
             capabilities = queueCapabilities.copy(supportsSecondaryContent = true),
         ),
         station(
-            id = "entranced",
+            id = "efm",
             name = "Entranced.FM",
             shortName = "Entranced",
             description = "Trance and electronic music",
@@ -74,7 +75,7 @@ class BootstrapStationRepository(
     override fun observeStationPreferences(): Flow<LocalStationPreferences> = preferences.observePreferences()
 
     override suspend fun selectStation(stationId: StationId) {
-        val station = stations.firstOrNull { it.id == stationId } ?: return
+        val station = stations.firstOrNull { it.id == stationId.canonicalized() } ?: return
         selected.value = station
         preferences.recordLastStation(station.id)
     }
@@ -84,8 +85,9 @@ class BootstrapStationRepository(
     }
 
     override suspend fun setStartupStation(stationId: StationId) {
-        if (stations.none { it.id == stationId }) return
-        preferences.setStartupPreference(StartupStationMode.Fixed, stationId)
+        val canonical = stationId.canonicalized()
+        if (stations.none { it.id == canonical }) return
+        preferences.setStartupPreference(StartupStationMode.Fixed, canonical)
     }
 
     private fun resolveStartupStation(saved: LocalStationPreferences): Station {
@@ -93,7 +95,9 @@ class BootstrapStationRepository(
             StartupStationMode.Fixed -> listOfNotNull(saved.defaultStationId, saved.lastStationId)
             StartupStationMode.LastSelected -> listOfNotNull(saved.lastStationId, saved.defaultStationId)
         }
-        return candidates.firstNotNullOfOrNull { candidate -> stations.firstOrNull { it.id == candidate } }
+        return candidates.firstNotNullOfOrNull { candidate ->
+            stations.firstOrNull { it.id == candidate.canonicalized() }
+        }
             ?: stations.first()
     }
 

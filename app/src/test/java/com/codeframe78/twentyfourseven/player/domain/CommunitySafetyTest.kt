@@ -50,7 +50,7 @@ class CommunitySafetyTest {
     fun `blocks are normalized and remain station scoped`() = runTest {
         val repository = InMemoryCommunitySafetyRepository()
         val sst = StationId("sst")
-        val adagio = StationId("adagio")
+        val adagio = StationId("afm")
 
         repository.blockUser(sst, " MorG  Hubby ")
         repository.blockUser(sst, "morg hubby")

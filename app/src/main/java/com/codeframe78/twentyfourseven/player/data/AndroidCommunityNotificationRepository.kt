@@ -17,6 +17,8 @@ import com.codeframe78.twentyfourseven.player.domain.ChatMentionTracker
 import com.codeframe78.twentyfourseven.player.domain.CommunityNotificationRepository
 import com.codeframe78.twentyfourseven.player.domain.CommunityNotificationState
 import com.codeframe78.twentyfourseven.player.domain.StationId
+import com.codeframe78.twentyfourseven.player.domain.canonicalized
+import com.codeframe78.twentyfourseven.player.domain.toSupportedStationIdOrNull
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,12 +35,13 @@ class AndroidCommunityNotificationRepository internal constructor(
     override fun observeSettings(): Flow<CommunityNotificationState> = settings.asStateFlow()
 
     override suspend fun setChatMentionsEnabled(stationId: StationId, enabled: Boolean) {
+        val canonicalStationId = stationId.canonicalized()
         val updatedIds = settings.value.chatMentionStationIds.toMutableSet().apply {
-            if (enabled) add(stationId) else remove(stationId)
+            if (enabled) add(canonicalStationId) else remove(canonicalStationId)
         }
         settings.value = CommunityNotificationState(updatedIds)
         preferences.edit().putStringSet(KEY_CHAT_MENTION_STATIONS, updatedIds.map { it.value }.toSet()).apply()
-        if (!enabled) trackers.remove(stationId)
+        if (!enabled) trackers.remove(canonicalStationId)
     }
 
     override fun processChatSnapshot(snapshot: ChatMentionSnapshot) {
@@ -47,11 +50,13 @@ class AndroidCommunityNotificationRepository internal constructor(
         tracker.accept(snapshot).forEach(notifier::show)
     }
 
-    private fun readSettings(): CommunityNotificationState = CommunityNotificationState(
-        chatMentionStationIds = preferences.getStringSet(KEY_CHAT_MENTION_STATIONS, emptySet()).orEmpty()
-            .mapNotNull { value -> value.takeIf(String::isNotBlank)?.let(::StationId) }
-            .toSet(),
-    )
+    private fun readSettings(): CommunityNotificationState {
+        val stationIds = preferences.getStringSet(KEY_CHAT_MENTION_STATIONS, emptySet()).orEmpty()
+            .mapNotNull(String::toSupportedStationIdOrNull)
+            .toSet()
+        preferences.edit().putStringSet(KEY_CHAT_MENTION_STATIONS, stationIds.map { it.value }.toSet()).apply()
+        return CommunityNotificationState(chatMentionStationIds = stationIds)
+    }
 
     internal companion object {
         const val EXTRA_CHAT_STATION_ID = "community_chat_station_id"

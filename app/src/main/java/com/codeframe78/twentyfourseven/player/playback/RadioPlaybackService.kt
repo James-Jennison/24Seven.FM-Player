@@ -119,15 +119,36 @@ class RadioPlaybackService : MediaSessionService() {
             session: MediaSession,
             controller: MediaSession.ControllerInfo,
         ): MediaSession.ConnectionResult {
+            val access = MediaSessionControllerPolicy.access(controller, packageName)
+            if (access == ControllerAccess.Foreign) {
+                return MediaSession.ConnectionResult.accept(
+                    MediaSessionControllerPolicy.sessionCommands(
+                        MediaSession.ConnectionResult.DEFAULT_SESSION_COMMANDS,
+                        access,
+                    ),
+                    MediaSessionControllerPolicy.playerCommands(session.player.availableCommands, access),
+                )
+            }
             val base = super.onConnect(session, controller)
             if (!base.isAccepted) return base
             return MediaSession.ConnectionResult.accept(
-                base.availableSessionCommands.buildUpon()
-                    .add(SleepTimerSessionContract.setCommand)
-                    .add(SleepTimerSessionContract.cancelCommand)
-                    .build(),
-                base.availablePlayerCommands,
+                MediaSessionControllerPolicy.sessionCommands(base.availableSessionCommands, access),
+                MediaSessionControllerPolicy.playerCommands(base.availablePlayerCommands, access),
             )
+        }
+
+        override fun onAddMediaItems(
+            mediaSession: MediaSession,
+            controller: MediaSession.ControllerInfo,
+            mediaItems: List<MediaItem>,
+        ) = if (
+            MediaSessionControllerPolicy.mayChangeMedia(
+                MediaSessionControllerPolicy.access(controller, packageName),
+            )
+        ) {
+            super.onAddMediaItems(mediaSession, controller, mediaItems)
+        } else {
+            Futures.immediateFailedFuture(SecurityException("Controller cannot change station media"))
         }
 
         override fun onCustomCommand(
@@ -137,18 +158,28 @@ class RadioPlaybackService : MediaSessionService() {
             args: Bundle,
         ) = when (customCommand) {
             SleepTimerSessionContract.setCommand -> {
-                val durationMillis = SleepTimerSessionContract.durationMillis(args)
-                if (durationMillis == null) {
-                    Futures.immediateFuture(SessionResult(SessionError.ERROR_BAD_VALUE))
+                val access = MediaSessionControllerPolicy.access(controller, packageName)
+                if (!MediaSessionControllerPolicy.maySetSleepTimer(access)) {
+                    Futures.immediateFuture(SessionResult(SessionError.ERROR_NOT_SUPPORTED))
                 } else {
-                    startSleepTimer(durationMillis)
-                    Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+                    val durationMillis = SleepTimerSessionContract.durationMillis(args)
+                    if (durationMillis == null) {
+                        Futures.immediateFuture(SessionResult(SessionError.ERROR_BAD_VALUE))
+                    } else {
+                        startSleepTimer(durationMillis)
+                        Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+                    }
                 }
             }
 
             SleepTimerSessionContract.cancelCommand -> {
-                cancelSleepTimer()
-                Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+                val access = MediaSessionControllerPolicy.access(controller, packageName)
+                if (!MediaSessionControllerPolicy.mayCancelSleepTimer(access)) {
+                    Futures.immediateFuture(SessionResult(SessionError.ERROR_NOT_SUPPORTED))
+                } else {
+                    cancelSleepTimer()
+                    Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+                }
             }
 
             else -> super.onCustomCommand(session, controller, customCommand, args)

@@ -5,13 +5,13 @@ import com.codeframe78.twentyfourseven.player.domain.RequestSearchResult
 import com.codeframe78.twentyfourseven.player.domain.RequestSuggestionMode
 import com.codeframe78.twentyfourseven.player.domain.RequestableTrack
 import com.codeframe78.twentyfourseven.player.domain.StationId
+import com.codeframe78.twentyfourseven.player.domain.canonicalized
 import com.codeframe78.twentyfourseven.player.domain.MAX_REQUEST_MESSAGE_CHARACTERS
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
 import java.io.IOException
 import java.net.CookieManager
-import java.net.CookiePolicy
 import java.net.HttpURLConnection
 import java.net.URI
 import java.net.URLDecoder
@@ -36,6 +36,7 @@ internal interface SongRequestRemoteDataSource {
 internal class StationSongRequestRemoteDataSource(
     private val parser: SongRequestPageParser = SongRequestPageParser(),
     private val sessionStore: AuthSessionStore = InMemoryAuthSessionStore(),
+    private val sessions: StationAuthSessionCoordinator = StationAuthSessionCoordinator(sessionStore),
     private val connectionFactory: (URI) -> HttpURLConnection = {
         it.toURL().openConnection() as HttpURLConnection
     },
@@ -112,6 +113,9 @@ internal class StationSongRequestRemoteDataSource(
             stopReadingWhen = ::containsTerminalRequestResponse,
         )
         val submission = classifySubmission(page.html)
+        if (submission == RequestSubmissionResult.AuthenticationRequired) {
+            sessions.expire(stationId)
+        }
         if (submission !is RequestSubmissionResult.Submitted || message.isBlank()) {
             return@withContext submission
         }
@@ -288,7 +292,9 @@ internal class StationSongRequestRemoteDataSource(
                     connection.outputStream.use { it.write(body) }
                 }
                 val status = connection.responseCode
-                if (authenticated) cookieManager?.put(uri, connection.headerFields.filterKeys { it != null })
+                if (authenticated && cookieManager != null) {
+                    sessions.captureResponse(stationId, origin(stationId), uri, connection.headerFields)
+                }
                 if (status in REDIRECT_STATUSES) {
                     if (redirectCount == MAX_REDIRECTS) throw IOException("Too many station redirects")
                     uri = trustedRedirect(
@@ -315,22 +321,20 @@ internal class StationSongRequestRemoteDataSource(
     }
 
     private fun authenticatedCookieManager(stationId: StationId, origin: String): CookieManager {
-        val uri = URI(origin)
-        return CookieManager(null, CookiePolicy.ACCEPT_ORIGINAL_SERVER).also { manager ->
-            sessionStore.load(stationId, uri.host).forEach { manager.cookieStore.add(uri, it) }
-        }
+        return sessions.cookieManager(stationId, origin)
     }
 
     private fun requireSameOrigin(stationId: StationId, uri: URI) {
         val expected = URI(origin(stationId))
         if (uri.scheme != "https") throw IOException("Untrusted request scheme")
+        if (uri.userInfo != null) throw IOException("Untrusted request authority")
         if (!uri.host.equals(expected.host, true)) throw IOException("Untrusted request host")
         if (effectivePort(uri) != effectivePort(expected)) throw IOException("Untrusted request port")
     }
 
     private fun trustedRedirect(stationId: StationId, redirect: URI): URI {
         val expected = URI(origin(stationId))
-        val trustedHosts = REDIRECT_HOSTS[stationId] ?: setOf(expected.host)
+        val trustedHosts = REDIRECT_HOSTS[stationId.canonicalized()] ?: setOf(expected.host)
         if (trustedHosts.none { it.equals(redirect.host, ignoreCase = true) }) return redirect
         if (
             (redirect.scheme == "http" && effectivePort(redirect) == 80) ||
@@ -376,7 +380,8 @@ internal class StationSongRequestRemoteDataSource(
         return REJECTION_PATTERNS.any { it.containsMatchIn(text) }
     }
 
-    private fun origin(stationId: StationId): String = ORIGINS[stationId] ?: throw IOException("Unsupported station")
+    private fun origin(stationId: StationId): String =
+        ORIGINS[stationId.canonicalized()] ?: throw IOException("Unsupported station")
     private fun encode(value: String) = URLEncoder.encode(value, StandardCharsets.UTF_8.name())
 
     private companion object {
@@ -408,9 +413,9 @@ internal class StationSongRequestRemoteDataSource(
         val ORIGINS = mapOf(
             StationId("sst") to "https://streamingsoundtracks.com/",
             StationId("1980s") to "https://1980s.fm/",
-            StationId("adagio") to "https://adagio.fm/",
-            StationId("death") to "https://death.fm/",
-            StationId("entranced") to "https://entranced.fm/",
+            StationId("afm") to "https://adagio.fm/",
+            StationId("dfm") to "https://death.fm/",
+            StationId("efm") to "https://entranced.fm/",
         )
         val REDIRECT_HOSTS = mapOf(
             StationId("sst") to setOf("streamingsoundtracks.com", "www.streamingsoundtracks.com"),

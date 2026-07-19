@@ -41,7 +41,25 @@ class SharedPreferencesCommunitySafetyRepositoryTest {
             val restored = repository(context, name).observeSafety().first()
             assertTrue(restored.canViewCommunityContent)
             assertTrue(restored.isBlocked(StationId("sst"), "morg hubby"))
-            assertFalse(restored.isBlocked(StationId("adagio"), "morg hubby"))
+            assertFalse(restored.isBlocked(StationId("afm"), "morg hubby"))
+        } finally {
+            stored.edit().clear().commit()
+        }
+    }
+
+    @Test
+    fun legacyBlockedUserStationIdMigratesInMemoryAndOnNextWrite() = runTest {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val name = "m32-community-safety-migration-test"
+        val stored = context.getSharedPreferences(name, Context.MODE_PRIVATE)
+        stored.edit().clear().putStringSet("blocked_users", setOf("adagio|Legacy+Listener")).commit()
+        try {
+            val repository = repository(context, name)
+            assertTrue(repository.observeSafety().first().isBlocked(StationId("afm"), "Legacy Listener"))
+
+            repository.blockUser(StationId("sst"), "Current Listener")
+            assertTrue(stored.getStringSet("blocked_users", emptySet()).orEmpty().any { it.startsWith("afm|") })
+            assertFalse(stored.getStringSet("blocked_users", emptySet()).orEmpty().any { it.startsWith("adagio|") })
         } finally {
             stored.edit().clear().commit()
         }

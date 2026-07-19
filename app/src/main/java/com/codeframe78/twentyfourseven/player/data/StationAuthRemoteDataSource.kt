@@ -1,16 +1,17 @@
 package com.codeframe78.twentyfourseven.player.data
 
 import com.codeframe78.twentyfourseven.player.domain.StationId
+import com.codeframe78.twentyfourseven.player.domain.canonicalized
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.net.CookieManager
-import java.net.CookiePolicy
 import java.net.HttpURLConnection
 import java.net.URI
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
-import java.util.concurrent.ConcurrentHashMap
 
 internal data class AuthenticatedPage(val html: String, val finalUrl: String)
 
@@ -21,6 +22,8 @@ internal sealed interface RestoredAuthSession {
 }
 
 internal interface AuthRemoteDataSource {
+    fun observeSessionValidity(stationId: StationId): Flow<ProtectedSessionValidity> =
+        flowOf(ProtectedSessionValidity.Unknown)
     suspend fun fetchChallenge(stationId: StationId): LoginChallenge
     suspend fun signIn(
         stationId: StationId,
@@ -38,8 +41,10 @@ internal class StationAuthRemoteDataSource(
     private val parser: AuthLoginPageParser = AuthLoginPageParser(),
     private val resultParser: AuthLoginResultParser = AuthLoginResultParser(),
     private val sessionStore: AuthSessionStore = InMemoryAuthSessionStore(),
+    private val sessions: StationAuthSessionCoordinator = StationAuthSessionCoordinator(sessionStore),
 ) : AuthRemoteDataSource {
-    private val cookieManagers = ConcurrentHashMap<StationId, CookieManager>()
+    override fun observeSessionValidity(stationId: StationId): Flow<ProtectedSessionValidity> =
+        sessions.observeValidity(stationId)
 
     override suspend fun fetchChallenge(stationId: StationId): LoginChallenge = withContext(Dispatchers.IO) {
         val origin = origin(stationId)
@@ -74,14 +79,20 @@ internal class StationAuthRemoteDataSource(
             )
             Unit
         } finally {
-            cookieManagers.remove(stationId)
-            sessionStore.clear(stationId)
+            sessions.clear(stationId)
         }
     }
 
     override suspend fun restoredSession(stationId: StationId): RestoredAuthSession = withContext(Dispatchers.IO) {
-        if (cookieManager(stationId).cookieStore.cookies.isEmpty()) return@withContext RestoredAuthSession.None
-        val displayName = sessionStore.loadDisplayName(stationId) ?: return@withContext RestoredAuthSession.None
+        val displayName = sessions.displayName(stationId)
+        if (cookieManager(stationId).cookieStore.cookies.isEmpty()) {
+            if (displayName != null) {
+                sessions.expire(stationId)
+                return@withContext RestoredAuthSession.Expired
+            }
+            return@withContext RestoredAuthSession.None
+        }
+        if (displayName == null) return@withContext RestoredAuthSession.None
         val origin = origin(stationId)
         val page = runCatching { request(stationId, URI(origin), method = "GET") }
             .getOrNull() ?: return@withContext RestoredAuthSession.SignedIn(displayName)
@@ -89,17 +100,14 @@ internal class StationAuthRemoteDataSource(
             .fold(
                 onSuccess = RestoredAuthSession::SignedIn,
                 onFailure = {
-                cookieManagers.remove(stationId)
-                sessionStore.clear(stationId)
+                    sessions.expire(stationId)
                     RestoredAuthSession.Expired
                 },
             )
     }
 
     override fun persistSession(stationId: StationId, displayName: String) {
-        val domain = URI(origin(stationId)).host
-        val cookies = cookieManager(stationId).cookieStore.cookies
-        sessionStore.save(stationId, domain, cookies, displayName)
+        sessions.persistAuthenticated(stationId, origin(stationId), displayName)
     }
 
     private fun request(stationId: StationId, initialUri: URI, method: String, body: String? = null): AuthenticatedPage {
@@ -126,7 +134,7 @@ internal class StationAuthRemoteDataSource(
                     connection.outputStream.use { it.write(encoded.toByteArray(StandardCharsets.UTF_8)) }
                 }
                 val status = connection.responseCode
-                cookies.put(uri, connection.headerFields.filterKeys { it != null })
+                sessions.captureResponse(stationId, origin(stationId), uri, connection.headerFields)
                 if (status in REDIRECT_STATUSES) {
                     if (redirectCount == MAX_REDIRECTS) throw IOException("Too many station redirects")
                     val location = connection.getHeaderField("Location") ?: throw IOException("Station redirect was invalid")
@@ -152,20 +160,19 @@ internal class StationAuthRemoteDataSource(
     private fun requireSameOrigin(url: String, origin: String) {
         val uri = URI(url)
         val expected = URI(origin)
-        if (uri.scheme != "https" || !uri.host.equals(expected.host, true) || uri.port != expected.port) {
+        if (
+            uri.scheme != "https" || uri.userInfo != null ||
+            !uri.host.equals(expected.host, true) || uri.port != expected.port
+        ) {
             throw IOException("Untrusted authentication destination")
         }
     }
 
-    private fun origin(stationId: StationId): String = ORIGINS[stationId]
+    private fun origin(stationId: StationId): String = ORIGINS[stationId.canonicalized()]
         ?: throw IOException("Unsupported station")
 
-    private fun cookieManager(stationId: StationId): CookieManager = cookieManagers.getOrPut(stationId) {
-        val origin = URI(origin(stationId))
-        CookieManager(null, CookiePolicy.ACCEPT_ORIGINAL_SERVER).also { manager ->
-            sessionStore.load(stationId, origin.host).forEach { manager.cookieStore.add(origin, it) }
-        }
-    }
+    private fun cookieManager(stationId: StationId): CookieManager =
+        sessions.cookieManager(stationId, origin(stationId))
 
     private fun encode(value: String): String = URLEncoder.encode(value, StandardCharsets.UTF_8.name())
 
@@ -179,9 +186,9 @@ internal class StationAuthRemoteDataSource(
         val ORIGINS = mapOf(
             StationId("sst") to "https://streamingsoundtracks.com/",
             StationId("1980s") to "https://1980s.fm/",
-            StationId("adagio") to "https://adagio.fm/",
-            StationId("death") to "https://death.fm/",
-            StationId("entranced") to "https://entranced.fm/",
+            StationId("afm") to "https://adagio.fm/",
+            StationId("dfm") to "https://death.fm/",
+            StationId("efm") to "https://entranced.fm/",
         )
     }
 }

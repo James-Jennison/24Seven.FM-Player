@@ -12,7 +12,7 @@ class InMemoryNowPlayingRepositoryTest {
     @Test
     fun `publish and clear expose immutable station-scoped state`() = runTest {
         val repository = InMemoryNowPlayingRepository()
-        val stationId = StationId("adagio")
+        val stationId = StationId("afm")
 
         repository.publish(NowPlayingState(stationId, "Verified raw ICY title"))
         assertEquals("Verified raw ICY title", repository.observeNowPlaying().first().displayTitle)

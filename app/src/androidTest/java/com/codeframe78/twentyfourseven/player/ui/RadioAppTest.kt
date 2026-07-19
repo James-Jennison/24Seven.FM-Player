@@ -425,7 +425,7 @@ class RadioAppTest {
         val selectedStations = mutableListOf<StationId>()
         var playCount = 0
         var pauseCount = 0
-        val adagio = station.copy(id = StationId("adagio"), name = "Adagio.FM", shortName = "Adagio")
+        val adagio = station.copy(id = StationId("afm"), name = "Adagio.FM", shortName = "Adagio")
         composeRule.setContent {
             var state by remember {
                 mutableStateOf(
@@ -466,7 +466,7 @@ class RadioAppTest {
         composeRule.onNodeWithContentDescription("Pause live radio").performClick()
 
         composeRule.runOnIdle {
-            assertEquals(listOf(StationId("adagio"), StationId("sst")), selectedStations)
+            assertEquals(listOf(StationId("afm"), StationId("sst")), selectedStations)
             assertEquals(1, playCount)
             assertEquals(1, pauseCount)
         }
@@ -666,15 +666,15 @@ class RadioAppTest {
         val stations = listOf(
             accountStation("sst", "StreamingSoundtracks.com", "SST"),
             accountStation("1980s", "1980s.FM", "80s"),
-            accountStation("adagio", "Adagio.FM", "Adagio"),
-            accountStation("death", "Death.FM", "Death"),
-            accountStation("entranced", "Entranced.FM", "Entranced"),
+            accountStation("afm", "Adagio.FM", "Adagio"),
+            accountStation("dfm", "Death.FM", "Death"),
+            accountStation("efm", "Entranced.FM", "Entranced"),
         )
         val accounts = stations.map { accountStation ->
             val auth = when (accountStation.id.value) {
                 "sst" -> AuthState(accountStation.id, AuthStatus.SignedIn, displayName = "Listener")
-                "adagio" -> AuthState(accountStation.id, AuthStatus.Expired, errorMessage = "Session expired")
-                "entranced" -> AuthState(
+                "afm" -> AuthState(accountStation.id, AuthStatus.Expired, errorMessage = "Session expired")
+                "efm" -> AuthState(
                     accountStation.id,
                     AuthStatus.SignedOut,
                     challengeImageUrl = "https://entranced.fm/security-code.png",
@@ -723,15 +723,15 @@ class RadioAppTest {
 
         composeRule.runOnIdle {
             assertEquals(listOf(StationId("sst")), signedOut)
-            assertEquals(listOf(StationId("adagio")), refreshed)
-            assertEquals(listOf(StationId("entranced")), signedIn)
+            assertEquals(listOf(StationId("afm")), refreshed)
+            assertEquals(listOf(StationId("efm")), signedIn)
         }
     }
 
     @Test
     fun compactMorePrioritizesSelectedAccountAndTogglesDisclosures() {
         val sst = accountStation("sst", "StreamingSoundtracks.com", "SST")
-        val adagio = accountStation("adagio", "Adagio.FM", "Adagio")
+        val adagio = accountStation("afm", "Adagio.FM", "Adagio")
         val accounts = listOf(
             StationAccountUiState(sst, AuthState(sst.id)),
             StationAccountUiState(adagio, AuthState(adagio.id)),
@@ -783,7 +783,7 @@ class RadioAppTest {
     fun deviceStartupPreferenceIsDistinctAndEmitsExplicitActions() {
         val useLastCalls = mutableListOf<Unit>()
         val fixedStations = mutableListOf<StationId>()
-        val adagio = accountStation("adagio", "Adagio.FM", "Adagio")
+        val adagio = accountStation("afm", "Adagio.FM", "Adagio")
         composeRule.setContent {
             MaterialTheme {
                 RadioApp(
@@ -816,7 +816,7 @@ class RadioAppTest {
 
         composeRule.runOnIdle {
             assertEquals(1, useLastCalls.size)
-            assertEquals(listOf(StationId("adagio")), fixedStations)
+            assertEquals(listOf(StationId("afm")), fixedStations)
         }
     }
 

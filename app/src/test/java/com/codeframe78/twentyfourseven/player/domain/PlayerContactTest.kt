@@ -9,7 +9,7 @@ class PlayerContactTest {
     @Test
     fun `station contact draft uses the fixed monitored recipient and selected station`() {
         val station = Station(
-            id = StationId("adagio"),
+            id = StationId("afm"),
             name = "Adagio.FM",
             shortName = "Adagio",
             description = "Classical",
@@ -28,9 +28,9 @@ class PlayerContactTest {
         mapOf(
             "sst" to "StreamingSoundtracks.com",
             "1980s" to "1980s.FM",
-            "adagio" to "Adagio.FM",
-            "death" to "Death.FM",
-            "entranced" to "Entranced.FM",
+            "afm" to "Adagio.FM",
+            "dfm" to "Death.FM",
+            "efm" to "Entranced.FM",
         ).forEach { (stationId, stationName) ->
             val stationDraft = abuseReportEmailDraft(
                 stationId = StationId(stationId),

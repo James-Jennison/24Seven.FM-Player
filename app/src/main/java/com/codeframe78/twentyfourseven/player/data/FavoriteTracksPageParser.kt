@@ -104,7 +104,8 @@ internal class FavoriteTracksPageParser {
     }
 
     private fun isSameOrigin(uri: URI, origin: URI): Boolean =
-        uri.scheme == "https" && uri.host.equals(origin.host, true) && uri.port == origin.port
+        uri.scheme == "https" && uri.userInfo == null &&
+            uri.host.equals(origin.host, true) && uri.port == origin.port
 
     private fun queryValue(query: String?, name: String): String? = query
         ?.split('&')

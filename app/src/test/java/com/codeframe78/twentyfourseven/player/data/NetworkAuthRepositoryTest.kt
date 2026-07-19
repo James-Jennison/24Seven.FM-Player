@@ -3,6 +3,8 @@ package com.codeframe78.twentyfourseven.player.data
 import com.codeframe78.twentyfourseven.player.domain.AuthStatus
 import com.codeframe78.twentyfourseven.player.domain.StationId
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -81,7 +83,7 @@ class NetworkAuthRepositoryTest {
 
     @Test
     fun `expired restored session is explicit and isolated from another station`() = runTest {
-        val adagio = StationId("adagio")
+        val adagio = StationId("afm")
         val repository = NetworkAuthRepository(
             FakeAuthRemoteDataSource(
                 challenge,
@@ -105,7 +107,7 @@ class NetworkAuthRepositoryTest {
 
     @Test
     fun `signing out one station preserves another restored station`() = runTest {
-        val adagio = StationId("adagio")
+        val adagio = StationId("afm")
         val remote = FakeAuthRemoteDataSource(
             challenge,
             restoredSessions = mapOf(
@@ -125,6 +127,26 @@ class NetworkAuthRepositoryTest {
         assertEquals(listOf(stationId), remote.signedOutStations)
     }
 
+    @Test
+    fun `runtime session invalidation becomes explicit without changing another station`() = runTest {
+        val adagio = StationId("afm")
+        val remote = FakeAuthRemoteDataSource(
+            challenge,
+            restoredSessions = mapOf(
+                stationId to RestoredAuthSession.SignedIn("SST listener"),
+                adagio to RestoredAuthSession.SignedIn("Adagio listener"),
+            ),
+        )
+        val repository = NetworkAuthRepository(remote)
+        repository.restoreSession(stationId)
+        repository.restoreSession(adagio)
+
+        remote.emitValidity(stationId, ProtectedSessionValidity.Expired)
+
+        assertEquals(AuthStatus.Expired, repository.observeAuth(stationId).first().status)
+        assertEquals(AuthStatus.SignedIn, repository.observeAuth(adagio).first().status)
+    }
+
     private class FakeAuthRemoteDataSource(
         private val challenge: LoginChallenge,
         private val failSignIn: Boolean = false,
@@ -134,6 +156,10 @@ class NetworkAuthRepositoryTest {
         val signedOutStations = mutableListOf<StationId>()
         var persistCalls = 0
         var submittedInputs: List<String>? = null
+        private val validities = mutableMapOf<StationId, MutableStateFlow<ProtectedSessionValidity>>()
+
+        override fun observeSessionValidity(stationId: StationId): Flow<ProtectedSessionValidity> =
+            validity(stationId)
 
         override suspend fun fetchChallenge(stationId: StationId): LoginChallenge {
             challengeCalls++
@@ -164,6 +190,15 @@ class NetworkAuthRepositoryTest {
 
         override fun persistSession(stationId: StationId, displayName: String) {
             persistCalls++
+            validity(stationId).value = ProtectedSessionValidity.Active
+        }
+
+        fun emitValidity(stationId: StationId, value: ProtectedSessionValidity) {
+            validity(stationId).value = value
+        }
+
+        private fun validity(stationId: StationId) = validities.getOrPut(stationId) {
+            MutableStateFlow(ProtectedSessionValidity.Unknown)
         }
     }
 }

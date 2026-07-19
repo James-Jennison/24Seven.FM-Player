@@ -80,9 +80,9 @@ private fun PlayerPreview(
 private val previewStations = listOf(
     previewStation("sst", "StreamingSoundtracks.com", "SST", "Movie, game, TV and anime scores"),
     previewStation("1980s", "1980s.FM", "1980s", "Music from the 1980s"),
-    previewStation("adagio", "Adagio.FM", "Adagio", "Classical and light music"),
-    previewStation("death", "Death.FM", "Death", "Extreme metal"),
-    previewStation("entranced", "Entranced.FM", "Entranced", "Trance and electronic music"),
+    previewStation("afm", "Adagio.FM", "Adagio", "Classical and light music"),
+    previewStation("dfm", "Death.FM", "Death", "Extreme metal"),
+    previewStation("efm", "Entranced.FM", "Entranced", "Trance and electronic music"),
 )
 
 private fun previewStation(id: String, name: String, shortName: String, description: String) = Station(

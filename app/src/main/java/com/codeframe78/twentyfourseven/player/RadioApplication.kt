@@ -9,6 +9,7 @@ import com.codeframe78.twentyfourseven.player.data.AndroidKeystoreAuthSessionSto
 import com.codeframe78.twentyfourseven.player.data.AndroidCommunityNotificationRepository
 import com.codeframe78.twentyfourseven.player.data.PollingChatRepository
 import com.codeframe78.twentyfourseven.player.data.StationAuthRemoteDataSource
+import com.codeframe78.twentyfourseven.player.data.StationAuthSessionCoordinator
 import com.codeframe78.twentyfourseven.player.data.StationChatRemoteDataSource
 import com.codeframe78.twentyfourseven.player.data.NetworkSongRequestRepository
 import com.codeframe78.twentyfourseven.player.data.NetworkFavoriteTracksRepository
@@ -34,6 +35,7 @@ class RadioApplication : Application() {
 class AppContainer(application: Application) {
     private val nowPlayingStore = InMemoryNowPlayingRepository()
     private val authSessionStore = AndroidKeystoreAuthSessionStore(application)
+    private val authSessions = StationAuthSessionCoordinator(authSessionStore)
     private val stationPreferences = SharedPreferencesStationPreferencesRepository(application)
     val communitySafetyRepository = SharedPreferencesCommunitySafetyRepository(application)
     val communityNotificationRepository = AndroidCommunityNotificationRepository(application)
@@ -45,18 +47,18 @@ class AppContainer(application: Application) {
     val nowPlayingArtworkRepository: NowPlayingArtworkRepository = StationNowPlayingArtworkRepository()
     val queueRepository = PollingQueueRepository()
     val authRepository = NetworkAuthRepository(
-        StationAuthRemoteDataSource(sessionStore = authSessionStore),
+        StationAuthRemoteDataSource(sessionStore = authSessionStore, sessions = authSessions),
     )
     val chatRepository = PollingChatRepository(
-        StationChatRemoteDataSource(sessionStore = authSessionStore),
+        StationChatRemoteDataSource(sessionStore = authSessionStore, sessions = authSessions),
     )
     val songRequestRepository: SongRequestRepository = NetworkSongRequestRepository(
-        StationSongRequestRemoteDataSource(sessionStore = authSessionStore),
+        StationSongRequestRemoteDataSource(sessionStore = authSessionStore, sessions = authSessions),
     )
     val favoriteTracksRepository: FavoriteTracksRepository = NetworkFavoriteTracksRepository(
-        StationFavoriteTracksRemoteDataSource(sessionStore = authSessionStore),
+        StationFavoriteTracksRemoteDataSource(sessionStore = authSessionStore, sessions = authSessions),
     )
     val listenerActivityRepository: ListenerActivityRepository = NetworkListenerActivityRepository(
-        StationListenerActivityRemoteDataSource(sessionStore = authSessionStore),
+        StationListenerActivityRemoteDataSource(sessionStore = authSessionStore, sessions = authSessions),
     )
 }

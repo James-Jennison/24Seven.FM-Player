@@ -10,11 +10,11 @@ import org.junit.Test
 class PlayerExperienceTest {
     @Test
     fun `adjacent stations wrap in both directions`() {
-        val stations = listOf("sst", "1980s", "adagio", "death", "entranced").map(::station)
+        val stations = listOf("sst", "1980s", "afm", "dfm", "efm").map(::station)
 
         assertEquals(StationId("1980s"), adjacentStationId(stations, StationId("sst"), 1))
-        assertEquals(StationId("entranced"), adjacentStationId(stations, StationId("sst"), -1))
-        assertEquals(StationId("sst"), adjacentStationId(stations, StationId("entranced"), 1))
+        assertEquals(StationId("efm"), adjacentStationId(stations, StationId("sst"), -1))
+        assertEquals(StationId("sst"), adjacentStationId(stations, StationId("efm"), 1))
     }
 
     @Test

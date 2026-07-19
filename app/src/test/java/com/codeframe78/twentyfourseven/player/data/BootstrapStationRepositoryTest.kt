@@ -19,16 +19,16 @@ class BootstrapStationRepositoryTest {
         val stations = repository.observeStations().first()
 
         assertEquals(
-            listOf("sst", "1980s", "adagio", "death", "entranced"),
+            listOf("sst", "1980s", "afm", "dfm", "efm"),
             stations.map { it.id.value },
         )
     }
 
     @Test
     fun `station selection updates observed station`() = runTest {
-        repository.selectStation(StationId("adagio"))
+        repository.selectStation(StationId("afm"))
 
-        assertEquals("adagio", repository.observeSelectedStation().first().id.value)
+        assertEquals("afm", repository.observeSelectedStation().first().id.value)
     }
 
     @Test
@@ -46,14 +46,14 @@ class BootstrapStationRepositoryTest {
         val preferences = InMemoryStationPreferencesRepository(
             LocalStationPreferences(
                 startupMode = StartupStationMode.Fixed,
-                defaultStationId = StationId("death"),
-                lastStationId = StationId("adagio"),
+                defaultStationId = StationId("dfm"),
+                lastStationId = StationId("afm"),
             ),
         )
 
         val selected = BootstrapStationRepository(preferences).observeSelectedStation().first()
 
-        assertEquals(StationId("death"), selected.id)
+        assertEquals(StationId("dfm"), selected.id)
     }
 
     @Test
@@ -62,13 +62,13 @@ class BootstrapStationRepositoryTest {
             LocalStationPreferences(
                 startupMode = StartupStationMode.Fixed,
                 defaultStationId = StationId("removed-station"),
-                lastStationId = StationId("entranced"),
+                lastStationId = StationId("efm"),
             ),
         )
 
         val selected = BootstrapStationRepository(preferences).observeSelectedStation().first()
 
-        assertEquals(StationId("entranced"), selected.id)
+        assertEquals(StationId("efm"), selected.id)
     }
 
     @Test
@@ -76,13 +76,13 @@ class BootstrapStationRepositoryTest {
         val preferences = InMemoryStationPreferencesRepository()
         val repository = BootstrapStationRepository(preferences)
 
-        repository.selectStation(StationId("adagio"))
-        repository.setStartupStation(StationId("death"))
+        repository.selectStation(StationId("afm"))
+        repository.setStartupStation(StationId("dfm"))
         repository.selectStation(StationId("unknown"))
 
-        assertEquals(StationId("adagio"), preferences.current.lastStationId)
+        assertEquals(StationId("afm"), preferences.current.lastStationId)
         assertEquals(StartupStationMode.Fixed, preferences.current.startupMode)
-        assertEquals(StationId("death"), preferences.current.defaultStationId)
+        assertEquals(StationId("dfm"), preferences.current.defaultStationId)
 
         repository.useLastStationAtStartup()
         assertEquals(StartupStationMode.LastSelected, preferences.current.startupMode)
@@ -108,7 +108,7 @@ class BootstrapStationRepositoryTest {
         val stations = repository.observeStations().first()
 
         assertEquals(
-            listOf("sst", "1980s", "adagio", "death", "entranced"),
+            listOf("sst", "1980s", "afm", "dfm", "efm"),
             stations.filter { it.capabilities.supportsSecondaryContent }.map { it.id.value },
         )
         stations.filter { it.capabilities.supportsSecondaryContent }.forEach { station ->
@@ -151,7 +151,7 @@ class BootstrapStationRepositoryTest {
 
     @Test
     fun `adagio certification contract does not inherit SST only capabilities`() = runTest {
-        val station = repository.observeStations().first().single { it.id == StationId("adagio") }
+        val station = repository.observeStations().first().single { it.id == StationId("afm") }
 
         with(station.capabilities) {
             assertEquals(true, supportsAuthentication)
@@ -177,7 +177,7 @@ class BootstrapStationRepositoryTest {
 
     @Test
     fun `death certification contract uses verified RIP pages without SST only capabilities`() = runTest {
-        val station = repository.observeStations().first().single { it.id == StationId("death") }
+        val station = repository.observeStations().first().single { it.id == StationId("dfm") }
 
         with(station.capabilities) {
             assertEquals(true, supportsAuthentication)
@@ -203,7 +203,7 @@ class BootstrapStationRepositoryTest {
 
     @Test
     fun `entranced certification contract does not inherit SST only capabilities`() = runTest {
-        val station = repository.observeStations().first().single { it.id == StationId("entranced") }
+        val station = repository.observeStations().first().single { it.id == StationId("efm") }
 
         with(station.capabilities) {
             assertEquals(true, supportsAuthentication)
