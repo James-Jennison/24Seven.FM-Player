@@ -66,6 +66,7 @@ section: roadmap
       <h3>{{ item.name }}</h3>
       <p>{{ item.summary }}</p>
       <p class="roadmap-dependency"><strong>Dependency:</strong> {{ item.dependencies }}</p>
+      {% if item.forecast %}<p class="roadmap-forecast"><strong>Forecast:</strong> {{ item.forecast }}<span>{{ item.forecast_confidence }} · {{ item.forecast_model }}</span></p>{% endif %}
       <a href="https://github.com/codeframe78/24Seven.FM-Player/blob/main/{{ item.evidence }}">View scope or evidence <span aria-hidden="true">↗</span></a>
     </article>
     {% endfor %}
@@ -104,7 +105,7 @@ section: roadmap
 <section class="content-section" id="notifications">
   <div class="content-intro wide"><p class="eyebrow">M36–M38 · Authorization before implementation</p><h2>True delivery without fake push</h2><p>M27 is complete for actively observed Chat. Closed-app delivery begins only with an authorized event source, then a secure implementation, then lifecycle/privacy certification.</p></div>
   <div class="workstream-grid">
-    {% for item in notification_items %}<article class="roadmap-card {{ item.state }}"><p class="status"><span></span>{{ item.state_label }}</p><p class="milestone-id">{{ item.id }}</p><h3>{{ item.name }}</h3><p>{{ item.summary }}</p><p class="roadmap-dependency"><strong>Dependency:</strong> {{ item.dependencies }}</p></article>{% endfor %}
+    {% for item in notification_items %}<article class="roadmap-card {{ item.state }}"><p class="status"><span></span>{{ item.state_label }}</p><p class="milestone-id">{{ item.id }}</p><h3>{{ item.name }}</h3><p>{{ item.summary }}</p><p class="roadmap-dependency"><strong>Dependency:</strong> {{ item.dependencies }}</p>{% if item.forecast %}<p class="roadmap-forecast"><strong>Forecast:</strong> {{ item.forecast }}<span>{{ item.forecast_confidence }} · {{ item.forecast_model }}</span></p>{% endif %}</article>{% endfor %}
   </div>
 </section>
 
@@ -112,7 +113,7 @@ section: roadmap
 <section class="content-section" id="alpha">
   <div class="content-intro wide"><p class="eyebrow">M39–M41 · Exact artifact to authorized release</p><h2>Freeze, prove delivery, then publish</h2><p>Candidate creation, Play delivery/remediation, and publication are separate gates. A green build never publishes itself.</p></div>
   <div class="workstream-grid">
-    {% for item in alpha_distribution %}<article class="roadmap-card {{ item.state }}"><p class="status"><span></span>{{ item.state_label }}</p><p class="milestone-id">{{ item.id }}</p><h3>{{ item.name }}</h3><p>{{ item.summary }}</p><p class="roadmap-dependency"><strong>Dependency:</strong> {{ item.dependencies }}</p></article>{% endfor %}
+    {% for item in alpha_distribution %}<article class="roadmap-card {{ item.state }}"><p class="status"><span></span>{{ item.state_label }}</p><p class="milestone-id">{{ item.id }}</p><h3>{{ item.name }}</h3><p>{{ item.summary }}</p><p class="roadmap-dependency"><strong>Dependency:</strong> {{ item.dependencies }}</p>{% if item.forecast %}<p class="roadmap-forecast"><strong>Forecast:</strong> {{ item.forecast }}<span>{{ item.forecast_confidence }} · {{ item.forecast_model }}</span></p>{% endif %}</article>{% endfor %}
   </div>
 </section>
 
@@ -120,7 +121,7 @@ section: roadmap
 <section class="content-section" id="production">
   <div class="content-intro wide"><p class="eyebrow">M42–M45 · Beyond Alpha</p><h2>A complete path to production and maintenance</h2><p>Closed testing, production access, staged rollout, and continuing operations now have explicit exit criteria instead of disappearing after Alpha publication.</p></div>
   <div class="workstream-grid">
-    {% for item in production_items %}<article class="roadmap-card {{ item.state }}"><p class="status"><span></span>{{ item.state_label }}</p><p class="milestone-id">{{ item.id }}</p><h3>{{ item.name }}</h3><p>{{ item.summary }}</p><p class="roadmap-dependency"><strong>Dependency:</strong> {{ item.dependencies }}</p></article>{% endfor %}
+    {% for item in production_items %}<article class="roadmap-card {{ item.state }}"><p class="status"><span></span>{{ item.state_label }}</p><p class="milestone-id">{{ item.id }}</p><h3>{{ item.name }}</h3><p>{{ item.summary }}</p><p class="roadmap-dependency"><strong>Dependency:</strong> {{ item.dependencies }}</p>{% if item.forecast %}<p class="roadmap-forecast"><strong>Forecast:</strong> {{ item.forecast }}<span>{{ item.forecast_confidence }} · {{ item.forecast_model }}</span></p>{% endif %}</article>{% endfor %}
   </div>
 </section>
 
@@ -133,7 +134,7 @@ section: roadmap
     <p class="filter-count" aria-live="polite"><strong data-filter-count>{{ future_items.size }}</strong> visible</p>
   </div>
   <div class="workstream-grid" id="future-grid" data-filter-scope>
-    {% for item in future_items %}<article class="roadmap-card {{ item.state }}" data-filter-item data-state="{{ item.state }}"><p class="status"><span></span>{{ item.state_label }}</p><p class="milestone-id">{{ item.id }}</p><h3>{{ item.name }}</h3><p>{{ item.summary }}</p><p class="roadmap-dependency"><strong>Dependency:</strong> {{ item.dependencies }}</p><a href="https://github.com/codeframe78/24Seven.FM-Player/blob/main/{{ item.evidence }}">View future scope <span aria-hidden="true">↗</span></a></article>{% endfor %}
+    {% for item in future_items %}<article class="roadmap-card {{ item.state }}" data-filter-item data-state="{{ item.state }}"><p class="status"><span></span>{{ item.state_label }}</p><p class="milestone-id">{{ item.id }}</p><h3>{{ item.name }}</h3><p>{{ item.summary }}</p><p class="roadmap-dependency"><strong>Dependency:</strong> {{ item.dependencies }}</p>{% if item.forecast %}<p class="roadmap-forecast"><strong>Forecast:</strong> {{ item.forecast }}<span>{{ item.forecast_confidence }} · {{ item.forecast_model }}</span></p>{% endif %}<a href="https://github.com/codeframe78/24Seven.FM-Player/blob/main/{{ item.evidence }}">View future scope <span aria-hidden="true">↗</span></a></article>{% endfor %}
     <p class="filter-empty" data-filter-empty hidden>No future milestones match that filter.</p>
   </div>
 </section>

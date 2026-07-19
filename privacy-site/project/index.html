@@ -146,10 +146,11 @@ section: overview
       <p class="status"><span></span>{{ item.state_label }}</p>
       <h3>{{ item.id }} · {{ item.name }}</h3>
       <p>{{ item.summary }}</p>
+      {% if item.forecast %}<p class="roadmap-forecast"><strong>Forecast:</strong> {{ item.forecast }}<span>{{ item.forecast_confidence }} · {{ item.forecast_model }}</span></p>{% endif %}
     </article>
     {% endfor %}
   </div>
-  <p class="roadmap-note">M01–M28 and M31–M35 preserve 33 verified achievements. Closed-app notifications require M36–M38, Alpha delivery is M39–M41, and production readiness is M42–M45. Private Messages remain excluded until M47 repairs and verifies server delivery; Forum access is staged across M51–M54 and membership commerce across M58–M60.</p>
+  <p class="roadmap-note">Every unfinished card now shows its trigger-based estimate, confidence, and recommended next model. M01–M28 and M31–M35 preserve 33 verified achievements. Closed-app notifications require M36–M38, Alpha delivery is M39–M41, and production readiness is M42–M45.</p>
 </section>
 
 <section class="cta" aria-labelledby="cta-title">

@@ -12,6 +12,7 @@ The GitHub Pages surface now provides a comprehensive, responsive, interactive p
 - a tester-facing 38-case product workspace with local search, status filters, device-only checklist progress, bounded smoke/member/device/resilience/adaptive sessions, dedicated M29/M31 policy cases, future VIP/RIP commerce lifecycle cases, and a structured public result form for passes, failures, notes, and blocked tests;
 - all 33 achieved checkpoints in verified chronological order, including completed M24 Sleep Timer, M25 Audio-Output Selection, M26 In-App Diagnostics, M27 local Chat mentions, M28 UGC safety, M31 payments/account-route compliance, M32 security, M33 request integrity, M34 device/accessibility acceptance, and M35 signing/Console eligibility;
 - the two remaining M29–M35 Alpha-readiness gates, completed M31–M35, deferred M47 boundary, M36–M38 closed-app delivery gates, and M39–M41 Alpha-delivery program;
+- trigger-based estimates, confidence, and recommended next model on every unfinished M29–M60 roadmap card, while preserving the rule that estimates start only after their named dependency;
 - a searchable, category-filtered public resource index for architecture, protocol research, station certification, Play readiness, release notes, testing, and contribution;
 - a searchable privacy notice with a generated on-page table of contents while keeping all canonical notice text visible without JavaScript.
 

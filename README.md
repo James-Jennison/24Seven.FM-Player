@@ -57,6 +57,39 @@ The [milestone forecast](docs/MILESTONE_FORECAST.md) separates active-work estim
 the current scope, M29/M30/M36 are the external Alpha critical path; it intentionally gives no Alpha release date
 until those triggers are resolved.
 
+### Forecast at a glance
+
+These ranges begin only when the named milestone dependency is satisfied; they are not promises of elapsed calendar
+time. `Conditional` and `External` entries intentionally remain undated. The full trigger wording and model-routing
+notes remain in [MILESTONE_FORECAST.md](docs/MILESTONE_FORECAST.md).
+
+| Milestone | Estimate after trigger | Confidence | Next model |
+| --- | --- | --- | --- |
+| M29 Play declarations | 2–5 active days | Conditional | Sol High |
+| M30 Rights | 0.5–1 active day | Conditional | Sol High |
+| M36 Event-source authorization | 1–3 active Sol days | Conditional | Sol High |
+| M37 Secure delivery | 5–10 active days | Medium | Terra High |
+| M38 Delivery certification | 5–10 active days | Medium | Terra High → Sol High acceptance |
+| M39 Candidate freeze | 1–2 active days | High once triggered | Sol High |
+| M40 Play delivery/remediation | 3–10 calendar days | Medium | Terra High; Sol High release decisions |
+| M41 Explicit Alpha publication | 0.5–1 active day | High once authorized | Sol High |
+
+| Production milestone | Estimate after trigger | Confidence | Next model |
+| --- | --- | --- | --- |
+| M42 Closed-test operations | 3–5 calendar weeks | Medium | Terra Medium; Sol High checkpoints |
+| M43 Production access | 1–2 calendar weeks | Medium | Sol Extra High |
+| M44 Staged rollout | 1–4 calendar weeks | Medium | Sol Extra High |
+| M45 Operations | Recurring monthly, quarterly, and release-triggered review | High | Terra Medium; Sol High for material policy/security |
+
+| Future program | Estimate after trigger |
+| --- | --- |
+| M46 Architecture sustainability | 1–3 active weeks per approved slice |
+| M47–M50 Private Messages | External repair first; then 1–3, 1–2, 1–2, and 2–4 active weeks respectively |
+| M51–M54 Forum | 2–5 active days, then 2–3, 2–3, and 2–4 active weeks respectively |
+| M55 Cast feasibility | 2–4 active weeks; may end in an explicit no-go |
+| M56–M57 Station/account research | 1–3 active weeks each |
+| M58–M60 VIP/RIP commerce | 2–4 active weeks for architecture with external contract timing, then 3–6 and 2–4 active weeks |
+
 | Phase | Milestones | State | Required outcome |
 | --- | --- | :---: | --- |
 | Verified product baseline | M01–M28 | ✅ Complete | Native foundation, five certified stations, API/launcher readiness, Sleep Timer, system audio output, diagnostics, local Chat mentions, and validated UGC safeguards |

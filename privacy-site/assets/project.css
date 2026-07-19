@@ -960,6 +960,9 @@ figcaption span { color: var(--muted); font-size: 0.88rem; }
 .workstream-grid .roadmap-card > a { color: var(--cyan); font-size: 0.82rem; font-weight: 750; }
 .workstream-grid .roadmap-card .roadmap-dependency { flex-grow: 0; margin-top: 1rem; padding-top: 0.8rem; border-top: 1px solid var(--border); font-size: 0.78rem; }
 .workstream-grid .roadmap-card .roadmap-dependency strong { color: var(--text); }
+.roadmap-forecast { margin-top: 0.8rem; padding: 0.75rem 0.8rem; border-left: 2px solid var(--cyan); background: color-mix(in srgb, var(--cyan) 7%, transparent); font-size: 0.8rem; line-height: 1.45; }
+.roadmap-forecast strong { color: var(--text); }
+.roadmap-forecast span { display: block; margin-top: 0.35rem; color: var(--accent); font-size: 0.74rem; font-weight: 750; }
 .milestone-id { margin: 0 0 0.55rem; color: var(--accent) !important; font: 850 0.78rem/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.08em; }
 
 .milestone-history li {

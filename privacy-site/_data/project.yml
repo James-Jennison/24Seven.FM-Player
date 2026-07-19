@@ -336,6 +336,9 @@ roadmap:
     state_label: "Waiting externally"
     blocking: true
     dependencies: "Station/operator facts, final candidate, and Play Console"
+    forecast: "2–5 active days after trigger"
+    forecast_confidence: "Conditional"
+    forecast_model: "Sol High; Terra Medium documentation support"
     evidence: "docs/m23-play-declaration-packet.md"
     summary: "Artifact/policy audit is current; five-station access, operator data facts, saved declarations, and final media video remain."
 
@@ -347,6 +350,9 @@ roadmap:
     state_label: "Waiting externally"
     blocking: true
     dependencies: "Written rights-holder authorization"
+    forecast: "0.5–1 active day after trigger"
+    forecast_confidence: "Conditional"
+    forecast_model: "Sol High"
     evidence: "docs/m23-owner-response-packet.md"
     summary: "Private evidence process is ready; written distribution authorization remains."
 
@@ -410,6 +416,9 @@ roadmap:
     state_label: "Waiting externally"
     blocking: true
     dependencies: "Authorized station event source"
+    forecast: "1–3 active Sol days after trigger"
+    forecast_confidence: "Conditional"
+    forecast_model: "Sol High"
     evidence: "docs/m27-community-notification-validation.md"
     summary: "Establish provider ownership payload authentication retention abuse outage and station support contracts."
 
@@ -421,6 +430,9 @@ roadmap:
     state_label: "Planned after M36"
     blocking: true
     dependencies: "M36"
+    forecast: "5–10 active days after trigger"
+    forecast_confidence: "Medium"
+    forecast_model: "Terra High; escalate unresolved delivery/privacy decisions to Sol High"
     evidence: "docs/ROADMAP.md"
     summary: "Implement minimal opt-in duplicate-safe delivery without session forwarding or perpetual polling."
 
@@ -432,6 +444,9 @@ roadmap:
     state_label: "Planned after M37"
     blocking: true
     dependencies: "M37"
+    forecast: "5–10 active days after trigger"
+    forecast_confidence: "Medium"
+    forecast_model: "Terra High, then Sol High acceptance"
     evidence: "docs/ROADMAP.md"
     summary: "Certify closed idle reboot network battery privacy deep-link and all-station behavior."
 
@@ -443,6 +458,9 @@ roadmap:
     state_label: "Planned"
     blocking: true
     dependencies: "M28–M38"
+    forecast: "1–2 active days after trigger"
+    forecast_confidence: "High once triggered"
+    forecast_model: "Sol High"
     evidence: "docs/ROADMAP.md"
     summary: "Freeze current-head signed artifacts version listing release notes roadmap and testing evidence."
 
@@ -454,6 +472,9 @@ roadmap:
     state_label: "Planned after M39"
     blocking: true
     dependencies: "M39"
+    forecast: "3–10 calendar days after trigger"
+    forecast_confidence: "Medium"
+    forecast_model: "Terra High; Sol High for release decisions"
     evidence: "docs/play-console-checklist.md"
     summary: "Upload inspect Play splits install and update through Play then resolve automated and reviewer findings."
 
@@ -465,6 +486,9 @@ roadmap:
     state_label: "Planned after M40"
     blocking: true
     dependencies: "M40 and owner authorization"
+    forecast: "0.5–1 active day after trigger"
+    forecast_confidence: "High once authorized"
+    forecast_model: "Sol High"
     evidence: "docs/play-console-checklist.md"
     summary: "Publish internal or closed Alpha only after explicit authorization and verify support and rollback records."
 
@@ -475,6 +499,9 @@ roadmap:
     state_label: "Planned after M41"
     blocking: false
     dependencies: "M41"
+    forecast: "3–5 calendar weeks after trigger"
+    forecast_confidence: "Medium"
+    forecast_model: "Terra Medium; Sol High checkpoints"
     evidence: "docs/ROADMAP.md"
     summary: "Maintain qualifying tester continuity gather feedback fix and retest then meet exit criteria."
 
@@ -485,6 +512,9 @@ roadmap:
     state_label: "Planned after M42"
     blocking: false
     dependencies: "M42"
+    forecast: "1–2 calendar weeks after trigger"
+    forecast_confidence: "Medium"
+    forecast_model: "Sol Extra High"
     evidence: "docs/ROADMAP.md"
     summary: "Submit testing feedback changes value and readiness evidence and resolve Play response."
 
@@ -495,6 +525,9 @@ roadmap:
     state_label: "Planned after M43"
     blocking: false
     dependencies: "M43 and owner authorization"
+    forecast: "1–4 calendar weeks after trigger"
+    forecast_confidence: "Medium"
+    forecast_model: "Sol Extra High"
     evidence: "docs/ROADMAP.md"
     summary: "Stage the production release with health thresholds pause rollback and update validation."
 
@@ -505,6 +538,9 @@ roadmap:
     state_label: "Planned"
     blocking: false
     dependencies: "M41 onward"
+    forecast: "Recurring monthly/quarterly and release-triggered review"
+    forecast_confidence: "High"
+    forecast_model: "Terra Medium; Sol High for material policy/security changes"
     evidence: "docs/ROADMAP.md"
     summary: "Maintain quality support station contracts rights moderation policies dependencies and key recovery."
 
@@ -515,6 +551,9 @@ roadmap:
     state_label: "Planned post-Alpha"
     blocking: false
     dependencies: "Evidence-driven post-Alpha window"
+    forecast: "1–3 active weeks per approved slice"
+    forecast_confidence: "Medium"
+    forecast_model: "Terra Medium; Sol High for major refactors"
     evidence: "docs/future-scope.md"
     summary: "Split oversized feature boundaries while preserving immutable state repositories and service ownership."
 
@@ -526,6 +565,9 @@ roadmap:
     state_label: "Deferred"
     blocking: false
     dependencies: "Site-owner server repair"
+    forecast: "No calendar forecast before repair; 1–3 active weeks afterward"
+    forecast_confidence: "External"
+    forecast_model: "Sol Extra High"
     evidence: "docs/future-scope.md"
     summary: "Resume only after delivery limits isolation and error behavior are repaired and verified."
 
@@ -536,6 +578,9 @@ roadmap:
     state_label: "Deferred after M47"
     blocking: false
     dependencies: "M47"
+    forecast: "1–2 active weeks after trigger"
+    forecast_confidence: "Medium"
+    forecast_model: "Terra High"
     evidence: "docs/future-scope.md"
     summary: "Add bounded protected Inbox and Sent reading with explicit lifecycle states."
 
@@ -546,6 +591,9 @@ roadmap:
     state_label: "Deferred after M48"
     blocking: false
     dependencies: "M48"
+    forecast: "1–2 active weeks after trigger"
+    forecast_confidence: "Medium"
+    forecast_model: "Terra High"
     evidence: "docs/future-scope.md"
     summary: "Add preview confirmation one-shot mutation and indeterminate-delivery recovery."
 
@@ -556,6 +604,9 @@ roadmap:
     state_label: "Deferred after M49 and M38"
     blocking: false
     dependencies: "M49 and M38"
+    forecast: "2–4 active weeks after trigger"
+    forecast_confidence: "Medium"
+    forecast_model: "Sol Extra High"
     evidence: "docs/future-scope.md"
     summary: "Independently certify every station and optional authorized notification delivery."
 
@@ -567,6 +618,9 @@ roadmap:
     state_label: "Planned"
     blocking: false
     dependencies: "Route authorization"
+    forecast: "2–5 active days after trigger"
+    forecast_confidence: "Medium"
+    forecast_model: "Sol High"
     evidence: "docs/future-scope.md"
     summary: "Add only independently verified station Forum routes to trusted Custom Tabs."
 
@@ -578,6 +632,9 @@ roadmap:
     state_label: "Planned after M51"
     blocking: false
     dependencies: "M51 and retrieval authorization"
+    forecast: "2–3 active weeks after trigger"
+    forecast_confidence: "Medium"
+    forecast_model: "Terra High"
     evidence: "docs/future-scope.md"
     summary: "Add bounded repository-backed native categories threads posts safety gates and browser fallback."
 
@@ -589,6 +646,9 @@ roadmap:
     state_label: "Planned after M52"
     blocking: false
     dependencies: "M52 and mutation authorization"
+    forecast: "2–3 active weeks after trigger"
+    forecast_confidence: "Medium"
+    forecast_model: "Terra High"
     evidence: "docs/future-scope.md"
     summary: "Add certified previews one-shot compose and reply plus moderation boundaries."
 
@@ -600,6 +660,9 @@ roadmap:
     state_label: "Planned after M53 and M38"
     blocking: false
     dependencies: "M53 and M38"
+    forecast: "2–4 active weeks after trigger"
+    forecast_confidence: "Medium"
+    forecast_model: "Sol High"
     evidence: "docs/future-scope.md"
     summary: "Certify all stations devices accessibility lifecycle and optional authorized notifications."
 
@@ -610,6 +673,9 @@ roadmap:
     state_label: "Research gated"
     blocking: false
     dependencies: "Rights and receiver compatibility"
+    forecast: "2–4 active weeks; may end with an explicit no-go"
+    forecast_confidence: "Conditional"
+    forecast_model: "Sol High"
     evidence: "docs/future-scope.md"
     summary: "Verify permitted stream use receiver lifecycle and five-station behavior before implementation."
 
@@ -620,6 +686,9 @@ roadmap:
     state_label: "Research gated"
     blocking: false
     dependencies: "Independent live evidence"
+    forecast: "1–3 active weeks after trigger"
+    forecast_confidence: "Medium"
+    forecast_model: "Sol High"
     evidence: "docs/future-scope.md"
     summary: "Verify non-SST request messages activity cooldown membership and other differences."
 
@@ -630,6 +699,9 @@ roadmap:
     state_label: "Research gated"
     blocking: false
     dependencies: "M31 and station authorization"
+    forecast: "1–3 active weeks after trigger"
+    forecast_confidence: "Medium"
+    forecast_model: "Sol High"
     evidence: "docs/future-scope.md"
     summary: "Verify permitted routes then choose trusted browser or authorized native interfaces."
 
@@ -640,6 +712,9 @@ roadmap:
     state_label: "Research and authorization gated"
     blocking: false
     dependencies: "Station/merchant authority and approved Play billing path"
+    forecast: "2–4 active weeks for architecture; contract timing external"
+    forecast_confidence: "Conditional"
+    forecast_model: "Sol Extra High"
     evidence: "docs/future-scope.md"
     summary: "Authorize the billing merchant product activation support refund privacy and security contracts before implementation."
 
@@ -650,6 +725,9 @@ roadmap:
     state_label: "Planned after M58"
     blocking: false
     dependencies: "M58 approved architecture and activation service"
+    forecast: "3–6 active weeks after trigger"
+    forecast_confidence: "Medium"
+    forecast_model: "Terra High; Sol Extra High escalation"
     evidence: "docs/future-scope.md"
     summary: "Implement the approved native purchase verification activation restore and truthful failure flows."
 
@@ -660,5 +738,8 @@ roadmap:
     state_label: "Planned after M59"
     blocking: false
     dependencies: "M59 and independent station products"
+    forecast: "2–4 active weeks after trigger"
+    forecast_confidence: "Medium"
+    forecast_model: "Sol Extra High"
     evidence: "docs/future-scope.md"
     summary: "Certify subscription lifecycle devices accessibility policy and independent VIP/RIP station behavior."

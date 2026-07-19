@@ -25,6 +25,11 @@ owner/external blockers explicitly, and records the model required for the next 
 scope, M39 remains blocked by M29, M30, and M36–M38; no Alpha calendar date is credible until the M36 event-source
 authorization is resolved.
 
+Every forecast below starts only after its stated gate is met. It is an active-work or coordination range, not a
+promise of elapsed calendar time; **Conditional** and **External** entries intentionally have no start date until the
+owner or provider supplies the required input. The next-step model is recorded in
+[MILESTONE_FORECAST.md](MILESTONE_FORECAST.md).
+
 ## Phase 1 — Native foundation and shared product capabilities
 
 | ID | Milestone | State | Completion signal |
@@ -72,66 +77,66 @@ authorization is resolved.
 These milestones must close before the final Alpha candidate is frozen. Work may proceed in parallel where dependencies
 allow, but no partial checkpoint should be described as release-ready.
 
-| ID | Milestone | State | Required gate |
-| --- | --- | --- | --- |
-| M28 | UGC Safety and Ongoing Moderation | Complete | Existing safeguards plus fixed-recipient Contact/report email handoff, physical composer validation, and one owner-confirmed one-shot receipt check |
-| M29 | Play Declarations, Privacy, and Data Safety | Waiting externally | PT-35 exact-artifact reconciliation, five-station reviewer access, audience/content/UGC classification, retention/deletion/processor/IP facts, account-boundary audit, final media-playback video, and saved Console/privacy consistency |
-| M30 | Brand, Content, and Distribution Rights | Waiting externally | Written authorization for app/station naming, logos, artwork/metadata, streams, screenshots, and Play testing/distribution |
-| M31 | Payments, External Links, and Account Lifecycle Compliance | Complete | Contact-only external catalog; VIP/RIP purchase/registration and direct privacy browser routes removed; declarations and account boundary reconciled in `9e340b9` |
-| M32 | Session, Controller, Network, and Supply-Chain Security | Complete | Least-privilege MediaSession controller policy, coherent station-isolated cookie rotation/absolute expiry, trusted redirects, canonical station-ID migration, pinned/verified build inputs, and adversarial Razr harness evidence in `2bc45f7` |
-| M33 | Request Transaction Integrity | Complete | Fresh station/Queue/account/membership/cooldown/limit/identity validation, exact availability semantics, explicit station/account confirmation, and bounded one-shot result handling in `572d419` |
-| M34 | Device and Accessibility Acceptance | Complete | Adaptive window/foldable matrix, physical Razr hinge lifecycle, human TalkBack, focused Voice Access, and signed-release Bluetooth keyboard/pointer acceptance pass; Play delivery/pre-launch belongs to M40 |
-| M35 | Release Signing and Console Eligibility | Complete | Current-head protected upload identity, local physical clean-install/update verification, package registration, eligible unused version code, and reproducible signed build accepted from evidence commit `55413bd` |
+| ID | Milestone | State | Required gate | Forecast after trigger |
+| --- | --- | --- | --- | --- |
+| M28 | UGC Safety and Ongoing Moderation | Complete | Existing safeguards plus fixed-recipient Contact/report email handoff, physical composer validation, and one owner-confirmed one-shot receipt check | Complete |
+| M29 | Play Declarations, Privacy, and Data Safety | Waiting externally | PT-35 exact-artifact reconciliation, five-station reviewer access, audience/content/UGC classification, retention/deletion/processor/IP facts, account-boundary audit, final media-playback video, and saved Console/privacy consistency | Conditional · 2–5 active days |
+| M30 | Brand, Content, and Distribution Rights | Waiting externally | Written authorization for app/station naming, logos, artwork/metadata, streams, screenshots, and Play testing/distribution | Conditional · 0.5–1 active day |
+| M31 | Payments, External Links, and Account Lifecycle Compliance | Complete | Contact-only external catalog; VIP/RIP purchase/registration and direct privacy browser routes removed; declarations and account boundary reconciled in `9e340b9` | Complete |
+| M32 | Session, Controller, Network, and Supply-Chain Security | Complete | Least-privilege MediaSession controller policy, coherent station-isolated cookie rotation/absolute expiry, trusted redirects, canonical station-ID migration, pinned/verified build inputs, and adversarial Razr harness evidence in `2bc45f7` | Complete |
+| M33 | Request Transaction Integrity | Complete | Fresh station/Queue/account/membership/cooldown/limit/identity validation, exact availability semantics, explicit station/account confirmation, and bounded one-shot result handling in `572d419` | Complete |
+| M34 | Device and Accessibility Acceptance | Complete | Adaptive window/foldable matrix, physical Razr hinge lifecycle, human TalkBack, focused Voice Access, and signed-release Bluetooth keyboard/pointer acceptance pass; Play delivery/pre-launch belongs to M40 | Complete |
+| M35 | Release Signing and Console Eligibility | Complete | Current-head protected upload identity, local physical clean-install/update verification, package registration, eligible unused version code, and reproducible signed build accepted from evidence commit `55413bd` | Complete |
 
 ## Phase 5 — Authorized closed-app community notifications
 
 M36 is an external authorization decision. M37 and M38 must not start by substituting background polling or forwarding
 protected station sessions.
 
-| ID | Milestone | State | Required gate |
-| --- | --- | --- | --- |
-| M36 | Notification Event-Source Authorization | Waiting externally | Authorized station event source, webhook, or privacy-compatible relay with ownership, payload, authentication, retention, deletion, abuse, and outage contracts |
-| M37 | Secure Closed-App Notification Delivery | Planned after M36 | Opt-in station-scoped token/event delivery, minimal payloads, duplicate safety, sign-out/reinstall handling, and no perpetual polling |
-| M38 | Notification Lifecycle and Privacy Certification | Planned after M37 | Foreground/background/closed/idle/reboot/network tests, delivery latency, battery/traffic, lock-screen privacy, deep-link gates, and all five station boundaries |
+| ID | Milestone | State | Required gate | Forecast after trigger |
+| --- | --- | --- | --- | --- |
+| M36 | Notification Event-Source Authorization | Waiting externally | Authorized station event source, webhook, or privacy-compatible relay with ownership, payload, authentication, retention, deletion, abuse, and outage contracts | Conditional · 1–3 active Sol days |
+| M37 | Secure Closed-App Notification Delivery | Planned after M36 | Opt-in station-scoped token/event delivery, minimal payloads, duplicate safety, sign-out/reinstall handling, and no perpetual polling | Medium · 5–10 active days |
+| M38 | Notification Lifecycle and Privacy Certification | Planned after M37 | Foreground/background/closed/idle/reboot/network tests, delivery latency, battery/traffic, lock-screen privacy, deep-link gates, and all five station boundaries | Medium · 5–10 active days |
 
 ## Phase 6 — Alpha distribution
 
-| ID | Milestone | State | Required gate |
-| --- | --- | --- | --- |
-| M39 | Alpha Candidate and Documentation Freeze | Planned | Current-head signed AAB/APK, exact version/signer/dependency audit, synchronized roadmap/testing/release notes/listing, and no open release-critical finding |
-| M40 | Play Alpha Delivery and Pre-launch Remediation | Planned after M39 | Upload, Play-generated split inspection, fresh install/update, pre-review/pre-launch reconciliation, reviewer access, and artifact-specific evidence |
-| M41 | Explicit Alpha Publication | Planned after M40 | Owner-authorized internal or closed release, tester instructions, support path, rollback record, and verified availability; never automatic |
+| ID | Milestone | State | Required gate | Forecast after trigger |
+| --- | --- | --- | --- | --- |
+| M39 | Alpha Candidate and Documentation Freeze | Planned | Current-head signed AAB/APK, exact version/signer/dependency audit, synchronized roadmap/testing/release notes/listing, and no open release-critical finding | High once triggered · 1–2 active days |
+| M40 | Play Alpha Delivery and Pre-launch Remediation | Planned after M39 | Upload, Play-generated split inspection, fresh install/update, pre-review/pre-launch reconciliation, reviewer access, and artifact-specific evidence | Medium · 3–10 calendar days |
+| M41 | Explicit Alpha Publication | Planned after M40 | Owner-authorized internal or closed release, tester instructions, support path, rollback record, and verified availability; never automatic | High once authorized · 0.5–1 active day |
 
 ## Phase 7 — Closed testing, production, and operations
 
-| ID | Milestone | State | Required gate |
-| --- | --- | --- | --- |
-| M42 | Closed-Test Operations and Stabilization | Planned after M41 | Qualifying tester continuity, structured feedback, fixes/retests, Play vitals/pre-launch review, update delivery, and exit criteria |
-| M43 | Production Access and Policy Approval | Planned after M42 | Production-access questionnaire, testing/feedback/change evidence, final policy review, and resolved Play response |
-| M44 | Production Release and Staged Rollout | Planned after M43 | Explicit authorization, production candidate, staged percentages, health thresholds, pause/rollback, release notes, and update validation |
-| M45 | Operational Reliability and Recertification | Planned | Play vitals/support/privacy handling, station outage and contract-drift procedures, rights/moderation recertification, target/API/dependency cadence, and key recovery |
+| ID | Milestone | State | Required gate | Forecast after trigger |
+| --- | --- | --- | --- | --- |
+| M42 | Closed-Test Operations and Stabilization | Planned after M41 | Qualifying tester continuity, structured feedback, fixes/retests, Play vitals/pre-launch review, update delivery, and exit criteria | Medium · 3–5 calendar weeks |
+| M43 | Production Access and Policy Approval | Planned after M42 | Production-access questionnaire, testing/feedback/change evidence, final policy review, and resolved Play response | Medium · 1–2 calendar weeks |
+| M44 | Production Release and Staged Rollout | Planned after M43 | Explicit authorization, production candidate, staged percentages, health thresholds, pause/rollback, release notes, and update validation | Medium · 1–4 calendar weeks |
+| M45 | Operational Reliability and Recertification | Planned | Play vitals/support/privacy handling, station outage and contract-drift procedures, rights/moderation recertification, target/API/dependency cadence, and key recovery | High · recurring monthly, quarterly, and release-triggered review |
 
 ## Phase 8 — Deferred and future programs
 
 None of these milestones blocks M41 unless a later owner decision explicitly moves it into the Alpha scope.
 
-| ID | Milestone | State | Required gate |
-| --- | --- | --- | --- |
-| M46 | Architecture Sustainability | Planned post-Alpha | Split oversized UI/ViewModel boundaries by feature contracts, preserve immutable state/repositories, and add performance work only where evidence warrants it |
-| M47 | Private Messages Server Repair and Protocol Certification | Deferred | Site owner repairs delivery; limits, station isolation, error/indeterminate behavior, and operator confirmation become verifiable |
-| M48 | Native Private Message Reading | Deferred after M47 | Protected station-scoped Inbox/Sent models, bounded retrieval, immutable state, loading/empty/error/expired states, and privacy tests |
-| M49 | Private Message Compose, Reply, and Send | Deferred after M48 | Explicit preview/confirmation, one-shot mutation, limits, CSRF/session safety, and indeterminate-delivery recovery |
-| M50 | Private Message Five-Station and Notification Certification | Deferred after M49/M38 | Independent station certification plus optional privacy-minimized delivery through the authorized notification architecture |
-| M51 | Verified Forum Links | Planned | Independently verify exact public HTTPS Forum routes and expose only trusted station-scoped Custom Tabs |
-| M52 | Native Forum Read-Only Foundation | Planned after M51 | Authorized repository contracts, bounded native category/thread reading, UGC gates, and browser fallback |
-| M53 | Authenticated Forum Participation | Planned after M52 | Certified session reuse, previews, one-shot compose/reply, moderation actions, and indeterminate handling |
-| M54 | Forum Five-Station and Notification Certification | Planned after M53/M38 | Independent station/device/accessibility certification and optional authorized notifications |
-| M55 | Google Cast Feasibility and Certification | Planned research gate | Permitted stream use, receiver compatibility, lifecycle/route behavior, rights review, and five-station validation before implementation |
-| M56 | Extended Station Capability Certification | Planned research gate | Independently verify non-SST request messages, activity/cooldown, membership, and other capability differences without inheritance |
-| M57 | Account Registration, Recovery, and Management Access | Planned research gate | Verify permitted station routes and deletion/recovery behavior, then choose trusted browser or authorized native interfaces without sharing browser/app sessions |
-| M58 | Membership Commerce Authorization and Billing Architecture | Planned research/authorization gate | Confirm station-owner and merchant authority, choose Play Billing or an enrolled regional alternative, define VIP/RIP products and trusted activation contracts, and close tax, support, refund, privacy, and security obligations |
-| M59 | Native VIP/RIP Purchase and Activation | Planned after M58 | Implement the approved fully native purchase, pending, acknowledgement, activation, restore, and error flows with server-verified entitlement and strict station/account isolation |
-| M60 | Subscription Lifecycle and Five-Station Certification | Planned after M59 | Certify renewal, cancellation, grace, refund, revocation, restore, reinstall, device/account switching, accessibility, support, and independent VIP/RIP behavior across all five stations |
+| ID | Milestone | State | Required gate | Forecast after trigger |
+| --- | --- | --- | --- | --- |
+| M46 | Architecture Sustainability | Planned post-Alpha | Split oversized UI/ViewModel boundaries by feature contracts, preserve immutable state/repositories, and add performance work only where evidence warrants it | Medium · 1–3 active weeks per approved slice |
+| M47 | Private Messages Server Repair and Protocol Certification | Deferred | Site owner repairs delivery; limits, station isolation, error/indeterminate behavior, and operator confirmation become verifiable | External · no calendar forecast before repair; 1–3 active weeks afterward |
+| M48 | Native Private Message Reading | Deferred after M47 | Protected station-scoped Inbox/Sent models, bounded retrieval, immutable state, loading/empty/error/expired states, and privacy tests | Medium · 1–2 active weeks |
+| M49 | Private Message Compose, Reply, and Send | Deferred after M48 | Explicit preview/confirmation, one-shot mutation, limits, CSRF/session safety, and indeterminate-delivery recovery | Medium · 1–2 active weeks |
+| M50 | Private Message Five-Station and Notification Certification | Deferred after M49/M38 | Independent station certification plus optional privacy-minimized delivery through the authorized notification architecture | Medium · 2–4 active weeks |
+| M51 | Verified Forum Links | Planned | Independently verify exact public HTTPS Forum routes and expose only trusted station-scoped Custom Tabs | Medium · 2–5 active days |
+| M52 | Native Forum Read-Only Foundation | Planned after M51 | Authorized repository contracts, bounded native category/thread reading, UGC gates, and browser fallback | Medium · 2–3 active weeks |
+| M53 | Authenticated Forum Participation | Planned after M52 | Certified session reuse, previews, one-shot compose/reply, moderation actions, and indeterminate handling | Medium · 2–3 active weeks |
+| M54 | Forum Five-Station and Notification Certification | Planned after M53/M38 | Independent station/device/accessibility certification and optional authorized notifications | Medium · 2–4 active weeks |
+| M55 | Google Cast Feasibility and Certification | Planned research gate | Permitted stream use, receiver compatibility, lifecycle/route behavior, rights review, and five-station validation before implementation | Conditional · 2–4 active weeks; may end in a no-go |
+| M56 | Extended Station Capability Certification | Planned research gate | Independently verify non-SST request messages, activity/cooldown, membership, and other capability differences without inheritance | Medium · 1–3 active weeks |
+| M57 | Account Registration, Recovery, and Management Access | Planned research gate | Verify permitted station routes and deletion/recovery behavior, then choose trusted browser or authorized native interfaces without sharing browser/app sessions | Medium · 1–3 active weeks |
+| M58 | Membership Commerce Authorization and Billing Architecture | Planned research/authorization gate | Confirm station-owner and merchant authority, choose Play Billing or an enrolled regional alternative, define VIP/RIP products and trusted activation contracts, and close tax, support, refund, privacy, and security obligations | Conditional · 2–4 active weeks for architecture; contract timing external |
+| M59 | Native VIP/RIP Purchase and Activation | Planned after M58 | Implement the approved fully native purchase, pending, acknowledgement, activation, restore, and error flows with server-verified entitlement and strict station/account isolation | Medium · 3–6 active weeks |
+| M60 | Subscription Lifecycle and Five-Station Certification | Planned after M59 | Certify renewal, cancellation, grace, refund, revocation, restore, reinstall, device/account switching, accessibility, support, and independent VIP/RIP behavior across all five stations | Medium · 2–4 active weeks |
 
 ## Program dependencies
 
