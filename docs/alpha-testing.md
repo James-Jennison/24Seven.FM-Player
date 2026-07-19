@@ -71,5 +71,5 @@ Never include passwords, security-code answers or images, cookies, session value
   membership status may still be shown when the station reports it, but the Player does not sell or upgrade membership.
 - Public station interfaces can change independently of the app.
 - Physical Razr playback and UI survive a measured open/tabletop/closed/reopened hinge cycle, and the signed release
-  package passes the human spoken TalkBack check. Play-delivered install/update validation and the Play pre-launch
+  package passes the human spoken TalkBack and Bluetooth keyboard/pointer checks. Play-delivered install/update validation and the Play pre-launch
   report remain M40 release checks.

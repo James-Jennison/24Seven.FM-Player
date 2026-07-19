@@ -1,6 +1,6 @@
 # 24Seven.FM Player roadmap
 
-Updated July 19, 2026 after the M35 completion, M34 physical TalkBack evidence, and forecast reconciliation.
+Updated July 19, 2026 after M34 device/accessibility acceptance, M35 completion, and forecast reconciliation.
 
 This is the authoritative milestone sequence for the Player repository. Milestones use dependency-ordered, zero-padded
 canonical IDs. The renumbering does not rewrite Git history: legacy IDs remain traceable through
@@ -22,7 +22,7 @@ requirement; the new work receives its own milestone and regression evidence.
 The dated, dependency-aware forecast for every unfinished milestone is maintained in
 [MILESTONE_FORECAST.md](MILESTONE_FORECAST.md). It uses active-work ranges only after their triggers occur, identifies
 owner/external blockers explicitly, and records the model required for the next substantive step. Under the current
-scope, M39 remains blocked by M29, M30, M34, and M36–M38; no Alpha calendar date is credible until the M36 event-source
+scope, M39 remains blocked by M29, M30, and M36–M38; no Alpha calendar date is credible until the M36 event-source
 authorization is resolved.
 
 ## Phase 1 — Native foundation and shared product capabilities
@@ -80,7 +80,7 @@ allow, but no partial checkpoint should be described as release-ready.
 | M31 | Payments, External Links, and Account Lifecycle Compliance | Complete | Contact-only external catalog; VIP/RIP purchase/registration and direct privacy browser routes removed; declarations and account boundary reconciled in `9e340b9` |
 | M32 | Session, Controller, Network, and Supply-Chain Security | Complete | Least-privilege MediaSession controller policy, coherent station-isolated cookie rotation/absolute expiry, trusted redirects, canonical station-ID migration, pinned/verified build inputs, and adversarial Razr harness evidence in `2bc45f7` |
 | M33 | Request Transaction Integrity | Complete | Fresh station/Queue/account/membership/cooldown/limit/identity validation, exact availability semantics, explicit station/account confirmation, and bounded one-shot result handling in `572d419` |
-| M34 | Device and Accessibility Acceptance | In progress | Human audible TalkBack passes; fair keyboard/pointer/assistive access, multi-window/foldable coverage, and local physical-device acceptance remain; Play delivery/pre-launch belongs to M40 |
+| M34 | Device and Accessibility Acceptance | Complete | Adaptive window/foldable matrix, physical Razr hinge lifecycle, human TalkBack, focused Voice Access, and signed-release Bluetooth keyboard/pointer acceptance pass; Play delivery/pre-launch belongs to M40 |
 | M35 | Release Signing and Console Eligibility | Complete | Current-head protected upload identity, local physical clean-install/update verification, package registration, eligible unused version code, and reproducible signed build accepted from evidence commit `55413bd` |
 
 ## Phase 5 — Authorized closed-app community notifications
@@ -135,8 +135,7 @@ None of these milestones blocks M41 unless a later owner decision explicitly mov
 
 ## Program dependencies
 
-1. M28, M31–M33, and M35 are complete; M29, M30, and M34 close the remaining Alpha policy, rights, and accessibility
-   gaps.
+1. M28 and M31–M35 are complete; M29 and M30 close the remaining Alpha policy and rights gaps.
 2. M36 authorizes the event source before M37 implementation; M38 certifies the result.
 3. M39 freezes the exact candidate only after all intended Alpha code has landed.
 4. M40 proves Play delivery and resolves automated/reviewer findings.

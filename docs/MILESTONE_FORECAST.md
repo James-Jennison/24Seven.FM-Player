@@ -36,17 +36,15 @@ takes seven days or less, while allowing that it can take longer. The earliest c
 | --- | --- | --- | --- | --- |
 | M29 | All station/operator retention, processor, deletion, IP-use, and reviewer-account facts are supplied; an intended protected candidate is selected | 2–5 active days | Conditional | Sol High, with Terra Medium documentation support |
 | M30 | Written authorization covers naming, artwork, metadata, streams, screenshots, and Play testing/distribution | 0.5–1 active day to sanitize, reconcile, and accept | Conditional | Sol High |
-| M34 | A charged physical keyboard or pointer is attached and a human completes the remaining fair-input traversal | 0.5–1 active day, plus 0.5 day Sol review | High once hardware is attached | Terra Medium, then Sol High acceptance |
 | M36 | An operator supplies an authorized event-source proposal with an accountable owner | 1–3 active Sol days to accept or reject the contract | Conditional | Sol High |
 | M37 | M36 contract, event schema, and test environment are accepted | 5–10 active days | Medium | Terra High; return unresolved delivery/privacy choices to Sol High |
 | M38 | M37 implementation is stable on all intended stations | 5–10 active days for lifecycle, privacy, battery, and device certification | Medium | Terra High, then Sol High acceptance |
-| M39 | M29, M30, M34, and M36–M38 are complete and no intended Alpha work remains | 1–2 active days | High once triggered | Sol High |
+| M39 | M29, M30, and M36–M38 are complete and no intended Alpha work remains | 1–2 active days | High once triggered | Sol High |
 | M40 | M39 frozen AAB and required Console fields are ready | 3–10 calendar days; add time only for actual Play/pre-launch findings | Medium | Terra High, with Sol High for release decisions |
 | M41 | M40 evidence is reconciled and the owner explicitly authorizes the selected Alpha track | 0.5–1 active day; tester availability follows Play processing | High once authorized | Sol High |
 
-M29, M30, and M36 can progress in parallel. M34 is currently the shortest owner-controlled Alpha gate: human audible
-TalkBack already passes, and the remaining keyboard/pointer test can resume as soon as the charged accessory is
-connected.
+M29, M30, and M36 can progress in parallel. M34 is complete: its human TalkBack, focused Voice Access, adaptive
+window/foldable, and physical Bluetooth keyboard/pointer evidence passed Sol High acceptance on July 19.
 
 ## Production forecast
 

@@ -65,7 +65,17 @@ recording a personal profile, audio capture, or private accessibility setting.
 The physical Razr also has Google Voice Access enabled with microphone access and without optional phone-call control.
 Following `03a310b`, the user confirmed Play/Pause, Previous station, and Next station by voice. The current device
 tree exposes those controls as named clickable buttons. The user also selected 1980s.FM and moved between Favorites
-and Player by voice. Full alternative-input traversal remains an M34 gate.
+and Player by voice.
+
+### Physical keyboard and pointer acceptance
+
+On July 19, a real paired Bluetooth keyboard with keyboard, DPAD, and pointer sources was used with the signed
+release on the physical Razr. `Tab` reached the named, focusable `Play live radio` control; `Enter` started the
+release Media3 session; the keyboard pointer opened Queue; and the pointer paused playback. UIAutomator confirmed
+the focused named playback control and Queue's `Up next` content, while the MediaSession confirmed the expected
+`PLAYING` and final `PAUSED` states. This is physical accessory input, not ADB-injected input. Together with the
+focused Voice Access pass above, it supplies the fair alternative-input evidence required for M34 without requiring
+the tester to rely on speech recognition for every task.
 
 ### Network-loss and restoration evidence
 
@@ -120,7 +130,9 @@ supported fully folded behavior on this model. The API 35 Pixel Fold validates t
 and fully closed outer display, while the dedicated Pixel Tablet validates its native landscape and portrait windows.
 The layout responds to the available window and naturally leaves the center gutter between expanded Player panes.
 Play-delivered installation/update and the Play pre-launch report are deferred to M40 after M39 freezes the exact
-candidate; they are not M34 completion gates.
+candidate; they are not M34 completion gates. The adaptive emulator/window matrix, physical Razr hinge cycle, human
+TalkBack check, Voice Access core-path check, and Bluetooth keyboard/pointer acceptance close M34 for the current
+signed candidate.
 
 No application can guarantee behavior on every future OEM configuration. For Alpha, "all modern Android devices"
 means the supported API range and adaptive window classes above are release requirements, regressions in those classes
