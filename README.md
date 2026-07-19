@@ -53,6 +53,10 @@ The validated baseline includes 163 unit tests, debug lint and release checks, A
 
 The roadmap was renumbered into one dependency-ordered sequence on July 18, 2026. Historical documents and filenames remain available; the [migration ledger](docs/MILESTONE_MIGRATION.md) records every former identifier.
 
+The [milestone forecast](docs/MILESTONE_FORECAST.md) separates active-work estimates from external waiting time. Under
+the current scope, M29/M30/M36 are the external Alpha critical path; it intentionally gives no Alpha release date
+until those triggers are resolved.
+
 | Phase | Milestones | State | Required outcome |
 | --- | --- | :---: | --- |
 | Verified product baseline | M01–M28 | ✅ Complete | Native foundation, five certified stations, API/launcher readiness, Sleep Timer, system audio output, diagnostics, local Chat mentions, and validated UGC safeguards |
@@ -75,6 +79,7 @@ The roadmap was renumbered into one dependency-ordered sequence on July 18, 2026
 Use these sources as the current planning authority:
 
 - [Full M01–M60 roadmap](docs/ROADMAP.md)
+- [Trigger-based milestone forecast](docs/MILESTONE_FORECAST.md)
 - [Milestone ID migration ledger](docs/MILESTONE_MIGRATION.md)
 - [Implementation and acceptance plan](docs/IMPLEMENTATION_PLAN.md)
 - [Future-scope boundaries](docs/future-scope.md)

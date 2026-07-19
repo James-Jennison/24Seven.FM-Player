@@ -1,6 +1,6 @@
 # 24Seven.FM Player roadmap
 
-Updated July 18, 2026 after the full milestone, implementation, security, Google Play, release, and operations audit.
+Updated July 19, 2026 after the M35 completion, M34 physical TalkBack evidence, and forecast reconciliation.
 
 This is the authoritative milestone sequence for the Player repository. Milestones use dependency-ordered, zero-padded
 canonical IDs. The renumbering does not rewrite Git history: legacy IDs remain traceable through
@@ -16,6 +16,14 @@ canonical IDs. The renumbering does not rewrite Git history: legacy IDs remain t
 
 Completion is milestone-specific. A completed historical milestone is not erased when a later audit finds a new release
 requirement; the new work receives its own milestone and regression evidence.
+
+## Forecasts
+
+The dated, dependency-aware forecast for every unfinished milestone is maintained in
+[MILESTONE_FORECAST.md](MILESTONE_FORECAST.md). It uses active-work ranges only after their triggers occur, identifies
+owner/external blockers explicitly, and records the model required for the next substantive step. Under the current
+scope, M39 remains blocked by M29, M30, M34, and M36–M38; no Alpha calendar date is credible until the M36 event-source
+authorization is resolved.
 
 ## Phase 1 — Native foundation and shared product capabilities
 
