@@ -33,7 +33,7 @@ The [comprehensive project portal](https://codeframe78.github.io/24Seven.FM-Play
 
 ## Alpha status
 
-The canonical roadmap now runs from **M01 through M60**. **M01–M28 are complete**, preserving all 28 verified achievements. The active Alpha-readiness program is **M29–M35**; authorized closed-app community delivery is **M36–M38**; candidate delivery and publication are **M39–M41**.
+The canonical roadmap now runs from **M01 through M60**. **M01–M28 and M31 are complete**, preserving 29 verified achievements. The active Alpha-readiness program is **M29–M35** with six gates still open; authorized closed-app community delivery is **M36–M38**; candidate delivery and publication are **M39–M41**.
 
 > [!IMPORTANT]
 > **Current focus:** close M29–M35 without weakening external approval, security, accessibility, signing, or request-integrity gates. M36–M38 cannot begin until an authorized event source exists, and M41 requires explicit publication authorization.
@@ -45,7 +45,7 @@ The current Alpha provides a responsive native player, service-owned Media3 play
 
 Public community content remains behind the adult age screen, versioned Terms acceptance, and separate mature-content reveal. Native report actions prepare bounded, station-scoped email drafts addressed to the monitored moderation contact for user review and explicit sending; Contact Us uses the same fixed-recipient handoff. Station-scoped local block controls are implemented. M27 supplies opt-in exact-name Chat-mention detection only while the existing Chat feed is actively observed; it is not closed-app push. Reliable delivery remains M36–M38 and will not be imitated with perpetual background polling.
 
-The validated baseline includes 147 unit tests, debug lint and release checks, API 26–36 coverage, a 16 KB runtime, Pixel Fold and Tablet layouts, large-text and accessibility checks, network loss/recovery, and physical Motorola Razr lifecycle checks. Evidence remains in the milestone documents linked from the [canonical roadmap](docs/ROADMAP.md).
+The validated baseline includes 148 unit tests, debug lint and release checks, API 26–36 coverage, a 16 KB runtime, Pixel Fold and Tablet layouts, large-text and accessibility checks, network loss/recovery, and physical Motorola Razr lifecycle checks. Evidence remains in the milestone documents linked from the [canonical roadmap](docs/ROADMAP.md).
 
 </details>
 
@@ -64,12 +64,12 @@ The roadmap was renumbered into one dependency-ordered sequence on July 18, 2026
 
 ### Current progression
 
-- **Completed:** M01–M28. M28 adds validated fixed-recipient Contact/report handoff, one-shot physical sending, and owner-confirmed receipt to the prior 27 achievement checkpoints.
-- **Active:** M29 Play declarations through M35 release signing and Console eligibility. Each milestone has an independent acceptance gate.
+- **Completed:** M01–M28 and M31. M31 establishes the Contact-only Play boundary and moves any future native VIP/RIP purchase and activation into M58–M60.
+- **Active:** six M29–M35 gates remain: M29, M30, and M32–M35. Each milestone has an independent acceptance gate.
 - **Authorization-gated:** M36–M38 require an approved station-side event source or privacy-compatible relay before implementation.
 - **Publication:** M39–M41 deliberately separate candidate freeze, Play delivery, and the final user-authorized Alpha action.
 - **Production:** M42–M45 add stabilization, production-access evidence, staged release, and operational recertification.
-- **Deferred/future:** Private Messages remain excluded until M47 repairs and verifies server delivery. Native Forum access is split across M51–M54. Google Cast remains a feasibility gate at M55.
+- **Deferred/future:** Private Messages remain excluded until M47 repairs and verifies server delivery. Native Forum access is split across M51–M54, Google Cast remains a feasibility gate at M55, and native VIP/RIP commerce is authorization-gated across M58–M60.
 - **Testing:** the [Product Testing catalog](https://codeframe78.github.io/24Seven.FM-Player/project/product-testing/) now contains 38 stable test cases covering the current product, Alpha gates, release campaigns, and capability-gated future slices. PT-35 is the exact-artifact M29 Play declaration/privacy/reviewer-access case; PT-36–PT-38 define the future authorized VIP/RIP purchase, activation, and lifecycle evidence.
 
 Use these sources as the current planning authority:

@@ -4,7 +4,9 @@ Date: July 18, 2026
 
 Model/review structure: Sol Extra High policy and architecture audit; Terra-bounded implementation; Sol High acceptance
 
-Status: implementation and local acceptance complete; repository coordination pending
+Implementation commit: `9e340b9`
+
+Status: complete
 
 ## Decision
 
@@ -89,7 +91,7 @@ M58–M60 do not add billing behavior to this Alpha and do not weaken the M31 Co
 | Account lifecycle | No native or external account creation/recovery/management/deletion route; Sign out remains local-session removal | Pass by source and route inventory |
 | Payment boundary | No in-app purchase, external purchase link, donation link, billing SDK, or transaction claim | Pass by source/dependency inventory |
 | Regression | Authentication, playback, requests, Favorites, Chat, and read-only membership evidence remain unchanged | Pass — 148/148 unit tests, debug lint, Android-test compilation, and focused Razr suite |
-| Documentation | README, privacy, architecture, endpoint/matrix, release notes, 38-case tester catalog, M01–M60 roadmap, portal, and GitHub Project agree | Repository/portal pass; GitHub Project pending implementation commit |
+| Documentation | README, privacy, architecture, endpoint/matrix, release notes, 38-case tester catalog, M01–M60 roadmap, portal, and GitHub Project agree | Pass — synchronized to implementation commit `9e340b9` |
 
 ## Local validation
 

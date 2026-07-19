@@ -34,7 +34,7 @@ navigation:
 
 roadmap_meta:
   updated: 2026-07-18
-  achieved_count: 28
+  achieved_count: 29
   total_count: 60
   active_phase: M29–M35
   active_label: Alpha readiness and release integrity
@@ -284,6 +284,14 @@ milestones:
     evidence: "docs/m23-ugc-safety-validation.md"
     outcome: "Fixed-recipient native Contact and report handoff with physical Razr validation and owner-confirmed one-shot receipt."
 
+  - order: 29
+    id: "M31"
+    name: "Payments External Links and Account Lifecycle"
+    date: "2026-07-18"
+    commit: "9e340b9"
+    evidence: "docs/m31-payments-account-lifecycle-validation.md"
+    outcome: "Contact-only candidate boundary with unapproved VIP/RIP purchase and account-registration routes removed."
+
 
 roadmap:
   - id: "M29"
@@ -311,12 +319,12 @@ roadmap:
   - id: "M31"
     phase: "alpha-readiness"
     name: "Payments External Links and Account Lifecycle"
-    state: "planned"
-    state_label: "Planned"
+    state: "done"
+    state_label: "Complete"
     blocking: true
     dependencies: "Live destination and Play program review"
-    evidence: "docs/ROADMAP.md"
-    summary: "Audit every Custom Tab purchase and account path then remove gate or lawfully implement it."
+    evidence: "docs/m31-payments-account-lifecycle-validation.md"
+    summary: "Contact-only external catalog; purchase/account browser routes removed and future commerce split into M58–M60."
 
   - id: "M32"
     phase: "alpha-readiness"

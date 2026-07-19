@@ -20,7 +20,7 @@ unverified stream addresses, background polling represented as push, or undocume
 
 ## Current program
 
-M01–M28 are achieved checkpoints. Their historical commits and validation remain intact. M28 closed after the fixed-recipient native Contact/report handoff passed automated and physical Razr validation and one authorized harmless report was sent exactly once with owner-confirmed receipt; the sanitized evidence is recorded in [m23-ugc-safety-validation.md](m23-ugc-safety-validation.md).
+M01–M28 and M31 are achieved checkpoints. Their historical commits and validation remain intact. M28 closed after the fixed-recipient native Contact/report handoff passed automated and physical Razr validation and one authorized harmless report was sent exactly once with owner-confirmed receipt; the sanitized evidence is recorded in [m23-ugc-safety-validation.md](m23-ugc-safety-validation.md). M31 closed in `9e340b9` after removing unapproved VIP/RIP purchase and account-registration handoffs, establishing the Contact-only candidate boundary, passing local/Razr validation, and publishing separate M58–M60 commerce gates.
 
 The active program is M29–M35 Alpha readiness:
 
@@ -28,13 +28,13 @@ The active program is M29–M35 Alpha readiness:
 | --- | --- | --- | --- | --- |
 | M29 Play Declarations, Privacy, and Data Safety | M | Waiting externally | PT-35 exact-artifact privacy/Data Safety; five-station reviewer access; audience/content/UGC classification; retention, deletion, processor, and IP facts; account boundary; foreground-media evidence | Station/operator facts, final candidate, and Play Console |
 | M30 Brand, Content, and Distribution Rights | S | Waiting externally | Preserve private rights evidence and record only sanitized completion facts | Written rights-holder authorization |
-| M31 Payments, External Links, and Account Lifecycle | M | Planned | Audit every shipped Custom Tab and downstream purchase/account path; remove, gate, or lawfully implement any incompatible route | Live destination behavior and Play program eligibility |
+| M31 Payments, External Links, and Account Lifecycle | M | Complete | Contact-only external catalog; membership/account browser routes removed; privacy, declarations, release notes, testing, and evidence reconciled | Re-audit before M51, M57, or M58–M60 ships |
 | M32 Session, Controller, Network, and Supply-Chain Security | XL, split | Planned | Controller command policy, protected-session coherence, trusted redirects, station-ID migration, dependency/action integrity, and adversarial tests | Sol security decisions and representative server behavior |
 | M33 Request Transaction Integrity | L | Planned | Fresh station/Queue/account/membership/cooldown/limit checks, exact status contract, station identity, and one-shot submission | Verified station capability data |
 | M34 Device, Accessibility, and Pre-launch Acceptance | L | In progress | Human audible TalkBack, alternative input, adaptive/device coverage, Play delivery/update, and pre-launch evidence | Test hardware, humans, and Play artifact |
 | M35 Release Signing and Console Eligibility | M | In progress | Protected signer path, physical-device verification, package registration, version-code eligibility, and repeatable signed build | Owner-only Console state |
 
-M31–M33 are audit additions and must close before M39 freezes a candidate. M34 must be rerun where those changes alter
+M31 is complete; M32–M33 remain audit additions that must close before M39 freezes a candidate. M34 must be rerun where those changes alter
 observable behavior. M35's current signing checkpoint is valuable evidence, but it is not a final candidate because the
 codebase has changed since that artifact was built.
 

@@ -69,7 +69,7 @@ allow, but no partial checkpoint should be described as release-ready.
 | M28 | UGC Safety and Ongoing Moderation | Complete | Existing safeguards plus fixed-recipient Contact/report email handoff, physical composer validation, and one owner-confirmed one-shot receipt check |
 | M29 | Play Declarations, Privacy, and Data Safety | Waiting externally | PT-35 exact-artifact reconciliation, five-station reviewer access, audience/content/UGC classification, retention/deletion/processor/IP facts, account-boundary audit, final media-playback video, and saved Console/privacy consistency |
 | M30 | Brand, Content, and Distribution Rights | Waiting externally | Written authorization for app/station naming, logos, artwork/metadata, streams, screenshots, and Play testing/distribution |
-| M31 | Payments, External Links, and Account Lifecycle Compliance | Planned | Audit every Custom Tab destination; remove or lawfully implement transaction/account-creation routes; reconcile deletion and Play declarations |
+| M31 | Payments, External Links, and Account Lifecycle Compliance | Complete | Contact-only external catalog; VIP/RIP purchase/registration and direct privacy browser routes removed; declarations and account boundary reconciled in `9e340b9` |
 | M32 | Session, Controller, Network, and Supply-Chain Security | Planned | MediaSession controller policy, coherent cookie rotation/expiry, trusted redirects, canonical station-ID migration, dependency/action integrity, and adversarial tests |
 | M33 | Request Transaction Integrity | Planned | Fresh station/Queue/account/membership/cooldown/limit/identity validation, exact availability semantics, station confirmation, and one-shot result handling |
 | M34 | Device, Accessibility, and Pre-launch Acceptance | In progress | Human audible TalkBack, keyboard/pointer/assistive access, multi-window/foldable coverage, Play delivery/update, and pre-launch evidence |
@@ -127,7 +127,8 @@ None of these milestones blocks M41 unless a later owner decision explicitly mov
 
 ## Program dependencies
 
-1. M28 is complete; M29–M35 close the remaining Alpha policy, security, correctness, accessibility, and release-tooling gaps.
+1. M28 and M31 are complete; M29, M30, and M32–M35 close the remaining Alpha policy, rights, security, correctness,
+   accessibility, and release-tooling gaps.
 2. M36 authorizes the event source before M37 implementation; M38 certifies the result.
 3. M39 freezes the exact candidate only after all intended Alpha code has landed.
 4. M40 proves Play delivery and resolves automated/reviewer findings.
