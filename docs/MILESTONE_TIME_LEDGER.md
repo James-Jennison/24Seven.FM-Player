@@ -1,6 +1,6 @@
 # Milestone real-world time ledger
 
-Last updated: `2026-07-20T19:24:30-07:00`
+Last updated: `July 20, 2026, 7:32:41 PM PDT (UTC-07:00)`
 
 This is the permanent cumulative time record for the canonical M01–M60 roadmap. It separates measured work from
 calendar passage and preserves uncertainty where older records did not contain execution timers. Historical commit,
@@ -22,7 +22,7 @@ pull-request, and workflow timestamps are evidence checkpoints; they are not sil
 | Longest and shortest completed milestones | Unknown by counted time. Supplemental observable windows: M34 is longest at least 90.27 h; M31 is shortest at least 0.03 h |
 | Overall forecast versus actual variance | Unknown; only M13, M14, and M17–M21 retained milestone-specific forecasts, and their actual counted time was not recorded |
 | Confidence classifications | Confirmed: 0; Reconstructed: 0; Estimated: 28; Unknown: 32 |
-| Ledger last updated | `2026-07-20T19:24:30-07:00` |
+| Ledger last updated | `July 20, 2026, 7:32:41 PM PDT (UTC-07:00)` |
 
 The 300.49-hour figure is a sum of per-milestone minimum observable wall-clock windows. Milestones overlapped, so it
 must not be interpreted as 300.49 unique calendar hours or counted project hours. The confidence counts cover all 60
@@ -37,7 +37,8 @@ retirement window are Estimated; every entry without a defensible historical dur
 - **Total elapsed time** is wall-clock time from actual milestone execution start through completion.
 - **Counted project time** is active execution time plus automated wait time. User-blocked time is excluded unless a
   milestone entry explicitly says otherwise.
-- Displayed totals round to two decimals. ISO 8601 timestamps are retained as the calculation source.
+- Displayed totals round to two decimals. Timestamps use a 12-hour clock and retain the full date, seconds, timezone
+  abbreviation, and UTC offset as the calculation source, for example `July 20, 2026, 7:32:41 PM PDT (UTC-07:00)`.
 - For every newly authorized milestone, open an in-progress entry immediately with actual start time, approved model,
   reasoning strength, and the forecast that exists at authorization. Planning and reasoning-gate discussion before
   authorization is not execution time.
@@ -77,41 +78,41 @@ Confidence classifications mean:
 
 | Milestone | Status | Started | Completed | Forecast | Active | Automated Wait | User-Blocked | Counted Project Time | Total Elapsed | Variance | Confidence |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| M01 | Complete | `2026-07-12T21:29:06-07:00`* | `2026-07-13T14:17:48-07:00` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥16.81 h | Unknown | Estimated |
-| M02 | Complete | `2026-07-13T04:39:00-07:00`* | `2026-07-13T14:48:48-07:00` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥10.16 h | Unknown | Estimated |
-| M03 | Complete | `2026-07-13T15:09:06-07:00`* | `2026-07-13T15:53:17-07:00` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥0.74 h | Unknown | Estimated |
-| M04 | Complete | `2026-07-13T16:42:09-07:00`* | `2026-07-13T17:25:46-07:00` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥0.73 h | Unknown | Estimated |
-| M05 | Complete | Unknown | `2026-07-13T18:16:52-07:00` | Not recorded | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown |
-| M06 | Complete | `2026-07-13T18:47:29-07:00`* | `2026-07-13T19:48:32-07:00` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥1.02 h | Unknown | Estimated |
-| M07 | Complete | `2026-07-13T20:08:37-07:00`* | `2026-07-13T21:27:20-07:00` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥1.31 h | Unknown | Estimated |
-| M08 | Complete | `2026-07-13T21:38:35-07:00`* | `2026-07-13T22:11:34-07:00` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥0.55 h | Unknown | Estimated |
-| M09 | Complete | `2026-07-13T22:46:18-07:00`* | `2026-07-13T23:03:44-07:00` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥0.29 h | Unknown | Estimated |
-| M10 | Complete | `2026-07-14T05:48:13-07:00`* | `2026-07-14T14:53:36-07:00` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥9.09 h | Unknown | Estimated |
-| M11 | Complete | Unknown | `2026-07-14T20:41:24-07:00` | Not recorded | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown |
-| M12 | Complete | Unknown | `2026-07-14T20:41:24-07:00` | Not recorded | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown |
-| M13 | Complete | Unknown | `2026-07-14T22:07:42-07:00` | 4–8 active h | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown |
-| M14 | Complete | `2026-07-14T22:30:36-07:00`* | `2026-07-14T22:32:47-07:00` | 2–4 active h | Unknown | Unknown | Unknown | Unknown | ≥0.04 h | Unknown | Estimated |
-| M15 | Complete | `2026-07-14T22:57:06-07:00`* | `2026-07-14T23:05:19-07:00` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥0.14 h | Unknown | Estimated |
-| M16 | Complete | `2026-07-14T23:29:27-07:00`* | `2026-07-14T23:38:09-07:00` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥0.14 h | Unknown | Estimated |
-| M17 | Complete | Unknown | `2026-07-14T23:58:33-07:00` | 2–4 active h | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown |
-| M18 | Complete | `2026-07-15T00:14:10-07:00`* | `2026-07-15T05:53:22-07:00` | 4–7 active h | Unknown | Unknown | Unknown | Unknown | ≥5.65 h | Unknown | Estimated |
-| M19 | Complete | `2026-07-15T00:37:03-07:00`* | `2026-07-15T06:07:04-07:00` | 4–7 active h | Unknown | Unknown | Unknown | Unknown | ≥5.50 h | Unknown | Estimated |
-| M20 | Complete | `2026-07-15T05:09:42-07:00`* | `2026-07-15T09:57:52-07:00` | 6–10 active h | Unknown | Unknown | Unknown | Unknown | ≥4.80 h | Unknown | Estimated |
-| M21 | Complete | `2026-07-15T10:22:34-07:00`* | `2026-07-15T10:25:07-07:00` | 4–7 active h | Unknown | Unknown | Unknown | Unknown | ≥0.04 h | Unknown | Estimated |
-| M22 | Complete | `2026-07-15T12:09:53-07:00`* | `2026-07-15T20:59:21-07:00` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥8.82 h | Unknown | Estimated |
-| M23 | Complete | Unknown | `2026-07-15T22:32:39-07:00` | Not recorded | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown |
-| M24 | Complete | `2026-07-16T16:46:35-07:00`* | `2026-07-16T17:01:06-07:00` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥0.24 h | Unknown | Estimated |
-| M25 | Complete | `2026-07-16T17:18:02-07:00`* | `2026-07-16T17:50:41-07:00` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥0.54 h | Unknown | Estimated |
-| M26 | Complete | `2026-07-16T18:07:48-07:00`* | `2026-07-16T18:21:05-07:00` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥0.22 h | Unknown | Estimated |
-| M27 | Complete | `2026-07-16T19:05:07-07:00`* | `2026-07-16T19:09:16-07:00` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥0.07 h | Unknown | Estimated |
-| M28 | Complete | `2026-07-15T22:32:07-07:00`* | `2026-07-18T15:04:15-07:00` | Not recorded individually | Unknown | Unknown | Unknown | Unknown | ≥64.54 h | Unknown | Estimated |
-| M29 | Waiting externally | `2026-07-15T22:42:33-07:00`* | — | Original not recorded; current 2–5 active d | Unknown | Unknown | Unknown | Unknown | Ongoing | — | Estimated |
-| M30 | Waiting externally | `2026-07-15T22:59:35-07:00`* | — | Original not recorded; current 0.5–1 active d | Unknown | Unknown | Unknown | Unknown | Ongoing | — | Estimated |
-| M31 | Complete | `2026-07-18T17:30:30-07:00`* | `2026-07-18T17:32:28-07:00` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥0.03 h | Unknown | Estimated |
-| M32 | Complete | Unknown | `2026-07-18T18:21:38-07:00` | Not recorded | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown |
-| M33 | Complete | Unknown | `2026-07-18T19:43:32-07:00` | Not recorded | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown |
-| M34 | Complete | `2026-07-15T12:09:53-07:00`* | `2026-07-19T06:25:48-07:00` | Not recorded individually | Unknown | Unknown | Unknown | Unknown | ≥90.27 h | Unknown | Estimated |
-| M35 | Complete | `2026-07-15T22:57:12-07:00`* | `2026-07-19T05:41:32-07:00` | Not recorded individually | Unknown | Unknown | Unknown | Unknown | ≥78.74 h | Unknown | Estimated |
+| M01 | Complete | `July 12, 2026, 9:29:06 PM PDT (UTC-07:00)`* | `July 13, 2026, 2:17:48 PM PDT (UTC-07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥16.81 h | Unknown | Estimated |
+| M02 | Complete | `July 13, 2026, 4:39:00 AM PDT (UTC-07:00)`* | `July 13, 2026, 2:48:48 PM PDT (UTC-07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥10.16 h | Unknown | Estimated |
+| M03 | Complete | `July 13, 2026, 3:09:06 PM PDT (UTC-07:00)`* | `July 13, 2026, 3:53:17 PM PDT (UTC-07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥0.74 h | Unknown | Estimated |
+| M04 | Complete | `July 13, 2026, 4:42:09 PM PDT (UTC-07:00)`* | `July 13, 2026, 5:25:46 PM PDT (UTC-07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥0.73 h | Unknown | Estimated |
+| M05 | Complete | Unknown | `July 13, 2026, 6:16:52 PM PDT (UTC-07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown |
+| M06 | Complete | `July 13, 2026, 6:47:29 PM PDT (UTC-07:00)`* | `July 13, 2026, 7:48:32 PM PDT (UTC-07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥1.02 h | Unknown | Estimated |
+| M07 | Complete | `July 13, 2026, 8:08:37 PM PDT (UTC-07:00)`* | `July 13, 2026, 9:27:20 PM PDT (UTC-07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥1.31 h | Unknown | Estimated |
+| M08 | Complete | `July 13, 2026, 9:38:35 PM PDT (UTC-07:00)`* | `July 13, 2026, 10:11:34 PM PDT (UTC-07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥0.55 h | Unknown | Estimated |
+| M09 | Complete | `July 13, 2026, 10:46:18 PM PDT (UTC-07:00)`* | `July 13, 2026, 11:03:44 PM PDT (UTC-07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥0.29 h | Unknown | Estimated |
+| M10 | Complete | `July 14, 2026, 5:48:13 AM PDT (UTC-07:00)`* | `July 14, 2026, 2:53:36 PM PDT (UTC-07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥9.09 h | Unknown | Estimated |
+| M11 | Complete | Unknown | `July 14, 2026, 8:41:24 PM PDT (UTC-07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown |
+| M12 | Complete | Unknown | `July 14, 2026, 8:41:24 PM PDT (UTC-07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown |
+| M13 | Complete | Unknown | `July 14, 2026, 10:07:42 PM PDT (UTC-07:00)` | 4–8 active h | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown |
+| M14 | Complete | `July 14, 2026, 10:30:36 PM PDT (UTC-07:00)`* | `July 14, 2026, 10:32:47 PM PDT (UTC-07:00)` | 2–4 active h | Unknown | Unknown | Unknown | Unknown | ≥0.04 h | Unknown | Estimated |
+| M15 | Complete | `July 14, 2026, 10:57:06 PM PDT (UTC-07:00)`* | `July 14, 2026, 11:05:19 PM PDT (UTC-07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥0.14 h | Unknown | Estimated |
+| M16 | Complete | `July 14, 2026, 11:29:27 PM PDT (UTC-07:00)`* | `July 14, 2026, 11:38:09 PM PDT (UTC-07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥0.14 h | Unknown | Estimated |
+| M17 | Complete | Unknown | `July 14, 2026, 11:58:33 PM PDT (UTC-07:00)` | 2–4 active h | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown |
+| M18 | Complete | `July 15, 2026, 12:14:10 AM PDT (UTC-07:00)`* | `July 15, 2026, 5:53:22 AM PDT (UTC-07:00)` | 4–7 active h | Unknown | Unknown | Unknown | Unknown | ≥5.65 h | Unknown | Estimated |
+| M19 | Complete | `July 15, 2026, 12:37:03 AM PDT (UTC-07:00)`* | `July 15, 2026, 6:07:04 AM PDT (UTC-07:00)` | 4–7 active h | Unknown | Unknown | Unknown | Unknown | ≥5.50 h | Unknown | Estimated |
+| M20 | Complete | `July 15, 2026, 5:09:42 AM PDT (UTC-07:00)`* | `July 15, 2026, 9:57:52 AM PDT (UTC-07:00)` | 6–10 active h | Unknown | Unknown | Unknown | Unknown | ≥4.80 h | Unknown | Estimated |
+| M21 | Complete | `July 15, 2026, 10:22:34 AM PDT (UTC-07:00)`* | `July 15, 2026, 10:25:07 AM PDT (UTC-07:00)` | 4–7 active h | Unknown | Unknown | Unknown | Unknown | ≥0.04 h | Unknown | Estimated |
+| M22 | Complete | `July 15, 2026, 12:09:53 PM PDT (UTC-07:00)`* | `July 15, 2026, 8:59:21 PM PDT (UTC-07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥8.82 h | Unknown | Estimated |
+| M23 | Complete | Unknown | `July 15, 2026, 10:32:39 PM PDT (UTC-07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown |
+| M24 | Complete | `July 16, 2026, 4:46:35 PM PDT (UTC-07:00)`* | `July 16, 2026, 5:01:06 PM PDT (UTC-07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥0.24 h | Unknown | Estimated |
+| M25 | Complete | `July 16, 2026, 5:18:02 PM PDT (UTC-07:00)`* | `July 16, 2026, 5:50:41 PM PDT (UTC-07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥0.54 h | Unknown | Estimated |
+| M26 | Complete | `July 16, 2026, 6:07:48 PM PDT (UTC-07:00)`* | `July 16, 2026, 6:21:05 PM PDT (UTC-07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥0.22 h | Unknown | Estimated |
+| M27 | Complete | `July 16, 2026, 7:05:07 PM PDT (UTC-07:00)`* | `July 16, 2026, 7:09:16 PM PDT (UTC-07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥0.07 h | Unknown | Estimated |
+| M28 | Complete | `July 15, 2026, 10:32:07 PM PDT (UTC-07:00)`* | `July 18, 2026, 3:04:15 PM PDT (UTC-07:00)` | Not recorded individually | Unknown | Unknown | Unknown | Unknown | ≥64.54 h | Unknown | Estimated |
+| M29 | Waiting externally | `July 15, 2026, 10:42:33 PM PDT (UTC-07:00)`* | — | Original not recorded; current 2–5 active d | Unknown | Unknown | Unknown | Unknown | Ongoing | — | Estimated |
+| M30 | Waiting externally | `July 15, 2026, 10:59:35 PM PDT (UTC-07:00)`* | — | Original not recorded; current 0.5–1 active d | Unknown | Unknown | Unknown | Unknown | Ongoing | — | Estimated |
+| M31 | Complete | `July 18, 2026, 5:30:30 PM PDT (UTC-07:00)`* | `July 18, 2026, 5:32:28 PM PDT (UTC-07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥0.03 h | Unknown | Estimated |
+| M32 | Complete | Unknown | `July 18, 2026, 6:21:38 PM PDT (UTC-07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown |
+| M33 | Complete | Unknown | `July 18, 2026, 7:43:32 PM PDT (UTC-07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown |
+| M34 | Complete | `July 15, 2026, 12:09:53 PM PDT (UTC-07:00)`* | `July 19, 2026, 6:25:48 AM PDT (UTC-07:00)` | Not recorded individually | Unknown | Unknown | Unknown | Unknown | ≥90.27 h | Unknown | Estimated |
+| M35 | Complete | `July 15, 2026, 10:57:12 PM PDT (UTC-07:00)`* | `July 19, 2026, 5:41:32 AM PDT (UTC-07:00)` | Not recorded individually | Unknown | Unknown | Unknown | Unknown | ≥78.74 h | Unknown | Estimated |
 | M36 | Waiting externally | — | — | 1–3 active Sol d after trigger | — | — | — | — | — | — | Unknown |
 | M37 | Planned after M36 | — | — | 5–10 active d | — | — | — | — | — | — | Unknown |
 | M38 | Planned after M37 | — | — | 5–10 active d | — | — | — | — | — | — | Unknown |
@@ -127,10 +128,10 @@ Confidence classifications mean:
 | M48 | Deferred after M47 | — | — | 1–2 active wk | — | — | — | — | — | — | Unknown |
 | M49 | Deferred after M48 | — | — | 1–2 active wk | — | — | — | — | — | — | Unknown |
 | M50 | Deferred after M49/M38 | — | — | 2–4 active wk | — | — | — | — | — | — | Unknown |
-| M51 | Retired | `2026-07-19T07:37:21-07:00`* | Retired `2026-07-19T08:55:35-07:00` | No forecast | Unknown | Unknown | Unknown | Unknown | ≥1.30 h decision window | — | Estimated |
-| M52 | Retired | — | Retired `2026-07-19T08:55:35-07:00` | No forecast | — | — | — | — | — | — | Unknown |
-| M53 | Retired | — | Retired `2026-07-19T08:55:35-07:00` | No forecast | — | — | — | — | — | — | Unknown |
-| M54 | Retired | — | Retired `2026-07-19T08:55:35-07:00` | No forecast | — | — | — | — | — | — | Unknown |
+| M51 | Retired | `July 19, 2026, 7:37:21 AM PDT (UTC-07:00)`* | Retired `July 19, 2026, 8:55:35 AM PDT (UTC-07:00)` | No forecast | Unknown | Unknown | Unknown | Unknown | ≥1.30 h decision window | — | Estimated |
+| M52 | Retired | — | Retired `July 19, 2026, 8:55:35 AM PDT (UTC-07:00)` | No forecast | — | — | — | — | — | — | Unknown |
+| M53 | Retired | — | Retired `July 19, 2026, 8:55:35 AM PDT (UTC-07:00)` | No forecast | — | — | — | — | — | — | Unknown |
+| M54 | Retired | — | Retired `July 19, 2026, 8:55:35 AM PDT (UTC-07:00)` | No forecast | — | — | — | — | — | — | Unknown |
 | M55 | Planned research gate | — | — | 2–4 active wk; may be no-go | — | — | — | — | — | — | Unknown |
 | M56 | Planned research gate | — | — | 1–3 active wk | — | — | — | — | — | — | Unknown |
 | M57 | Planned research gate | — | — | 1–3 active wk | — | — | — | — | — | — | Unknown |
@@ -197,8 +198,8 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 
 - **Objective:** Establish a buildable native Kotlin/Compose Android baseline with pinned tooling and verified Windows
   and Ubuntu development paths.
-- **Timestamps and intervals:** Earliest repository evidence `2026-07-12T21:29:06-07:00`*; completed
-  `2026-07-13T14:17:48-07:00`. Active, automated-wait, and user-blocked intervals are Unknown.
+- **Timestamps and intervals:** Earliest repository evidence `July 12, 2026, 9:29:06 PM PDT (UTC-07:00)`*; completed
+  `July 13, 2026, 2:17:48 PM PDT (UTC-07:00)`. Active, automated-wait, and user-blocked intervals are Unknown.
 - **Model/reasoning and original forecast:** Not recorded.
 - **Time and variance:** Counted project time Unknown; minimum observable elapsed 16.81 h; forecast variance Unknown.
 - **Evidence/confidence:** `252716e`, `9184afd`, `e8eb7da`, [m1-validation.md](m1-validation.md), PR #1, and the M01
@@ -209,8 +210,8 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 ### M02 — Five-station playback
 
 - **Objective:** Deliver verified five-station Media3 playback, atomic switching, and bounded primary/source fallback.
-- **Timestamps and intervals:** Earliest evidence `2026-07-13T04:39:00-07:00`*; completed
-  `2026-07-13T14:48:48-07:00`. Active, automated-wait, and user-blocked intervals are Unknown.
+- **Timestamps and intervals:** Earliest evidence `July 13, 2026, 4:39:00 AM PDT (UTC-07:00)`*; completed
+  `July 13, 2026, 2:48:48 PM PDT (UTC-07:00)`. Active, automated-wait, and user-blocked intervals are Unknown.
 - **Model/reasoning and original forecast:** Not recorded.
 - **Time and variance:** Counted time Unknown; minimum observable elapsed 10.16 h; variance Unknown.
 - **Evidence/confidence:** `b92da5a`, `7c7351d`, `d517713`, `5cdade0`, [m2-validation.md](m2-validation.md), PR #1,
@@ -221,8 +222,8 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 ### M03 — Background and system media
 
 - **Objective:** Validate service-owned background playback, MediaSession controls, audio focus, and accessory behavior.
-- **Timestamps and intervals:** Earliest evidence `2026-07-13T15:09:06-07:00`*; completed
-  `2026-07-13T15:53:17-07:00`. Historical category intervals are Unknown.
+- **Timestamps and intervals:** Earliest evidence `July 13, 2026, 3:09:06 PM PDT (UTC-07:00)`*; completed
+  `July 13, 2026, 3:53:17 PM PDT (UTC-07:00)`. Historical category intervals are Unknown.
 - **Model/reasoning and original forecast:** Not recorded.
 - **Time and variance:** Counted time Unknown; minimum observable elapsed 0.74 h; variance Unknown.
 - **Evidence/confidence:** `ce5f0f9`, `66e401c`, `9263993`, `4206fee`, [m3-validation.md](m3-validation.md), PR #1,
@@ -233,8 +234,8 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 ### M04 — Now Playing
 
 - **Objective:** Add and validate live ICY metadata with safe same-station artwork enrichment.
-- **Timestamps and intervals:** Earliest evidence `2026-07-13T16:42:09-07:00`*; completed
-  `2026-07-13T17:25:46-07:00`. Historical category intervals are Unknown.
+- **Timestamps and intervals:** Earliest evidence `July 13, 2026, 4:42:09 PM PDT (UTC-07:00)`*; completed
+  `July 13, 2026, 5:25:46 PM PDT (UTC-07:00)`. Historical category intervals are Unknown.
 - **Model/reasoning and original forecast:** Not recorded.
 - **Time and variance:** Counted time Unknown; minimum observable elapsed 0.73 h; variance Unknown.
 - **Evidence/confidence:** `f4b9c77`, `0d9e6b3`, later addenda `ae34a26`/`7aced76`,
@@ -245,7 +246,7 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 ### M05 — Native navigation
 
 - **Objective:** Deliver adaptive native destinations and the persistent mini-player.
-- **Timestamps and intervals:** Actual start Unknown; completed `2026-07-13T18:16:52-07:00`. All category intervals are
+- **Timestamps and intervals:** Actual start Unknown; completed `July 13, 2026, 6:16:52 PM PDT (UTC-07:00)`. All category intervals are
   Unknown.
 - **Model/reasoning and original forecast:** Not recorded.
 - **Time and variance:** Counted and total elapsed time Unknown; variance Unknown.
@@ -257,8 +258,8 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 ### M06 — Queue and History
 
 - **Objective:** Implement bounded station-scoped Queue and History observation.
-- **Timestamps and intervals:** Earliest evidence `2026-07-13T18:47:29-07:00`*; completed
-  `2026-07-13T19:48:32-07:00`. Category intervals are Unknown.
+- **Timestamps and intervals:** Earliest evidence `July 13, 2026, 6:47:29 PM PDT (UTC-07:00)`*; completed
+  `July 13, 2026, 7:48:32 PM PDT (UTC-07:00)`. Category intervals are Unknown.
 - **Model/reasoning and original forecast:** Not recorded.
 - **Time and variance:** Counted time Unknown; minimum observable elapsed 1.02 h; variance Unknown.
 - **Evidence/confidence:** `f7ef354`, `3babdf9`, later presentation fixes `9a9ac02`/`dcae5a2`,
@@ -269,8 +270,8 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 ### M07 — Authentication
 
 - **Objective:** Deliver native station login and Android-protected, station-isolated sessions.
-- **Timestamps and intervals:** Earliest evidence `2026-07-13T20:08:37-07:00`*; completed
-  `2026-07-13T21:27:20-07:00`. Category intervals are Unknown.
+- **Timestamps and intervals:** Earliest evidence `July 13, 2026, 8:08:37 PM PDT (UTC-07:00)`*; completed
+  `July 13, 2026, 9:27:20 PM PDT (UTC-07:00)`. Category intervals are Unknown.
 - **Model/reasoning and original forecast:** Not recorded.
 - **Time and variance:** Counted time Unknown; minimum observable elapsed 1.31 h; variance Unknown.
 - **Evidence/confidence:** `bb416d0` through `a897794`, [m7-validation.md](m7-validation.md), PR #1, and the indexed
@@ -281,8 +282,8 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 ### M08 — Chat
 
 - **Objective:** Implement native, bounded, station-scoped Chat.
-- **Timestamps and intervals:** Earliest evidence `2026-07-13T21:38:35-07:00`*; completed
-  `2026-07-13T22:11:34-07:00`. Category intervals are Unknown.
+- **Timestamps and intervals:** Earliest evidence `July 13, 2026, 9:38:35 PM PDT (UTC-07:00)`*; completed
+  `July 13, 2026, 10:11:34 PM PDT (UTC-07:00)`. Category intervals are Unknown.
 - **Model/reasoning and original forecast:** Not recorded.
 - **Time and variance:** Counted time Unknown; minimum observable elapsed 0.55 h; variance Unknown.
 - **Evidence/confidence:** `82119ca`, `f99635d`, [m8-validation.md](m8-validation.md), PR #1, and the indexed Action.
@@ -293,8 +294,8 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 ### M09 — Song requests
 
 - **Objective:** Add native search, explicit confirmation, and one-shot song-request submission.
-- **Timestamps and intervals:** Earliest evidence `2026-07-13T22:46:18-07:00`*; completed
-  `2026-07-13T23:03:44-07:00`. Category intervals are Unknown.
+- **Timestamps and intervals:** Earliest evidence `July 13, 2026, 10:46:18 PM PDT (UTC-07:00)`*; completed
+  `July 13, 2026, 11:03:44 PM PDT (UTC-07:00)`. Category intervals are Unknown.
 - **Model/reasoning and original forecast:** Not recorded.
 - **Time and variance:** Counted time Unknown; minimum observable elapsed 0.29 h; variance Unknown.
 - **Evidence/confidence:** `e748f27`, `5c50582`, [m9-validation.md](m9-validation.md), PR #1, and the indexed Action.
@@ -305,8 +306,8 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 ### M10 — Request attribution and messages
 
 - **Objective:** Add Queue attribution and the verified SST optional request-message flow.
-- **Timestamps and intervals:** Earliest evidence `2026-07-14T05:48:13-07:00`*; completed
-  `2026-07-14T14:53:36-07:00`. Category intervals are Unknown.
+- **Timestamps and intervals:** Earliest evidence `July 14, 2026, 5:48:13 AM PDT (UTC-07:00)`*; completed
+  `July 14, 2026, 2:53:36 PM PDT (UTC-07:00)`. Category intervals are Unknown.
 - **Model/reasoning and original forecast:** Not recorded.
 - **Time and variance:** Counted time Unknown; minimum observable elapsed 9.09 h; variance Unknown.
 - **Evidence/confidence:** `635139d` through `73a0d89`, [m10-validation.md](m10-validation.md), PR #1, and the indexed
@@ -318,7 +319,7 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 
 - **Objective:** Deliver the responsive Alpha shell, previews, semantics, and explicit exit flow while preserving the
   working native feature contracts.
-- **Timestamps and intervals:** Actual start Unknown; completed `2026-07-14T20:41:24-07:00`. Category intervals are
+- **Timestamps and intervals:** Actual start Unknown; completed `July 14, 2026, 8:41:24 PM PDT (UTC-07:00)`. Category intervals are
   Unknown.
 - **Model/reasoning and original forecast:** Not recorded.
 - **Time and variance:** Counted and total elapsed time Unknown; variance Unknown.
@@ -330,7 +331,7 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 ### M12 — Queue-aware request availability
 
 - **Objective:** Add conservative fresh Queue/History eligibility and fail-closed pre-submit checks.
-- **Timestamps and intervals:** Actual start Unknown; completed `2026-07-14T20:41:24-07:00`. Category intervals are
+- **Timestamps and intervals:** Actual start Unknown; completed `July 14, 2026, 8:41:24 PM PDT (UTC-07:00)`. Category intervals are
   Unknown.
 - **Model/reasoning and original forecast:** Not recorded.
 - **Time and variance:** Counted and total elapsed time Unknown; variance Unknown.
@@ -341,7 +342,7 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 ### M13 — Independent Accounts UX
 
 - **Objective:** Present five visible, independently actionable station-account states.
-- **Timestamps and intervals:** Actual start Unknown; implementation completed `2026-07-14T22:07:42-07:00`. Category
+- **Timestamps and intervals:** Actual start Unknown; implementation completed `July 14, 2026, 10:07:42 PM PDT (UTC-07:00)`. Category
   intervals are Unknown.
 - **Model/reasoning and original forecast:** Execution model/reasoning not recorded. Original forecast 4–8 active h,
   task complexity level 2, size L.
@@ -354,8 +355,8 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 ### M14 — Local personalization
 
 - **Objective:** Add device-local startup/default-station preferences without mixing station-owned data.
-- **Timestamps and intervals:** Earliest evidence `2026-07-14T22:30:36-07:00`*; documentation completed
-  `2026-07-14T22:32:47-07:00`. Category intervals are Unknown.
+- **Timestamps and intervals:** Earliest evidence `July 14, 2026, 10:30:36 PM PDT (UTC-07:00)`*; documentation completed
+  `July 14, 2026, 10:32:47 PM PDT (UTC-07:00)`. Category intervals are Unknown.
 - **Model/reasoning and original forecast:** Execution model/reasoning not recorded. Original forecast 2–4 active h,
   task complexity level 2, size M.
 - **Time and variance:** Counted time Unknown; minimum observable elapsed 0.04 h; forecast difference/percentage Unknown.
@@ -367,8 +368,8 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 ### M15 — Request activity and membership
 
 - **Objective:** Add SST request history, cooldown/readiness, and explicit membership evidence.
-- **Timestamps and intervals:** Earliest evidence `2026-07-14T22:57:06-07:00`*; completed
-  `2026-07-14T23:05:19-07:00`. Category intervals are Unknown.
+- **Timestamps and intervals:** Earliest evidence `July 14, 2026, 10:57:06 PM PDT (UTC-07:00)`*; completed
+  `July 14, 2026, 11:05:19 PM PDT (UTC-07:00)`. Category intervals are Unknown.
 - **Model/reasoning and original forecast:** Not recorded.
 - **Time and variance:** Counted time Unknown; minimum observable elapsed 0.14 h; variance Unknown.
 - **Evidence/confidence:** `b19d5fe`, `f16f408`, [m15-validation.md](m15-validation.md), PR #1, and the indexed Action.
@@ -379,8 +380,8 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 ### M16 — Secondary content access
 
 - **Objective:** Add allowlisted same-station HTTPS Custom Tab access while retaining the no-WebView boundary.
-- **Timestamps and intervals:** Earliest evidence `2026-07-14T23:29:27-07:00`*; completed
-  `2026-07-14T23:38:09-07:00`. Category intervals are Unknown.
+- **Timestamps and intervals:** Earliest evidence `July 14, 2026, 11:29:27 PM PDT (UTC-07:00)`*; completed
+  `July 14, 2026, 11:38:09 PM PDT (UTC-07:00)`. Category intervals are Unknown.
 - **Model/reasoning and original forecast:** Not recorded.
 - **Time and variance:** Counted time Unknown; minimum observable elapsed 0.14 h; variance Unknown.
 - **Evidence/confidence:** `90a7f98`, `d69c76d`, [m16-validation.md](m16-validation.md), PR #1, and the indexed Action.
@@ -391,7 +392,7 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 ### M17 — StreamingSoundtracks.com certification
 
 - **Objective:** Certify public, authenticated, VIP, request, Favorites, and Chat behavior for SST.
-- **Timestamps and intervals:** Actual start Unknown; certified `2026-07-14T23:58:33-07:00`. Category intervals are
+- **Timestamps and intervals:** Actual start Unknown; certified `July 14, 2026, 11:58:33 PM PDT (UTC-07:00)`. Category intervals are
   Unknown.
 - **Model/reasoning and original forecast:** Execution model/reasoning not recorded. Original forecast 2–4 active h,
   task complexity level 2, size S.
@@ -404,8 +405,8 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 ### M18 — 1980s.FM certification
 
 - **Objective:** Certify independent public, authenticated, and station-specific 1980s.FM behavior.
-- **Timestamps and intervals:** Earliest evidence `2026-07-15T00:14:10-07:00`*; completed
-  `2026-07-15T05:53:22-07:00`. Category intervals are Unknown.
+- **Timestamps and intervals:** Earliest evidence `July 15, 2026, 12:14:10 AM PDT (UTC-07:00)`*; completed
+  `July 15, 2026, 5:53:22 AM PDT (UTC-07:00)`. Category intervals are Unknown.
 - **Model/reasoning and original forecast:** Execution model/reasoning not recorded. Original forecast 4–7 active h,
   task complexity level 2, size M.
 - **Time and variance:** Counted time Unknown; minimum observable elapsed 5.65 h; forecast difference/percentage Unknown.
@@ -417,8 +418,8 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 ### M19 — Adagio.FM certification
 
 - **Objective:** Certify classical metadata and independent authenticated Adagio.FM workflows.
-- **Timestamps and intervals:** Earliest evidence `2026-07-15T00:37:03-07:00`*; completed
-  `2026-07-15T06:07:04-07:00`. Category intervals are Unknown.
+- **Timestamps and intervals:** Earliest evidence `July 15, 2026, 12:37:03 AM PDT (UTC-07:00)`*; completed
+  `July 15, 2026, 6:07:04 AM PDT (UTC-07:00)`. Category intervals are Unknown.
 - **Model/reasoning and original forecast:** Execution model/reasoning not recorded. Original forecast 4–7 active h,
   task complexity level 2, size M.
 - **Time and variance:** Counted time Unknown; minimum observable elapsed 5.50 h; forecast difference/percentage Unknown.
@@ -430,8 +431,8 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 ### M20 — Death.FM certification
 
 - **Objective:** Certify compact Queue, sparse metadata, RIP boundaries, and independent authenticated Death.FM flows.
-- **Timestamps and intervals:** Earliest evidence `2026-07-15T05:09:42-07:00`*; completed
-  `2026-07-15T09:57:52-07:00`. Category intervals are Unknown.
+- **Timestamps and intervals:** Earliest evidence `July 15, 2026, 5:09:42 AM PDT (UTC-07:00)`*; completed
+  `July 15, 2026, 9:57:52 AM PDT (UTC-07:00)`. Category intervals are Unknown.
 - **Model/reasoning and original forecast:** Execution model/reasoning not recorded. Original forecast 6–10 active h,
   task complexity level 2, size L.
 - **Time and variance:** Counted time Unknown; minimum observable elapsed 4.80 h; forecast difference/percentage Unknown.
@@ -443,8 +444,8 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 ### M21 — Entranced.FM certification
 
 - **Objective:** Certify extended Queue, legacy ICY punctuation, and authenticated Entranced.FM workflows.
-- **Timestamps and intervals:** Earliest evidence `2026-07-15T10:22:34-07:00`*; completed
-  `2026-07-15T10:25:07-07:00`. Category intervals are Unknown.
+- **Timestamps and intervals:** Earliest evidence `July 15, 2026, 10:22:34 AM PDT (UTC-07:00)`*; completed
+  `July 15, 2026, 10:25:07 AM PDT (UTC-07:00)`. Category intervals are Unknown.
 - **Model/reasoning and original forecast:** Execution model/reasoning not recorded. Original forecast 4–7 active h,
   task complexity level 2, size M.
 - **Time and variance:** Counted time Unknown; minimum observable elapsed 0.04 h; forecast difference/percentage Unknown.
@@ -456,8 +457,8 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 ### M22 — Android 16 and API 36 readiness
 
 - **Objective:** Validate API 36 targeting, edge-to-edge and predictive Back behavior, and platform regressions.
-- **Timestamps and intervals:** Earliest relevant device/layout evidence `2026-07-15T12:09:53-07:00`*; completed
-  `2026-07-15T20:59:21-07:00`. Category intervals are Unknown.
+- **Timestamps and intervals:** Earliest relevant device/layout evidence `July 15, 2026, 12:09:53 PM PDT (UTC-07:00)`*; completed
+  `July 15, 2026, 8:59:21 PM PDT (UTC-07:00)`. Category intervals are Unknown.
 - **Model/reasoning and original forecast:** Not recorded individually.
 - **Time and variance:** Counted time Unknown; minimum observable elapsed 8.82 h; variance Unknown.
 - **Evidence/confidence:** `252e3a4`, `44632f1`, [m23-api36-readiness.md](m23-api36-readiness.md), PR #1, and related
@@ -468,7 +469,7 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 ### M23 — Adaptive launcher and store polish
 
 - **Objective:** Deliver and validate legacy, adaptive, and monochrome launcher resources.
-- **Timestamps and intervals:** Actual start Unknown; completed `2026-07-15T22:32:39-07:00`. Category intervals are
+- **Timestamps and intervals:** Actual start Unknown; completed `July 15, 2026, 10:32:39 PM PDT (UTC-07:00)`. Category intervals are
   Unknown.
 - **Model/reasoning and original forecast:** Not recorded individually.
 - **Time and variance:** Counted and total elapsed time Unknown; variance Unknown.
@@ -480,8 +481,8 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 ### M24 — Sleep Timer
 
 - **Objective:** Add a bounded, service-owned timer with restoration, adjustment, cancellation, and deterministic expiry.
-- **Timestamps and intervals:** Earliest evidence `2026-07-16T16:46:35-07:00`*; merged/completed
-  `2026-07-16T17:01:06-07:00`. Category intervals are Unknown.
+- **Timestamps and intervals:** Earliest evidence `July 16, 2026, 4:46:35 PM PDT (UTC-07:00)`*; merged/completed
+  `July 16, 2026, 5:01:06 PM PDT (UTC-07:00)`. Category intervals are Unknown.
 - **Model/reasoning and original forecast:** Not recorded.
 - **Time and variance:** Counted time Unknown; minimum observable elapsed 0.24 h; variance Unknown.
 - **Evidence/confidence:** `b713783`, `1a0516e`, merge `feb24f7`, [m24-sleep-timer-validation.md](m24-sleep-timer-validation.md),
@@ -492,8 +493,8 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 ### M25 — System Audio-Output Selection
 
 - **Objective:** Add Android-managed output selection and accurate audio-policy route state without adding Cast.
-- **Timestamps and intervals:** Earliest evidence `2026-07-16T17:18:02-07:00`*; merged/completed
-  `2026-07-16T17:50:41-07:00`. Category intervals are Unknown.
+- **Timestamps and intervals:** Earliest evidence `July 16, 2026, 5:18:02 PM PDT (UTC-07:00)`*; merged/completed
+  `July 16, 2026, 5:50:41 PM PDT (UTC-07:00)`. Category intervals are Unknown.
 - **Model/reasoning and original forecast:** Not recorded.
 - **Time and variance:** Counted time Unknown; minimum observable elapsed 0.54 h; variance Unknown.
 - **Evidence/confidence:** `85fbca3`, `183ccc0`, `68e5ab8`, merge `3588c7d`,
@@ -504,8 +505,8 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 ### M26 — In-App Diagnostics
 
 - **Objective:** Add a privacy-safe, user-reviewed, fixed-allowlist diagnostics snapshot with explicit copy/share.
-- **Timestamps and intervals:** Earliest evidence `2026-07-16T18:07:48-07:00`*; merged/completed
-  `2026-07-16T18:21:05-07:00`. Category intervals are Unknown.
+- **Timestamps and intervals:** Earliest evidence `July 16, 2026, 6:07:48 PM PDT (UTC-07:00)`*; merged/completed
+  `July 16, 2026, 6:21:05 PM PDT (UTC-07:00)`. Category intervals are Unknown.
 - **Model/reasoning and original forecast:** Not recorded.
 - **Time and variance:** Counted time Unknown; minimum observable elapsed 0.22 h; variance Unknown.
 - **Evidence/confidence:** `7aedbfc`, `3aa0b74`, merge `32b7355`, [m26-diagnostics-validation.md](m26-diagnostics-validation.md),
@@ -516,8 +517,8 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 ### M27 — Local Chat-Mention Notifications
 
 - **Objective:** Add opt-in exact-name notifications from the actively observed Chat feed without claiming closed-app push.
-- **Timestamps and intervals:** Earliest evidence `2026-07-16T19:05:07-07:00`*; merged/completed
-  `2026-07-16T19:09:16-07:00`. Category intervals are Unknown.
+- **Timestamps and intervals:** Earliest evidence `July 16, 2026, 7:05:07 PM PDT (UTC-07:00)`*; merged/completed
+  `July 16, 2026, 7:09:16 PM PDT (UTC-07:00)`. Category intervals are Unknown.
 - **Model/reasoning and original forecast:** Not recorded.
 - **Time and variance:** Counted time Unknown; minimum observable elapsed 0.07 h; variance Unknown.
 - **Evidence/confidence:** `d902cbd`, merge `afd563a`, [m27-community-notification-validation.md](m27-community-notification-validation.md),
@@ -529,8 +530,8 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 
 - **Objective:** Add Terms/age/reveal safeguards, report and local block controls, a fixed-recipient user-reviewed email
   handoff, physical composer validation, and an owner-confirmed one-shot receipt check.
-- **Timestamps and intervals:** Earliest implementation evidence `2026-07-15T22:32:07-07:00`*; completed
-  `2026-07-18T15:04:15-07:00`. Active, automated-wait, and user-blocked intervals are Unknown; owner input is documented
+- **Timestamps and intervals:** Earliest implementation evidence `July 15, 2026, 10:32:07 PM PDT (UTC-07:00)`*; completed
+  `July 18, 2026, 3:04:15 PM PDT (UTC-07:00)`. Active, automated-wait, and user-blocked intervals are Unknown; owner input is documented
   but its exact pause/resume boundary is not.
 - **Model/reasoning and original forecast:** Execution model/reasoning not recorded. The later M28–M35 umbrella estimate
   was 3–6 focused days plus owner/station input; no original individual M28 forecast was retained.
@@ -544,10 +545,10 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 
 - **Objective:** Reconcile the exact artifact, reviewer access, audience/content/UGC classification, privacy/Data Safety,
   station retention/deletion/processor/IP facts, account boundaries, and media-playback evidence.
-- **Timestamps and intervals:** Earliest Play-declaration evidence `2026-07-15T22:42:33-07:00`*. Not completed. The
+- **Timestamps and intervals:** Earliest Play-declaration evidence `July 15, 2026, 10:42:33 PM PDT (UTC-07:00)`*. Not completed. The
   milestone is waiting externally; exact historical active intervals and the start of the user-blocked pause are Unknown.
 - **Model/reasoning and original forecast:** Original execution model/reasoning and forecast were not recorded at start.
-  Current routing, added `2026-07-19T06:17:38-07:00`, is Sol High with 2–5 active days after all named facts/candidate exist.
+  Current routing, added `July 19, 2026, 6:17:38 AM PDT (UTC-07:00)`, is Sol High with 2–5 active days after all named facts/candidate exist.
 - **Time and variance:** Active, wait, blocked, counted, and total elapsed durations remain Unknown/ongoing; variance is
   not calculated before completion.
 - **Evidence/confidence:** `4aa36d9`, `0fa5040`, `59d6096`, `849b5a0`, `93e8110`, `d3467cf`,
@@ -560,7 +561,7 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 
 - **Objective:** Obtain and privately retain written authorization for naming, branding, station assets/metadata,
   streams, screenshots, and Google Play testing/distribution.
-- **Timestamps and intervals:** Earliest rights-response packet evidence `2026-07-15T22:59:35-07:00`*. Not completed.
+- **Timestamps and intervals:** Earliest rights-response packet evidence `July 15, 2026, 10:59:35 PM PDT (UTC-07:00)`*. Not completed.
   The milestone is waiting externally; exact active intervals and the user-blocked pause start are Unknown.
 - **Model/reasoning and original forecast:** Original model/reasoning and forecast were not recorded at start. Current
   routing, added July 19, is Sol High with 0.5–1 active day after written authorization arrives.
@@ -575,8 +576,8 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 
 - **Objective:** Establish the Contact-only Alpha boundary and remove unapproved membership purchase, registration,
   account-management, and direct privacy browser routes.
-- **Timestamps and intervals:** Earliest implementation evidence `2026-07-18T17:30:30-07:00`*; completed
-  `2026-07-18T17:32:28-07:00`. Category intervals are Unknown.
+- **Timestamps and intervals:** Earliest implementation evidence `July 18, 2026, 5:30:30 PM PDT (UTC-07:00)`*; completed
+  `July 18, 2026, 5:32:28 PM PDT (UTC-07:00)`. Category intervals are Unknown.
 - **Model/reasoning and original forecast:** Sol Extra High policy/architecture audit, Terra-bounded implementation, and
   Sol High acceptance are recorded; original hours forecast was not recorded.
 - **Time and variance:** Counted time Unknown; minimum observable elapsed 0.03 h; variance Unknown.
@@ -590,7 +591,7 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 
 - **Objective:** Harden MediaSession authority, protected station sessions, redirects, canonical IDs, and build integrity,
   with adversarial physical-device evidence.
-- **Timestamps and intervals:** Actual start Unknown; completed `2026-07-18T18:21:38-07:00`. Category intervals are Unknown.
+- **Timestamps and intervals:** Actual start Unknown; completed `July 18, 2026, 6:21:38 PM PDT (UTC-07:00)`. Category intervals are Unknown.
 - **Model/reasoning and original forecast:** Exact execution model/reasoning and original forecast not recorded.
 - **Time and variance:** Counted and total elapsed time Unknown; variance Unknown.
 - **Evidence/confidence:** `2bc45f7`, follow-up evidence `1c50ca0`/`cec5d5e`,
@@ -602,7 +603,7 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 
 - **Objective:** Bind each one-shot request to fresh station, account, Queue, readiness, and track identity with bounded
   duplicate suppression.
-- **Timestamps and intervals:** Actual start Unknown; completed `2026-07-18T19:43:32-07:00`. Category intervals are Unknown.
+- **Timestamps and intervals:** Actual start Unknown; completed `July 18, 2026, 7:43:32 PM PDT (UTC-07:00)`. Category intervals are Unknown.
 - **Model/reasoning and original forecast:** Sol acceptance is recorded; reasoning strength and original forecast are not.
 - **Time and variance:** Counted and total elapsed time Unknown; variance Unknown.
 - **Evidence/confidence:** `572d419`, documentation `b7e10b6`,
@@ -614,8 +615,8 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 
 - **Objective:** Accept adaptive window/foldable, physical hinge, human TalkBack, Voice Access, keyboard/pointer, large
   text, network recovery, and current-device evidence.
-- **Timestamps and intervals:** Earliest relevant evidence `2026-07-15T12:09:53-07:00`*; completed
-  `2026-07-19T06:25:48-07:00`. Exact active, automated-wait, and user-blocked intervals are Unknown; human/physical
+- **Timestamps and intervals:** Earliest relevant evidence `July 15, 2026, 12:09:53 PM PDT (UTC-07:00)`*; completed
+  `July 19, 2026, 6:25:48 AM PDT (UTC-07:00)`. Exact active, automated-wait, and user-blocked intervals are Unknown; human/physical
   checkpoints are documented without full pause/resume timing.
 - **Model/reasoning and original forecast:** Sol High acceptance is recorded; original individual forecast was not.
 - **Time and variance:** Counted time Unknown; minimum observable elapsed 90.27 h; variance Unknown.
@@ -628,8 +629,8 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 
 - **Objective:** Prove current-head protected signing, exact upload identity, local clean/update lineage, package
   registration, eligible version code, and a repeatable signed build.
-- **Timestamps and intervals:** Earliest focused audit evidence `2026-07-15T22:57:12-07:00`*; completed
-  `2026-07-19T05:41:32-07:00`. Active, automated-wait, and user-blocked intervals are Unknown; owner confirmation and
+- **Timestamps and intervals:** Earliest focused audit evidence `July 15, 2026, 10:57:12 PM PDT (UTC-07:00)`*; completed
+  `July 19, 2026, 5:41:32 AM PDT (UTC-07:00)`. Active, automated-wait, and user-blocked intervals are Unknown; owner confirmation and
   protected build checkpoints lack complete pause boundaries.
 - **Model/reasoning and original forecast:** Sol acceptance is recorded; reasoning strength and original individual
   forecast were not.
@@ -785,8 +786,8 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 
 - **Objective:** Historically, verify Forum links and browser fallback; the project subsequently retired all Forum access
   from Player scope.
-- **Timestamps/intervals:** Earliest focused blocker evidence `2026-07-19T07:37:21-07:00`*; retirement decision recorded
-  `2026-07-19T08:55:35-07:00`. Category intervals are Unknown.
+- **Timestamps/intervals:** Earliest focused blocker evidence `July 19, 2026, 7:37:21 AM PDT (UTC-07:00)`*; retirement decision recorded
+  `July 19, 2026, 8:55:35 AM PDT (UTC-07:00)`. Category intervals are Unknown.
 - **Model/reasoning and original forecast:** Not recorded; no implementation forecast remains after retirement.
 - **Time/variance/evidence/confidence:** Counted time Unknown; minimum observable research-to-decision window 1.30 h;
   forecast variance not applicable. `cb37b03`, `8b9980f`, [m51-forum-links-research.md](m51-forum-links-research.md),
@@ -797,7 +798,7 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 ### M52 — Native Forum Read-Only Foundation
 
 - **Objective:** Former native Forum retrieval/rendering scope; permanently retired.
-- **Timestamps/intervals:** Never started; retired by project decision `2026-07-19T08:55:35-07:00`; no actual intervals.
+- **Timestamps/intervals:** Never started; retired by project decision `July 19, 2026, 8:55:35 AM PDT (UTC-07:00)`; no actual intervals.
 - **Model/reasoning and forecast:** None; no forecast after retirement.
 - **Time/variance/evidence/confidence:** No counted or elapsed time and no variance can be assigned. Roadmap `e249071`
   and retirement `8b9980f`; no implementation/PR/release/workflow. **Unknown** rather than zero.
@@ -805,7 +806,7 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 ### M53 — Authenticated Forum Participation
 
 - **Objective:** Former Forum sign-in/post/reply/moderation scope; permanently retired.
-- **Timestamps/intervals:** Never started; retired by project decision `2026-07-19T08:55:35-07:00`; no actual intervals.
+- **Timestamps/intervals:** Never started; retired by project decision `July 19, 2026, 8:55:35 AM PDT (UTC-07:00)`; no actual intervals.
 - **Model/reasoning and forecast:** None; no forecast after retirement.
 - **Time/variance/evidence/confidence:** No counted or elapsed time and no variance can be assigned. Roadmap `e249071`
   and retirement `8b9980f`; no implementation/PR/release/workflow. **Unknown** rather than zero.
@@ -813,7 +814,7 @@ begin/end, pauses/resumes, and acceptance in this ledger during execution.
 ### M54 — Forum Five-Station and Notification Certification
 
 - **Objective:** Former Forum certification/notification scope; permanently retired.
-- **Timestamps/intervals:** Never started; retired by project decision `2026-07-19T08:55:35-07:00`; no actual intervals.
+- **Timestamps/intervals:** Never started; retired by project decision `July 19, 2026, 8:55:35 AM PDT (UTC-07:00)`; no actual intervals.
 - **Model/reasoning and forecast:** None; no forecast after retirement.
 - **Time/variance/evidence/confidence:** No counted or elapsed time and no variance can be assigned. Roadmap `e249071`
   and retirement `8b9980f`; no implementation/PR/release/workflow. **Unknown** rather than zero.
@@ -881,9 +882,9 @@ Add rows in chronological order. Close an active interval before opening a wait 
 
 | Category | Started | Ended/resumed | Duration | Reason/evidence | Counted? |
 | --- | --- | --- | --- | --- | --- |
-| Active execution | `YYYY-MM-DDTHH:MM:SS±HH:MM` | `YYYY-MM-DDTHH:MM:SS±HH:MM` | 0.00 h | Examination/implementation/test/docs/commit activity | Yes |
-| Automated wait | `YYYY-MM-DDTHH:MM:SS±HH:MM` | `YYYY-MM-DDTHH:MM:SS±HH:MM` | 0.00 h | Build/test/install/deploy/workflow URL | Yes |
-| User-blocked | `YYYY-MM-DDTHH:MM:SS±HH:MM` | `YYYY-MM-DDTHH:MM:SS±HH:MM` | 0.00 h | Approval/credential/access/decision requested and received | No |
+| Active execution | `Month D, YYYY, h:mm:ss AM/PM TZ (UTC±HH:MM)` | `Month D, YYYY, h:mm:ss AM/PM TZ (UTC±HH:MM)` | 0.00 h | Examination/implementation/test/docs/commit activity | Yes |
+| Automated wait | `Month D, YYYY, h:mm:ss AM/PM TZ (UTC±HH:MM)` | `Month D, YYYY, h:mm:ss AM/PM TZ (UTC±HH:MM)` | 0.00 h | Build/test/install/deploy/workflow URL | Yes |
+| User-blocked | `Month D, YYYY, h:mm:ss AM/PM TZ (UTC±HH:MM)` | `Month D, YYYY, h:mm:ss AM/PM TZ (UTC±HH:MM)` | 0.00 h | Approval/credential/access/decision requested and received | No |
 
 ## Required milestone completion report
 

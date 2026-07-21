@@ -25,6 +25,6 @@
 ## Milestone time ledger
 
 - Treat `docs/MILESTONE_TIME_LEDGER.md` as the canonical cumulative record of milestone time.
-- When milestone execution is authorized, immediately record the actual ISO 8601 start timestamp, approved model and reasoning strength, original forecast, and an in-progress entry.
+- When milestone execution is authorized, immediately record the actual start timestamp in unambiguous 12-hour format with the full date, seconds, timezone abbreviation, and UTC offset; also record the approved model and reasoning strength, original forecast, and an in-progress entry.
 - Record active, automated-wait, and user-blocked pause/resume intervals as they occur; never count an unmeasured user-response gap as active work.
 - At completion, calculate counted project time, total elapsed time, user-blocked exclusion, forecast variance, lessons, and cumulative totals, then commit the ledger with the milestone documentation and include the ledger's required time block in the completion report.
