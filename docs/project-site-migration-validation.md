@@ -5,11 +5,12 @@ record.
 
 ## Outcome
 
-The existing Jekyll portal was retained, refined, and prepared as a static
+The existing Jekyll portal was retained, refined, and staged as a static
 artifact for `https://player.jamesjennison.net`. The implementation uses the
 approved clean route model, James-Jennison identity, curated public content,
-and GitHub-only privacy contact. It makes no Webuzo, DNS, Cloudflare, SSL,
-GitHub setting, GitHub Pages, staging, or production change.
+GitHub-only privacy contact, and an Apache-local custom 404 mapping. Webuzo
+origin staging is complete; public DNS, trusted SSL, Cloudflare, GitHub
+settings, GitHub Pages, and production remain unchanged.
 
 Source was isolated on local branch `codex/player-site-migration` from commit
 `c54057151f34e5505f238391d08a5520d8e45c06`. The owner's separate dirty main
@@ -27,13 +28,13 @@ node ./scripts/test-project-site-browser.mjs
 The static build uses the digest-pinned image
 `ghcr.io/actions/jekyll-build-pages@sha256:6791ebfd912185ed59bfb5fb102664fa872496b79f87ff8b9cfba292a7345041`.
 
-The final `_site/` artifact contains 24 files totaling approximately 3.42 MiB,
+The final `_site/` artifact contains 25 files totaling approximately 3.42 MiB,
 including nine HTML documents. Its deterministic inventory digest, calculated
 by sorting each relative file path and content SHA-256 into a second SHA-256,
 is:
 
 ```text
-db2d0047cc43168c1d5483df4afc88d0a016da34c81136bb76a27e06ab7e7a7b
+b6f62600b4ab04a5f124a5f2547e4795fcf8be72225fc4af597809025686a9ca
 ```
 
 The digest is a local validation checkpoint, not a signed release provenance
@@ -45,7 +46,7 @@ staging or production.
 | Validation | Result |
 | --- | --- |
 | Jekyll production build | Pass |
-| Dedicated-domain artifact validator | Pass: 24 files, 9 HTML documents |
+| Dedicated-domain artifact validator | Pass: 25 files, 9 HTML documents |
 | GitHub Pages transition validator | Pass: 8 `noindex` compatibility pages |
 | Internal routes, fragments, and assets | Pass |
 | Canonical, Open Graph, social, sitemap, manifest, robots, and structured data | Pass |
@@ -110,22 +111,45 @@ deploy job cannot run unless the separately approval-gated repository variable
 `PLAYER_PAGES_TRANSITION_APPROVED` equals `true`.
 
 Webuzo remains authoritative for the exact user, document root, ownership,
-permissions, active server chain, certificate, logs, and backup. Those values
-are deliberately unresolved until read-only Webuzo discovery and an exact
-subdomain proposal are approved. The complete deployment, health, transition,
-and rollback contract is in
+permissions, active server chain, certificate, logs, and backup. Origin
+staging uses Webuzo 4.7.4, Apache 2.4.68, user `jamesjen`, and document root
+`/home/jamesjen/player.jamesjennison.net`. The complete deployment, health,
+transition, and rollback contract is in
 [project-site-migration.md](project-site-migration.md).
+
+## Origin-staging validation
+
+| Check | Result |
+| --- | --- |
+| Webuzo domain | Pass: `player.jamesjennison.net` is an isolated subdomain owned by `jamesjen` |
+| Document root | Pass: exact approved path; no overlap with master, status, webmail, or another user |
+| Artifact parity | Pass: all 25 files match digest `b6f62600b4ab04a5f124a5f2547e4795fcf8be72225fc4af597809025686a9ca` |
+| Canonical routes | Pass: eight content routes return 200 with their approved canonical URLs |
+| Custom 404 | Pass: unknown paths return status 404 with the Player error page |
+| Static assets | Pass: CSS, JavaScript, PNG, manifest, robots, and sitemap are served |
+| Sensitive paths | Pass: `.git`, `.env`, source documentation, and `.htaccess` are not publicly readable |
+| Webuzo configuration | Pass: Apache syntax valid; Webuzo and MariaDB active; origin pages served successfully |
+| Public DNS | Unchanged: Player and generated internal aliases have no A, AAAA, or CNAME records |
+| Existing sites | Unchanged: apex, `www`, status, and the GitHub Pages fallback retain their prior responses |
+| Backups | Pass: snapshots `40412861`, `21c5494b`, and `0f7293db`; full Restic data check and streamed restore check pass |
+| HTTPS trust | Pending: Webuzo generated a self-signed placeholder; no trusted Player certificate was issued |
+| Security/cache headers | Pending separate approval; no domain-specific header configuration was added |
+
+The Webuzo template generated internal `www.player` and `mail.player` aliases.
+They are intentionally non-resolving and are not approved public hostnames. No
+generated virtual-host file was hand-edited, no shared service was restarted,
+and no custom reverse proxy, runtime process, database, or scheduled task was
+introduced.
 
 ## Remaining gates
 
 - Review and approval of this local commit
 - GitHub push or pull request
-- Read-only Webuzo, DNS, Cloudflare, SSL, backup, and existing-content discovery
-- Exact Webuzo user and isolated document root
-- Subdomain creation and SSL/DNS changes
-- Staging deployment and validation
+- Trusted origin certificate coverage and renewal validation
+- Security and cache header configuration
+- Cloudflare control-plane review and approved Player DNS record
 - Production deployment and validation
 - Play Console privacy URL change
 - GitHub Pages transition activation and eventual retirement
 
-None of these actions occurred during this milestone.
+None of the remaining actions occurred during this milestone.

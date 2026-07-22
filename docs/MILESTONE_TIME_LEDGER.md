@@ -1,6 +1,6 @@
 # Milestone Real-World Time Ledger
 
-Last updated: `July 22, 2026 at 2:27:41 PM PDT (UTC−07:00)`
+Last updated: `July 22, 2026 at 3:02:42 PM PDT (UTC−07:00)`
 
 This is the permanent time-accounting record for the canonical M01–M60 milestones in [ROADMAP.md](ROADMAP.md). It
 preserves historical uncertainty instead of treating commit spans as labor time. Future milestone work must be
@@ -38,6 +38,7 @@ does not alter the status, numbering, or cumulative totals of the canonical Andr
 | Program milestone | Status | Started | Forecast | Expected completion | Model and reasoning | Active | Automated wait | User-blocked |
 | --- | --- | --- | --- | --- | --- | ---: | ---: | ---: |
 | Master M12 — Player local migration implementation | Complete | `July 22, 2026 at 1:51:13 PM PDT (UTC−07:00)` | 8–14 active h | By `July 23, 2026 at 3:51:13 AM PDT (UTC−07:00)` if uninterrupted | GPT-5; current default reasoning strength, unchanged | 0.61 h | 0.00 h | 0.00 h |
+| Master M13 — Player origin staging | Complete | `July 22, 2026 at 2:50:15 PM PDT (UTC−07:00)` | 1.5–3 active h | By `July 22, 2026 at 5:50:15 PM PDT (UTC−07:00)` if uninterrupted | GPT-5; current default reasoning strength, unchanged | 0.21 h | 0.00 h | 0.00 h |
 
 ### Master M12 — Player local migration implementation
 
@@ -77,6 +78,42 @@ Total elapsed time: 0.61 h
 User-blocked time excluded: 0.00 h
 Forecast variance: 7.39 h below the lower bound (92.4%)
 Cumulative counted project time through Milestone Master M12: 0.61 h (master-site program website milestones only; canonical Android cumulative remains Unknown)
+```
+
+### Master M13 — Player origin staging
+
+- **Objective:** Create a verified pre-change backup, add only `player.jamesjennison.net` through Webuzo with the
+  approved isolated document root, deploy the reviewed static artifact, and validate it through an origin-only method.
+- **Authorization and start:** Authorized by the owner and started `July 22, 2026 at 2:50:15 PM PDT (UTC−07:00)`.
+- **Model, reasoning strength, and original forecast:** GPT-5 with the current default reasoning strength, unchanged;
+  1.5–3 active hours; expected completion by `July 22, 2026 at 5:50:15 PM PDT (UTC−07:00)` if uninterrupted.
+- **Scope boundary:** Cloudflare, public DNS, certificate issuance or replacement, GitHub push, GitHub Pages changes,
+  public staging, and production cutover remain excluded.
+- **Completion:** Completed `July 22, 2026 at 3:02:42 PM PDT (UTC−07:00)`. The measured window was 0.21 active hours
+  with no user-blocked or separately measured automated-wait interval.
+- **Forecast variance:** 1.29 hours (86.2%) below the 1.5-hour lower bound. Existing root access, the installed Webuzo
+  end-user API, a small static artifact, and a local Restic repository made the isolated staging operation faster than
+  the original allowance for access discovery, large transfers, or service-level troubleshooting.
+- **Evidence:** Webuzo owns the exact isolated domain and document root; artifact digest
+  `b6f62600b4ab04a5f124a5f2547e4795fcf8be72225fc4af597809025686a9ca` matches locally and on the origin; all content
+  routes, assets, protected paths, and the custom 404 pass; Restic snapshots `40412861`, `21c5494b`, and `0f7293db`
+  pass a full data check and streamed restore check; public Player DNS remains absent.
+- **Forecasting lesson:** Estimate a Webuzo static-origin stage separately from trusted certificate work, Cloudflare,
+  public DNS, security headers, and production cutover. A pre-authorized, prebuilt artifact can be staged quickly when
+  each of those higher-risk actions remains in its own gate.
+
+| Started | Ended | Category | Reason or work | Evidence | Hours |
+| --- | --- | --- | --- | --- | ---: |
+| `July 22, 2026 at 2:50:15 PM PDT (UTC−07:00)` | `July 22, 2026 at 3:02:42 PM PDT (UTC−07:00)` | Active | Verify the deployment artifact, back up the origin configuration, create the isolated Webuzo domain, deploy, and validate origin-only staging. | Owner approval; branch `codex/player-site-migration`; source commit `4f3b540`; staging validation record | 0.21 h |
+
+```text
+Milestone Master M13 time:
+Forecast: 1.5–3 active hours
+Counted project time: 0.21 h
+Total elapsed time: 0.21 h
+User-blocked time excluded: 0.00 h
+Forecast variance: 1.29 h below the lower bound (86.2%)
+Cumulative counted project time through Milestone Master M13: 0.82 h (master-site program website milestones only; canonical Android cumulative remains Unknown)
 ```
 
 ## Definitions and confidence rules

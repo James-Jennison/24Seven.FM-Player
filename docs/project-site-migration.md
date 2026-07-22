@@ -32,19 +32,20 @@ materially benefit a dedicated domain:
 | Build runtime | Digest-pinned `ghcr.io/actions/jekyll-build-pages` container |
 | Build method | `./scripts/build-project-site.sh` |
 | Validation method | `./scripts/validate-project-site.sh` |
-| Production output | Static `_site/` artifact |
+| Production output | Static `_site/` artifact; staged artifact digest `b6f62600b4ab04a5f124a5f2547e4795fcf8be72225fc4af597809025686a9ca` |
 | Server runtime | None |
 | Database | None |
 | Persistent process or port | None |
-| Webuzo user | Must be read from Webuzo and approved before staging |
-| Webuzo document root | Must be read from Webuzo and approved before subdomain creation |
-| Origin SSL owner and method | Must be read from Webuzo and approved before certificate action |
+| Webuzo | Version 4.7.4, revision 3723; Apache 2.4.68 serves the public virtual hosts directly |
+| Webuzo user | `jamesjen` |
+| Webuzo document root | `/home/jamesjen/player.jamesjennison.net` |
+| Origin SSL owner and method | Webuzo; current auto-generated self-signed placeholder is staging-only and not production-trusted |
 | Cloudflare record and proxy state | Must be read from Cloudflare and approved before DNS action |
 | Cache behavior | Static asset caching proposed below; no rule configured |
 | Logging | Existing Webuzo domain access/error logs only; no browser analytics |
 | Health check | Static route, asset, TLS, metadata, header, and cross-site navigation checks |
-| Backup | Webuzo backup plus a release-specific document-root archive before activation |
-| Rollback | Restore the prior release or document-root archive; Pages remains available during initial validation |
+| Backup | Restic pre-change snapshot `40412861`, empty-domain snapshot `21c5494b`, and staged snapshot `0f7293db` |
+| Rollback | Withdraw any later Player DNS, restore the empty-domain snapshot or validated artifact, and leave Pages available |
 
 The source, build container, Docker socket, repository metadata, documentation,
 dependencies, and credentials must remain outside the public document root.
@@ -105,6 +106,40 @@ certificate, ownership, permissions, logs, and backups.
 
 No custom VirtualHost, reverse proxy, runtime service, scheduled job, service
 restart, or global web-server change is required for the static site.
+
+## Origin-staging record
+
+Owner-approved origin-only staging completed July 22, 2026. Webuzo created
+`player.jamesjennison.net` as a subdomain owned by `jamesjen` with the isolated
+document root `/home/jamesjen/player.jamesjennison.net`. Webuzo generated
+internal `www.player` and `mail.player` virtual-host aliases as part of its
+standard template; neither alias has public DNS, and no alias is approved as a
+public hostname.
+
+The staged document root contains only the 25 validated static artifact files.
+The root is owned by `jamesjen:nobody` with mode `0750`; artifact directories
+use `0755`, files use `0644`, and artifact entries are owned by
+`jamesjen:jamesjen`. There are no symlinks, Git metadata, environment files,
+private keys, logs, source maps, dependencies, or repository documentation in
+the document root.
+
+All eight public content routes and their assets return successfully through
+an origin-address-bound hostname probe. Unknown routes retain HTTP status 404
+and render the project-specific `404.html` through the artifact-local
+`.htaccess`; no generated Webuzo virtual-host file was edited. The staged
+artifact and local artifact have the same deterministic inventory digest.
+
+Webuzo generated a self-signed placeholder certificate for the new virtual
+host even though public certificate issuance was disabled. It is sufficient
+only to confirm that the HTTPS virtual host responds; it is not trusted and
+must be replaced or covered through an approved Webuzo-managed certificate
+workflow before public DNS or Full (Strict) Cloudflare operation. Security and
+cache headers also remain pending their separate approval gate.
+
+Restic snapshot `0f7293db` contains all 25 Player files and the corresponding
+Webuzo, Apache, database-dump, and certificate state. A streamed restore check
+of `index.html` matched the live staged file, and a full Restic repository data
+check passed.
 
 ## Proposed domain-specific headers
 
@@ -206,9 +241,6 @@ If the new site fails:
 
 ## Remaining approval gates
 
-- Exact Webuzo user and document root
-- Creation of the Webuzo subdomain
-- Staging deployment
 - DNS and Cloudflare record
 - Origin SSL issuance or coverage
 - Any redirects or domain-specific server configuration

@@ -23,6 +23,7 @@ EXPECTED_PAGES = {
     "/404.html": "404.html",
 }
 REQUIRED_FILES = {
+    ".htaccess",
     "assets/privacy.css",
     "assets/project.css",
     "assets/project.js",

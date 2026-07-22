@@ -10,6 +10,9 @@ github_url: https://github.com/James-Jennison/24Seven.FM-Player
 master_url: https://jamesjennison.net
 status_url: https://status.jamesjennison.net
 
+include:
+  - .htaccess
+
 exclude:
   - .jekyll-cache
   - .sass-cache
