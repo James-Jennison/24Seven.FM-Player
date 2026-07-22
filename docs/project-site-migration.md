@@ -25,27 +25,27 @@ materially benefit a dedicated domain:
 | --- | --- |
 | Public project | 24Seven.FM Player |
 | Repository | `James-Jennison/24Seven.FM-Player` |
-| Source branch | Local `codex/player-site-migration`; no push authorized |
+| Source branch | `codex/player-site-migration`; remote through `b94eacd`, with the current hardening milestone local-only pending review |
 | Approved hostname | `player.jamesjennison.net` |
 | Canonical hostname | `player.jamesjennison.net`; no `www` variant |
 | Framework | Jekyll through the GitHub Pages build environment |
 | Build runtime | Digest-pinned `ghcr.io/actions/jekyll-build-pages` container |
 | Build method | `./scripts/build-project-site.sh` |
 | Validation method | `./scripts/validate-project-site.sh` |
-| Production output | Static `_site/` artifact; staged artifact digest `b6f62600b4ab04a5f124a5f2547e4795fcf8be72225fc4af597809025686a9ca` |
+| Production output | Static `_site/` artifact; current origin artifact digest `3729bc53082966c0473e8fb04da820f731c0f1c3140a5f7d821a8717b7d79bb5` |
 | Server runtime | None |
 | Database | None |
 | Persistent process or port | None |
 | Webuzo | Version 4.7.4, revision 3723; Apache 2.4.68 serves the public virtual hosts directly |
 | Webuzo user | `jamesjen` |
 | Webuzo document root | `/home/jamesjen/player.jamesjennison.net` |
-| Origin SSL owner and method | Webuzo; current auto-generated self-signed placeholder is staging-only and not production-trusted |
+| Origin SSL owner and method | Webuzo; existing publicly trusted Let's Encrypt apex/wildcard certificate assigned to Player through Webuzo's supported install-certificate workflow; dedicated renewal proof remains pending |
 | Cloudflare record and proxy state | Player record absent; zone is proxied and uses Full rather than Full (Strict); Universal SSL is active for the apex and wildcard; no applicable redirect, transform, origin, cache, configuration, compression, or response-header Ruleset is deployed |
 | Cache behavior | Static asset caching proposed below; no rule configured |
 | Logging | Existing Webuzo domain access/error logs only; no browser analytics |
 | Health check | Static route, asset, TLS, metadata, header, and cross-site navigation checks |
-| Backup | Restic pre-change snapshot `40412861`, empty-domain snapshot `21c5494b`, and staged snapshot `0f7293db` |
-| Rollback | Withdraw any later Player DNS, restore the empty-domain snapshot or validated artifact, and leave Pages available |
+| Backup | Restic pre-change snapshots `40412861`, `21c5494b`, `0f7293db`, and `bcefb231`; hardened-state snapshot `77f5810b` |
+| Rollback | Withdraw any later Player DNS, atomically restore the retained prior origin release or snapshot `bcefb231`, reinstall the backed-up prior certificate through Webuzo if needed, and leave Pages available |
 
 The source, build container, Docker socket, repository metadata, documentation,
 dependencies, and credentials must remain outside the public document root.
@@ -129,24 +129,35 @@ and render the project-specific `404.html` through the artifact-local
 `.htaccess`; no generated Webuzo virtual-host file was edited. The staged
 artifact and local artifact have the same deterministic inventory digest.
 
-Webuzo generated a self-signed placeholder certificate for the new virtual
-host even though public certificate issuance was disabled. It is sufficient
-only to confirm that the HTTPS virtual host responds; it is not trusted and
-must be replaced or covered through an approved Webuzo-managed certificate
-workflow before public DNS or Full (Strict) Cloudflare operation. Security and
-cache headers also remain pending their separate approval gate.
+Webuzo initially generated a self-signed placeholder certificate for the new
+virtual host even though public certificate issuance was disabled. During the
+subsequently approved origin-hardening milestone, the existing publicly trusted
+Let's Encrypt wildcard was assigned to Player through Webuzo's supported
+install-certificate API. Direct-origin verification now passes the certificate
+chain and exact Player hostname without bypassing trust checks. This is
+temporary coverage: the wildcard expires August 27, 2026, and a dedicated
+Webuzo-managed certificate plus verified renewal path remain required before
+that date.
 
 Restic snapshot `0f7293db` contains all 25 Player files and the corresponding
 Webuzo, Apache, database-dump, and certificate state. A streamed restore check
 of `index.html` matched the live staged file, and a full Restic repository data
 check passed.
 
-## Proposed domain-specific headers
+Before hardening, snapshot `bcefb231` captured the exact Player document root,
+Apache configuration, Webuzo state, database dump, and certificate files. A
+full Restic data check and streamed `index.html` and `.htaccess` restores
+passed. The hardened artifact was activated by a same-filesystem directory
+swap, with the prior release retained at
+`/home/jamesjen/.player-previous-20260722T231413Z`. Post-change snapshot
+`77f5810b` preserves the validated working state.
 
-These are recommendations, not active configuration. Before use, identify the
-active Webuzo web server, translate them into Webuzo's supported per-domain
-configuration, show the exact resulting syntax, validate it, obtain approval,
-and test every affected route.
+## Active domain-specific headers
+
+The approved headers are implemented in the deployment artifact's local
+`.htaccess`. Apache's loaded `mod_headers` module applies them to successful and
+error responses; no generated Webuzo virtual-host file or global web-server
+configuration was edited.
 
 ```text
 Content-Security-Policy: default-src 'self'; base-uri 'self'; connect-src 'none'; font-src 'self'; form-action 'none'; frame-ancestors 'none'; img-src 'self' data:; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; upgrade-insecure-requests
@@ -157,8 +168,9 @@ X-Frame-Options: DENY
 Cross-Origin-Opener-Policy: same-origin
 ```
 
-HSTS should be considered only after origin and edge HTTPS are stable and the
-effect on every covered hostname is understood. Do not add it casually.
+Direct-origin HTTP and HTTPS checks confirm all six exact values on successful
+and custom-404 responses. HSTS remains intentionally absent until origin and
+edge HTTPS are stable and the effect on every covered hostname is understood.
 
 Recommended caching after Webuzo and Cloudflare review:
 
@@ -175,9 +187,9 @@ depends on them. The expected design is one DNS record for
 `player.jamesjennison.net`, proxied through Cloudflare only after origin health
 is confirmed, with valid origin coverage and end-to-end Full (Strict) TLS.
 
-The exact record type, target, proxy state, origin certificate method, renewal
-owner, HTTPS enforcement, and cache rules remain approval-gated. Do not expose
-an origin IP in documentation or browser assets.
+The exact record type, target, proxy state, dedicated-certificate renewal path,
+HTTPS enforcement, and cache rules remain approval-gated. Do not expose an
+origin IP in documentation or browser assets.
 
 The live read-only DNS and edge audit plus the recommended certificate sequence
 are recorded in
@@ -186,8 +198,9 @@ currently in Full mode, not Full (Strict). Always Use HTTPS and Automatic HTTPS
 Rewrites are enabled, Universal SSL has active apex and wildcard coverage, and
 the complete zone/account Ruleset inventories contain no custom phase that
 would redirect, rewrite, change the origin, change cache behavior, or alter
-response headers for Player. The trusted-origin and Full (Strict) transition
-therefore remain required and approval-gated before public cutover.
+response headers for Player. Trusted direct-origin coverage is now verified;
+the zone-wide Full (Strict) transition remains required and approval-gated
+before public cutover.
 
 ## GitHub Pages transition
 
@@ -203,6 +216,14 @@ The variable must not be created or changed until:
 3. the Play Console privacy URL and other known consumers are ready to move;
 4. the old and new URL matrix has passed;
 5. rollback has been rehearsed.
+
+The repository's current GitHub Pages URL is
+`https://james-jennison.github.io/24Seven.FM-Player/` and returns 200. The
+historical `codeframe78.github.io` URL now returns GitHub's 404. The transition
+variable is absent, so the guarded workflow has not replaced the current
+organizational Pages site. Before public cutover, verify which URL Play Console
+and every other external consumer currently stores; repository documentation
+still records the historical URL as the saved privacy destination.
 
 Each static transition page has a visible ordinary link and a five-second HTML
 fallback. Its small script preserves the incoming query string and fragment
@@ -241,22 +262,26 @@ certificate state, and expected restoration time.
 If the new site fails:
 
 1. stop the release promotion without changing unrelated Webuzo services;
-2. restore the prior document-root release or verified archive;
-3. restore only the approved Player DNS/proxy state when DNS was part of the
+2. atomically restore the retained prior document-root release or snapshot
+   `bcefb231` while preserving the failed release for diagnosis;
+3. if certificate rollback is required, extract the prior Player materials into
+   a root-only temporary directory and reinstall them through Webuzo's supported
+   certificate workflow; never hand-edit the generated virtual host;
+4. restore only the approved Player DNS/proxy state when DNS was part of the
    failed change;
-4. leave GitHub Pages unchanged or restore its prior artifact if its transition
+5. leave GitHub Pages unchanged or restore its prior artifact if its transition
    was separately activated;
-5. re-run master, Player, status, mail, and unrelated-host health checks;
-6. document the cause and do not retry production without renewed approval.
+6. re-run master, Player, status, mail, and unrelated-host health checks;
+7. document the cause and do not retry production without renewed approval.
 
 ## Remaining approval gates
 
 - DNS and Cloudflare record
-- Origin SSL issuance or coverage
+- Dedicated origin-certificate issuance and renewal proof before the temporary wildcard expires
 - Any redirects or domain-specific server configuration
-- Security and cache headers
+- Cache headers
 - Production deployment
-- Play Console privacy URL update
+- Play Console and other external privacy-URL verification/update
 - `PLAYER_PAGES_TRANSITION_APPROVED` repository variable
 - GitHub push or pull request
 - GitHub Pages transition and later retirement

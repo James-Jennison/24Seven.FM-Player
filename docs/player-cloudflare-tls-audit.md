@@ -53,11 +53,11 @@ written to the repository or included in this record.
   Services ECDSA and RSA certificates expiring October 20, 2026.
 - Cloudflare reports certificate verification active. The Free plan does not
   permit uploaded custom edge certificates; none is needed for Player.
-- The zone-to-origin mode is Full. It encrypts the connection but does not
-  validate the origin certificate, so the current Player self-signed placeholder
-  would not fail solely because it is untrusted. That is not the approved
-  production posture; the target remains Full (Strict) with a trusted Player
-  origin certificate.
+- At audit time, the zone-to-origin mode was Full. It encrypts the connection
+  but does not validate the origin certificate, so the then-current Player
+  self-signed placeholder would not have failed solely because it was
+  untrusted. That was not the approved production posture; the target remains
+  Full (Strict) with a trusted Player origin certificate.
 
 ## Verified Ruleset state
 
@@ -99,9 +99,9 @@ enumerated.
   presents that valid wildcard certificate. Cloudflare then returns its
   no-DNS-record response, as expected.
 
-This proves that edge certificate coverage is ready for a first-level Player
-record. It does not make the current self-signed Player origin suitable for the
-approved Full (Strict) production posture.
+This proved that edge certificate coverage was ready for a first-level Player
+record. It did not make the then-current self-signed Player origin suitable for
+the approved Full (Strict) production posture.
 
 On the final audit pass, HTTPS apex and `www` both returned the same 403 Webuzo
 default-site response through Cloudflare; the read-only audit did not cause that
@@ -116,6 +116,34 @@ certificate path.
 | --- | --- | --- | --- | --- |
 | Existing master wildcard | Apex and `*.jamesjennison.net` | Let's Encrypt; publicly trusted | Through August 27, 2026 | Valid now; recent renewal health is not established |
 | Player placeholder | `player.jamesjennison.net` common name only | Self-signed; not publicly trusted | Through July 22, 2027 | Staging only; incompatible with Full (Strict) |
+
+### Post-audit origin-hardening checkpoint
+
+The owner separately approved the first three steps of the sequence below.
+Before any origin mutation, Restic snapshot `bcefb231` captured the Player
+document root, Apache and Webuzo state, database dump, and certificate files; a
+full repository data check and streamed restore comparisons passed. Webuzo's
+supported install-certificate workflow then assigned the existing trusted
+Let's Encrypt apex/wildcard certificate to Player. No generated virtual-host
+file was hand-edited.
+
+Direct-origin HTTPS now passes public chain and exact-hostname validation for
+`player.jamesjennison.net`. The Player certificate identity matches the
+existing wildcard, Apache syntax passes, all project routes and the custom 404
+retain their expected statuses, and apex, `www`, and status retain their
+pre-change responses. Public Player DNS remains absent, Cloudflare remains in
+Full mode, and no Cloudflare setting changed. Hardened-state snapshot
+`77f5810b` preserves the verified result.
+
+The current organizational GitHub Pages site at
+`james-jennison.github.io/24Seven.FM-Player/` remains available with HTTP 200,
+and the approval-gated transition variable is absent. The historical
+`codeframe78.github.io` URL returns GitHub's 404 and must not be treated as a
+healthy fallback.
+
+This wildcard is temporary Player coverage and expires August 27, 2026. The
+failed earlier HTTP-01 renewal means a dedicated Webuzo-managed certificate and
+controlled renewal proof remain required before relying on unattended renewal.
 
 Webuzo runs its Let's Encrypt renewal command daily at midnight. Webuzo also
 attempted a Player certificate immediately after the approved subdomain was
@@ -149,12 +177,12 @@ Webuzo authoritative for issuance and renewal. Cloudflare Origin CA is the
 documented fallback if Webuzo's HTTP-01 path cannot be made reliable; it should
 not be the first choice while hosting independence is valuable.
 
-1. Take a fresh Restic snapshot of the Player virtual host, Webuzo database,
+1. **Complete:** take a fresh Restic snapshot of the Player virtual host, Webuzo database,
    Apache configuration, and certificate state.
-2. Through Webuzo's SSL manager, temporarily assign the existing valid wildcard
+2. **Complete:** through Webuzo's SSL manager, temporarily assign the existing valid wildcard
    certificate to the Player virtual host. Do not hand-edit generated Apache
    configuration.
-3. Validate direct origin HTTPS for the Player hostname and its complete chain,
+3. **Complete:** validate direct origin HTTPS for the Player hostname and its complete chain,
    and revalidate the trusted master-origin certificate.
 4. With separate approval, change the zone origin mode from Full to Full
    (Strict), then validate apex, `www`, and the status Worker. Restore Full
@@ -172,8 +200,8 @@ not be the first choice while hosting independence is valuable.
 9. Validate the new certificate chain, Webuzo renewal ownership, route matrix,
    custom 404, logs, existing master/status/mail health, and the GitHub Pages
    fallback.
-10. Request separate approval for security/cache headers and production
-    cutover. Keep GitHub Pages unchanged until those gates pass.
+10. Security headers are complete. Request separate approval for cache headers
+    and production cutover. Keep GitHub Pages unchanged until those gates pass.
 
 If HTTP-01 fails, withdraw the Player DNS record or retain the valid temporary
 wildcard while the hostname remains unannounced. After Full (Strict) is proven,
@@ -194,6 +222,9 @@ server configuration.
 
 ## Approval boundary
 
-This audit does not authorize certificate installation or issuance, challenge
-file creation, DNS records, Cloudflare setting changes, security headers,
-GitHub changes, staging promotion, or production cutover.
+The subsequent owner approval authorized only the recorded origin-hardening
+checkpoint: artifact security headers, verified backups, redeployment to the
+existing isolated root, and temporary wildcard assignment through Webuzo. It
+does not authorize new certificate issuance, challenge-file creation, DNS
+records, Cloudflare changes, GitHub changes, public staging, or production
+cutover.

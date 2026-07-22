@@ -57,6 +57,17 @@ SECRET_MARKERS = {
     "ghp_",
     "sk-proj-",
 }
+REQUIRED_HTACCESS_DIRECTIVES = {
+    "ErrorDocument 404 /404.html",
+    "<IfModule mod_headers.c>",
+    "Header always set Content-Security-Policy \"default-src 'self'; base-uri 'self'; connect-src 'none'; font-src 'self'; form-action 'none'; frame-ancestors 'none'; img-src 'self' data:; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; upgrade-insecure-requests\"",
+    "Header always set Permissions-Policy \"camera=(), geolocation=(), microphone=(), payment=(), usb=()\"",
+    "Header always set Referrer-Policy \"strict-origin-when-cross-origin\"",
+    "Header always set X-Content-Type-Options \"nosniff\"",
+    "Header always set X-Frame-Options \"DENY\"",
+    "Header always set Cross-Origin-Opener-Policy \"same-origin\"",
+    "</IfModule>",
+}
 
 
 class DocumentAudit(HTMLParser):
@@ -155,6 +166,22 @@ def audit() -> int:
     missing_files = sorted(expected_files - relative_files)
     if missing_files:
         fail(f"Missing required files: {', '.join(missing_files)}", failures)
+
+    htaccess_path = artifact_root / ".htaccess"
+    if htaccess_path.is_file():
+        htaccess_lines = {
+            line.strip()
+            for line in htaccess_path.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        }
+        missing_directives = sorted(REQUIRED_HTACCESS_DIRECTIVES - htaccess_lines)
+        if missing_directives:
+            fail(
+                "Missing required .htaccess directives: " + ", ".join(missing_directives),
+                failures,
+            )
+        if any("Strict-Transport-Security" in line for line in htaccess_lines):
+            fail("HSTS must remain absent until public HTTPS cutover is approved", failures)
 
     html_documents: dict[Path, DocumentAudit] = {}
     for path in files:

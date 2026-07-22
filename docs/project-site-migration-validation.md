@@ -8,9 +8,10 @@ record.
 The existing Jekyll portal was retained, refined, and staged as a static
 artifact for `https://player.jamesjennison.net`. The implementation uses the
 approved clean route model, James-Jennison identity, curated public content,
-GitHub-only privacy contact, and an Apache-local custom 404 mapping. Webuzo
-origin staging is complete; public DNS, trusted SSL, Cloudflare, GitHub
-settings, GitHub Pages, and production remain unchanged.
+GitHub-only privacy contact, an Apache-local custom 404 mapping, and six
+artifact-level security headers. Webuzo origin staging and trusted wildcard
+assignment are complete. Public DNS, Cloudflare settings, GitHub settings,
+GitHub Pages, and production remain unchanged.
 
 Source was isolated on local branch `codex/player-site-migration` from commit
 `c54057151f34e5505f238391d08a5520d8e45c06`. The owner's separate dirty main
@@ -22,7 +23,9 @@ Run from the repository root:
 
 ```bash
 ./scripts/validate-project-site.sh
-node ./scripts/test-project-site-browser.mjs
+python3 -m http.server 4173 --directory _site
+# In a second terminal:
+node ./scripts/test-project-site-browser.mjs http://127.0.0.1:4173
 ```
 
 The static build uses the digest-pinned image
@@ -34,7 +37,7 @@ by sorting each relative file path and content SHA-256 into a second SHA-256,
 is:
 
 ```text
-b6f62600b4ab04a5f124a5f2547e4795fcf8be72225fc4af597809025686a9ca
+3729bc53082966c0473e8fb04da820f731c0f1c3140a5f7d821a8717b7d79bb5
 ```
 
 The digest is a local validation checkpoint, not a signed release provenance
@@ -54,6 +57,7 @@ staging or production.
 | Shell script static analysis | Pass |
 | Workflow YAML parsing | Pass |
 | Sensitive-file, symlink, credential-marker, source-map, and private-content boundary | Pass |
+| Artifact-local security-header contract | Pass: six exact directives; HSTS intentionally absent |
 | `git diff --check` | Pass |
 
 The browser suite exercised all nine routes at 390 by 844 pixels and key
@@ -62,6 +66,11 @@ heading per route, canonical metadata, navigation, overflow, images, themes,
 the mobile menu, site explorer, screenshot lightbox, local-only test progress,
 resource and privacy search, reduced motion, forced colors, no-JavaScript
 fallback, and absence of browser errors.
+
+The same browser suite also passed against the HTTPS origin with Chrome's
+operator-supplied hostname resolver mapping. This exercised the deployed CSP
+and other response headers while retaining normal public certificate and
+hostname verification; it did not require public DNS or a TLS trust bypass.
 
 ## Lighthouse
 
@@ -117,23 +126,26 @@ staging uses Webuzo 4.7.4, Apache 2.4.68, user `jamesjen`, and document root
 transition, and rollback contract is in
 [project-site-migration.md](project-site-migration.md).
 
-## Origin-staging validation
+## Origin-hardening validation
 
 | Check | Result |
 | --- | --- |
 | Webuzo domain | Pass: `player.jamesjennison.net` is an isolated subdomain owned by `jamesjen` |
 | Document root | Pass: exact approved path; no overlap with master, status, webmail, or another user |
-| Artifact parity | Pass: all 25 files match digest `b6f62600b4ab04a5f124a5f2547e4795fcf8be72225fc4af597809025686a9ca` |
+| Artifact parity | Pass: all 25 files match digest `3729bc53082966c0473e8fb04da820f731c0f1c3140a5f7d821a8717b7d79bb5` locally and at the origin |
 | Canonical routes | Pass: eight content routes return 200 with their approved canonical URLs |
 | Custom 404 | Pass: unknown paths return status 404 with the Player error page |
 | Static assets | Pass: CSS, JavaScript, PNG, manifest, robots, and sitemap are served |
 | Sensitive paths | Pass: `.git`, `.env`, source documentation, and `.htaccess` are not publicly readable |
 | Webuzo configuration | Pass: Apache syntax valid; Webuzo and MariaDB active; origin pages served successfully |
 | Public DNS | Unchanged: Player and generated internal aliases have no A, AAAA, or CNAME records |
-| Existing sites | Unchanged: apex, `www`, status, and the GitHub Pages fallback retain their prior responses |
-| Backups | Pass: snapshots `40412861`, `21c5494b`, and `0f7293db`; full Restic data check and streamed restore check pass |
-| HTTPS trust | Pending: Webuzo generated a self-signed placeholder; no trusted Player certificate was issued |
-| Security/cache headers | Pending separate approval; no domain-specific header configuration was added |
+| Existing sites | Apex and `www` retain their pre-existing 403 responses; status and the current organizational GitHub Pages site return 200 |
+| Legacy Pages URL | `codeframe78.github.io/24Seven.FM-Player/` returns GitHub's 404; repository records identify it as a historical Play Console privacy URL, so owner verification is required before cutover |
+| Backups | Pass: pre-hardening snapshot `bcefb231` passed a full Restic data check and streamed `index.html`/`.htaccess` restores; post-hardening snapshot `77f5810b` passed artifact and `.htaccess` restore verification |
+| HTTPS trust | Pass: Webuzo installed the existing publicly trusted Let's Encrypt wildcard for Player; direct-origin chain and hostname validation pass without a trust bypass |
+| Certificate isolation | Pass: only Player's Webuzo certificate set changed; the apex wildcard identity remained unchanged; unprivileged key access is blocked by Webuzo's restricted SSL directory chain |
+| Security headers | Pass: CSP, Permissions Policy, Referrer Policy, MIME sniffing protection, frame denial, and cross-origin opener policy match exactly on HTTPS success and custom-404 responses |
+| HSTS/cache headers | Intentionally unchanged pending edge-wide HTTPS and caching review |
 | Cloudflare TLS | Read-only audit complete: current origin mode is Full, not Full (Strict); Universal SSL actively covers the apex and wildcard |
 | Cloudflare rules | No legacy Page Rules or applicable redirect, transform, origin, cache, configuration, compression, or response-header Rulesets are deployed |
 
@@ -143,15 +155,21 @@ generated virtual-host file was hand-edited, no shared service was restarted,
 and no custom reverse proxy, runtime process, database, or scheduled task was
 introduced.
 
+The prior origin release remains at
+`/home/jamesjen/.player-previous-20260722T231413Z` for immediate atomic
+rollback. The temporary wildcard expires August 27, 2026. A dedicated
+Webuzo-managed certificate and controlled renewal proof remain required before
+that date; this checkpoint does not claim that future renewal is automatic.
+
 ## Remaining gates
 
 - Review and approval of this local commit
 - GitHub push or pull request
-- Trusted origin certificate coverage and renewal validation
-- Security and cache header configuration
-- Cloudflare control-plane review and approved Player DNS record
+- Dedicated origin certificate issuance and renewal validation
+- Cache header configuration
+- Approved Cloudflare Full (Strict) change and Player DNS record
 - Production deployment and validation
-- Play Console privacy URL change
+- Play Console and other external privacy-URL verification/update
 - GitHub Pages transition activation and eventual retirement
 
 None of the remaining actions occurred during this milestone.

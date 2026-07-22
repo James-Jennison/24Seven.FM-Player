@@ -7,6 +7,7 @@ import { join } from "node:path";
 
 const baseUrl = (process.argv[2] ?? "http://127.0.0.1:4173").replace(/\/$/, "");
 const chromeBinary = process.env.PROJECT_SITE_CHROME ?? "/usr/bin/google-chrome";
+const hostResolverRules = process.env.PROJECT_SITE_CHROME_HOST_RESOLVER_RULES;
 const profile = await mkdtemp(join(tmpdir(), "player-site-chrome-"));
 const chrome = spawn(
   chromeBinary,
@@ -19,6 +20,7 @@ const chrome = spawn(
     "--disable-default-apps",
     "--disable-extensions",
     "--no-first-run",
+    ...(hostResolverRules ? [`--host-resolver-rules=${hostResolverRules}`] : []),
     "--remote-debugging-port=0",
     `--user-data-dir=${profile}`,
     "about:blank",

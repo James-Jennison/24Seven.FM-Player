@@ -1,6 +1,6 @@
 # Milestone Real-World Time Ledger
 
-Last updated: `July 22, 2026 at 3:16:20 PM PDT (UTC−07:00)`
+Last updated: `July 22, 2026 at 4:24:19 PM PDT (UTC−07:00)`
 
 This is the permanent time-accounting record for the canonical M01–M60 milestones in [ROADMAP.md](ROADMAP.md). It
 preserves historical uncertainty instead of treating commit spans as labor time. Future milestone work must be
@@ -40,6 +40,7 @@ does not alter the status, numbering, or cumulative totals of the canonical Andr
 | Master M12 — Player local migration implementation | Complete | `July 22, 2026 at 1:51:13 PM PDT (UTC−07:00)` | 8–14 active h | By `July 23, 2026 at 3:51:13 AM PDT (UTC−07:00)` if uninterrupted | GPT-5; current default reasoning strength, unchanged | 0.61 h | 0.00 h | 0.00 h |
 | Master M13 — Player origin staging | Complete | `July 22, 2026 at 2:50:15 PM PDT (UTC−07:00)` | 1.5–3 active h | By `July 22, 2026 at 5:50:15 PM PDT (UTC−07:00)` if uninterrupted | GPT-5; current default reasoning strength, unchanged | 0.21 h | 0.00 h | 0.00 h |
 | Master M14 — Cloudflare and Player TLS verification | Complete | `July 22, 2026 at 3:07:22 PM PDT (UTC−07:00)` | 0.5–1.5 active h | Completed `July 22, 2026 at 3:54:26 PM PDT (UTC−07:00)` | GPT-5; current default reasoning strength, unchanged | 0.32 h | 0.00 h | 0.46 h |
+| Master M15 — Player trusted-origin hardening | Complete | `July 22, 2026 at 3:59:38 PM PDT (UTC−07:00)` | 1–2 active h | Completed `July 22, 2026 at 4:24:19 PM PDT (UTC−07:00)` | GPT-5; current default reasoning strength, unchanged | 0.41 h | 0.00 h | 0.00 h |
 
 ### Master M12 — Player local migration implementation
 
@@ -167,6 +168,53 @@ Total elapsed time: 0.78 h
 User-blocked time excluded: 0.46 h
 Forecast variance: 0.18 h below the lower bound (35.1%)
 Cumulative counted project time through Milestone Master M14: 1.14 h (master-site program website milestones only; canonical Android cumulative remains Unknown)
+```
+
+### Master M15 — Player trusted-origin hardening
+
+- **Objective:** Add and verify artifact-level security headers, create a fresh restorable pre-change backup, redeploy
+  the exact validated static artifact to the existing isolated Player document root, and assign trusted wildcard
+  origin coverage through Webuzo without making Player public.
+- **Authorization and start:** The owner continued after receiving the exact origin-only scope, and execution started
+  `July 22, 2026 at 3:59:38 PM PDT (UTC−07:00)`.
+- **Model, reasoning strength, and original forecast:** GPT-5 with the current default reasoning strength, unchanged;
+  1–2 active hours; expected completion by `July 22, 2026 at 5:59:38 PM PDT (UTC−07:00)` if uninterrupted.
+- **Scope boundary:** The existing `player.jamesjennison.net` Webuzo domain and document root, artifact-local
+  `.htaccess`, trusted wildcard assignment, backups, origin-only validation, and local documentation. Public DNS,
+  Cloudflare settings, Full (Strict), new certificate issuance, master-site content, GitHub Pages, production cutover,
+  and GitHub push remain excluded. Per owner direction, this website project does not use Discord milestone notices.
+- **Completion gates:** Clean Git state; exact artifact and destination verification; fresh checked Restic snapshot;
+  validated header syntax and browser behavior; Webuzo-supported certificate assignment with no generated VirtualHost
+  edits; trusted direct-origin TLS; route, 404, ownership, permission, and existing-site health checks; rollback record;
+  clean diff and local milestone commit.
+- **Completion:** Completed `July 22, 2026 at 4:24:19 PM PDT (UTC−07:00)`. The measured window was 0.41 active hours
+  with no user-blocked or separately measured automated-wait interval. Builds, browser checks, backups, and origin
+  probes were short and actively monitored.
+- **Forecast variance:** 0.59 hours (58.9%) below the 1-hour lower bound. The already verified Webuzo domain,
+  compact static artifact, reusable wildcard, supported local SSO/API path, and incremental Restic repository removed
+  most of the allowance for access discovery, certificate issuance, or deployment troubleshooting.
+- **Evidence:** Artifact digest `3729bc53082966c0473e8fb04da820f731c0f1c3140a5f7d821a8717b7d79bb5`
+  matches locally and at the origin; pre-change snapshot `bcefb231` passed a full repository data check and streamed
+  restores; post-change snapshot `77f5810b` preserves the working state; the prior release remains available for
+  atomic rollback; Webuzo installed the trusted wildcard without a generated VirtualHost edit; direct-origin chain,
+  hostname, route, 404, header, responsive-browser, certificate-isolation, apex, `www`, and status checks pass; Player
+  DNS remains absent.
+- **Forecasting lesson:** Once an isolated static origin and rollback repository are verified, estimate artifact-local
+  headers, an incremental backup, atomic promotion, and supported certificate reuse separately from DNS, Full
+  (Strict), dedicated issuance, cache policy, and public cutover.
+
+| Started | Ended | Category | Reason or work | Evidence | Hours |
+| --- | --- | --- | --- | --- | ---: |
+| `July 22, 2026 at 3:59:38 PM PDT (UTC−07:00)` | `July 22, 2026 at 4:24:19 PM PDT (UTC−07:00)` | Active | Verify preconditions, implement and validate headers, back up and redeploy the isolated artifact, assign trusted origin coverage through Webuzo, and document the result. | Owner continuation; branch `codex/player-site-migration`; base `b94eacd`; snapshots `bcefb231` and `77f5810b`; origin validation record | 0.41 h |
+
+```text
+Milestone Master M15 time:
+Forecast: 1–2 active hours
+Counted project time: 0.41 h
+Total elapsed time: 0.41 h
+User-blocked time excluded: 0.00 h
+Forecast variance: 0.59 h below the lower bound (58.9%)
+Cumulative counted project time through Milestone Master M15: 1.55 h (master-site program website milestones only; canonical Android cumulative remains Unknown)
 ```
 
 ## Definitions and confidence rules
