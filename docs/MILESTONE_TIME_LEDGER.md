@@ -267,6 +267,47 @@ Forecast variance: 0.22 h below the lower bound (88.0%)
 Cumulative counted project time through Milestone Master M16A: 1.58 h (master-site program website milestones only; canonical Android cumulative remains Unknown)
 ```
 
+### Master M16B — Player public activation and Automatic SSL
+
+- **Objective:** Activate only `player.jamesjennison.net` through one proxied
+  Cloudflare record, verify Full (Strict) production behavior, enroll the exact
+  hostname in Webuzo Automatic SSL, prove renewal readiness, and complete the
+  production and unaffected-service validation matrix.
+- **Authorization and start:** The owner explicitly approved the milestone, and
+  execution started `July 22, 2026 at 8:50:10 PM PDT (UTC−07:00)`.
+- **Model, reasoning strength, and original forecast:** GPT-5 with the current
+  default reasoning strength, unchanged; 1–2 active hours; expected completion
+  by `July 22, 2026 at 10:50:10 PM PDT (UTC−07:00)` if uninterrupted.
+- **Scope boundary:** The existing staged Player artifact and isolated Webuzo
+  domain, one proxied `player` A record, exact-hostname Automatic SSL,
+  production validation, backup/rollback evidence, and local documentation.
+  `www.player`, `mail.player`, wildcard DNS, general cache-policy changes,
+  zone-wide TLS/HSTS changes, master content, GitHub Pages, repository push,
+  Play Console, and shared-service changes remain excluded. The owner later
+  approved only the Player HTML `no-transform` correction recorded below. Per
+  owner direction, this website project does not use Discord milestone notices.
+- **Completion gates:** Clean pre-state; exact artifact and origin parity;
+  verified restorable backup; single-record DNS activation; Full (Strict)
+  success; exact-hostname Webuzo certificate and renewal registration; public
+  route, privacy, error, header, browser, accessibility, performance, and
+  security checks; fresh post-launch backup; unaffected master, `www`, status,
+  QuireForge, mail, and GitHub Pages behavior; exact DNS rollback; clean diff;
+  and a local milestone commit without push.
+- **Pause:** Active execution paused `July 22, 2026 at 8:58:56 PM PDT
+  (UTC−07:00)` after Cloudflare's zone-wide JavaScript Detection injection
+  caused the strict Player CSP to report blocked inline scripts. All functional
+  browser checks completed, but Best Practices and SEO were 92. The
+  domain-scoped `Cache-Control: no-transform` correction is outside the
+  approved no-cache-policy-change boundary and requires owner approval. The
+  owner approved that exact correction, and execution resumed `July 22, 2026 at
+  9:01:01 PM PDT (UTC−07:00)`.
+
+| Started | Ended | Category | Reason or work | Evidence | Hours |
+| --- | --- | --- | --- | --- | ---: |
+| `July 22, 2026 at 8:50:10 PM PDT (UTC−07:00)` | `July 22, 2026 at 8:58:56 PM PDT (UTC−07:00)` | Active | Revalidate source, origin, backup, DNS, TLS, and unaffected-service pre-state; create the exact record; validate public Full (Strict); enroll Automatic SSL; test browsers and Lighthouse; checkpoint the result. | Owner approval; snapshots `85b7382c` and `11ad18e9`; exact Cloudflare record; dedicated certificate and renewal state; production test results | 0.15 h |
+| `July 22, 2026 at 8:58:56 PM PDT (UTC−07:00)` | `July 22, 2026 at 9:01:01 PM PDT (UTC−07:00)` | User-blocked | Await approval for the narrow domain-artifact `Cache-Control: no-transform` correction and redeployment; do not weaken CSP or change a zone-wide Cloudflare security feature. | Production CSP console errors; Lighthouse Best Practices 92 and SEO 92; owner approval | 0.04 h excluded |
+| `July 22, 2026 at 9:01:01 PM PDT (UTC−07:00)` | In progress | Active | Implement, validate, back up, atomically deploy, and production-test the approved Player-only HTML `no-transform` correction. | Owner approval | In progress |
+
 ## Definitions and confidence rules
 
 - **Active execution time** is time spent examining, implementing, testing, documenting, or committing milestone work.

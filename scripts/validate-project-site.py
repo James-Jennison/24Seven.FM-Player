@@ -66,6 +66,9 @@ REQUIRED_HTACCESS_DIRECTIVES = {
     "Header always set X-Content-Type-Options \"nosniff\"",
     "Header always set X-Frame-Options \"DENY\"",
     "Header always set Cross-Origin-Opener-Policy \"same-origin\"",
+    "<FilesMatch \"\\.html$\">",
+    "Header set Cache-Control \"public, max-age=0, must-revalidate, no-transform\"",
+    "</FilesMatch>",
     "</IfModule>",
 }
 
