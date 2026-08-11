@@ -312,6 +312,7 @@ private fun CompactPlayerContent(
         NowPlayingDetails(state, palette)
         PrimaryPlayerControls(state, onSelectStation, onPlay, onStop, sleepTimerActions, isCompact = true)
         StationSelector(state, onSelectStation, isCompact = true)
+        if (!isScrollable) Spacer(Modifier.weight(1f))
         PlaybackDetails(state, audioOutputActions)
     }
 }
