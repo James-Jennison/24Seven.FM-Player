@@ -80,7 +80,6 @@ import com.codeframe78.twentyfourseven.player.domain.AudioOutputKind
 import com.codeframe78.twentyfourseven.player.domain.PlaybackStatus
 import com.codeframe78.twentyfourseven.player.domain.Station
 import com.codeframe78.twentyfourseven.player.domain.StationId
-import com.codeframe78.twentyfourseven.player.domain.StreamFormat
 import com.codeframe78.twentyfourseven.player.ui.theme.StationPalette
 import com.codeframe78.twentyfourseven.player.ui.theme.stationPalette
 
@@ -529,11 +528,6 @@ private fun PlaybackDetails(
     audioOutputActions: AudioOutputActions,
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            state.selectedStation?.streams?.minByOrNull { it.priority }?.qualityLabel.orEmpty(),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
         AudioOutputControl(state, audioOutputActions)
     }
 }
@@ -861,19 +855,6 @@ private fun parseNowPlayingMetadata(raw: String?): NowPlayingMetadata {
         NowPlayingMetadata(value, null)
     }
 }
-
-private val com.codeframe78.twentyfourseven.player.domain.StreamVariant.qualityLabel: String?
-    get() {
-        val formatLabel = when (format) {
-            StreamFormat.Aac -> "AAC"
-            StreamFormat.Mp3 -> "MP3"
-            StreamFormat.Hls -> "HLS"
-            StreamFormat.Unknown -> null
-        }
-        return listOfNotNull(formatLabel, bitrateKbps?.let { "$it kbps" })
-            .takeIf(List<String>::isNotEmpty)
-            ?.joinToString(" · ")
-    }
 
 private val PlaybackStatus.isActive: Boolean
     get() = this in setOf(
