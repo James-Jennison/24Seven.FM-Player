@@ -169,12 +169,13 @@ private fun CoverPlayerContent(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            NowPlayingArtwork(state, palette, Modifier.size(76.dp))
+            NowPlayingArtwork(state, palette, Modifier.size(96.dp))
             Column(Modifier.weight(1f)) {
                 CoverNowPlayingDetails(state, palette)
             }
         }
         PrimaryPlayerControls(state, onSelectStation, onPlay, onStop, sleepTimerActions, audioOutputActions)
+        Spacer(Modifier.weight(1f))
         CoverStationSelector(state, onSelectStation)
     }
 }
@@ -203,7 +204,7 @@ private fun CoverStationSelector(
                 ),
                 modifier = Modifier
                     .weight(1f)
-                    .height(48.dp)
+                    .height(64.dp)
                     .semantics {
                         this.selected = selected
                         role = Role.RadioButton
@@ -219,7 +220,7 @@ private fun CoverStationSelector(
                         fallback = painterResource(R.drawable.app_logo),
                         error = painterResource(R.drawable.app_logo),
                         placeholder = painterResource(R.drawable.app_logo),
-                        modifier = Modifier.size(40.dp),
+                        modifier = Modifier.size(52.dp),
                     )
                 }
             }
