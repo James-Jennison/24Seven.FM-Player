@@ -88,7 +88,7 @@ private val ExpandedPlayerBreakpoint = 840.dp
 private val CompactPlayerReservedHeight = 420.dp
 private val MinimumCompactArtworkSize = 140.dp
 private val MaximumCompactArtworkSize = 320.dp
-private val CompactPlayerNoScrollHeight = 800.dp
+private val CompactPlayerNoScrollHeight = 720.dp
 private val SleepTimerPresetsMinutes = listOf(15, 30, 45, 60, 90)
 
 @Immutable
