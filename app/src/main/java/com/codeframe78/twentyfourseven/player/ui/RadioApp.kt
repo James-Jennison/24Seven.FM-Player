@@ -241,9 +241,7 @@ private fun PhoneShell(
     val showNavigationLabels = LocalDensity.current.fontScale <= 1.5f
     Scaffold(
         topBar = {
-            if (isCoverDisplay) {
-                CoverTopBar(state, onSelectDestination)
-            } else {
+            if (!isCoverDisplay) {
                 StationTopBar(state, onSelectDestination)
             }
         },
@@ -294,61 +292,6 @@ private fun isCoverDisplayWindow(maxWidth: androidx.compose.ui.unit.Dp, maxHeigh
     if (maxWidth > 480.dp || maxHeight > 480.dp) return false
     val aspectRatio = maxWidth.value / maxHeight.value
     return aspectRatio in 0.8f..1.5f
-}
-
-@Composable
-private fun CoverTopBar(
-    state: MainUiState,
-    onSelectDestination: (MainDestination) -> Unit,
-) {
-    var navigationMenuOpen by rememberSaveable { mutableStateOf(false) }
-    val destinationLabel = navigationItems.first { it.destination == state.destination }.label
-    Surface(shadowElevation = 3.dp) {
-        Row(
-            Modifier.fillMaxWidth().height(56.dp).padding(start = 12.dp, end = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(Icons.Default.Radio, contentDescription = null)
-            Spacer(Modifier.width(8.dp))
-            Column(Modifier.weight(1f)) {
-                Text("24Seven.FM", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                Text(
-                    if (state.destination == MainDestination.Player) {
-                        state.selectedStation?.shortName ?: "Player"
-                    } else {
-                        destinationLabel
-                    },
-                    style = MaterialTheme.typography.labelMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-            Box {
-                IconButton(
-                    onClick = { navigationMenuOpen = true },
-                    modifier = Modifier.testTag("cover_navigation_menu"),
-                ) {
-                    Icon(Icons.Default.MoreVert, contentDescription = "Open navigation")
-                }
-                DropdownMenu(
-                    expanded = navigationMenuOpen,
-                    onDismissRequest = { navigationMenuOpen = false },
-                ) {
-                    navigationItems.forEach { item ->
-                        DropdownMenuItem(
-                            text = { Text(item.label) },
-                            leadingIcon = { Icon(item.icon, contentDescription = null) },
-                            onClick = {
-                                navigationMenuOpen = false
-                                onSelectDestination(item.destination)
-                            },
-                            modifier = Modifier.semantics { contentDescription = item.label },
-                        )
-                    }
-                }
-            }
-        }
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -165,15 +165,14 @@ class RadioAppTest {
     }
 
     @Test
-    fun cutoutConstrainedCoverWindowUsesMenuNavigationAndKeepsPlaybackControlsVisible() {
+    fun cutoutConstrainedCoverWindowHidesAppNavigationAndKeepsPlaybackControlsVisible() {
         composeRule.setContent {
-            var state by remember { mutableStateOf(sampleState()) }
             MaterialTheme {
                 Box(Modifier.requiredSize(469.dp, 342.dp)) {
                     RadioApp(
-                        state = state,
+                        state = sampleState(),
                         onSelectStation = {},
-                        onSelectDestination = { state = state.copy(destination = it) },
+                        onSelectDestination = {},
                         onPlay = {},
                         onPause = {},
                         onStop = {},
@@ -183,16 +182,12 @@ class RadioAppTest {
             }
         }
 
-        composeRule.onNodeWithTag("cover_navigation_menu").assertIsDisplayed()
         composeRule.onNodeWithTag("phone_navigation_bar").assertDoesNotExist()
         composeRule.onNodeWithTag("cover_player_scroll").assertDoesNotExist()
+        composeRule.onNodeWithContentDescription("Open navigation").assertDoesNotExist()
         composeRule.onNodeWithTag("primary_play_pause").assertIsDisplayed()
         composeRule.onNodeWithTag("cover_sleep_timer_open").assertIsDisplayed()
         composeRule.onNodeWithTag("cover_audio_output_open").assertIsDisplayed()
-        composeRule.onNodeWithContentDescription("Open navigation").performClick()
-        composeRule.onNodeWithContentDescription("Queue").performClick()
-        composeRule.onNodeWithText("No supported queue or history source has been verified for this station yet.")
-            .assertIsDisplayed()
     }
 
     @Test
