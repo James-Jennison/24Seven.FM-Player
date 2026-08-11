@@ -290,6 +290,7 @@ private fun CompactPlayerContent(
         PrimaryPlayerControls(state, onSelectStation, onPlay, onStop, sleepTimerActions, audioOutputActions, isCompact = true)
         if (!isScrollable) Spacer(Modifier.weight(1f))
         StationSelector(state, onSelectStation, isCompact = true)
+        if (!isScrollable) Spacer(Modifier.weight(1f))
     }
 }
 
