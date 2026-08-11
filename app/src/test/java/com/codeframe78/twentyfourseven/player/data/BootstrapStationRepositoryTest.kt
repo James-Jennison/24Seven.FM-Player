@@ -54,6 +54,22 @@ class BootstrapStationRepositoryTest {
     }
 
     @Test
+    fun `every station exposes its verified same origin cover logo`() = runTest {
+        val stations = repository.observeStations().first()
+
+        assertEquals(
+            listOf(
+                "https://streamingsoundtracks.com/images/logos/logo-sst-v200x200.png",
+                "https://1980s.fm/images/logos/1980s_logo-200x200.png",
+                "https://adagio.fm/images/logos/logo-afm-200x200.png",
+                "https://death.fm/images/logos/logo-dfm-200x200.png",
+                "https://entranced.fm/images/logos/logo-efm-g200x200.png",
+            ),
+            stations.map { station -> station.logoUrl },
+        )
+    }
+
+    @Test
     fun `fixed startup station is selected before the repository emits`() = runTest {
         val preferences = InMemoryStationPreferencesRepository(
             LocalStationPreferences(

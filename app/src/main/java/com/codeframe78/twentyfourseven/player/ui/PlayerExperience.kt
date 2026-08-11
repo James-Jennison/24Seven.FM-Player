@@ -219,13 +219,14 @@ private fun CoverStationSelector(
                     .testTag("cover_station_${station.id.value}"),
             ) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        station.shortName,
-                        color = palette.accent,
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
+                    AsyncImage(
+                        model = station.logoUrl,
+                        contentDescription = null,
+                        contentScale = ContentScale.Fit,
+                        fallback = painterResource(R.drawable.app_logo),
+                        error = painterResource(R.drawable.app_logo),
+                        placeholder = painterResource(R.drawable.app_logo),
+                        modifier = Modifier.size(40.dp),
                     )
                 }
             }
