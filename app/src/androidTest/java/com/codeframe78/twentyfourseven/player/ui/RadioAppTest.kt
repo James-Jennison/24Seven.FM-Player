@@ -188,6 +188,12 @@ class RadioAppTest {
         composeRule.onNodeWithTag("primary_play_pause").assertIsDisplayed()
         composeRule.onNodeWithTag("cover_sleep_timer_open").assertIsDisplayed()
         composeRule.onNodeWithTag("cover_audio_output_open").assertIsDisplayed()
+        composeRule.onNodeWithTag("cover_station_selector").assertIsDisplayed()
+        composeRule.onNodeWithTag("cover_station_sst").assertIsDisplayed()
+        composeRule.onNodeWithTag("cover_station_1980s").assertIsDisplayed()
+        composeRule.onNodeWithTag("cover_station_afm").assertIsDisplayed()
+        composeRule.onNodeWithTag("cover_station_dfm").assertIsDisplayed()
+        composeRule.onNodeWithTag("cover_station_efm").assertIsDisplayed()
     }
 
     @Test

@@ -31,11 +31,17 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.BluetoothAudio
 import androidx.compose.material.icons.filled.CastConnected
+import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material.icons.filled.Movie
+import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Headphones
 import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.Piano
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Radio
 import androidx.compose.material.icons.filled.Speaker
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.Whatshot
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -182,7 +188,53 @@ private fun CoverPlayerContent(
             CoverSleepTimerControl(state, sleepTimerActions)
             CoverAudioOutputControl(state, audioOutputActions)
         }
+        CoverStationSelector(state, onSelectStation)
     }
+}
+
+@Composable
+private fun CoverStationSelector(
+    state: MainUiState,
+    onSelectStation: (StationId) -> Unit,
+) {
+    Row(
+        Modifier.fillMaxWidth().testTag("cover_station_selector"),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        state.stations.forEach { station ->
+            val selected = station.id == state.selectedStation?.id
+            val palette = stationPalette(station.id)
+            IconButton(
+                onClick = { onSelectStation(station.id) },
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(if (selected) palette.glow else MaterialTheme.colorScheme.surfaceContainer)
+                    .semantics {
+                        this.selected = selected
+                        role = Role.RadioButton
+                        contentDescription = if (selected) "${station.name}, selected" else station.name
+                    }
+                    .testTag("cover_station_${station.id.value}"),
+            ) {
+                Icon(
+                    coverStationIcon(station.id),
+                    contentDescription = null,
+                    tint = palette.accent,
+                )
+            }
+        }
+    }
+}
+
+private fun coverStationIcon(stationId: StationId): ImageVector = when (stationId.value) {
+    "sst" -> Icons.Default.Movie
+    "1980s" -> Icons.Default.MusicNote
+    "afm" -> Icons.Default.Piano
+    "dfm" -> Icons.Default.Whatshot
+    "efm" -> Icons.Default.GraphicEq
+    else -> Icons.Default.Radio
 }
 
 @Composable
