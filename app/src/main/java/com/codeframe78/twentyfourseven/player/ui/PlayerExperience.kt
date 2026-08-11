@@ -159,8 +159,6 @@ private fun CoverPlayerContent(
     Column(
         Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .testTag("cover_player_scroll")
             .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -169,9 +167,9 @@ private fun CoverPlayerContent(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            NowPlayingArtwork(state, palette, Modifier.size(96.dp))
+            NowPlayingArtwork(state, palette, Modifier.size(76.dp), showLiveBadge = false)
             Column(Modifier.weight(1f)) {
-                NowPlayingDetails(state, palette, Alignment.Start)
+                CoverNowPlayingDetails(state, palette)
             }
         }
         PrimaryPlayerControls(state, onSelectStation, onPlay, onPause)
@@ -180,16 +178,113 @@ private fun CoverPlayerContent(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            TextButton(onClick = onStop, enabled = state.playback.status != PlaybackStatus.Idle) {
-                Icon(Icons.Default.Stop, contentDescription = null)
-                Spacer(Modifier.width(4.dp))
-                Text("Stop")
-            }
-            SleepTimerControl(state, sleepTimerActions)
-            AudioOutputControl(state, audioOutputActions)
+            CoverStopControl(state, onStop)
+            CoverSleepTimerControl(state, sleepTimerActions)
+            CoverAudioOutputControl(state, audioOutputActions)
         }
-        Text("Choose a station", style = MaterialTheme.typography.labelLarge)
-        StationSelector(state, onSelectStation, edgePadding = 0.dp)
+    }
+}
+
+@Composable
+private fun CoverNowPlayingDetails(
+    state: MainUiState,
+    palette: StationPalette,
+) {
+    val metadata = parseNowPlayingMetadata(state.nowPlaying.displayTitle)
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(
+            state.selectedStation?.shortName ?: "24Seven.FM",
+            color = palette.accent,
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            metadata.title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.testTag("now_playing_title"),
+        )
+        Text(
+            state.playback.status.userMessage,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.semantics { stateDescription = state.playback.status.accessibleName },
+        )
+    }
+}
+
+@Composable
+private fun CoverStopControl(
+    state: MainUiState,
+    onStop: () -> Unit,
+) {
+    IconButton(
+        onClick = onStop,
+        enabled = state.playback.status != PlaybackStatus.Idle,
+        modifier = Modifier
+            .size(48.dp)
+            .semantics { contentDescription = "Stop radio" }
+            .testTag("cover_stop"),
+    ) {
+        Icon(Icons.Default.Stop, contentDescription = null)
+    }
+}
+
+@Composable
+private fun CoverSleepTimerControl(
+    state: MainUiState,
+    actions: SleepTimerActions,
+) {
+    var showDialog by rememberSaveable { mutableStateOf(false) }
+    val sleepTimer = state.playback.sleepTimer
+    IconButton(
+        onClick = { showDialog = true },
+        enabled = state.selectedStation?.streams?.isNotEmpty() == true,
+        modifier = Modifier
+            .size(48.dp)
+            .semantics {
+                contentDescription = if (sleepTimer.isActive) "Adjust sleep timer" else "Set sleep timer"
+                if (sleepTimer.isActive) stateDescription = "Sleep timer active"
+            }
+            .testTag("cover_sleep_timer_open"),
+    ) {
+        Icon(Icons.Default.Bedtime, contentDescription = null)
+    }
+    if (showDialog) {
+        SleepTimerDialog(
+            isAdjusting = sleepTimer.isActive,
+            onSet = { durationMillis ->
+                actions.onSet(durationMillis)
+                showDialog = false
+            },
+            onDismiss = { showDialog = false },
+        )
+    }
+}
+
+@Composable
+private fun CoverAudioOutputControl(
+    state: MainUiState,
+    actions: AudioOutputActions,
+) {
+    val output = state.playback.audioOutput
+    IconButton(
+        onClick = actions.onOpenChooser,
+        modifier = Modifier
+            .size(48.dp)
+            .semantics {
+                contentDescription = "Choose audio output"
+                stateDescription = "Current output: ${output.displayName}"
+            }
+            .testTag("cover_audio_output_open"),
+    ) {
+        Icon(output.kind.icon, contentDescription = null)
     }
 }
 
@@ -283,6 +378,7 @@ private fun NowPlayingArtwork(
     state: MainUiState,
     palette: StationPalette,
     modifier: Modifier = Modifier,
+    showLiveBadge: Boolean = true,
 ) {
     Box(
         modifier
@@ -307,18 +403,20 @@ private fun NowPlayingArtwork(
             placeholder = painterResource(R.drawable.app_logo),
             modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(22.dp)).testTag("now_playing_artwork"),
         )
-        Surface(
-            modifier = Modifier.align(Alignment.TopStart).padding(12.dp),
-            color = MaterialTheme.colorScheme.scrim.copy(alpha = 0.78f),
-            contentColor = palette.accent,
-            shape = RoundedCornerShape(100.dp),
-        ) {
-            Text(
-                "●  LIVE",
-                Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
-            )
+        if (showLiveBadge) {
+            Surface(
+                modifier = Modifier.align(Alignment.TopStart).padding(12.dp),
+                color = MaterialTheme.colorScheme.scrim.copy(alpha = 0.78f),
+                contentColor = palette.accent,
+                shape = RoundedCornerShape(100.dp),
+            ) {
+                Text(
+                    "●  LIVE",
+                    Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
         }
     }
 }
