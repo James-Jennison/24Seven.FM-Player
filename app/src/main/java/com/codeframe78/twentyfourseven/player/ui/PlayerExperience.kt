@@ -308,7 +308,7 @@ private fun CompactPlayerContent(
     ) {
         NowPlayingArtwork(state, palette, Modifier.size(artworkSize))
         NowPlayingDetails(state, palette)
-        PrimaryPlayerControls(state, onSelectStation, onPlay, onStop, sleepTimerActions)
+        PrimaryPlayerControls(state, onSelectStation, onPlay, onStop, sleepTimerActions, isCompact = true)
         StationSelector(state, onSelectStation, isCompact = true)
         PlaybackDetails(state, audioOutputActions)
     }
@@ -483,8 +483,11 @@ private fun PrimaryPlayerControls(
     onPlay: () -> Unit,
     onStop: () -> Unit,
     sleepTimerActions: SleepTimerActions,
+    isCompact: Boolean = false,
 ) {
     val isActive = state.playback.status.isActive
+    val supportingControlSize = if (isCompact) 48.dp else 56.dp
+    val primaryControlSize = if (isCompact) 64.dp else 76.dp
     Row(
         Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Center,
@@ -494,7 +497,7 @@ private fun PrimaryPlayerControls(
             onClick = { adjacentStationId(state.stations, state.selectedStation?.id, -1)?.let(onSelectStation) },
             enabled = state.stations.size > 1,
             modifier = Modifier
-                .size(56.dp)
+                .size(supportingControlSize)
                 .semantics { contentDescription = "Previous station" }
                 .testTag("previous_station"),
         ) {
@@ -508,7 +511,7 @@ private fun PrimaryPlayerControls(
             onClick = if (isActive) onStop else onPlay,
             enabled = state.selectedStation?.streams?.isNotEmpty() == true,
             modifier = Modifier
-                .size(76.dp)
+                .size(primaryControlSize)
                 .semantics { contentDescription = playbackDescription }
                 .testTag("primary_play_pause"),
             shape = CircleShape,
@@ -524,7 +527,7 @@ private fun PrimaryPlayerControls(
             onClick = { adjacentStationId(state.stations, state.selectedStation?.id, 1)?.let(onSelectStation) },
             enabled = state.stations.size > 1,
             modifier = Modifier
-                .size(56.dp)
+                .size(supportingControlSize)
                 .semantics { contentDescription = "Next station" }
                 .testTag("next_station"),
         ) {
@@ -715,7 +718,7 @@ private fun StationSelector(
                     border = BorderStroke(if (selected) 2.dp else 1.dp, if (selected) palette.accent else MaterialTheme.colorScheme.outlineVariant),
                     modifier = Modifier
                         .weight(1f)
-                        .height(58.dp)
+                        .height(64.dp)
                         .semantics {
                             this.selected = selected
                             role = Role.RadioButton
@@ -731,7 +734,7 @@ private fun StationSelector(
                             fallback = painterResource(R.drawable.app_logo),
                             error = painterResource(R.drawable.app_logo),
                             placeholder = painterResource(R.drawable.app_logo),
-                            modifier = Modifier.size(40.dp),
+                            modifier = Modifier.size(44.dp),
                         )
                     }
                 }
