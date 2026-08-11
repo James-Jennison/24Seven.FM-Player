@@ -165,11 +165,11 @@ class RadioAppTest {
     }
 
     @Test
-    fun squareCoverWindowUsesMenuNavigationAndKeepsPlaybackControlsVisible() {
+    fun cutoutConstrainedCoverWindowUsesMenuNavigationAndKeepsPlaybackControlsVisible() {
         composeRule.setContent {
             var state by remember { mutableStateOf(sampleState()) }
             MaterialTheme {
-                Box(Modifier.requiredSize(400.dp, 400.dp)) {
+                Box(Modifier.requiredSize(469.dp, 342.dp)) {
                     RadioApp(
                         state = state,
                         onSelectStation = {},

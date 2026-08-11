@@ -286,14 +286,14 @@ private fun PhoneShell(
 }
 
 /**
- * A full-app flip-phone cover display is small and nearly square.  This is intentionally a
- * window contract rather than a device check so it also works in resized and future foldable
- * windows with the same usable shape.
+ * A full-app flip-phone cover display is small and close to square. The cover camera cutout can
+ * make its usable app window short and wide, so the window contract accommodates that inset.
+ * This remains a window contract rather than a device check.
  */
 private fun isCoverDisplayWindow(maxWidth: androidx.compose.ui.unit.Dp, maxHeight: androidx.compose.ui.unit.Dp): Boolean {
     if (maxWidth > 480.dp || maxHeight > 480.dp) return false
     val aspectRatio = maxWidth.value / maxHeight.value
-    return aspectRatio in 0.8f..1.25f
+    return aspectRatio in 0.8f..1.5f
 }
 
 @Composable

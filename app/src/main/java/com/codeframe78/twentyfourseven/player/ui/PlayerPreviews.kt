@@ -19,7 +19,7 @@ import com.codeframe78.twentyfourseven.player.ui.theme.TwentyFourSevenTheme
 @Composable
 private fun CompactPlayingPreview() = PlayerPreview(PlaybackStatus.Playing)
 
-@Preview(name = "Folded cover display · playing", widthDp = 400, heightDp = 400, showBackground = true)
+@Preview(name = "Folded cover display · playing", widthDp = 469, heightDp = 342, showBackground = true)
 @Composable
 private fun CoverDisplayPlayingPreview() = PlayerPreview(PlaybackStatus.Playing, isCoverDisplay = true)
 
