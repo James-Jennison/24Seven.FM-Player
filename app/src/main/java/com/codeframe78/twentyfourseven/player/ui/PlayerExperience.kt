@@ -31,17 +31,11 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.BluetoothAudio
 import androidx.compose.material.icons.filled.CastConnected
-import androidx.compose.material.icons.filled.GraphicEq
-import androidx.compose.material.icons.filled.Movie
-import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Headphones
 import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.Piano
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Radio
 import androidx.compose.material.icons.filled.Speaker
 import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material.icons.filled.Whatshot
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -205,12 +199,18 @@ private fun CoverStationSelector(
         state.stations.forEach { station ->
             val selected = station.id == state.selectedStation?.id
             val palette = stationPalette(station.id)
-            IconButton(
+            Card(
                 onClick = { onSelectStation(station.id) },
+                colors = CardDefaults.cardColors(
+                    containerColor = if (selected) palette.glow else MaterialTheme.colorScheme.surfaceContainer,
+                ),
+                border = BorderStroke(
+                    if (selected) 2.dp else 1.dp,
+                    if (selected) palette.accent else MaterialTheme.colorScheme.outlineVariant,
+                ),
                 modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(if (selected) palette.glow else MaterialTheme.colorScheme.surfaceContainer)
+                    .weight(1f)
+                    .height(48.dp)
                     .semantics {
                         this.selected = selected
                         role = Role.RadioButton
@@ -218,23 +218,19 @@ private fun CoverStationSelector(
                     }
                     .testTag("cover_station_${station.id.value}"),
             ) {
-                Icon(
-                    coverStationIcon(station.id),
-                    contentDescription = null,
-                    tint = palette.accent,
-                )
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(
+                        station.shortName,
+                        color = palette.accent,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
         }
     }
-}
-
-private fun coverStationIcon(stationId: StationId): ImageVector = when (stationId.value) {
-    "sst" -> Icons.Default.Movie
-    "1980s" -> Icons.Default.MusicNote
-    "afm" -> Icons.Default.Piano
-    "dfm" -> Icons.Default.Whatshot
-    "efm" -> Icons.Default.GraphicEq
-    else -> Icons.Default.Radio
 }
 
 @Composable
