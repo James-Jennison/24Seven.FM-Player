@@ -187,7 +187,7 @@ class RadioAppTest {
         composeRule.onNodeWithContentDescription("Open navigation").assertDoesNotExist()
         composeRule.onNodeWithTag("primary_play_pause").assertIsDisplayed()
         composeRule.onNodeWithTag("sleep_timer_open").assertIsDisplayed()
-        composeRule.onNodeWithTag("cover_audio_output_open").assertIsDisplayed()
+        composeRule.onNodeWithTag("audio_output_open").assertIsDisplayed()
         composeRule.onNodeWithTag("cover_station_selector").assertIsDisplayed()
         composeRule.onNodeWithTag("cover_station_sst").assertIsDisplayed()
         composeRule.onNodeWithTag("cover_station_1980s").assertIsDisplayed()
@@ -595,7 +595,7 @@ class RadioAppTest {
             }
         }
 
-        composeRule.onNodeWithTag("audio_output_open").performScrollTo().assertIsDisplayed().performClick()
+        composeRule.onNodeWithTag("audio_output_open").assertIsDisplayed().performClick()
         composeRule.onNodeWithText("Using Razr Buds").assertDoesNotExist()
         composeRule.runOnIdle { assertEquals(1, chooserOpenCount) }
     }

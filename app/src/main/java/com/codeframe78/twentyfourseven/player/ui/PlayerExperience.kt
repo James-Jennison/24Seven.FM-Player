@@ -174,10 +174,7 @@ private fun CoverPlayerContent(
                 CoverNowPlayingDetails(state, palette)
             }
         }
-        PrimaryPlayerControls(state, onSelectStation, onPlay, onStop, sleepTimerActions)
-        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-            CoverAudioOutputControl(state, audioOutputActions)
-        }
+        PrimaryPlayerControls(state, onSelectStation, onPlay, onStop, sleepTimerActions, audioOutputActions)
         CoverStationSelector(state, onSelectStation)
     }
 }
@@ -267,26 +264,6 @@ private fun CoverNowPlayingDetails(
 }
 
 @Composable
-private fun CoverAudioOutputControl(
-    state: MainUiState,
-    actions: AudioOutputActions,
-) {
-    val output = state.playback.audioOutput
-    IconButton(
-        onClick = actions.onOpenChooser,
-        modifier = Modifier
-            .size(48.dp)
-            .semantics {
-                contentDescription = "Choose audio output"
-                stateDescription = "Current output: ${output.displayName}"
-            }
-            .testTag("cover_audio_output_open"),
-    ) {
-        Icon(output.kind.icon, contentDescription = null)
-    }
-}
-
-@Composable
 private fun CompactPlayerContent(
     state: MainUiState,
     palette: StationPalette,
@@ -310,10 +287,9 @@ private fun CompactPlayerContent(
     ) {
         NowPlayingArtwork(state, palette, Modifier.size(artworkSize))
         NowPlayingDetails(state, palette)
-        PrimaryPlayerControls(state, onSelectStation, onPlay, onStop, sleepTimerActions, isCompact = true)
-        StationSelector(state, onSelectStation, isCompact = true)
+        PrimaryPlayerControls(state, onSelectStation, onPlay, onStop, sleepTimerActions, audioOutputActions, isCompact = true)
         if (!isScrollable) Spacer(Modifier.weight(1f))
-        PlaybackDetails(state, audioOutputActions)
+        StationSelector(state, onSelectStation, isCompact = true)
     }
 }
 
@@ -345,9 +321,7 @@ private fun ExpandedPlayerContent(
         ) {
             NowPlayingDetails(state, palette, Alignment.Start)
             Spacer(Modifier.height(28.dp))
-            PrimaryPlayerControls(state, onSelectStation, onPlay, onStop, sleepTimerActions)
-            Spacer(Modifier.height(8.dp))
-            PlaybackDetails(state, audioOutputActions)
+            PrimaryPlayerControls(state, onSelectStation, onPlay, onStop, sleepTimerActions, audioOutputActions)
             Spacer(Modifier.height(32.dp))
             Text("Choose a station", style = MaterialTheme.typography.titleMedium)
             Spacer(Modifier.height(12.dp))
@@ -471,6 +445,7 @@ private fun PrimaryPlayerControls(
     onPlay: () -> Unit,
     onStop: () -> Unit,
     sleepTimerActions: SleepTimerActions,
+    audioOutputActions: AudioOutputActions,
     isCompact: Boolean = false,
 ) {
     val isActive = state.playback.status.isActive
@@ -511,6 +486,8 @@ private fun PrimaryPlayerControls(
             )
         }
         Spacer(Modifier.width(10.dp))
+        PlaybackAudioOutputControl(state, audioOutputActions, supportingControlSize)
+        Spacer(Modifier.width(10.dp))
         IconButton(
             onClick = { adjacentStationId(state.stations, state.selectedStation?.id, 1)?.let(onSelectStation) },
             enabled = state.stations.size > 1,
@@ -525,29 +502,23 @@ private fun PrimaryPlayerControls(
 }
 
 @Composable
-private fun PlaybackDetails(
+private fun PlaybackAudioOutputControl(
     state: MainUiState,
-    audioOutputActions: AudioOutputActions,
+    actions: AudioOutputActions,
+    controlSize: androidx.compose.ui.unit.Dp,
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        AudioOutputControl(state, audioOutputActions)
-    }
-}
-
-@Composable
-private fun AudioOutputControl(state: MainUiState, actions: AudioOutputActions) {
     val output = state.playback.audioOutput
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        TextButton(
-            onClick = actions.onOpenChooser,
-            modifier = Modifier
-                .semantics { stateDescription = "Current output: ${output.displayName}" }
-                .testTag("audio_output_open"),
-        ) {
-            Icon(output.kind.icon, contentDescription = null)
-            Spacer(Modifier.width(6.dp))
-            Text("Audio output")
-        }
+    IconButton(
+        onClick = actions.onOpenChooser,
+        modifier = Modifier
+            .size(controlSize)
+            .semantics {
+                contentDescription = "Choose audio output"
+                stateDescription = "Current output: ${output.displayName}"
+            }
+            .testTag("audio_output_open"),
+    ) {
+        Icon(output.kind.icon, contentDescription = null)
     }
 }
 
@@ -692,7 +663,7 @@ private fun StationSelector(
                     border = BorderStroke(if (selected) 2.dp else 1.dp, if (selected) palette.accent else MaterialTheme.colorScheme.outlineVariant),
                     modifier = Modifier
                         .weight(1f)
-                        .height(64.dp)
+                        .height(80.dp)
                         .semantics {
                             this.selected = selected
                             role = Role.RadioButton
@@ -708,7 +679,7 @@ private fun StationSelector(
                             fallback = painterResource(R.drawable.app_logo),
                             error = painterResource(R.drawable.app_logo),
                             placeholder = painterResource(R.drawable.app_logo),
-                            modifier = Modifier.size(44.dp),
+                            modifier = Modifier.size(56.dp),
                         )
                     }
                 }
