@@ -169,7 +169,7 @@ private fun CoverPlayerContent(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            NowPlayingArtwork(state, palette, Modifier.size(120.dp))
+            NowPlayingArtwork(state, palette, Modifier.size(152.dp))
             Column(Modifier.weight(1f)) {
                 CoverNowPlayingDetails(state, palette)
             }
