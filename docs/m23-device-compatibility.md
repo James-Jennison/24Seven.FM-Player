@@ -10,6 +10,7 @@ not a list of hard-coded device models.
 - Most compact windows below 600dp use bottom navigation. Medium and expanded windows use a navigation rail.
 - Small compact cover windows (no more than 480dp in either dimension, including short-wide windows after a cover-camera inset) use a cover-display shell: a control-first Player with direct station-name chips but without in-app navigation. This is window-driven, not a device-name check.
 - The Player switches from a vertically scrollable compact layout to a two-pane artwork/details layout at 840dp.
+- A normal-height compact phone window keeps its Player controls, station carousel, and utility actions in view without scrolling; short compact windows and enlarged text retain a scrollable Player.
 - Selected station, destination, playback state, and the service-owned media session are not recreated or duplicated
   when the available window size changes.
 - Edge-to-edge content, system bars, display cutouts, large text, portrait, landscape, and freeform resizing are handled

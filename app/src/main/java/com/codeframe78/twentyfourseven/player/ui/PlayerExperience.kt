@@ -60,6 +60,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
@@ -86,7 +87,8 @@ import com.codeframe78.twentyfourseven.player.ui.theme.stationPalette
 private val ExpandedPlayerBreakpoint = 840.dp
 private val CompactPlayerReservedHeight = 420.dp
 private val MinimumCompactArtworkSize = 140.dp
-private val MaximumCompactArtworkSize = 300.dp
+private val MaximumCompactArtworkSize = 272.dp
+private val CompactPlayerNoScrollHeight = 800.dp
 private val SleepTimerPresetsMinutes = listOf(15, 30, 45, 60, 90)
 
 @Immutable
@@ -132,6 +134,8 @@ internal fun AdaptivePlayerScreen(
         } else if (maxWidth >= ExpandedPlayerBreakpoint) {
             ExpandedPlayerContent(state, palette, onSelectStation, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions)
         } else {
+            val compactPlayerCanFitWithoutScroll =
+                maxHeight >= CompactPlayerNoScrollHeight && LocalDensity.current.fontScale <= 1.3f
             val availableArtworkWidth = maxWidth - 40.dp
             val availableArtworkHeight = (maxHeight - CompactPlayerReservedHeight)
                 .coerceIn(MinimumCompactArtworkSize, MaximumCompactArtworkSize)
@@ -140,7 +144,7 @@ internal fun AdaptivePlayerScreen(
                 availableArtworkHeight,
                 MaximumCompactArtworkSize,
             )
-            CompactPlayerContent(state, palette, artworkSize, onSelectStation, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions)
+            CompactPlayerContent(state, palette, artworkSize, onSelectStation, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, isScrollable = !compactPlayerCanFitWithoutScroll)
         }
     }
 }
@@ -348,11 +352,13 @@ private fun CompactPlayerContent(
     onStop: () -> Unit,
     sleepTimerActions: SleepTimerActions,
     audioOutputActions: AudioOutputActions,
+    isScrollable: Boolean,
 ) {
+    val scrollModifier = if (isScrollable) Modifier.verticalScroll(rememberScrollState()) else Modifier
     Column(
         Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .then(scrollModifier)
             .testTag("compact_player_scroll")
             .padding(horizontal = 20.dp, vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,

@@ -256,6 +256,29 @@ class RadioAppTest {
     }
 
     @Test
+    fun normalHeightInnerPlayerKeepsControlsAndStationCarouselVisibleWithoutScrolling() {
+        composeRule.setContent {
+            MaterialTheme {
+                Box(Modifier.requiredSize(411.dp, 1006.dp)) {
+                    RadioApp(
+                        state = sampleState(),
+                        onSelectStation = {},
+                        onSelectDestination = {},
+                        onPlay = {},
+                        onPause = {},
+                        onStop = {},
+                        onRefreshQueue = {},
+                    )
+                }
+            }
+        }
+
+        composeRule.onNodeWithTag("primary_play_pause").assertIsDisplayed()
+        composeRule.onNodeWithTag("station_selector").assertIsDisplayed()
+        composeRule.onNodeWithTag("audio_output_open").assertIsDisplayed()
+    }
+
+    @Test
     fun maximumFontAndDisplayScaleKeepCompactNavigationAndStationDetailsReachable() {
         composeRule.setContent {
             val density = LocalDensity.current
