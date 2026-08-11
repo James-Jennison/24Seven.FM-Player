@@ -569,7 +569,7 @@ class RadioAppTest {
     }
 
     @Test
-    fun audioOutputDisplaysCurrentRouteAndEmitsChooserAction() {
+    fun audioOutputEmitsChooserAction() {
         var chooserOpenCount = 0
         composeRule.setContent {
             MaterialTheme {
@@ -596,7 +596,7 @@ class RadioAppTest {
         }
 
         composeRule.onNodeWithTag("audio_output_open").performScrollTo().assertIsDisplayed().performClick()
-        composeRule.onNodeWithText("Using Razr Buds").assertIsDisplayed()
+        composeRule.onNodeWithText("Using Razr Buds").assertDoesNotExist()
         composeRule.runOnIdle { assertEquals(1, chooserOpenCount) }
     }
 

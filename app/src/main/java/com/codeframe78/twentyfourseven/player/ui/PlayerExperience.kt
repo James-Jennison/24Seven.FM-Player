@@ -565,15 +565,6 @@ private fun AudioOutputControl(state: MainUiState, actions: AudioOutputActions) 
             Spacer(Modifier.width(6.dp))
             Text("Audio output")
         }
-        Text(
-            "Using ${output.displayName}",
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.testTag("audio_output_current"),
-        )
     }
 }
 
