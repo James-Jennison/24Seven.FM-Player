@@ -698,12 +698,52 @@ private fun StationSelector(
     edgePadding: androidx.compose.ui.unit.Dp = 2.dp,
     isCompact: Boolean = false,
 ) {
-    LazyRow(
-        Modifier.fillMaxWidth().testTag("station_selector"),
-        contentPadding = PaddingValues(horizontal = edgePadding),
-        horizontalArrangement = Arrangement.spacedBy(if (isCompact) 8.dp else 10.dp),
-    ) {
-        items(state.stations, key = { it.id.value }) { station ->
+    if (isCompact) {
+        Row(
+            Modifier.fillMaxWidth().testTag("station_selector"),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            state.stations.forEach { station ->
+                val selected = station.id == state.selectedStation?.id
+                val palette = stationPalette(station.id)
+                Card(
+                    onClick = { onSelectStation(station.id) },
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (selected) palette.glow else MaterialTheme.colorScheme.surfaceContainer,
+                    ),
+                    border = BorderStroke(if (selected) 2.dp else 1.dp, if (selected) palette.accent else MaterialTheme.colorScheme.outlineVariant),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(58.dp)
+                        .semantics {
+                            this.selected = selected
+                            role = Role.RadioButton
+                            contentDescription = if (selected) "${station.name}, selected" else station.name
+                        }
+                        .testTag("station_card_${station.id.value}"),
+                ) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        AsyncImage(
+                            model = station.logoUrl,
+                            contentDescription = null,
+                            contentScale = ContentScale.Fit,
+                            fallback = painterResource(R.drawable.app_logo),
+                            error = painterResource(R.drawable.app_logo),
+                            placeholder = painterResource(R.drawable.app_logo),
+                            modifier = Modifier.size(40.dp),
+                        )
+                    }
+                }
+            }
+        }
+    } else {
+        LazyRow(
+            Modifier.fillMaxWidth().testTag("station_selector"),
+            contentPadding = PaddingValues(horizontal = edgePadding),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            items(state.stations, key = { it.id.value }) { station ->
             val selected = station.id == state.selectedStation?.id
             val palette = stationPalette(station.id)
             Card(
@@ -713,8 +753,8 @@ private fun StationSelector(
                 ),
                 border = BorderStroke(if (selected) 2.dp else 1.dp, if (selected) palette.accent else MaterialTheme.colorScheme.outlineVariant),
                 modifier = Modifier
-                    .width(if (isCompact) 112.dp else 152.dp)
-                    .heightIn(min = if (isCompact) 58.dp else 86.dp)
+                    .width(152.dp)
+                    .heightIn(min = 86.dp)
                     .semantics {
                         this.selected = selected
                         role = Role.RadioButton
@@ -723,7 +763,7 @@ private fun StationSelector(
                     .testTag("station_card_${station.id.value}"),
             ) {
                 Column(
-                    Modifier.padding(if (isCompact) 10.dp else 14.dp),
+                    Modifier.padding(14.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     Text(
@@ -733,18 +773,17 @@ private fun StationSelector(
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
                     )
-                    if (!isCompact) {
-                        Text(
-                            station.description,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.labelSmall,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.testTag("station_card_description_${station.id.value}"),
-                        )
-                    }
+                    Text(
+                        station.description,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.labelSmall,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.testTag("station_card_description_${station.id.value}"),
+                    )
                 }
             }
+        }
         }
     }
 }
