@@ -169,7 +169,7 @@ private fun CoverPlayerContent(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            NowPlayingArtwork(state, palette, Modifier.size(76.dp), showLiveBadge = false)
+            NowPlayingArtwork(state, palette, Modifier.size(76.dp))
             Column(Modifier.weight(1f)) {
                 CoverNowPlayingDetails(state, palette)
             }
@@ -253,14 +253,16 @@ private fun CoverNowPlayingDetails(
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.testTag("now_playing_title"),
         )
-        Text(
-            state.playback.status.userMessage,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.semantics { stateDescription = state.playback.status.accessibleName },
-        )
+        if (state.playback.status != PlaybackStatus.Playing) {
+            Text(
+                state.playback.status.userMessage,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.semantics { stateDescription = state.playback.status.accessibleName },
+            )
+        }
     }
 }
 
@@ -374,7 +376,6 @@ private fun NowPlayingArtwork(
     state: MainUiState,
     palette: StationPalette,
     modifier: Modifier = Modifier,
-    showLiveBadge: Boolean = true,
 ) {
     Box(
         modifier
@@ -399,21 +400,6 @@ private fun NowPlayingArtwork(
             placeholder = painterResource(R.drawable.app_logo),
             modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(22.dp)).testTag("now_playing_artwork"),
         )
-        if (showLiveBadge) {
-            Surface(
-                modifier = Modifier.align(Alignment.TopStart).padding(12.dp),
-                color = MaterialTheme.colorScheme.scrim.copy(alpha = 0.78f),
-                contentColor = palette.accent,
-                shape = RoundedCornerShape(100.dp),
-            ) {
-                Text(
-                    "●  LIVE",
-                    Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                )
-            }
-        }
     }
 }
 
@@ -458,6 +444,7 @@ private fun NowPlayingDetails(
 
 @Composable
 private fun PlaybackStatusPill(state: MainUiState, palette: StationPalette) {
+    if (state.playback.status == PlaybackStatus.Playing) return
     Surface(
         color = palette.glow.copy(alpha = 0.88f),
         contentColor = palette.accent,
@@ -911,10 +898,10 @@ private val PlaybackStatus.accessibleName: String
 
 private val PlaybackStatus.userMessage: String
     get() = when (this) {
-        PlaybackStatus.Idle -> "LIVE • Not connected"
-        PlaybackStatus.Connecting -> "Connecting to live radio…"
-        PlaybackStatus.Buffering -> "Buffering live audio…"
-        PlaybackStatus.Playing -> "Playing live"
+        PlaybackStatus.Idle -> "Not connected"
+        PlaybackStatus.Connecting -> "Connecting…"
+        PlaybackStatus.Buffering -> "Buffering…"
+        PlaybackStatus.Playing -> "Playing"
         PlaybackStatus.Paused -> "Playback paused"
         PlaybackStatus.Retrying -> "Primary stream unavailable · trying fallback"
         PlaybackStatus.WaitingForNetwork -> "No network · playback will resume automatically"
