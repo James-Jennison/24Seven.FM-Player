@@ -85,8 +85,9 @@ import com.codeframe78.twentyfourseven.player.ui.theme.stationPalette
 
 private val ExpandedPlayerBreakpoint = 840.dp
 private val CompactPlayerReservedHeight = 420.dp
+private val CompactPlayerHorizontalPadding = 12.dp
 private val MinimumCompactArtworkSize = 140.dp
-private val MaximumCompactArtworkSize = 352.dp
+private val MaximumCompactArtworkSize = 384.dp
 private val CompactPlayerNoScrollHeight = 720.dp
 private val SleepTimerPresetsMinutes = listOf(15, 30, 45, 60, 90)
 
@@ -134,7 +135,7 @@ internal fun AdaptivePlayerScreen(
         } else {
             val compactPlayerCanFitWithoutScroll =
                 maxHeight >= CompactPlayerNoScrollHeight && LocalDensity.current.fontScale <= 1.3f
-            val availableArtworkWidth = maxWidth - 40.dp
+            val availableArtworkWidth = maxWidth - (CompactPlayerHorizontalPadding * 2)
             val availableArtworkHeight = (maxHeight - CompactPlayerReservedHeight)
                 .coerceIn(MinimumCompactArtworkSize, MaximumCompactArtworkSize)
             val artworkSize = minOf(
@@ -303,7 +304,7 @@ private fun CompactPlayerContent(
             .fillMaxSize()
             .then(scrollModifier)
             .testTag("compact_player_scroll")
-            .padding(horizontal = 20.dp, vertical = 16.dp),
+            .padding(horizontal = CompactPlayerHorizontalPadding, vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {

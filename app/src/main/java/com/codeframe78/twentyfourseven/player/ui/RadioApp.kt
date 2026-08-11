@@ -242,7 +242,7 @@ private fun PhoneShell(
     Scaffold(
         topBar = {
             if (!isCoverDisplay) {
-                StationTopBar(state, onSelectDestination)
+                StationTopBar(onSelectDestination)
             }
         },
         bottomBar = {
@@ -354,7 +354,7 @@ private fun TabletShell(
         VerticalDivider(Modifier.fillMaxHeight())
         Scaffold(
             modifier = Modifier.weight(1f),
-            topBar = { StationTopBar(state, onSelectDestination) },
+            topBar = { StationTopBar(onSelectDestination) },
             bottomBar = {
                 if (state.destination != MainDestination.Player) {
                     PersistentMiniPlayer(state, onSelectDestination, onPlay, onPause)
@@ -370,7 +370,6 @@ private fun TabletShell(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun StationTopBar(
-    state: MainUiState,
     onSelectDestination: (MainDestination) -> Unit,
 ) {
     CenterAlignedTopAppBar(
@@ -381,22 +380,7 @@ private fun StationTopBar(
                 modifier = Modifier.padding(start = 12.dp).size(40.dp).clip(RoundedCornerShape(10.dp)),
             )
         },
-        title = {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("24Seven.FM", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                TextButton(
-                    onClick = { onSelectDestination(MainDestination.Player) },
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
-                ) {
-                    Text(
-                        state.selectedStation?.name ?: "Choose station",
-                        style = MaterialTheme.typography.labelMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
-        },
+        title = { Text("24Seven.FM", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) },
         actions = {
             IconButton(onClick = { onSelectDestination(MainDestination.More) }) {
                 Icon(Icons.Default.MoreVert, contentDescription = "Account and station options")
