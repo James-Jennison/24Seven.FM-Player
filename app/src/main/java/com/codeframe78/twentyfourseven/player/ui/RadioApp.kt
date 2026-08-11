@@ -445,7 +445,6 @@ private fun DestinationContent(
             padding,
             onSelectStation,
             onPlay,
-            onPause,
             onStop,
             sleepTimerActions,
             audioOutputActions,

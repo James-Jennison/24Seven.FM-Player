@@ -108,7 +108,6 @@ internal fun AdaptivePlayerScreen(
     padding: PaddingValues,
     onSelectStation: (StationId) -> Unit,
     onPlay: () -> Unit,
-    onPause: () -> Unit,
     onStop: () -> Unit,
     sleepTimerActions: SleepTimerActions = SleepTimerActions(),
     audioOutputActions: AudioOutputActions = AudioOutputActions(),
@@ -127,12 +126,12 @@ internal fun AdaptivePlayerScreen(
                         MaterialTheme.colorScheme.background,
                     ),
                 ),
-            ),
+        ),
     ) {
         if (isCoverDisplay) {
-            CoverPlayerContent(state, palette, onSelectStation, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions)
+            CoverPlayerContent(state, palette, onSelectStation, onPlay, onStop, sleepTimerActions, audioOutputActions)
         } else if (maxWidth >= ExpandedPlayerBreakpoint) {
-            ExpandedPlayerContent(state, palette, onSelectStation, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions)
+            ExpandedPlayerContent(state, palette, onSelectStation, onPlay, onStop, sleepTimerActions, audioOutputActions)
         } else {
             val compactPlayerCanFitWithoutScroll =
                 maxHeight >= CompactPlayerNoScrollHeight && LocalDensity.current.fontScale <= 1.3f
@@ -144,7 +143,7 @@ internal fun AdaptivePlayerScreen(
                 availableArtworkHeight,
                 MaximumCompactArtworkSize,
             )
-            CompactPlayerContent(state, palette, artworkSize, onSelectStation, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, isScrollable = !compactPlayerCanFitWithoutScroll)
+            CompactPlayerContent(state, palette, artworkSize, onSelectStation, onPlay, onStop, sleepTimerActions, audioOutputActions, isScrollable = !compactPlayerCanFitWithoutScroll)
         }
     }
 }
@@ -155,7 +154,6 @@ private fun CoverPlayerContent(
     palette: StationPalette,
     onSelectStation: (StationId) -> Unit,
     onPlay: () -> Unit,
-    onPause: () -> Unit,
     onStop: () -> Unit,
     sleepTimerActions: SleepTimerActions,
     audioOutputActions: AudioOutputActions,
@@ -176,14 +174,8 @@ private fun CoverPlayerContent(
                 CoverNowPlayingDetails(state, palette)
             }
         }
-        PrimaryPlayerControls(state, onSelectStation, onPlay, onPause)
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            CoverStopControl(state, onStop)
-            CoverSleepTimerControl(state, sleepTimerActions)
+        PrimaryPlayerControls(state, onSelectStation, onPlay, onStop, sleepTimerActions)
+        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             CoverAudioOutputControl(state, audioOutputActions)
         }
         CoverStationSelector(state, onSelectStation)
@@ -273,55 +265,6 @@ private fun CoverNowPlayingDetails(
 }
 
 @Composable
-private fun CoverStopControl(
-    state: MainUiState,
-    onStop: () -> Unit,
-) {
-    IconButton(
-        onClick = onStop,
-        enabled = state.playback.status != PlaybackStatus.Idle,
-        modifier = Modifier
-            .size(48.dp)
-            .semantics { contentDescription = "Stop radio" }
-            .testTag("cover_stop"),
-    ) {
-        Icon(Icons.Default.Stop, contentDescription = null)
-    }
-}
-
-@Composable
-private fun CoverSleepTimerControl(
-    state: MainUiState,
-    actions: SleepTimerActions,
-) {
-    var showDialog by rememberSaveable { mutableStateOf(false) }
-    val sleepTimer = state.playback.sleepTimer
-    IconButton(
-        onClick = { showDialog = true },
-        enabled = state.selectedStation?.streams?.isNotEmpty() == true,
-        modifier = Modifier
-            .size(48.dp)
-            .semantics {
-                contentDescription = if (sleepTimer.isActive) "Adjust sleep timer" else "Set sleep timer"
-                if (sleepTimer.isActive) stateDescription = "Sleep timer active"
-            }
-            .testTag("cover_sleep_timer_open"),
-    ) {
-        Icon(Icons.Default.Bedtime, contentDescription = null)
-    }
-    if (showDialog) {
-        SleepTimerDialog(
-            isAdjusting = sleepTimer.isActive,
-            onSet = { durationMillis ->
-                actions.onSet(durationMillis)
-                showDialog = false
-            },
-            onDismiss = { showDialog = false },
-        )
-    }
-}
-
-@Composable
 private fun CoverAudioOutputControl(
     state: MainUiState,
     actions: AudioOutputActions,
@@ -348,7 +291,6 @@ private fun CompactPlayerContent(
     artworkSize: androidx.compose.ui.unit.Dp,
     onSelectStation: (StationId) -> Unit,
     onPlay: () -> Unit,
-    onPause: () -> Unit,
     onStop: () -> Unit,
     sleepTimerActions: SleepTimerActions,
     audioOutputActions: AudioOutputActions,
@@ -366,9 +308,9 @@ private fun CompactPlayerContent(
     ) {
         NowPlayingArtwork(state, palette, Modifier.size(artworkSize))
         NowPlayingDetails(state, palette)
-        PrimaryPlayerControls(state, onSelectStation, onPlay, onPause)
-        StationSelector(state, onSelectStation)
-        PlaybackDetails(state, onStop, sleepTimerActions, audioOutputActions)
+        PrimaryPlayerControls(state, onSelectStation, onPlay, onStop, sleepTimerActions)
+        StationSelector(state, onSelectStation, isCompact = true)
+        PlaybackDetails(state, audioOutputActions)
     }
 }
 
@@ -378,7 +320,6 @@ private fun ExpandedPlayerContent(
     palette: StationPalette,
     onSelectStation: (StationId) -> Unit,
     onPlay: () -> Unit,
-    onPause: () -> Unit,
     onStop: () -> Unit,
     sleepTimerActions: SleepTimerActions,
     audioOutputActions: AudioOutputActions,
@@ -401,9 +342,9 @@ private fun ExpandedPlayerContent(
         ) {
             NowPlayingDetails(state, palette, Alignment.Start)
             Spacer(Modifier.height(28.dp))
-            PrimaryPlayerControls(state, onSelectStation, onPlay, onPause)
+            PrimaryPlayerControls(state, onSelectStation, onPlay, onStop, sleepTimerActions)
             Spacer(Modifier.height(8.dp))
-            PlaybackDetails(state, onStop, sleepTimerActions, audioOutputActions)
+            PlaybackDetails(state, audioOutputActions)
             Spacer(Modifier.height(32.dp))
             Text("Choose a station", style = MaterialTheme.typography.titleMedium)
             Spacer(Modifier.height(12.dp))
@@ -540,7 +481,8 @@ private fun PrimaryPlayerControls(
     state: MainUiState,
     onSelectStation: (StationId) -> Unit,
     onPlay: () -> Unit,
-    onPause: () -> Unit,
+    onStop: () -> Unit,
+    sleepTimerActions: SleepTimerActions,
 ) {
     val isActive = state.playback.status.isActive
     Row(
@@ -558,24 +500,26 @@ private fun PrimaryPlayerControls(
         ) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
         }
-        Spacer(Modifier.width(22.dp))
-        val playPauseDescription = if (isActive) "Pause live radio" else "Play live radio"
+        Spacer(Modifier.width(10.dp))
+        SleepTimerControl(state, sleepTimerActions)
+        Spacer(Modifier.width(10.dp))
+        val playbackDescription = if (isActive) "Stop radio" else "Play live radio"
         FilledIconButton(
-            onClick = if (isActive) onPause else onPlay,
+            onClick = if (isActive) onStop else onPlay,
             enabled = state.selectedStation?.streams?.isNotEmpty() == true,
             modifier = Modifier
                 .size(76.dp)
-                .semantics { contentDescription = playPauseDescription }
+                .semantics { contentDescription = playbackDescription }
                 .testTag("primary_play_pause"),
             shape = CircleShape,
         ) {
             Icon(
-                if (isActive) Icons.Default.Pause else Icons.Default.PlayArrow,
+                if (isActive) Icons.Default.Stop else Icons.Default.PlayArrow,
                 contentDescription = null,
                 modifier = Modifier.size(36.dp),
             )
         }
-        Spacer(Modifier.width(22.dp))
+        Spacer(Modifier.width(10.dp))
         IconButton(
             onClick = { adjacentStationId(state.stations, state.selectedStation?.id, 1)?.let(onSelectStation) },
             enabled = state.stations.size > 1,
@@ -592,8 +536,6 @@ private fun PrimaryPlayerControls(
 @Composable
 private fun PlaybackDetails(
     state: MainUiState,
-    onStop: () -> Unit,
-    sleepTimerActions: SleepTimerActions,
     audioOutputActions: AudioOutputActions,
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -602,14 +544,6 @@ private fun PlaybackDetails(
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = onStop, enabled = state.playback.status != PlaybackStatus.Idle) {
-                Icon(Icons.Default.Stop, contentDescription = null)
-                Spacer(Modifier.width(6.dp))
-                Text("Stop")
-            }
-            SleepTimerControl(state, sleepTimerActions)
-        }
         AudioOutputControl(state, audioOutputActions)
     }
 }
@@ -652,32 +586,18 @@ private val AudioOutputKind.icon: ImageVector
 private fun SleepTimerControl(state: MainUiState, actions: SleepTimerActions) {
     var showDialog by rememberSaveable { mutableStateOf(false) }
     val sleepTimer = state.playback.sleepTimer
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        TextButton(
+    IconButton(
             onClick = { showDialog = true },
             enabled = state.selectedStation?.streams?.isNotEmpty() == true,
-            modifier = Modifier.testTag("sleep_timer_open"),
-        ) {
+            modifier = Modifier
+                .size(48.dp)
+                .semantics {
+                    contentDescription = if (sleepTimer.isActive) "Adjust sleep timer" else "Set sleep timer"
+                    if (sleepTimer.isActive) stateDescription = "Sleep timer active"
+                }
+                .testTag("sleep_timer_open"),
+    ) {
             Icon(Icons.Default.Bedtime, contentDescription = null)
-            Spacer(Modifier.width(6.dp))
-            Text(if (sleepTimer.isActive) "Adjust timer" else "Sleep timer")
-        }
-        if (sleepTimer.isActive) {
-            Text(
-                "Stops in ${formatSleepTimerRemaining(sleepTimer.remainingMillis)}",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier
-                    .semantics { stateDescription = "Sleep timer active" }
-                    .testTag("sleep_timer_remaining"),
-            )
-            TextButton(
-                onClick = actions.onCancel,
-                modifier = Modifier.testTag("sleep_timer_cancel"),
-            ) {
-                Text("Cancel timer")
-            }
-        }
     }
     if (showDialog) {
         SleepTimerDialog(
@@ -685,6 +605,14 @@ private fun SleepTimerControl(state: MainUiState, actions: SleepTimerActions) {
             onSet = { durationMillis ->
                 actions.onSet(durationMillis)
                 showDialog = false
+            },
+            onCancel = if (sleepTimer.isActive) {
+                {
+                    actions.onCancel()
+                    showDialog = false
+                }
+            } else {
+                null
             },
             onDismiss = { showDialog = false },
         )
@@ -695,6 +623,7 @@ private fun SleepTimerControl(state: MainUiState, actions: SleepTimerActions) {
 private fun SleepTimerDialog(
     isAdjusting: Boolean,
     onSet: (Long) -> Unit,
+    onCancel: (() -> Unit)? = null,
     onDismiss: () -> Unit,
 ) {
     var customMinutes by rememberSaveable { mutableStateOf("") }
@@ -737,7 +666,16 @@ private fun SleepTimerDialog(
                 Text(if (isAdjusting) "Update" else "Start")
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Not now") } },
+        dismissButton = {
+            Row {
+                if (onCancel != null) {
+                    TextButton(onClick = onCancel, modifier = Modifier.testTag("sleep_timer_cancel")) {
+                        Text("Cancel timer")
+                    }
+                }
+                TextButton(onClick = onDismiss) { Text("Not now") }
+            }
+        },
     )
 }
 
@@ -758,11 +696,12 @@ private fun StationSelector(
     state: MainUiState,
     onSelectStation: (StationId) -> Unit,
     edgePadding: androidx.compose.ui.unit.Dp = 2.dp,
+    isCompact: Boolean = false,
 ) {
     LazyRow(
         Modifier.fillMaxWidth().testTag("station_selector"),
         contentPadding = PaddingValues(horizontal = edgePadding),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalArrangement = Arrangement.spacedBy(if (isCompact) 8.dp else 10.dp),
     ) {
         items(state.stations, key = { it.id.value }) { station ->
             val selected = station.id == state.selectedStation?.id
@@ -774,8 +713,8 @@ private fun StationSelector(
                 ),
                 border = BorderStroke(if (selected) 2.dp else 1.dp, if (selected) palette.accent else MaterialTheme.colorScheme.outlineVariant),
                 modifier = Modifier
-                    .width(152.dp)
-                    .heightIn(min = 86.dp)
+                    .width(if (isCompact) 112.dp else 152.dp)
+                    .heightIn(min = if (isCompact) 58.dp else 86.dp)
                     .semantics {
                         this.selected = selected
                         role = Role.RadioButton
@@ -784,7 +723,7 @@ private fun StationSelector(
                     .testTag("station_card_${station.id.value}"),
             ) {
                 Column(
-                    Modifier.padding(14.dp),
+                    Modifier.padding(if (isCompact) 10.dp else 14.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     Text(
@@ -794,14 +733,16 @@ private fun StationSelector(
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
                     )
-                    Text(
-                        station.description,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.labelSmall,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.testTag("station_card_description_${station.id.value}"),
-                    )
+                    if (!isCompact) {
+                        Text(
+                            station.description,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.labelSmall,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.testTag("station_card_description_${station.id.value}"),
+                        )
+                    }
                 }
             }
         }

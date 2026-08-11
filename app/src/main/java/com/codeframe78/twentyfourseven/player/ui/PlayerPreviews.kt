@@ -76,7 +76,6 @@ private fun PlayerPreview(
             padding = PaddingValues(0.dp),
             onSelectStation = {},
             onPlay = {},
-            onPause = {},
             onStop = {},
             isCoverDisplay = isCoverDisplay,
         )

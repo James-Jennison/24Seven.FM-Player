@@ -186,7 +186,7 @@ class RadioAppTest {
         composeRule.onNodeWithTag("cover_player_scroll").assertDoesNotExist()
         composeRule.onNodeWithContentDescription("Open navigation").assertDoesNotExist()
         composeRule.onNodeWithTag("primary_play_pause").assertIsDisplayed()
-        composeRule.onNodeWithTag("cover_sleep_timer_open").assertIsDisplayed()
+        composeRule.onNodeWithTag("sleep_timer_open").assertIsDisplayed()
         composeRule.onNodeWithTag("cover_audio_output_open").assertIsDisplayed()
         composeRule.onNodeWithTag("cover_station_selector").assertIsDisplayed()
         composeRule.onNodeWithTag("cover_station_sst").assertIsDisplayed()
@@ -306,15 +306,6 @@ class RadioAppTest {
         }
         composeRule.onNodeWithContentDescription("Play live radio").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithTag("station_card_sst").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithTag("station_card_description_sst", useUnmergedTree = true).assertIsDisplayed()
-
-        val cardBounds = composeRule.onNodeWithTag("station_card_sst").fetchSemanticsNode().boundsInRoot
-        val descriptionBounds = composeRule
-            .onNodeWithTag("station_card_description_sst", useUnmergedTree = true)
-            .fetchSemanticsNode()
-            .boundsInRoot
-        assertTrue(descriptionBounds.top >= cardBounds.top)
-        assertTrue(descriptionBounds.bottom <= cardBounds.bottom)
     }
 
     @Test
@@ -382,7 +373,7 @@ class RadioAppTest {
         }
         composeRule.onNodeWithContentDescription("Play live radio").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithTag("compact_player_scroll").performTouchInput { swipeUp() }
-        composeRule.onNodeWithTag("station_card_description_sst", useUnmergedTree = true).assertIsDisplayed()
+        composeRule.onNodeWithTag("station_card_sst").assertIsDisplayed()
     }
 
     @Test
@@ -473,14 +464,14 @@ class RadioAppTest {
             }
         }
 
-        composeRule.onNodeWithText("Stop").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Play live radio").performScrollTo().assertIsDisplayed()
     }
 
     @Test
     fun playerControlsDispatchPlaybackAndWrappedStationActions() {
         val selectedStations = mutableListOf<StationId>()
         var playCount = 0
-        var pauseCount = 0
+        var stopCount = 0
         val adagio = station.copy(id = StationId("afm"), name = "Adagio.FM", shortName = "Adagio")
         composeRule.setContent {
             var state by remember {
@@ -506,11 +497,11 @@ class RadioAppTest {
                         playCount += 1
                         state = state.copy(playback = PlaybackState(state.selectedStation?.id, PlaybackStatus.Playing))
                     },
-                    onPause = {
-                        pauseCount += 1
-                        state = state.copy(playback = PlaybackState(state.selectedStation?.id, PlaybackStatus.Paused))
+                    onPause = {},
+                    onStop = {
+                        stopCount += 1
+                        state = state.copy(playback = PlaybackState(state.selectedStation?.id, PlaybackStatus.Idle))
                     },
-                    onStop = {},
                     onRefreshQueue = {},
                 )
             }
@@ -519,12 +510,12 @@ class RadioAppTest {
         composeRule.onNodeWithContentDescription("Next station").performClick()
         composeRule.onNodeWithContentDescription("Previous station").performClick()
         composeRule.onNodeWithContentDescription("Play live radio").performClick()
-        composeRule.onNodeWithContentDescription("Pause live radio").performClick()
+        composeRule.onNodeWithContentDescription("Stop radio").performClick()
 
         composeRule.runOnIdle {
             assertEquals(listOf(StationId("afm"), StationId("sst")), selectedStations)
             assertEquals(1, playCount)
-            assertEquals(1, pauseCount)
+            assertEquals(1, stopCount)
         }
     }
 
@@ -568,8 +559,7 @@ class RadioAppTest {
 
         composeRule.onNodeWithTag("sleep_timer_open").performScrollTo().performClick()
         composeRule.onNodeWithTag("sleep_timer_preset_30").performClick()
-        composeRule.onNodeWithTag("sleep_timer_remaining").assertIsDisplayed()
-        composeRule.onNodeWithText("Stops in 30:00").assertIsDisplayed()
+        composeRule.onNodeWithTag("sleep_timer_open").performScrollTo().performClick()
         composeRule.onNodeWithTag("sleep_timer_cancel").performClick()
 
         composeRule.runOnIdle {
@@ -611,7 +601,7 @@ class RadioAppTest {
     }
 
     @Test
-    fun networkLossExplainsAutomaticRecoveryAndKeepsPauseAvailable() {
+    fun networkLossExplainsAutomaticRecoveryAndKeepsStopAvailable() {
         composeRule.setContent {
             MaterialTheme {
                 RadioApp(
@@ -634,7 +624,7 @@ class RadioAppTest {
         composeRule.onNodeWithText("No network · playback will resume automatically")
             .performScrollTo()
             .assertIsDisplayed()
-        composeRule.onNodeWithContentDescription("Pause live radio").assertIsDisplayed().assertHasClickAction()
+        composeRule.onNodeWithContentDescription("Stop radio").assertIsDisplayed().assertHasClickAction()
     }
 
     @Test
