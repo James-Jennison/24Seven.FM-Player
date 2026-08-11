@@ -51,12 +51,13 @@ pre-launch evidence belong exclusively to M40 after M39 freezes the exact candid
 
 | ID | Size | State | Implementation focus |
 | --- | --- | --- | --- |
-| M36 Notification Event-Source Authorization | Architecture gate | Waiting externally | Identify an authorized station event source, webhook, or privacy-compatible relay and document ownership, payloads, authentication, retention/deletion, abuse, outage, and station support |
-| M37 Secure Closed-App Notification Delivery | L | Planned after M36 | Minimal opt-in events, station/token isolation, duplicate safety, sign-out/reinstall behavior, and no protected-session forwarding or perpetual polling |
+| M36 Notification Event-Source Authorization | Architecture gate | Waiting externally | Identify an authorized station event source, webhook, or privacy-compatible relay and document ownership, payloads, authentication, retention/deletion, abuse, outage, and station support. A local one-station foreground monitor is separately authorized. |
+| M37 Secure Closed-App Notification Delivery | L | Planned after M36 | Minimal opt-in events, station/token isolation, duplicate safety, sign-out/reinstall behavior, and replacement of the foreground-monitor fallback where available |
 | M38 Notification Lifecycle and Privacy Certification | L | Planned after M37 | Foreground/background/closed/idle/reboot/network testing, latency, battery/traffic, payload privacy, deep-link safety, and all-station coverage |
 
-M27 remains complete for exact-name local notifications produced from the actively observed Chat feed. It is not
-closed-app push and does not authorize M37.
+M27 remains complete for exact-name local notifications produced from the actively observed Chat feed. The optional
+foreground monitor adds visible, user-started bounded polling for one station; it is not closed-app push and does not
+authorize M37.
 
 ## Alpha distribution program
 
@@ -85,7 +86,7 @@ one into the Alpha contract.
 - M46 — Architecture Sustainability.
 - M47–M50 — repaired and certified Private Messages.
 - M51–M54 — retired Forum scope; retained only as historical roadmap IDs and research evidence.
-- M55 — Google Cast feasibility and certification.
+- M55 — deferred optional Google Cast feasibility and certification.
 - M56 — extended station capability certification.
 - M57 — account registration, recovery, and management access.
 - M58 — membership commerce authorization and billing architecture (**Sol Extra High**).

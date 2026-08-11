@@ -84,7 +84,7 @@ class NetworkAuthRepository internal constructor(
         lock(canonical).withLock {
             val challenge = challenges[canonical]
             if (username.isBlank() || password.isBlank() || securityCode.isBlank() || challenge == null) {
-                loadChallenge(canonical, "Enter your username, password, and security code.")
+                loadChallenge(canonical, "Enter your username, password, and anti-spam answer.")
                 return@withLock
             }
             state(canonical).value = AuthState(canonical, AuthStatus.SigningIn)
@@ -98,7 +98,7 @@ class NetworkAuthRepository internal constructor(
                 challenges.remove(canonical)
                 state(canonical).value = AuthState(canonical, AuthStatus.SignedIn, displayName = displayName)
             }.onFailure {
-                loadChallenge(canonical, "Sign in failed. Check your details and the new security code.")
+                loadChallenge(canonical, "Sign in failed. Check your details and the new anti-spam check.")
             }
         }
     }
@@ -120,7 +120,8 @@ class NetworkAuthRepository internal constructor(
                 state(stationId).value = AuthState(
                     stationId,
                     if (errorMessage == null) AuthStatus.SignedOut else AuthStatus.Error,
-                    challengeImageUrl = challenge.imageUrl,
+                    challengeImageUrl = (challenge as? LoginChallenge.Image)?.imageUrl,
+                    antiSpamPrompt = (challenge as? LoginChallenge.Text)?.prompt,
                     errorMessage = errorMessage,
                 )
             }

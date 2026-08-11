@@ -15,6 +15,7 @@ import com.codeframe78.twentyfourseven.player.data.NetworkSongRequestRepository
 import com.codeframe78.twentyfourseven.player.data.NetworkFavoriteTracksRepository
 import com.codeframe78.twentyfourseven.player.data.StationFavoriteTracksRemoteDataSource
 import com.codeframe78.twentyfourseven.player.data.StationSongRequestRemoteDataSource
+import com.codeframe78.twentyfourseven.player.data.StationRequestQueueVerifier
 import com.codeframe78.twentyfourseven.player.data.StationNowPlayingArtworkRepository
 import com.codeframe78.twentyfourseven.player.data.SharedPreferencesStationPreferencesRepository
 import com.codeframe78.twentyfourseven.player.data.SharedPreferencesCommunitySafetyRepository
@@ -53,7 +54,11 @@ class AppContainer(application: Application) {
         StationChatRemoteDataSource(sessionStore = authSessionStore, sessions = authSessions),
     )
     val songRequestRepository: SongRequestRepository = NetworkSongRequestRepository(
-        StationSongRequestRemoteDataSource(sessionStore = authSessionStore, sessions = authSessions),
+        StationSongRequestRemoteDataSource(
+            sessionStore = authSessionStore,
+            sessions = authSessions,
+            requestQueueVerifier = StationRequestQueueVerifier(),
+        ),
     )
     val favoriteTracksRepository: FavoriteTracksRepository = NetworkFavoriteTracksRepository(
         StationFavoriteTracksRemoteDataSource(sessionStore = authSessionStore, sessions = authSessions),

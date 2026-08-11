@@ -7,9 +7,14 @@ import java.security.MessageDigest
 
 data class CommunityNotificationState(
     val chatMentionStationIds: Set<StationId> = emptySet(),
+    val foregroundMonitorStationId: StationId? = null,
 ) {
     fun chatMentionsEnabled(stationId: StationId?): Boolean =
         stationId != null && stationId in chatMentionStationIds
+
+    fun foregroundMonitorEnabled(stationId: StationId?): Boolean =
+        stationId != null && foregroundMonitorStationId == stationId
+
 }
 
 data class ChatMentionSnapshot(
@@ -24,6 +29,9 @@ interface CommunityNotificationRepository {
     fun observeSettings(): Flow<CommunityNotificationState>
 
     suspend fun setChatMentionsEnabled(stationId: StationId, enabled: Boolean)
+
+    /** User-controlled, one-station monitor while the app is closed. */
+    suspend fun setForegroundChatMonitorEnabled(stationId: StationId, enabled: Boolean) = Unit
 
     fun processChatSnapshot(snapshot: ChatMentionSnapshot)
 }

@@ -4,7 +4,9 @@ import com.codeframe78.twentyfourseven.player.domain.RequestSearchField
 import com.codeframe78.twentyfourseven.player.domain.RequestSearchResult
 import com.codeframe78.twentyfourseven.player.domain.RequestSuggestionMode
 import com.codeframe78.twentyfourseven.player.domain.RequestableTrack
+import com.codeframe78.twentyfourseven.player.domain.RequestTrackIdentity
 import com.codeframe78.twentyfourseven.player.domain.StationId
+import com.codeframe78.twentyfourseven.player.domain.TrackRequestAvailabilityResolver
 import com.codeframe78.twentyfourseven.player.domain.canonicalized
 import com.codeframe78.twentyfourseven.player.domain.MAX_REQUEST_MESSAGE_CHARACTERS
 import kotlinx.coroutines.Dispatchers
@@ -21,8 +23,42 @@ import java.nio.charset.StandardCharsets
 
 internal sealed interface RequestSubmissionResult {
     data class Submitted(val message: String) : RequestSubmissionResult
+    data class Unconfirmed(val message: String) : RequestSubmissionResult
     data class Rejected(val message: String) : RequestSubmissionResult
     data object AuthenticationRequired : RequestSubmissionResult
+}
+
+internal sealed interface RequestQueueVerification {
+    data object Queued : RequestQueueVerification
+    data object NotVisible : RequestQueueVerification
+    data object Unavailable : RequestQueueVerification
+}
+
+internal fun interface RequestQueueVerifier {
+    suspend fun verify(stationId: StationId, track: RequestableTrack): RequestQueueVerification
+}
+
+internal class StationRequestQueueVerifier(
+    private val remote: QueueRemoteDataSource = PlayerQueueRemoteDataSource(),
+) : RequestQueueVerifier {
+    override suspend fun verify(
+        stationId: StationId,
+        track: RequestableTrack,
+    ): RequestQueueVerification = runCatching {
+        val queued = remote.fetchForVerification(stationId).upcoming.any { candidate ->
+            TrackRequestAvailabilityResolver.matches(
+                track.identity,
+                RequestTrackIdentity(
+                    songId = candidate.songId,
+                    albumId = candidate.albumId,
+                    title = candidate.displayTitle,
+                    artist = candidate.artistName,
+                    albumTitle = candidate.albumTitle,
+                ),
+            )
+        }
+        if (queued) RequestQueueVerification.Queued else RequestQueueVerification.NotVisible
+    }.getOrElse { RequestQueueVerification.Unavailable }
 }
 
 internal interface SongRequestRemoteDataSource {
@@ -37,6 +73,7 @@ internal class StationSongRequestRemoteDataSource(
     private val parser: SongRequestPageParser = SongRequestPageParser(),
     private val sessionStore: AuthSessionStore = InMemoryAuthSessionStore(),
     private val sessions: StationAuthSessionCoordinator = StationAuthSessionCoordinator(sessionStore),
+    private val requestQueueVerifier: RequestQueueVerifier = UnavailableRequestQueueVerifier,
     private val connectionFactory: (URI) -> HttpURLConnection = {
         it.toURL().openConnection() as HttpURLConnection
     },
@@ -110,30 +147,49 @@ internal class StationSongRequestRemoteDataSource(
             ),
             authenticated = true,
             cookieManager = manager,
-            stopReadingWhen = ::containsTerminalRequestResponse,
+            referer = URI(origin).resolve("/modules.php?name=Album&asin=${encode(track.albumId)}"),
+            stopReadingWhen = { html -> containsTerminalRequestResponse(html, track.albumId) },
         )
-        val submission = classifySubmission(page.html)
+        val messageForm = requestMessageForm(stationId, track.albumId, page)
+        val submission = classifySubmission(page.html, hasAuthenticatedMessageForm = messageForm != null)
         if (submission == RequestSubmissionResult.AuthenticationRequired) {
             sessions.expire(stationId)
         }
-        if (submission !is RequestSubmissionResult.Submitted || message.isBlank()) {
+        if (submission !is RequestSubmissionResult.Submitted) {
             return@withContext submission
         }
 
-        val messageForm = requestMessageForm(stationId, track.albumId, page)
-            ?: return@withContext RequestSubmissionResult.Submitted(
-                "The station reported the request accepted, but did not provide a valid optional-message form. " +
-                    "The request was not retried.",
-            )
-        postOptionalMessage(
-            stationId,
-            message,
-            manager,
-            messageForm,
-        ) ?: RequestSubmissionResult.Submitted(
-            "The station reported the request accepted, but the optional message could not be confirmed. " +
-                "The request was not retried.",
+        // The station exposes the message form on its acknowledgement page. Submit it
+        // immediately, just as the website does; Queue visibility is a later, separate
+        // confirmation and must not suppress a valid optional message.
+        val messageStatus = if (message.isBlank()) {
+            null
+        } else {
+            postOptionalMessage(stationId, message, manager, checkNotNull(messageForm))
+                ?: "The optional message could not be confirmed."
+        }
+        finalizeSubmission(stationId, track, messageStatus)
+    }
+
+    private suspend fun finalizeSubmission(
+        stationId: StationId,
+        track: RequestableTrack,
+        messageStatus: String?,
+    ): RequestSubmissionResult {
+        val messageDetail = messageStatus?.let { " $it" }.orEmpty()
+        return when (requestQueueVerifier.verify(stationId, track)) {
+        RequestQueueVerification.Queued -> {
+            RequestSubmissionResult.Submitted("The request is confirmed in Queue.$messageDetail")
+        }
+        RequestQueueVerification.NotVisible -> RequestSubmissionResult.Unconfirmed(
+            "The station acknowledged the request, but it is not yet visible in Queue. " +
+                "It was not retried.$messageDetail",
         )
+        RequestQueueVerification.Unavailable -> RequestSubmissionResult.Unconfirmed(
+            "The station acknowledged the request, but Queue could not be checked. " +
+                "It was not retried.$messageDetail",
+        )
+        }
     }
 
     private fun requestMessageForm(
@@ -182,7 +238,7 @@ internal class StationSongRequestRemoteDataSource(
         message: String,
         manager: CookieManager,
         form: RequestMessageForm,
-    ): RequestSubmissionResult? {
+    ): String? {
         val messageResult = runCatching {
             request(
                 stationId,
@@ -202,20 +258,11 @@ internal class StationSongRequestRemoteDataSource(
         if (messageResult == null) return null
         val messageText = Jsoup.parse(messageResult.html).text().replace(Regex("\\s+"), " ").trim()
         return if (messageText.contains("log in", true) || messageText.contains("login", true)) {
-            RequestSubmissionResult.Submitted(
-                "The station reported the request accepted, but the optional message was not added because " +
-                    "the station sign-in expired.",
-            )
+            "The optional message was not added because the station sign-in expired."
         } else if (messageText.contains("message has been saved", true)) {
-            RequestSubmissionResult.Submitted(
-                "The station reported the request and optional message saved. " +
-                    "Confirm it in Queue before requesting again.",
-            )
+            "The optional message was saved."
         } else {
-            RequestSubmissionResult.Submitted(
-                "The station reported the request accepted, but the optional message response was not recognized. " +
-                    "The request was not retried.",
-            )
+            "The optional message response was not recognized."
         }
     }
 
@@ -231,23 +278,26 @@ internal class StationSongRequestRemoteDataSource(
         }
         .toMap()
 
-    private fun classifySubmission(html: String): RequestSubmissionResult {
+    private fun classifySubmission(
+        html: String,
+        hasAuthenticatedMessageForm: Boolean,
+    ): RequestSubmissionResult {
         val text = Jsoup.parse(html).text().replace(Regex("\\s+"), " ").trim()
         if (text.contains("log in", true) || text.contains("login", true) && text.contains("request", true)) {
             return RequestSubmissionResult.AuthenticationRequired
         }
+        if (hasAuthenticatedMessageForm && ACCEPTANCE_PATTERNS.any { it.containsMatchIn(text) }) {
+            return RequestSubmissionResult.Submitted(
+                "The station acknowledged the request. Confirm it in Queue before requesting again.",
+            )
+        }
         val rejection = REJECTION_PATTERNS.firstOrNull { it.containsMatchIn(text) }
         if (rejection != null) {
             return RequestSubmissionResult.Rejected(
-                text.take(MAX_NOTICE_CHARACTERS).ifBlank { "The station rejected this request." },
+                rejectionMessage(rejection),
             )
         }
-        if (ACCEPTANCE_PATTERNS.none { it.containsMatchIn(text) }) {
-            throw IOException("Unrecognized station request confirmation")
-        }
-        return RequestSubmissionResult.Submitted(
-            "The station reported the request accepted. Confirm it in Queue before requesting again.",
-        )
+        throw IOException("Unrecognized station request confirmation")
     }
 
     private fun request(
@@ -369,15 +419,32 @@ internal class StationSongRequestRemoteDataSource(
         return runCatching { Charset.forName(declared.orEmpty()) }.getOrDefault(StandardCharsets.ISO_8859_1)
     }
 
-    private fun containsCompleteMessageForm(html: String): Boolean {
-        val actionIndex = html.indexOf("submitmessage", ignoreCase = true)
-        return actionIndex >= 0 && html.indexOf("</form>", startIndex = actionIndex, ignoreCase = true) >= 0
+    private fun containsCompleteMessageForm(html: String, albumId: String): Boolean {
+        val form = Jsoup.parse(html).selectFirst(
+            "form:has(textarea[name=msg]):has([name=send]):has([name=remLen])",
+        ) ?: return false
+        val action = runCatching { URI(form.attr("action")) }.getOrNull() ?: return false
+        val parameters = runCatching { queryParameters(action) }.getOrNull() ?: return false
+        return action.path == "/modules.php" &&
+            parameters["name"] == "Album" &&
+            parameters["action"] == "submitmessage" &&
+            parameters["asin"] == albumId &&
+            parameters["id"]?.matches(NUMERIC_ID) == true &&
+            form.selectFirst("[name=send][value=Send]") != null
     }
 
-    private fun containsTerminalRequestResponse(html: String): Boolean {
-        if (containsCompleteMessageForm(html)) return true
+    private fun containsTerminalRequestResponse(html: String, albumId: String): Boolean {
         val text = Jsoup.parse(html).text().replace(Regex("\\s+"), " ").trim()
-        return REJECTION_PATTERNS.any { it.containsMatchIn(text) }
+        if (ACCEPTANCE_PATTERNS.any { it.containsMatchIn(text) } && containsCompleteMessageForm(html, albumId)) return true
+        return TERMINAL_REJECTION_PATTERNS.any { it.containsMatchIn(text) }
+    }
+
+    private fun rejectionMessage(rejection: Regex): String = when (rejection.pattern) {
+        "played recently" -> "The station reports this track was played recently."
+        "already (?:in|on) the queue" -> "The station reports this track is already in the queue."
+        "(?:request\\s+wait|cooldown|too soon to request|request limit)" ->
+            "The station reports that this account must wait before requesting again."
+        else -> "The station rejected this request. Check Queue before trying again."
     }
 
     private fun origin(stationId: StationId): String =
@@ -400,11 +467,14 @@ internal class StationSongRequestRemoteDataSource(
             Regex("played recently", RegexOption.IGNORE_CASE),
             Regex("cannot request", RegexOption.IGNORE_CASE),
             Regex("can only request", RegexOption.IGNORE_CASE),
-            Regex("not available", RegexOption.IGNORE_CASE),
+            Regex("(?:request|track) (?:is )?not available", RegexOption.IGNORE_CASE),
             Regex("already (?:in|on) the queue", RegexOption.IGNORE_CASE),
-            Regex("(?:wait|cooldown|too soon|request limit)", RegexOption.IGNORE_CASE),
+            Regex("(?:request\\s+wait|cooldown|too soon to request|request limit)", RegexOption.IGNORE_CASE),
             Regex("not eligible", RegexOption.IGNORE_CASE),
         )
+        val TERMINAL_REJECTION_PATTERNS = REJECTION_PATTERNS.filterNot {
+            it.pattern == "(?:request\\s+wait|cooldown|too soon to request|request limit)"
+        }
         val ACCEPTANCE_PATTERNS = listOf(
             Regex("request successful", RegexOption.IGNORE_CASE),
             Regex("request has successfully been delivered", RegexOption.IGNORE_CASE),
@@ -420,6 +490,13 @@ internal class StationSongRequestRemoteDataSource(
         val REDIRECT_HOSTS = mapOf(
             StationId("sst") to setOf("streamingsoundtracks.com", "www.streamingsoundtracks.com"),
         )
+    }
+
+    private data object UnavailableRequestQueueVerifier : RequestQueueVerifier {
+        override suspend fun verify(
+            stationId: StationId,
+            track: RequestableTrack,
+        ): RequestQueueVerification = RequestQueueVerification.Unavailable
     }
 
     private data class RequestMessageForm(

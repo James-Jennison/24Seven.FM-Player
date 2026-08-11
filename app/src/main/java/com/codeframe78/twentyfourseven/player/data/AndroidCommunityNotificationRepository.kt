@@ -27,6 +27,8 @@ class AndroidCommunityNotificationRepository internal constructor(
     context: Context,
     private val notifier: ChatMentionNotifier = AndroidChatMentionNotifier(context.applicationContext),
     preferencesName: String = PREFERENCES_NAME,
+    private val monitorController: ForegroundChatMonitorController =
+        AndroidForegroundChatMonitorController(context.applicationContext),
 ) : CommunityNotificationRepository {
     private val preferences = context.getSharedPreferences(preferencesName, Context.MODE_PRIVATE)
     private val settings = MutableStateFlow(readSettings())
@@ -39,9 +41,28 @@ class AndroidCommunityNotificationRepository internal constructor(
         val updatedIds = settings.value.chatMentionStationIds.toMutableSet().apply {
             if (enabled) add(canonicalStationId) else remove(canonicalStationId)
         }
-        settings.value = CommunityNotificationState(updatedIds)
-        preferences.edit().putStringSet(KEY_CHAT_MENTION_STATIONS, updatedIds.map { it.value }.toSet()).apply()
+        val stopMonitor = !enabled && settings.value.foregroundMonitorStationId == canonicalStationId
+        writeSettings(
+            CommunityNotificationState(
+                chatMentionStationIds = updatedIds,
+                foregroundMonitorStationId = if (stopMonitor) null else settings.value.foregroundMonitorStationId,
+            ),
+        )
+        if (stopMonitor) monitorController.stop(canonicalStationId)
         if (!enabled) trackers.remove(canonicalStationId)
+    }
+
+    override suspend fun setForegroundChatMonitorEnabled(stationId: StationId, enabled: Boolean) {
+        val canonicalStationId = stationId.canonicalized()
+        if (enabled) {
+            writeSettings(settings.value.copy(foregroundMonitorStationId = canonicalStationId))
+            if (!monitorController.start(canonicalStationId)) {
+                writeSettings(settings.value.copy(foregroundMonitorStationId = null))
+            }
+        } else if (settings.value.foregroundMonitorStationId == canonicalStationId) {
+            writeSettings(settings.value.copy(foregroundMonitorStationId = null))
+            monitorController.stop(canonicalStationId)
+        }
     }
 
     override fun processChatSnapshot(snapshot: ChatMentionSnapshot) {
@@ -54,14 +75,48 @@ class AndroidCommunityNotificationRepository internal constructor(
         val stationIds = preferences.getStringSet(KEY_CHAT_MENTION_STATIONS, emptySet()).orEmpty()
             .mapNotNull(String::toSupportedStationIdOrNull)
             .toSet()
-        preferences.edit().putStringSet(KEY_CHAT_MENTION_STATIONS, stationIds.map { it.value }.toSet()).apply()
-        return CommunityNotificationState(chatMentionStationIds = stationIds)
+        val monitoredStation = preferences.getString(KEY_FOREGROUND_MONITOR_STATION, null)
+            ?.toSupportedStationIdOrNull()
+        val state = CommunityNotificationState(stationIds, monitoredStation)
+        writePreferences(state)
+        return state
+    }
+
+    private fun writeSettings(updated: CommunityNotificationState) {
+        settings.value = updated
+        writePreferences(updated)
+    }
+
+    private fun writePreferences(updated: CommunityNotificationState) {
+        preferences.edit()
+            .putStringSet(KEY_CHAT_MENTION_STATIONS, updated.chatMentionStationIds.map { it.value }.toSet())
+            .putString(KEY_FOREGROUND_MONITOR_STATION, updated.foregroundMonitorStationId?.value)
+            .apply()
     }
 
     internal companion object {
         const val EXTRA_CHAT_STATION_ID = "community_chat_station_id"
         private const val PREFERENCES_NAME = "community_notifications"
         private const val KEY_CHAT_MENTION_STATIONS = "chat_mention_stations"
+        private const val KEY_FOREGROUND_MONITOR_STATION = "foreground_monitor_station"
+    }
+}
+
+internal interface ForegroundChatMonitorController {
+    fun start(stationId: StationId): Boolean
+
+    fun stop(stationId: StationId)
+}
+
+private class AndroidForegroundChatMonitorController(
+    private val context: Context,
+) : ForegroundChatMonitorController {
+    override fun start(stationId: StationId): Boolean = runCatching {
+        context.startForegroundService(ChatMentionMonitorService.startIntent(context, stationId))
+    }.isSuccess
+
+    override fun stop(stationId: StationId) {
+        context.stopService(ChatMentionMonitorService.stopIntent(context, stationId))
     }
 }
 

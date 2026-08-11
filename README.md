@@ -36,14 +36,14 @@ The [comprehensive project portal](https://codeframe78.github.io/24Seven.FM-Play
 The canonical roadmap now runs from **M01 through M60**. **M01–M28 and M31–M35 are complete**, preserving 33 verified achievements. The active Alpha-readiness program is **M29–M35** with two gates still open; authorized closed-app community delivery is **M36–M38**; candidate delivery and publication are **M39–M41**.
 
 > [!IMPORTANT]
-> **Current focus:** close M29–M35 without weakening external approval, security, accessibility, signing, or request-integrity gates. M36–M38 cannot begin until an authorized event source exists, and M41 requires explicit publication authorization.
+> **Current focus:** close M29–M35 without weakening external approval, security, accessibility, signing, or request-integrity gates. A user-started one-station foreground Chat monitor is authorized as a local interim delivery mode; M36–M38 remain the server-event-source path, and M41 requires explicit publication authorization.
 
 <details>
 <summary><strong>Explore the current Alpha capability and validation summary</strong></summary>
 
 The current Alpha provides a responsive native player, service-owned Media3 playback and Sleep Timer, Android-managed audio-output selection, five-station navigation, device-local startup preferences, live metadata and artwork, Queue/History, five isolated station accounts with Android-protected sessions, Chat, song requests, Favorites, verified SST request activity, fixed-recipient Contact handoff, and user-reviewed privacy-safe diagnostics. Request availability is conservatively revalidated against fresh Queue and recent-play data before a one-shot submission, including stable indexed handling for 1,500-track Favorites lists.
 
-Public community content remains behind the adult age screen, versioned Terms acceptance, and separate mature-content reveal. Native report actions prepare bounded, station-scoped email drafts addressed to the monitored moderation contact for user review and explicit sending; Contact Us uses the same fixed-recipient handoff. Station-scoped local block controls are implemented. M27 supplies opt-in exact-name Chat-mention detection only while the existing Chat feed is actively observed; it is not closed-app push. Reliable delivery remains M36–M38 and will not be imitated with perpetual background polling.
+Public community content remains behind the adult age screen, versioned Terms acceptance, and separate mature-content reveal. Native report actions prepare bounded, station-scoped email drafts addressed to the monitored moderation contact for user review and explicit sending; Contact Us uses the same fixed-recipient handoff. Station-scoped local block controls are implemented. M27 supplies opt-in exact-name Chat-mention detection while Chat is open; a separately enabled foreground monitor may poll one signed-in station about once a minute with a persistent Android notification and Stop action. It is not server push; reliable event delivery remains M36–M38.
 
 The validated baseline includes 163 unit tests, debug lint and release checks, API 26–36 coverage, a 16 KB runtime, Pixel Fold and Tablet layouts, large-text and accessibility checks, network loss/recovery, physical Motorola Razr lifecycle checks, and human TalkBack plus Bluetooth keyboard/pointer acceptance on the signed Razr release. M32 adds a genuine foreign-package controller harness and focused 20/20 Razr security evidence; M33 adds fresh station/account/Queue/readiness request validation, bounded duplicate suppression, and a focused physical-Razr confirmation check; M35 adds a protected current-head signing path, exact upload-certificate verification, and local release clean/update evidence on the Razr. Evidence remains in the milestone documents linked from the [canonical roadmap](docs/ROADMAP.md).
 
@@ -86,7 +86,7 @@ notes remain in [MILESTONE_FORECAST.md](docs/MILESTONE_FORECAST.md).
 | M46 Architecture sustainability | 1–3 active weeks per approved slice |
 | M47–M50 Private Messages | External repair first; then 1–3, 1–2, 1–2, and 2–4 active weeks respectively |
 | M51–M54 Forum | Retired by project decision; no implementation forecast |
-| M55 Cast feasibility | 2–4 active weeks; may end in an explicit no-go |
+| M55 Cast | Deferred by product decision; no implementation forecast |
 | M56–M57 Station/account research | 1–3 active weeks each |
 | M58–M60 VIP/RIP commerce | 2–4 active weeks for architecture with external contract timing, then 3–6 and 2–4 active weeks |
 
@@ -106,7 +106,7 @@ notes remain in [MILESTONE_FORECAST.md](docs/MILESTONE_FORECAST.md).
 - **Authorization-gated:** M36–M38 require an approved station-side event source or privacy-compatible relay before implementation.
 - **Publication:** M39–M41 deliberately separate candidate freeze, Play delivery, and the final user-authorized Alpha action.
 - **Production:** M42–M45 add stabilization, production-access evidence, staged release, and operational recertification.
-- **Deferred/future:** Private Messages remain excluded until M47 repairs and verifies server delivery. M51–M54 are retired by project decision: the Player will not expose, retrieve, or participate in station Forums; the historical research remains retained as evidence. Google Cast remains a feasibility gate at M55, and native VIP/RIP commerce is authorization-gated across M58–M60.
+- **Deferred/future:** Private Messages remain excluded until M47 repairs and verifies server delivery. M51–M54 are retired by project decision: the Player will not expose, retrieve, or participate in station Forums; the historical research remains retained as evidence. Google Cast is an optional deferred M55 scope, and native VIP/RIP commerce is authorization-gated across M58–M60.
 - **Testing:** the [Product Testing catalog](https://codeframe78.github.io/24Seven.FM-Player/project/product-testing/) now contains 35 stable test cases covering the current product, Alpha gates, release campaigns, and capability-gated future slices. PT-29–PT-31 were retired with the permanent removal of Forum scope. PT-35 is the exact-artifact M29 Play declaration/privacy/reviewer-access case; PT-36–PT-38 define the future authorized VIP/RIP purchase, activation, and lifecycle evidence.
 
 Use these sources as the current planning authority:

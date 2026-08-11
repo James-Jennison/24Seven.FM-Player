@@ -48,7 +48,8 @@ internal class StationAuthRemoteDataSource(
 
     override suspend fun fetchChallenge(stationId: StationId): LoginChallenge = withContext(Dispatchers.IO) {
         val origin = origin(stationId)
-        parser.parse(request(stationId, URI(origin), method = "GET").html, origin)
+        val accountPage = URI(origin).resolve("/modules.php?name=Your_Account")
+        parser.parse(request(stationId, accountPage, method = "GET").html, origin)
     }
 
     override suspend fun signIn(
@@ -60,13 +61,11 @@ internal class StationAuthRemoteDataSource(
     ): AuthenticatedPage = withContext(Dispatchers.IO) {
         val origin = origin(stationId)
         requireSameOrigin(challenge.actionUrl, origin)
-        val body = listOf(
+        val body = (challenge.hiddenFields.map { it.name to it.value } + listOf(
             "username" to username,
             "user_password" to password,
-            "gfx_check" to securityCode,
-            "random_num" to challenge.challengeToken,
-            "op" to "login",
-        ).joinToString("&") { (name, value) -> "${encode(name)}=${encode(value)}" }
+            challenge.answerFieldName to securityCode,
+        )).joinToString("&") { (name, value) -> "${encode(name)}=${encode(value)}" }
         request(stationId, URI(challenge.actionUrl), method = "POST", body = body)
     }
 

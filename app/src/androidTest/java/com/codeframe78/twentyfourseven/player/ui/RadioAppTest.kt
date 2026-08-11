@@ -165,6 +165,34 @@ class RadioAppTest {
     }
 
     @Test
+    fun squareCoverWindowUsesMenuNavigationAndKeepsPlaybackControlsVisible() {
+        composeRule.setContent {
+            var state by remember { mutableStateOf(sampleState()) }
+            MaterialTheme {
+                Box(Modifier.requiredSize(400.dp, 400.dp)) {
+                    RadioApp(
+                        state = state,
+                        onSelectStation = {},
+                        onSelectDestination = { state = state.copy(destination = it) },
+                        onPlay = {},
+                        onPause = {},
+                        onStop = {},
+                        onRefreshQueue = {},
+                    )
+                }
+            }
+        }
+
+        composeRule.onNodeWithTag("cover_navigation_menu").assertIsDisplayed()
+        composeRule.onNodeWithTag("phone_navigation_bar").assertDoesNotExist()
+        composeRule.onNodeWithTag("primary_play_pause").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Open navigation").performClick()
+        composeRule.onNodeWithContentDescription("Queue").performClick()
+        composeRule.onNodeWithText("No supported queue or history source has been verified for this station yet.")
+            .assertIsDisplayed()
+    }
+
+    @Test
     fun navigationAdaptsAcrossWidthChangesWithoutLosingDestination() {
         var containerWidth by mutableStateOf(430.dp)
         val queueState = sampleState().copy(destination = MainDestination.Queue)
@@ -657,6 +685,37 @@ class RadioAppTest {
         composeRule.onNodeWithText("Password").assertExists()
         composeRule.onNodeWithText("Security code").assertExists()
         composeRule.onNodeWithText("Sign in to SST").assertExists()
+    }
+
+    @Test
+    fun signedOutAccountRendersTextAntiSpamCheckWithoutWebContent() {
+        composeRule.setContent {
+            MaterialTheme {
+                RadioApp(
+                    state = sampleState().copy(
+                        destination = MainDestination.More,
+                        selectedStation = station.copy(
+                            capabilities = StationCapabilities(supportsAuthentication = true),
+                        ),
+                        auth = AuthState(
+                            station.id,
+                            AuthStatus.SignedOut,
+                            antiSpamPrompt = "Anti-spam check: Type the word “sound” below.",
+                        ),
+                    ),
+                    onSelectStation = {},
+                    onSelectDestination = {},
+                    onPlay = {},
+                    onPause = {},
+                    onStop = {},
+                    onRefreshQueue = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("Anti-spam check: Type the word “sound” below.").assertExists()
+        composeRule.onNodeWithText("Anti-spam answer").assertExists()
+        composeRule.onNodeWithText("Security code").assertDoesNotExist()
     }
 
     @Test

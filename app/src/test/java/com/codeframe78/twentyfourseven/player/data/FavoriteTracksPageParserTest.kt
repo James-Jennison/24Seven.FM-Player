@@ -50,7 +50,7 @@ class FavoriteTracksPageParserTest {
               </tr>
               <tr>
                 <td>5</td>
-                <td><img title="The artist is already in queue."></td>
+                <td><img src="/images/requestbutton_unavailable.gif" title="The artist is already in queue."></td>
                 <td><span><b>Unavailable Track</b></span><br><span>Example Album</span></td>
                 <td><span><b>Example Artist</b></span><br><span>Game</span></td>
                 <td>2020</td><td>3:10</td><td></td><td></td>
@@ -72,5 +72,25 @@ class FavoriteTracksPageParserTest {
         assertFalse(tracks[1].availabilityMessage.isNullOrBlank())
         assertEquals("The artist is already in queue.", tracks[1].availabilityMessage)
         assertEquals(TrackRequestStatus.RequestsUnavailable, tracks[1].availability.status)
+    }
+
+    @Test
+    fun `ignores station navigation imagery when no request control is present`() {
+        val tracks = parser.parseTracks(
+            """
+                <table><tr>
+                  <td>6</td>
+                  <td><img src="/images/station-logo.png" title="Station account navigation"></td>
+                  <td><span>Track title</span><span>Album title</span></td>
+                  <td><span>Artist</span><span>Soundtrack</span></td>
+                  <td>2020</td><td>3:10</td><td></td><td></td>
+                </tr></table>
+            """.trimIndent(),
+            origin,
+        )
+
+        assertEquals(1, tracks.size)
+        assertNull(tracks.single().availabilityMessage)
+        assertEquals(TrackRequestStatus.Unknown, tracks.single().availability.status)
     }
 }

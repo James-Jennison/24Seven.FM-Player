@@ -13,10 +13,11 @@ import java.io.IOException
 
 class NetworkAuthRepositoryTest {
     private val stationId = StationId("sst")
-    private val challenge = LoginChallenge(
-        "https://streamingsoundtracks.com/modules.php?name=Your_Account",
-        "https://streamingsoundtracks.com/security-code.png",
-        "123456",
+    private val challenge = LoginChallenge.Image(
+        actionUrl = "https://streamingsoundtracks.com/modules.php?name=Your_Account",
+        imageUrl = "https://streamingsoundtracks.com/security-code.png",
+        answerFieldName = "gfx_check",
+        hiddenFields = listOf(LoginFormField("random_num", "123456"), LoginFormField("op", "login")),
     )
 
     @Test
@@ -49,7 +50,24 @@ class NetworkAuthRepositoryTest {
         assertEquals(AuthStatus.Error, state.status)
         assertEquals(2, remote.challengeCalls)
         assertEquals(challenge.imageUrl, state.challengeImageUrl)
-        assertEquals("Sign in failed. Check your details and the new security code.", state.errorMessage)
+        assertEquals("Sign in failed. Check your details and the new anti-spam check.", state.errorMessage)
+    }
+
+    @Test
+    fun `text anti-spam challenge is exposed without an image`() = runTest {
+        val textChallenge = LoginChallenge.Text(
+            actionUrl = "https://streamingsoundtracks.com/modules.php?name=Your_Account",
+            prompt = "Anti-spam check: Type the word “sound” below.",
+            answerFieldName = "anti_spam_answer",
+            hiddenFields = listOf(LoginFormField("op", "login")),
+        )
+        val repository = NetworkAuthRepository(FakeAuthRemoteDataSource(textChallenge))
+
+        repository.refreshChallenge(stationId)
+
+        val state = repository.observeAuth(stationId).first()
+        assertNull(state.challengeImageUrl)
+        assertEquals("Anti-spam check: Type the word “sound” below.", state.antiSpamPrompt)
     }
 
     @Test

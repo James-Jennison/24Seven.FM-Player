@@ -32,6 +32,9 @@ data class ChatState(
 interface ChatRepository {
     fun observeChat(stationId: StationId): Flow<ChatState>
 
+    /** Observes cached state without creating a second polling loop. */
+    fun observeCachedChat(stationId: StationId): Flow<ChatState>
+
     suspend fun refresh(stationId: StationId)
 
     suspend fun sendMessage(stationId: StationId, message: String)

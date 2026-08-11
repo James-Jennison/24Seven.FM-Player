@@ -73,6 +73,35 @@ class PlayerQueueResponseParserTest {
     }
 
     @Test
+    fun `parses the current station queue markup`() {
+        val result = parser.parseExtended(
+            extendedPage(
+                queue = """
+                    <tr>
+                      <td><span class="glowing-rank">1</span><br>4:08</td>
+                      <td><a href="/modules.php?name=Album&amp;asin=ALBUM_1"><img src="/covers/queue.jpg"></a></td>
+                      <td><b>Current artist</b> - Current album<br>
+                        <span style="color: #AAAAAA;">Current title</span>
+                        <br><span class="req-text"><a href="/modules.php?name=Your_Account&amp;op=userinfo&amp;username=Listener"><b>Listener</b></a></span>
+                      </td>
+                    </tr>
+                """.trimIndent(),
+                history = "",
+            ),
+            "https://1980s.fm/",
+        )
+
+        with(result.upcoming.single()) {
+            assertEquals(1, position)
+            assertEquals("Current title", displayTitle)
+            assertEquals("Current artist", artistName)
+            assertEquals("Current album", albumTitle)
+            assertEquals("ALBUM_1", albumId)
+            assertEquals("Listener", requesterName)
+        }
+    }
+
+    @Test
     fun `ignores malformed requester labels without changing track fields`() {
         val result = parser.parseExtended(
             extendedPage(
@@ -101,6 +130,22 @@ class PlayerQueueResponseParserTest {
         assertEquals(30, result.recentlyPlayed.size)
         assertEquals(30, result.upcoming.last().position)
         assertEquals("Played track 30", result.recentlyPlayed.last().displayTitle)
+    }
+
+    @Test
+    fun `supports a larger bounded queue snapshot for request verification`() {
+        val queue = (1..124).joinToString("") { position ->
+            extendedRow(position, title = "Queue track $position")
+        }
+
+        val result = parser.parseExtended(
+            extendedPage(queue, history = ""),
+            "https://entranced.fm/",
+            maxTracks = 500,
+        )
+
+        assertEquals(124, result.upcoming.size)
+        assertEquals(124, result.upcoming.last().position)
     }
 
     private fun response(queue: String, history: String) = JSONObject()

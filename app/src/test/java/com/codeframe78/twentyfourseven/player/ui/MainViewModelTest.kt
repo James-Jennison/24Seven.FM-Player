@@ -422,7 +422,7 @@ class MainViewModelTest {
     }
 
     @Test
-    fun `request confirmation refreshes and forwards station scoped preflight context`() = runTest(dispatcher) {
+    fun `request confirmation opens Queue and refreshes it after submission`() = runTest(dispatcher) {
         val stationId = StationId("sst")
         val queue = FakeQueueRepository().apply {
             emit(QueueState(stationId, QueueLoadStatus.Ready))
@@ -458,7 +458,7 @@ class MainViewModelTest {
         advanceUntilIdle()
 
         assertEquals(stationId, queue.refreshedStation)
-        assertEquals(listOf(stationId), activity.refreshedStations)
+        assertEquals(emptyList<StationId>(), activity.refreshedStations)
         assertEquals(stationId, requests.confirmedStation)
         assertEquals("One request", requests.confirmedMessage)
         assertEquals(AuthStatus.SignedIn, requests.confirmedContext?.auth?.status)
@@ -688,7 +688,7 @@ class MainViewModelTest {
     }
 
     @Test
-    fun `favorites recalculate when selected station queue changes`() = runTest(dispatcher) {
+    fun `favorites retain station-provided requestability when queue changes`() = runTest(dispatcher) {
         val stationId = StationId("sst")
         val queue = FakeQueueRepository()
         val favoriteRequest = RequestableTrack(
@@ -749,7 +749,7 @@ class MainViewModelTest {
         )
         advanceUntilIdle()
 
-        assertEquals(TrackRequestStatus.InCurrentQueue, viewModel.uiState.value.favorites?.tracks?.single()?.availability?.status)
+        assertEquals(TrackRequestStatus.Available, viewModel.uiState.value.favorites?.tracks?.single()?.availability?.status)
         assertEquals(1, queue.activeObservations)
     }
 
@@ -1010,6 +1010,8 @@ class MainViewModelTest {
                 }
             }
         }
+
+        override fun observeCachedChat(stationId: StationId): Flow<ChatState> = state(stationId)
 
         override suspend fun refresh(stationId: StationId) {
             refreshedStation = stationId

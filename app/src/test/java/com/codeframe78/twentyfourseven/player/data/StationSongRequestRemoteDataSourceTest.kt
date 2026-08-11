@@ -5,6 +5,7 @@ import com.codeframe78.twentyfourseven.player.domain.RequestSearchTarget
 import com.codeframe78.twentyfourseven.player.domain.RequestableTrack
 import com.codeframe78.twentyfourseven.player.domain.RequestSuggestionMode
 import com.codeframe78.twentyfourseven.player.domain.StationId
+import com.codeframe78.twentyfourseven.player.domain.QueueTrack
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -34,7 +35,10 @@ class StationSongRequestRemoteDataSourceTest {
             )
         }
         val connections = mutableListOf<FakeConnection>()
-        val remote = StationSongRequestRemoteDataSource(sessionStore = store) { uri ->
+        val remote = StationSongRequestRemoteDataSource(
+            sessionStore = store,
+            requestQueueVerifier = queuedRequestVerifier,
+        ) { uri ->
             when (connections.size) {
                 0 -> FakeConnection(
                     uri.toURL(),
@@ -68,6 +72,10 @@ class StationSongRequestRemoteDataSourceTest {
         assertEquals(3, connections.size)
         assertEquals("GET", connections[0].requestMethod)
         assertTrue(connections[0].url.file.contains("songID=263260"))
+        assertEquals(
+            "https://streamingsoundtracks.com/modules.php?name=Album&asin=B00005BG8G",
+            connections[0].capturedRequestProperties["Referer"],
+        )
         assertEquals("https", connections[1].url.protocol)
         assertEquals("POST", connections[2].requestMethod)
         assertEquals(
@@ -163,7 +171,10 @@ class StationSongRequestRemoteDataSourceTest {
               <input name="remLen" value="80" readonly>
             </form>
         """.trimIndent()
-        val remote = StationSongRequestRemoteDataSource(sessionStore = store) { uri ->
+        val remote = StationSongRequestRemoteDataSource(
+            sessionStore = store,
+            requestQueueVerifier = queuedRequestVerifier,
+        ) { uri ->
             when (connections.size) {
                 0 -> FakeConnection(uri.toURL(), acceptedPrefix + "x".repeat(1_000_000))
                 else -> FakeConnection(uri.toURL(), "Your message has been saved." + "x".repeat(1_000_000))
@@ -174,11 +185,69 @@ class StationSongRequestRemoteDataSourceTest {
 
         assertEquals(
             RequestSubmissionResult.Submitted(
-                "The station reported the request and optional message saved. " +
-                    "Confirm it in Queue before requesting again.",
+                "The request is confirmed in Queue. The optional message was saved.",
             ),
             result,
         )
+        assertEquals(2, connections.size)
+        assertEquals("POST", connections[1].requestMethod)
+    }
+
+    @Test
+    fun `site navigation form does not preempt the accepted request message form`() = runTest {
+        val connections = mutableListOf<FakeConnection>()
+        val response = """
+            <form action="/modules.php?name=Search&amp;action=submitmessage"><input name="send" value="Send"></form>
+            Your request has successfully been delivered to the DJ application.
+            <form action="/modules.php?name=Album&amp;action=submitmessage&amp;asin=B00005BG8G&amp;id=2055716">
+              <textarea name="msg"></textarea>
+              <input name="send" type="submit" value="Send">
+              <input name="remLen" value="80" readonly>
+            </form>
+        """.trimIndent()
+        val remote = StationSongRequestRemoteDataSource(
+            sessionStore = sessionStore(),
+            requestQueueVerifier = queuedRequestVerifier,
+        ) { uri ->
+            when (connections.size) {
+                0 -> FakeConnection(uri.toURL(), response)
+                else -> FakeConnection(uri.toURL(), "Your message has been saved.")
+            }.also(connections::add)
+        }
+
+        assertEquals(
+            RequestSubmissionResult.Submitted(
+                "The request is confirmed in Queue. The optional message was saved.",
+            ),
+            remote.submit(stationId, track(), "M10 Android app test"),
+        )
+        assertEquals(2, connections.size)
+        assertEquals("POST", connections[1].requestMethod)
+    }
+
+    @Test
+    fun `post success cooldown does not preempt the accepted request message form`() = runTest {
+        val connections = mutableListOf<FakeConnection>()
+        val response = """
+            Request Wait: 60 Minutes
+            Your request has successfully been delivered to the DJ application.
+            <form action="/modules.php?name=Album&amp;action=submitmessage&amp;asin=B00005BG8G&amp;id=2055716">
+              <textarea name="msg"></textarea>
+              <input name="send" type="submit" value="Send">
+              <input name="remLen" value="80" readonly>
+            </form>
+        """.trimIndent()
+        val remote = StationSongRequestRemoteDataSource(
+            sessionStore = sessionStore(),
+            requestQueueVerifier = queuedRequestVerifier,
+        ) { uri ->
+            when (connections.size) {
+                0 -> FakeConnection(uri.toURL(), response)
+                else -> FakeConnection(uri.toURL(), "Your message has been saved.")
+            }.also(connections::add)
+        }
+
+        assertTrue(remote.submit(stationId, track(), "M10 Android app test") is RequestSubmissionResult.Submitted)
         assertEquals(2, connections.size)
         assertEquals("POST", connections[1].requestMethod)
     }
@@ -205,6 +274,97 @@ class StationSongRequestRemoteDataSourceTest {
         assertEquals("Unrecognized station request confirmation", failure?.message)
         assertEquals(1, connections.size)
         assertEquals("GET", connections.single().requestMethod)
+    }
+
+    @Test
+    fun `generic success text without the authenticated message form is not accepted`() = runTest {
+        val connections = mutableListOf<FakeConnection>()
+        val remote = StationSongRequestRemoteDataSource(sessionStore = sessionStore()) { uri ->
+            FakeConnection(uri.toURL(), "Request successful").also(connections::add)
+        }
+
+        val failure = runCatching {
+            remote.submit(stationId, track(), "M10 Android app test")
+        }.exceptionOrNull()
+
+        assertTrue(failure is IOException)
+        assertEquals("Unrecognized station request confirmation", failure?.message)
+        assertEquals(1, connections.size)
+    }
+
+    @Test
+    fun `station acknowledgement without a queue match is not reported as submitted`() = runTest {
+        val response = """
+            Your request has successfully been delivered to the DJ application.
+            <form action="/modules.php?name=Album&amp;action=submitmessage&amp;asin=B00005BG8G&amp;id=2055716">
+              <textarea name="msg"></textarea>
+              <input name="send" type="submit" value="Send">
+              <input name="remLen" value="80" readonly>
+            </form>
+        """.trimIndent()
+        val remote = StationSongRequestRemoteDataSource(
+            sessionStore = sessionStore(),
+            requestQueueVerifier = RequestQueueVerifier { _, _ -> RequestQueueVerification.NotVisible },
+        ) { uri -> FakeConnection(uri.toURL(), response) }
+
+        assertEquals(
+            RequestSubmissionResult.Unconfirmed(
+                "The station acknowledged the request, but it is not yet visible in Queue. It was not retried.",
+            ),
+            remote.submit(stationId, track(), ""),
+        )
+    }
+
+    @Test
+    fun `optional message is submitted before an unconfirmed queue check`() = runTest {
+        val connections = mutableListOf<FakeConnection>()
+        val response = """
+            Your request has successfully been delivered to the DJ application.
+            <form action="/modules.php?name=Album&amp;action=submitmessage&amp;asin=B00005BG8G&amp;id=2055716">
+              <textarea name="msg"></textarea>
+              <input name="send" type="submit" value="Send">
+              <input name="remLen" value="80" readonly>
+            </form>
+        """.trimIndent()
+        val remote = StationSongRequestRemoteDataSource(
+            sessionStore = sessionStore(),
+            requestQueueVerifier = RequestQueueVerifier { _, _ -> RequestQueueVerification.NotVisible },
+        ) { uri ->
+            val body = if (connections.isEmpty()) response else "Your message has been saved."
+            FakeConnection(uri.toURL(), body).also(connections::add)
+        }
+
+        assertEquals(
+            RequestSubmissionResult.Unconfirmed(
+                "The station acknowledged the request, but it is not yet visible in Queue. " +
+                    "It was not retried. The optional message was saved.",
+            ),
+            remote.submit(stationId, track(), "Great choice!"),
+        )
+        assertEquals(2, connections.size)
+        assertEquals("POST", connections[1].requestMethod)
+    }
+
+    @Test
+    fun `queue verification matches the current SST album and title shape`() = runTest {
+        val verifier = StationRequestQueueVerifier(
+            object : QueueRemoteDataSource {
+                override suspend fun fetch(stationId: StationId) = QueuePayload(
+                    upcoming = listOf(
+                        QueueTrack(
+                            position = 4,
+                            displayTitle = "Just Testing",
+                            albumId = "B00005BG8G",
+                            artistName = "Example Composer",
+                            albumTitle = "Example Album",
+                        ),
+                    ),
+                    recentlyPlayed = emptyList(),
+                )
+            },
+        )
+
+        assertEquals(RequestQueueVerification.Queued, verifier.verify(stationId, track()))
     }
 
     @Test
@@ -258,6 +418,11 @@ class StationSongRequestRemoteDataSourceTest {
 
     private fun track() = RequestableTrack("B00005BG8G", "263260", "Just Testing", eligible = true)
 
+    private companion object {
+        val queuedRequestVerifier = RequestQueueVerifier { _, _ -> RequestQueueVerification.Queued }
+        val stationId = StationId("sst")
+    }
+
     private class FakeConnection(
         url: URL,
         private val response: String,
@@ -279,9 +444,5 @@ class StationSongRequestRemoteDataSourceTest {
         override fun setRequestProperty(key: String, value: String) {
             capturedRequestProperties[key] = value
         }
-    }
-
-    private companion object {
-        val stationId = StationId("sst")
     }
 }

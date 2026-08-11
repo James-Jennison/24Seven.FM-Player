@@ -7,7 +7,7 @@ import org.junit.Test
 
 class TrackRequestAvailabilityResolverTest {
     @Test
-    fun `queued and recently played tracks keep distinct internal states`() {
+    fun `queue observations do not override station-provided requestability`() {
         val queued = readyQueue(
             upcoming = listOf(
                 QueueTrack(
@@ -31,17 +31,17 @@ class TrackRequestAvailabilityResolverTest {
         )
 
         assertEquals(
-            TrackRequestStatus.InCurrentQueue,
+            TrackRequestStatus.Available,
             TrackRequestAvailabilityResolver.resolve(stationId, identity, available, queued).status,
         )
         assertEquals(
-            TrackRequestStatus.RecentlyPlayed,
+            TrackRequestStatus.Available,
             TrackRequestAvailabilityResolver.resolve(stationId, identity, available, played).status,
         )
     }
 
     @Test
-    fun `matching is station scoped and never uses title alone`() {
+    fun `identity matching never uses title alone`() {
         val otherStationQueue = QueueState(
             StationId("dfm"),
             QueueLoadStatus.Ready,
@@ -49,31 +49,24 @@ class TrackRequestAvailabilityResolverTest {
         )
         val titleOnlyQueue = readyQueue(upcoming = listOf(QueueTrack(1, "Example Track")))
 
-        assertEquals(
-            TrackRequestStatus.StationUnavailable,
-            TrackRequestAvailabilityResolver.resolve(stationId, identity, available, otherStationQueue).status,
-        )
+        assertEquals(TrackRequestStatus.Available, TrackRequestAvailabilityResolver.resolve(stationId, identity, available, otherStationQueue).status)
         assertFalse(
             TrackRequestAvailabilityResolver.matches(
                 identity.copy(albumId = null, artist = null, albumTitle = null),
                 RequestTrackIdentity(title = "Example Track"),
             ),
         )
-        assertEquals(
-            TrackRequestStatus.RequestsUnavailable,
-            TrackRequestAvailabilityResolver.resolve(stationId, identity, available, titleOnlyQueue).status,
-        )
+        assertEquals(TrackRequestStatus.Available, TrackRequestAvailabilityResolver.resolve(stationId, identity, available, titleOnlyQueue).status)
     }
 
     @Test
-    fun `stale or missing queue never exposes request now`() {
+    fun `stale or missing queue does not override a station request link`() {
         val loading = QueueState(stationId, QueueLoadStatus.Loading)
 
         val result = TrackRequestAvailabilityResolver.resolve(stationId, identity, available, loading)
 
-        assertEquals(TrackRequestStatus.RequestsUnavailable, result.status)
-        assertFalse(result.canRequest)
-        assertTrue(result.detail.orEmpty().contains("Queue status"))
+        assertEquals(TrackRequestStatus.Available, result.status)
+        assertTrue(result.canRequest)
     }
 
     @Test
@@ -123,8 +116,8 @@ class TrackRequestAvailabilityResolverTest {
 
         assertEquals(1_500, resolved.size)
         assertEquals(TrackRequestStatus.Available, resolved.first().status)
-        assertEquals(TrackRequestStatus.InCurrentQueue, resolved[749].status)
-        assertEquals(TrackRequestStatus.RecentlyPlayed, resolved[1_249].status)
+        assertEquals(TrackRequestStatus.Available, resolved[749].status)
+        assertEquals(TrackRequestStatus.Available, resolved[1_249].status)
         assertEquals(TrackRequestStatus.Available, resolved.last().status)
     }
 

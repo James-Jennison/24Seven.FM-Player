@@ -34,9 +34,10 @@ internal fun RequestConfirmationDialog(
     val track = prepared.track
     val availability = requests.tracks.firstOrNull { it.songId == track.songId }?.availability
         ?: track.availability
+    var confirmationStarted by remember(prepared.stationId, track.albumId, track.songId) { mutableStateOf(false) }
     var requestMessage by remember(track.albumId, track.songId) { mutableStateOf("") }
     AlertDialog(
-        onDismissRequest = onCancelRequest,
+        onDismissRequest = { if (!confirmationStarted) onCancelRequest() },
         title = { Text("Request this track?") },
         text = {
             Column(
@@ -59,6 +60,12 @@ internal fun RequestConfirmationDialog(
                 RequestStatusIndicator(availability)
                 availability.detail?.let { detail ->
                     Text(detail, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                if (confirmationStarted) {
+                    Text(
+                        "Checking current station status…",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
                 if (!state.communitySafety.canContributeCommunityContent) {
                     Text(
@@ -90,8 +97,11 @@ internal fun RequestConfirmationDialog(
         },
         confirmButton = {
             Button(
-                onClick = { onConfirmRequest(requestMessage) },
-                enabled = requests.status != SongRequestLoadStatus.Submitting &&
+                onClick = {
+                    confirmationStarted = true
+                    onConfirmRequest(requestMessage)
+                },
+                enabled = !confirmationStarted && requests.status != SongRequestLoadStatus.Submitting &&
                     availability.canRequest && state.communitySafety.canContributeCommunityContent &&
                     state.selectedStation?.id == prepared.stationId &&
                     state.auth?.displayName?.trim() == prepared.accountDisplayName,

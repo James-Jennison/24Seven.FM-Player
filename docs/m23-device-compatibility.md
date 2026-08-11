@@ -7,7 +7,8 @@ not a list of hard-coded device models.
 ## Supported runtime and layout contract
 
 - Android 8.0 / API 26 is the minimum runtime; Android 16 / API 36 is both the target and compile level.
-- Compact windows below 600dp use bottom navigation. Medium and expanded windows use a navigation rail.
+- Most compact windows below 600dp use bottom navigation. Medium and expanded windows use a navigation rail.
+- Small near-square compact windows (no more than 480dp in either dimension) use a cover-display shell: menu navigation and a control-first Player. This is window-driven, not a device-name check.
 - The Player switches from a vertically scrollable compact layout to a two-pane artwork/details layout at 840dp.
 - Selected station, destination, playback state, and the service-owned media session are not recreated or duplicated
   when the available window size changes.

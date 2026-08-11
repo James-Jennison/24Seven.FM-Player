@@ -6,6 +6,8 @@ import com.codeframe78.twentyfourseven.player.domain.RequestReadiness
 import com.codeframe78.twentyfourseven.player.domain.StationId
 import com.codeframe78.twentyfourseven.player.domain.canonicalized
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.net.CookieManager
@@ -40,12 +42,19 @@ internal class StationListenerActivityRemoteDataSource(
             val manager = authenticatedCookieManager(stationId, origin)
             val historyPage = request(stationId, URI(origin).resolve(REQUEST_HISTORY_PATH), origin, manager)
             val discovery = parser.parseDiscovery(historyPage, origin, displayName)
-            val cooldown = discovery.requestTimerUrl
-                ?.let { parser.parseCooldown(request(stationId, URI(it), origin, manager, TIMER_RESPONSE_LIMIT)) }
-                ?: RequestCooldownEvidence(RequestReadiness.Unknown, null)
-            val membership = discovery.memberProfileUrl
-                ?.let { parser.parseMembership(request(stationId, URI(it), origin, manager), origin, displayName) }
-                ?: MembershipTier.Unknown
+            val (cooldown, membership) = coroutineScope {
+                val cooldown = async {
+                    discovery.requestTimerUrl
+                        ?.let { parser.parseCooldown(request(stationId, URI(it), origin, manager, TIMER_RESPONSE_LIMIT)) }
+                        ?: RequestCooldownEvidence(RequestReadiness.Unknown, null)
+                }
+                val membership = async {
+                    discovery.memberProfileUrl
+                        ?.let { parser.parseMembership(request(stationId, URI(it), origin, manager), origin, displayName) }
+                        ?: MembershipTier.Unknown
+                }
+                cooldown.await() to membership.await()
+            }
             ListenerActivitySnapshot(
                 membershipTier = membership,
                 requestReadiness = cooldown.readiness,
@@ -82,7 +91,8 @@ internal class StationListenerActivityRemoteDataSource(
                 connection.instanceFollowRedirects = false
                 connection.setRequestProperty("Accept", "text/html")
                 connection.setRequestProperty("User-Agent", USER_AGENT)
-                manager.get(uri, emptyMap()).forEach { (name, values) ->
+                val requestHeaders = synchronized(manager) { manager.get(uri, emptyMap()) }
+                requestHeaders.forEach { (name, values) ->
                     connection.setRequestProperty(name, values.joinToString("; "))
                 }
                 val status = connection.responseCode

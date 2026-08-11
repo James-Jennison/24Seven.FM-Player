@@ -1,6 +1,7 @@
 # 24Seven.FM Player roadmap
 
-Updated July 20, 2026 after M34 device/accessibility acceptance, M35 completion, forecast reconciliation, and the
+Updated August 11, 2026 after M34 device/accessibility acceptance, M35 completion, forecast reconciliation, and the
+owner decision to defer Google Cast as an optional future enhancement.
 historical milestone-time reconstruction.
 
 This is the authoritative milestone sequence for the Player repository. Milestones use dependency-ordered, zero-padded
@@ -93,15 +94,16 @@ allow, but no partial checkpoint should be described as release-ready.
 | M34 | Device and Accessibility Acceptance | Complete | Adaptive window/foldable matrix, physical Razr hinge lifecycle, human TalkBack, focused Voice Access, and signed-release Bluetooth keyboard/pointer acceptance pass; Play delivery/pre-launch belongs to M40 | Complete |
 | M35 | Release Signing and Console Eligibility | Complete | Current-head protected upload identity, local physical clean-install/update verification, package registration, eligible unused version code, and reproducible signed build accepted from evidence commit `55413bd` | Complete |
 
-## Phase 5 — Authorized closed-app community notifications
+## Phase 5 — Closed-app community notifications
 
-M36 is an external authorization decision. M37 and M38 must not start by substituting background polling or forwarding
-protected station sessions.
+A user-approved local fallback may use one visible, user-started foreground monitor to poll an opted-in signed-in station
+at a bounded cadence. It must not forward protected station sessions. M36 remains the path to a server event source and
+near-immediate push delivery.
 
 | ID | Milestone | State | Required gate | Forecast after trigger |
 | --- | --- | --- | --- | --- |
-| M36 | Notification Event-Source Authorization | Waiting externally | Authorized station event source, webhook, or privacy-compatible relay with ownership, payload, authentication, retention, deletion, abuse, and outage contracts | Conditional · 1–3 active Sol days |
-| M37 | Secure Closed-App Notification Delivery | Planned after M36 | Opt-in station-scoped token/event delivery, minimal payloads, duplicate safety, sign-out/reinstall handling, and no perpetual polling | Medium · 5–10 active days |
+| M36 | Notification Event-Source Authorization | Waiting externally | Authorized station event source, webhook, or privacy-compatible relay with ownership, payload, authentication, retention, deletion, abuse, and outage contracts; local foreground monitor is separately authorized | Conditional · 1–3 active Sol days |
+| M37 | Secure Closed-App Notification Delivery | Planned after M36 | Opt-in station-scoped token/event delivery, minimal payloads, duplicate safety, sign-out/reinstall handling, and replacement of the foreground-polling fallback where available | Medium · 5–10 active days |
 | M38 | Notification Lifecycle and Privacy Certification | Planned after M37 | Foreground/background/closed/idle/reboot/network tests, delivery latency, battery/traffic, lock-screen privacy, deep-link gates, and all five station boundaries | Medium · 5–10 active days |
 
 ## Phase 6 — Alpha distribution
@@ -136,7 +138,7 @@ None of these milestones blocks M41 unless a later owner decision explicitly mov
 | M52 | Native Forum Read-Only Foundation | Retired by project decision | Native Forum retrieval and rendering are permanently out of Player scope | No forecast |
 | M53 | Authenticated Forum Participation | Retired by project decision | Forum sign-in reuse, posting, replies, and moderation actions are permanently out of Player scope | No forecast |
 | M54 | Forum Five-Station and Notification Certification | Retired by project decision | Forum certification and Forum notifications are permanently out of Player scope | No forecast |
-| M55 | Google Cast Feasibility and Certification | Planned research gate | Permitted stream use, receiver compatibility, lifecycle/route behavior, rights review, and five-station validation before implementation | Conditional · 2–4 active weeks; may end in a no-go |
+| M55 | Google Cast Feasibility and Certification | Deferred by product decision | Reopen only with explicit owner direction, permitted stream use, receiver compatibility, lifecycle/route behavior, rights review, and five-station validation | No forecast while deferred |
 | M56 | Extended Station Capability Certification | Planned research gate | Independently verify non-SST request messages, activity/cooldown, membership, and other capability differences without inheritance | Medium · 1–3 active weeks |
 | M57 | Account Registration, Recovery, and Management Access | Planned research gate | Verify permitted station routes and deletion/recovery behavior, then choose trusted browser or authorized native interfaces without sharing browser/app sessions | Medium · 1–3 active weeks |
 | M58 | Membership Commerce Authorization and Billing Architecture | Planned research/authorization gate | Confirm station-owner and merchant authority, choose Play Billing or an enrolled regional alternative, define VIP/RIP products and trusted activation contracts, and close tax, support, refund, privacy, and security obligations | Conditional · 2–4 active weeks for architecture; contract timing external |

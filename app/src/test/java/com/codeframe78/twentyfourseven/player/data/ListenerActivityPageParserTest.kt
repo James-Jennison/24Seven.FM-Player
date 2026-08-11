@@ -105,6 +105,19 @@ class ListenerActivityPageParserTest {
     }
 
     @Test
+    fun `membership is read from the current profile card not site navigation`() {
+        val vip = parser.parseMembership(
+            currentProfilePage("<a href=\"/modules.php?name=VIP_Subscribe\"><img alt=\"VIP\"></a>"),
+            origin,
+            "Listener",
+        )
+        val standard = parser.parseMembership(currentProfilePage(""), origin, "Listener")
+
+        assertEquals(MembershipTier.Vip, vip)
+        assertEquals(MembershipTier.Standard, standard)
+    }
+
+    @Test
     fun `login form is treated as expired authentication`() {
         assertThrows(ListenerActivityAuthenticationRequiredException::class.java) {
             parser.parseDiscovery("<form><input name=\"user_password\"></form>", origin, "Listener")
@@ -116,5 +129,13 @@ class ListenerActivityPageParserTest {
           <tr><th>Viewing profile :: $displayName</th></tr>
           <tr><td>Admiral (Administrator) $membership</td></tr>
         </table>
+    """.trimIndent()
+
+    private fun currentProfilePage(membership: String) = """
+        <a href="/modules.php?name=VIP_Subscribe">Site-wide membership navigation</a>
+        <table><tr>
+          <td><div><table class="table01"><tr><td>$membership</td></tr></table></div></td>
+          <td><div class="profile-tabs"><button>Favorites</button></div></td>
+        </tr></table>
     """.trimIndent()
 }

@@ -110,6 +110,7 @@ internal fun AdaptivePlayerScreen(
     onStop: () -> Unit,
     sleepTimerActions: SleepTimerActions = SleepTimerActions(),
     audioOutputActions: AudioOutputActions = AudioOutputActions(),
+    isCoverDisplay: Boolean = false,
 ) {
     val palette = stationPalette(state.selectedStation?.id)
     BoxWithConstraints(
@@ -126,7 +127,9 @@ internal fun AdaptivePlayerScreen(
                 ),
             ),
     ) {
-        if (maxWidth >= ExpandedPlayerBreakpoint) {
+        if (isCoverDisplay) {
+            CoverPlayerContent(state, palette, onSelectStation, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions)
+        } else if (maxWidth >= ExpandedPlayerBreakpoint) {
             ExpandedPlayerContent(state, palette, onSelectStation, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions)
         } else {
             val availableArtworkWidth = maxWidth - 40.dp
@@ -139,6 +142,54 @@ internal fun AdaptivePlayerScreen(
             )
             CompactPlayerContent(state, palette, artworkSize, onSelectStation, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions)
         }
+    }
+}
+
+@Composable
+private fun CoverPlayerContent(
+    state: MainUiState,
+    palette: StationPalette,
+    onSelectStation: (StationId) -> Unit,
+    onPlay: () -> Unit,
+    onPause: () -> Unit,
+    onStop: () -> Unit,
+    sleepTimerActions: SleepTimerActions,
+    audioOutputActions: AudioOutputActions,
+) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .testTag("cover_player_scroll")
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            NowPlayingArtwork(state, palette, Modifier.size(96.dp))
+            Column(Modifier.weight(1f)) {
+                NowPlayingDetails(state, palette, Alignment.Start)
+            }
+        }
+        PrimaryPlayerControls(state, onSelectStation, onPlay, onPause)
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            TextButton(onClick = onStop, enabled = state.playback.status != PlaybackStatus.Idle) {
+                Icon(Icons.Default.Stop, contentDescription = null)
+                Spacer(Modifier.width(4.dp))
+                Text("Stop")
+            }
+            SleepTimerControl(state, sleepTimerActions)
+            AudioOutputControl(state, audioOutputActions)
+        }
+        Text("Choose a station", style = MaterialTheme.typography.labelLarge)
+        StationSelector(state, onSelectStation, edgePadding = 0.dp)
     }
 }
 

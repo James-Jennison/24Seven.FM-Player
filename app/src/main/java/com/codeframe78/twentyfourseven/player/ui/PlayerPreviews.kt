@@ -19,6 +19,10 @@ import com.codeframe78.twentyfourseven.player.ui.theme.TwentyFourSevenTheme
 @Composable
 private fun CompactPlayingPreview() = PlayerPreview(PlaybackStatus.Playing)
 
+@Preview(name = "Folded cover display · playing", widthDp = 400, heightDp = 400, showBackground = true)
+@Composable
+private fun CoverDisplayPlayingPreview() = PlayerPreview(PlaybackStatus.Playing, isCoverDisplay = true)
+
 @Preview(name = "Phone landscape · paused", widthDp = 760, heightDp = 400, showBackground = true)
 @Composable
 private fun LandscapePausedPreview() = PlayerPreview(PlaybackStatus.Paused)
@@ -57,6 +61,7 @@ private fun PlayerPreview(
     status: PlaybackStatus,
     displayTitle: String? = "John Williams - The Adventure Continues",
     darkTheme: Boolean = true,
+    isCoverDisplay: Boolean = false,
 ) {
     val stations = previewStations
     val selected = stations.first()
@@ -73,6 +78,7 @@ private fun PlayerPreview(
             onPlay = {},
             onPause = {},
             onStop = {},
+            isCoverDisplay = isCoverDisplay,
         )
     }
 }

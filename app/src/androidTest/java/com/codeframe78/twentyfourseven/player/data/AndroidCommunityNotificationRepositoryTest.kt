@@ -81,10 +81,61 @@ class AndroidCommunityNotificationRepositoryTest {
         }
     }
 
+    @Test
+    fun foregroundMonitorIsOneStationPersistentAndStopsWithMentionAlerts() = runTest {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val preferencesName = "foreground-chat-monitor-test"
+        val preferences = context.getSharedPreferences(preferencesName, Context.MODE_PRIVATE)
+        preferences.edit().clear().commit()
+        val controller = FakeForegroundChatMonitorController()
+        val stationId = StationId("sst")
+        try {
+            val repository = AndroidCommunityNotificationRepository(
+                context,
+                notifier = {},
+                preferencesName = preferencesName,
+                monitorController = controller,
+            )
+            repository.setChatMentionsEnabled(stationId, true)
+            repository.setForegroundChatMonitorEnabled(stationId, true)
+
+            assertEquals(listOf(stationId), controller.started)
+            assertTrue(repository.observeSettings().first().foregroundMonitorEnabled(stationId))
+            assertTrue(
+                AndroidCommunityNotificationRepository(
+                    context,
+                    notifier = {},
+                    preferencesName = preferencesName,
+                    monitorController = controller,
+                ).observeSettings().first().foregroundMonitorEnabled(stationId),
+            )
+
+            repository.setChatMentionsEnabled(stationId, false)
+            assertEquals(listOf(stationId), controller.stopped)
+            assertFalse(repository.observeSettings().first().foregroundMonitorEnabled(stationId))
+        } finally {
+            preferences.edit().clear().commit()
+        }
+    }
+
     private fun snapshot(vararg messages: ChatMessage) = ChatMentionSnapshot(
         StationId("sst"),
         "SST",
         "MorG",
         messages.toList(),
     )
+
+    private class FakeForegroundChatMonitorController : ForegroundChatMonitorController {
+        val started = mutableListOf<StationId>()
+        val stopped = mutableListOf<StationId>()
+
+        override fun start(stationId: StationId): Boolean {
+            started += stationId
+            return true
+        }
+
+        override fun stop(stationId: StationId) {
+            stopped += stationId
+        }
+    }
 }

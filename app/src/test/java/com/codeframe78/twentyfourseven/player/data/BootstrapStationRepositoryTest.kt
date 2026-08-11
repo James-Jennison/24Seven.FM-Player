@@ -32,12 +32,24 @@ class BootstrapStationRepositoryTest {
     }
 
     @Test
-    fun `every station has relay and source fallbacks`() = runTest {
-        repository.observeStations().first().forEach { station ->
-            assertEquals(listOf("Primary relay", "Source stream"), station.streams.map { it.label })
-            assertEquals(listOf(0, 1), station.streams.map { it.priority })
-            assertEquals(listOf(StreamFormat.Aac, StreamFormat.Aac), station.streams.map { it.format })
-            assertEquals(listOf(128, 128), station.streams.map { it.bitrateKbps })
+    fun `every station uses its HTTPS live proxy`() = runTest {
+        val stations = repository.observeStations().first()
+
+        assertEquals(
+            listOf(
+                "https://streamingsoundtracks.com/live",
+                "https://1980s.fm/live",
+                "https://adagio.fm/live",
+                "https://death.fm/live",
+                "https://entranced.fm/live",
+            ),
+            stations.map { station -> station.streams.single().url },
+        )
+        stations.forEach { station ->
+            assertEquals("Live stream", station.streams.single().label)
+            assertEquals(0, station.streams.single().priority)
+            assertEquals(StreamFormat.Aac, station.streams.single().format)
+            assertEquals(192, station.streams.single().bitrateKbps)
         }
     }
 

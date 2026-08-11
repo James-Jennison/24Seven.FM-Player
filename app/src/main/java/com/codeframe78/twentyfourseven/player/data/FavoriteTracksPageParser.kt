@@ -46,7 +46,7 @@ internal class FavoriteTracksPageParser {
                 val requestTrack = requestCell.selectFirst("a[href]")?.absUrl("href")
                     ?.let { parseRequestTrack(it, originUri, title, album, artist, cells[5].text().trim()) }
                 val availability = if (requestTrack == null) {
-                    requestCell.selectFirst("img")?.let { image ->
+                    requestCell.selectFirst("img[src*=requestbutton]")?.let { image ->
                         image.attr("title").ifBlank { image.attr("alt") }.trim().takeIf(String::isNotBlank)
                     }
                 } else {

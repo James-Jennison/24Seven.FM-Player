@@ -48,8 +48,8 @@ internal class PlayerQueueResponseParser {
         )
     }
 
-    fun parseExtended(html: String, baseUrl: String, maxTracks: Int = MAX_VISIBLE_TRACKS): QueuePayload {
-        require(maxTracks in 1..MAX_VISIBLE_TRACKS)
+    fun parseExtended(html: String, baseUrl: String, maxTracks: Int = DEFAULT_VISIBLE_TRACKS): QueuePayload {
+        require(maxTracks in 1..MAX_EXTENDED_TRACKS)
         val document = Jsoup.parse(html, baseUrl)
         val queueTable = document.select("table").firstOrNull { table ->
             directRows(table).any { row ->
@@ -131,23 +131,38 @@ internal class PlayerQueueResponseParser {
     private fun parseExtendedRow(row: Element, baseUrl: String): ExtendedTrack? {
         val cells = row.select("td")
         if (cells.size != 3) return null
-        val position = cells[0].selectFirst("b")?.text()?.trim()?.toIntOrNull() ?: return null
+        val position = cells[0].selectFirst("b, .glowing-rank")?.text()?.trim()?.toIntOrNull() ?: return null
         val duration = DURATION.find(cells[0].text())?.value ?: return null
         val details = cells[2]
-        val album = details.selectFirst("b")?.text()?.trim()?.takeIf(String::isNotEmpty) ?: return null
-        val artist = details.selectFirst("i")?.text()?.trim()?.takeIf(String::isNotEmpty)
-        val title = details.clone().apply { select("b, i, span").remove() }
-            .text()
-            .trim()
-            .removePrefix("-")
-            .trim()
-            .takeIf(String::isNotEmpty) ?: return null
+        val titleSpan = details.select("span")
+            .firstOrNull { !it.hasClass("req-text") && it.text().trim().isNotEmpty() }
+        val usesCurrentStationMarkup = titleSpan != null && details.selectFirst("i") == null
+        val (album, artist, title) = if (usesCurrentStationMarkup) {
+            val parsedArtist = details.selectFirst("b")?.text()?.trim()?.takeIf(String::isNotEmpty) ?: return null
+            val parsedAlbum = details.clone().apply { select("b, span, br").remove() }
+                .text()
+                .trim()
+                .removePrefix("-")
+                .trim()
+                .takeIf(String::isNotEmpty) ?: return null
+            Triple(parsedAlbum, parsedArtist, titleSpan.text().trim())
+        } else {
+            val parsedAlbum = details.selectFirst("b")?.text()?.trim()?.takeIf(String::isNotEmpty) ?: return null
+            val parsedArtist = details.selectFirst("i")?.text()?.trim()?.takeIf(String::isNotEmpty)
+            val parsedTitle = details.clone().apply { select("b, i, span").remove() }
+                .text()
+                .trim()
+                .removePrefix("-")
+                .trim()
+                .takeIf(String::isNotEmpty) ?: return null
+            Triple(parsedAlbum, parsedArtist, parsedTitle)
+        }
         val attribution = parseRequestAttribution(details)
         return ExtendedTrack(
             position = position,
             displayTitle = title,
-            songId = requestIdentifier(details, "songID"),
-            albumId = requestIdentifier(details, "asin"),
+            songId = requestIdentifier(details, "songID") ?: requestIdentifier(cells[1], "songID"),
+            albumId = requestIdentifier(details, "asin") ?: requestIdentifier(cells[1], "asin"),
             artistName = artist,
             albumTitle = album,
             durationLabel = duration,
@@ -161,8 +176,9 @@ internal class PlayerQueueResponseParser {
 
     private fun parseRequestAttribution(details: Element): RequestAttribution? {
         val label = details.selectFirst("span.req-text") ?: return null
-        if (!REQUESTER_PREFIX.containsMatchIn(label.text())) return null
-        val requesterName = label.selectFirst("a[href*=username]")?.text()?.trim()
+        val requesterLink = label.selectFirst("a[href*=username]")
+        if (!REQUESTER_PREFIX.containsMatchIn(label.text()) && requesterLink == null) return null
+        val requesterName = requesterLink?.text()?.trim()
             ?.takeIf(String::isNotEmpty)
             ?: label.clone().apply { select("i, img").remove() }.text()
                 .replaceFirst(REQUESTER_PREFIX, "")
@@ -223,7 +239,8 @@ internal class PlayerQueueResponseParser {
     private data class RequestAttribution(val requesterName: String, val message: String?)
 
     private companion object {
-        const val MAX_VISIBLE_TRACKS = 30
+        const val DEFAULT_VISIBLE_TRACKS = 30
+        const val MAX_EXTENDED_TRACKS = 500
         val DURATION = Regex("\\b\\d{1,2}:\\d{2}\\b")
         val REQUESTER_PREFIX = Regex("^\\s*Request\\s+By:\\s*", RegexOption.IGNORE_CASE)
         const val MAX_REQUESTER_CHARACTERS = 80

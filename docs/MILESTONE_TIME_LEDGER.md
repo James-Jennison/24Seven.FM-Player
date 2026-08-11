@@ -1,6 +1,6 @@
 # Milestone Real-World Time Ledger
 
-Last updated: `July 20, 2026 at 7:43:14 PM PDT (UTC−07:00)`
+Last updated: `August 11, 2026 at 8:00:11 AM PDT (UTC−07:00)`
 
 This is the permanent time-accounting record for the canonical M01–M60 milestones in [ROADMAP.md](ROADMAP.md). It
 preserves historical uncertainty instead of treating commit spans as labor time. Future milestone work must be
@@ -23,7 +23,7 @@ measured prospectively from the actual authorized execution start.
 | Shortest completed milestone | Unknown by counted time | M31 has the shortest observable elapsed lower bound at 0.03 h. |
 | Overall forecast versus actual variance | Unknown | Only M13, M14, and M17–M21 retained milestone-specific forecasts, and their actual counted time was not recorded. |
 | Confidence classifications | Confirmed 0; Reconstructed 0; Estimated 28; Unknown 32 | One classification per canonical milestone. |
-| Ledger last updated | `July 20, 2026 at 7:43:14 PM PDT (UTC−07:00)` | Full date, 12-hour time, seconds, timezone abbreviation, and UTC offset. |
+| Ledger last updated | `August 11, 2026 at 8:00:11 AM PDT (UTC−07:00)` | Full date, 12-hour time, seconds, timezone abbreviation, and UTC offset. |
 
 Elapsed totals are arithmetic milestone totals, not unique calendar time. Milestones overlapped, so counted work must
 be assigned to only one milestone while each milestone retains its own wall-clock elapsed period. The confidence counts
@@ -128,7 +128,7 @@ active execution.
 | M52 | Retired | — | Retired `July 19, 2026 at 8:55:35 AM PDT (UTC−07:00)` | No forecast | — | — | — | — | — | — | Unknown |
 | M53 | Retired | — | Retired `July 19, 2026 at 8:55:35 AM PDT (UTC−07:00)` | No forecast | — | — | — | — | — | — | Unknown |
 | M54 | Retired | — | Retired `July 19, 2026 at 8:55:35 AM PDT (UTC−07:00)` | No forecast | — | — | — | — | — | — | Unknown |
-| M55 | Planned research gate | — | — | 2–4 active wk; may be no-go | — | — | — | — | — | — | Unknown |
+| M55 | Deferred by product decision | — | — | No forecast while deferred | — | — | — | — | — | — | Unknown |
 | M56 | Planned research gate | — | — | 1–3 active wk | — | — | — | — | — | — | Unknown |
 | M57 | Planned research gate | — | — | 1–3 active wk | — | — | — | — | — | — | Unknown |
 | M58 | Planned authorization gate | — | — | 2–4 active wk; contract time external | — | — | — | — | — | — | Unknown |
@@ -821,13 +821,13 @@ independently.
 
 ### M55 — Google Cast Feasibility and Certification
 
-- **Objective:** Decide go/no-go only after permitted stream use, receiver compatibility, lifecycle/route behavior,
-  rights review, and five-station validation.
+- **Objective:** Deferred optional scope. Resume go/no-go research only after explicit owner direction, permitted stream
+  use, receiver compatibility, lifecycle/route behavior, rights review, and five-station validation.
 - **Start, completion, and intervals:** Not started; all actual intervals and totals are not applicable.
-- **Model, reasoning strength, and original forecast:** Sol High; current forecast 2–4 active weeks after permission/receiver triggers and
-  may end in an explicit no-go.
-- **Time, variance, evidence, confidence, and forecasting lessons:** No actual variance. Roadmap `e249071`, forecast `f971a9e`; no Cast evidence.
-  **Unknown**. A no-go remains a valid timed outcome when the gate is authorized.
+- **Model, reasoning strength, and original forecast:** No model or forecast is assigned while deferred. The owner scope
+  decision was recorded August 11, 2026 at 8:00:11 AM PDT (UTC−07:00).
+- **Time, variance, evidence, confidence, and forecasting lessons:** No actual variance or Cast evidence. **Unknown**.
+  Record a new model and forecast only if the owner reopens M55.
 
 ### M56 — Extended Station Capability Certification
 

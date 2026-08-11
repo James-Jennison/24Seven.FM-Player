@@ -71,6 +71,7 @@ internal class ListenerActivityPageParser {
                     it.text().contains(displayName, ignoreCase = true)
             }
             ?.closest("table")
+            ?: currentProfileCard(document)
             ?: return MembershipTier.Unknown
         val membershipNames = profileTable.select("a[href]").asSequence()
             .mapNotNull { membershipName(it, originUri) }
@@ -81,6 +82,17 @@ internal class ListenerActivityPageParser {
             else -> MembershipTier.Standard
         }
     }
+
+    /**
+     * The current station profile page replaced its legacy \"Viewing profile\" table with a
+     * profile card beside the `.profile-tabs` panel. Scope membership evidence to that card so
+     * site-wide membership navigation cannot turn every account into a VIP/RIP account.
+     */
+    private fun currentProfileCard(document: org.jsoup.nodes.Document): Element? = document
+        .selectFirst(".profile-tabs")
+        ?.parent()
+        ?.parent()
+        ?.selectFirst("table.table01")
 
     private fun parseHistoryRow(row: Element): RequestHistoryEntry? {
         val cells = row.children().filter { it.tagName() == "td" }

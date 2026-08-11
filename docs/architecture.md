@@ -115,7 +115,10 @@ first snapshot establishes a no-alert baseline; later exact-name matches exclude
 authors while still fingerprinting blocked messages so unblocking cannot surface stale alerts. Duplicate suppression keeps at most 200 SHA-256 message fingerprints per enabled station in memory and never
 persists Chat text. The Android implementation stores only enabled station IDs, posts a dedicated private-channel
 notification containing station and sender but no message body, and deep-links through the existing community gates.
-It does not expand Chat polling or claim closed-app push delivery. See `docs/m27-community-notification-validation.md`.
+The optional `ChatMentionMonitorService` is started only from an explicit UI control. It monitors one station at a
+60-second cadence through the same `ChatRepository`, uses the same local matching and block policy, shows Android's
+persistent foreground-service notification with a Stop action, and never forwards sessions or Chat text. It is a local
+fallback rather than closed-app push delivery. See `docs/m27-community-notification-validation.md`.
 
 ## Community safety and moderation
 

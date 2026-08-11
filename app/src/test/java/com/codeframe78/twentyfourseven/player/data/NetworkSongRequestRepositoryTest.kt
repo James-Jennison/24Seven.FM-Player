@@ -76,10 +76,10 @@ class NetworkSongRequestRepositoryTest {
 
         val state = repository.observeRequests(stationId).first()
         assertEquals(1, remote.submitCalls)
-        assertEquals(2, remote.albumCalls)
+        assertEquals(1, remote.albumCalls)
         assertEquals("For the evening listeners", remote.lastMessage)
         assertNull(state.pendingRequest)
-        assertFalse(state.tracks.single().eligible)
+        assertTrue(state.tracks.single().eligible)
     }
 
     @Test
@@ -110,9 +110,9 @@ class NetworkSongRequestRepositoryTest {
         val state = repository.observeRequests(stationId).first()
         assertEquals(1, remote.submitCalls)
         assertNull(state.pendingRequest)
-        assertFalse(state.tracks.single().eligible)
+        assertTrue(state.tracks.single().eligible)
         assertEquals(
-            "The station may have received this request, but confirmation could not be read. " +
+                "The station may have received this request, but confirmation could not be read. " +
                 "The confirmation page exceeded the safe response limit. " +
                 "Check Queue before trying again. Nothing was retried.",
             state.errorMessage,
@@ -120,7 +120,32 @@ class NetworkSongRequestRepositoryTest {
     }
 
     @Test
-    fun `fresh queue validation blocks a queued track without submitting`() = runTest {
+    fun `unconfirmed acknowledgement leaves the station-provided track availability unchanged`() = runTest {
+        val remote = FakeRemote().apply {
+            submitResult = RequestSubmissionResult.Unconfirmed(
+                "The station acknowledged the request, but it is not yet visible in Queue. It was not retried.",
+            )
+        }
+        val repository = NetworkSongRequestRepository(remote)
+        repository.openSearchResult(stationId, albumTarget)
+        repository.prepareRequest(stationId, "12345", "Test Listener")
+
+        repository.confirmAsTestListener(stationId, readyQueue)
+
+        val state = repository.observeRequests(stationId).first()
+        assertEquals(1, remote.submitCalls)
+        assertEquals(1, remote.albumCalls)
+        assertTrue(state.tracks.single().eligible)
+        assertEquals(TrackRequestStatus.Available, state.tracks.single().availability.status)
+        assertTrue(state.transactionBlocks.isEmpty())
+        assertEquals(
+            "The station acknowledged the request, but it is not yet visible in Queue. It was not retried.",
+            state.errorMessage,
+        )
+    }
+
+    @Test
+    fun `cached queue does not override fresh station track requestability`() = runTest {
         val remote = FakeRemote()
         val repository = NetworkSongRequestRepository(remote)
         repository.openSearchResult(stationId, albumTarget)
@@ -140,13 +165,13 @@ class NetworkSongRequestRepositoryTest {
         repository.confirmAsTestListener(stationId, queue)
 
         val state = repository.observeRequests(stationId).first()
-        assertEquals(0, remote.submitCalls)
-        assertEquals(TrackRequestStatus.InCurrentQueue, state.tracks.single().availability.status)
-        assertTrue(state.errorMessage.orEmpty().startsWith("Track Recently Played"))
+        assertEquals(1, remote.submitCalls)
+        assertTrue(state.tracks.single().eligible)
+        assertNull(state.errorMessage)
     }
 
     @Test
-    fun `missing fresh queue fails closed without submitting`() = runTest {
+    fun `missing queue snapshot does not block a station-authoritative submission`() = runTest {
         val remote = FakeRemote()
         val repository = NetworkSongRequestRepository(remote)
         repository.openSearchResult(stationId, albumTarget)
@@ -154,12 +179,27 @@ class NetworkSongRequestRepositoryTest {
 
         repository.confirmAsTestListener(stationId, QueueState(stationId, QueueLoadStatus.Error))
 
-        assertEquals(0, remote.submitCalls)
-        assertTrue(repository.observeRequests(stationId).first().errorMessage.orEmpty().startsWith("Requests Temporarily Unavailable"))
+        assertEquals(1, remote.submitCalls)
+        assertNull(repository.observeRequests(stationId).first().errorMessage)
     }
 
     @Test
-    fun `track leaving queue remains blocked when fresh station data says recently played`() = runTest {
+    fun `cancelling a request also clears its transient result message`() = runTest {
+        val remote = FakeRemote()
+        val repository = NetworkSongRequestRepository(remote)
+        repository.openSearchResult(stationId, albumTarget)
+        repository.prepareRequest(stationId, "12345", "Test Listener")
+        repository.confirmAsTestListener(stationId, QueueState(stationId, QueueLoadStatus.Error))
+
+        repository.cancelRequest(stationId)
+
+        assertNull(repository.observeRequests(stationId).first().pendingRequest)
+        assertNull(repository.observeRequests(stationId).first().errorMessage)
+        assertNull(repository.observeRequests(stationId).first().notice)
+    }
+
+    @Test
+    fun `request endpoint remains authoritative after the user opens confirmation`() = runTest {
         val remote = FakeRemote()
         val repository = NetworkSongRequestRepository(remote)
         repository.openSearchResult(stationId, albumTarget)
@@ -171,11 +211,8 @@ class NetworkSongRequestRepositoryTest {
 
         repository.confirmAsTestListener(stationId, readyQueue)
 
-        assertEquals(0, remote.submitCalls)
-        assertEquals(
-            TrackRequestStatus.RecentlyPlayed,
-            repository.observeRequests(stationId).first().tracks.single().availability.status,
-        )
+        assertEquals(1, remote.submitCalls)
+        assertEquals(TrackRequestStatus.Available, repository.observeRequests(stationId).first().tracks.single().availability.status)
     }
 
     @Test
@@ -199,7 +236,7 @@ class NetworkSongRequestRepositoryTest {
     }
 
     @Test
-    fun `station reported wait returns the cooldown contract without submitting`() = runTest {
+    fun `listener timer does not override a fresh station requestability check`() = runTest {
         val remote = FakeRemote()
         val repository = NetworkSongRequestRepository(remote)
         repository.openSearchResult(stationId, albumTarget)
@@ -222,14 +259,13 @@ class NetworkSongRequestRepositoryTest {
         )
 
         val state = repository.observeRequests(stationId).first()
-        assertEquals(0, remote.submitCalls)
+        assertEquals(1, remote.submitCalls)
         assertNull(state.pendingRequest)
-        assertTrue(state.errorMessage.orEmpty().startsWith("Request Cooldown Active"))
-        assertTrue(state.errorMessage.orEmpty().contains("7 minutes"))
+        assertNull(state.errorMessage)
     }
 
     @Test
-    fun `required listener activity must be fresh and ready before submission`() = runTest {
+    fun `unknown membership display does not block a fresh station submission`() = runTest {
         val remote = FakeRemote()
         val repository = NetworkSongRequestRepository(remote)
         repository.openSearchResult(stationId, albumTarget)
@@ -250,13 +286,38 @@ class NetworkSongRequestRepositoryTest {
             ),
         )
 
-        assertEquals(0, remote.submitCalls)
+        assertEquals(1, remote.submitCalls)
         assertNull(repository.observeRequests(stationId).first().pendingRequest)
-        assertTrue(repository.observeRequests(stationId).first().errorMessage.orEmpty().startsWith("Requests Temporarily Unavailable"))
+        assertNull(repository.observeRequests(stationId).first().errorMessage)
     }
 
     @Test
-    fun `indeterminate result blocks a second prepare from another surface`() = runTest {
+    fun `listener activity failure does not override a fresh station submission`() = runTest {
+        val remote = FakeRemote()
+        val repository = NetworkSongRequestRepository(remote)
+        repository.openSearchResult(stationId, albumTarget)
+        repository.prepareRequest(stationId, "12345", "Test Listener")
+
+        repository.confirmRequest(
+            stationId,
+            RequestConfirmationContext(
+                auth = AuthState(stationId, AuthStatus.SignedIn, "Test Listener"),
+                queue = readyQueue,
+                listenerActivity = ListenerActivityState(
+                    stationId = stationId,
+                    status = ListenerActivityLoadStatus.Error,
+                    errorMessage = "Sign in to this station to load request activity and membership status.",
+                ),
+                requiresListenerActivity = true,
+            ),
+        )
+
+        assertEquals(1, remote.submitCalls)
+        assertNull(repository.observeRequests(stationId).first().errorMessage)
+    }
+
+    @Test
+    fun `indeterminate result permits a new user-initiated prepare when station still lists the track`() = runTest {
         val remote = FakeRemote().apply { submitFailure = IOException("Station response was too large") }
         val repository = NetworkSongRequestRepository(remote)
         repository.openSearchResult(stationId, albumTarget)
@@ -269,12 +330,12 @@ class NetworkSongRequestRepositoryTest {
             "Test Listener",
         )
 
-        assertNull(repository.observeRequests(stationId).first().pendingRequest)
+        assertEquals("12345", repository.observeRequests(stationId).first().pendingRequest?.songId)
         assertEquals(1, remote.submitCalls)
     }
 
     @Test
-    fun `fresh album metadata change blocks submission`() = runTest {
+    fun `submission does not reload the album before or after sending`() = runTest {
         val remote = FakeRemote().apply { changeTitleAfterFirstLoad = true }
         val repository = NetworkSongRequestRepository(remote)
         repository.openSearchResult(stationId, albumTarget)
@@ -282,8 +343,9 @@ class NetworkSongRequestRepositoryTest {
 
         repository.confirmAsTestListener(stationId, readyQueue)
 
-        assertEquals(0, remote.submitCalls)
-        assertTrue(repository.observeRequests(stationId).first().errorMessage.orEmpty().contains("no longer listed"))
+        assertEquals(1, remote.submitCalls)
+        assertEquals(1, remote.albumCalls)
+        assertEquals("Request accepted", repository.observeRequests(stationId).first().notice)
     }
 
     private class FakeRemote : SongRequestRemoteDataSource {
@@ -297,6 +359,8 @@ class NetworkSongRequestRepositoryTest {
         var lastArtistName: String? = null
         var lastSuggestionMode: RequestSuggestionMode? = null
         var trackAvailability = TrackRequestAvailability.available()
+        var availabilityAfterSubmit: TrackRequestAvailability? = null
+        var submitResult: RequestSubmissionResult = RequestSubmissionResult.Submitted("Request accepted")
         var changeTitleAfterFirstLoad = false
 
         override suspend fun search(stationId: StationId, query: String, field: RequestSearchField): List<RequestSearchResult> {
@@ -337,9 +401,9 @@ class NetworkSongRequestRepositoryTest {
                         if (changeTitleAfterFirstLoad && albumCalls > 1) "A different track" else "Requestable track",
                         "Composer",
                         "3:21",
-                        trackAvailability.canRequest,
+                        (availabilityAfterSubmit.takeIf { submitCalls > 0 } ?: trackAvailability).canRequest,
                         albumTitle = "Example album",
-                        availability = trackAvailability,
+                        availability = availabilityAfterSubmit.takeIf { submitCalls > 0 } ?: trackAvailability,
                     ),
                 ),
             )
@@ -362,7 +426,7 @@ class NetworkSongRequestRepositoryTest {
             submitCalls++
             lastMessage = message
             submitFailure?.let { throw it }
-            return RequestSubmissionResult.Submitted("Request accepted")
+            return submitResult
         }
     }
 

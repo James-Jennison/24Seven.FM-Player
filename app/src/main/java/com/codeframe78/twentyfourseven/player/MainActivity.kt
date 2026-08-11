@@ -153,6 +153,7 @@ class MainActivity : ComponentActivity() {
                         onSubmitReport = viewModel::submitAbuseReport,
                         onDismissReport = viewModel::dismissAbuseReport,
                         onSetChatMentionsEnabled = viewModel::setChatMentionNotificationsEnabled,
+                        onSetForegroundChatMentionMonitorEnabled = viewModel::setForegroundChatMentionMonitorEnabled,
                     ),
                     onRefreshAuth = viewModel::refreshAuth,
                     onSignIn = viewModel::signIn,

@@ -50,7 +50,8 @@ remains in `m51-forum-links-research.md` as historical evidence only.
 
 ## M55 — Google Cast Feasibility and Certification
 
-M25 completed Android's system-managed audio-output path; it did not implement or promise Cast.
+Google Cast is deferred by product decision. M25's Android system-managed audio-output path is the supported
+current capability; the Player does not implement or promise Cast. M55 may resume only with explicit owner direction.
 
 - Verify permitted stream use and receiver compatibility before implementation.
 - Resolve station/rights implications, route ownership, fallback, reconnection, metadata, notification, and timer behavior.

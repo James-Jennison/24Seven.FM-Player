@@ -150,6 +150,7 @@ internal data class CommunitySafetyActions(
     val onSubmitReport: (AbuseReportSubmission) -> Unit = {},
     val onDismissReport: () -> Unit = {},
     val onSetChatMentionsEnabled: (StationId, Boolean) -> Unit = { _, _ -> },
+    val onSetForegroundChatMentionMonitorEnabled: (StationId, Boolean) -> Unit = { _, _ -> },
 )
 
 @Composable
@@ -188,7 +189,7 @@ internal fun RadioApp(
         if (maxWidth >= 600.dp) {
             TabletShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions) { showTerms = true }
         } else {
-            PhoneShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions) { showTerms = true }
+            PhoneShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, isCoverDisplay = isCoverDisplayWindow(maxWidth, maxHeight)) { showTerms = true }
         }
     }
     if (showTerms) {
@@ -234,13 +235,24 @@ private fun PhoneShell(
     onSetStartupStation: (StationId) -> Unit,
     onOpenStationPage: (StationPage) -> Unit,
     communitySafetyActions: CommunitySafetyActions,
+    isCoverDisplay: Boolean,
     onReviewTerms: () -> Unit,
 ) {
     val showNavigationLabels = LocalDensity.current.fontScale <= 1.5f
     Scaffold(
-        topBar = { StationTopBar(state, onSelectDestination) },
+        topBar = {
+            if (isCoverDisplay) {
+                CoverTopBar(state, onSelectDestination)
+            } else {
+                StationTopBar(state, onSelectDestination)
+            }
+        },
         bottomBar = {
-            Column {
+            if (isCoverDisplay) {
+                if (state.destination != MainDestination.Player) {
+                    PersistentMiniPlayer(state, onSelectDestination, onPlay, onPause)
+                }
+            } else {
                 if (state.destination != MainDestination.Player) {
                     PersistentMiniPlayer(state, onSelectDestination, onPlay, onPause)
                 }
@@ -268,7 +280,74 @@ private fun PhoneShell(
             }
         },
     ) { padding ->
-        DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onReviewTerms)
+        DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onReviewTerms, isCoverDisplay)
+    }
+    RequestResultDialog(state, onCancelRequest)
+}
+
+/**
+ * A full-app flip-phone cover display is small and nearly square.  This is intentionally a
+ * window contract rather than a device check so it also works in resized and future foldable
+ * windows with the same usable shape.
+ */
+private fun isCoverDisplayWindow(maxWidth: androidx.compose.ui.unit.Dp, maxHeight: androidx.compose.ui.unit.Dp): Boolean {
+    if (maxWidth > 480.dp || maxHeight > 480.dp) return false
+    val aspectRatio = maxWidth.value / maxHeight.value
+    return aspectRatio in 0.8f..1.25f
+}
+
+@Composable
+private fun CoverTopBar(
+    state: MainUiState,
+    onSelectDestination: (MainDestination) -> Unit,
+) {
+    var navigationMenuOpen by rememberSaveable { mutableStateOf(false) }
+    val destinationLabel = navigationItems.first { it.destination == state.destination }.label
+    Surface(shadowElevation = 3.dp) {
+        Row(
+            Modifier.fillMaxWidth().height(56.dp).padding(start = 12.dp, end = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(Icons.Default.Radio, contentDescription = null)
+            Spacer(Modifier.width(8.dp))
+            Column(Modifier.weight(1f)) {
+                Text("24Seven.FM", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                Text(
+                    if (state.destination == MainDestination.Player) {
+                        state.selectedStation?.shortName ?: "Player"
+                    } else {
+                        destinationLabel
+                    },
+                    style = MaterialTheme.typography.labelMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            Box {
+                IconButton(
+                    onClick = { navigationMenuOpen = true },
+                    modifier = Modifier.testTag("cover_navigation_menu"),
+                ) {
+                    Icon(Icons.Default.MoreVert, contentDescription = "Open navigation")
+                }
+                DropdownMenu(
+                    expanded = navigationMenuOpen,
+                    onDismissRequest = { navigationMenuOpen = false },
+                ) {
+                    navigationItems.forEach { item ->
+                        DropdownMenuItem(
+                            text = { Text(item.label) },
+                            leadingIcon = { Icon(item.icon, contentDescription = null) },
+                            onClick = {
+                                navigationMenuOpen = false
+                                onSelectDestination(item.destination)
+                            },
+                            modifier = Modifier.semantics { contentDescription = item.label },
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -341,6 +420,7 @@ private fun TabletShell(
         ) { padding ->
             DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onReviewTerms)
         }
+        RequestResultDialog(state, onCancelRequest)
     }
 }
 
@@ -414,6 +494,7 @@ private fun DestinationContent(
     onOpenStationPage: (StationPage) -> Unit,
     communitySafetyActions: CommunitySafetyActions,
     onReviewTerms: () -> Unit,
+    isCoverDisplay: Boolean = false,
 ) {
     when (state.destination) {
         MainDestination.Player -> AdaptivePlayerScreen(
@@ -425,6 +506,7 @@ private fun DestinationContent(
             onStop,
             sleepTimerActions,
             audioOutputActions,
+            isCoverDisplay,
         )
         MainDestination.Favorites -> FavoriteTracksScreen(
             state = state,
@@ -514,7 +596,7 @@ private fun ChatMessages(
         if (awaitingSend && !chat.isSending) {
             if (chat.sendErrorMessage != null) {
                 awaitingSend = false
-            } else if (chat.messages.any { it.messageText == draft }) {
+            } else {
                 draft = ""
                 awaitingSend = false
             }
@@ -1289,7 +1371,11 @@ private fun MoreScreen(
     ) {
         AccountSection(state, onRefreshAuth, onSignIn, onSignOut)
         CommunitySafetySection(state, communitySafetyActions, onReviewTerms)
-        CommunityNotificationSection(state, communitySafetyActions.onSetChatMentionsEnabled)
+        CommunityNotificationSection(
+            state,
+            communitySafetyActions.onSetChatMentionsEnabled,
+            communitySafetyActions.onSetForegroundChatMentionMonitorEnabled,
+        )
         MoreDisclosure(
             title = "Song requests",
             summary = "Search or ask the station for an available track.",
@@ -1323,11 +1409,14 @@ private fun MoreScreen(
 private fun CommunityNotificationSection(
     state: MainUiState,
     onSetChatMentionsEnabled: (StationId, Boolean) -> Unit,
+    onSetForegroundChatMentionMonitorEnabled: (StationId, Boolean) -> Unit,
 ) {
     val station = state.selectedStation ?: return
     val enabled = state.communityNotifications.chatMentionsEnabled(station.id)
+    val monitorEnabled = state.communityNotifications.foregroundMonitorEnabled(station.id)
     val eligible = state.auth?.status == AuthStatus.SignedIn && state.communitySafety.canViewCommunityContent
     val canChangeSetting = eligible || enabled
+    val canChangeMonitor = (eligible && enabled) || monitorEnabled
     MoreDisclosure(
         title = "Community notifications",
         summary = if (enabled) "Chat mentions enabled for ${station.shortName}" else "Off for ${station.shortName}",
@@ -1370,8 +1459,43 @@ private fun CommunityNotificationSection(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
+                Row(
+                    Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Checkbox(
+                        checked = monitorEnabled,
+                        onCheckedChange = { onSetForegroundChatMentionMonitorEnabled(station.id, it) },
+                        enabled = canChangeMonitor,
+                        modifier = Modifier
+                            .testTag("foreground_chat_mention_monitor_toggle")
+                            .semantics {
+                                contentDescription = "Monitor chat mentions while the app is closed"
+                            },
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text("Monitor mentions while app is closed", fontWeight = FontWeight.SemiBold)
+                        Text(
+                            "Keeps one ${station.shortName} chat monitor active and checks about once a minute. Android shows a persistent monitoring notification with a Stop action.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+                if (!enabled && eligible) {
+                    Text(
+                        "Turn on mention notifications before enabling the closed-app monitor.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 Text(
-                    "Current preview: mentions can be detected only while this app is open and Chat is actively refreshing. Closed-app delivery will require station or push-relay support. Message text is not included in the notification.",
+                    if (monitorEnabled) {
+                        "The closed-app monitor is active for ${station.shortName}. It stops if you sign out or disable community content. Message text is not included in notifications."
+                    } else {
+                        "When the app is open, mentions are detected while Chat is actively refreshing. Message text is not included in notifications."
+                    },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -1911,7 +2035,7 @@ private fun AccountCard(
                 }
                 AuthStatus.SignedOut, AuthStatus.Error -> {
                     auth.errorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-                    if (auth.challengeImageUrl == null) {
+                    if (auth.challengeImageUrl == null && auth.antiSpamPrompt == null) {
                         Button(
                             onClick = { onRefresh(station.id) },
                             modifier = Modifier.testTag("account_retry_sign_in_${station.id.value}"),
@@ -1938,26 +2062,37 @@ private fun AccountCard(
                                 .testTag("account_password_${station.id.value}")
                                 .semantics { contentDescription = "Password for ${station.name}" },
                         )
-                        AsyncImage(
-                            model = auth.challengeImageUrl,
-                            contentDescription = "${station.name} security code image",
-                            contentScale = ContentScale.Fit,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(112.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Color.White)
-                                .padding(12.dp),
-                        )
+                        auth.challengeImageUrl?.let { imageUrl ->
+                            AsyncImage(
+                                model = imageUrl,
+                                contentDescription = "${station.name} security code image",
+                                contentScale = ContentScale.Fit,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(112.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color.White)
+                                    .padding(12.dp),
+                            )
+                        }
+                        auth.antiSpamPrompt?.let { prompt ->
+                            Text(prompt, fontWeight = FontWeight.Medium)
+                        }
                         OutlinedTextField(
                             securityCode,
-                            { securityCode = it.filter(Char::isLetterOrDigit) },
-                            label = { Text("Security code") },
+                            { securityCode = it.take(MAX_ANTI_SPAM_ANSWER_LENGTH) },
+                            label = { Text(if (auth.antiSpamPrompt == null) "Security code" else "Anti-spam answer") },
                             singleLine = true,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .testTag("account_security_code_${station.id.value}")
-                                .semantics { contentDescription = "Security code for ${station.name}" },
+                                .semantics {
+                                    contentDescription = if (auth.antiSpamPrompt == null) {
+                                        "Security code for ${station.name}"
+                                    } else {
+                                        "Anti-spam answer for ${station.name}"
+                                    }
+                                },
                         )
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Button(
@@ -1968,7 +2103,7 @@ private fun AccountCard(
                                 },
                                 modifier = Modifier.testTag("account_sign_in_${station.id.value}"),
                             ) { Text("Sign in to ${station.shortName}") }
-                            TextButton(onClick = { onRefresh(station.id) }) { Text("New code") }
+                            TextButton(onClick = { onRefresh(station.id) }) { Text("New check") }
                         }
                     }
                 }
@@ -1976,6 +2111,8 @@ private fun AccountCard(
         }
     }
 }
+
+private const val MAX_ANTI_SPAM_ANSWER_LENGTH = 64
 
 @Composable
 private fun AccountStationIdentity(
@@ -2123,7 +2260,15 @@ private fun SongRequestSection(
                 CircularProgressIndicator()
                 Text(if (requests.status == SongRequestLoadStatus.Submitting) "Sending one request…" else "Loading station library…")
             }
-            requests?.errorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+            requests?.errorMessage?.let { error ->
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(error, color = MaterialTheme.colorScheme.error)
+                    TextButton(
+                        onClick = onCancelRequest,
+                        modifier = Modifier.testTag("dismiss_song_request_result"),
+                    ) { Text("Dismiss") }
+                }
+            }
             requests?.notice?.let { Text(it, color = MaterialTheme.colorScheme.primary) }
 
             requests?.searchResults?.takeIf { it.isNotEmpty() }?.let { results ->
@@ -2214,4 +2359,25 @@ private fun SongRequestSection(
             }
         }
     }
+}
+
+@Composable
+private fun RequestResultDialog(
+    state: MainUiState,
+    onDismiss: () -> Unit,
+) {
+    val requests = state.requests ?: return
+    val error = requests.errorMessage
+    val message = error ?: requests.notice ?: return
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Request status") },
+        text = { Text(message) },
+        confirmButton = {
+            TextButton(
+                onClick = onDismiss,
+                modifier = Modifier.testTag("dismiss_song_request_result_dialog"),
+            ) { Text("Dismiss") }
+        },
+    )
 }

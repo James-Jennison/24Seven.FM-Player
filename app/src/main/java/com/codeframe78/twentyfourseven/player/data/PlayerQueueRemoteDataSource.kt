@@ -13,6 +13,7 @@ import java.nio.charset.StandardCharsets
 
 internal interface QueueRemoteDataSource {
     suspend fun fetch(stationId: StationId): QueuePayload
+    suspend fun fetchForVerification(stationId: StationId): QueuePayload = fetch(stationId)
 }
 
 internal class PlayerQueueRemoteDataSource(
@@ -21,7 +22,20 @@ internal class PlayerQueueRemoteDataSource(
         it.toURL().openConnection() as HttpURLConnection
     },
 ) : QueueRemoteDataSource {
-    override suspend fun fetch(stationId: StationId): QueuePayload = withContext(Dispatchers.IO) {
+    override suspend fun fetch(stationId: StationId): QueuePayload = fetch(
+        stationId,
+        maxExtendedTracks = VISIBLE_QUEUE_TRACK_LIMIT,
+    )
+
+    override suspend fun fetchForVerification(stationId: StationId): QueuePayload = fetch(
+        stationId,
+        maxExtendedTracks = VERIFICATION_QUEUE_TRACK_LIMIT,
+    )
+
+    private suspend fun fetch(
+        stationId: StationId,
+        maxExtendedTracks: Int,
+    ): QueuePayload = withContext(Dispatchers.IO) {
         val endpoint = endpoints[stationId.canonicalized()] ?: throw IOException("Unsupported station")
         if (endpoint.extendedQueue) {
             val origin = "https://${endpoint.domain}/"
@@ -32,7 +46,7 @@ internal class PlayerQueueRemoteDataSource(
                 fallbackCharset = StandardCharsets.ISO_8859_1,
                 expectedOrigin = URI(origin),
             )
-            return@withContext parser.parseExtended(response, origin)
+            return@withContext parser.parseExtended(response, origin, maxExtendedTracks)
         }
         val playerUrl = "https://${endpoint.domain}/player.php"
         val response = get(
@@ -106,6 +120,8 @@ internal class PlayerQueueRemoteDataSource(
         const val REQUEST_TIMEOUT_MILLIS = 10_000
         const val MAX_RESPONSE_CHARACTERS = 512_000
         const val MAX_REDIRECTS = 5
+        const val VISIBLE_QUEUE_TRACK_LIMIT = 30
+        const val VERIFICATION_QUEUE_TRACK_LIMIT = 500
         val REDIRECT_STATUSES = setOf(301, 302, 303, 307, 308)
         val endpoints = mapOf(
             StationId("sst") to Endpoint("streamingsoundtracks.com", "sst"),

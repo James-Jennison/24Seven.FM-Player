@@ -8,6 +8,7 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.isActive
@@ -45,6 +46,8 @@ class PollingChatRepository internal constructor(
             forwarding.cancel()
         }
     }
+
+    override fun observeCachedChat(stationId: StationId): Flow<ChatState> = state(stationId).asStateFlow()
 
     override suspend fun refresh(stationId: StationId) {
         lock(stationId).withLock {

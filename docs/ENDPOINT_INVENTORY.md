@@ -1,18 +1,17 @@
 # Endpoint inventory
 
-Sanitized inventory updated July 14, 2026. No cookies, credentials, CAPTCHA tokens, authentication headers, personal identifiers, or message IDs belong in this document.
+Sanitized inventory updated August 11, 2026. No cookies, credentials, anti-spam answers, authentication headers, personal identifiers, or message IDs belong in this document.
 
 All relative HTTPS paths below are resolved independently against one of these five station origins: `streamingsoundtracks.com`, `1980s.fm`, `adagio.fm`, `death.fm`, or `entranced.fm`. Requests validate the expected origin before sending station sessions.
 
 | Station(s) | Purpose | Endpoint/protocol | Format | Authentication | Stability/refresh/cache | Error behavior | Authorization/status |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| All five | Primary live audio | Station-provided `http://hi5.<station-domain>/;` | ICY AAC+ stream | None | Continuous Media3 playback; first priority | One controlled fallback | Verified PLS; implemented and permitted |
-| All five | Fallback live audio | Station-provided `http://hi.<station-domain>/;` | ICY AAC+ stream | None | Used only after primary failure | Playback error after bounded fallback | Verified PLS; implemented and permitted |
+| All five | Live audio | Station-provided `https://<station-domain>/live` | HTTPS-proxied Icecast AAC+ stream, 192 kbps | None | Continuous Media3 playback; reverse proxy handles `hi5` primary and `hi` backup failover | Playback error when the redundant proxy cannot serve audio | Administrator-directed redundant Icecast architecture; verified HTTPS 200 on August 10, 2026 |
 | All five | ICY metadata | Audio response headers/metadata | ICY text | None | Event driven; no independent poll | Playback continues without metadata | Implemented/verified |
 | All five | Current artwork | `/soap/FM24sevenJSON.php?action=GetCurrentlyPlaying` | Bounded JSON | None | Once per distinct ICY title; no interval poll | Omit artwork and retain station fallback | Implemented/verified |
 | SST, 1980s, Adagio, Entranced | Queue and recent history | `/modules/Queue_Played/Queue_Played-gen.php`, Queue page referer | Bounded ISO-8859-1 HTML | None | No more than once per 60 seconds; memory last-known | Preserve prior ready state or show refresh error | Administrator-authorized; implemented |
 | Death.FM | Compact queue/history | `/player.php?ajax_action=get_db_info&station=dfm&asin=` | Bounded JSON containing HTML fragments | None | Same shared 60-second limit | Same queue repository error policy | Administrator-authorized; implemented |
-| All five | Login challenge/form discovery | Station HTTPS root; server-provided same-origin form action | Bounded HTML + CAPTCHA image | Credentials transient on POST | User initiated; restored session revalidated | New challenge and safe error | Administrator-authorized; implemented |
+| All five | Login challenge/form discovery | `/modules.php?name=Your_Account`; server-provided same-origin form action | Bounded HTML + text anti-spam prompt | Credentials and answer transient on POST | User initiated; restored session revalidated | New challenge and safe error | Administrator-directed text anti-spam migration; implemented |
 | All five | Logout | `/modules.php?name=Your_Account&op=logout` | HTML/redirect | Station session | User initiated | Local protected session cleared even on remote failure | Implemented |
 | All five | Chat read | `/modules/ClearChat/block-files/view.php?username=&sort=desc` | Bounded ISO-8859-1 HTML | No | 30-second minimum; memory-only | Prior state/error, no persisted history | Administrator-authorized; implemented |
 | All five | Chat post-form discovery | Station root plus server form at `/modules/ClearChat/block-files/input.php` | HTML form | Station session | User initiated | No mutation without validated form/session | Administrator-authorized; implemented |

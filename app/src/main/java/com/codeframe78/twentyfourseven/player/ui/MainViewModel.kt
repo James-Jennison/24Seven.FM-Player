@@ -434,6 +434,10 @@ class MainViewModel(
         communityNotifications.setChatMentionsEnabled(stationId, enabled)
     }
 
+    fun setForegroundChatMentionMonitorEnabled(stationId: StationId, enabled: Boolean) = viewModelScope.launch {
+        communityNotifications.setForegroundChatMonitorEnabled(stationId, enabled)
+    }
+
     fun blockCommunityUser(stationId: StationId, displayName: String) = viewModelScope.launch {
         communitySafety.blockUser(stationId, displayName)
     }
@@ -516,12 +520,9 @@ class MainViewModel(
         if (!communitySafety.observeSafety().first().canContributeCommunityContent) return@launch
         val station = stations.observeSelectedStation().first()
         val stationId = station.id
-        queue.refresh(stationId)
-        if (station.capabilities.supportsListenerActivity) listenerActivity.refresh(stationId)
-        if (stations.observeSelectedStation().first().id != stationId) {
-            requests.cancelRequest(stationId)
-            return@launch
-        }
+        // Queue is the confirmation surface. Navigate immediately; the result remains
+        // station-authoritative and the refresh below renders the final queue state.
+        destination.value = MainDestination.Queue
         requests.confirmRequest(
             stationId,
             RequestConfirmationContext(
@@ -532,6 +533,7 @@ class MainViewModel(
             ),
             message,
         )
+        queue.refresh(stationId)
     }
 
     class Factory(

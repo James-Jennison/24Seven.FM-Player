@@ -233,10 +233,20 @@ private fun FavoriteTrackCard(
     val available = track.availability.canRequest
     Card(Modifier.fillMaxWidth().testTag("favorite_track_${track.position}")) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                RequestStatusIndicator(track.availability)
-                Spacer(Modifier.weight(1f))
-                Text("#${track.position}", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                RequestStatusIndicator(
+                    availability = track.availability,
+                    modifier = Modifier.weight(1f),
+                )
+                Spacer(Modifier.width(12.dp))
+                Text(
+                    "#${track.position}",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.testTag("favorite_track_position_${track.position}"),
+                )
             }
             Text(track.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Text(

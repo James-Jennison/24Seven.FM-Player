@@ -9,6 +9,7 @@ data class AuthState(
     val status: AuthStatus = AuthStatus.Unavailable,
     val displayName: String? = null,
     val challengeImageUrl: String? = null,
+    val antiSpamPrompt: String? = null,
     val errorMessage: String? = null,
 )
 

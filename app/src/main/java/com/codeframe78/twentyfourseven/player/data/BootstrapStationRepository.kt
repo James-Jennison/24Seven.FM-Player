@@ -112,8 +112,7 @@ class BootstrapStationRepository(
         )
 
         fun streams(domain: String) = listOf(
-            StreamVariant("http://hi5.$domain/;", "Primary relay", priority = 0, format = StreamFormat.Aac, bitrateKbps = 128),
-            StreamVariant("http://hi.$domain/;", "Source stream", priority = 1, format = StreamFormat.Aac, bitrateKbps = 128),
+            StreamVariant("https://$domain/live", "Live stream", priority = 0, format = StreamFormat.Aac, bitrateKbps = 192),
         )
 
         fun station(
