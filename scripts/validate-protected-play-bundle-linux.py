@@ -12,6 +12,7 @@ import json
 import os
 from pathlib import Path
 import re
+import secrets
 import shutil
 import subprocess
 import sys
@@ -36,6 +37,12 @@ RECOVERY_AAD = f"{RECOVERY_FORMAT}-v{RECOVERY_VERSION}".encode()
 EXPECTED_UPLOAD_CERTIFICATE_SHA256 = (
     "F6E8E81271964FFC3F8A0D548B49B4DB93AEFC48CCB74B8744512670F4279E3F"
 )
+REPLACEMENT_UPLOAD_ALIAS = "24seven-upload"
+REPLACEMENT_UPLOAD_DNAME = (
+    "CN=24Seven.FM Player Upload, OU=Mobile, O=24Seven.FM Community, C=US"
+)
+
+
 class SigningError(RuntimeError):
     """A safe, user-facing signing validation failure."""
 
@@ -107,6 +114,163 @@ def decrypt_recovery_envelope(envelope: object, passphrase: str) -> bytearray:
         key[:] = b"\x00" * len(key)
 
 
+def _require_replacement_passphrase() -> str:
+    first = getpass.getpass("New recovery passphrase: ")
+    second = getpass.getpass("Confirm recovery passphrase: ")
+    if len(first) < 16:
+        raise SigningError("The recovery passphrase must contain at least 16 characters.")
+    if not secrets.compare_digest(first, second):
+        raise SigningError("The recovery passphrases do not match.")
+    return first
+
+
+def _encrypt_recovery_payload(payload: bytes, passphrase: str) -> dict[str, object]:
+    salt = secrets.token_bytes(32)
+    nonce = secrets.token_bytes(12)
+    key = bytearray(
+        hashlib.pbkdf2_hmac(
+            "sha256", passphrase.encode("utf-8"), salt, MINIMUM_KDF_ITERATIONS, dklen=32
+        )
+    )
+    try:
+        encrypted = AESGCM(bytes(key)).encrypt(nonce, payload, RECOVERY_AAD)
+        return {
+            "format": RECOVERY_FORMAT,
+            "version": RECOVERY_VERSION,
+            "encryption": "AES-256-GCM",
+            "kdf": "PBKDF2-HMAC-SHA256",
+            "iterations": MINIMUM_KDF_ITERATIONS,
+            "salt": base64.b64encode(salt).decode("ascii"),
+            "nonce": base64.b64encode(nonce).decode("ascii"),
+            "tag": base64.b64encode(encrypted[-16:]).decode("ascii"),
+            "ciphertext": base64.b64encode(encrypted[:-16]).decode("ascii"),
+        }
+    finally:
+        key[:] = b"\x00" * len(key)
+
+
+def _write_new_recovery_package(package_path: Path, envelope: Mapping[str, object]) -> None:
+    if package_path.exists():
+        raise SigningError("Refusing to replace an existing encrypted recovery package.")
+    package_path.parent.mkdir(parents=True, exist_ok=True)
+    temporary_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="x", encoding="utf-8", dir=package_path.parent, prefix=".24seven-recovery-", delete=False
+        ) as temporary:
+            temporary_path = Path(temporary.name)
+            temporary_path.chmod(0o600)
+            temporary.write(json.dumps(envelope, separators=(",", ":")))
+            temporary.write("\n")
+            temporary.flush()
+            os.fsync(temporary.fileno())
+        os.replace(temporary_path, package_path)
+        temporary_path = None
+    finally:
+        if temporary_path is not None:
+            temporary_path.unlink(missing_ok=True)
+
+
+def create_replacement_recovery_package(repository_root: Path, package_path: Path) -> str:
+    """Create and independently verify a new upload identity held only in encrypted recovery."""
+    _assert_external_package(package_path, repository_root)
+    if package_path.exists():
+        raise SigningError("Refusing to replace an existing encrypted recovery package.")
+    if not Path("/dev/shm").is_dir():
+        raise SigningError("Memory-backed /dev/shm is required to create a replacement upload identity.")
+
+    passphrase = _require_replacement_passphrase()
+    payload: RecoveryPayload | None = None
+    try:
+        with tempfile.TemporaryDirectory(prefix="24seven-replacement-upload-", dir="/dev/shm") as directory:
+            keystore_path = Path(directory) / "24seven-upload.p12"
+            password = secrets.token_urlsafe(48)
+            environment = os.environ.copy()
+            environment["TWENTYFOURSEVEN_REPLACEMENT_KEY_PASSWORD"] = password
+            result = subprocess.run(
+                [
+                    shutil.which("keytool") or "keytool",
+                    "-genkeypair",
+                    "-keystore",
+                    str(keystore_path),
+                    "-storetype",
+                    "PKCS12",
+                    "-alias",
+                    REPLACEMENT_UPLOAD_ALIAS,
+                    "-keyalg",
+                    "RSA",
+                    "-keysize",
+                    "4096",
+                    "-validity",
+                    "10000",
+                    "-dname",
+                    REPLACEMENT_UPLOAD_DNAME,
+                    "-storepass:env",
+                    "TWENTYFOURSEVEN_REPLACEMENT_KEY_PASSWORD",
+                    "-keypass:env",
+                    "TWENTYFOURSEVEN_REPLACEMENT_KEY_PASSWORD",
+                    "-noprompt",
+                ],
+                env=environment,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=False,
+            )
+            if result.returncode != 0 or not keystore_path.is_file():
+                raise SigningError("keytool could not create the replacement Play upload identity.")
+
+            store_bytes = bytearray(keystore_path.read_bytes())
+            temporary_payload = RecoveryPayload(
+                store_bytes=store_bytes,
+                store_sha256=hashlib.sha256(store_bytes).hexdigest().upper(),
+                store_password=password,
+                key_alias=REPLACEMENT_UPLOAD_ALIAS,
+                key_password=password,
+                certificate_sha256="",
+            )
+            try:
+                temporary_payload.certificate_sha256 = _keystore_certificate_sha256(
+                    keystore_path, temporary_payload.store_password, temporary_payload.key_alias
+                )
+                plaintext = bytearray(
+                    json.dumps(
+                        {
+                            "version": 1,
+                            "storeFileName": keystore_path.name,
+                            "storeBytes": base64.b64encode(store_bytes).decode("ascii"),
+                            "storeSha256": temporary_payload.store_sha256,
+                            "storePassword": password,
+                            "keyAlias": REPLACEMENT_UPLOAD_ALIAS,
+                            "keyPassword": password,
+                            "certificateSha256": temporary_payload.certificate_sha256,
+                        },
+                        separators=(",", ":"),
+                    ).encode("utf-8")
+                )
+                try:
+                    _write_new_recovery_package(
+                        package_path, _encrypt_recovery_payload(plaintext, passphrase)
+                    )
+                finally:
+                    plaintext[:] = b"\x00" * len(plaintext)
+            finally:
+                temporary_payload.clear()
+
+        payload = load_recovery_package(package_path, passphrase, temporary_payload.certificate_sha256)
+        with materialized_keystore(payload) as restored_keystore:
+            certificate_sha256 = verify_keystore_certificate(restored_keystore, payload)
+        if certificate_sha256 != temporary_payload.certificate_sha256:
+            raise SigningError("The replacement recovery package did not verify its upload certificate.")
+        return certificate_sha256
+    except Exception:
+        package_path.unlink(missing_ok=True)
+        raise
+    finally:
+        passphrase = ""
+        if payload is not None:
+            payload.clear()
+
+
 def parse_recovery_payload(
     plaintext: bytearray, expected_certificate_sha256: str
 ) -> RecoveryPayload:
@@ -148,7 +312,7 @@ def parse_recovery_payload(
 def load_recovery_package(
     package_path: Path,
     passphrase: str,
-    expected_certificate_sha256: str = EXPECTED_UPLOAD_CERTIFICATE_SHA256,
+    expected_certificate_sha256: str | None = EXPECTED_UPLOAD_CERTIFICATE_SHA256,
 ) -> RecoveryPayload:
     try:
         envelope = json.loads(package_path.read_text(encoding="utf-8"))
@@ -159,9 +323,23 @@ def load_recovery_package(
 
     plaintext = decrypt_recovery_envelope(envelope, passphrase)
     try:
+        if expected_certificate_sha256 is None:
+            return _parse_recovery_payload_without_registered_identity(plaintext)
         return parse_recovery_payload(plaintext, expected_certificate_sha256)
     finally:
         plaintext[:] = b"\x00" * len(plaintext)
+
+
+def _parse_recovery_payload_without_registered_identity(plaintext: bytearray) -> RecoveryPayload:
+    """Read a self-authenticated first-upload package before Play has an upload identity."""
+    try:
+        value = json.loads(plaintext.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise SigningError("The authenticated recovery payload is not valid JSON.") from exc
+    if not isinstance(value, dict):
+        raise SigningError("The authenticated recovery payload is not a JSON object.")
+    certificate_sha256 = _normalize_sha256(value.get("certificateSha256"), "certificateSha256")
+    return parse_recovery_payload(plaintext, certificate_sha256)
 
 
 def _certificate_sha256_from_pem(pem: str) -> str:
@@ -193,9 +371,9 @@ def _run_captured(command: list[str], environment: dict[str, str] | None = None)
     return result.stdout
 
 
-def verify_keystore_certificate(keystore_path: Path, payload: RecoveryPayload) -> str:
+def _keystore_certificate_sha256(keystore_path: Path, store_password: str, key_alias: str) -> str:
     environment = os.environ.copy()
-    environment["TWENTYFOURSEVEN_RECOVERY_STORE_PASSWORD"] = payload.store_password
+    environment["TWENTYFOURSEVEN_RECOVERY_STORE_PASSWORD"] = store_password
     pem = _run_captured(
         [
             shutil.which("keytool") or "keytool",
@@ -206,13 +384,19 @@ def verify_keystore_certificate(keystore_path: Path, payload: RecoveryPayload) -
             "-storetype",
             "PKCS12",
             "-alias",
-            payload.key_alias,
+            key_alias,
             "-storepass:env",
             "TWENTYFOURSEVEN_RECOVERY_STORE_PASSWORD",
         ],
         environment,
     )
-    certificate_sha256 = _certificate_sha256_from_pem(pem)
+    return _certificate_sha256_from_pem(pem)
+
+
+def verify_keystore_certificate(keystore_path: Path, payload: RecoveryPayload) -> str:
+    certificate_sha256 = _keystore_certificate_sha256(
+        keystore_path, payload.store_password, payload.key_alias
+    )
     if certificate_sha256 != payload.certificate_sha256:
         raise SigningError(
             "The recovered keystore certificate does not match the authenticated payload."
@@ -381,6 +565,22 @@ def parse_arguments() -> argparse.Namespace:
         action="store_true",
         help="Check Linux prerequisites without reading signing material",
     )
+    parser.add_argument(
+        "--create-replacement-recovery-package",
+        type=Path,
+        help=(
+            "Create and verify a replacement upload identity as an encrypted recovery package "
+            "outside the repository"
+        ),
+    )
+    parser.add_argument(
+        "--accept-first-upload-identity",
+        action="store_true",
+        help=(
+            "Accept and print the self-authenticated certificate from a replacement package "
+            "only for Play's first bundle upload"
+        ),
+    )
     return parser.parse_args()
 
 
@@ -392,13 +592,33 @@ def main() -> int:
         if arguments.check_environment:
             print("Protected Linux signing environment is ready.")
             return 0
+        if arguments.create_replacement_recovery_package is not None:
+            certificate_sha256 = create_replacement_recovery_package(
+                repository_root, arguments.create_replacement_recovery_package.expanduser()
+            )
+            print("Replacement upload identity created and recovery package independently verified.")
+            print(f"Upload certificate SHA-256: {certificate_sha256}")
+            return 0
         if arguments.recovery_package is None:
-            raise SigningError("--recovery-package is required unless --check-environment is used.")
+            raise SigningError(
+                "--recovery-package is required unless --check-environment or "
+                "--create-replacement-recovery-package is used."
+            )
         _assert_external_package(arguments.recovery_package, repository_root)
+        if arguments.accept_first_upload_identity and arguments.recovery_package.name != (
+            "24seven-upload-replacement-20260811.24seven-recovery"
+        ):
+            raise SigningError(
+                "First-upload identity acceptance is restricted to the approved replacement recovery package."
+            )
         passphrase = getpass.getpass("Recovery passphrase: ")
         payload: RecoveryPayload | None = None
         try:
-            payload = load_recovery_package(arguments.recovery_package.expanduser(), passphrase)
+            payload = load_recovery_package(
+                arguments.recovery_package.expanduser(),
+                passphrase,
+                None if arguments.accept_first_upload_identity else EXPECTED_UPLOAD_CERTIFICATE_SHA256,
+            )
             passphrase = ""
             with materialized_keystore(payload) as keystore_path:
                 certificate_sha256 = verify_keystore_certificate(keystore_path, payload)
