@@ -37,6 +37,34 @@
         '<p>You can use the testing matrix to choose a focused test case: <a href="https://player.jamesjennison.net/product-testing/">https://player.jamesjennison.net/product-testing/</a></p>' +
         '<p><strong>Privacy reminder:</strong> GitHub issues are public. Do not include passwords, CAPTCHA answers, private messages, cookies, session details, full network captures, or unredacted personal screenshots.</p>' +
         '<p>Thanks again for helping shape 24Seven.FM Player.</p><p>—James</p>'
+    },
+    'new-build': {
+      subject: '24Seven.FM Player Closed Alpha: new build available [version]',
+      html: '<p>Hi,</p><p>A new 24Seven.FM Player Closed Alpha build is ready to test.</p><h3>What changed</h3><ul><li>[Change or fix 1]</li><li>[Change or fix 2]</li><li>[Change or fix 3]</li></ul><h3>What to focus on</h3><p>[Describe the feature, station, device scenario, or issue that needs attention.]</p><p>Update through Google Play, then send feedback through <a href="https://github.com/James-Jennison/24Seven.FM-Player/issues/new?template=product-test.yml">the feedback form</a>. Please include the build version, device, Android version, and steps taken.</p><p>Thanks,<br>24Seven.FM Player</p>'
+    },
+    reminder: {
+      subject: 'Reminder: 24Seven.FM Player Closed Alpha testing',
+      html: '<p>Hi,</p><p>A quick reminder that the 24Seven.FM Player Closed Alpha is still open for testing.</p><p>If you have a few minutes, please update the app, try normal listening plus station switching and background playback, and let us know how it goes.</p><p>Send feedback by [date] using <a href="https://github.com/James-Jennison/24Seven.FM-Player/issues/new?template=product-test.yml">the feedback form</a>. Successful tests and usability notes are just as useful as bug reports.</p><p>Thanks for your help,<br>24Seven.FM Player</p>'
+    },
+    'known-issue': {
+      subject: '24Seven.FM Player Closed Alpha: known issue and workaround',
+      html: '<p>Hi,</p><p>We are aware of the following issue in the current Closed Alpha build:</p><h3>[Known issue]</h3><p>[Describe what testers may see, which devices or stations are affected, and when it happens.]</p><h3>Workaround</h3><ol><li>[Workaround step 1]</li><li>[Workaround step 2]</li></ol><p>Please avoid filing duplicate reports for this issue unless you have a different cause, device-specific detail, or a way to reproduce it consistently.</p><p>We will share an update when a fix is available. Thanks,<br>24Seven.FM Player</p>'
+    },
+    'test-session': {
+      subject: '24Seven.FM Player Closed Alpha: focused test session request',
+      html: '<p>Hi,</p><p>We would appreciate your help with a focused testing session.</p><h3>Session details</h3><ul><li><strong>When:</strong> [date and time]</li><li><strong>Focus:</strong> [feature, station, device type, or scenario]</li><li><strong>Goal:</strong> [what you want to confirm]</li></ul><h3>Please try</h3><ol><li>[Test action 1]</li><li>[Test action 2]</li><li>[Test action 3]</li></ol><p>Report results through <a href="https://github.com/James-Jennison/24Seven.FM-Player/issues/new?template=product-test.yml">the feedback form</a>, including a pass result if everything works as expected.</p><p>Thanks,<br>24Seven.FM Player</p>'
+    },
+    'test-complete': {
+      subject: 'Thank you for testing 24Seven.FM Player Closed Alpha',
+      html: '<p>Hi,</p><p>Thank you for your time and feedback during this Closed Alpha testing period.</p><p>Your reports, successful test results, and usability notes have helped shape the next stage of 24Seven.FM Player.</p><p>[Add any next-step information, such as the next build, testing pause, or release timing.]</p><p>Thanks again,<br>24Seven.FM Player</p>'
+    },
+    'tester-status': {
+      subject: '24Seven.FM Player Closed Alpha: tester status update',
+      html: '<p>Hi,</p><p>This is an update about your 24Seven.FM Player Closed Alpha tester status.</p><p>[Add the status change or update here, including any action the tester should take.]</p><p>If you have questions, reply to this email.</p><p>Thanks,<br>24Seven.FM Player</p>'
+    },
+    'release-signoff': {
+      subject: '24Seven.FM Player: release candidate sign-off request',
+      html: '<p>Hi,</p><p>We are preparing a release candidate and would appreciate a final sign-off from Closed Alpha testers.</p><h3>Please confirm</h3><ol><li>Whether you can install and open the current build.</li><li>Whether live playback, station switching, and background media controls work on your device.</li><li>Whether you have any release-blocking issues.</li></ol><p>Please reply by [date] with one of these outcomes: <strong>Works as expected</strong>, <strong>Issue found</strong>, or <strong>Blocked</strong>. For an issue or block, include your device, Android version, app version, and steps to reproduce.</p><p>Thanks for helping us reach a confident release decision,<br>24Seven.FM Player</p>'
     }
   };
 
