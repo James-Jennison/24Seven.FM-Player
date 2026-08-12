@@ -65,6 +65,15 @@ canonical James-Jennison repository link, and HTTP 200 responses for
 Google-like user agents. This record does not authorize a later content,
 Cloudflare, or server change.
 
+Cloudflare Security Events identified a Bot Fight Mode managed challenge on a
+Google user-agent request to `/privacy/`, which could cause Google Play's URL
+validator to see a 403 response. With explicit owner approval, one custom
+rule was created in the custom firewall phase. It skips only the Bot Fight
+phase for `player.jamesjennison.net` paths `/privacy` and `/privacy/`; it does
+not skip managed WAF rules, rate limits, or any other hostname or route.
+Fresh Google Play-style and Googlebot requests returned HTTP 200, and the
+subsequent Security Events query contained no Google privacy-route challenge.
+
 ## Reproducible build
 
 From the repository root:
