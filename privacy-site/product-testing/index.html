@@ -48,11 +48,26 @@ section: product-testing
   <div class="tester-application-layout">
     <form class="tester-application-form" data-alpha-tester-form novalidate>
       <div class="form-grid">
-        <label>Display name <span aria-hidden="true">*</span><input name="name" autocomplete="name" maxlength="100" required></label>
-        <label>Google Play account email <span aria-hidden="true">*</span><input name="email" type="email" autocomplete="email" maxlength="254" inputmode="email" required></label>
-        <label>Country or region <small>Optional</small><input name="country" autocomplete="country-name" maxlength="80"></label>
-        <label>Android device model <span aria-hidden="true">*</span><input name="device" autocomplete="off" maxlength="160" placeholder="For example, Pixel 9 or Razr 2026" required></label>
-        <label>Android version <span aria-hidden="true">*</span><input name="androidVersion" autocomplete="off" maxlength="48" placeholder="For example, Android 16" required></label>
+        <div class="form-field">
+          <label for="tester-name">Display name <span aria-hidden="true">*</span></label>
+          <input id="tester-name" name="name" autocomplete="name" maxlength="100" required>
+        </div>
+        <div class="form-field">
+          <label for="tester-email">Google Play account email <span aria-hidden="true">*</span></label>
+          <input id="tester-email" name="email" type="email" autocomplete="email" maxlength="254" inputmode="email" required>
+        </div>
+        <div class="form-field">
+          <label for="tester-country">Country or region <small>Optional</small></label>
+          <input id="tester-country" name="country" autocomplete="country-name" maxlength="80">
+        </div>
+        <div class="form-field">
+          <label for="tester-device">Android device model <span aria-hidden="true">*</span></label>
+          <input id="tester-device" name="device" autocomplete="off" maxlength="160" placeholder="For example, Pixel 9 or Razr 2026" required>
+        </div>
+        <div class="form-field">
+          <label for="tester-android-version">Android version <span aria-hidden="true">*</span></label>
+          <input id="tester-android-version" name="androidVersion" autocomplete="off" maxlength="48" placeholder="For example, Android 16" required>
+        </div>
       </div>
       <fieldset>
         <legend>What would you like to test? <small>Optional</small></legend>
@@ -64,8 +79,11 @@ section: product-testing
           <label><input type="checkbox" name="interests" value="General testing"> General testing</label>
         </div>
       </fieldset>
-      <label>Prior testing experience <small>Optional</small><textarea name="experience" maxlength="1200" rows="4" placeholder="Device coverage, accessibility experience, or anything else that may help assign a test."></textarea></label>
-      <label class="visually-hidden" aria-hidden="true">Leave this field blank<input name="company" tabindex="-1" autocomplete="off"></label>
+      <div class="form-field">
+        <label for="tester-experience">Prior testing experience <small>Optional</small></label>
+        <textarea id="tester-experience" name="experience" maxlength="1200" rows="4" placeholder="Device coverage, accessibility experience, or anything else that may help assign a test."></textarea>
+      </div>
+      <div class="visually-hidden" aria-hidden="true"><label for="tester-company">Leave this field blank</label><input id="tester-company" name="company" tabindex="-1" autocomplete="off"></div>
       <label class="consent-check"><input type="checkbox" name="consent" value="yes" required> I agree that the project coordinator may use these details to contact me about 24Seven.FM Player Alpha testing. I will not submit passwords, station credentials, CAPTCHA answers, or other authentication secrets.</label>
       <div class="turnstile-slot" data-alpha-tester-turnstile></div>
       <p class="form-privacy">The form sends your application to the project coordinator without a public record or a website database. Details are used only to assess and manage Alpha invitations; use the Player support route to request deletion.</p>
