@@ -25,6 +25,7 @@ EXPECTED_PAGES = {
 REQUIRED_FILES = {
     ".htaccess",
     "alpha-tester-interest.php",
+    "private-tester-queue.php",
     "assets/privacy.css",
     "assets/project.css",
     "assets/project.js",

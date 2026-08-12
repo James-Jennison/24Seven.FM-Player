@@ -21,3 +21,7 @@ _pages-transition/
 project-site-browser-results/
 privacy-site/privacy/index.md
 privacy-site/assets/project/
+.private-tester-queue-config.php
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal

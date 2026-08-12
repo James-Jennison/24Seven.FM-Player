@@ -30,5 +30,6 @@ docker run --rm \
 # reviewed with the static artifact but runs only through the existing
 # Webuzo PHP handler after an approved deployment.
 install -m 0644 "${repository_root}/privacy-site/alpha-tester-interest.php" "${destination}/alpha-tester-interest.php"
+install -m 0644 "${repository_root}/privacy-site/private-tester-queue.php" "${destination}/private-tester-queue.php"
 
 printf 'Built the project site at %s\n' "${destination}"
