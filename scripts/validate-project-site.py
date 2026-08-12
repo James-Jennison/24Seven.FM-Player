@@ -24,6 +24,7 @@ EXPECTED_PAGES = {
 }
 REQUIRED_FILES = {
     ".htaccess",
+    "alpha-tester-interest.php",
     "assets/privacy.css",
     "assets/project.css",
     "assets/project.js",
@@ -59,7 +60,7 @@ SECRET_MARKERS = {
 REQUIRED_HTACCESS_DIRECTIVES = {
     "ErrorDocument 404 /404.html",
     "<IfModule mod_headers.c>",
-    "Header always set Content-Security-Policy \"default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'self'; form-action 'self'; frame-ancestors 'none'; frame-src https://challenges.cloudflare.com; img-src 'self' data:; object-src 'none'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; upgrade-insecure-requests\"",
+    "Header always set Content-Security-Policy \"default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'self'; form-action 'self'; frame-ancestors 'none'; frame-src 'none'; img-src 'self' data:; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; upgrade-insecure-requests\"",
     "Header always set Permissions-Policy \"camera=(), geolocation=(), microphone=(), payment=(), usb=()\"",
     "Header always set Referrer-Policy \"strict-origin-when-cross-origin\"",
     "Header always set X-Content-Type-Options \"nosniff\"",
@@ -189,7 +190,7 @@ def audit() -> int:
     for path in files:
         if path.stat().st_size > 8 * 1024 * 1024:
             fail(f"Artifact file exceeds 8 MiB: {path.relative_to(artifact_root)}", failures)
-        if path.suffix.lower() not in {".html", ".css", ".js", ".xml", ".txt", ".json", ".webmanifest"}:
+        if path.suffix.lower() not in {".html", ".css", ".js", ".php", ".xml", ".txt", ".json", ".webmanifest"}:
             continue
         try:
             text = path.read_text(encoding="utf-8")

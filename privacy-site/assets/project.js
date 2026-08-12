@@ -472,11 +472,8 @@
   function enhanceAlphaTesterApplication() {
     const form = document.querySelector('[data-alpha-tester-form]');
     if (!form) return;
-    const slot = form.querySelector('[data-alpha-tester-turnstile]');
     const status = form.querySelector('[data-alpha-tester-status]');
     const submit = form.querySelector('[data-alpha-tester-submit]');
-    let widgetId = null;
-    let rendering = false;
 
     function setStatus(message, state) {
       if (!status) return;
@@ -484,30 +481,21 @@
       status.dataset.state = state || '';
     }
 
-    function renderTurnstile() {
-      if (!slot || widgetId !== null || rendering) return;
-      if (!window.turnstile || typeof window.turnstile.render !== 'function') {
-        window.setTimeout(renderTurnstile, 100);
-        return;
-      }
-      rendering = true;
-      widgetId = window.turnstile.render(slot, {
-        sitekey: '0x4AAAAAAENpAmKMHVwen77V',
-        action: 'alpha_tester_interest',
-      });
-    }
+    const applicationResult = new URLSearchParams(window.location.search).get('application');
+    if (applicationResult === 'sent') setStatus('Your tester-interest application was sent.', 'success');
+    if (applicationResult === 'error') setStatus('The application could not be delivered. Please try again later.', 'error');
 
     form.addEventListener('submit', async function (event) {
       event.preventDefault();
       if (!form.reportValidity()) return;
-      if (widgetId === null) {
-        setStatus('Verification is still loading. Please wait a moment and try again.', 'error');
-        return;
-      }
       submit.disabled = true;
       setStatus('Sending your application…', 'pending');
       try {
-        const response = await fetch('/api/alpha-tester-interest', { method: 'POST', body: new FormData(form) });
+        const response = await fetch(form.action, {
+          method: 'POST',
+          headers: { Accept: 'application/json' },
+          body: new FormData(form),
+        });
         const result = await response.json();
         if (!response.ok || result.ok !== true) throw new Error(result.message || 'The application could not be sent.');
         form.reset();
@@ -516,10 +504,8 @@
         setStatus(error && error.message ? error.message : 'The application could not be sent. Please try again.', 'error');
       } finally {
         submit.disabled = false;
-        if (widgetId !== null && window.turnstile && typeof window.turnstile.reset === 'function') window.turnstile.reset(widgetId);
       }
     });
-    renderTurnstile();
   }
 
   enhanceAlphaTesterApplication();

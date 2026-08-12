@@ -46,7 +46,7 @@ section: product-testing
     <p>Internal testing is limited and currently awaits Google Play availability. Apply with the Google-account email that should receive the Play testing invitation. An application is interest only; an invitation is not guaranteed.</p>
   </div>
   <div class="tester-application-layout">
-    <form class="tester-application-form" data-alpha-tester-form novalidate>
+    <form class="tester-application-form" data-alpha-tester-form action="/alpha-tester-interest.php" method="post" novalidate>
       <div class="form-grid">
         <div class="form-field">
           <label for="tester-name">Display name <span aria-hidden="true">*</span></label>
@@ -85,8 +85,7 @@ section: product-testing
       </div>
       <div class="visually-hidden" aria-hidden="true"><label for="tester-company">Leave this field blank</label><input id="tester-company" name="company" tabindex="-1" autocomplete="off"></div>
       <label class="consent-check"><input type="checkbox" name="consent" value="yes" required> I agree that the project coordinator may use these details to contact me about 24Seven.FM Player Alpha testing. I will not submit passwords, station credentials, CAPTCHA answers, or other authentication secrets.</label>
-      <div class="turnstile-slot" data-alpha-tester-turnstile></div>
-      <p class="form-privacy">The form sends your application to the project coordinator without a public record or a website database. Details are used only to assess and manage Alpha invitations; use the Player support route to request deletion.</p>
+      <p class="form-privacy">The form sends your application directly to the project coordinator without a public record or a website database. Details are used only to assess and manage Alpha invitations; use the Player support route to request deletion.</p>
       <p class="form-status" data-alpha-tester-status role="status" aria-live="polite"></p>
       <button class="button primary" type="submit" data-alpha-tester-submit>Send tester-interest application</button>
     </form>
@@ -102,7 +101,6 @@ section: product-testing
     </aside>
   </div>
 </section>
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 
 <div class="catalog-toolbar tester-catalog-toolbar" data-test-catalog aria-label="Tester catalog controls">
   <label for="tester-catalog-search">Search test cases</label>

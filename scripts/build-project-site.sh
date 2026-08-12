@@ -26,4 +26,9 @@ docker run --rm \
   -v "${repository_root}:/workspace" \
   "${jekyll_image}"
 
+# Jekyll intentionally excludes executable server files. The endpoint is
+# reviewed with the static artifact but runs only through the existing
+# Webuzo PHP handler after an approved deployment.
+install -m 0644 "${repository_root}/privacy-site/alpha-tester-interest.php" "${destination}/alpha-tester-interest.php"
+
 printf 'Built the project site at %s\n' "${destination}"
