@@ -12,7 +12,20 @@
   var templates = {
     welcome: {
       subject: 'Welcome to the 24Seven.FM Player internal test',
-      html: '<p>Hello,</p><p>Thank you for joining the 24Seven.FM Player internal test.</p><p>We will share testing instructions and the latest build details with you shortly.</p><p>Please reply to this email if you have any questions.</p><p>Thanks,<br>24Seven.FM Player</p>'
+      html: '<p>Hi,</p>' +
+        '<p>Welcome to the internal test for 24Seven.FM Player. Thank you for helping us validate the app before wider release.</p>' +
+        '<p><strong>Join on Android:</strong><br><a href="https://play.google.com/store/apps/details?id=com.codeframe78.twentyfourseven.player">https://play.google.com/store/apps/details?id=com.codeframe78.twentyfourseven.player</a></p>' +
+        '<p><strong>Join on the web:</strong><br><a href="https://play.google.com/apps/testing/com.codeframe78.twentyfourseven.player">https://play.google.com/apps/testing/com.codeframe78.twentyfourseven.player</a></p>' +
+        '<p>Open the link while signed in to Google Play with the Google account added to the tester list. Updates will arrive through Google Play during the test.</p>' +
+        '<h3>Quick start</h3><ol><li>Open 24Seven.FM Player and allow notifications if prompted.</li><li>On the Player screen, swipe across the station cards to select a station.</li><li>Tap the central Play button to begin live radio.</li><li>Confirm the station name, artwork, and current track appear.</li><li>Background the app briefly; playback should continue with Android media controls.</li><li>Tap the media notification to return to the Player, then try Pause/Play and another station.</li></ol>' +
+        '<h3>Signing in to a station</h3><ol><li>Select the station you want to use.</li><li>Tap the account and station options button in the upper-right corner of the app.</li><li>Choose the station’s sign-in option. This opens that station’s own login page.</li><li>Sign in there with your existing account for that specific station, then return to the app.</li><li>Confirm the app shows that station as signed in.</li></ol>' +
+        '<p>Each station uses its own website account. Signing in to one station does not sign you in to the others. Available features—such as Favorites, Chat participation, requests, and account information—depend on the selected station and its supported capabilities.</p>' +
+        '<p><strong>Please do not include passwords, CAPTCHA answers, session information, or screenshots containing credentials in feedback.</strong></p>' +
+        '<h3>Testing matrix</h3><p><a href="https://player.jamesjennison.net/product-testing/">https://player.jamesjennison.net/product-testing/</a></p><p>Use the matrix to choose a test case or a normal listening scenario suitable for your device.</p>' +
+        '<h3>Submit feedback</h3><p><a href="https://github.com/James-Jennison/24Seven.FM-Player/issues/new?template=product-test.yml">https://github.com/James-Jennison/24Seven.FM-Player/issues/new?template=product-test.yml</a></p><p>Please report passes, issues, usability notes, and blocked tests. Include the app version, device and Android version, station selected, steps taken, expected versus actual behavior, and whether it repeats.</p>' +
+        '<p>GitHub issues are public. Do not include credentials, private messages, cookies, session details, full network captures, or unredacted personal screenshots.</p>' +
+        '<p>For in-app help, use <strong>More → Contact Us</strong>. Privacy information: <a href="https://player.jamesjennison.net/privacy/">https://player.jamesjennison.net/privacy/</a></p>' +
+        '<p>Thanks again for helping shape 24Seven.FM Player.</p><p>—James</p>'
     },
     feedback: {
       subject: '24Seven.FM Player testing feedback request',

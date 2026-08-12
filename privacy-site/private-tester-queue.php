@@ -198,6 +198,7 @@ function appendSanitizedNodes(DOMDocument $output, DOMNode $source, DOMNode $des
     $allowed = [
         'p' => 'p', 'br' => 'br', 'strong' => 'strong', 'b' => 'strong',
         'em' => 'em', 'i' => 'em', 'u' => 'u', 's' => 's', 'strike' => 's',
+        'h2' => 'h2', 'h3' => 'h3', 'h4' => 'h4',
         'ul' => 'ul', 'ol' => 'ol', 'li' => 'li', 'a' => 'a',
     ];
     foreach ($source->childNodes as $child) {
