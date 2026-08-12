@@ -269,11 +269,11 @@ try {
     field.dispatchEvent(new Event('input', { bubbles: true }));
     return {
       visible: [...document.querySelectorAll('[data-privacy-document] > section')].filter((item) => !item.hidden).length,
-      emailPublished: document.body.textContent.includes('24sevenplayer@')
+      stationDeletionContact: document.body.textContent.includes('morg@24seven.fm')
     };
   })()`);
   assert(privacyState.visible > 0, "Privacy search returned no session results");
-  assert(!privacyState.emailPublished, "The unapproved public email remains visible");
+  assert(privacyState.stationDeletionContact, "The approved station deletion contact is missing");
 
   await send("Emulation.setEmulatedMedia", {
     media: "screen",
