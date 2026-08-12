@@ -7,6 +7,11 @@
 - Never commit cookies, credentials, CSRF tokens, private endpoints, or HAR files.
 - Do not add a stream URL until it has been verified and its use is permitted.
 
+## Player project site deployment
+
+- For any 24Seven.FM Player website deployment, verification, or server-side investigation, use only the canonical SSH alias `website-vm-admin`.
+- Do not use `webuzo-production-admin` for this project. Resolve the required alias through the managed SSH configuration before connecting.
+
 ## Android validation
 
 - Never run `gradlew clean` during routine development or validation. Preserve Gradle caches, incremental outputs, and existing build products.
