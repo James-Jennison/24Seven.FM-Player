@@ -14,6 +14,7 @@ const QUEUE_CONFIG_FILE = '.private-tester-queue-config.php';
 const SESSION_NAME = 'player_tester_queue';
 const MAX_SUBJECT_LENGTH = 180;
 const MAX_BODY_LENGTH = 12_000;
+const MAX_HTML_BODY_LENGTH = 24_000;
 
 ini_set('display_errors', '0');
 
@@ -83,6 +84,7 @@ function database(array $config): PDO
             id INTEGER PRIMARY KEY,
             subject TEXT NOT NULL,
             body TEXT NOT NULL,
+            body_html TEXT,
             created_at TEXT NOT NULL,
             dispatched_at TEXT,
             status TEXT NOT NULL CHECK(status IN (\'prepared\', \'dispatched\', \'partial\', \'failed\'))
@@ -95,6 +97,17 @@ function database(array $config): PDO
             PRIMARY KEY (batch_id, tester_id)
         );'
     );
+    $columns = $database->query('PRAGMA table_info(email_batches)')->fetchAll();
+    $hasHtmlBody = false;
+    foreach ($columns as $column) {
+        if (($column['name'] ?? '') === 'body_html') {
+            $hasHtmlBody = true;
+            break;
+        }
+    }
+    if (!$hasHtmlBody) {
+        $database->exec('ALTER TABLE email_batches ADD COLUMN body_html TEXT');
+    }
     return $database;
 }
 
@@ -158,7 +171,7 @@ function renderPage(string $title, string $content): never
     header('X-Frame-Options: DENY');
     echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'
         . e($title) . '</title><style>'
-        . 'body{margin:0;background:#090c15;color:#f7f4ec;font:16px/1.5 system-ui,sans-serif}.shell{max-width:72rem;margin:3rem auto;padding:0 1rem}h1,h2{line-height:1.15}section{margin:1rem 0;padding:1.25rem;border:1px solid #30394d;border-radius:.8rem;background:#111624}.muted{color:#b7bdca}.notice{padding:.8rem;border-radius:.5rem;background:#173631}.error{background:#4a2229}label{display:block;margin:.75rem 0 .3rem;font-weight:700}input,textarea{box-sizing:border-box;width:100%;padding:.65rem;border:1px solid #59647a;border-radius:.4rem;background:#fff;color:#182033;font:inherit}textarea{min-height:12rem}button{margin-top:1rem;padding:.65rem 1rem;border:0;border-radius:.4rem;background:#67e6d1;color:#071411;font:700 1rem system-ui;cursor:pointer}button.secondary{margin-left:.5rem;background:#d29cff;color:#22102f}table{width:100%;border-collapse:collapse}th,td{padding:.6rem;text-align:left;border-bottom:1px solid #30394d;vertical-align:top}th:first-child,td:first-child{width:2.4rem}small{color:#b7bdca}.actions{display:flex;gap:.6rem;flex-wrap:wrap}.actions form{margin:0}.danger{background:#ffcb6b;color:#2a1a00}@media(max-width:44rem){table{font-size:.86rem}.optional{display:none}}</style></head><body><main class="shell">'
+        . 'body{margin:0;background:#090c15;color:#f7f4ec;font:16px/1.5 system-ui,sans-serif}.shell{max-width:72rem;margin:3rem auto;padding:0 1rem}h1,h2{line-height:1.15}section{margin:1rem 0;padding:1.25rem;border:1px solid #30394d;border-radius:.8rem;background:#111624}.muted{color:#b7bdca}.notice{padding:.8rem;border-radius:.5rem;background:#173631}.error{background:#4a2229}.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}label{display:block;margin:.75rem 0 .3rem;font-weight:700}input,textarea,.editor{box-sizing:border-box;width:100%;padding:.65rem;border:1px solid #59647a;border-radius:.4rem;background:#fff;color:#182033;font:inherit}textarea{min-height:12rem}.toolbar{display:flex;flex-wrap:wrap;gap:.4rem;margin:.35rem 0}.toolbar button{margin:0;padding:.35rem .55rem;background:#e8edf5;color:#182033;font-size:.86rem}.editor{min-height:14rem;overflow:auto}.editor:focus{outline:3px solid #67e6d1;outline-offset:3px}.editor:empty:before{color:#58647a;content:attr(data-placeholder);pointer-events:none}.editor p:first-child{margin-top:0}.editor p:last-child{margin-bottom:0}button{margin-top:1rem;padding:.65rem 1rem;border:0;border-radius:.4rem;background:#67e6d1;color:#071411;font:700 1rem system-ui;cursor:pointer}button.secondary{margin-left:.5rem;background:#d29cff;color:#22102f}table{width:100%;border-collapse:collapse}th,td{padding:.6rem;text-align:left;border-bottom:1px solid #30394d;vertical-align:top}th:first-child,td:first-child{width:2.4rem}small{color:#b7bdca}.actions{display:flex;gap:.6rem;flex-wrap:wrap}.actions form{margin:0}.danger{background:#ffcb6b;color:#2a1a00}@media(max-width:44rem){table{font-size:.86rem}.optional{display:none}}</style></head><body><main class="shell">'
         . $content . '</main></body></html>';
     exit;
 }
@@ -177,6 +190,95 @@ function field(string $name, int $maximum, bool $required = true, bool $singleLi
         throw new InvalidArgumentException('Please check the email subject and body.');
     }
     return $value;
+}
+
+function appendSanitizedNodes(DOMDocument $output, DOMNode $source, DOMNode $destination): void
+{
+    $allowed = [
+        'p' => 'p', 'br' => 'br', 'strong' => 'strong', 'b' => 'strong',
+        'em' => 'em', 'i' => 'em', 'u' => 'u', 's' => 's', 'strike' => 's',
+        'ul' => 'ul', 'ol' => 'ol', 'li' => 'li', 'a' => 'a',
+    ];
+    foreach ($source->childNodes as $child) {
+        if ($child->nodeType === XML_TEXT_NODE) {
+            $destination->appendChild($output->createTextNode($child->nodeValue ?? ''));
+            continue;
+        }
+        if ($child->nodeType !== XML_ELEMENT_NODE) {
+            continue;
+        }
+        $tag = strtolower($child->nodeName);
+        if (!isset($allowed[$tag])) {
+            appendSanitizedNodes($output, $child, $destination);
+            continue;
+        }
+        $element = $output->createElement($allowed[$tag]);
+        if ($allowed[$tag] === 'a' && $child instanceof DOMElement && $child->hasAttribute('href')) {
+            $href = trim($child->getAttribute('href'));
+            $scheme = strtolower((string) parse_url($href, PHP_URL_SCHEME));
+            if (in_array($scheme, ['http', 'https', 'mailto'], true)) {
+                $element->setAttribute('href', $href);
+                $element->setAttribute('rel', 'noopener noreferrer');
+            }
+        }
+        $destination->appendChild($element);
+        if ($allowed[$tag] !== 'br') {
+            appendSanitizedNodes($output, $child, $element);
+        }
+    }
+}
+
+function sanitizeHtmlBody(string $html): string
+{
+    if (mb_strlen($html) > MAX_HTML_BODY_LENGTH || str_contains($html, "\0")) {
+        throw new InvalidArgumentException('Please keep the email message within the allowed length.');
+    }
+    if (!class_exists('DOMDocument')) {
+        throw new RuntimeException('The rich-text email editor is unavailable.');
+    }
+    $source = new DOMDocument('1.0', 'UTF-8');
+    $prior = libxml_use_internal_errors(true);
+    $loaded = $source->loadHTML('<!doctype html><html><body><div id="queue-editor">' . $html . '</div></body></html>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+    libxml_clear_errors();
+    libxml_use_internal_errors($prior);
+    if (!$loaded) {
+        throw new InvalidArgumentException('The formatted message could not be read.');
+    }
+    $root = $source->getElementById('queue-editor');
+    if (!$root instanceof DOMElement) {
+        throw new InvalidArgumentException('The formatted message could not be read.');
+    }
+    $output = new DOMDocument('1.0', 'UTF-8');
+    $container = $output->createElement('div');
+    $output->appendChild($container);
+    appendSanitizedNodes($output, $root, $container);
+    $body = '';
+    foreach ($container->childNodes as $child) {
+        $body .= $output->saveHTML($child);
+    }
+    if (trim(strip_tags($body)) === '') {
+        throw new InvalidArgumentException('Write an email message before reviewing recipients.');
+    }
+    return $body;
+}
+
+function plainTextFromHtml(string $html): string
+{
+    $withBreaks = preg_replace('/<\\/(p|li|h[1-6])>|<br\\s*\\/?\\s*>/i', "\n", $html) ?? $html;
+    $text = html_entity_decode(strip_tags($withBreaks), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $text = preg_replace("/[^\\S\r\n]+/u", ' ', $text) ?? $text;
+    $text = preg_replace("/\n{3,}/", "\n\n", $text) ?? $text;
+    return trim($text);
+}
+
+function plainTextToHtml(string $text): string
+{
+    $paragraphs = preg_split("/\r?\n{2,}/", trim($text)) ?: [];
+    $html = '';
+    foreach ($paragraphs as $paragraph) {
+        $html .= '<p>' . nl2br(e($paragraph), false) . '</p>';
+    }
+    return $html;
 }
 
 function selectedTesterIds(): array
@@ -207,19 +309,33 @@ function selectedActiveTesters(PDO $database, array $ids): array
     return $testers;
 }
 
-function sendIndividualMail(array $config, string $recipient, string $subject, string $body): bool
+function sendIndividualMail(array $config, string $recipient, string $subject, string $plainText, string $html): bool
 {
     $senderName = trim((string) ($config['from_name'] ?? '24Seven.FM Player'));
     $from = $config['from_email'];
     $encodedName = '=?UTF-8?B?' . base64_encode($senderName) . '?=';
+    $boundary = '=_24Seven_' . bin2hex(random_bytes(16));
     $headers = [
         'From: ' . $encodedName . ' <' . $from . '>',
         'Reply-To: ' . $from,
         'MIME-Version: 1.0',
+        'Content-Type: multipart/alternative; boundary="' . $boundary . '"',
+    ];
+    $message = implode("\r\n", [
+        '--' . $boundary,
         'Content-Type: text/plain; charset=UTF-8',
         'Content-Transfer-Encoding: 8bit',
-    ];
-    return mail($recipient, $subject, $body, implode("\r\n", $headers), '-f' . $from);
+        '',
+        $plainText,
+        '--' . $boundary,
+        'Content-Type: text/html; charset=UTF-8',
+        'Content-Transfer-Encoding: 8bit',
+        '',
+        '<!doctype html><html><body>' . $html . '</body></html>',
+        '--' . $boundary . '--',
+        '',
+    ]);
+    return mail($recipient, $subject, $message, implode("\r\n", $headers), '-f' . $from);
 }
 
 function renderDashboard(PDO $database, string $notice = '', string $error = ''): never
@@ -234,14 +350,15 @@ function renderDashboard(PDO $database, string $notice = '', string $error = '')
     }
     $message = $notice === '' ? '' : '<p class="notice">' . e($notice) . '</p>';
     $message .= $error === '' ? '' : '<p class="notice error">' . e($error) . '</p>';
+    $editor = '<label for="body-editor">Message</label><div class="toolbar" role="toolbar" aria-label="Email text formatting"><button type="button" data-format="bold"><strong>B</strong><span class="visually-hidden">Bold</span></button><button type="button" data-format="italic"><em>I</em><span class="visually-hidden">Italic</span></button><button type="button" data-format="underline"><u>U</u><span class="visually-hidden">Underline</span></button><button type="button" data-format="insertUnorderedList">Bullets</button><button type="button" data-format="insertOrderedList">Numbered list</button><button type="button" data-format="createLink">Link</button><button type="button" data-format="removeFormat">Clear format</button></div><div id="body-editor" class="editor" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Write a message for the selected testers."></div><input type="hidden" name="body_html" id="body-html"><noscript><label for="body">Message</label><textarea id="body" name="body" maxlength="' . MAX_BODY_LENGTH . '" required></textarea></noscript>';
     $content = '<div class="actions"><div><h1>Private tester queue</h1><p class="muted">' . count($testers) . ' active tester' . (count($testers) === 1 ? '' : 's') . '. Each send is delivered individually; recipients are never exposed to one another.</p></div><form method="post"><input type="hidden" name="action" value="logout"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><button class="secondary" type="submit">Sign out</button></form></div>' . $message
-        . '<form method="post"><input type="hidden" name="action" value="prepare"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><section><h2>Active testers</h2><p><label><input type="checkbox" id="select-all"> Select all active testers</label></p><table><thead><tr><th scope="col">Select</th><th scope="col">Tester</th><th scope="col">Device</th><th class="optional" scope="col">Coverage</th><th class="optional" scope="col">Experience</th></tr></thead><tbody>' . $rows . '</tbody></table></section><section><h2>Prepare email</h2><p class="muted">The next step shows the selected recipients and the final message before any delivery is attempted.</p><label for="subject">Subject</label><input id="subject" name="subject" maxlength="' . MAX_SUBJECT_LENGTH . '" required><label for="body">Message</label><textarea id="body" name="body" maxlength="' . MAX_BODY_LENGTH . '" required></textarea><button type="submit">Review selected recipients</button></section></form><script>document.getElementById("select-all").addEventListener("change",function(){document.querySelectorAll("input[name=\"tester_ids[]\"]").forEach(function(box){box.checked=event.target.checked;});});</script>';
+        . '<form method="post" id="email-form"><input type="hidden" name="action" value="prepare"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><section><h2>Active testers</h2><p><label><input type="checkbox" id="select-all"> Select all active testers</label></p><table><thead><tr><th scope="col">Select</th><th scope="col">Tester</th><th scope="col">Device</th><th class="optional" scope="col">Coverage</th><th class="optional" scope="col">Experience</th></tr></thead><tbody>' . $rows . '</tbody></table></section><section><h2>Prepare HTML email</h2><p class="muted">Use the formatting bar, then review the selected recipients and rendered message before any delivery is attempted. A plain-text alternative is included for mail clients that cannot show HTML.</p><label for="subject">Subject</label><input id="subject" name="subject" maxlength="' . MAX_SUBJECT_LENGTH . '" required>' . $editor . '<button type="submit">Review selected recipients</button></section></form><script>(function(){var all=document.getElementById("select-all"),editor=document.getElementById("body-editor"),hidden=document.getElementById("body-html"),form=document.getElementById("email-form");all.addEventListener("change",function(){document.querySelectorAll("input[name=\"tester_ids[]\"]").forEach(function(box){box.checked=all.checked;});});document.querySelectorAll("[data-format]").forEach(function(button){button.addEventListener("click",function(){editor.focus();var command=button.dataset.format;if(command==="createLink"){var url=window.prompt("Link URL (http, https, or mailto):");if(url){document.execCommand(command,false,url);}}else{document.execCommand(command,false,null);}});});form.addEventListener("submit",function(event){hidden.value=editor.innerHTML;if(!editor.textContent.trim()){event.preventDefault();editor.focus();alert("Write an email message before reviewing recipients.");}});}());</script>';
     renderPage('Private tester queue', $content);
 }
 
 function renderConfirmation(PDO $database, int $batchId): never
 {
-    $batch = $database->prepare('SELECT id, subject, body FROM email_batches WHERE id = ? AND status = \'prepared\'');
+    $batch = $database->prepare('SELECT id, subject, body, body_html FROM email_batches WHERE id = ? AND status = \'prepared\'');
     $batch->execute([$batchId]);
     $batch = $batch->fetch();
     if ($batch === false) {
@@ -253,7 +370,8 @@ function renderConfirmation(PDO $database, int $batchId): never
     foreach ($recipients->fetchAll() as $recipient) {
         $list .= '<li>' . e($recipient['display_name']) . ' <small>&lt;' . e($recipient['email']) . '&gt;</small></li>';
     }
-    $content = '<h1>Review delivery</h1><section><h2>Recipients</h2><p class="muted">Each recipient receives an individual email. No recipient is placed in To, Cc, or Bcc with another tester.</p><ol>' . $list . '</ol></section><section><h2>' . e($batch['subject']) . '</h2><pre style="white-space:pre-wrap;font:inherit">' . e($batch['body']) . '</pre></section><form method="post"><input type="hidden" name="action" value="send"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="batch_id" value="' . (int) $batch['id'] . '"><button class="danger" type="submit">Send to these recipients</button></form><p><a href="/private-tester-queue.php">Cancel and return to queue</a></p>';
+    $html = is_string($batch['body_html'] ?? null) && $batch['body_html'] !== '' ? $batch['body_html'] : plainTextToHtml($batch['body']);
+    $content = '<h1>Review delivery</h1><section><h2>Recipients</h2><p class="muted">Each recipient receives an individual email. No recipient is placed in To, Cc, or Bcc with another tester.</p><ol>' . $list . '</ol></section><section><h2>' . e($batch['subject']) . '</h2><div style="background:#fff;color:#182033;padding:1rem;border-radius:.4rem">' . $html . '</div><h3>Plain-text alternative</h3><pre style="white-space:pre-wrap;font:inherit">' . e($batch['body']) . '</pre></section><form method="post"><input type="hidden" name="action" value="send"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="batch_id" value="' . (int) $batch['id'] . '"><button class="danger" type="submit">Send to these recipients</button></form><p><a href="/private-tester-queue.php">Cancel and return to queue</a></p>';
     renderPage('Review tester email', $content);
 }
 
@@ -286,11 +404,17 @@ try {
         if ($action === 'prepare') {
             $ids = selectedTesterIds();
             $subject = field('subject', MAX_SUBJECT_LENGTH, true, true);
-            $body = field('body', MAX_BODY_LENGTH);
+            $fallbackBody = field('body', MAX_BODY_LENGTH, false);
+            $htmlInput = (string) ($_POST['body_html'] ?? '');
+            $html = $htmlInput !== '' ? sanitizeHtmlBody($htmlInput) : plainTextToHtml($fallbackBody);
+            $body = plainTextFromHtml($html);
+            if ($body === '') {
+                throw new InvalidArgumentException('Write an email message before reviewing recipients.');
+            }
             $testers = selectedActiveTesters($database, $ids);
             $database->beginTransaction();
-            $insertBatch = $database->prepare("INSERT INTO email_batches(subject, body, created_at, status) VALUES (?, ?, ?, 'prepared')");
-            $insertBatch->execute([$subject, $body, gmdate('c')]);
+            $insertBatch = $database->prepare("INSERT INTO email_batches(subject, body, body_html, created_at, status) VALUES (?, ?, ?, ?, 'prepared')");
+            $insertBatch->execute([$subject, $body, $html, gmdate('c')]);
             $batchId = (int) $database->lastInsertId();
             $insertRecipient = $database->prepare("INSERT INTO email_batch_recipients(batch_id, tester_id, delivery_status) VALUES (?, ?, 'pending')");
             foreach ($testers as $tester) {
@@ -304,7 +428,7 @@ try {
             if ($batchId === false) {
                 throw new InvalidArgumentException('The prepared email is invalid.');
             }
-            $batch = $database->prepare('SELECT subject, body FROM email_batches WHERE id = ? AND status = \'prepared\'');
+            $batch = $database->prepare('SELECT subject, body, body_html FROM email_batches WHERE id = ? AND status = \'prepared\'');
             $batch->execute([$batchId]);
             $batch = $batch->fetch();
             if ($batch === false) {
@@ -316,7 +440,8 @@ try {
             $accepted = 0;
             $failed = 0;
             foreach ($recipients->fetchAll() as $recipient) {
-                $delivered = sendIndividualMail($config, $recipient['email'], $batch['subject'], $batch['body']);
+                $html = is_string($batch['body_html'] ?? null) && $batch['body_html'] !== '' ? $batch['body_html'] : plainTextToHtml($batch['body']);
+                $delivered = sendIndividualMail($config, $recipient['email'], $batch['subject'], $batch['body'], $html);
                 $update->execute([$delivered ? 'accepted' : 'failed', gmdate('c'), $batchId, $recipient['id']]);
                 $delivered ? $accepted++ : $failed++;
             }
