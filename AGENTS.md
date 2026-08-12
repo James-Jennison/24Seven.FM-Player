@@ -13,6 +13,18 @@
 - Do not reinstall Android SDK packages or repeat unaffected successful validators.
 - Signing, distribution, production stream settings, background-media behavior, and external publication require project release validation and explicit approval.
 
+## Browser and desktop control
+
+- For any existing browser page or browser-based workflow, use the desktop **Computer Use** connection. Do not use or
+  claim access through an in-app browser unless the user explicitly opened the target there.
+- Begin every desktop-browser interaction with a read-only desktop state check, enumerate windows, and focus the exact
+  target browser window before reading, clicking, or typing. Use the shared desktop/screenshot state to verify the
+  active page rather than assuming its location or contents.
+- Treat external-service writes as approval-gated: navigation and read-only inspection are allowed, but saving,
+  submitting, publishing, deleting, purchasing, or otherwise changing a remote service requires the user's explicit
+  approval for that action. Never retrieve, search for, display, or record passwords, tokens, or other secrets; ask
+  the user to enter them directly in the focused browser field.
+
 ## Milestones
 
 Keep `docs/MILESTONE_TIME_LEDGER.md` accurate during authorized milestone work. Update roadmap, evidence, and approved Discord milestone communication only after the relevant acceptance gate is complete; never include sensitive details.
