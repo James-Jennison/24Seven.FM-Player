@@ -301,9 +301,10 @@ class RadioAppTest {
     @Test
     fun maximumFontAndDisplayScaleKeepMediumNavigationAndPlayerReachable() {
         composeRule.setContent {
-            val density = LocalDensity.current
             CompositionLocalProvider(
-                LocalDensity provides Density(density.density, fontScale = 2f),
+                // Keep the logical 701 dp fixture inside a phone test device's
+                // physical pixel bounds while retaining the maximum font scale.
+                LocalDensity provides Density(density = 1f, fontScale = 2f),
             ) {
                 MaterialTheme {
                     Box(Modifier.requiredSize(701.dp, 584.dp)) {
@@ -515,7 +516,10 @@ class RadioAppTest {
         composeRule.onNodeWithTag("sleep_timer_preset_30").performClick()
         composeRule.onNodeWithTag("sleep_timer_remaining").assertIsDisplayed()
         composeRule.onNodeWithText("Stops in 30:00").assertIsDisplayed()
-        composeRule.onNodeWithTag("sleep_timer_cancel").performClick()
+        composeRule.onNodeWithTag("sleep_timer_cancel")
+            .performScrollTo()
+            .assertIsDisplayed()
+            .performClick()
 
         composeRule.runOnIdle {
             assertEquals(30L * 60L * 1_000L, selectedDuration)
@@ -551,6 +555,7 @@ class RadioAppTest {
         }
 
         composeRule.onNodeWithTag("audio_output_open").performScrollTo().assertIsDisplayed().performClick()
+        composeRule.onNodeWithTag("audio_output_current").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Using Razr Buds").assertIsDisplayed()
         composeRule.runOnIdle { assertEquals(1, chooserOpenCount) }
     }
@@ -712,15 +717,15 @@ class RadioAppTest {
         composeRule.onAllNodesWithTag("account_card_1980s").assertCountEquals(0)
         composeRule.onNodeWithTag("toggle_other_station_accounts").performScrollTo().performClick()
         composeRule.onAllNodesWithTag("account_card_1980s").assertCountEquals(1)
-        composeRule.onAllNodesWithTag("account_card_adagio").assertCountEquals(1)
-        composeRule.onAllNodesWithTag("account_card_death").assertCountEquals(1)
-        composeRule.onAllNodesWithTag("account_card_entranced").assertCountEquals(1)
+        composeRule.onAllNodesWithTag("account_card_afm").assertCountEquals(1)
+        composeRule.onAllNodesWithTag("account_card_dfm").assertCountEquals(1)
+        composeRule.onAllNodesWithTag("account_card_efm").assertCountEquals(1)
         composeRule.onNodeWithContentDescription("StreamingSoundtracks.com account status: Signed in").assertExists()
         composeRule.onNodeWithContentDescription("Adagio.FM account status: Expired").assertExists()
 
         composeRule.onNodeWithTag("account_sign_out_sst").performScrollTo().performClick()
-        composeRule.onNodeWithTag("account_sign_in_again_adagio").performScrollTo().performClick()
-        composeRule.onNodeWithTag("account_sign_in_entranced").performScrollTo().performClick()
+        composeRule.onNodeWithTag("account_sign_in_again_afm").performScrollTo().performClick()
+        composeRule.onNodeWithTag("account_sign_in_efm").performScrollTo().performClick()
 
         composeRule.runOnIdle {
             assertEquals(listOf(StationId("sst")), signedOut)
@@ -758,7 +763,7 @@ class RadioAppTest {
             }
         }
 
-        composeRule.onAllNodesWithTag("account_card_adagio").assertCountEquals(1)
+        composeRule.onAllNodesWithTag("account_card_afm").assertCountEquals(1)
         composeRule.onAllNodesWithTag("account_card_sst").assertCountEquals(0)
 
         composeRule.onNodeWithContentDescription("Song requests, collapsed").assertExists()

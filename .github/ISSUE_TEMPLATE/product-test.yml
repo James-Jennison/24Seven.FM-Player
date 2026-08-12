@@ -7,7 +7,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thank you for testing 24Seven.FM Player. Choose a case from the [complete manual acceptance catalog](https://codeframe78.github.io/24Seven.FM-Player/project/product-testing/) and enter its PT ID below.
+        Thank you for testing 24Seven.FM Player. Choose a case from the [complete manual acceptance catalog](https://player.jamesjennison.net/product-testing/) and enter its PT ID below.
 
         GitHub issues are public. Do not include passwords, security answers, cookies, session values, private messages, abuse-report content, private endpoints, signing material, full network captures, or unredacted personal screenshots.
   - type: input
@@ -147,7 +147,9 @@ body:
     attributes:
       label: Reproduction steps for a failure or note
       description: Number the smallest sequence that reproduces the result. Write Not applicable for a clean pass.
-      placeholder: "1. Select Death.FM\n2. Start playback\n3. Background the app..."
+      placeholder: "1. Select Death.FM
+2. Start playback
+3. Background the app..."
     validations:
       required: true
   - type: dropdown
