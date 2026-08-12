@@ -43,6 +43,5 @@ cp -- "${repository_root}/docs/play-store-assets/screenshots/phone-player-live-p
 cp -- "${repository_root}/docs/play-store-assets/screenshots/phone-queue-live.png" "${site_root}/assets/project/screenshots/queue.png"
 cp -- "${repository_root}/docs/play-store-assets/screenshots/phone-stations.png" "${site_root}/assets/project/screenshots/stations.png"
 cp -- "${repository_root}/docs/play-store-assets/screenshots/phone-more.png" "${site_root}/assets/project/screenshots/more.png"
-cp -- "${repository_root}/docs/play-store-assets/screenshots/tablet-landscape-player.png" "${site_root}/assets/project/screenshots/tablet.png"
 
 printf 'Prepared the project site source at %s\n' "${site_root}"

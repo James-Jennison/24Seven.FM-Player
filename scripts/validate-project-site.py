@@ -34,7 +34,6 @@ REQUIRED_FILES = {
     "assets/project/screenshots/player.png",
     "assets/project/screenshots/queue.png",
     "assets/project/screenshots/stations.png",
-    "assets/project/screenshots/tablet.png",
     "robots.txt",
     "sitemap.xml",
     "site.webmanifest",
