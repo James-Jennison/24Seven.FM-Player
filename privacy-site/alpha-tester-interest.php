@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 const FORM_ORIGIN = 'https://player.jamesjennison.net';
 const FALLBACK_LOCATION = '/product-testing/';
+const DELIVERY_DOMAIN = 'jamesjennison.net';
 const MAX_REQUEST_BYTES = 16_384;
 const RATE_WINDOW_SECONDS = 1_800;
 const RATE_LIMIT = 3;
@@ -94,6 +95,129 @@ function consumeRateLimit(array $config): bool
     }
 }
 
+function smtpWrite($socket, string $value): void
+{
+    $offset = 0;
+    $length = strlen($value);
+    while ($offset < $length) {
+        $written = fwrite($socket, substr($value, $offset));
+        if ($written === false || $written === 0) {
+            throw new RuntimeException('SMTP write failed.');
+        }
+        $offset += $written;
+    }
+}
+
+function smtpResponse($socket): array
+{
+    $lines = [];
+    $code = null;
+    while (($line = fgets($socket, 2048)) !== false) {
+        $line = rtrim($line, "\r\n");
+        if (!preg_match('/^(\d{3})([ -])/', $line, $matches)) {
+            throw new RuntimeException('Invalid SMTP response.');
+        }
+        $code ??= (int) $matches[1];
+        if ($code !== (int) $matches[1]) {
+            throw new RuntimeException('Inconsistent SMTP response.');
+        }
+        $lines[] = $line;
+        if ($matches[2] === ' ') {
+            return [$code, $lines];
+        }
+    }
+    throw new RuntimeException('SMTP connection closed.');
+}
+
+function smtpCommand($socket, string $command, array $expected): array
+{
+    smtpWrite($socket, $command . "\r\n");
+    [$code, $lines] = smtpResponse($socket);
+    if (!in_array($code, $expected, true)) {
+        throw new RuntimeException('SMTP command rejected.');
+    }
+    return [$code, $lines];
+}
+
+function smtpDeliver(string $recipient, string $sender, string $replyTo, string $subject, string $message): bool
+{
+    if (!getmxrr(DELIVERY_DOMAIN, $hosts, $priorities) || $hosts === []) {
+        return false;
+    }
+    array_multisort($priorities, SORT_ASC, SORT_NUMERIC, $hosts);
+
+    foreach ($hosts as $host) {
+        $host = rtrim($host, '.');
+        if ($host === '') {
+            continue;
+        }
+
+        $socket = null;
+        try {
+            $context = stream_context_create(['ssl' => [
+                'verify_peer' => true,
+                'verify_peer_name' => true,
+                'allow_self_signed' => false,
+                'peer_name' => $host,
+            ]]);
+            $socket = stream_socket_client(
+                'tcp://' . $host . ':25',
+                $errorNumber,
+                $errorMessage,
+                10,
+                STREAM_CLIENT_CONNECT,
+                $context,
+            );
+            if ($socket === false) {
+                throw new RuntimeException('SMTP connection failed.');
+            }
+            stream_set_timeout($socket, 15);
+            [$greeting] = smtpResponse($socket);
+            if ($greeting !== 220) {
+                throw new RuntimeException('SMTP greeting rejected.');
+            }
+            [, $capabilities] = smtpCommand($socket, 'EHLO player.jamesjennison.net', [250]);
+            if (!array_filter($capabilities, static fn (string $line): bool => str_contains(strtoupper($line), 'STARTTLS'))) {
+                throw new RuntimeException('SMTP STARTTLS is unavailable.');
+            }
+            smtpCommand($socket, 'STARTTLS', [220]);
+            if (!stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
+                throw new RuntimeException('SMTP TLS negotiation failed.');
+            }
+            smtpCommand($socket, 'EHLO player.jamesjennison.net', [250]);
+            smtpCommand($socket, 'MAIL FROM:<' . $sender . '>', [250]);
+            smtpCommand($socket, 'RCPT TO:<' . $recipient . '>', [250, 251]);
+            smtpCommand($socket, 'DATA', [354]);
+
+            $data = implode("\r\n", [
+                'From: ' . $sender,
+                'To: ' . $recipient,
+                'Reply-To: ' . $replyTo,
+                'Subject: ' . $subject,
+                'MIME-Version: 1.0',
+                'Content-Type: text/plain; charset=UTF-8',
+                '',
+                $message,
+            ]);
+            $data = str_replace(["\r\n", "\r"], "\n", $data);
+            $data = preg_replace('/(?m)^\./', '..', $data) ?? $data;
+            smtpWrite($socket, str_replace("\n", "\r\n", $data) . "\r\n.\r\n");
+            [$code] = smtpResponse($socket);
+            if ($code !== 250) {
+                throw new RuntimeException('SMTP message rejected.');
+            }
+            smtpCommand($socket, 'QUIT', [221]);
+            fclose($socket);
+            return true;
+        } catch (Throwable $exception) {
+            if (is_resource($socket)) {
+                fclose($socket);
+            }
+        }
+    }
+    return false;
+}
+
 try {
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
         respond(405, 'This form accepts submissions only.', 'error', $wantsJson);
@@ -157,18 +281,12 @@ try {
         'Prior testing experience: ' . ($experience !== '' ? $experience : 'Not provided'),
         'Consent: Confirmed',
     ]);
-    $headers = [
-        'From: ' . $config['sender'],
-        'Reply-To: ' . $email,
-        'MIME-Version: 1.0',
-        'Content-Type: text/plain; charset=UTF-8',
-    ];
-    $sent = mail(
+    $sent = smtpDeliver(
         $config['recipient'],
+        $config['sender'],
+        $email,
         '24Seven.FM Player Alpha tester-interest application',
         $message,
-        implode("\r\n", $headers),
-        '-f' . $config['sender'],
     );
     if (!$sent) {
         throw new RuntimeException('Mail transport rejected the submission.');
