@@ -139,9 +139,17 @@ function smtpCommand($socket, string $command, array $expected): array
     return [$code, $lines];
 }
 
+function smtpDiagnostic(string $stage): void
+{
+    // Keep delivery diagnostics useful without recording application content
+    // or any personally identifying request data in the server error log.
+    error_log('alpha-tester-interest delivery failure stage=' . $stage);
+}
+
 function smtpDeliver(string $recipient, string $sender, string $replyTo, string $subject, string $message): bool
 {
     if (!getmxrr(DELIVERY_DOMAIN, $hosts, $priorities) || $hosts === []) {
+        smtpDiagnostic('mx_lookup');
         return false;
     }
     array_multisort($priorities, SORT_ASC, SORT_NUMERIC, $hosts);
@@ -153,6 +161,7 @@ function smtpDeliver(string $recipient, string $sender, string $replyTo, string 
         }
 
         $socket = null;
+        $stage = 'connect';
         try {
             $context = stream_context_create(['ssl' => [
                 'verify_peer' => true,
@@ -172,21 +181,28 @@ function smtpDeliver(string $recipient, string $sender, string $replyTo, string 
                 throw new RuntimeException('SMTP connection failed.');
             }
             stream_set_timeout($socket, 15);
+            $stage = 'greeting';
             [$greeting] = smtpResponse($socket);
             if ($greeting !== 220) {
                 throw new RuntimeException('SMTP greeting rejected.');
             }
+            $stage = 'ehlo';
             [, $capabilities] = smtpCommand($socket, 'EHLO player.jamesjennison.net', [250]);
             if (!array_filter($capabilities, static fn (string $line): bool => str_contains(strtoupper($line), 'STARTTLS'))) {
                 throw new RuntimeException('SMTP STARTTLS is unavailable.');
             }
+            $stage = 'starttls';
             smtpCommand($socket, 'STARTTLS', [220]);
             if (!stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
                 throw new RuntimeException('SMTP TLS negotiation failed.');
             }
+            $stage = 'tls_ehlo';
             smtpCommand($socket, 'EHLO player.jamesjennison.net', [250]);
+            $stage = 'mail_from';
             smtpCommand($socket, 'MAIL FROM:<' . $sender . '>', [250]);
+            $stage = 'recipient';
             smtpCommand($socket, 'RCPT TO:<' . $recipient . '>', [250, 251]);
+            $stage = 'data';
             smtpCommand($socket, 'DATA', [354]);
 
             $data = implode("\r\n", [
@@ -201,6 +217,7 @@ function smtpDeliver(string $recipient, string $sender, string $replyTo, string 
             ]);
             $data = str_replace(["\r\n", "\r"], "\n", $data);
             $data = preg_replace('/(?m)^\./', '..', $data) ?? $data;
+            $stage = 'message';
             smtpWrite($socket, str_replace("\n", "\r\n", $data) . "\r\n.\r\n");
             [$code] = smtpResponse($socket);
             if ($code !== 250) {
@@ -210,6 +227,7 @@ function smtpDeliver(string $recipient, string $sender, string $replyTo, string 
             fclose($socket);
             return true;
         } catch (Throwable $exception) {
+            smtpDiagnostic($stage);
             if (is_resource($socket)) {
                 fclose($socket);
             }
