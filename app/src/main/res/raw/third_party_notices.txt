@@ -35,4 +35,4 @@ OkHttp contains publicsuffixes.gz, compiled from the Public Suffix List at https
 
 The upstream notice is retained in the release artifact at okhttp3/internal/publicsuffix/NOTICE.
 
-Project-level notice and source links: https://github.com/codeframe78/24Seven.FM-Player/blob/main/THIRD_PARTY_NOTICES.md
+Project-level notice and source links: https://github.com/James-Jennison/24Seven.FM-Player/blob/main/THIRD_PARTY_NOTICES.md

@@ -40,7 +40,7 @@ Public listening does not require an account. The app contains no ads, analytics
 - Price: Free
 - Category: Music & Audio
 - Suggested tags: Radio, Music & Audio, Music streaming (only if offered by Console)
-- Suggested website: `https://github.com/codeframe78/24Seven.FM-Player`
+- Suggested website: `https://github.com/James-Jennison/24Seven.FM-Player`
 - Public support email: `24sevenplayer@jamesjennison.net`
 - Phone number: omit unless the product owner wants it public
 - External marketing: off during Alpha to avoid promotion outside the controlled testing audience

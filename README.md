@@ -4,8 +4,8 @@
   <p><strong>Five stations. One adaptive, fully native Android player.</strong></p>
   <p>A community-built Kotlin, Jetpack Compose, and Media3 client for the 24seven.FM internet-radio network.</p>
   <p>
-    <a href="https://github.com/codeframe78/24Seven.FM-Player/actions/workflows/android.yml"><img src="https://github.com/codeframe78/24Seven.FM-Player/actions/workflows/android.yml/badge.svg?branch=main" alt="Android CI status"></a>
-    <a href="https://github.com/codeframe78/24Seven.FM-Player/actions/workflows/privacy-pages.yml"><img src="https://github.com/codeframe78/24Seven.FM-Player/actions/workflows/privacy-pages.yml/badge.svg?branch=main" alt="Project Pages status"></a>
+    <a href="https://github.com/James-Jennison/24Seven.FM-Player/actions/workflows/android.yml"><img src="https://github.com/James-Jennison/24Seven.FM-Player/actions/workflows/android.yml/badge.svg?branch=main" alt="Android CI status"></a>
+    <a href="https://github.com/James-Jennison/24Seven.FM-Player/actions/workflows/privacy-pages.yml"><img src="https://github.com/James-Jennison/24Seven.FM-Player/actions/workflows/privacy-pages.yml/badge.svg?branch=main" alt="Project Pages status"></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-7b52ab" alt="Apache-2.0 license"></a>
   </p>
   <p>
