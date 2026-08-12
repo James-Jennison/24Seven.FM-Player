@@ -66,6 +66,11 @@ function plainTextToHtml(string $text): string
     return $html;
 }
 
+function base64MimePart(string $content): string
+{
+    return rtrim(chunk_split(base64_encode($content), 76, "\r\n"), "\r\n");
+}
+
 function submitMessage(array $config, string $recipient, string $subject, string $plainText, string $html, string $archivePath): bool
 {
     $senderName = trim((string) ($config['from_name'] ?? '24Seven.FM Player'));
@@ -81,14 +86,14 @@ function submitMessage(array $config, string $recipient, string $subject, string
     $message = implode("\r\n", [
         '--' . $boundary,
         'Content-Type: text/plain; charset=UTF-8',
-        'Content-Transfer-Encoding: 8bit',
+        'Content-Transfer-Encoding: base64',
         '',
-        $plainText,
+        base64MimePart($plainText),
         '--' . $boundary,
         'Content-Type: text/html; charset=UTF-8',
-        'Content-Transfer-Encoding: 8bit',
+        'Content-Transfer-Encoding: base64',
         '',
-        '<!doctype html><html><body>' . $html . '</body></html>',
+        base64MimePart('<!doctype html><html><body>' . $html . '</body></html>'),
         '--' . $boundary . '--',
         '',
     ]);
