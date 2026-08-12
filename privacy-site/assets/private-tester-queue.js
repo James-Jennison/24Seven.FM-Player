@@ -5,7 +5,20 @@
   var editor = document.getElementById('body-editor');
   var hidden = document.getElementById('body-html');
   var form = document.getElementById('email-form');
-  if (!all || !editor || !hidden || !form) return;
+  var template = document.getElementById('email-template');
+  var subject = document.getElementById('subject');
+  if (!all || !editor || !hidden || !form || !template || !subject) return;
+
+  var templates = {
+    welcome: {
+      subject: 'Welcome to the 24Seven.FM Player internal test',
+      html: '<p>Hello,</p><p>Thank you for joining the 24Seven.FM Player internal test.</p><p>We will share testing instructions and the latest build details with you shortly.</p><p>Please reply to this email if you have any questions.</p><p>Thanks,<br>24Seven.FM Player</p>'
+    },
+    feedback: {
+      subject: '24Seven.FM Player testing feedback request',
+      html: '<p>Hello,</p><p>Thank you for testing the 24Seven.FM Player.</p><p>When you have a moment, please share any issues you found, what you expected to happen, and the device you used.</p><p>Your feedback helps us improve the next build.</p><p>Thanks,<br>24Seven.FM Player</p>'
+    }
+  };
 
   var savedRange = null;
 
@@ -29,6 +42,16 @@
     document.querySelectorAll('input[name="tester_ids[]"]').forEach(function (box) {
       box.checked = all.checked;
     });
+  });
+
+  template.addEventListener('change', function () {
+    var selected = templates[template.value];
+    if (!selected) return;
+    subject.value = selected.subject;
+    editor.innerHTML = selected.html;
+    hidden.value = selected.html;
+    editor.focus();
+    saveRange();
   });
 
   editor.addEventListener('keyup', saveRange);
