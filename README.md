@@ -53,9 +53,9 @@ The validated baseline includes 163 unit tests, debug lint and release checks, A
 
 The roadmap was renumbered into one dependency-ordered sequence on July 18, 2026. Historical documents and filenames remain available; the [migration ledger](docs/MILESTONE_MIGRATION.md) records every former identifier.
 
-The [milestone forecast](docs/MILESTONE_FORECAST.md) separates active-work estimates from external waiting time. Under
-the current scope, M29/M30/M36 are the external Alpha critical path; it intentionally gives no Alpha release date
-until those triggers are resolved.
+The [milestone forecast](docs/MILESTONE_FORECAST.md) separates active-work estimates from external waiting time. The
+authorized Administrator has supplied M29/M30 facts and rights, which are now in local reconciliation; M36 remains the
+external Alpha critical path. It intentionally gives no Alpha release date until all required triggers are resolved.
 
 ### Forecast at a glance
 
@@ -65,8 +65,8 @@ notes remain in [MILESTONE_FORECAST.md](docs/MILESTONE_FORECAST.md).
 
 | Milestone | Estimate after trigger | Confidence | Next model |
 | --- | --- | --- | --- |
-| M29 Play declarations | 2–5 active days | Conditional | Sol High |
-| M30 Rights | 0.5–1 active day | Conditional | Sol High |
+| M29 Play declarations | 2–5 active days after candidate selection | Conditional | Sol High |
+| M30 Rights | 0.5–1 active day to reconcile | High | Sol High |
 | M36 Event-source authorization | 1–3 active Sol days | Conditional | Sol High |
 | M37 Secure delivery | 5–10 active days | Medium | Terra High |
 | M38 Delivery certification | 5–10 active days | Medium | Terra High → Sol High acceptance |
@@ -102,7 +102,8 @@ notes remain in [MILESTONE_FORECAST.md](docs/MILESTONE_FORECAST.md).
 ### Current progression
 
 - **Completed:** M01–M28 and M31–M35. M31 establishes the Contact-only Play boundary and moves any future native VIP/RIP purchase and activation into M58–M60; M32 hardens controller authority, protected sessions, redirects, canonical station IDs, and build integrity; M33 binds every one-shot request to fresh station, account, Queue, readiness, and track identity; M34 accepts adaptive, assistive, and physical alternative-input evidence; M35 proves the protected upload identity, local release install/update lineage, package registration, and version-code eligibility.
-- **Active:** two M29–M35 gates remain: M29 and M30. Each milestone has an independent acceptance gate.
+- **Active:** two M29–M35 gates remain: M29 and M30. Their authorized administrator response is being reconciled;
+  each milestone still has an independent acceptance gate.
 - **Authorization-gated:** M36–M38 require an approved station-side event source or privacy-compatible relay before implementation.
 - **Publication:** M39–M41 deliberately separate candidate freeze, Play delivery, and the final user-authorized Alpha action.
 - **Production:** M42–M45 add stabilization, production-access evidence, staged release, and operational recertification.

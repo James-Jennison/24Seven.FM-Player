@@ -1,8 +1,8 @@
 # M28–M35 site-owner response packet
 
-Prepared July 18, 2026
+Prepared July 18, 2026; updated August 11, 2026
 
-Status: M28 moderation destination and receipt confirmed; M29, M30, and M47 owner facts remain
+Status: M28 receipt confirmed; M29 and M30 administrator facts received and in reconciliation; M47 remains excluded
 
 This packet consolidates the factual confirmations still needed from an authorized 24seven.FM representative. Send it
 privately. Retain the original response and its sender/date privately; commit only a sanitized completion note. Do not
@@ -11,6 +11,36 @@ Git, Discord, or a public issue.
 
 The moderation authorization already supplied for M28 authorizes app-originated abuse reports. It does not, by
 itself, establish permission to use third-party names, logos, artwork, streams, screenshots, or to distribute the app.
+
+## August 11 sanitized authorized-administrator response
+
+An authorized 24seven.FM network **Administrator** supplied a written response for all five stations in the project
+conversation. The representative confirmed that the network-wide policy below applies to
+StreamingSoundtracks.com, 1980s.FM, Adagio.FM, Death.FM, and Entranced.FM. Personal identity and the original
+correspondence are retained privately; no reviewer identifiers or credentials are committed.
+
+- **M23.2 test report:** the clearly labeled harmless test report was received.
+- **M30 authorization:** the Administrator confirmed the exact non-exclusive, revocable grant requested in this
+  packet: use of the 24seven.FM and five station names, network/station logos, station-provided artwork and metadata,
+  and authorized public live streams in the unofficial non-commercial native Player and privacy-reviewed Google Play
+  materials, including internal, closed, open, and production Play distribution. The grant does not transfer ownership,
+  permit downloading or redistribution outside live playback, make the app official or endorsed, or override
+  applicable network terms and third-party rights. No exclusions were identified. Preserve the private attestation for
+  Play advance notice; do not treat this sanitized note as a substitute for that evidence.
+- **M29 privacy facts:** retention periods are **unknown**. Do not infer that any station-side submission, log, cookie,
+  or content is ephemeral. The station owner and network administrators are the stated access roles. Information is
+  not shared with another provider except PayPal when processing subscriptions or donations; financial data is not
+  stored directly on station servers. The policy collects username, email address, and IP address for account security
+  and network access; may collect non-identifying browser, operating-system, and page-view data; and uses cookies for
+  sign-in/session, preferences, and Chat functionality without tracking activity outside the network. The station-side
+  access, correction, or deletion contact for this application is `morg@24seven.fm`.
+- **Reviewer access:** standard, non-administrator reviewer accounts are active for all five stations and have no
+  special requirements or privileges. Their protected identifier and password must be entered only in Play Console
+  App access and the approved password manager. A reviewer must enter the **current anti-spam word displayed by the
+  station login page** for each sign-in; it is not documented as a fixed-length CAPTCHA. A clean-install,
+  non-owner-network sign-in remains an acceptance test, not an assumed result.
+- **Private Messaging:** it worked on the preceding day but failed again on August 11. There is no repaired-delivery
+  confirmation, no verified sender/recipient result, and no limits record. M47 stays out of the shipping build.
 
 ## 1. Completed M28 Player email handoff
 
@@ -70,7 +100,7 @@ described as ephemeral.
 
 Create or designate one reusable, least-privileged, non-administrator account for each station. The owner should confirm:
 
-> I confirm that reusable reviewer accounts are active for StreamingSoundtracks.com, 1980s.FM, Adagio.FM, Death.FM, and Entranced.FM; they can sign in from a clean install and a non-owner network; they do not require email OTP, IP allowlisting, an expiring password, or moderator privileges; and they will remain active throughout Google Play review and subsequent updates. The current three-character, case-sensitive CAPTCHA is completed by the reviewer for each sign-in attempt.
+> I confirm that reusable reviewer accounts are active for StreamingSoundtracks.com, 1980s.FM, Adagio.FM, Death.FM, and Entranced.FM; they can sign in from a clean install and a non-owner network; they do not require email OTP, IP allowlisting, an expiring password, or moderator privileges; and they will remain active throughout Google Play review and subsequent updates. The reviewer completes the current anti-spam word displayed by the station for each sign-in attempt.
 
 Send the actual usernames and passwords only through the protected Play Console App access form. Do not send them in
 the site-owner response retained for project evidence. If practical, give each account a small harmless Favorites list
@@ -94,10 +124,11 @@ implemented from a success page alone; both sender and recipient delivery must b
   received from an authorized network representative on [date]; original evidence retained privately.”
 - M28 is complete: the fixed-recipient implementation passed automated/device checks and one authorized Player email
   handoff was reconciled with owner-confirmed receipt on July 18, 2026.
-- M29 completes only after reviewer access; retention, deletion, processor, and IP-use facts; exact privacy/Data Safety
-  reconciliation; the final foreground-service video; and all active Console questionnaires are saved and reviewed.
-- M30 completes only after the full rights statement or an equivalent written grant is received and any exclusions are
-  reflected in the artifact/listing.
+- M29 completes only after reviewer access is validated; the recorded facts and explicit unknowns are reconciled in
+  privacy/Data Safety; the final foreground-service video is hosted; and all active Console questionnaires are saved
+  and reviewed.
+- M30 completes only after the received grant is reconciled with the intended artifact/listing and private Play
+  evidence is retained.
 - M47 restarts only after verified PM delivery and limits are supplied.
 
 ## Google Play references

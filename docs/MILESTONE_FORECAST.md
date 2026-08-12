@@ -17,9 +17,10 @@ external approval into a promised date.
 
 ## Critical path and calendar floor
 
-The current roadmap makes M39 depend on M28–M38. Therefore the Alpha path is blocked by the slowest of these three
-external inputs: M29 operator/Console facts, M30 written rights, and M36 an authorized notification event source.
-After M36, M37 and M38 remain required before M39 under the current scope. If the owner later chooses to make
+The current roadmap makes M39 depend on M28–M38. The authorized Administrator has supplied the M29 operator facts
+and M30 written-rights grant, so those milestones are now local reconciliation work rather than external-response
+waits. M36 remains the outstanding external authorization, and M37 and M38 remain required before M39 under the
+current scope. If the owner later chooses to make
 closed-app notifications nonblocking for Alpha, that is a scope decision requiring a roadmap change; this forecast
 does not assume it.
 
@@ -34,8 +35,8 @@ takes seven days or less, while allowing that it can take longer. The earliest c
 
 | ID | Trigger to start the range | Forecast | Confidence | Model at the next substantive step |
 | --- | --- | --- | --- | --- |
-| M29 | All station/operator retention, processor, deletion, IP-use, and reviewer-account facts are supplied; an intended protected candidate is selected | 2–5 active days | Conditional | Sol High, with Terra Medium documentation support |
-| M30 | Written authorization covers naming, artwork, metadata, streams, screenshots, and Play testing/distribution | 0.5–1 active day to sanitize, reconcile, and accept | Conditional | Sol High |
+| M29 | Authorized operator facts are recorded and an intended protected candidate is selected | 2–5 active days | Conditional on candidate selection | Sol High, with Terra Medium documentation support |
+| M30 | Authorized written grant is recorded | 0.5–1 active day to reconcile and accept | High | Sol High |
 | M36 | An operator supplies an authorized event-source proposal with an accountable owner | 1–3 active Sol days to accept or reject the contract | Conditional | Sol High |
 | M37 | M36 contract, event schema, and test environment are accepted | 5–10 active days | Medium | Terra High; return unresolved delivery/privacy choices to Sol High |
 | M38 | M37 implementation is stable on all intended stations | 5–10 active days for lifecycle, privacy, battery, and device certification | Medium | Terra High, then Sol High acceptance |
@@ -43,8 +44,9 @@ takes seven days or less, while allowing that it can take longer. The earliest c
 | M40 | M39 frozen AAB and required Console fields are ready | 3–10 calendar days; add time only for actual Play/pre-launch findings | Medium | Terra High, with Sol High for release decisions |
 | M41 | M40 evidence is reconciled and the owner explicitly authorizes the selected Alpha track | 0.5–1 active day; tester availability follows Play processing | High once authorized | Sol High |
 
-M29, M30, and M36 can progress in parallel. M34 is complete: its human TalkBack, focused Voice Access, adaptive
-window/foldable, and physical Bluetooth keyboard/pointer evidence passed Sol High acceptance on July 19.
+M29/M30 reconciliation can progress while M36 remains externally gated. M34 is complete: its human TalkBack, focused
+Voice Access, adaptive window/foldable, and physical Bluetooth keyboard/pointer evidence passed Sol High acceptance
+on July 19.
 
 ## Production forecast
 

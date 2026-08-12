@@ -1,6 +1,7 @@
 # M29 Google Play Data Safety worksheet
 
-Checked against the current Google Play definitions through July 19, 2026 and the release variant on July 18, 2026. This is a conservative
+Checked against the current Google Play definitions through July 19, 2026, the release variant on July 18, 2026, and
+the authorized network-administrator response on August 11, 2026. This is a conservative
 implementation worksheet, not the final owner declaration. Reconcile it with the exact signed candidate and active
 Console form immediately before submission.
 
@@ -83,25 +84,42 @@ This strengthens the provisional transport finding but is not the final encrypte
 protected candidate must still validate authenticated, server-discovered form actions and redirects without recording
 secrets before the Console answer is saved.
 
-## Owner/station fact table
+## Authorized station fact record — August 11, 2026
 
-The final answer is blocked until the authorized operator provides these facts for all five stations, or explicitly
-confirms one network-wide rule:
+An authorized network Administrator confirmed one shared policy for all five stations. The following facts are
+available for the final reconciliation:
 
-| Process | Required fact |
-| --- | --- |
-| Sign-in, session, and access/security logs | Retention duration/deletion rule, access roles, processors, and user request path |
-| Source IP/network logs | Retention, purpose, whether location is inferred, processors, and deletion rule |
-| Search | Whether terms are logged/linked, retention, processors, and deletion rule |
-| Chat | Post/log retention, moderation access, processors, edit/deletion path |
-| Song requests/messages/activity | Retention, account linkage, processors, and deletion path |
-| Moderation email | Recipient/email-provider retention, access, processors, and request/deletion path |
+- The network collects account username, email address, and IP address for account security and network access. It
+  may collect non-identifying browser, operating-system, and page-view data. Cookies maintain signed-in sessions,
+  preferences, and Chat functionality; they are not used to track behavior outside the 24seven.FM network.
+- Retention duration and deletion rules for successful/failed sign-ins, sessions/cookies and access logs, IP/security
+  logs, search terms, Chat posts, song requests, and abuse reports are **unknown**. This is not evidence that any of
+  those categories are unretained or ephemeral.
+- The stated access roles are the station owner and network administrators. The operator did not identify a separate
+  service provider for these categories. PayPal is used only for premium-subscription and donation payments; financial
+  data is not stored directly on the station servers.
+- Source-IP collection supports account security and network access. Whether IP is retained separately, linked to
+  other data, or used to infer location is unknown.
+- Station-side access, correction, or deletion requests for this application may be directed to `morg@24seven.fm`.
+  The existing site Contact/Feedback path and network administration remain available support routes.
+- The M28 email handoff is governed separately by the selected email app and the receiving administration; this
+  operator response does not establish email-provider retention or deletion terms.
+
+| Process | Recorded fact | Remaining disclosure constraint |
+| --- | --- | --- |
+| Sign-in, session, and access/security logs | Account data includes username, email, and IP; owner/network administrators access it | Retention/deletion detail is unknown |
+| Source IP/network logs | Used for account security and network access; access roles and non-payment sharing posture are stated above | Retention, linkage, and location inference are unknown |
+| Search | Network-wide access and sharing posture applies | Whether terms are logged/linked and their retention are unknown |
+| Chat | Network-wide access and sharing posture applies | Post/log retention and edit/deletion behavior are unknown |
+| Song requests/messages/activity | Network-wide access and sharing posture applies | Account linkage and retention/deletion behavior are unknown |
+| Moderation email | Player handoff remains user-directed; receiving administration is an authorized access role | Email-app/provider retention and deletion are unknown |
 
 ## Console verification gate
 
 1. Re-run the release dependency and merged-manifest audits against the exact protected pre-M39 candidate AAB.
 2. Probe every user-data endpoint and redirect for HTTPS/TLS without recording credentials, cookies, or private content.
-3. Confirm the owner/station facts above and update the public/native privacy wording where needed.
+3. Reconcile the recorded unknown-retention and limited-sharing facts above with the public/native privacy wording;
+   do not replace unknown values with assumptions.
 4. Preserve M31's Contact-only boundary and repeat the account creation/deletion audit before any M57 or M58–M60
    external/account/commerce route ships.
 5. Compare every active Console question with this worksheet; Console wording is authoritative.

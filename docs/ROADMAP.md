@@ -1,8 +1,8 @@
 # 24Seven.FM Player roadmap
 
-Updated August 11, 2026 after M34 device/accessibility acceptance, M35 completion, forecast reconciliation, and the
-owner decision to defer Google Cast as an optional future enhancement.
-historical milestone-time reconstruction.
+Updated August 11, 2026 after M34 device/accessibility acceptance, M35 completion, forecast reconciliation, the
+authorized Administrator's M29/M30 response, and the owner decision to defer Google Cast as an optional future
+enhancement.
 
 This is the authoritative milestone sequence for the Player repository. Milestones use dependency-ordered, zero-padded
 canonical IDs. The renumbering does not rewrite Git history: legacy IDs remain traceable through
@@ -86,8 +86,8 @@ allow, but no partial checkpoint should be described as release-ready.
 | ID | Milestone | State | Required gate | Forecast after trigger |
 | --- | --- | --- | --- | --- |
 | M28 | UGC Safety and Ongoing Moderation | Complete | Existing safeguards plus fixed-recipient Contact/report email handoff, physical composer validation, and one owner-confirmed one-shot receipt check | Complete |
-| M29 | Play Declarations, Privacy, and Data Safety | Waiting externally | PT-35 exact-artifact reconciliation, five-station reviewer access, audience/content/UGC classification, retention/deletion/processor/IP facts, account-boundary audit, final media-playback video, and saved Console/privacy consistency | Conditional · 2–5 active days |
-| M30 | Brand, Content, and Distribution Rights | Waiting externally | Written authorization for app/station naming, logos, artwork/metadata, streams, screenshots, and Play testing/distribution | Conditional · 0.5–1 active day |
+| M29 | Play Declarations, Privacy, and Data Safety | In progress | Reconcile the authorized network-wide privacy facts (including unknown retention), validate five-station reviewer access, complete PT-35 against the exact candidate, and save/review the Console and media-video evidence | 2–5 active days after exact candidate selection |
+| M30 | Brand, Content, and Distribution Rights | In progress | Reconcile the authorized non-exclusive, revocable grant with the intended artifact/listing and retain the private Play evidence | 0.5–1 active day |
 | M31 | Payments, External Links, and Account Lifecycle Compliance | Complete | Contact-only external catalog; VIP/RIP purchase/registration and direct privacy browser routes removed; declarations and account boundary reconciled in `9e340b9` | Complete |
 | M32 | Session, Controller, Network, and Supply-Chain Security | Complete | Least-privilege MediaSession controller policy, coherent station-isolated cookie rotation/absolute expiry, trusted redirects, canonical station-ID migration, pinned/verified build inputs, and adversarial Razr harness evidence in `2bc45f7` | Complete |
 | M33 | Request Transaction Integrity | Complete | Fresh station/Queue/account/membership/cooldown/limit/identity validation, exact availability semantics, explicit station/account confirmation, and bounded one-shot result handling in `572d419` | Complete |

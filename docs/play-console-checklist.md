@@ -20,8 +20,10 @@ The Google Play developer account was approved on July 14, 2026. Use this during
 - A July 19 credential-free probe reached 36 applicable public/read-only station entry points over HTTPS/TLS 1.2 or
   newer with HTTP 200, expected same-origin effective URLs, and no redirects or downgrades. Authenticated,
   server-discovered actions still require final-candidate validation without retaining secrets.
-- Privacy notice, Alpha testing guide, release notes, permission review, and current device validation evidence exist;
-  owner/station retention and deletion facts still need reconciliation before M29 closes.
+- Privacy notice, Alpha testing guide, release notes, permission review, and current device validation evidence exist.
+  An authorized Administrator supplied a shared five-station policy on August 11: station retention periods remain
+  explicitly unknown, station owner/network administrators are the stated access roles, and PayPal is the sole
+  payment processor. Reconcile those facts with the exact candidate before M29 closes.
 - Gradle accepts Play upload signing only from four `TWENTYFOURSEVEN_UPLOAD_*` environment variables. Supplying a partial set fails configuration.
 - `scripts/validate-play-bundle.ps1` builds the release AAB, requires a real signature, and prints its SHA-256 without revealing signing inputs.
 - `scripts/initialize-play-upload-key.ps1` creates the separate upload key outside Git and stores its credentials in a Windows-current-user DPAPI envelope. It refuses to overwrite either artifact.
@@ -75,18 +77,18 @@ The following objective declarations and listing settings are saved in Play Cons
 - **Privacy policy:** `https://codeframe78.github.io/24Seven.FM-Player/`; the HTTPS page is public and returns the canonical `PRIVACY.md` content.
 - **Store contact/category:** public support email `24sevenplayer@jamesjennison.net`; category **Music & Audio**.
 
-These saved declarations have not been sent for review. The remaining App content forms require owner-provided or
-policy-sensitive inputs and must not be guessed: reviewer credentials/instructions, final target-audience and Restrict
-Minor Access settings, content-rating/UGC answers, account-deletion treatment, Data Safety confirmation, and the
-media-playback foreground-service declaration/video.
+These saved declarations have not been sent for review. The remaining App content forms require protected credentials
+or policy-sensitive reconciliation and must not be guessed: reviewer credentials/instructions, final target-audience
+and Restrict Minor Access settings, content-rating/UGC answers, account-deletion treatment, Data Safety confirmation,
+and the media-playback foreground-service declaration/video.
 
 The copy-ready, non-secret portion of those declarations is maintained in `docs/m23-play-declaration-packet.md`.
 
 ## App-content details to review
 
-- **App access:** Public playback, Queue, and History do not require login. Authentication, Chat posting, Favorites, and requests do. Console requires reusable sign-in details that give reviewers full access and will not unlock Target audience until this declaration is complete. Because accounts are station-specific, provide least-privileged non-administrator reviewer details for every station needed to exercise the restricted features, only through Play Console's protected reviewer form. Do not place them in Git or chat.
+- **App access:** Public playback, Queue, and History do not require login. Authentication, Chat posting, Favorites, and requests do. Console requires reusable sign-in details that give reviewers full access and will not unlock Target audience until this declaration is complete. The authorized Administrator confirms standard, non-administrator reviewer accounts are active for all five stations; enter their details only through Play Console's protected reviewer form, validate a clean-install/non-owner-network sign-in, and do not place identifiers or passwords in Git or chat. Each login requires the current anti-spam word shown by the station; it is not a fixed three-character CAPTCHA.
 - **Ads:** Completed as **No** on July 15, 2026; the app contains no advertising SDK or advertising behavior.
-- **Data safety:** Internal-only testing is currently exempt, but closed/open/production releases require an accurate declaration. Use `docs/m23-data-safety.md` rather than memory. Explicit user-data paths are same-station HTTPS; only public live audio is allowlisted cleartext and carries no Player-added user payload. The station/CDN still receives network information such as source IP. Contact/report and diagnostic exports transfer data to another app only after an explicit user action; reconcile the specific user-initiated sharing exception instead of assuming it. The Player has no analytics or developer backend. Station retention, processors, deletion paths, and IP use remain owner/operator facts.
+- **Data safety:** Internal-only testing is currently exempt, but closed/open/production releases require an accurate declaration. Use `docs/m23-data-safety.md` rather than memory. Explicit user-data paths are same-station HTTPS; only public live audio is allowlisted cleartext and carries no Player-added user payload. The station/CDN still receives network information such as source IP. Contact/report and diagnostic exports transfer data to another app only after an explicit user action; reconcile the specific user-initiated sharing exception instead of assuming it. The Player has no analytics or developer backend. The authorized Administrator supplied a shared policy: the station owner/network administrators access station data, PayPal is used only for payments, and retention/deletion and IP-location details are unknown.
 - **Privacy policy:** The active public HTTPS page is `https://codeframe78.github.io/24Seven.FM-Player/`; a consistent native notice is under More. Before saving M29, align the exact Play developer identity/contact and station-side retention/deletion path in both surfaces.
 - **Account deletion:** The app does not create station accounts, the M31 candidate exposes only Contact through email, and Sign out removes only the local protected session. If M57 or M58–M60 later directs users to account creation, Play also requires approved in-app and web account-deletion paths. Do not claim station-account/post/log deletion until a verified mechanism exists.
 - **Target audience/content rating:** The owner selected **18+** on July 15, 2026. Verify that saved selection and make an explicit Restrict Minor Access decision. Community content is hidden by default behind a neutral adult age screen, versioned Terms acceptance, and a separate reveal action. Accurately declare public text Chat, requester identity/messages, and the observed frequency/intensity of profanity or mature themes; retain the generated IARC result privately.

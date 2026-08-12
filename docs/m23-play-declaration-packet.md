@@ -1,8 +1,9 @@
 # M29 Google Play declaration packet
 
-Date: July 19, 2026
+Date: July 19, 2026; updated August 11, 2026
 
-Status: exact-artifact and current-policy audit complete; owner, station, final-candidate, and Play Console gates remain
+Status: exact-artifact and current-policy audit complete; authorized administrator facts received; final-candidate and
+Play Console gates remain
 
 This packet is the non-secret working record for M29. Reconcile every answer with the exact signed AAB and active Play
 Console wording immediately before saving or submitting it. Never commit reviewer credentials, Console captures containing
@@ -110,19 +111,19 @@ English. Provide credentials only through Play Console's protected App access fo
 - Do not require an expiring password, email OTP, IP allowlist, location restriction, or moderator role.
 - Keep the accounts active throughout review and future updates.
 - Preconfigure a small harmless Favorites list where possible so the reviewer sees a non-empty authenticated surface.
-- The station CAPTCHA is not a secret or second factor: reviewers read the current three-character image in the app
-  and enter it for that sign-in attempt.
+- The station anti-spam prompt is not a secret or second factor: reviewers read the current word displayed in the app
+  and enter it for that sign-in attempt. Do not describe it as fixed-length or assume its case/format.
 
 **Copy-ready navigation instructions**
 
-> Public radio playback, Queue, and History work without an account. To review restricted features, open More → Account. The selected station account appears first. Enter the reviewer username and password supplied in this protected form, enter the current three-character security code shown by the app (case-sensitive), and tap Sign in. Use “Manage other station accounts” to reach the other four independent station accounts. Favorites is available from the primary navigation. Station-library search and song requests are under More. To review Chat and public request attribution, open Chat, complete the adult age screen, read and accept the Terms of Participation, then separately choose “Show community content.” Each public message/request attribution provides distinct Report content, Report user, and Block user actions; blocked users are managed under More → Community safety. StreamingSoundtracks.com also exposes signed-in request activity under More.
+> Public radio playback, Queue, and History work without an account. To review restricted features, open More → Account. The selected station account appears first. Enter the reviewer username and password supplied in this protected form, enter the current anti-spam word shown by the app, and tap Sign in. Use “Manage other station accounts” to reach the other four independent station accounts. Favorites is available from the primary navigation. Station-library search and song requests are under More. To review Chat and public request attribution, open Chat, complete the adult age screen, read and accept the Terms of Participation, then separately choose “Show community content.” Each public message/request attribution provides distinct Report content, Report user, and Block user actions; blocked users are managed under More → Community safety. StreamingSoundtracks.com also exposes signed-in request activity under More.
 
-**Owner-only fields still required**
+**Protected reviewer-access completion still required**
 
-- reviewer usernames/passwords for all five stations;
-- confirmation that every account signs in from a clean install and non-owner network;
-- a private maintenance owner for password/account expiry; and
-- any Console field limit that requires shortening the instructions without removing access steps.
+- enter the designated active standard-user credentials only in Play Console's protected form;
+- validate every station from a clean installation and non-owner network;
+- retain the private maintenance owner for password/account expiry; and
+- shorten these instructions only if a Console field limit requires it without removing access steps.
 
 ## Target audience, content rating, and UGC evidence
 
@@ -154,14 +155,14 @@ current Player does not match those definitions, but confirm the active Restrict
 ## Data Safety, privacy, and deletion
 
 Use `m23-data-safety.md` for the field-by-field worksheet and `../PRIVACY.md` for the canonical public disclosure.
-The remaining station/operator answers are:
-
-- whether and for how long login submissions, sessions/access logs, IP/security logs, search terms, Chat/request
-  submissions, request actions, and abuse reports are retained;
-- whether IP addresses or other network identifiers are used to infer location or for another declared purpose;
-- which processors or other parties receive those data;
-- which contact or mechanism handles station-side access, correction, or deletion; and
-- the exact developer identity/contact shown on the Play listing.
+The authorized Administrator provided one policy for all five stations. Account username, email, and IP address are
+used for account security and network access; cookies serve sign-in/session, preferences, and Chat; and non-identifying
+browser, operating-system, and page-view data may be collected. The station owner and network administrators are the
+stated access roles. Information is not shared with another provider except PayPal for subscriptions/donations, and
+financial data is not stored directly on station servers. Retention/deletion periods, IP linkage/location inference,
+and individual log/content persistence are **unknown** and must remain disclosed as such. Station-side access,
+correction, or deletion requests may be directed to `morg@24seven.fm`. The exact developer identity/contact shown on
+the Play listing still needs final consistency review.
 
 Do not claim end-to-end ephemeral processing, broad station-side deletion, or a Data Safety deletion badge without
 those facts. The app does not create station accounts. **Sign out** removes the protected local session; it does not
@@ -169,12 +170,12 @@ delete the pre-existing station account, public posts, request history, server l
 
 ## M29 completion gate
 
-M29 remains **Waiting externally** until all of the following are true:
+M29 is **in progress**. It completes only when all of the following are true:
 
 1. PT-35 is run against the exact signed candidate and its release manifest/dependencies/data flows match this packet.
 2. Five reusable reviewer accounts and English access instructions pass a clean-install/non-owner-network check.
-3. Station retention, deletion/contact, processor, and IP-use facts are received and reflected in the privacy policy
-   and Data Safety form.
+3. The authorized station facts, including unknown retention/deletion details, are accurately reflected in the privacy
+   policy and Data Safety form.
 4. Ads, app access, target audience, Restrict Minor Access decision, content rating, UGC, account deletion, privacy,
    and Data Safety answers are saved and reviewed in the active Console.
 5. Any applicable Child Safety Standards self-certification has an actual operational process and designated contact;

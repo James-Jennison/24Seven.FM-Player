@@ -33,8 +33,8 @@ The active program is M29–M35 Alpha readiness:
 
 | ID | Size | State | Implementation focus | Principal dependency |
 | --- | --- | --- | --- | --- |
-| M29 Play Declarations, Privacy, and Data Safety | M | Waiting externally | PT-35 exact-artifact privacy/Data Safety; five-station reviewer access; audience/content/UGC classification; retention, deletion, processor, and IP facts; account boundary; foreground-media evidence | Station/operator facts, final candidate, and Play Console |
-| M30 Brand, Content, and Distribution Rights | S | Waiting externally | Preserve private rights evidence and record only sanitized completion facts | Written rights-holder authorization |
+| M29 Play Declarations, Privacy, and Data Safety | M | In progress | Reconcile authorized network-wide facts (including unknown retention), validate five-station reviewer access, and complete PT-35/Console/media evidence | Final candidate and Play Console |
+| M30 Brand, Content, and Distribution Rights | S | In progress | Preserve private rights evidence and reconcile the authorized grant with the intended artifact/listing | Final artifact/listing reconciliation |
 | M31 Payments, External Links, and Account Lifecycle | M | Complete | Contact-only external catalog; membership/account browser routes removed; privacy, declarations, release notes, testing, and evidence reconciled | Re-audit before M57 or M58–M60 ships |
 | M32 Session, Controller, Network, and Supply-Chain Security | XL, split | Complete | Controller command policy, protected-session coherence, trusted redirects, station-ID migration, dependency/action integrity, and adversarial tests | Re-audit when controller, session, redirect, station-ID, or build-input boundaries change |
 | M33 Request Transaction Integrity | L | Complete | Fresh station/Queue/account/membership/cooldown/limit checks, exact status contract, station/account/track identity, and bounded one-shot submission | Re-audit when request, Queue, account, readiness, or station capability contracts change; see `m33-request-transaction-validation.md` |

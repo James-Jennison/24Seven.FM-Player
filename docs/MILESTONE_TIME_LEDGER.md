@@ -102,8 +102,8 @@ active execution.
 | M26 | Complete | No later than `July 16, 2026 at 6:07:48 PM PDT (UTC−07:00)` | `July 16, 2026 at 6:21:05 PM PDT (UTC−07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥0.22 h | Unknown | Estimated |
 | M27 | Complete | No later than `July 16, 2026 at 7:05:07 PM PDT (UTC−07:00)` | `July 16, 2026 at 7:09:16 PM PDT (UTC−07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥0.07 h | Unknown | Estimated |
 | M28 | Complete | No later than `July 15, 2026 at 10:32:07 PM PDT (UTC−07:00)` | `July 18, 2026 at 3:04:15 PM PDT (UTC−07:00)` | Not recorded individually | Unknown | Unknown | Unknown | Unknown | ≥64.54 h | Unknown | Estimated |
-| M29 | Waiting externally | No later than `July 15, 2026 at 10:42:33 PM PDT (UTC−07:00)` | — | Original not recorded; current 2–5 active d | Unknown | Unknown | Unknown | Unknown | Ongoing | — | Estimated |
-| M30 | Waiting externally | No later than `July 15, 2026 at 10:59:35 PM PDT (UTC−07:00)` | — | Original not recorded; current 0.5–1 active d | Unknown | Unknown | Unknown | Unknown | Ongoing | — | Estimated |
+| M29 | In progress | No later than `July 15, 2026 at 10:42:33 PM PDT (UTC−07:00)` | — | Original not recorded; current 2–5 active d after candidate selection | Unknown | Unknown | Unknown | Unknown | Ongoing | — | Estimated |
+| M30 | In progress | No later than `July 15, 2026 at 10:59:35 PM PDT (UTC−07:00)` | — | Original not recorded; current 0.5–1 active d to reconcile | Unknown | Unknown | Unknown | Unknown | Ongoing | — | Estimated |
 | M31 | Complete | No later than `July 18, 2026 at 5:30:30 PM PDT (UTC−07:00)` | `July 18, 2026 at 5:32:28 PM PDT (UTC−07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥0.03 h | Unknown | Estimated |
 | M32 | Complete | Unknown | `July 18, 2026 at 6:21:38 PM PDT (UTC−07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown |
 | M33 | Complete | Unknown | `July 18, 2026 at 7:43:32 PM PDT (UTC−07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown |
@@ -545,8 +545,9 @@ independently.
 
 - **Objective:** Reconcile the exact artifact, reviewer access, audience/content/UGC classification, privacy/Data Safety,
   station retention/deletion/processor/IP facts, account boundaries, and media-playback evidence.
-- **Start, completion, and intervals:** Earliest Play-declaration evidence `July 15, 2026 at 10:42:33 PM PDT (UTC−07:00)`. Not completed. The
-  milestone is waiting externally; exact historical active intervals and the start of the user-blocked pause are Unknown.
+- **Start, completion, and intervals:** Earliest Play-declaration evidence `July 15, 2026 at 10:42:33 PM PDT (UTC−07:00)`. Not completed. An
+  authorized Administrator supplied the network-wide privacy and reviewer facts on August 11, 2026 (time not logged),
+  ending that response wait. Exact historical active intervals and the start of the earlier user-blocked pause are Unknown.
 - **Model, reasoning strength, and original forecast:** Original execution model/reasoning and forecast were not recorded at start.
   Current routing, added `July 19, 2026 at 6:17:38 AM PDT (UTC−07:00)`, is Sol High with 2–5 active days after all named facts/candidate exist.
 - **Counted project time, total elapsed time, and forecast variance:** Active, wait, blocked, counted, and total elapsed durations remain Unknown/ongoing; variance is
@@ -554,23 +555,25 @@ independently.
 - **Evidence used and confidence classification:** `4aa36d9`, `0fa5040`, `59d6096`, `849b5a0`, `93e8110`, `d3467cf`,
   [m23-play-declaration-packet.md](m23-play-declaration-packet.md), and [m23-data-safety.md](m23-data-safety.md).
   **Estimated** start proxy.
-- **Explanation of variance and forecasting lessons:** Do not backdate the July 19 forecast as original. On resume, record a real resume
-  timestamp and retain the current external wait as Unknown rather than inventing a duration.
+- **Explanation of variance and forecasting lessons:** Do not backdate the July 19 forecast as original. The response
+  established some facts and explicitly left retention periods unknown; reconcile those unknowns without inventing a
+  duration or a broader deletion mechanism.
 
 ### M30 — Brand, Content, and Distribution Rights
 
 - **Objective:** Obtain and privately retain written authorization for naming, branding, station assets/metadata,
   streams, screenshots, and Google Play testing/distribution.
 - **Start, completion, and intervals:** Earliest rights-response packet evidence `July 15, 2026 at 10:59:35 PM PDT (UTC−07:00)`. Not completed.
-  The milestone is waiting externally; exact active intervals and the user-blocked pause start are Unknown.
+  An authorized Administrator provided the documented non-exclusive, revocable grant on August 11, 2026 (time not
+  logged), ending the response wait. Exact active intervals and the earlier user-blocked pause start are Unknown.
 - **Model, reasoning strength, and original forecast:** Original model/reasoning and forecast were not recorded at start. Current
   routing, added July 19, is Sol High with 0.5–1 active day after written authorization arrives.
 - **Counted project time, total elapsed time, and forecast variance:** Active, wait, blocked, counted, and total elapsed durations remain Unknown/ongoing; variance is
   not calculated before completion.
 - **Evidence used and confidence classification:** `c0e37ae`, [m23-owner-response-packet.md](m23-owner-response-packet.md), roadmap `e249071`,
   and forecast `f971a9e`. **Estimated** start proxy.
-- **Explanation of variance and forecasting lessons:** External response time must remain separate from reconciliation work. Record the
-  actual resume timestamp when authorization arrives.
+- **Explanation of variance and forecasting lessons:** External response time remains separate from reconciliation work.
+  The sanitized repository record must not replace the private Play evidence or imply ownership beyond the stated grant.
 
 ### M31 — Payments, External Links, and Account Lifecycle Compliance
 
