@@ -5,6 +5,7 @@ description: Explore the dependency-ordered M01–M60 roadmap, verified completi
 permalink: /roadmap/
 section: roadmap
 ---
+{% assign achieved_percent = site.data.project.roadmap_meta.achieved_count | times: 100 | divided_by: site.data.project.roadmap_meta.total_count %}
 <section class="page-hero">
   <div>
     <p class="eyebrow">Canonical delivery plan</p>
@@ -20,15 +21,15 @@ section: roadmap
       <div><dt>Stations</dt><dd>5</dd></div>
     </dl>
     <div class="program-progress">
-      <div><span>Canonical milestones achieved</span><strong>55%</strong></div>
-      <progress value="33" max="60">33 of 60 achieved</progress>
+      <div><span>Canonical milestones achieved</span><strong>{{ achieved_percent }}%</strong></div>
+      <progress value="{{ site.data.project.roadmap_meta.achieved_count }}" max="{{ site.data.project.roadmap_meta.total_count }}">{{ site.data.project.roadmap_meta.achieved_count }} of {{ site.data.project.roadmap_meta.total_count }} achieved</progress>
     </div>
   </aside>
 </section>
 
 <nav class="section-jump" aria-label="On this page">
   <a href="#current">Alpha readiness</a>
-  <a href="#history">33 achieved checkpoints</a>
+  <a href="#history">{{ site.data.project.roadmap_meta.achieved_count }} achieved checkpoints</a>
   <a href="#notifications">Notifications</a>
   <a href="#alpha">Alpha delivery</a>
   <a href="#production">Production</a>
@@ -41,7 +42,7 @@ section: roadmap
   <div class="content-intro wide">
     <p class="eyebrow">{{ site.data.project.roadmap_meta.active_phase }} · Verified snapshot</p>
     <h2>{{ site.data.project.roadmap_meta.active_label }}</h2>
-    <p>M31–M35 are complete; two independently reviewable gates remain in the Alpha-readiness program. External dependencies stay visible while policy and rights evidence progress.</p>
+    <p>M29–M35 are complete. The active gate is Google Play internal-test delivery and review; unrelated notification authorization remains separately scoped.</p>
   </div>
   <div class="roadmap-callout migration-callout">
     <div><p class="eyebrow">Repository checkpoint · {{ site.data.project.site_meta.source_commit }}</p><h2>State is dated, not implied live</h2></div>
@@ -75,7 +76,7 @@ section: roadmap
 
 <section class="content-section" id="history">
   <div class="content-intro wide">
-    <p class="eyebrow">33 verified checkpoints · Achievement chronology</p>
+    <p class="eyebrow">{{ site.data.project.roadmap_meta.achieved_count }} verified checkpoints · Achievement chronology</p>
     <h2>Completed work remains evidence-backed</h2>
     <p>Renumbering changed references, not history. The original commit, date, achievement order, and validation remain attached to each completed milestone.</p>
   </div>
@@ -89,7 +90,11 @@ section: roadmap
       <div class="history-order">{{ item.order }}</div>
       <div class="history-date"><time datetime="{{ item.date }}">{{ item.date | date: "%b %-d, %Y" }}</time>{% if item.joint %}<span>Joint checkpoint</span>{% endif %}</div>
       <div class="history-copy"><p class="milestone-id">{{ item.id }}</p><h3>{{ item.name }}</h3><p>{{ item.outcome }}</p></div>
+      {% if item.commit %}
       <a class="commit-link" href="{{ site.github_url }}/commit/{{ item.commit }}"><code>{{ item.commit }}</code><span class="sr-only"> commit</span></a>
+      {% else %}
+      <span class="commit-link"><code>{{ item.evidence_label }}</code></span>
+      {% endif %}
     </li>
     {% endfor %}
     <li class="filter-empty" data-filter-empty hidden>No achieved milestones match that search.</li>

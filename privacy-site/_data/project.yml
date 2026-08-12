@@ -35,19 +35,19 @@ navigation:
 site_meta:
   verified: 2026-08-11
   source_commit: 15aa3d1
-  verification_label: Google Play status checked on August 11, 2026
+  verification_label: Google Play internal-test release submitted on August 11, 2026
 
 play_status:
-  label: Google Play internal testing
-  headline: Initial internal-test release is under review
-  detail: The 24Seven.FM Player is in Google Play internal testing and review. It is not publicly available yet; tester access will be shared after the internal release is available.
+  label: M40 · Google Play internal testing
+  headline: Internal-test release submitted for review
+  detail: The signed 24Seven.FM Player internal-test release has been submitted to Google Play and is under review. It is not publicly available yet; tester access will be shared after Google makes the release available.
 
 roadmap_meta:
-  updated: 2026-07-20
-  achieved_count: 33
+  updated: 2026-08-11
+  achieved_count: 36
   total_count: 60
-  active_phase: M29–M30
-  active_label: Owner and external Alpha-readiness gates
+  active_phase: M40
+  active_label: Google Play internal-test delivery and review
 
 milestones:
   - order: 1
@@ -336,35 +336,53 @@ milestones:
     evidence: "docs/m23-device-compatibility.md"
     outcome: "Adaptive window and foldable evidence, physical Razr hinge lifecycle, human TalkBack, focused Voice Access, and signed-release Bluetooth keyboard/pointer acceptance."
 
+  - order: 34
+    id: "M29"
+    legacy_id: "M23.4"
+    name: "Play Declarations Privacy and Data Safety"
+    date: "2026-08-11"
+    evidence_label: "Private Play Console record"
+    outcome: "Authorized operator data, reviewer access, privacy, Data Safety, content, target-audience, and app-access declarations completed for internal testing."
+
+  - order: 35
+    id: "M30"
+    legacy_id: "M23.5"
+    name: "Brand Content and Distribution Rights"
+    date: "2026-08-11"
+    evidence_label: "Private owner authorization"
+    outcome: "Authorized non-exclusive, revocable permission documented for the five station names, logos, station-provided artwork and metadata, and public live-stream playback through Google Play release."
+
+  - order: 36
+    id: "M39"
+    legacy_id: "M28 candidate slice"
+    name: "Alpha Candidate and Documentation Freeze"
+    date: "2026-08-11"
+    evidence_label: "Signed candidate and Play Console record"
+    outcome: "Exact signed version 2 / 0.1.0-alpha01 candidate and required store-listing and release materials prepared for the internal-test submission."
+
 
 roadmap:
   - id: "M29"
     legacy_id: "M23.4"
     phase: "alpha-readiness"
     name: "Play Declarations Privacy and Data Safety"
-    state: "waiting"
-    state_label: "Waiting externally"
-    blocking: true
-    dependencies: "Station/operator facts, final candidate, and Play Console"
-    forecast: "2–5 active days after trigger"
-    forecast_confidence: "Conditional"
-    forecast_model: "Sol High; Terra Medium documentation support"
+    state: "done"
+    state_label: "Complete · August 11"
+    blocking: false
+    dependencies: "Completed with authorized network-wide privacy facts, reviewer access, and saved Play declarations"
     evidence: "docs/m23-play-declaration-packet.md"
-    summary: "Artifact/policy audit is current; five-station access, operator data facts, saved declarations, and final media video remain."
+    summary: "Authorized privacy and retention facts, reviewer access, Data Safety, content, target-audience, and app-access declarations are complete for internal testing."
 
   - id: "M30"
     legacy_id: "M23.5"
     phase: "alpha-readiness"
     name: "Brand Content and Distribution Rights"
-    state: "waiting"
-    state_label: "Waiting externally"
-    blocking: true
-    dependencies: "Written rights-holder authorization"
-    forecast: "0.5–1 active day after trigger"
-    forecast_confidence: "Conditional"
-    forecast_model: "Sol High"
+    state: "done"
+    state_label: "Complete · August 11"
+    blocking: false
+    dependencies: "Completed with the authorized non-exclusive, revocable distribution grant"
     evidence: "docs/m23-owner-response-packet.md"
-    summary: "Private evidence process is ready; written distribution authorization remains."
+    summary: "The owner-authorized grant covers the five station names, logos, station-provided artwork and metadata, and public live-stream playback through Google Play release."
 
   - id: "M31"
     phase: "alpha-readiness"
@@ -464,29 +482,26 @@ roadmap:
     legacy_id: "M28 candidate slice"
     phase: "alpha-distribution"
     name: "Alpha Candidate and Documentation Freeze"
-    state: "planned"
-    state_label: "Planned"
-    blocking: true
-    dependencies: "M28–M38"
-    forecast: "1–2 active days after trigger"
-    forecast_confidence: "High once triggered"
-    forecast_model: "Sol High"
+    state: "done"
+    state_label: "Complete · August 11"
+    blocking: false
+    dependencies: "Completed with the exact signed version 2 / 0.1.0-alpha01 candidate and required listing and release materials"
     evidence: "docs/ROADMAP.md"
-    summary: "Freeze current-head signed artifacts version listing release notes roadmap and testing evidence."
+    summary: "The signed internal-test candidate, store listing, release notes, roadmap, and testing materials were prepared for submission."
 
   - id: "M40"
     legacy_id: "M28 delivery slice"
     phase: "alpha-distribution"
     name: "Play Alpha Delivery and Pre-launch Remediation"
-    state: "planned"
-    state_label: "Planned after M39"
+    state: "active"
+    state_label: "In review"
     blocking: true
-    dependencies: "M39"
+    dependencies: "Google Play review and internal-test availability"
     forecast: "3–10 calendar days after trigger"
     forecast_confidence: "Medium"
     forecast_model: "Terra High; Sol High for release decisions"
     evidence: "docs/play-console-checklist.md"
-    summary: "Upload inspect Play splits install and update through Play then resolve automated and reviewer findings."
+    summary: "The signed internal-test bundle is uploaded. Await Google Play review, then verify Play-delivered fresh install and update, generated splits, and any review or pre-launch findings."
 
   - id: "M41"
     legacy_id: "M28 publication slice"
@@ -500,7 +515,7 @@ roadmap:
     forecast_confidence: "High once authorized"
     forecast_model: "Sol High"
     evidence: "docs/play-console-checklist.md"
-    summary: "Publish internal or closed Alpha only after explicit authorization and verify support and rollback records."
+    summary: "After M40 availability and explicit authorization, share tester access, verify installation and playback, and retain support and rollback records."
 
   - id: "M42"
     phase: "production"
