@@ -77,16 +77,17 @@ The following objective declarations and listing settings are saved in Play Cons
 - **Privacy policy:** `https://codeframe78.github.io/24Seven.FM-Player/`; the HTTPS page is public and returns the canonical `PRIVACY.md` content.
 - **Store contact/category:** public support email `24sevenplayer@jamesjennison.net`; category **Music & Audio**.
 
-These saved declarations have not been sent for review. The remaining App content forms require protected credentials
-or policy-sensitive reconciliation and must not be guessed: reviewer credentials/instructions, final target-audience
-and Restrict Minor Access settings, content-rating/UGC answers, account-deletion treatment, Data Safety confirmation,
-and the media-playback foreground-service declaration/video.
+On August 11, the protected **Sign in details** declaration was saved with one reusable standard reviewer account and
+English access instructions. Credentials remain only in Play Console and the password manager. This did not send the
+app for review. The remaining App content forms require policy-sensitive reconciliation and must not be guessed: final
+target-audience and Restrict Minor Access settings, content-rating/UGC answers, account-deletion treatment, Data
+Safety confirmation, and the media-playback foreground-service declaration/video.
 
 The copy-ready, non-secret portion of those declarations is maintained in `docs/m23-play-declaration-packet.md`.
 
 ## App-content details to review
 
-- **App access:** Public playback, Queue, and History do not require login. Authentication, Chat posting, Favorites, and requests do. Console requires reusable sign-in details that give reviewers full access and will not unlock Target audience until this declaration is complete. The authorized Administrator confirms standard, non-administrator reviewer accounts are active for all five stations; enter their details only through Play Console's protected reviewer form, validate a clean-install/non-owner-network sign-in, and do not place identifiers or passwords in Git or chat. Each login requires the current anti-spam word shown by the station; it is not a fixed three-character CAPTCHA.
+- **App access:** Public playback, Queue, and History do not require login. Authentication, Chat posting, Favorites, and requests do. On August 11, the protected Console declaration was saved with one standard, non-administrator reviewer account and English instructions; identifiers and passwords are not committed. The authorized Administrator confirms active accounts across all five stations. Validate a clean-install/non-owner-network sign-in before M29 closes. Each login requires the current anti-spam word shown by the station; it is not a fixed three-character CAPTCHA.
 - **Ads:** Completed as **No** on July 15, 2026; the app contains no advertising SDK or advertising behavior.
 - **Data safety:** Internal-only testing is currently exempt, but closed/open/production releases require an accurate declaration. Use `docs/m23-data-safety.md` rather than memory. Explicit user-data paths are same-station HTTPS; only public live audio is allowlisted cleartext and carries no Player-added user payload. The station/CDN still receives network information such as source IP. Contact/report and diagnostic exports transfer data to another app only after an explicit user action; reconcile the specific user-initiated sharing exception instead of assuming it. The Player has no analytics or developer backend. The authorized Administrator supplied a shared policy: the station owner/network administrators access station data, PayPal is used only for payments, and retention/deletion and IP-location details are unknown.
 - **Privacy policy:** The active public HTTPS page is `https://codeframe78.github.io/24Seven.FM-Player/`; a consistent native notice is under More. Before saving M29, align the exact Play developer identity/contact and station-side retention/deletion path in both surfaces.

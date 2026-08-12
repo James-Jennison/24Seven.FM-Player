@@ -86,7 +86,10 @@ as already complete.
 - The Play Console app was created on July 15 as an English (United States), App, Free listing with the intended package. The owner explicitly accepted the Developer Program Policies, Play App Signing Terms, and US export declaration; automatic installer protection was disabled to preserve approved sideload testing.
 - Play Console App content now records the four evidence-backed objective declarations: no ads, not a government app, no financial features, and no health features. The changes are saved in Publishing overview but have not been sent for review.
 - GitHub Pages now publishes the canonical privacy notice at `https://codeframe78.github.io/24Seven.FM-Player/`; HTTPS is enforced, the live page returns HTTP 200, and the URL is saved in Play Console. The public support email and Music & Audio category are also saved.
-- Console requires reusable reviewer sign-in details before Target audience can be completed. The app has restricted, station-specific account features, so the declaration must contain least-privileged credentials and instructions sufficient to review those surfaces across the station family.
+- On August 11, the protected Console Sign in details declaration was saved with one standard reviewer account and
+  English instructions. The app has restricted, station-specific account features, so the remaining acceptance step is
+  a clean-install/non-owner-network validation across the station family; no credentials or reviewer identifier are
+  committed.
 - The owner selected an **18+** target audience on July 15, consistent with the predominantly adult legacy-station membership and the existing authenticated freeform chat. The app is not designed as a children's product, and no child age band will be claimed without a separate Families-compliance milestone. Console entry remains locked until reviewer-access details are saved.
 - Console confirms the account-specific production gate: publish a closed-test release, keep at least 12 testers opted in continuously for at least 14 days, then apply for production access.
 - The policy-conscious default store copy, category/contact proposal, asset inventory, and accessibility-text draft are recorded in `docs/play-store-listing.md`.

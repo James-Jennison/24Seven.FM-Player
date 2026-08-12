@@ -31,7 +31,7 @@ The audit used the current `main` source and release variant. `:app:processRelea
 | Console area | Current evidence-backed posture | Remaining gate |
 | --- | --- | --- |
 | Ads, government, financial, health | Saved as No/None; artifact audit agrees | Recheck only if the candidate or Console wording changes |
-| App access | Public playback, Queue, and History work signed out; protected features require one station-specific session at a time | Supply and validate five reusable, least-privileged reviewer accounts only in Play Console |
+| App access | Public playback, Queue, and History work signed out; protected features require one station-specific session at a time. One protected standard-user entry and English instructions were saved in Play Console on August 11 | Validate all five station accounts from a clean install and non-owner network |
 | Target audience | Owner selected 18+; the app uses a neutral age screen and is not designed for children | Verify the saved selection and decide whether to enable Restrict Minor Access |
 | Content rating | Music & Audio app with public text Chat, requester identity/message, possible mature themes/profanity, and no user image/video upload | Owner must answer actual content frequency/intensity and submit the generated IARC ratings |
 | UGC | M28 provides Terms acceptance, objectionable-content rules, content/user reporting, blocking, ongoing monitored moderation, and a separate mature-content reveal | Reconcile the exact UGC and incidental-content answers with the candidate and active questionnaire |

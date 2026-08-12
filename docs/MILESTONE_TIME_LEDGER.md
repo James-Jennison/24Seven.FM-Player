@@ -547,7 +547,9 @@ independently.
   station retention/deletion/processor/IP facts, account boundaries, and media-playback evidence.
 - **Start, completion, and intervals:** Earliest Play-declaration evidence `July 15, 2026 at 10:42:33 PM PDT (UTC−07:00)`. Not completed. An
   authorized Administrator supplied the network-wide privacy and reviewer facts on August 11, 2026 (time not logged),
-  ending that response wait. Exact historical active intervals and the start of the earlier user-blocked pause are Unknown.
+  ending that response wait. The protected Console Sign in details declaration was saved later that day; it is not a
+  clean-install reviewer-access acceptance. Exact historical active intervals and the start of the earlier user-blocked
+  pause are Unknown.
 - **Model, reasoning strength, and original forecast:** Original execution model/reasoning and forecast were not recorded at start.
   Current routing, added `July 19, 2026 at 6:17:38 AM PDT (UTC−07:00)`, is Sol High with 2–5 active days after all named facts/candidate exist.
 - **Counted project time, total elapsed time, and forecast variance:** Active, wait, blocked, counted, and total elapsed durations remain Unknown/ongoing; variance is
