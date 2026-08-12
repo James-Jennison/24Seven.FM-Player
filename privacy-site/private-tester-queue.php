@@ -15,6 +15,7 @@ const SESSION_NAME = 'player_tester_queue';
 const MAX_SUBJECT_LENGTH = 180;
 const MAX_BODY_LENGTH = 12_000;
 const MAX_HTML_BODY_LENGTH = 24_000;
+const MAIL_SUBMISSION_HOST = 'mail.jamesjennison.net';
 
 ini_set('display_errors', '0');
 
@@ -309,6 +310,49 @@ function selectedActiveTesters(PDO $database, array $ids): array
     return $testers;
 }
 
+function smtpWrite($socket, string $value): void
+{
+    $offset = 0;
+    while ($offset < strlen($value)) {
+        $written = fwrite($socket, substr($value, $offset));
+        if ($written === false || $written === 0) {
+            throw new RuntimeException('SMTP write failed.');
+        }
+        $offset += $written;
+    }
+}
+
+function smtpResponse($socket): array
+{
+    $lines = [];
+    $code = null;
+    while (($line = fgets($socket, 2048)) !== false) {
+        $line = rtrim($line, "\r\n");
+        if (!preg_match('/^(\d{3})([ -])/', $line, $match)) {
+            throw new RuntimeException('Invalid SMTP response.');
+        }
+        $code ??= (int) $match[1];
+        if ($code !== (int) $match[1]) {
+            throw new RuntimeException('Inconsistent SMTP response.');
+        }
+        $lines[] = $line;
+        if ($match[2] === ' ') {
+            return [$code, $lines];
+        }
+    }
+    throw new RuntimeException('SMTP connection closed.');
+}
+
+function smtpCommand($socket, string $command, array $expected): array
+{
+    smtpWrite($socket, $command . "\r\n");
+    [$code, $lines] = smtpResponse($socket);
+    if (!in_array($code, $expected, true)) {
+        throw new RuntimeException('SMTP command rejected.');
+    }
+    return [$code, $lines];
+}
+
 function sendIndividualMail(array $config, string $recipient, string $subject, string $plainText, string $html): bool
 {
     $senderName = trim((string) ($config['from_name'] ?? '24Seven.FM Player'));
@@ -317,6 +361,7 @@ function sendIndividualMail(array $config, string $recipient, string $subject, s
     $boundary = '=_24Seven_' . bin2hex(random_bytes(16));
     $headers = [
         'From: ' . $encodedName . ' <' . $from . '>',
+        'To: ' . $recipient,
         'Reply-To: ' . $from,
         'MIME-Version: 1.0',
         'Content-Type: multipart/alternative; boundary="' . $boundary . '"',
@@ -335,7 +380,67 @@ function sendIndividualMail(array $config, string $recipient, string $subject, s
         '--' . $boundary . '--',
         '',
     ]);
-    return mail($recipient, $subject, $message, implode("\r\n", $headers), '-f' . $from);
+    $message = preg_replace('/(?m)^\./', '..', $message) ?? $message;
+    $socket = null;
+    $stage = 'connect';
+    try {
+        $context = stream_context_create(['ssl' => [
+            'verify_peer' => true,
+            'verify_peer_name' => true,
+            'allow_self_signed' => false,
+            'peer_name' => MAIL_SUBMISSION_HOST,
+        ]]);
+        $socket = stream_socket_client(
+            'tcp://' . MAIL_SUBMISSION_HOST . ':25',
+            $errorNumber,
+            $errorMessage,
+            15,
+            STREAM_CLIENT_CONNECT,
+            $context,
+        );
+        if ($socket === false) {
+            throw new RuntimeException('SMTP connection failed.');
+        }
+        stream_set_timeout($socket, 20);
+        $stage = 'greeting';
+        [$greeting] = smtpResponse($socket);
+        if ($greeting !== 220) {
+            throw new RuntimeException('SMTP greeting rejected.');
+        }
+        $stage = 'ehlo';
+        [, $capabilities] = smtpCommand($socket, 'EHLO player.jamesjennison.net', [250]);
+        if (!array_filter($capabilities, static fn (string $line): bool => str_contains(strtoupper($line), 'STARTTLS'))) {
+            throw new RuntimeException('SMTP STARTTLS is unavailable.');
+        }
+        $stage = 'starttls';
+        smtpCommand($socket, 'STARTTLS', [220]);
+        if (!stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
+            throw new RuntimeException('SMTP TLS negotiation failed.');
+        }
+        $stage = 'tls_ehlo';
+        smtpCommand($socket, 'EHLO player.jamesjennison.net', [250]);
+        $stage = 'mail_from';
+        smtpCommand($socket, 'MAIL FROM:<' . $from . '>', [250]);
+        $stage = 'recipient';
+        smtpCommand($socket, 'RCPT TO:<' . $recipient . '>', [250, 251]);
+        $stage = 'data';
+        smtpCommand($socket, 'DATA', [354]);
+        $stage = 'message';
+        smtpWrite($socket, implode("\r\n", $headers) . "\r\nSubject: " . $subject . "\r\n\r\n" . $message . "\r\n.\r\n");
+        [$accepted] = smtpResponse($socket);
+        if ($accepted !== 250) {
+            throw new RuntimeException('SMTP message rejected.');
+        }
+        smtpCommand($socket, 'QUIT', [221]);
+        fclose($socket);
+        return true;
+    } catch (Throwable $exception) {
+        error_log('private-tester-queue mail transport failure stage=' . $stage);
+        if (is_resource($socket)) {
+            fclose($socket);
+        }
+        return false;
+    }
 }
 
 function renderDashboard(PDO $database, string $notice = '', string $error = ''): never

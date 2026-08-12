@@ -12,6 +12,7 @@ if command -v php >/dev/null 2>&1; then
   php -l "${repository_root}/privacy-site/alpha-tester-interest.php"
   php -l "${repository_root}/privacy-site/private-tester-queue.php"
   php -l "${repository_root}/scripts/import-alpha-tester-mailbox.php"
+  php -l "${repository_root}/scripts/reroute-private-tester-batch.php"
 else
   printf '%s\n' 'PHP CLI is unavailable locally; the exact staged artifact must be linted by the Player PHP runtime before promotion.'
 fi
