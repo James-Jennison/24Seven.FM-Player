@@ -111,6 +111,10 @@ section: roadmap
 {% assign alpha_distribution = site.data.project.roadmap | where: "phase", "alpha-distribution" %}
 <section class="content-section" id="alpha">
   <div class="content-intro wide"><p class="eyebrow">M39–M41 · Exact artifact to authorized release</p><h2>Freeze, prove delivery, then publish</h2><p>Candidate creation, Play delivery/remediation, and publication are separate gates. A green build never publishes itself.</p></div>
+  <div class="roadmap-callout migration-callout">
+    <div><p class="eyebrow">{{ site.data.project.play_status.label }}</p><h2>{{ site.data.project.play_status.headline }}</h2></div>
+    <div><p>{{ site.data.project.play_status.detail }}</p></div>
+  </div>
   <div class="workstream-grid">
     {% for item in alpha_distribution %}<article class="roadmap-card {{ item.state }}"><p class="status"><span></span>{{ item.state_label }}</p><p class="milestone-id">{{ item.id }}</p><h3>{{ item.name }}</h3><p>{{ item.summary }}</p><p class="roadmap-dependency"><strong>Dependency:</strong> {{ item.dependencies }}</p></article>{% endfor %}
   </div>

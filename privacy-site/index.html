@@ -20,15 +20,28 @@ section: overview
       <li>Media3</li>
       <li>No WebView</li>
     </ul>
-    <a class="hero-status" href="{{ '/roadmap/' | relative_url }}">
+    <a class="hero-status" href="#google-play-status">
       <span class="live-dot" aria-hidden="true"></span>
-      <span><small>Verified snapshot</small><strong>{{ site.data.project.roadmap_meta.active_phase }} Alpha readiness</strong></span>
-      <span>View roadmap <span aria-hidden="true">→</span></span>
+      <span><small>{{ site.data.project.play_status.label }}</small><strong>{{ site.data.project.play_status.headline }}</strong></span>
+      <span>View status <span aria-hidden="true">→</span></span>
     </a>
   </div>
   <div class="hero-art" aria-hidden="true">
     <div class="art-glow"></div>
     <img class="hero-icon" src="{{ '/assets/project/app-icon.png' | relative_url }}" alt="" width="512" height="512">
+  </div>
+</section>
+
+<section class="section" id="google-play-status" aria-labelledby="google-play-status-title">
+  <div class="roadmap-callout migration-callout">
+    <div>
+      <p class="eyebrow">{{ site.data.project.play_status.label }}</p>
+      <h2 id="google-play-status-title">{{ site.data.project.play_status.headline }}</h2>
+    </div>
+    <div>
+      <p>{{ site.data.project.play_status.detail }}</p>
+      <div class="actions"><a class="button secondary" href="{{ '/roadmap/' | relative_url }}#alpha">View release roadmap</a></div>
+    </div>
   </div>
 </section>
 

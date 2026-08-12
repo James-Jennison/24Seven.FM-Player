@@ -33,9 +33,14 @@ navigation:
     description: Canonical app privacy notice with plain-language data boundaries.
 
 site_meta:
-  verified: 2026-07-22
-  source_commit: c540571
-  verification_label: Verified against repository commit c540571 on July 22, 2026
+  verified: 2026-08-11
+  source_commit: 15aa3d1
+  verification_label: Google Play status checked on August 11, 2026
+
+play_status:
+  label: Google Play internal testing
+  headline: Initial internal-test release is under review
+  detail: The 24Seven.FM Player is in Google Play internal testing and review. It is not publicly available yet; tester access will be shared after the internal release is available.
 
 roadmap_meta:
   updated: 2026-07-20
