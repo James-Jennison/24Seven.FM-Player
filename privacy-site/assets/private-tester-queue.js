@@ -28,8 +28,15 @@
         '<p>Thanks again for helping shape 24Seven.FM Player.</p><p>—James</p>'
     },
     feedback: {
-      subject: '24Seven.FM Player testing feedback request',
-      html: '<p>Hello,</p><p>Thank you for testing the 24Seven.FM Player.</p><p>When you have a moment, please share any issues you found, what you expected to happen, and the device you used.</p><p>Your feedback helps us improve the next build.</p><p>Thanks,<br>24Seven.FM Player</p>'
+      subject: '24Seven.FM Player Closed Alpha: detailed testing feedback request',
+      html: '<p>Hi,</p>' +
+        '<p>Thank you for taking part in the 24Seven.FM Player Closed Alpha. Your detailed feedback helps us find issues and improve the next build.</p>' +
+        '<h3>What to test</h3><p>Use the app normally as well as trying the areas below:</p><ul><li>Start and pause live playback, then switch between stations.</li><li>Check that station artwork, station name, and current-track information update correctly.</li><li>Briefly background the app and confirm playback and Android media controls behave as expected.</li><li>Return from the media notification and try Play/Pause plus another station.</li><li>If available for the selected station, try its sign-in flow and confirm the app reflects the sign-in state after you return.</li></ul>' +
+        '<h3>How to send feedback</h3><p>Use the feedback form: <a href="https://github.com/James-Jennison/24Seven.FM-Player/issues/new?template=product-test.yml">https://github.com/James-Jennison/24Seven.FM-Player/issues/new?template=product-test.yml</a></p><p>For every issue, please include:</p><ol><li>A short, clear title.</li><li>Your app version, phone or tablet model, and Android version.</li><li>The station selected and whether you were signed in.</li><li>The exact steps you took.</li><li>What you expected to happen and what happened instead.</li><li>Whether the issue repeats and how often.</li><li>A screenshot or screen recording when helpful, with personal information removed.</li></ol>' +
+        '<h3>Useful feedback even when nothing breaks</h3><p>Please also share successful tests, confusing wording, slow or awkward interactions, missing information, or anything that would make the Player easier to use.</p>' +
+        '<p>You can use the testing matrix to choose a focused test case: <a href="https://player.jamesjennison.net/product-testing/">https://player.jamesjennison.net/product-testing/</a></p>' +
+        '<p><strong>Privacy reminder:</strong> GitHub issues are public. Do not include passwords, CAPTCHA answers, private messages, cookies, session details, full network captures, or unredacted personal screenshots.</p>' +
+        '<p>Thanks again for helping shape 24Seven.FM Player.</p><p>—James</p>'
     }
   };
 
