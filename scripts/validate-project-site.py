@@ -27,6 +27,7 @@ REQUIRED_FILES = {
     "alpha-tester-interest.php",
     "private-tester-queue.php",
     "assets/privacy.css",
+    "assets/private-tester-queue.js",
     "assets/project.css",
     "assets/project.js",
     "assets/theme-init.js",

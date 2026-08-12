@@ -7,6 +7,7 @@ repository_root="$(cd -- "${script_dir}/.." && pwd)"
 "${script_dir}/build-project-site.sh"
 node --check "${repository_root}/privacy-site/assets/project.js"
 node --check "${repository_root}/privacy-site/assets/theme-init.js"
+node --check "${repository_root}/privacy-site/assets/private-tester-queue.js"
 if command -v php >/dev/null 2>&1; then
   php -l "${repository_root}/privacy-site/alpha-tester-interest.php"
   php -l "${repository_root}/privacy-site/private-tester-queue.php"
