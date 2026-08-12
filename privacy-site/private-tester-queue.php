@@ -118,20 +118,26 @@ function database(array $config): PDO
             configuration_scope TEXT NOT NULL DEFAULT \'\',
             coordinator_note TEXT NOT NULL DEFAULT \'\',
             mutation_authorized INTEGER NOT NULL DEFAULT 0 CHECK(mutation_authorized IN (0, 1)),
+            assignment_email_status TEXT NOT NULL DEFAULT \'not_sent\' CHECK(assignment_email_status IN (\'not_sent\', \'accepted\', \'failed\')),
+            assignment_email_attempted_at TEXT,
+            assignment_email_attempts INTEGER NOT NULL DEFAULT 0,
             created_at TEXT NOT NULL,
             updated_at TEXT NOT NULL
         );'
     );
-    $columns = $database->query('PRAGMA table_info(email_batches)')->fetchAll();
-    $hasHtmlBody = false;
-    foreach ($columns as $column) {
-        if (($column['name'] ?? '') === 'body_html') {
-            $hasHtmlBody = true;
-            break;
-        }
-    }
-    if (!$hasHtmlBody) {
+    $emailBatchColumns = array_column($database->query('PRAGMA table_info(email_batches)')->fetchAll(), 'name');
+    if (!in_array('body_html', $emailBatchColumns, true)) {
         $database->exec('ALTER TABLE email_batches ADD COLUMN body_html TEXT');
+    }
+    $assignmentColumns = array_column($database->query('PRAGMA table_info(tester_task_assignments)')->fetchAll(), 'name');
+    if (!in_array('assignment_email_status', $assignmentColumns, true)) {
+        $database->exec("ALTER TABLE tester_task_assignments ADD COLUMN assignment_email_status TEXT NOT NULL DEFAULT 'not_sent' CHECK(assignment_email_status IN ('not_sent', 'accepted', 'failed'))");
+    }
+    if (!in_array('assignment_email_attempted_at', $assignmentColumns, true)) {
+        $database->exec('ALTER TABLE tester_task_assignments ADD COLUMN assignment_email_attempted_at TEXT');
+    }
+    if (!in_array('assignment_email_attempts', $assignmentColumns, true)) {
+        $database->exec('ALTER TABLE tester_task_assignments ADD COLUMN assignment_email_attempts INTEGER NOT NULL DEFAULT 0');
     }
     return $database;
 }
@@ -322,6 +328,31 @@ function assignmentMessage(array $task, array $assignment): string
     $lines[] = 'Task cases: https://player.jamesjennison.net/product-testing/?task=' . rawurlencode($task['id']);
     $lines[] = 'Submit one result for each PT case.';
     return implode("\n", $lines);
+}
+
+function assignmentEmailSubject(array $task): string
+{
+    return '24Seven.FM Player: ' . $task['id'] . ' assignment';
+}
+
+function sendAssignmentEmail(PDO $database, array $config, int $assignmentId): bool
+{
+    $statement = $database->prepare('SELECT assignments.id, assignments.task_id, assignments.station_scope, assignments.configuration_scope, assignments.coordinator_note, assignments.mutation_authorized, testers.display_name, testers.email FROM tester_task_assignments AS assignments JOIN testers ON testers.id = assignments.tester_id WHERE assignments.id = ? AND testers.status = \'active\'');
+    $statement->execute([$assignmentId]);
+    $assignment = $statement->fetch();
+    if ($assignment === false) {
+        throw new InvalidArgumentException('The assignment recipient is no longer active.');
+    }
+    $tasks = taskRegistry();
+    $task = $tasks[$assignment['task_id']] ?? null;
+    if (!is_array($task)) {
+        throw new RuntimeException('The assigned Tester Task is unavailable.');
+    }
+    $message = 'Hi ' . $assignment['display_name'] . ",\n\n" . assignmentMessage($task, $assignment);
+    $accepted = sendIndividualMail($config, $assignment['email'], assignmentEmailSubject($task), $message, plainTextToHtml($message));
+    $database->prepare('UPDATE tester_task_assignments SET assignment_email_status = ?, assignment_email_attempted_at = ?, assignment_email_attempts = assignment_email_attempts + 1, updated_at = ? WHERE id = ?')
+        ->execute([$accepted ? 'accepted' : 'failed', gmdate('c'), gmdate('c'), $assignmentId]);
+    return $accepted;
 }
 
 function appendSanitizedNodes(DOMDocument $output, DOMNode $source, DOMNode $destination): void
@@ -584,7 +615,7 @@ function renderDashboard(PDO $database, string $notice = '', string $error = '')
 {
     $tasks = taskRegistry();
     $testers = $database->query("SELECT id, display_name, email, country, device, android_version, interests_json, experience, received_at FROM testers WHERE status = 'active' ORDER BY received_at, id")->fetchAll();
-    $assignments = $database->query("SELECT id, tester_id, task_id, task_status, station_scope, configuration_scope, coordinator_note, mutation_authorized, created_at, updated_at FROM tester_task_assignments ORDER BY created_at, id")->fetchAll();
+    $assignments = $database->query("SELECT id, tester_id, task_id, task_status, station_scope, configuration_scope, coordinator_note, mutation_authorized, assignment_email_status, assignment_email_attempted_at, assignment_email_attempts, created_at, updated_at FROM tester_task_assignments ORDER BY created_at, id")->fetchAll();
     $assignmentsByTester = [];
     foreach ($assignments as $assignment) {
         if (isset($tasks[$assignment['task_id']])) {
@@ -632,7 +663,10 @@ function renderDashboard(PDO $database, string $notice = '', string $error = '')
             foreach (STATION_SCOPES as $station) {
                 $stationUpdateOptions .= '<option value="' . e($station) . '"' . ($assignment['station_scope'] === $station ? ' selected' : '') . '>' . e($station) . '</option>';
             }
-            $existing .= '<div class="assignment-existing"><h4>' . e($task['id'] . ' — ' . $task['title']) . '</h4><p><strong>PT cases:</strong> ' . e(implode(', ', $task['ptIds'])) . ' · <a href="/product-testing/?task=' . rawurlencode($task['id']) . '">Open cases</a></p><p class="warning"><strong>Safety:</strong> ' . e($task['safetyWarning']) . '</p><form method="post" class="assignment-update"><input type="hidden" name="action" value="update_task"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="assignment_id" value="' . (int) $assignment['id'] . '"><label>Status<select name="task_status">' . $statusOptions . '</select></label><label>Station scope<select name="station_scope">' . $stationUpdateOptions . '</select></label><label>Device / accessory / form factor scope<input name="configuration_scope" maxlength="' . MAX_ASSIGNMENT_CONFIGURATION_LENGTH . '" value="' . e($assignment['configuration_scope']) . '"></label><label>Coordinator note<textarea name="coordinator_note" maxlength="' . MAX_ASSIGNMENT_NOTE_LENGTH . '">' . e($assignment['coordinator_note']) . '</textarea></label><button type="submit">Save assignment</button><button class="secondary copy-assignment" type="button" data-assignment-copy="' . e($copy) . '">Copy assignment</button></form><form method="post" class="inline-form"><input type="hidden" name="action" value="remove_task"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="assignment_id" value="' . (int) $assignment['id'] . '"><button class="danger" type="submit">Remove assignment</button></form></div>';
+            $handoff = $assignment['assignment_email_status'] === 'accepted'
+                ? 'Accepted by the mail transport'
+                : ($assignment['assignment_email_status'] === 'failed' ? 'Mail transport failed — resend only if appropriate.' : 'Not sent yet');
+            $existing .= '<div class="assignment-existing"><h4>' . e($task['id'] . ' — ' . $task['title']) . '</h4><p><strong>PT cases:</strong> ' . e(implode(', ', $task['ptIds'])) . ' · <a href="/product-testing/?task=' . rawurlencode($task['id']) . '">Open cases</a></p><p><strong>Assignment email:</strong> ' . e($handoff) . ' <small>(' . (int) $assignment['assignment_email_attempts'] . ' handoff attempt' . ((int) $assignment['assignment_email_attempts'] === 1 ? '' : 's') . ')</small></p><p class="warning"><strong>Safety:</strong> ' . e($task['safetyWarning']) . '</p><form method="post" class="assignment-update"><input type="hidden" name="action" value="update_task"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="assignment_id" value="' . (int) $assignment['id'] . '"><label>Status<select name="task_status">' . $statusOptions . '</select></label><label>Station scope<select name="station_scope">' . $stationUpdateOptions . '</select></label><label>Device / accessory / form factor scope<input name="configuration_scope" maxlength="' . MAX_ASSIGNMENT_CONFIGURATION_LENGTH . '" value="' . e($assignment['configuration_scope']) . '"></label><label>Coordinator note<textarea name="coordinator_note" maxlength="' . MAX_ASSIGNMENT_NOTE_LENGTH . '">' . e($assignment['coordinator_note']) . '</textarea></label><button type="submit">Save assignment</button><button class="secondary copy-assignment" type="button" data-assignment-copy="' . e($copy) . '">Copy assignment</button></form><form method="post" class="inline-form"><input type="hidden" name="action" value="resend_assignment_email"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="assignment_id" value="' . (int) $assignment['id'] . '"><button class="secondary" type="submit">Send assignment email</button></form><form method="post" class="inline-form"><input type="hidden" name="action" value="remove_task"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="assignment_id" value="' . (int) $assignment['id'] . '"><button class="danger" type="submit">Remove assignment</button></form></div>';
         }
         $panels .= '<article class="tester-task-panel" id="tester-' . $id . '"><h3>' . e($tester['display_name']) . '</h3><p class="muted">' . e($tester['device']) . ' · ' . e($tester['android_version']) . '</p>' . ($existing === '' ? '<p class="muted">No Tester Task assigned yet.</p>' : $existing) . '<form method="post" class="assignment-create" data-task-assignment-form><input type="hidden" name="action" value="assign_task"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $id . '"><h4>Assign a focused Tester Task</h4><label>Tester Task<select name="task_id" data-task-select required>' . $taskOptions . '</select></label><div class="task-preview" data-task-preview aria-live="polite">Choose a current task to see its PT cases, prerequisites, and safety boundary.</div><label>Station scope<select name="station_scope">' . $stationOptions . '</select></label><label>Device / accessory / form factor scope<input name="configuration_scope" maxlength="' . MAX_ASSIGNMENT_CONFIGURATION_LENGTH . '" placeholder="For example, Pixel 9, Bluetooth headset, folded"></label><label>Coordinator note<textarea name="coordinator_note" maxlength="' . MAX_ASSIGNMENT_NOTE_LENGTH . '" placeholder="Only information the tester needs to carry out this assignment."></textarea></label><label class="mutation-authorization" data-mutation-authorization hidden><input type="checkbox" name="mutation_authorized" value="1"> I explicitly authorize the controlled subcase described above.</label><button type="submit">Assign Tester Task</button></form></article>';
     }
@@ -695,7 +729,9 @@ try {
             $insert = $database->prepare('INSERT INTO tester_task_assignments(tester_id, task_id, task_status, station_scope, configuration_scope, coordinator_note, mutation_authorized, created_at, updated_at) VALUES (?, ?, \'assigned\', ?, ?, ?, ?, ?, ?)');
             $now = gmdate('c');
             $insert->execute([$testerId, $task['id'], $station, $configuration, $note, $mutationAuthorized, $now, $now]);
-            redirect('?notice=' . rawurlencode($task['id'] . ' was assigned.'));
+            $assignmentId = (int) $database->lastInsertId();
+            $accepted = sendAssignmentEmail($database, $config, $assignmentId);
+            redirect('?notice=' . rawurlencode($task['id'] . ' was assigned; assignment email handoff ' . ($accepted ? 'was accepted by the mail transport.' : 'failed.')));
         }
         if ($action === 'update_task') {
             $id = assignmentId();
@@ -731,6 +767,11 @@ try {
             activeTester($database, (int) $assignment['tester_id']);
             $database->prepare('DELETE FROM tester_task_assignments WHERE id = ?')->execute([$id]);
             redirect('?notice=' . rawurlencode('Tester Task assignment removed.'));
+        }
+        if ($action === 'resend_assignment_email') {
+            $id = assignmentId();
+            $accepted = sendAssignmentEmail($database, $config, $id);
+            redirect('?notice=' . rawurlencode('Assignment email handoff ' . ($accepted ? 'was accepted by the mail transport.' : 'failed.')));
         }
         if ($action === 'prepare') {
             $ids = selectedTesterIds();

@@ -61,7 +61,7 @@ Never include passwords, security-code answers or images, cookies, session value
 
 ## Coordinator task assignments
 
-The protected Tester Queue keeps Alpha enrollment separate from assignment state. Coordinators can give an accepted tester one or more focused `TT-*` bundles, record the assigned station and device/accessory scope, and mark each assignment Assigned, In progress, Complete, or Blocked. Future / Blocked tasks cannot be assigned.
+The protected Tester Queue keeps Alpha enrollment separate from assignment state. Coordinators can give an accepted tester one or more focused `TT-*` bundles, record the assigned station and device/accessory scope, and mark each assignment Assigned, In progress, Complete, or Blocked. Saving a new assignment sends that tester an individual assignment email through the project mail transport; the Queue records the mail-transport handoff outcome and permits an explicit resend if needed. Future / Blocked tasks cannot be assigned.
 
 For a controlled assignment, the Queue shows the task-specific boundary before it is saved. In particular, `TT-09` allows one authorized request only—never retry an indeterminate result and inspect Queue first. `TT-11` defaults to read-only Chat validation unless one harmless post is explicitly authorized; `TT-12` never grants moderation-email delivery authority; and `TT-13` requires the approved two-account setup.
 
