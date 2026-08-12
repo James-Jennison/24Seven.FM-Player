@@ -45,4 +45,10 @@ To request access to, correction of, or deletion of station-side data, email mor
 
 This is pre-release software. Testers should use a non-administrator station account where practical and should not include credentials, private messages, session values, or security-code images in bug reports.
 
+## Alpha tester-interest form
+
+The project website offers an optional Alpha tester-interest form. It collects the applicant's display name, Google Play account email, Android device model and version, and any optional country, testing-interest, or experience details the applicant chooses to provide. Cloudflare Turnstile verifies that a form submission is made by a person. The form sends the application directly to the project coordinator's dedicated mailbox; it does not create a public record or website database.
+
+These details are used only to assess device coverage and manage possible Alpha invitations. They are not sold, used for advertising, or shared with other recipients. Cloudflare processes the form and email delivery as the service provider. The coordinator retains an application only as long as needed to manage the Alpha program. An applicant may request deletion through the Player support route without including a password, station credential, CAPTCHA answer, or other authentication secret.
+
 The application is maintained by the community contributors to the `James-Jennison/24Seven.FM-Player` project. Privacy questions and reports can be submitted through [the project's GitHub issue channel](https://github.com/James-Jennison/24Seven.FM-Player/issues) without sensitive account information.

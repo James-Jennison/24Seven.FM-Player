@@ -11,6 +11,7 @@ section: product-testing
     <h1>Test the player. Record every result.</h1>
     <p class="page-lede">This is the canonical manual acceptance catalog for the M01–M60 roadmap. A coordinator assigns current, specialist, campaign, or future cases with the stations, accounts, devices, accessories, and approved commerce environments needed for each run; no single tester is expected to own the entire matrix.</p>
     <div class="actions">
+      <a class="button primary" href="#alpha-tester-interest">Apply to test the Alpha</a>
       <a class="button primary" href="{{ site.github_url }}/issues/new?template=product-test.yml">Submit a test result</a>
       <a class="button secondary" href="{{ site.github_url }}/issues?q=is%3Aissue+label%3Atesting-feedback">Browse tester reports</a>
     </div>
@@ -28,6 +29,7 @@ section: product-testing
 
 <nav class="section-jump" aria-label="On this page">
   <a href="#start">Before testing</a>
+  <a href="#alpha-tester-interest">Apply to test</a>
   <a href="#listening-tests">Listening</a>
   <a href="#member-tests">Account and community</a>
   <a href="#device-tests">Devices and access</a>
@@ -36,6 +38,53 @@ section: product-testing
   <a href="#report">Report a result</a>
   <a href="#safety">Safety</a>
 </nav>
+
+<section class="content-section" id="alpha-tester-interest">
+  <div class="content-intro wide">
+    <p class="eyebrow">Google Play internal testing</p>
+    <h2>Apply to test the Alpha</h2>
+    <p>Internal testing is limited and currently awaits Google Play availability. Apply with the Google-account email that should receive the Play testing invitation. An application is interest only; an invitation is not guaranteed.</p>
+  </div>
+  <div class="tester-application-layout">
+    <form class="tester-application-form" data-alpha-tester-form novalidate>
+      <div class="form-grid">
+        <label>Display name <span aria-hidden="true">*</span><input name="name" autocomplete="name" maxlength="100" required></label>
+        <label>Google Play account email <span aria-hidden="true">*</span><input name="email" type="email" autocomplete="email" maxlength="254" inputmode="email" required></label>
+        <label>Country or region <small>Optional</small><input name="country" autocomplete="country-name" maxlength="80"></label>
+        <label>Android device model <span aria-hidden="true">*</span><input name="device" autocomplete="off" maxlength="160" placeholder="For example, Pixel 9 or Razr 2026" required></label>
+        <label>Android version <span aria-hidden="true">*</span><input name="androidVersion" autocomplete="off" maxlength="48" placeholder="For example, Android 16" required></label>
+      </div>
+      <fieldset>
+        <legend>What would you like to test? <small>Optional</small></legend>
+        <div class="choice-grid">
+          <label><input type="checkbox" name="interests" value="Playback"> Playback and media controls</label>
+          <label><input type="checkbox" name="interests" value="Foldable and tablet"> Foldable, tablet, or adaptive layouts</label>
+          <label><input type="checkbox" name="interests" value="Accessibility"> Accessibility or alternative input</label>
+          <label><input type="checkbox" name="interests" value="Account and community"> Account and community workflows</label>
+          <label><input type="checkbox" name="interests" value="General testing"> General testing</label>
+        </div>
+      </fieldset>
+      <label>Prior testing experience <small>Optional</small><textarea name="experience" maxlength="1200" rows="4" placeholder="Device coverage, accessibility experience, or anything else that may help assign a test."></textarea></label>
+      <label class="visually-hidden" aria-hidden="true">Leave this field blank<input name="company" tabindex="-1" autocomplete="off"></label>
+      <label class="consent-check"><input type="checkbox" name="consent" value="yes" required> I agree that the project coordinator may use these details to contact me about 24Seven.FM Player Alpha testing. I will not submit passwords, station credentials, CAPTCHA answers, or other authentication secrets.</label>
+      <div class="turnstile-slot" data-alpha-tester-turnstile></div>
+      <p class="form-privacy">The form sends your application to the project coordinator without a public record or a website database. Details are used only to assess and manage Alpha invitations; use the Player support route to request deletion.</p>
+      <p class="form-status" data-alpha-tester-status role="status" aria-live="polite"></p>
+      <button class="button primary" type="submit" data-alpha-tester-submit>Send tester-interest application</button>
+    </form>
+    <aside class="tester-application-notes" aria-label="Tester application details">
+      <p class="eyebrow">What happens next</p>
+      <h3>Invitation, then a focused assignment</h3>
+      <ol>
+        <li>The coordinator reviews device coverage and current testing needs.</li>
+        <li>If selected after Play availability, your specified Google account receives the internal-test invitation.</li>
+        <li>Install from Google Play, then use the public catalog to record redacted results.</li>
+      </ol>
+      <p><strong>Please do not submit:</strong> station usernames or passwords, CAPTCHA answers, screenshots with personal information, or private messages.</p>
+    </aside>
+  </div>
+</section>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 
 <div class="catalog-toolbar tester-catalog-toolbar" data-test-catalog aria-label="Tester catalog controls">
   <label for="tester-catalog-search">Search test cases</label>
