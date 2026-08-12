@@ -155,5 +155,7 @@ None of these milestones blocks M41 unless a later owner decision explicitly mov
    purchase surface, and M60 must certify the complete subscription lifecycle before release.
 
 The manual acceptance catalog is maintained on the
-[Product Testing page](../privacy-site/product-testing/index.html). `PT-*` identifiers do not change during
-milestone renumbering so existing tester reports remain traceable.
+[Product Testing page](../privacy-site/product-testing/index.html). Its 35 `PT-*` cases are grouped by the canonical
+23-task `TT-*` registry for coordinator-distributed testing; one result remains required for each PT case. Current
+tasks are assignable through the protected Tester Queue, while future task bundles remain blocked until their milestone.
+`PT-*` identifiers do not change during milestone renumbering so existing tester reports remain traceable.

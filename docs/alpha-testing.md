@@ -47,7 +47,7 @@ Do not distribute the development debug APK as the public Alpha. Its machine-loc
 
 ## Reporting a problem
 
-Use the public [product-testing workspace](https://codeframe78.github.io/24Seven.FM-Player/project/product-testing/) to choose a test session and open the structured GitHub result form. The same form accepts passes, failures, passes with notes, and blocked tests so successful coverage is recorded alongside defects.
+Use the public [product-testing workspace](https://player.jamesjennison.net/product-testing/) to open the assigned Tester Task and the structured GitHub result form. The canonical catalog has 35 PT cases organized into 23 Tester Tasks; 19 current bundles are assignable and four future bundles remain blocked by their milestones. A Tester Task can contain more than one PT case, but every PT case needs its own result. The coordinator distributes focused tasks through the private Tester Queue rather than asking one volunteer to complete the full catalog.
 
 Include:
 
@@ -58,6 +58,12 @@ Include:
 - a screenshot only after checking it for personal information.
 
 Never include passwords, security-code answers or images, cookies, session values, private messages, private network addresses, or full network captures. Do not repeatedly submit a song request while investigating an indeterminate response; check Queue first.
+
+## Coordinator task assignments
+
+The protected Tester Queue keeps Alpha enrollment separate from assignment state. Coordinators can give an accepted tester one or more focused `TT-*` bundles, record the assigned station and device/accessory scope, and mark each assignment Assigned, In progress, Complete, or Blocked. Future / Blocked tasks cannot be assigned.
+
+For a controlled assignment, the Queue shows the task-specific boundary before it is saved. In particular, `TT-09` allows one authorized request only—never retry an indeterminate result and inspect Queue first. `TT-11` defaults to read-only Chat validation unless one harmless post is explicitly authorized; `TT-12` never grants moderation-email delivery authority; and `TT-13` requires the approved two-account setup.
 
 ## Known Alpha boundaries
 

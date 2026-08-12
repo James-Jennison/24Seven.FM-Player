@@ -1015,6 +1015,33 @@ figcaption span { color: var(--muted); font-size: 0.88rem; }
 .coverage-table-spacing { margin-top: 1rem; }
 .tester-coverage-table td:nth-child(2) { color: var(--accent); }
 
+.testing-tasks-section { padding-bottom: 2rem; }
+.task-summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.75rem; width: min(calc(100% - 2rem), var(--content)); margin: 1.5rem auto 1rem; }
+.task-summary-grid div { padding: 1rem; border: 1px solid var(--border); border-radius: 0.8rem; background: var(--surface-raised); }
+.task-summary-grid strong, .task-summary-grid span { display: block; }
+.task-summary-grid strong { color: var(--cyan); font-size: 1.35rem; }
+.task-summary-grid span { color: var(--muted); font-size: 0.8rem; }
+.testing-task-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; width: min(calc(100% - 2rem), var(--content)); margin: 0 auto; }
+.testing-task-card { display: flex; flex-direction: column; min-width: 0; padding: 1.3rem; border: 1px solid var(--border); border-radius: 1rem; background: linear-gradient(145deg, rgba(103, 230, 209, 0.07), rgba(210, 156, 255, 0.025)); }
+.testing-task-card[data-task-focused="true"] { border-color: var(--cyan); box-shadow: 0 0 0 3px color-mix(in srgb, var(--cyan) 18%, transparent); }
+.testing-task-card h3 { margin: 0.75rem 0 0.35rem; }
+.testing-task-heading { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
+.task-id, .task-state, .task-tags li { display: inline-flex; align-items: center; width: fit-content; border-radius: 999px; font-size: 0.72rem; font-weight: 800; line-height: 1.2; }
+.task-id { padding: 0.32rem 0.55rem; background: color-mix(in srgb, var(--cyan) 16%, transparent); color: var(--cyan); letter-spacing: 0.06em; }
+.task-state { padding: 0.32rem 0.55rem; border: 1px solid var(--border); color: var(--muted); }
+.task-pt-ids { color: var(--text); font-size: 0.86rem; }
+.task-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0.3rem 0 0.8rem; padding: 0; list-style: none; }
+.task-tags li { padding: 0.28rem 0.5rem; border: 1px solid var(--border); color: var(--muted); }
+.task-details { margin: 0; }
+.task-details div { margin-top: 0.7rem; }
+.task-details dt { color: var(--text); font-size: 0.76rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; }
+.task-details dd { margin: 0.15rem 0 0; color: var(--muted); font-size: 0.88rem; }
+.task-warning, .task-blocked { margin: 1rem 0 0; padding: 0.75rem; border-left: 3px solid var(--warning); background: color-mix(in srgb, var(--warning) 8%, transparent); color: var(--muted); font-size: 0.88rem; }
+.task-warning strong, .task-blocked strong { color: var(--text); }
+.testing-task-card .button { margin-top: auto; align-self: flex-start; }
+.testing-task-future { border-color: rgba(255, 203, 107, 0.45); background: linear-gradient(145deg, rgba(255, 203, 107, 0.09), rgba(210, 156, 255, 0.025)); }
+.testing-task-future .task-state { border-color: rgba(255, 203, 107, 0.45); color: var(--warning); }
+
 .test-session-grid article > span,
 .severity-grid article > span {
   display: inline-block;
@@ -1556,6 +1583,7 @@ h2:hover .anchor-copy,
   .detail-grid.three,
   .test-session-grid,
   .test-session-grid.comprehensive-test-grid,
+  .testing-task-grid,
   .principle-grid,
   .source-map,
   .evidence-grid,
@@ -1593,6 +1621,7 @@ h2:hover .anchor-copy,
   .tester-application-layout,
   .test-session-grid,
   .test-session-grid.comprehensive-test-grid,
+  .testing-task-grid,
   .detail-grid.two,
   .detail-grid.three,
   .principle-grid,
@@ -1604,6 +1633,7 @@ h2:hover .anchor-copy,
   .link-cards { grid-template-columns: 1fr; }
   .page-hero h1 { font-size: clamp(2.7rem, 14vw, 4rem); }
   .page-summary dl { grid-template-columns: 1fr; }
+  .task-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .architecture-implementations { grid-template-columns: 1fr; }
   .architecture-split { writing-mode: vertical-rl; margin-inline: auto; }
   .toolchain-grid { grid-template-columns: repeat(2, 1fr); }

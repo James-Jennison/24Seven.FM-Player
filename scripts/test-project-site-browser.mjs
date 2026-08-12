@@ -249,6 +249,21 @@ try {
   assert(testingState.checked === "true", "Tester progress control did not update");
   assert(testingState.stored, "Tester progress was not stored locally");
 
+  await navigate("/product-testing/?task=TT-02");
+  const taskFilterState = await evaluate(`(() => ({
+    taskCards: document.querySelectorAll('[data-task-card]').length,
+    summary: document.querySelector('.task-summary-grid')?.textContent ?? '',
+    focused: document.querySelector('[data-task-card="TT-02"]')?.dataset.taskFocused,
+    visibleCases: [...document.querySelectorAll('.test-session-grid article[id^="pt-"]')]
+      .filter((item) => !item.hidden).map((item) => item.id),
+    taskNote: document.querySelector('[data-test-task-note]')?.textContent ?? ''
+  }))()`);
+  assert(taskFilterState.taskCards === 23, `Expected 23 Tester Tasks; found ${taskFilterState.taskCards}`);
+  assert(taskFilterState.summary.includes("35") && taskFilterState.summary.includes("19") && taskFilterState.summary.includes("4"), "Tester Task summary is incomplete");
+  assert(taskFilterState.focused === "true", "TT-02 was not focused from the task URL");
+  assert(taskFilterState.visibleCases.join(",") === "pt-02,pt-03", `TT-02 exposed the wrong PT cases: ${taskFilterState.visibleCases.join(",")}`);
+  assert(taskFilterState.taskNote.includes("one result for each"), "Task filter did not explain per-case reporting");
+
   await navigate("/resources/");
   const resourceState = await evaluate(`(() => {
     const field = document.querySelector('[data-resource-search]');

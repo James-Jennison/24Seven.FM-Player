@@ -5,6 +5,7 @@ script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repository_root="$(cd -- "${script_dir}/.." && pwd)"
 
 "${script_dir}/build-project-site.sh"
+python3 "${script_dir}/validate-tester-tasks.py"
 node --check "${repository_root}/privacy-site/assets/project.js"
 node --check "${repository_root}/privacy-site/assets/theme-init.js"
 node --check "${repository_root}/privacy-site/assets/private-tester-queue.js"
@@ -18,6 +19,7 @@ else
 fi
 node --check "${repository_root}/scripts/test-project-site-browser.mjs"
 node --check "${repository_root}/scripts/test-project-site-firefox.mjs"
+node "${repository_root}/scripts/test-private-tester-queue.mjs"
 python3 "${script_dir}/validate-project-site.py" "${repository_root}/_site"
 
 "${script_dir}/prepare-pages-transition.sh" "_pages-transition"

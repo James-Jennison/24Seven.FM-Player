@@ -134,3 +134,78 @@
     window.alert('Write an email message before reviewing recipients.');
   });
 }());
+
+(function () {
+  'use strict';
+
+  var registryElement = document.getElementById('tester-task-registry');
+  if (!registryElement) return;
+  var tasks;
+  try {
+    tasks = JSON.parse(registryElement.textContent || '[]');
+  } catch (error) {
+    return;
+  }
+  var byId = {};
+  tasks.forEach(function (task) { byId[task.id] = task; });
+
+  function copyText(value) {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(value);
+    var field = document.createElement('textarea');
+    field.value = value;
+    field.setAttribute('readonly', '');
+    field.style.position = 'fixed';
+    field.style.opacity = '0';
+    document.body.appendChild(field);
+    field.select();
+    var copied = document.execCommand('copy');
+    field.remove();
+    return copied ? Promise.resolve() : Promise.reject(new Error('Copy unavailable'));
+  }
+
+  document.querySelectorAll('[data-task-assignment-form]').forEach(function (form) {
+    var select = form.querySelector('[data-task-select]');
+    var preview = form.querySelector('[data-task-preview]');
+    var authorization = form.querySelector('[data-mutation-authorization]');
+    if (!select || !preview || !authorization) return;
+
+    function updatePreview() {
+      var task = byId[select.value];
+      if (!task) {
+        preview.textContent = 'Choose a current task to see its PT cases, prerequisites, and safety boundary.';
+        authorization.hidden = true;
+        return;
+      }
+      var detail = task.state === 'future' && task.blockReason
+        ? '<p><strong>Future / Blocked:</strong> ' + task.blockReason + '</p>'
+        : '';
+      preview.innerHTML = '<p><strong>' + task.id + ' — ' + task.title + '</strong></p>' +
+        '<p><strong>PT cases:</strong> ' + task.ptIds.join(', ') + '</p>' +
+        '<p><strong>Prerequisites:</strong> ' + task.prerequisites.join('; ') + '</p>' +
+        '<p class="warning"><strong>Safety:</strong> ' + task.safetyWarning + '</p>' + detail;
+      var mode = task.mutation && task.mutation.mode;
+      authorization.hidden = mode !== 'required' && mode !== 'optional';
+      var checkbox = authorization.querySelector('input');
+      if (checkbox) {
+        checkbox.required = mode === 'required';
+        checkbox.checked = false;
+      }
+      authorization.lastChild.textContent = ' ' + (task.mutation && task.mutation.label ? task.mutation.label : 'Explicit authorization required.');
+    }
+
+    select.addEventListener('change', updatePreview);
+    updatePreview();
+  });
+
+  document.querySelectorAll('[data-assignment-copy]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      copyText(button.dataset.assignmentCopy || '')
+        .then(function () {
+          var prior = button.textContent;
+          button.textContent = 'Assignment copied';
+          window.setTimeout(function () { button.textContent = prior; }, 1800);
+        })
+        .catch(function () { window.alert('Copy was unavailable. Select and copy the assignment manually.'); });
+    });
+  });
+}());

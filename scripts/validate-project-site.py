@@ -28,6 +28,7 @@ REQUIRED_FILES = {
     "private-tester-queue.php",
     "assets/privacy.css",
     "assets/private-tester-queue.js",
+    "assets/tester-tasks.json",
     "assets/project.css",
     "assets/project.js",
     "assets/theme-init.js",

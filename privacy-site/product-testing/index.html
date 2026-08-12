@@ -5,6 +5,8 @@ description: Run the complete manual test catalog for the 24Seven.FM Player and 
 permalink: /product-testing/
 section: product-testing
 ---
+{% assign task_registry = site.data.tester_tasks %}
+{% assign task_summary = task_registry.summary %}
 <section class="page-hero">
   <div>
     <p class="eyebrow">Tester workspace</p>
@@ -18,9 +20,10 @@ section: product-testing
   </div>
   <aside class="page-summary" aria-label="Testing workspace summary">
     <span>Manual acceptance catalog</span>
-    <strong>35 test cases</strong>
+    <strong>{{ task_summary.ptCaseCount }} PT cases</strong>
     <dl>
       <div><dt>Stations</dt><dd>5</dd></div>
+      <div><dt>Tester tasks</dt><dd>{{ task_summary.taskCount }}</dd></div>
       <div><dt>Outcomes</dt><dd>4</dd></div>
       <div><dt>Accounts</dt><dd>Assigned</dd></div>
     </dl>
@@ -30,6 +33,7 @@ section: product-testing
 <nav class="section-jump" aria-label="On this page">
   <a href="#start">Before testing</a>
   <a href="#alpha-tester-interest">Apply to test</a>
+  <a href="#testing-tasks">Testing tasks</a>
   <a href="#listening-tests">Listening</a>
   <a href="#member-tests">Account and community</a>
   <a href="#device-tests">Devices and access</a>
@@ -41,9 +45,9 @@ section: product-testing
 
 <section class="content-section" id="alpha-tester-interest">
   <div class="content-intro wide">
-    <p class="eyebrow">Google Play internal testing</p>
+    <p class="eyebrow">Google Play internal testing is open</p>
     <h2>Apply to test the Alpha</h2>
-    <p>Internal testing is limited and currently awaits Google Play availability. Apply with the Google-account email that should receive the Play testing invitation. An application is interest only; an invitation is not guaranteed.</p>
+    <p>Internal testing is limited. Apply with the Google-account email that should receive the Play testing invitation. An application is interest only; an invitation is not guaranteed.</p>
   </div>
   <div class="tester-application-layout">
     <form class="tester-application-form" data-alpha-tester-form action="/alpha-tester-interest.php" method="post" novalidate>
@@ -94,7 +98,7 @@ section: product-testing
       <h3>Invitation, then a focused assignment</h3>
       <ol>
         <li>The coordinator reviews device coverage and current testing needs.</li>
-        <li>If selected after Play availability, your specified Google account receives the internal-test invitation.</li>
+        <li>If selected, your specified Google account receives the internal-test invitation.</li>
         <li>Install from Google Play, then use the public catalog to record redacted results.</li>
       </ol>
       <p><strong>Please do not submit:</strong> station usernames or passwords, CAPTCHA answers, screenshots with personal information, or private messages.</p>
@@ -102,7 +106,47 @@ section: product-testing
   </div>
 </section>
 
-<div class="catalog-toolbar tester-catalog-toolbar" data-test-catalog aria-label="Tester catalog controls">
+<section class="content-section testing-tasks-section" id="testing-tasks" data-testing-tasks>
+  <div class="content-intro wide">
+    <p class="eyebrow">Coordinator-distributed coverage</p>
+    <h2>Assigned Testing Tasks</h2>
+    <p>Your assignment may contain more than one PT case. Submit one result for each PT case. The coordinator assigns a focused task with the required station, account, device, accessory, and authorization scope; no individual volunteer is expected to complete the full catalog.</p>
+  </div>
+  <div class="task-summary-grid" aria-label="Testing task summary">
+    <div><strong>{{ task_summary.ptCaseCount }}</strong><span>PT cases</span></div>
+    <div><strong>{{ task_summary.taskCount }}</strong><span>testing tasks</span></div>
+    <div><strong>{{ task_summary.assignableTaskCount }}</strong><span>currently assignable</span></div>
+    <div><strong>{{ task_summary.futureTaskCount }}</strong><span>future / blocked</span></div>
+  </div>
+  <div class="testing-task-grid">
+    {% for task in task_registry.tasks %}
+      <article class="testing-task-card{% if task.state == 'future' %} testing-task-future{% endif %}" data-task-card="{{ task.id }}" data-task-pt-ids="{{ task.ptIds | join: ',' }}">
+        <div class="testing-task-heading">
+          <span class="task-id">{{ task.id }}</span>
+          <span class="task-state">{% if task.state == 'future' %}Future / Blocked{% else %}Current{% endif %}</span>
+        </div>
+        <h3>{{ task.title }}</h3>
+        <p class="task-pt-ids"><strong>PT cases:</strong> {{ task.ptIds | join: ', ' }}</p>
+        <p>{{ task.purpose }}</p>
+        <ul class="task-tags" aria-label="Classification">
+          {% for tag in task.tags %}<li>{{ tag }}</li>{% endfor %}
+        </ul>
+        <dl class="task-details">
+          <div><dt>Scope</dt><dd>{{ task.stationScope }}</dd></div>
+          <div><dt>Prerequisites</dt><dd>{{ task.prerequisites | join: '; ' }}</dd></div>
+          <div><dt>Authorization</dt><dd>{{ task.mutation.label }}</dd></div>
+        </dl>
+        <p class="task-warning"><strong>Safety:</strong> {{ task.safetyWarning }}</p>
+        {% if task.state == 'future' %}
+          <p class="task-blocked"><strong>Blocked until:</strong> {{ task.blockReason }}</p>
+        {% endif %}
+        <a class="button secondary" href="{{ '/product-testing/?task=' | append: task.id | relative_url }}#catalog-controls">Open {{ task.id }} cases</a>
+      </article>
+    {% endfor %}
+  </div>
+</section>
+
+<div class="catalog-toolbar tester-catalog-toolbar" id="catalog-controls" data-test-catalog aria-label="Tester catalog controls">
   <label for="tester-catalog-search">Search test cases</label>
   <input id="tester-catalog-search" type="search" placeholder="Search by case, feature, or requirement" autocomplete="off" data-test-search>
   <div class="catalog-filters" role="group" aria-label="Filter test cases">
@@ -112,10 +156,11 @@ section: product-testing
     <button type="button" data-test-filter="future" aria-pressed="false">Future</button>
   </div>
   <div class="tester-catalog-progress">
-    <span data-test-progress-text>0 of 35 checked</span>
-    <progress max="35" value="0" data-test-progress aria-label="Tester catalog progress">0 of 35</progress>
+    <span data-test-progress-text>0 of {{ task_summary.ptCaseCount }} checked</span>
+    <progress max="{{ task_summary.ptCaseCount }}" value="0" data-test-progress aria-label="Tester catalog progress">0 of {{ task_summary.ptCaseCount }}</progress>
   </div>
-  <p class="catalog-visible-count" data-test-visible-count role="status" aria-live="polite">35 test cases visible</p>
+  <p class="catalog-visible-count" data-test-visible-count role="status" aria-live="polite">{{ task_summary.ptCaseCount }} test cases visible</p>
+  <p class="catalog-visible-count" data-test-task-note hidden data-test-task-note></p>
   <button type="button" class="catalog-clear" data-test-clear-progress>Clear progress</button>
 </div>
 <p class="catalog-empty-state" data-test-empty-state hidden>No test cases match the current search and filter.</p>

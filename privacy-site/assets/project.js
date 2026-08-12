@@ -353,10 +353,18 @@
     const progressText = catalog.querySelector('[data-test-progress-text]');
     const progress = catalog.querySelector('[data-test-progress]');
     const visibleCount = catalog.querySelector('[data-test-visible-count]');
+    const taskNote = catalog.querySelector('[data-test-task-note]');
     const clearButton = catalog.querySelector('[data-test-clear-progress]');
     const empty = document.querySelector('[data-test-empty-state]');
     const cases = Array.from(document.querySelectorAll('.test-session-grid article[id^="pt-"]'));
-    const caseSections = Array.from(document.querySelectorAll('#listening-tests, #member-tests, #device-tests'));
+    const caseSections = Array.from(document.querySelectorAll('.content-section')).filter(function (section) {
+      return Boolean(section.querySelector('.test-session-grid article[id^="pt-"]'));
+    });
+    const requestedTaskId = (new URLSearchParams(window.location.search).get('task') || '').toUpperCase();
+    const taskCard = requestedTaskId ? document.querySelector('[data-task-card="' + requestedTaskId + '"]') : null;
+    const taskCaseIds = taskCard
+      ? (taskCard.dataset.taskPtIds || '').split(',').map(function (id) { return id.trim().toUpperCase(); }).filter(Boolean)
+      : [];
     const storageKey = 'project-test-checklist-v1';
     let selectedFilter = 'all';
     let checked = new Set();
@@ -421,12 +429,13 @@
         const isChecked = checked.has(testCase.id);
         const isFuture = testCase.classList.contains('future-test-case');
         const matchesQuery = !query || testCase.textContent.toLocaleLowerCase().includes(query);
+        const matchesTask = !taskCaseIds.length || taskCaseIds.includes(testCase.id.toUpperCase());
         const matchesFilter =
           selectedFilter === 'all' ||
           selectedFilter === 'checked' && isChecked ||
           selectedFilter === 'remaining' && !isChecked ||
           selectedFilter === 'future' && isFuture;
-        testCase.hidden = !(matchesQuery && matchesFilter);
+        testCase.hidden = !(matchesQuery && matchesFilter && matchesTask);
         if (!testCase.hidden) visible += 1;
       });
       caseSections.forEach(function (section) {
@@ -462,6 +471,13 @@
         applyTestFilter();
         announce('Browser-local checklist cleared');
       });
+    }
+    if (taskCard) {
+      taskCard.dataset.taskFocused = 'true';
+      if (taskNote) {
+        taskNote.hidden = false;
+        taskNote.textContent = requestedTaskId + ' is selected. Submit one result for each included PT case.';
+      }
     }
     catalog.dataset.enhanced = 'true';
     applyTestFilter();
