@@ -25,6 +25,11 @@
   approval for that action. Never retrieve, search for, display, or record passwords, tokens, or other secrets; ask
   the user to enter them directly in the focused browser field.
 
+## Player project site deployment
+
+- For any 24Seven.FM Player website deployment, verification, or server-side investigation, use only the canonical SSH alias `website-vm-admin`.
+- Do not use `webuzo-production-admin` for this project. Resolve the required alias through the managed SSH configuration before connecting.
+
 ## Milestones
 
 Keep `docs/MILESTONE_TIME_LEDGER.md` accurate during authorized milestone work. Update roadmap, evidence, and approved Discord milestone communication only after the relevant acceptance gate is complete; never include sensitive details.
