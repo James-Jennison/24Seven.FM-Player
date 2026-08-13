@@ -1,0 +1,13 @@
+# OWNER ACTION REQUIRED — OPTIONAL SYSTEM-WIDE extension.
+# requirements.toml is system-wide, not repository-scoped. Install these exact
+# verified tables only if the owner intentionally wants the Player bans to apply
+# to every Codex project on this machine. Merge them into the active managed
+# requirements file; do not create a second arbitrary requirements source.
+
+[apps.gmail]
+# Verified installed app identifier from the `gmail` app/skill namespace.
+enabled = false
+
+[features]
+# Verified key: disables the built-in browser pane while leaving Computer Use enabled.
+in_app_browser = false
