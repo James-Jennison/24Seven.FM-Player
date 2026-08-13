@@ -11,7 +11,7 @@
 
   var templates = {
     welcome: {
-      subject: 'Welcome to the 24Seven.FM Player Closed Alpha test',
+      subject: 'Welcome to the 24Seven.FM Player Closed Alpha Test',
       html: '<p>Hi,</p>' +
         '<p>Welcome to the internal test for 24Seven.FM Player. Thank you for helping us validate the app before wider release.</p>' +
         '<p><strong>Join on Android:</strong><br><a href="https://play.google.com/store/apps/details?id=com.codeframe78.twentyfourseven.player">https://play.google.com/store/apps/details?id=com.codeframe78.twentyfourseven.player</a></p>' +
