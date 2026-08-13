@@ -16,6 +16,88 @@ const MAX_REQUEST_BYTES = 16_384;
 const RATE_WINDOW_SECONDS = 1_800;
 const RATE_LIMIT = 3;
 const SIGNUP_CONFIRMATION_SUBJECT = 'Thanks for signing up to test the 24Seven.FM Player';
+const STATIONS = [
+    'sst' => 'StreamingSoundtracks.com',
+    '1980s' => '1980s.FM',
+    'afm' => 'Adagio.FM',
+    'dfm' => 'Death.FM',
+    'efm' => 'Entranced.FM',
+];
+const PRIMARY_STATIONS = STATIONS + [
+    'multiple' => 'I regularly listen to more than one',
+    'none' => "I don't have a primary station",
+];
+const DEVICE_FORM_FACTORS = [
+    'phone' => 'Standard phone',
+    'foldable' => 'Foldable / flip phone',
+    'tablet' => 'Android tablet',
+    'chromebook' => 'Chromebook with Android app support',
+    'other' => 'Other Android device',
+];
+const TESTING_INTERESTS = [
+    'playback' => 'Playback and media controls',
+    'queue_history_data' => 'Queue, History, and station data',
+    'accounts_favorites' => 'Accounts and Favorites',
+    'request_safety' => 'Song request browsing and safety',
+    'chat_community' => 'Chat and community features',
+    'network_recovery' => 'Network loss and recovery',
+    'audio_accessories' => 'Audio devices and accessories',
+    'adaptive_layouts' => 'Foldable, tablet, and adaptive layouts',
+    'accessibility' => 'Accessibility and alternative input',
+    'general' => 'General testing / anything needed',
+];
+const NETWORK_CAPABILITIES = [
+    'wifi' => 'Wi-Fi',
+    'mobile_data' => 'Mobile/cellular data',
+    'network_handoff' => 'Switching between Wi-Fi and mobile data',
+    'network_disconnect' => 'Temporarily disconnecting network access to test recovery',
+];
+const AUDIO_CAPABILITIES = [
+    'device_speaker' => 'Device speaker',
+    'bluetooth_headphones' => 'Bluetooth headphones or earbuds',
+    'bluetooth_speaker' => 'Bluetooth speaker',
+    'wired_headphones' => 'Wired headphones/headset',
+    'usb_audio' => 'USB audio device',
+    'android_auto' => 'Android Auto / automotive media',
+    'hearing_aid' => 'Hearing aid / assistive audio device',
+    'hdmi_audio' => 'HDMI / external display audio',
+    'external_input' => 'External keyboard or mouse/trackpad',
+    'none' => 'None beyond the device itself',
+];
+const ACCESSIBILITY_CAPABILITIES = [
+    'talkback' => 'TalkBack',
+    'large_text' => 'Large text / enlarged display',
+    'voice_access' => 'Voice Access',
+    'switch_access' => 'Switch Access',
+    'accessibility_scanner' => 'Accessibility Scanner / touch-target review',
+    'external_keyboard' => 'External keyboard',
+    'mouse_trackpad' => 'Mouse / trackpad',
+    'general_accessibility' => 'General accessibility testing',
+    'none' => 'None',
+];
+const TESTING_COMFORT = [
+    'readonly' => 'Read-only and general testing',
+    'account' => 'Account testing',
+    'controlled' => 'Controlled live testing',
+    'any' => 'Any appropriate testing',
+];
+const CONTROLLED_ACTIONS = [
+    'song_request' => 'One authorized song request',
+    'chat_message' => 'One harmless authorized Chat message',
+    'chat_mention' => 'Two-account Chat mention testing',
+    'session_testing' => 'Sign-in / sign-out / session testing',
+    'report_block' => 'Report/block/unblock workflow without sending a moderation email',
+    'account_testing' => 'General account-based testing',
+    'none' => 'None',
+];
+const TESTING_AVAILABILITY = [
+    'under_30m' => 'Less than 30 minutes',
+    '30_60m' => 'About 30–60 minutes',
+    '1_2h' => 'About 1–2 hours',
+    '2_4h' => 'About 2–4 hours',
+    'over_4h' => 'More than 4 hours',
+    'varies' => 'It varies',
+];
 
 ini_set('display_errors', '0');
 
@@ -47,6 +129,106 @@ function requestField(string $name, int $maximum, bool $required = false): strin
         throw new InvalidArgumentException('Invalid field.');
     }
     return $value;
+}
+
+function requestChoice(string $name, array $allowed, bool $required = false): ?string
+{
+    $value = requestField($name, 80, $required);
+    if ($value === '') {
+        return null;
+    }
+    if (!array_key_exists($value, $allowed)) {
+        throw new InvalidArgumentException('Invalid field.');
+    }
+    return $value;
+}
+
+function requestChoices(string $name, array $allowed, int $maximum, bool $noneExclusive = false): array
+{
+    $values = $_POST[$name] ?? [];
+    if (!is_array($values) || count($values) > $maximum) {
+        throw new InvalidArgumentException('Invalid field.');
+    }
+    $normalized = [];
+    foreach ($values as $value) {
+        if (!is_string($value) || strlen($value) > 80 || !preg_match('//u', $value) || !array_key_exists($value, $allowed)) {
+            throw new InvalidArgumentException('Invalid field.');
+        }
+        $normalized[$value] = true;
+    }
+    $result = array_keys($normalized);
+    if ($noneExclusive && in_array('none', $result, true)) {
+        return ['none'];
+    }
+    return $result;
+}
+
+function labels(array $values, array $allowed, string $fallback = 'Not provided'): string
+{
+    if ($values === []) {
+        return $fallback;
+    }
+    return implode(', ', array_map(static fn (string $value): string => $allowed[$value], $values));
+}
+
+function applicationFromRequest(): array
+{
+    $application = [
+        'name' => requestField('name', 100, true),
+        'email' => requestField('email', 254, true),
+        'country' => requestField('country', 80),
+        'primary_station' => requestChoice('primaryStation', PRIMARY_STATIONS, true),
+        'other_stations' => requestChoices('otherStations', STATIONS, count(STATIONS)),
+        'station_accounts' => requestChoices('stationAccounts', STATIONS + ['none' => 'None'], count(STATIONS) + 1, true),
+        'device' => requestField('device', 160, true),
+        'android_version' => requestField('androidVersion', 48, true),
+        'device_form_factor' => requestChoice('deviceFormFactor', DEVICE_FORM_FACTORS, true),
+        'other_devices' => requestField('otherDevices', 500),
+        'interests' => requestChoices('interests', TESTING_INTERESTS, count(TESTING_INTERESTS)),
+        'network_capabilities' => requestChoices('networkCapabilities', NETWORK_CAPABILITIES, count(NETWORK_CAPABILITIES)),
+        'audio_capabilities' => requestChoices('audioCapabilities', AUDIO_CAPABILITIES, count(AUDIO_CAPABILITIES), true),
+        'accessibility_capabilities' => requestChoices('accessibilityCapabilities', ACCESSIBILITY_CAPABILITIES, count(ACCESSIBILITY_CAPABILITIES), true),
+        'testing_comfort' => requestChoice('testingComfort', TESTING_COMFORT, true),
+        'controlled_actions' => requestChoices('controlledActions', CONTROLLED_ACTIONS, count(CONTROLLED_ACTIONS), true),
+        'testing_availability' => requestChoice('testingAvailability', TESTING_AVAILABILITY),
+        'experience' => requestField('experience', 1200),
+        'company' => requestField('company', 100),
+        'consent' => requestField('consent', 3, true),
+    ];
+    if (!filter_var($application['email'], FILTER_VALIDATE_EMAIL) || $application['consent'] !== 'yes') {
+        throw new InvalidArgumentException('Invalid application.');
+    }
+    if (in_array($application['primary_station'], array_keys(STATIONS), true)) {
+        $application['other_stations'] = array_values(array_diff($application['other_stations'], [$application['primary_station']]));
+    }
+    return $application;
+}
+
+function coordinatorIntakeMessage(array $application): string
+{
+    return implode("\n", [
+        'Alpha tester-interest application',
+        '',
+        'Display name: ' . $application['name'],
+        'Google Play account email: ' . $application['email'],
+        'Country or region: ' . ($application['country'] !== '' ? $application['country'] : 'Not provided'),
+        'Primary station: ' . PRIMARY_STATIONS[$application['primary_station']],
+        'Other familiar stations: ' . labels($application['other_stations'], STATIONS),
+        'Station accounts available: ' . labels($application['station_accounts'], STATIONS + ['none' => 'None']),
+        'Android device: ' . $application['device'],
+        'Android version: ' . $application['android_version'],
+        'Device form factor: ' . DEVICE_FORM_FACTORS[$application['device_form_factor']],
+        'Other Android devices: ' . ($application['other_devices'] !== '' ? $application['other_devices'] : 'Not provided'),
+        'Testing interests: ' . labels($application['interests'], TESTING_INTERESTS),
+        'Network capabilities: ' . labels($application['network_capabilities'], NETWORK_CAPABILITIES),
+        'Audio/accessory capabilities: ' . labels($application['audio_capabilities'], AUDIO_CAPABILITIES),
+        'Accessibility/alternative-input capabilities: ' . labels($application['accessibility_capabilities'], ACCESSIBILITY_CAPABILITIES),
+        'Testing comfort level: ' . TESTING_COMFORT[$application['testing_comfort']],
+        'Controlled-action preferences: ' . labels($application['controlled_actions'], CONTROLLED_ACTIONS),
+        'Two-week availability: ' . ($application['testing_availability'] === null ? 'Not provided' : TESTING_AVAILABILITY[$application['testing_availability']]),
+        'Assignment notes: ' . ($application['experience'] !== '' ? $application['experience'] : 'Not provided'),
+        'Consent: Confirmed',
+    ]);
 }
 
 function consumeRateLimit(array $config): bool
@@ -352,57 +534,21 @@ try {
         throw new RuntimeException('Missing private form configuration.');
     }
 
-    $name = requestField('name', 100, true);
-    $email = requestField('email', 254, true);
-    $country = requestField('country', 80);
-    $device = requestField('device', 160, true);
-    $androidVersion = requestField('androidVersion', 48, true);
-    $experience = requestField('experience', 1200);
-    $company = requestField('company', 100);
-    $consent = requestField('consent', 3, true);
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL) || $consent !== 'yes') {
-        throw new InvalidArgumentException('Invalid application.');
-    }
-
-    $allowedInterests = ['Playback', 'Foldable and tablet', 'Accessibility', 'Account and community', 'General testing'];
-    $interests = $_POST['interests'] ?? [];
-    if (!is_array($interests) || count($interests) > count($allowedInterests)) {
-        throw new InvalidArgumentException('Invalid interests.');
-    }
-    foreach ($interests as $interest) {
-        if (!is_string($interest)) {
-            throw new InvalidArgumentException('Invalid interests.');
-        }
-    }
-    $interests = array_values(array_unique(array_map(static fn ($interest): string => trim((string) $interest), $interests)));
-    if (array_diff($interests, $allowedInterests)) {
-        throw new InvalidArgumentException('Invalid interests.');
-    }
+    $application = applicationFromRequest();
 
     // Honeypot submissions appear successful but are discarded without mail.
-    if ($company !== '') {
+    if ($application['company'] !== '') {
         respond(200, 'Your tester-interest application was sent.', 'sent', $wantsJson);
     }
     if (!consumeRateLimit($config)) {
         respond(429, 'Please wait before sending another application.', 'error', $wantsJson);
     }
 
-    $message = implode("\n", [
-        'Alpha tester-interest application',
-        '',
-        'Display name: ' . $name,
-        'Google Play account email: ' . $email,
-        'Country or region: ' . ($country !== '' ? $country : 'Not provided'),
-        'Android device: ' . $device,
-        'Android version: ' . $androidVersion,
-        'Interests: ' . ($interests ? implode(', ', $interests) : 'Not provided'),
-        'Prior testing experience: ' . ($experience !== '' ? $experience : 'Not provided'),
-        'Consent: Confirmed',
-    ]);
+    $message = coordinatorIntakeMessage($application);
     $sent = smtpDeliver(
         $config['recipient'],
         $config['sender'],
-        $email,
+        $application['email'],
         '24Seven.FM Player Alpha tester-interest application',
         $message,
     );
@@ -412,7 +558,7 @@ try {
 
     $confirmation = signupConfirmationEmail();
     if (!smtpDeliver(
-        $email,
+        $application['email'],
         $config['sender'],
         $config['sender'],
         $confirmation['subject'],

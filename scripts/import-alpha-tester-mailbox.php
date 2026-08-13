@@ -48,6 +48,25 @@ function database(string $path): PDO
         status TEXT NOT NULL CHECK(status IN ('active', 'inactive')),
         imported_at TEXT NOT NULL
     )");
+    $columns = array_column($database->query('PRAGMA table_info(testers)')->fetchAll(), 'name');
+    $migrations = [
+        'primary_station' => 'TEXT',
+        'other_stations_json' => "TEXT NOT NULL DEFAULT '[]'",
+        'station_accounts_json' => "TEXT NOT NULL DEFAULT '[]'",
+        'device_form_factor' => 'TEXT',
+        'other_devices' => 'TEXT',
+        'network_capabilities_json' => "TEXT NOT NULL DEFAULT '[]'",
+        'audio_capabilities_json' => "TEXT NOT NULL DEFAULT '[]'",
+        'accessibility_capabilities_json' => "TEXT NOT NULL DEFAULT '[]'",
+        'testing_comfort' => 'TEXT',
+        'controlled_actions_json' => "TEXT NOT NULL DEFAULT '[]'",
+        'testing_availability' => 'TEXT',
+    ];
+    foreach ($migrations as $column => $definition) {
+        if (!in_array($column, $columns, true)) {
+            $database->exec("ALTER TABLE testers ADD COLUMN {$column} {$definition}");
+        }
+    }
     return $database;
 }
 
@@ -56,6 +75,23 @@ function messageBody(string $raw): string
     $parts = preg_split("/\r?\n\r?\n/", $raw, 2);
     return $parts[1] ?? $raw;
 }
+
+const INTAKE_VALUE_MAPS = [
+    'primary_station' => [
+        'StreamingSoundtracks.com' => 'sst', '1980s.FM' => '1980s', 'Adagio.FM' => 'afm', 'Death.FM' => 'dfm', 'Entranced.FM' => 'efm',
+        'I regularly listen to more than one' => 'multiple', "I don't have a primary station" => 'none',
+    ],
+    'other_stations' => ['StreamingSoundtracks.com' => 'sst', '1980s.FM' => '1980s', 'Adagio.FM' => 'afm', 'Death.FM' => 'dfm', 'Entranced.FM' => 'efm'],
+    'station_accounts' => ['StreamingSoundtracks.com' => 'sst', '1980s.FM' => '1980s', 'Adagio.FM' => 'afm', 'Death.FM' => 'dfm', 'Entranced.FM' => 'efm', 'None' => 'none'],
+    'device_form_factor' => ['Standard phone' => 'phone', 'Foldable / flip phone' => 'foldable', 'Android tablet' => 'tablet', 'Chromebook with Android app support' => 'chromebook', 'Other Android device' => 'other'],
+    'interests' => ['Playback and media controls' => 'playback', 'Queue, History, and station data' => 'queue_history_data', 'Accounts and Favorites' => 'accounts_favorites', 'Song request browsing and safety' => 'request_safety', 'Chat and community features' => 'chat_community', 'Network loss and recovery' => 'network_recovery', 'Audio devices and accessories' => 'audio_accessories', 'Foldable, tablet, and adaptive layouts' => 'adaptive_layouts', 'Accessibility and alternative input' => 'accessibility', 'General testing / anything needed' => 'general', 'Playback' => 'playback', 'Foldable and tablet' => 'adaptive_layouts', 'Accessibility' => 'accessibility', 'Account and community' => 'accounts_favorites', 'General testing' => 'general'],
+    'network_capabilities' => ['Wi-Fi' => 'wifi', 'Mobile/cellular data' => 'mobile_data', 'Switching between Wi-Fi and mobile data' => 'network_handoff', 'Temporarily disconnecting network access to test recovery' => 'network_disconnect'],
+    'audio_capabilities' => ['Device speaker' => 'device_speaker', 'Bluetooth headphones or earbuds' => 'bluetooth_headphones', 'Bluetooth speaker' => 'bluetooth_speaker', 'Wired headphones/headset' => 'wired_headphones', 'USB audio device' => 'usb_audio', 'Android Auto / automotive media' => 'android_auto', 'Hearing aid / assistive audio device' => 'hearing_aid', 'HDMI / external display audio' => 'hdmi_audio', 'External keyboard or mouse/trackpad' => 'external_input', 'None beyond the device itself' => 'none'],
+    'accessibility_capabilities' => ['TalkBack' => 'talkback', 'Large text / enlarged display' => 'large_text', 'Voice Access' => 'voice_access', 'Switch Access' => 'switch_access', 'Accessibility Scanner / touch-target review' => 'accessibility_scanner', 'External keyboard' => 'external_keyboard', 'Mouse / trackpad' => 'mouse_trackpad', 'General accessibility testing' => 'general_accessibility', 'None' => 'none'],
+    'testing_comfort' => ['Read-only and general testing' => 'readonly', 'Account testing' => 'account', 'Controlled live testing' => 'controlled', 'Any appropriate testing' => 'any'],
+    'controlled_actions' => ['One authorized song request' => 'song_request', 'One harmless authorized Chat message' => 'chat_message', 'Two-account Chat mention testing' => 'chat_mention', 'Sign-in / sign-out / session testing' => 'session_testing', 'Report/block/unblock workflow without sending a moderation email' => 'report_block', 'General account-based testing' => 'account_testing', 'None' => 'none'],
+    'testing_availability' => ['Less than 30 minutes' => 'under_30m', 'About 30–60 minutes' => '30_60m', 'About 1–2 hours' => '1_2h', 'About 2–4 hours' => '2_4h', 'More than 4 hours' => 'over_4h', 'It varies' => 'varies'],
+];
 
 function parseFields(string $raw): array
 {
@@ -66,13 +102,19 @@ function parseFields(string $raw): array
         'country' => 'Country or region',
         'device' => 'Android device',
         'android_version' => 'Android version',
-        'interests' => 'Interests',
-        'experience' => 'Prior testing experience',
+        'interests' => 'Testing interests',
+        'experience' => 'Assignment notes',
     ];
     $fields = [];
     foreach ($labels as $key => $label) {
         if (!preg_match('/^' . preg_quote($label, '/') . ':\\s*(.*)$/mi', $body, $match)) {
-            throw new RuntimeException("Message does not contain {$label}.");
+            if ($key === 'interests' && preg_match('/^Interests:\\s*(.*)$/mi', $body, $match)) {
+                // Legacy application mail before assignment-preference intake.
+            } elseif ($key === 'experience' && preg_match('/^Prior testing experience:\\s*(.*)$/mi', $body, $match)) {
+                // Legacy application mail before assignment-preference intake.
+            } else {
+                throw new RuntimeException("Message does not contain {$label}.");
+            }
         }
         $fields[$key] = trim($match[1]);
     }
@@ -82,7 +124,54 @@ function parseFields(string $raw): array
     $fields['country'] = $fields['country'] === 'Not provided' ? null : $fields['country'];
     $fields['experience'] = $fields['experience'] === 'Not provided' ? null : $fields['experience'];
     $fields['interests'] = $fields['interests'] === 'Not provided' ? [] : array_values(array_filter(array_map('trim', explode(',', $fields['interests']))));
+    $optional = [
+        'primary_station' => 'Primary station',
+        'other_stations' => 'Other familiar stations',
+        'station_accounts' => 'Station accounts available',
+        'device_form_factor' => 'Device form factor',
+        'other_devices' => 'Other Android devices',
+        'network_capabilities' => 'Network capabilities',
+        'audio_capabilities' => 'Audio/accessory capabilities',
+        'accessibility_capabilities' => 'Accessibility/alternative-input capabilities',
+        'testing_comfort' => 'Testing comfort level',
+        'controlled_actions' => 'Controlled-action preferences',
+        'testing_availability' => 'Two-week availability',
+    ];
+    foreach ($optional as $key => $label) {
+        $fields[$key] = preg_match('/^' . preg_quote($label, '/') . ':\\s*(.*)$/mi', $body, $match) ? trim($match[1]) : 'Not provided';
+    }
     return $fields;
+}
+
+function canonicalValue(string $field, string $value): ?string
+{
+    if ($value === 'Not provided') {
+        return null;
+    }
+    $canonical = INTAKE_VALUE_MAPS[$field][$value] ?? null;
+    if ($canonical === null) {
+        throw new RuntimeException("Unknown {$field} value.");
+    }
+    return $canonical;
+}
+
+function canonicalList(string $field, string $value): array
+{
+    if ($value === 'Not provided') {
+        return [];
+    }
+    $values = array_values(array_filter(array_map('trim', explode(',', $value))));
+    $canonical = [];
+    foreach ($values as $item) {
+        $candidate = canonicalValue($field, $item);
+        if ($candidate !== null) {
+            $canonical[$candidate] = true;
+        }
+    }
+    if (isset($canonical['none'])) {
+        return ['none'];
+    }
+    return array_keys($canonical);
 }
 
 $options = getopt('', ['database:', 'uid:', 'received-at:', 'message:']);
@@ -98,7 +187,7 @@ if ($messages === [] || !preg_match('/^[0-9A-Za-z._:-]+$/', $uid) || strtotime($
 }
 
 $database = database($databasePath);
-$insert = $database->prepare("INSERT INTO testers(source_message_uid, received_at, display_name, email, country, device, android_version, interests_json, experience, status, imported_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?) ON CONFLICT(source_message_uid) DO NOTHING");
+$insert = $database->prepare("INSERT INTO testers(source_message_uid, received_at, display_name, email, country, device, android_version, interests_json, experience, status, imported_at, primary_station, other_stations_json, station_accounts_json, device_form_factor, other_devices, network_capabilities_json, audio_capabilities_json, accessibility_capabilities_json, testing_comfort, controlled_actions_json, testing_availability) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(source_message_uid) DO NOTHING");
 $imported = 0;
 foreach ($messages as $offset => $messagePath) {
     if (!is_string($messagePath)) {
@@ -119,7 +208,29 @@ foreach ($messages as $offset => $messagePath) {
     }
     $fields = parseFields($raw);
     $sourceId = count($messages) === 1 ? $uid : $uid . '-' . ($offset + 1);
-    $insert->execute([$sourceId, $receivedAt, $fields['name'], $fields['email'], $fields['country'], $fields['device'], $fields['android_version'], json_encode($fields['interests'], JSON_THROW_ON_ERROR), $fields['experience'], gmdate('c')]);
+    $insert->execute([
+        $sourceId,
+        $receivedAt,
+        $fields['name'],
+        $fields['email'],
+        $fields['country'],
+        $fields['device'],
+        $fields['android_version'],
+        json_encode($fields['interests'] === [] ? [] : canonicalList('interests', implode(', ', $fields['interests'])), JSON_THROW_ON_ERROR),
+        $fields['experience'],
+        gmdate('c'),
+        canonicalValue('primary_station', $fields['primary_station']),
+        json_encode(canonicalList('other_stations', $fields['other_stations']), JSON_THROW_ON_ERROR),
+        json_encode(canonicalList('station_accounts', $fields['station_accounts']), JSON_THROW_ON_ERROR),
+        canonicalValue('device_form_factor', $fields['device_form_factor']),
+        $fields['other_devices'] === 'Not provided' ? null : $fields['other_devices'],
+        json_encode(canonicalList('network_capabilities', $fields['network_capabilities']), JSON_THROW_ON_ERROR),
+        json_encode(canonicalList('audio_capabilities', $fields['audio_capabilities']), JSON_THROW_ON_ERROR),
+        json_encode(canonicalList('accessibility_capabilities', $fields['accessibility_capabilities']), JSON_THROW_ON_ERROR),
+        canonicalValue('testing_comfort', $fields['testing_comfort']),
+        json_encode(canonicalList('controlled_actions', $fields['controlled_actions']), JSON_THROW_ON_ERROR),
+        canonicalValue('testing_availability', $fields['testing_availability']),
+    ]);
     $imported += $insert->rowCount();
 }
 fwrite(STDOUT, "Imported {$imported} tester application(s).\n");
