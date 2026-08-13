@@ -1,0 +1,20 @@
+# Trusted Player project controls. These tighten the user-level policy only.
+approval_policy = "on-request"
+
+[features]
+# Verified Codex 0.147.0 feature key: disables the built-in browser pane only.
+in_app_browser = false
+
+[mcp_servers.node_repl]
+# The configured browser/in-app-browser backend. Computer Use is a separate MCP.
+enabled = false
+
+[apps.gmail]
+# Verified installed app identifier; applies to reads and writes.
+enabled = false
+
+[permissions.owner_local_development.filesystem.":workspace_roots"]
+# The global normal profile remains writable for source code, while guardrails stay read-only.
+"docs/codex-security" = "read"
+"scripts/audit_codex_guardrails.sh" = "read"
+"scripts/test-audit_codex_guardrails.sh" = "read"

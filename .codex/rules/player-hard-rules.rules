@@ -1,0 +1,12 @@
+# Player-only command policy. Rules apply outside the sandbox; project trust is required.
+prefix_rule(pattern=["./gradlew", "clean"], decision="forbidden", justification="Player Android policy forbids Gradle clean; preserve caches and incremental outputs.", match=["./gradlew clean"], not_match=["./gradlew :app:compileDebugKotlin"])
+prefix_rule(pattern=["gradlew", "clean"], decision="forbidden", justification="Player Android policy forbids Gradle clean; preserve caches and incremental outputs.", match=["gradlew clean"])
+prefix_rule(pattern=["./gradlew.bat", "clean"], decision="forbidden", justification="Player Android policy forbids Gradle clean; preserve caches and incremental outputs.", match=["./gradlew.bat clean"])
+prefix_rule(pattern=["gradlew.bat", "clean"], decision="forbidden", justification="Player Android policy forbids Gradle clean; preserve caches and incremental outputs.", match=["gradlew.bat clean"])
+prefix_rule(pattern=["ssh", "webuzo-production-admin"], decision="forbidden", justification="The Player project prohibits webuzo-production-admin; do not substitute another target.", match=["ssh webuzo-production-admin"])
+prefix_rule(pattern=["ssh", "-F", "/home/jjennison/.ssh/config", "webuzo-production-admin"], decision="forbidden", justification="The Player project prohibits webuzo-production-admin; use no substitute target.", match=["ssh -F /home/jjennison/.ssh/config webuzo-production-admin"])
+prefix_rule(pattern=["git", "restore", "AGENTS.md"], decision="forbidden", justification="Restoring a guardrail file discards policy changes and requires named owner authorization.", match=["git restore AGENTS.md"])
+prefix_rule(pattern=["git", "restore", ".codex"], decision="forbidden", justification="Restoring a guardrail path requires named owner authorization.", match=["git restore .codex"])
+prefix_rule(pattern=["git", "checkout", "--", "AGENTS.md"], decision="forbidden", justification="Discarding the Player policy requires named owner authorization.", match=["git checkout -- AGENTS.md"])
+prefix_rule(pattern=["rm", "AGENTS.md"], decision="forbidden", justification="Removing the Player policy is prohibited without named owner authorization.", match=["rm AGENTS.md"])
+prefix_rule(pattern=["rm", "-f", "AGENTS.md"], decision="forbidden", justification="Removing the Player policy is prohibited without named owner authorization.", match=["rm -f AGENTS.md"])

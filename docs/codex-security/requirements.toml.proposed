@@ -1,0 +1,41 @@
+# OWNER ACTION REQUIRED — install as /etc/codex/requirements.toml on Linux.
+# Verified against Codex CLI 0.147.0 and current official OpenAI Codex docs.
+# This is not active merely because it is committed in this repository.
+
+allowed_approval_policies = ["on-request"]
+allowed_approvals_reviewers = ["user"]
+default_permissions = "owner_local_development"
+
+[allowed_permission_profiles]
+":read-only" = true
+owner_local_development = true
+# :danger-full-access and every unlisted current/future profile are denied.
+
+[permissions.owner_local_development]
+description = "Normal workspace editing with policy and credential paths protected."
+extends = ":workspace"
+
+[permissions.owner_local_development.filesystem]
+"~/.ssh" = "deny"
+"~/.codex/auth.json" = "deny"
+"~/.codex/history.jsonl" = "deny"
+"~/.codex/AGENTS.md" = "read"
+"~/.codex/config.toml" = "read"
+"~/.codex/rules" = "read"
+
+[permissions.owner_local_development.filesystem.":workspace_roots"]
+"AGENTS.md" = "read"
+".codex" = "read"
+"**/*.env" = "deny"
+
+[rules]
+prefix_rules = [
+  { pattern = [{ token = "git" }, { token = "reset" }, { token = "--hard" }], decision = "forbidden", justification = "Destructive reset requires a named owner recovery authorization." },
+  { pattern = [{ token = "git" }, { token = "clean" }, { token = "-f" }], decision = "forbidden", justification = "Destructive clean requires a named owner recovery authorization." },
+  { pattern = [{ token = "git" }, { token = "push" }], decision = "prompt", justification = "Remote mutation requires fresh owner approval." },
+  { pattern = [{ token = "ssh" }], decision = "prompt", justification = "Remote shell requires fresh owner approval." },
+  { pattern = [{ token = "scp" }], decision = "prompt", justification = "Remote transfer requires fresh owner approval." },
+  { pattern = [{ token = "rsync" }], decision = "prompt", justification = "Remote synchronization requires fresh owner approval." },
+  { pattern = [{ token = "systemctl" }], decision = "prompt", justification = "Service mutation requires fresh owner approval." },
+  { pattern = [{ token = "codex" }, { token = "update" }], decision = "prompt", justification = "Codex update requires fresh owner approval." },
+]
