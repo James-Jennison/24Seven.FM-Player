@@ -15,6 +15,7 @@ const DELIVERY_DOMAIN = 'jamesjennison.net';
 const MAX_REQUEST_BYTES = 16_384;
 const RATE_WINDOW_SECONDS = 1_800;
 const RATE_LIMIT = 3;
+const SIGNUP_CONFIRMATION_SUBJECT = 'Thanks for signing up to test the 24Seven.FM Player';
 
 ini_set('display_errors', '0');
 
@@ -146,7 +147,111 @@ function smtpDiagnostic(string $stage): void
     error_log('alpha-tester-interest delivery failure stage=' . $stage);
 }
 
-function smtpDeliver(string $recipient, string $sender, string $replyTo, string $subject, string $message): bool
+function signupConfirmationEmail(): array
+{
+    return [
+        'subject' => SIGNUP_CONFIRMATION_SUBJECT,
+        'plainText' => <<<'TEXT'
+Thanks for signing up to help test the 24Seven.FM Player!
+
+We've received your interest in joining the internal testing program. We really appreciate your willingness to help us test the app, find bugs, and improve the experience before a wider release.
+
+At this stage, there's nothing else you need to do yet.
+
+Once you've been added to the testing program, you'll receive a separate welcome email with everything you need to get started, including:
+
+- Instructions for downloading and installing the 24Seven.FM Player
+- Information about the current testing build
+- How testing assignments work
+- How to find your assigned testing tasks
+- How to report passes, bugs, and other feedback
+- Important testing and privacy guidelines
+
+Testing will be divided into focused assignments, so you won't be expected to test every feature or complete the entire testing catalog yourself.
+
+Some tests may require a particular station account, Android version, device type, accessory, or other setup. If that's the case, your assignment will tell you exactly what you need.
+
+Please keep an eye on your inbox for the welcome email once your tester access has been activated.
+
+Thanks again for volunteering to help make the 24Seven.FM Player better.
+
+James — 24Seven.FM Player Testing Team
+TEXT,
+        'html' => <<<'HTML'
+<p>Thanks for signing up to help test the <strong>24Seven.FM Player</strong>!</p>
+
+<p>We've received your interest in joining the internal testing program. We really appreciate your willingness to help us test the app, find bugs, and improve the experience before a wider release.</p>
+
+<p>At this stage, <strong>there's nothing else you need to do yet</strong>.</p>
+
+<p>Once you've been added to the testing program, you'll receive a separate <strong>welcome email</strong> with everything you need to get started, including:</p>
+
+<ul>
+  <li>Instructions for downloading and installing the 24Seven.FM Player</li>
+  <li>Information about the current testing build</li>
+  <li>How testing assignments work</li>
+  <li>How to find your assigned testing tasks</li>
+  <li>How to report passes, bugs, and other feedback</li>
+  <li>Important testing and privacy guidelines</li>
+</ul>
+
+<p>Testing will be divided into focused assignments, so you won't be expected to test every feature or complete the entire testing catalog yourself.</p>
+
+<p>Some tests may require a particular station account, Android version, device type, accessory, or other setup. If that's the case, your assignment will tell you exactly what you need.</p>
+
+<p>Please keep an eye on your inbox for the welcome email once your tester access has been activated.</p>
+
+<p>Thanks again for volunteering to help make the <strong>24Seven.FM Player</strong> better.</p>
+
+<p><strong>James —</strong> <strong>24Seven.FM Player Testing Team</strong></p>
+HTML,
+    ];
+}
+
+function base64MimePart(string $content): string
+{
+    return rtrim(chunk_split(base64_encode($content), 76, "\r\n"), "\r\n");
+}
+
+function smtpMessage(string $recipient, string $sender, string $replyTo, string $subject, string $plainText, ?string $html = null): string
+{
+    if ($html === null) {
+        return implode("\r\n", [
+            'From: ' . $sender,
+            'To: ' . $recipient,
+            'Reply-To: ' . $replyTo,
+            'Subject: ' . $subject,
+            'MIME-Version: 1.0',
+            'Content-Type: text/plain; charset=UTF-8',
+            'Content-Transfer-Encoding: base64',
+            '',
+            base64MimePart($plainText),
+        ]);
+    }
+    $boundary = '=_24Seven_' . bin2hex(random_bytes(16));
+    return implode("\r\n", [
+        'From: ' . $sender,
+        'To: ' . $recipient,
+        'Reply-To: ' . $replyTo,
+        'Subject: ' . $subject,
+        'MIME-Version: 1.0',
+        'Content-Type: multipart/alternative; boundary="' . $boundary . '"',
+        '',
+        '--' . $boundary,
+        'Content-Type: text/plain; charset=UTF-8',
+        'Content-Transfer-Encoding: base64',
+        '',
+        base64MimePart($plainText),
+        '--' . $boundary,
+        'Content-Type: text/html; charset=UTF-8',
+        'Content-Transfer-Encoding: base64',
+        '',
+        base64MimePart('<!doctype html><html><body>' . $html . '</body></html>'),
+        '--' . $boundary . '--',
+    ]);
+}
+
+function smtpDeliver(string $recipient, string $sender, string $replyTo, string $subject, string $plainText, ?string $html = null): bool
 {
     if (!getmxrr(DELIVERY_DOMAIN, $hosts, $priorities) || $hosts === []) {
         smtpDiagnostic('mx_lookup');
@@ -205,16 +310,7 @@ function smtpDeliver(string $recipient, string $sender, string $replyTo, string 
             $stage = 'data';
             smtpCommand($socket, 'DATA', [354]);
 
-            $data = implode("\r\n", [
-                'From: ' . $sender,
-                'To: ' . $recipient,
-                'Reply-To: ' . $replyTo,
-                'Subject: ' . $subject,
-                'MIME-Version: 1.0',
-                'Content-Type: text/plain; charset=UTF-8',
-                '',
-                $message,
-            ]);
+            $data = smtpMessage($recipient, $sender, $replyTo, $subject, $plainText, $html);
             $data = str_replace(["\r\n", "\r"], "\n", $data);
             $data = preg_replace('/(?m)^\./', '..', $data) ?? $data;
             $stage = 'message';
@@ -234,6 +330,10 @@ function smtpDeliver(string $recipient, string $sender, string $replyTo, string 
         }
     }
     return false;
+}
+
+if (getenv('ALPHA_TESTER_INTEREST_TEST_LIBRARY') === '1') {
+    return;
 }
 
 try {
@@ -308,6 +408,20 @@ try {
     );
     if (!$sent) {
         throw new RuntimeException('Mail transport rejected the submission.');
+    }
+
+    $confirmation = signupConfirmationEmail();
+    if (!smtpDeliver(
+        $email,
+        $config['sender'],
+        $config['sender'],
+        $confirmation['subject'],
+        $confirmation['plainText'],
+        $confirmation['html'],
+    )) {
+        // Coordinator intake was already accepted. Do not re-submit it or
+        // expose transport detail to the applicant if this bounded follow-up fails.
+        smtpDiagnostic('signup_confirmation');
     }
 
     respond(200, 'Your tester-interest application was sent.', 'sent', $wantsJson);
