@@ -337,22 +337,14 @@ milestones:
     outcome: "Adaptive window and foldable evidence, physical Razr hinge lifecycle, human TalkBack, focused Voice Access, and signed-release Bluetooth keyboard/pointer acceptance."
 
   - order: 34
-    id: "M29"
-    legacy_id: "M23.4"
-    name: "Play Declarations Privacy and Data Safety"
-    date: "2026-08-11"
-    evidence_label: "Private Play Console record"
-    outcome: "Authorized operator data, reviewer access, privacy, Data Safety, content, target-audience, and app-access declarations completed for internal testing."
-
-  - order: 35
     id: "M30"
     legacy_id: "M23.5"
     name: "Brand Content and Distribution Rights"
-    date: "2026-08-11"
-    evidence_label: "Private owner authorization"
-    outcome: "Authorized non-exclusive, revocable permission documented for the five station names, logos, station-provided artwork and metadata, and public live-stream playback through Google Play release."
+    date: "2026-08-14"
+    evidence: "docs/m30-brand-content-distribution-authorization.md"
+    outcome: "Authorized five-station Player, Google Play, and Closed Alpha use; normal live playback only, with third-party artwork rights retained by their owners."
 
-  - order: 36
+  - order: 35
     id: "M39"
     legacy_id: "M28 candidate slice"
     name: "Alpha Candidate and Documentation Freeze"
@@ -366,23 +358,23 @@ roadmap:
     legacy_id: "M23.4"
     phase: "alpha-readiness"
     name: "Play Declarations Privacy and Data Safety"
-    state: "done"
-    state_label: "Complete · August 11"
-    blocking: false
-    dependencies: "Completed with authorized network-wide privacy facts, reviewer access, and saved Play declarations"
+    state: "waiting"
+    state_label: "Waiting on formal retention/deletion policy"
+    blocking: true
+    dependencies: "Adopted station retention/deletion policy, reviewer access, exact candidate, and saved Play declarations"
     evidence: "docs/m23-play-declaration-packet.md"
-    summary: "Authorized privacy and retention facts, reviewer access, Data Safety, content, target-audience, and app-access declarations are complete for internal testing."
+    summary: "Network-wide processing and deletion-request facts are recorded, but the formal retention/deletion policy, exact candidate, reviewer access, and saved Play declarations remain open."
 
   - id: "M30"
     legacy_id: "M23.5"
     phase: "alpha-readiness"
     name: "Brand Content and Distribution Rights"
     state: "done"
-    state_label: "Complete · August 11"
+    state_label: "Complete · August 14"
     blocking: false
     dependencies: "Completed with the authorized non-exclusive, revocable distribution grant"
-    evidence: "docs/m23-owner-response-packet.md"
-    summary: "The owner-authorized grant covers the five station names, logos, station-provided artwork and metadata, and public live-stream playback through Google Play release."
+    evidence: "docs/m30-brand-content-distribution-authorization.md"
+    summary: "The authorized grant covers the five station names, controlled assets and metadata, normal public live-stream playback, and Player/Google Play/Closed Alpha materials; third-party artwork rights remain with their owners."
 
   - id: "M31"
     phase: "alpha-readiness"

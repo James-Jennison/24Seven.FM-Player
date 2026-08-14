@@ -83,25 +83,43 @@ This strengthens the provisional transport finding but is not the final encrypte
 protected candidate must still validate authenticated, server-discovered form actions and redirects without recording
 secrets before the Console answer is saved.
 
-## Owner/station fact table
+## Authorized operator update — August 14, 2026
+
+An authorized Network/Station Administrator confirmed one network-wide practice for all five stations:
+
+- 24seven.FM, LLC operates the station services. Usernames, email addresses, IP addresses, browser/operating-system
+  details, page views, sessions, cookies, Chat, request activity, Favorites, and other user-initiated account/community
+  features are processed by the applicable station service as needed to provide those features.
+- IP addresses may be used for security, diagnostics, abuse prevention, and enforcement of station rules. Information
+  is not sold, traded, or rented. Payment-card information is handled by third-party payment providers and is not
+  stored on 24Seven.FM servers.
+- The Player does not create a separate account. Station-account deletion or associated-data requests can be made
+  through the station Contact/Feedback system for handling by an authorized administrator. Reviewer accounts may use
+  normal permitted account features for legitimate Google Play review and testing only.
+- No specific retention period or complete per-data-class deletion rule is currently established in the published
+  station policy. That limitation must remain explicit: it is not evidence of ephemeral processing or a completed
+  retention/deletion policy.
+
+## Remaining owner/station fact table
 
 The final answer is blocked until the authorized operator provides these facts for all five stations, or explicitly
 confirms one network-wide rule:
 
-| Process | Required fact |
+| Process | Remaining required fact |
 | --- | --- |
-| Sign-in, session, and access/security logs | Retention duration/deletion rule, access roles, processors, and user request path |
-| Source IP/network logs | Retention, purpose, whether location is inferred, processors, and deletion rule |
-| Search | Whether terms are logged/linked, retention, processors, and deletion rule |
-| Chat | Post/log retention, moderation access, processors, edit/deletion path |
-| Song requests/messages/activity | Retention, account linkage, processors, and deletion path |
-| Moderation email | Recipient/email-provider retention, access, processors, and request/deletion path |
+| Sign-in, session, and access/security logs | Adopt a retention duration/deletion rule and identify any processors beyond 24seven.FM, LLC; access roles and a request path are confirmed. |
+| Source IP/network logs | State whether location is inferred and adopt a retention/deletion rule; security/diagnostics/abuse purposes and the request path are confirmed. |
+| Search | Confirm whether terms are logged or account/IP-linked, any processors, and the retention/deletion rule. |
+| Chat | Adopt post/log retention and deletion rules; moderation access is authorized but processor facts remain needed. |
+| Song requests/messages/activity | Adopt retention/deletion rules and confirm account linkage/processors. |
+| Moderation email | Identify the recipient/email-provider retention and deletion policy and any processors. |
 
 ## Console verification gate
 
 1. Re-run the release dependency and merged-manifest audits against the exact protected pre-M39 candidate AAB.
 2. Probe every user-data endpoint and redirect for HTTPS/TLS without recording credentials, cookies, or private content.
-3. Confirm the owner/station facts above and update the public/native privacy wording where needed.
+3. Adopt and publish the remaining station retention/deletion rules above, then update the public/native privacy wording
+   and Data Safety form without claiming more than the policy supports.
 4. Preserve M31's Contact-only boundary and repeat the account creation/deletion audit before any M57 or M58–M60
    external/account/commerce route ships.
 5. Compare every active Console question with this worksheet; Console wording is authoritative.

@@ -2,7 +2,7 @@
 
 Prepared July 18, 2026
 
-Status: M28 moderation destination and receipt confirmed; M29, M30, and M47 owner facts remain
+Status: M28 moderation destination/receipt and M30 authorization confirmed; M29 and M47 owner facts remain
 
 This packet consolidates the factual confirmations still needed from an authorized 24seven.FM representative. Send it
 privately. Retain the original response and its sender/date privately; commit only a sanitized completion note. Do not
@@ -43,9 +43,10 @@ network does not own. Any station-provided asset that is not actually covered mu
 submission. Public store screenshots should avoid private account data and unnecessary user-generated content even
 when the station permits the underlying interface.
 
-After receiving written permission, use Google Play's advance-notice route to submit the private evidence before the
-app or listing is reviewed. Google explicitly accepts advance documentation for permission to use third-party brand
-names, logos, graphic assets, and audio.
+M30 closed on August 14, 2026 with an equivalent grant from an authorized network representative. The sanitized
+repository record is [m30-brand-content-distribution-authorization.md](m30-brand-content-distribution-authorization.md).
+Original authority evidence remains outside Git. Use Google Play's advance-notice route if Play asks for the private
+evidence before reviewing the app or listing.
 
 ## 3. Station retention facts for Privacy and Data Safety
 
@@ -94,10 +95,11 @@ implemented from a success page alone; both sender and recipient delivery must b
   received from an authorized network representative on [date]; original evidence retained privately.”
 - M28 is complete: the fixed-recipient implementation passed automated/device checks and one authorized Player email
   handoff was reconciled with owner-confirmed receipt on July 18, 2026.
-- M29 completes only after reviewer access; retention, deletion, processor, and IP-use facts; exact privacy/Data Safety
-  reconciliation; the final foreground-service video; and all active Console questionnaires are saved and reviewed.
-- M30 completes only after the full rights statement or an equivalent written grant is received and any exclusions are
-  reflected in the artifact/listing.
+- M29 completes only after reviewer access; a formally adopted retention/deletion policy with processor and IP-use
+  facts; exact privacy/Data Safety reconciliation; the final foreground-service video; and all active Console
+  questionnaires are saved and reviewed.
+- M30 is complete. The authorization excludes stream redistribution and ownership transfer; third-party artwork remains
+  subject to the applicable rights holder.
 - M47 restarts only after verified PM delivery and limits are supplied.
 
 ## Google Play references

@@ -1,6 +1,6 @@
 # Milestone Real-World Time Ledger
 
-Last updated: `July 22, 2026 at 4:36:32 PM PDT (UTC−07:00)`
+Last updated: `August 14, 2026 at 3:19:08 PM PDT (UTC−07:00)`
 
 This is the permanent time-accounting record for the canonical M01–M60 milestones in [ROADMAP.md](ROADMAP.md). It
 preserves historical uncertainty instead of treating commit spans as labor time. Future milestone work must be
@@ -11,19 +11,19 @@ measured prospectively from the actual authorized execution start.
 | Measure | Cumulative value | Qualification |
 | --- | ---: | --- |
 | Total canonical milestones planned | 60 | M01–M60 |
-| Total canonical milestones completed | 33 | M01–M28 and M31–M35 |
-| Confirmed or reconstructed active hours | 0.00 h identified | Historical active intervals were not recorded, so the real total is unknown. |
+| Total canonical milestones completed | 34 | M01–M28 and M30–M35 |
+| Confirmed or reconstructed active hours | 0.40 h identified | M30 authorization reconciliation and M55 retirement are prospectively measured; historical active intervals remain unknown. |
 | Total automated wait hours | Unknown | Workflow durations exist, but there is no evidence that execution waited on every run. |
 | Total user-blocked hours | Unknown | Historical owner, device, approval, credential, and external waits lack complete pause/resume timestamps. |
 | Total counted project hours | Unknown | Active execution plus automated wait cannot be reconstructed defensibly. |
-| Total elapsed hours across completed milestones | At least 300.49 h | Lower-bound total across 25 observable milestone windows; 8 completed milestones have unknown elapsed duration. |
+| Total elapsed hours across completed milestones | At least 300.55 h | Lower-bound total across 26 observable milestone windows; 8 completed milestones have unknown elapsed duration. |
 | Average counted hours per completed milestone | Unknown | Counted project time is unknown for every historical completion. |
 | Median counted hours per completed milestone | Unknown | Counted project time is unknown for every historical completion. |
 | Longest completed milestone | Unknown by counted time | M34 has the longest observable elapsed lower bound at 90.27 h. |
 | Shortest completed milestone | Unknown by counted time | M31 has the shortest observable elapsed lower bound at 0.03 h. |
 | Overall forecast versus actual variance | Unknown | Only M13, M14, and M17–M21 retained milestone-specific forecasts, and their actual counted time was not recorded. |
-| Confidence classifications | Confirmed 0; Reconstructed 0; Estimated 28; Unknown 32 | One classification per canonical milestone. |
-| Ledger last updated | `July 20, 2026 at 7:43:14 PM PDT (UTC−07:00)` | Full date, 12-hour time, seconds, timezone abbreviation, and UTC offset. |
+| Confidence classifications | Confirmed 2; Reconstructed 0; Estimated 28; Unknown 30 | One classification per canonical milestone. |
+| Ledger last updated | `August 14, 2026 at 3:19:08 PM PDT (UTC−07:00)` | Full date, 12-hour time, seconds, timezone abbreviation, and UTC offset. |
 
 Elapsed totals are arithmetic milestone totals, not unique calendar time. Milestones overlapped, so counted work must
 be assigned to only one milestone while each milestone retains its own wall-clock elapsed period. The confidence counts
@@ -416,7 +416,7 @@ active execution.
 | M27 | Complete | No later than `July 16, 2026 at 7:05:07 PM PDT (UTC−07:00)` | `July 16, 2026 at 7:09:16 PM PDT (UTC−07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥0.07 h | Unknown | Estimated |
 | M28 | Complete | No later than `July 15, 2026 at 10:32:07 PM PDT (UTC−07:00)` | `July 18, 2026 at 3:04:15 PM PDT (UTC−07:00)` | Not recorded individually | Unknown | Unknown | Unknown | Unknown | ≥64.54 h | Unknown | Estimated |
 | M29 | Waiting externally | No later than `July 15, 2026 at 10:42:33 PM PDT (UTC−07:00)` | — | Original not recorded; current 2–5 active d | Unknown | Unknown | Unknown | Unknown | Ongoing | — | Estimated |
-| M30 | Waiting externally | No later than `July 15, 2026 at 10:59:35 PM PDT (UTC−07:00)` | — | Original not recorded; current 0.5–1 active d | Unknown | Unknown | Unknown | Unknown | Ongoing | — | Estimated |
+| M30 | Complete | `August 14, 2026 at 3:15:26 PM PDT (UTC−07:00)` | `August 14, 2026 at 3:19:08 PM PDT (UTC−07:00)` | 4–8 active h (original 0.5–1 active d) | 0.06 h | 0.00 h | 0.00 h | 0.06 h | 0.06 h | 3.94 h below lower bound (98.5%) | Confirmed |
 | M31 | Complete | No later than `July 18, 2026 at 5:30:30 PM PDT (UTC−07:00)` | `July 18, 2026 at 5:32:28 PM PDT (UTC−07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥0.03 h | Unknown | Estimated |
 | M32 | Complete | Unknown | `July 18, 2026 at 6:21:38 PM PDT (UTC−07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown |
 | M33 | Complete | Unknown | `July 18, 2026 at 7:43:32 PM PDT (UTC−07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown |
@@ -872,18 +872,37 @@ independently.
 
 ### M30 — Brand, Content, and Distribution Rights
 
-- **Objective:** Obtain and privately retain written authorization for naming, branding, station assets/metadata,
-  streams, screenshots, and Google Play testing/distribution.
-- **Start, completion, and intervals:** Earliest rights-response packet evidence `July 15, 2026 at 10:59:35 PM PDT (UTC−07:00)`. Not completed.
-  The milestone is waiting externally; exact active intervals and the user-blocked pause start are Unknown.
-- **Model, reasoning strength, and original forecast:** Original model/reasoning and forecast were not recorded at start. Current
-  routing, added July 19, is Sol High with 0.5–1 active day after written authorization arrives.
-- **Counted project time, total elapsed time, and forecast variance:** Active, wait, blocked, counted, and total elapsed durations remain Unknown/ongoing; variance is
-  not calculated before completion.
-- **Evidence used and confidence classification:** `c0e37ae`, [m23-owner-response-packet.md](m23-owner-response-packet.md), roadmap `e249071`,
-  and forecast `f971a9e`. **Estimated** start proxy.
-- **Explanation of variance and forecasting lessons:** External response time must remain separate from reconciliation work. Record the
-  actual resume timestamp when authorization arrives.
+- **Objective:** Obtain and record the authorized five-station permission for Player branding/assets, normal stream
+  playback, screenshots, and Google Play/Closed Alpha materials without claiming ownership of third-party assets.
+- **Authorization and completion:** An authorized Network/Station Administrator supplied the grant on `August 14,
+  2026 at 3:15:26 PM PDT (UTC−07:00)`. Sanitized scope reconciliation and static-site validation completed `August 14,
+  2026 at 3:19:08 PM PDT (UTC−07:00)`.
+- **Model, reasoning strength, and original forecast:** The current task does not expose a model/reasoning label to
+  the ledger. The original pending-work forecast was 0.5–1 active day, normalized to 4–8 active hours using an
+  eight-hour active workday for the required variance calculation.
+
+| Started | Ended | Category | Reason or work | Evidence | Hours |
+| --- | --- | --- | --- | --- | ---: |
+| `August 14, 2026 at 3:15:26 PM PDT (UTC−07:00)` | `August 14, 2026 at 3:19:08 PM PDT (UTC−07:00)` | Active | Reconcile the authorized grant, retain only a sanitized record, separate third-party artwork and stream-redistribution boundaries, and validate the portal. | Authorized administrator statement; `scripts/validate-project-site.sh` pass | 0.06 h |
+
+- **Counted project time, total elapsed time, and forecast variance:** Active 0.06 h; automated wait 0.00 h;
+  user-blocked 0.00 h; counted project time 0.06 h; total elapsed 0.06 h. This is 3.94 h (98.5%) below the normalized
+  4 h lower forecast bound because the authorization arrived complete and required only a bounded reconciliation.
+  **Confirmed**.
+- **Evidence and forecasting lesson:** [m30-brand-content-distribution-authorization.md](m30-brand-content-distribution-authorization.md)
+  records the sanitized scope. The user-provided grant does not authorize rebroadcasting, ownership transfer, or
+  use beyond the named Player/Google Play/Closed Alpha context. When an authorization is explicit about exclusions,
+  retain those boundaries instead of inflating the grant.
+
+```text
+Milestone M30 time:
+Forecast: 4–8 active hours (original 0.5–1 active day)
+Counted project time: 0.06 h
+Total elapsed time: 0.06 h
+User-blocked time excluded: 0.00 h
+Forecast variance: 3.94 h below the lower bound (98.5%)
+Cumulative counted project time through Milestone M30: Unknown overall; 0.40 h prospectively measured
+```
 
 ### M31 — Payments, External Links, and Account Lifecycle Compliance
 
@@ -988,7 +1007,7 @@ independently.
 - **Objective:** Freeze exact signed artifacts, version, signer, dependencies, permissions, listing, release notes,
   roadmap/testing, and all release-critical findings.
 - **Start, completion, and intervals:** Not started; all actual intervals and totals are not applicable.
-- **Model, reasoning strength, and original forecast:** Sol High; current forecast 1–2 active days after M29, M30, and M36–M38 complete.
+- **Model, reasoning strength, and original forecast:** Sol High; current forecast 1–2 active days after M29 and M36–M38 complete.
 - **Time, variance, evidence, confidence, and forecasting lessons:** No actual variance. Roadmap `e249071`, forecast `f971a9e`; no candidate-finish
   commit/PR/release/workflow. **Unknown**. Record the exact freeze authorization as start, not prior planning.
 
