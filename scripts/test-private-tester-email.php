@@ -18,9 +18,10 @@ function assertion(bool $condition, string $message): void
     }
 }
 
-$source = '<p>We’re sorry the earlier message did not render correctly.</p><ul><li>Primary station</li><li>Android device</li></ul>';
+$source = '<p>We’re sorry the earlier message did not render correctly.</p><div>Open the tester portal.</div><ul><li>Primary station</li><li>Android device</li></ul>';
 $endpointSource = file_get_contents(dirname(__DIR__) . '/privacy-site/private-tester-queue.php');
 assertion(is_string($endpointSource) && str_contains($endpointSource, '<meta charset="UTF-8">'), 'Rich HTML parser must explicitly declare UTF-8.');
+assertion(is_string($endpointSource) && str_contains($endpointSource, "'div' => 'p'"), 'Content-editor paragraphs must be retained as email paragraphs.');
 
 $html = class_exists('DOMDocument') ? sanitizeHtmlBody($source) : $source;
 $plainText = plainTextFromHtml($html);
@@ -28,6 +29,7 @@ $plainText = plainTextFromHtml($html);
 assertion(str_contains($html, 'We’re'), 'Rich HTML must preserve UTF-8 punctuation.');
 assertion(!str_contains($html, 'Weâ€™re'), 'Rich HTML must not contain mojibake.');
 assertion(str_contains($plainText, 'We’re'), 'Plain-text alternative must preserve UTF-8 punctuation.');
+assertion(str_contains($plainText, 'Open the tester portal.'), 'Plain-text alternative must retain content-editor paragraphs.');
 assertion(str_contains($plainText, 'Primary station'), 'Plain-text alternative must retain list content.');
 
 [$headers, $message] = multipartAlternativeMessage(
