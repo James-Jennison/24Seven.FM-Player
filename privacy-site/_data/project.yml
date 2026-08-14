@@ -359,11 +359,11 @@ roadmap:
     phase: "alpha-readiness"
     name: "Play Declarations Privacy and Data Safety"
     state: "waiting"
-    state_label: "Waiting on formal retention/deletion policy"
+    state_label: "Waiting on final Play evidence"
     blocking: true
-    dependencies: "Adopted station retention/deletion policy, reviewer access, exact candidate, and saved Play declarations"
+    dependencies: "Exact candidate, reviewer access, final media video, and saved Play declarations"
     evidence: "docs/m23-play-declaration-packet.md"
-    summary: "Network-wide processing and deletion-request facts are recorded, but the formal retention/deletion policy, exact candidate, reviewer access, and saved Play declarations remain open."
+    summary: "The adopted network-wide retention/deletion policy and request path are documented. Exact-candidate reconciliation, reviewer access, final media evidence, and saved Play declarations remain open."
 
   - id: "M30"
     legacy_id: "M23.5"

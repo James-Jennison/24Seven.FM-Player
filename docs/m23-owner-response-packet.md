@@ -50,8 +50,16 @@ evidence before reviewing the app or listing.
 
 ## 3. Station retention facts for Privacy and Data Safety
 
-Please answer these as factual operational details, either once for the network if all five stations share the same
-practice or separately for StreamingSoundtracks.com, 1980s.FM, Adagio.FM, Death.FM, and Entranced.FM:
+The network-wide policy was adopted on August 14, 2026. It is recorded in
+[m23-data-safety.md](m23-data-safety.md) and the public privacy notice: verified deletion requests remove or anonymize
+active account/profile data and Favorites/preferences within 30 days; ordinary operational/request, Chat/forum, and
+normal diagnostic/server/IP records are retained no more than 90 days; investigation records are limited to active
+work and at most one year; backups are retained no more than 90 days; and lawful legal/regulatory obligations may
+require longer retention. The station Contact/Feedback system reaches Network/Station Administration for verified
+access, correction, and deletion requests.
+
+Do not request a second answer to this table unless the shared policy changes or a station needs to record a documented
+exception. The historical request format is preserved below for that purpose:
 
 | Data/process | Retained? | Duration or deletion rule | Who can access it? | Shared with any processor/third party? |
 | --- | --- | --- | --- | --- |
@@ -63,9 +71,8 @@ practice or separately for StreamingSoundtracks.com, 1980s.FM, Adagio.FM, Death.
 | Song requests, requester identity, and optional request messages | | | | |
 | Abuse reports, reporter contact details, and bounded reported content | | | | |
 
-Also state the contact path a user should use to request access, correction, or deletion where applicable. “Unknown” is
-preferable to an invented retention period; unknown fields will remain disclosed as unresolved rather than being
-described as ephemeral.
+Also state any documented exception, including a different contact path, before it is published. Do not infer an
+exception from older research or describe station-side processing as ephemeral.
 
 ## 4. Google Play reviewer accounts
 
@@ -95,9 +102,9 @@ implemented from a success page alone; both sender and recipient delivery must b
   received from an authorized network representative on [date]; original evidence retained privately.”
 - M28 is complete: the fixed-recipient implementation passed automated/device checks and one authorized Player email
   handoff was reconciled with owner-confirmed receipt on July 18, 2026.
-- M29 completes only after reviewer access; a formally adopted retention/deletion policy with processor and IP-use
-  facts; exact privacy/Data Safety reconciliation; the final foreground-service video; and all active Console
-  questionnaires are saved and reviewed.
+- M29's retention/deletion policy, processor boundary, IP-use facts, and privacy/Data Safety reconciliation are now
+  documented. M29 still requires reviewer access, exact-candidate reconciliation, the final foreground-service video,
+  and all active Console questionnaires to be saved and reviewed.
 - M30 is complete. The authorization excludes stream redistribution and ownership transfer; third-party artwork remains
   subject to the applicable rights holder.
 - M47 restarts only after verified PM delivery and limits are supplied.

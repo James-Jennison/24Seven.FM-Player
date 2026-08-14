@@ -34,7 +34,7 @@ takes seven days or less, while allowing that it can take longer. The earliest c
 
 | ID | Trigger to start the range | Forecast | Confidence | Model at the next substantive step |
 | --- | --- | --- | --- | --- |
-| M29 | All station/operator retention, processor, deletion, IP-use, and reviewer-account facts are supplied; an intended protected candidate is selected | 2–5 active days | Conditional | Sol High, with Terra Medium documentation support |
+| M29 | An intended protected candidate, five reviewer accounts, and active Play Console access are available; the station retention/deletion/processor/IP-use policy is already adopted | 2–5 active days | Conditional | Sol High, with Terra Medium documentation support |
 | M36 | An operator supplies an authorized event-source proposal with an accountable owner | 1–3 active Sol days to accept or reject the contract | Conditional | Sol High |
 | M37 | M36 contract, event schema, and test environment are accepted | 5–10 active days | Medium | Terra High; return unresolved delivery/privacy choices to Sol High |
 | M38 | M37 implementation is stable on all intended stations | 5–10 active days for lifecycle, privacy, battery, and device certification | Medium | Terra High, then Sol High acceptance |

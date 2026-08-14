@@ -85,7 +85,7 @@ allow, but no partial checkpoint should be described as release-ready.
 | ID | Milestone | State | Required gate | Forecast after trigger |
 | --- | --- | --- | --- | --- |
 | M28 | UGC Safety and Ongoing Moderation | Complete | Existing safeguards plus fixed-recipient Contact/report email handoff, physical composer validation, and one owner-confirmed one-shot receipt check | Complete |
-| M29 | Play Declarations, Privacy, and Data Safety | Waiting externally | PT-35 exact-artifact reconciliation, five-station reviewer access, audience/content/UGC classification, retention/deletion/processor/IP facts, account-boundary audit, final media-playback video, and saved Console/privacy consistency | Conditional · 2–5 active days |
+| M29 | Play Declarations, Privacy, and Data Safety | Waiting externally | Retention/deletion/processor/IP policy and account boundary are documented; PT-35 exact-candidate reconciliation, five-station reviewer access, audience/content/UGC classification, final media-playback video, and saved Console/privacy consistency remain | Conditional · 2–5 active days |
 | M30 | Brand, Content, and Distribution Rights | Complete | Authorized network-wide use of the five stations' names, controlled assets, station metadata, public streams, screenshots, and Player/Google Play/Closed Alpha materials; third-party artwork remains rights-holder property | Complete · August 14, 2026 |
 | M31 | Payments, External Links, and Account Lifecycle Compliance | Complete | Contact-only external catalog; VIP/RIP purchase/registration and direct privacy browser routes removed; declarations and account boundary reconciled in `9e340b9` | Complete |
 | M32 | Session, Controller, Network, and Supply-Chain Security | Complete | Least-privilege MediaSession controller policy, coherent station-isolated cookie rotation/absolute expiry, trusted redirects, canonical station-ID migration, pinned/verified build inputs, and adversarial Razr harness evidence in `2bc45f7` | Complete |
@@ -145,7 +145,7 @@ None of these milestones blocks M41 unless a later owner decision explicitly mov
 
 ## Program dependencies
 
-1. M28, M30, and M31–M35 are complete; M29 remains the Alpha policy/declaration gate.
+1. M28, M30, and M31–M35 are complete; M29 remains the Alpha declaration-evidence gate.
 2. M36 authorizes the event source before M37 implementation; M38 certifies the result.
 3. M39 freezes the exact candidate only after all intended Alpha code has landed.
 4. M40 proves Play delivery and resolves automated/reviewer findings.

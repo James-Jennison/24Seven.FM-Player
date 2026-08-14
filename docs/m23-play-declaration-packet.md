@@ -35,9 +35,9 @@ The audit used the current `main` source and release variant. `:app:processRelea
 | Content rating | Music & Audio app with public text Chat, requester identity/message, possible mature themes/profanity, and no user image/video upload | Owner must answer actual content frequency/intensity and submit the generated IARC ratings |
 | UGC | M28 provides Terms acceptance, objectionable-content rules, content/user reporting, blocking, ongoing monitored moderation, and a separate mature-content reveal | Reconcile the exact UGC and incidental-content answers with the candidate and active questionnaire |
 | Child Safety Standards | Current category is Music & Audio; radio is the core function, and authenticated station Chat is neither anonymous nor random | Current scope covers anonymous/random-chat apps and apps in Social/Dating categories. If active Console classification or functionality puts the Player in scope, do not self-certify until public CSAE standards, an operational CSAM response/reporting process, and a designated point of contact are verified |
-| Data Safety | Field inventory and a 36-entry five-station public/read-only TLS probe are complete in `m23-data-safety.md`; there is no developer backend or telemetry SDK | Station retention/deletion/IP-use facts, final authenticated candidate probes, and owner review remain |
+| Data Safety | Field inventory, adopted station retention/deletion/IP-use policy, and a 36-entry five-station public/read-only TLS probe are complete in `m23-data-safety.md`; there is no developer backend or telemetry SDK | Final authenticated candidate probes, active-form reconciliation, and owner review remain |
 | Account deletion | No account creation in the native app or current external catalog; Sign out removes only the local protected session | M31 audit complete for the current candidate; any later account-creation route requires approved in-app and web deletion paths before release |
-| Privacy policy | Public HTTPS policy and native notice exist and disclose the station/operator boundary | Align the exact Play developer identity/contact and station retention/deletion path; keep native and public wording consistent |
+| Privacy policy | Public HTTPS policy and native notice disclose the station/operator boundary and adopted deletion path | Verify the exact Play developer identity/contact and keep the active Console form consistent |
 | Foreground service | Manifest, service ownership, copy, and rehearsal sequence are ready | Record and host the final protected-candidate video, then save the declaration in Console |
 
 ## Foreground service permission
@@ -154,18 +154,24 @@ current Player does not match those definitions, but confirm the active Restrict
 ## Data Safety, privacy, and deletion
 
 Use `m23-data-safety.md` for the field-by-field worksheet and `../PRIVACY.md` for the canonical public disclosure.
-The remaining station/operator answers are:
+24seven.FM, LLC has adopted a network-wide policy. Account/profile data remains while an account is active; after a
+verified deletion request, personally identifiable account/profile data and Favorites/preferences are deleted or
+anonymized from active systems within 30 days. Ordinary request records and operational logs, Chat/forum data, and
+normal diagnostics/server/IP logs are retained for no more than 90 days. Chat/forum content may be anonymized for
+continuity or moderation, with direct identifiers unlinked. Active security, abuse, fraud, or rule-enforcement
+investigations may retain relevant records for up to one year and only while needed; lawful legal or regulatory duties
+can require longer retention. Encrypted backups are retained for no more than 90 days, deleted data is not intentionally
+restored, and deletion is reapplied after disaster recovery if needed. Irreversibly aggregated/anonymized statistics
+may be retained indefinitely.
 
-- whether and for how long login submissions, sessions/access logs, IP/security logs, search terms, Chat/request
-  submissions, request actions, and abuse reports are retained;
-- whether IP addresses or other network identifiers are used to infer location or for another declared purpose;
-- which processors or other parties receive those data;
-- which contact or mechanism handles station-side access, correction, or deletion; and
-- the exact developer identity/contact shown on the Play listing.
+IP addresses may be used for security, diagnostics, abuse prevention, and enforcement of station rules. Station
+services are operated by 24seven.FM, LLC; payment credentials are handled by payment providers rather than stored on
+24Seven.FM servers. A user requests station-side access, correction, or deletion through the applicable station
+Contact/Feedback system, where Network/Station Administration verifies and handles the request.
 
-Do not claim end-to-end ephemeral processing, broad station-side deletion, or a Data Safety deletion badge without
-those facts. The app does not create station accounts. **Sign out** removes the protected local session; it does not
-delete the pre-existing station account, public posts, request history, server logs, or sent email.
+The app does not create station accounts. **Sign out** removes the protected local session; it does not delete the
+pre-existing station account, public posts, request history, server logs, or sent email. Do not claim end-to-end
+ephemeral processing or a Data Safety deletion badge without reconciling the exact active Console wording.
 
 ## M29 completion gate
 
@@ -173,8 +179,8 @@ M29 remains **Waiting externally** until all of the following are true:
 
 1. PT-35 is run against the exact signed candidate and its release manifest/dependencies/data flows match this packet.
 2. Five reusable reviewer accounts and English access instructions pass a clean-install/non-owner-network check.
-3. Station retention, deletion/contact, processor, and IP-use facts are received and reflected in the privacy policy
-   and Data Safety form.
+3. The adopted station retention, deletion/contact, processor, and IP-use policy is reflected accurately in the privacy
+   policy and Data Safety form.
 4. Ads, app access, target audience, Restrict Minor Access decision, content rating, UGC, account deletion, privacy,
    and Data Safety answers are saved and reviewed in the active Console.
 5. Any applicable Child Safety Standards self-certification has an actual operational process and designated contact;
