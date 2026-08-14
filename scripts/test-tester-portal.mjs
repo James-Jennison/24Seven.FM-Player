@@ -20,6 +20,7 @@ assert(portal.includes("PORTAL_TOKEN_TTL_SECONDS"), "Tester portal sign-in links
 assert(portal.includes("consumed_at"), "Tester portal sign-in links must be single use.");
 assert(portal.includes("portalRenderLinkConfirmation"), "Sign-in links must require a confirmation step so mail scanners do not consume them.");
 assert(portal.includes("action\" value=\"consume_link"), "Sign-in link consumption must be a form POST.");
+assert(portal.includes("($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && isset($_GET['token'])"), "The confirmation screen must only render for a GET so its POST can consume the link.");
 assert(portal.includes("tester_portal_tokens"), "Tester portal token storage is missing.");
 assert(portal.includes("tester_feedback"), "Tester portal feedback persistence is missing.");
 assert(portal.includes("WHERE id = ? AND tester_id = ?"), "Feedback must be bound to the signed-in tester's own assignment.");
