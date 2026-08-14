@@ -1,0 +1,37 @@
+#!/usr/bin/env node
+
+import { readFile } from "node:fs/promises";
+
+const [portal, queue, build] = await Promise.all([
+  readFile(new URL("../privacy-site/tester-portal.php", import.meta.url), "utf8"),
+  readFile(new URL("../privacy-site/private-tester-queue.php", import.meta.url), "utf8"),
+  readFile(new URL("validate-project-site.sh", import.meta.url), "utf8"),
+]);
+
+function assert(condition, message) {
+  if (!condition) throw new Error(message);
+}
+
+assert(portal.includes("define('PRIVATE_TESTER_QUEUE_LIBRARY_ONLY', true)"), "Tester portal must reuse the private queue library without invoking coordinator routing.");
+assert(portal.includes("TESTER_PORTAL_SESSION_NAME"), "Tester portal must use a session separate from the coordinator session.");
+assert(portal.includes("random_bytes(32)"), "Tester portal sign-in links must use cryptographically random tokens.");
+assert(portal.includes("portalTokenHash($raw)"), "Tester portal must persist only the sign-in token hash.");
+assert(portal.includes("PORTAL_TOKEN_TTL_SECONDS"), "Tester portal sign-in links must expire.");
+assert(portal.includes("consumed_at"), "Tester portal sign-in links must be single use.");
+assert(portal.includes("portalRenderLinkConfirmation"), "Sign-in links must require a confirmation step so mail scanners do not consume them.");
+assert(portal.includes("action\" value=\"consume_link"), "Sign-in link consumption must be a form POST.");
+assert(portal.includes("tester_portal_tokens"), "Tester portal token storage is missing.");
+assert(portal.includes("tester_feedback"), "Tester portal feedback persistence is missing.");
+assert(portal.includes("WHERE id = ? AND tester_id = ?"), "Feedback must be bound to the signed-in tester's own assignment.");
+assert(portal.includes("play_opt_in_confirmed_at"), "Tester opt-in confirmation state is missing.");
+assert(portal.includes("onboarding_status = 'ready'"), "A completed opt-in must advance a complete tester to ready for assignment.");
+assert(portal.includes("TESTER_PORTAL_TURNSTILE_ACTION"), "Magic-link requests must be protected by Turnstile.");
+assert(portal.includes("portalVerifyTurnstile($turnstileToken"), "Turnstile must be verified before a magic link is sent.");
+assert(!portal.includes("password_verify("), "Tester portal must not collect or verify tester passwords.");
+assert(queue.includes("CREATE TABLE IF NOT EXISTS tester_portal_tokens"), "Queue database migration must create portal token storage.");
+assert(queue.includes("CREATE TABLE IF NOT EXISTS tester_feedback"), "Queue database migration must create feedback storage.");
+assert(queue.includes("play_opt_in_confirmed_at"), "Queue database migration must retain tester opt-in confirmation.");
+assert(queue.includes("Tester task reports"), "Coordinator workspaces must display submitted tester reports.");
+assert(build.includes("test-tester-portal.mjs"), "Site validator must run the tester portal contract.");
+
+console.log("Tester portal security and data-routing contract: valid.");

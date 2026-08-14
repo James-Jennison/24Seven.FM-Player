@@ -12,6 +12,7 @@ node --check "${repository_root}/privacy-site/assets/private-tester-queue.js"
 if command -v php >/dev/null 2>&1; then
   php -l "${repository_root}/privacy-site/alpha-tester-interest.php"
   php -l "${repository_root}/privacy-site/private-tester-queue.php"
+  php -l "${repository_root}/privacy-site/tester-portal.php"
   php "${repository_root}/scripts/test-private-tester-email.php"
   php -l "${repository_root}/privacy-site/turnstile-test.php"
   php "${repository_root}/scripts/test-turnstile-test-confirmation.php"
@@ -26,6 +27,7 @@ fi
 node --check "${repository_root}/scripts/test-project-site-browser.mjs"
 node --check "${repository_root}/scripts/test-project-site-firefox.mjs"
 node "${repository_root}/scripts/test-private-tester-queue.mjs"
+node "${repository_root}/scripts/test-tester-portal.mjs"
 python3 "${script_dir}/validate-project-site.py" "${repository_root}/_site"
 
 "${script_dir}/prepare-pages-transition.sh" "_pages-transition"

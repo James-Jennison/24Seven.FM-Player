@@ -67,6 +67,7 @@ jobs:
           node --check privacy-site/assets/private-tester-queue.js
           python3 scripts/validate-tester-tasks.py
           node scripts/test-private-tester-queue.mjs
+          node scripts/test-tester-portal.mjs
           python3 scripts/validate-project-site.py _site
 
       - name: Prepare temporary GitHub Pages transition
