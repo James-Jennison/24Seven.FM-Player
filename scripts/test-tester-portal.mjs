@@ -17,6 +17,7 @@ assert(portal.includes("TESTER_PORTAL_SESSION_NAME"), "Tester portal must use a 
 assert(portal.includes("random_bytes(32)"), "Tester portal sign-in links must use cryptographically random tokens.");
 assert(portal.includes("portalTokenHash($raw)"), "Tester portal must persist only the sign-in token hash.");
 assert(portal.includes("PORTAL_TOKEN_TTL_SECONDS"), "Tester portal sign-in links must expire.");
+assert(portal.includes("const PORTAL_REQUEST_COOLDOWN_SECONDS = 60;"), "Tester portal repeat-link cooldown must remain at one minute.");
 assert(portal.includes("consumed_at"), "Tester portal sign-in links must be single use.");
 assert(portal.includes("portalRenderLinkConfirmation"), "Sign-in links must require a confirmation step so mail scanners do not consume them.");
 assert(portal.includes("action\" value=\"consume_link"), "Sign-in link consumption must be a form POST.");
