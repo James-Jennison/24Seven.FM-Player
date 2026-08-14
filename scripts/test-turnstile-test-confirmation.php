@@ -17,4 +17,8 @@ expectTurnstileTest($confirmation['subject'] === '24Seven.FM Player Turnstile te
 expectTurnstileTest(str_contains($confirmation['plainText'], 'player.jamesjennison.net'), 'Turnstile test confirmation must identify the tested site.');
 expectTurnstileTest(str_contains($confirmation['plainText'], 'No application or account data was stored.'), 'Turnstile test confirmation must preserve its no-intake guarantee.');
 
+$source = file_get_contents(dirname(__DIR__) . '/privacy-site/turnstile-test.php');
+expectTurnstileTest(is_string($source), 'Unable to inspect the Turnstile test endpoint.');
+expectTurnstileTest(str_contains($source, "require __DIR__ . '/alpha-tester-interest.php';"), 'Turnstile test must load the SMTP helper from the deployed document root.');
+
 fwrite(STDOUT, "Turnstile test confirmation contract: valid.\n");
