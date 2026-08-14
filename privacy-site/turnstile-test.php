@@ -2,14 +2,16 @@
 declare(strict_types=1);
 
 /**
- * Isolated Turnstile verification endpoint. It deliberately performs no mail,
- * persistence, or intake processing.
+ * Isolated Turnstile verification endpoint. It performs one test-only
+ * confirmation delivery after a successful verification and does not record
+ * application or account data.
  */
 
 const TEST_ORIGIN = 'https://player.jamesjennison.net';
 const TEST_ACTION = 'turnstile-test';
 const TEST_HOSTNAME = 'player.jamesjennison.net';
 const TEST_CONFIG_FILE = '.turnstile-test-config.php';
+const TEST_MAIL_CONFIG_FILE = '.turnstile-test-mail-config.php';
 
 function result(int $status, string $message): never
 {
@@ -21,6 +23,18 @@ function result(int $status, string $message): never
         . htmlspecialchars($message, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
         . '</p><p><a href="/turnstile-test/">Return to the isolated Turnstile test</a></p></body></html>';
     exit;
+}
+
+function testConfirmationEmail(): array
+{
+    return [
+        'subject' => '24Seven.FM Player Turnstile test succeeded',
+        'plainText' => "The isolated Turnstile test at player.jamesjennison.net was verified successfully.\n\nNo application or account data was stored. This message confirms only the test email delivery path.\n",
+    ];
+}
+
+if (getenv('TURNSTILE_TEST_LIBRARY') === '1') {
+    return;
 }
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || !hash_equals(TEST_ORIGIN, $_SERVER['HTTP_ORIGIN'] ?? '')) {
@@ -60,4 +74,29 @@ if (!is_array($verification)
     result(403, 'Turnstile verification was rejected. Refresh the test page and try again.');
 }
 
-result(200, 'Turnstile verification succeeded. No form data was stored or sent.');
+$mailConfig = require dirname(__DIR__) . '/' . TEST_MAIL_CONFIG_FILE;
+if (!is_array($mailConfig)
+    || !isset($mailConfig['recipient'], $mailConfig['sender'])
+    || !is_string($mailConfig['recipient'])
+    || !is_string($mailConfig['sender'])
+    || !filter_var($mailConfig['recipient'], FILTER_VALIDATE_EMAIL)
+    || !filter_var($mailConfig['sender'], FILTER_VALIDATE_EMAIL)) {
+    result(503, 'Turnstile verification succeeded, but the test confirmation is not configured.');
+}
+
+putenv('ALPHA_TESTER_INTEREST_TEST_LIBRARY=1');
+require dirname(__DIR__) . '/alpha-tester-interest.php';
+putenv('ALPHA_TESTER_INTEREST_TEST_LIBRARY');
+
+$confirmation = testConfirmationEmail();
+if (!smtpDeliver(
+    $mailConfig['recipient'],
+    $mailConfig['sender'],
+    $mailConfig['sender'],
+    $confirmation['subject'],
+    $confirmation['plainText'],
+)) {
+    result(503, 'Turnstile verification succeeded, but the test confirmation email could not be delivered.');
+}
+
+result(200, 'Turnstile verification succeeded. A test confirmation email was sent.');

@@ -13,6 +13,7 @@ if command -v php >/dev/null 2>&1; then
   php -l "${repository_root}/privacy-site/alpha-tester-interest.php"
   php -l "${repository_root}/privacy-site/private-tester-queue.php"
   php -l "${repository_root}/privacy-site/turnstile-test.php"
+  php "${repository_root}/scripts/test-turnstile-test-confirmation.php"
   php -l "${repository_root}/scripts/import-alpha-tester-mailbox.php"
   php -l "${repository_root}/scripts/reroute-private-tester-batch.php"
   php "${repository_root}/scripts/test-alpha-tester-signup-confirmation.php"
