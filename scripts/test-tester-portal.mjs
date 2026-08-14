@@ -25,6 +25,13 @@ assert(portal.includes("tester_feedback"), "Tester portal feedback persistence i
 assert(portal.includes("WHERE id = ? AND tester_id = ?"), "Feedback must be bound to the signed-in tester's own assignment.");
 assert(portal.includes("play_opt_in_confirmed_at"), "Tester opt-in confirmation state is missing.");
 assert(portal.includes("onboarding_status = 'ready'"), "A completed opt-in must advance a complete tester to ready for assignment.");
+assert(portal.includes("PORTAL_TESTING_INTERESTS"), "Tester profile must include the original testing-interest intake options.");
+assert(portal.includes("name=\"display_name\""), "Tester profile must allow a tester to update their name.");
+assert(portal.includes("name=\"country\""), "Tester profile must allow a tester to update their country or region.");
+assert(portal.includes("portalCheckboxes('other_stations'"), "Tester profile must allow a tester to update other familiar stations.");
+assert(portal.includes("portalCheckboxes('testing_interests'"), "Tester profile must allow a tester to update testing interests.");
+assert(portal.includes("name=\"experience\""), "Tester profile must allow a tester to update assignment notes or experience.");
+assert(portal.includes("Email changes are reviewed by the coordinator"), "Tester email must remain a reviewed identity change.");
 assert(portal.includes("TESTER_PORTAL_TURNSTILE_ACTION"), "Magic-link requests must be protected by Turnstile.");
 assert(portal.includes("portalVerifyTurnstile($turnstileToken"), "Turnstile must be verified before a magic link is sent.");
 assert(portal.includes("function portalAdminPreviewTesterId"), "The coordinator must have an authenticated tester-view preview path.");
