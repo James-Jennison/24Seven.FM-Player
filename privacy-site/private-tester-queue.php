@@ -19,7 +19,9 @@ const MAIL_SUBMISSION_HOST = 'mail.jamesjennison.net';
 const TASK_REGISTRY_FILE = 'assets/tester-tasks.json';
 const MAX_ASSIGNMENT_CONFIGURATION_LENGTH = 300;
 const MAX_ASSIGNMENT_NOTE_LENGTH = 1_000;
+const MAX_ONBOARDING_NOTE_LENGTH = 1_000;
 const ASSIGNMENT_STATUSES = ['assigned', 'in_progress', 'complete', 'blocked'];
+const ONBOARDING_STATUSES = ['profile_pending', 'profile_complete', 'invited', 'orientation_sent', 'ready', 'paused'];
 const STATION_SCOPES = [
     'Network-wide / not station-specific',
     'StreamingSoundtracks.com',
@@ -123,6 +125,15 @@ function database(array $config): PDO
             assignment_email_attempts INTEGER NOT NULL DEFAULT 0,
             created_at TEXT NOT NULL,
             updated_at TEXT NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS tester_onboarding (
+            tester_id INTEGER PRIMARY KEY REFERENCES testers(id) ON DELETE CASCADE,
+            onboarding_status TEXT NOT NULL DEFAULT \'profile_pending\' CHECK(onboarding_status IN (\'profile_pending\', \'profile_complete\', \'invited\', \'orientation_sent\', \'ready\', \'paused\')),
+            coordinator_note TEXT NOT NULL DEFAULT \'\',
+            orientation_email_status TEXT NOT NULL DEFAULT \'not_sent\' CHECK(orientation_email_status IN (\'not_sent\', \'accepted\', \'failed\')),
+            orientation_email_attempted_at TEXT,
+            orientation_email_attempts INTEGER NOT NULL DEFAULT 0,
+            updated_at TEXT NOT NULL
         );'
     );
     $emailBatchColumns = array_column($database->query('PRAGMA table_info(email_batches)')->fetchAll(), 'name');
@@ -221,7 +232,7 @@ function renderPage(string $title, string $content): never
     header('X-Frame-Options: DENY');
     echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'
         . e($title) . '</title><style>'
-        . 'body{margin:0;background:#090c15;color:#f7f4ec;font:16px/1.5 system-ui,sans-serif}.shell{max-width:72rem;margin:3rem auto;padding:0 1rem}h1,h2{line-height:1.15}section{margin:1rem 0;padding:1.25rem;border:1px solid #30394d;border-radius:.8rem;background:#111624}.muted{color:#b7bdca}.notice{padding:.8rem;border-radius:.5rem;background:#173631}.error{background:#4a2229}.warning{padding:.65rem;border-left:3px solid #ffcb6b;background:#302719}.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}label{display:block;margin:.75rem 0 .3rem;font-weight:700}input,textarea,select,.editor{box-sizing:border-box;width:100%;padding:.65rem;border:1px solid #59647a;border-radius:.4rem;background:#fff;color:#182033;font:inherit}input[type="checkbox"]{width:auto;padding:0}textarea{min-height:12rem}.toolbar{display:flex;flex-wrap:wrap;gap:.4rem;margin:.35rem 0}.toolbar button{margin:0;padding:.35rem .55rem;background:#e8edf5;color:#182033;font-size:.86rem}.editor{min-height:14rem;overflow:auto}.editor:focus{outline:3px solid #67e6d1;outline-offset:3px}.editor:empty:before{color:#58647a;content:attr(data-placeholder);pointer-events:none}.editor p:first-child{margin-top:0}.editor p:last-child{margin-bottom:0}button{margin-top:1rem;padding:.65rem 1rem;border:0;border-radius:.4rem;background:#67e6d1;color:#071411;font:700 1rem system-ui;cursor:pointer}button.secondary{margin-left:.5rem;background:#d29cff;color:#22102f}table{width:100%;border-collapse:collapse}th,td{padding:.6rem;text-align:left;border-bottom:1px solid #30394d;vertical-align:top}th:first-child,td:first-child{width:2.4rem}small{color:#b7bdca}.actions{display:flex;gap:.6rem;flex-wrap:wrap}.actions form{margin:0}.tester-task-panels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}.tester-task-panel,.assignment-existing{min-width:0;padding:1rem;border:1px solid #30394d;border-radius:.6rem}.assignment-existing{margin:1rem 0;background:#0c101c}.assignment-existing h4,.tester-task-panel h3{margin:.1rem 0}.assignment-existing textarea,.tester-task-panel textarea{min-height:5rem}.inline-form{margin-top:.5rem}.mutation-authorization{padding:.65rem;border-left:3px solid #ffcb6b;background:#302719}.task-preview{min-height:3rem;padding:.75rem;border:1px solid #30394d;border-radius:.4rem;color:#b7bdca}.task-preview strong{color:#f7f4ec}.copy-assignment{margin-left:.5rem}@media(max-width:44rem){table{font-size:.86rem}.optional{display:none}.tester-task-panels{grid-template-columns:1fr}.shell{margin:1rem auto}.copy-assignment{margin-left:0}}</style></head><body><main class="shell">'
+        . 'body{margin:0;background:#090c15;color:#f7f4ec;font:16px/1.5 system-ui,sans-serif}.shell{max-width:72rem;margin:3rem auto;padding:0 1rem}h1,h2{line-height:1.15}section{margin:1rem 0;padding:1.25rem;border:1px solid #30394d;border-radius:.8rem;background:#111624}.muted{color:#b7bdca}.notice{padding:.8rem;border-radius:.5rem;background:#173631}.error{background:#4a2229}.warning{padding:.65rem;border-left:3px solid #ffcb6b;background:#302719}.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}label{display:block;margin:.75rem 0 .3rem;font-weight:700}input,textarea,select,.editor{box-sizing:border-box;width:100%;padding:.65rem;border:1px solid #59647a;border-radius:.4rem;background:#fff;color:#182033;font:inherit}input[type="checkbox"]{width:auto;padding:0}textarea{min-height:12rem}.toolbar{display:flex;flex-wrap:wrap;gap:.4rem;margin:.35rem 0}.toolbar button{margin:0;padding:.35rem .55rem;background:#e8edf5;color:#182033;font-size:.86rem}.editor{min-height:14rem;overflow:auto}.editor:focus{outline:3px solid #67e6d1;outline-offset:3px}.editor:empty:before{color:#58647a;content:attr(data-placeholder);pointer-events:none}.editor p:first-child{margin-top:0}.editor p:last-child{margin-bottom:0}button{margin-top:1rem;padding:.65rem 1rem;border:0;border-radius:.4rem;background:#67e6d1;color:#071411;font:700 1rem system-ui;cursor:pointer}button.secondary{margin-left:.5rem;background:#d29cff;color:#22102f}table{width:100%;border-collapse:collapse}th,td{padding:.6rem;text-align:left;border-bottom:1px solid #30394d;vertical-align:top}th:first-child,td:first-child{width:2.4rem}small{color:#b7bdca}.actions{display:flex;gap:.6rem;flex-wrap:wrap}.actions form{margin:0}.onboarding-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.75rem}.onboarding-metric{padding:.8rem;border:1px solid #3b4964;border-radius:.55rem;background:#0c101c}.onboarding-metric strong{display:block;font-size:1.6rem;color:#67e6d1}.tester-task-panels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}.tester-task-panel,.assignment-existing,.onboarding-card{min-width:0;padding:1rem;border:1px solid #30394d;border-radius:.6rem}.assignment-existing,.onboarding-card{margin:1rem 0;background:#0c101c}.assignment-existing h4,.tester-task-panel h3,.onboarding-card h4{margin:.1rem 0}.assignment-existing textarea,.tester-task-panel textarea,.onboarding-card textarea{min-height:5rem}.inline-form{margin-top:.5rem}.onboarding-status{display:inline-block;padding:.16rem .5rem;border-radius:99px;background:#233552;color:#dfeaff;font-size:.84rem;font-weight:700}.profile-missing{margin:.65rem 0;padding:.65rem;border-left:3px solid #ffcb6b;background:#302719}.profile-complete{margin:.65rem 0;padding:.65rem;border-left:3px solid #67e6d1;background:#173631}.mutation-authorization{padding:.65rem;border-left:3px solid #ffcb6b;background:#302719}.task-preview{min-height:3rem;padding:.75rem;border:1px solid #30394d;border-radius:.4rem;color:#b7bdca}.task-preview strong{color:#f7f4ec}.copy-assignment{margin-left:.5rem}@media(max-width:44rem){table{font-size:.86rem}.optional{display:none}.onboarding-overview,.tester-task-panels{grid-template-columns:1fr}.shell{margin:1rem auto}.copy-assignment{margin-left:0}}</style></head><body><main class="shell">'
         . $content . '</main></body></html>';
     exit;
 }
@@ -274,6 +285,128 @@ function activeTester(PDO $database, int $testerId): void
     if ($statement->fetch() === false) {
         throw new InvalidArgumentException('The tester is no longer active. Refresh the queue and try again.');
     }
+}
+
+function listFromJson(?string $value): array
+{
+    $decoded = json_decode((string) $value, true);
+    if (!is_array($decoded)) {
+        return [];
+    }
+    return array_values(array_filter($decoded, static fn (mixed $item): bool => is_string($item) && $item !== ''));
+}
+
+function profileSummary(array $tester): array
+{
+    $required = [
+        'primary_station' => 'primary station',
+        'station_accounts_json' => 'station account availability',
+        'device_form_factor' => 'Android device type',
+        'network_capabilities_json' => 'network-testing preferences',
+        'audio_capabilities_json' => 'audio/accessory preferences',
+        'accessibility_capabilities_json' => 'accessibility or alternative-input preferences',
+        'testing_comfort' => 'testing comfort',
+        'controlled_actions_json' => 'controlled-test preferences',
+        'testing_availability' => 'two-week availability',
+    ];
+    $missing = [];
+    foreach ($required as $column => $label) {
+        $value = $tester[$column] ?? null;
+        $provided = str_ends_with($column, '_json')
+            ? listFromJson(is_string($value) ? $value : null) !== []
+            : is_string($value) && trim($value) !== '';
+        if (!$provided) {
+            $missing[] = $label;
+        }
+    }
+    return ['complete' => $missing === [], 'missing' => $missing];
+}
+
+function onboardingStatus(array $tester): string
+{
+    $profile = profileSummary($tester);
+    if (!$profile['complete']) {
+        return 'profile_pending';
+    }
+    $status = $tester['onboarding_status'] ?? 'profile_complete';
+    return is_string($status) && in_array($status, ONBOARDING_STATUSES, true) ? $status : 'profile_complete';
+}
+
+function onboardingStatusLabel(string $status): string
+{
+    return match ($status) {
+        'profile_pending' => 'Profile update needed',
+        'profile_complete' => 'Profile complete',
+        'invited' => 'Invitation sent',
+        'orientation_sent' => 'Orientation sent',
+        'ready' => 'Ready for assignment',
+        'paused' => 'Paused',
+        default => 'Unknown',
+    };
+}
+
+function onboardingInput(array $tester): array
+{
+    $status = (string) ($_POST['onboarding_status'] ?? '');
+    if (!in_array($status, ONBOARDING_STATUSES, true)) {
+        throw new InvalidArgumentException('Choose a valid onboarding status.');
+    }
+    $profile = profileSummary($tester);
+    if (!$profile['complete'] && $status !== 'profile_pending') {
+        throw new InvalidArgumentException('This tester needs their profile update before advancing onboarding.');
+    }
+    return [$status, field('onboarding_note', MAX_ONBOARDING_NOTE_LENGTH, false)];
+}
+
+function saveOnboarding(PDO $database, int $testerId, string $status, string $note, ?string $emailStatus = null): void
+{
+    $existing = $database->prepare('SELECT orientation_email_status, orientation_email_attempted_at, orientation_email_attempts FROM tester_onboarding WHERE tester_id = ?');
+    $existing->execute([$testerId]);
+    $record = $existing->fetch();
+    $orientationStatus = $emailStatus ?? (is_array($record) ? $record['orientation_email_status'] : 'not_sent');
+    $attemptedAt = is_array($record) ? $record['orientation_email_attempted_at'] : null;
+    $attempts = is_array($record) ? (int) $record['orientation_email_attempts'] : 0;
+    $statement = $database->prepare('INSERT INTO tester_onboarding(tester_id, onboarding_status, coordinator_note, orientation_email_status, orientation_email_attempted_at, orientation_email_attempts, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(tester_id) DO UPDATE SET onboarding_status = excluded.onboarding_status, coordinator_note = excluded.coordinator_note, orientation_email_status = excluded.orientation_email_status, orientation_email_attempted_at = excluded.orientation_email_attempted_at, orientation_email_attempts = excluded.orientation_email_attempts, updated_at = excluded.updated_at');
+    $statement->execute([$testerId, $status, $note, $orientationStatus, $attemptedAt, $attempts, gmdate('c')]);
+}
+
+function onboardingMessage(array $tester): string
+{
+    return 'Hi ' . $tester['display_name'] . ",\n\n"
+        . "Welcome to the 24Seven.FM Player Closed Alpha. Your tester profile is complete, and you are ready for the next step.\n\n"
+        . "1. Join the Android test from the project’s Google Play testing link when you receive it.\n"
+        . "2. Install or update 24Seven.FM Player, then complete the first-run checklist at https://player.jamesjennison.net/product-testing/.\n"
+        . "3. Use only the focused Tester Tasks you are assigned. Each task has its own safety boundary and needs one result per PT case.\n"
+        . "4. Send results through the linked feedback form, including the app version, device, Android version, station, steps, and outcome.\n\n"
+        . "Please do not send passwords, usernames, security answers, CAPTCHA answers, session information, or screenshots containing private information.\n\n"
+        . "Thank you,\n24Seven.FM Player Testing Team";
+}
+
+function sendOnboardingEmail(PDO $database, array $config, int $testerId): bool
+{
+    $statement = $database->prepare("SELECT testers.*, onboarding.onboarding_status, onboarding.coordinator_note FROM testers LEFT JOIN tester_onboarding AS onboarding ON onboarding.tester_id = testers.id WHERE testers.id = ? AND testers.status = 'active'");
+    $statement->execute([$testerId]);
+    $tester = $statement->fetch();
+    if ($tester === false) {
+        throw new InvalidArgumentException('The tester is no longer active.');
+    }
+    if (!profileSummary($tester)['complete']) {
+        throw new InvalidArgumentException('This tester needs their profile update before an orientation email can be sent.');
+    }
+    $message = onboardingMessage($tester);
+    $accepted = sendIndividualMail($config, $tester['email'], 'Welcome to 24Seven.FM Player Closed Alpha', $message, plainTextToHtml($message));
+    $status = onboardingStatus($tester);
+    if ($accepted && $status !== 'ready') {
+        $status = 'orientation_sent';
+    }
+    $record = $database->prepare('SELECT coordinator_note, orientation_email_attempts FROM tester_onboarding WHERE tester_id = ?');
+    $record->execute([$testerId]);
+    $existing = $record->fetch();
+    $note = is_array($existing) ? (string) $existing['coordinator_note'] : '';
+    $attempts = (is_array($existing) ? (int) $existing['orientation_email_attempts'] : 0) + 1;
+    $upsert = $database->prepare('INSERT INTO tester_onboarding(tester_id, onboarding_status, coordinator_note, orientation_email_status, orientation_email_attempted_at, orientation_email_attempts, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(tester_id) DO UPDATE SET onboarding_status = excluded.onboarding_status, orientation_email_status = excluded.orientation_email_status, orientation_email_attempted_at = excluded.orientation_email_attempted_at, orientation_email_attempts = excluded.orientation_email_attempts, updated_at = excluded.updated_at');
+    $upsert->execute([$testerId, $status, $note, $accepted ? 'accepted' : 'failed', gmdate('c'), $attempts, gmdate('c')]);
+    return $accepted;
 }
 
 function assignmentId(): int
@@ -630,7 +763,107 @@ function sendIndividualMail(array $config, string $recipient, string $subject, s
     }
 }
 
+function onboardingBadge(string $status): string
+{
+    return '<span class="onboarding-status">' . e(onboardingStatusLabel($status)) . '</span>';
+}
+
+function renderOperationsDashboard(PDO $database, string $notice = '', string $error = ''): never
+{
+    $tasks = taskRegistry();
+    $testers = $database->query("SELECT testers.*, onboarding.onboarding_status, onboarding.orientation_email_status, onboarding.orientation_email_attempted_at, onboarding.orientation_email_attempts FROM testers LEFT JOIN tester_onboarding AS onboarding ON onboarding.tester_id = testers.id WHERE testers.status = 'active' ORDER BY testers.received_at, testers.id")->fetchAll();
+    $assignments = $database->query("SELECT tester_id, task_status FROM tester_task_assignments ORDER BY id")->fetchAll();
+    $assignmentCounts = [];
+    foreach ($assignments as $assignment) {
+        $id = (int) $assignment['tester_id'];
+        $assignmentCounts[$id] = ($assignmentCounts[$id] ?? 0) + 1;
+    }
+    $metrics = ['profile_pending' => 0, 'profile_complete' => 0, 'orientation_sent' => 0, 'ready' => 0];
+    $rows = '';
+    foreach ($testers as $tester) {
+        $id = (int) $tester['id'];
+        $status = onboardingStatus($tester);
+        if (isset($metrics[$status])) {
+            $metrics[$status]++;
+        }
+        $profile = profileSummary($tester);
+        $profileText = $profile['complete'] ? 'Complete' : count($profile['missing']) . ' update' . (count($profile['missing']) === 1 ? '' : 's') . ' needed';
+        $taskText = ($assignmentCounts[$id] ?? 0) === 0 ? 'No focused task' : ($assignmentCounts[$id] . ' focused task' . ($assignmentCounts[$id] === 1 ? '' : 's'));
+        $rows .= '<tr><td><strong>' . e($tester['display_name']) . '</strong><br><small>' . e($tester['email']) . '</small></td><td>' . e($tester['device']) . '<br><small>' . e($tester['android_version']) . '</small></td><td>' . onboardingBadge($status) . '<br><small>' . e($profileText) . '</small></td><td><small>' . e($taskText) . '</small></td><td><a href="/private-tester-queue.php?tester=' . $id . '">Open workspace</a></td></tr>';
+    }
+    $message = $notice === '' ? '' : '<p class="notice">' . e($notice) . '</p>';
+    $message .= $error === '' ? '' : '<p class="notice error">' . e($error) . '</p>';
+    $editor = '<label for="email-template">Email template</label><select id="email-template"><option value="">Custom email</option><option value="profile-update">Profile update request</option><option value="welcome">Welcome to the 24Seven.FM Player Closed Alpha Test</option><option value="feedback">Testing feedback request</option><option value="new-build">New build available</option><option value="reminder">Reminder to test</option><option value="known-issue">Known issue / workaround</option><option value="test-session">Test session request</option><option value="test-complete">Thank you / test complete</option><option value="tester-status">Tester status update</option><option value="release-signoff">Release candidate sign-off</option></select><p class="muted">Choose a template or write a custom message. The queue always sends one individual, multipart email per selected tester.</p><label for="body-editor">Message</label><div class="toolbar" role="toolbar" aria-label="Email text formatting"><button type="button" data-format="bold"><strong>B</strong><span class="visually-hidden">Bold</span></button><button type="button" data-format="italic"><em>I</em><span class="visually-hidden">Italic</span></button><button type="button" data-format="underline"><u>U</u><span class="visually-hidden">Underline</span></button><button type="button" data-format="insertUnorderedList">Bullets</button><button type="button" data-format="insertOrderedList">Numbered list</button><button type="button" data-format="createLink">Link</button><button type="button" data-format="removeFormat">Clear format</button></div><div id="body-editor" class="editor" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Write a message for the selected testers."></div><input type="hidden" name="body_html" id="body-html"><noscript><label for="body">Message</label><textarea id="body" name="body" maxlength="' . MAX_BODY_LENGTH . '" required></textarea></noscript>';
+    $content = '<div class="actions"><div><p class="muted">24Seven.FM Player · closed alpha</p><h1>Tester operations</h1><p class="muted">A private workspace for moving accepted volunteers from a complete profile to a focused, safe testing assignment.</p></div><form method="post"><input type="hidden" name="action" value="logout"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><button class="secondary" type="submit">Sign out</button></form></div>' . $message
+        . '<section><h2>Onboarding pipeline</h2><div class="onboarding-overview"><div class="onboarding-metric"><strong>' . $metrics['profile_pending'] . '</strong>Profile updates needed</div><div class="onboarding-metric"><strong>' . $metrics['profile_complete'] . '</strong>Ready to invite</div><div class="onboarding-metric"><strong>' . $metrics['orientation_sent'] . '</strong>Orientation sent</div><div class="onboarding-metric"><strong>' . $metrics['ready'] . '</strong>Ready for assignment</div></div><p class="muted">Workflow: confirm coverage → invite and orient → mark ready → assign a focused Tester Task. Enrollment and onboarding stay separate.</p></section>'
+        . '<section><h2>Tester roster</h2><p class="muted">Open one workspace to review coverage, record onboarding progress, send an individual orientation email, and manage focused tasks.</p><table><thead><tr><th scope="col">Tester</th><th scope="col">Device</th><th scope="col">Onboarding</th><th scope="col">Assignments</th><th scope="col"><span class="visually-hidden">Open</span></th></tr></thead><tbody>' . $rows . '</tbody></table></section>'
+        . '<details><summary><strong>Compose a coordinator email</strong></summary><form method="post" id="email-form"><input type="hidden" name="action" value="prepare"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><section><h2>Recipients and message</h2><p><label><input type="checkbox" id="select-all"> Select all active testers</label></p><table><thead><tr><th scope="col">Select</th><th scope="col">Tester</th><th scope="col">Onboarding</th></tr></thead><tbody>' . implode('', array_map(static fn (array $tester): string => '<tr><td><input aria-label="Select ' . e($tester['display_name']) . '" type="checkbox" name="tester_ids[]" value="' . (int) $tester['id'] . '"></td><td>' . e($tester['display_name']) . '<br><small>' . e($tester['email']) . '</small></td><td>' . onboardingBadge(onboardingStatus($tester)) . '</td></tr>', $testers)) . '</tbody></table><label for="subject">Subject</label><input id="subject" name="subject" maxlength="' . MAX_SUBJECT_LENGTH . '" required>' . $editor . '<button type="submit">Review selected recipients</button></section></form></details><script src="/assets/private-tester-queue.js?v=onboarding-1" defer></script>';
+    renderPage('Tester operations', $content);
+}
+
+function renderTesterWorkspace(PDO $database, int $testerId, string $notice = '', string $error = ''): never
+{
+    $testerQuery = $database->prepare("SELECT testers.*, onboarding.onboarding_status, onboarding.coordinator_note AS onboarding_note, onboarding.orientation_email_status, onboarding.orientation_email_attempted_at, onboarding.orientation_email_attempts FROM testers LEFT JOIN tester_onboarding AS onboarding ON onboarding.tester_id = testers.id WHERE testers.id = ? AND testers.status = 'active'");
+    $testerQuery->execute([$testerId]);
+    $tester = $testerQuery->fetch();
+    if ($tester === false) {
+        redirect('?error=' . rawurlencode('The tester is no longer active.'));
+    }
+    $tasks = taskRegistry();
+    $assignmentsQuery = $database->prepare('SELECT id, task_id, task_status, station_scope, configuration_scope, coordinator_note, mutation_authorized, assignment_email_status, assignment_email_attempted_at, assignment_email_attempts FROM tester_task_assignments WHERE tester_id = ? ORDER BY created_at, id');
+    $assignmentsQuery->execute([$testerId]);
+    $assignments = $assignmentsQuery->fetchAll();
+    $profile = profileSummary($tester);
+    $status = onboardingStatus($tester);
+    $statusOptions = '';
+    foreach (ONBOARDING_STATUSES as $candidate) {
+        $disabled = !$profile['complete'] && $candidate !== 'profile_pending' ? ' disabled' : '';
+        $statusOptions .= '<option value="' . e($candidate) . '"' . ($status === $candidate ? ' selected' : '') . $disabled . '>' . e(onboardingStatusLabel($candidate)) . '</option>';
+    }
+    $profileBlock = $profile['complete']
+        ? '<p class="profile-complete"><strong>Profile complete.</strong> This tester can progress through invitation, orientation, and assignment.</p>'
+        : '<p class="profile-missing"><strong>Profile update needed:</strong> ' . e(implode(', ', $profile['missing'])) . '. Keep onboarding at this step until the tester replies with the missing information.</p>';
+    $orientation = ($tester['orientation_email_status'] ?? 'not_sent') === 'accepted'
+        ? 'Accepted by the mail transport'
+        : (($tester['orientation_email_status'] ?? 'not_sent') === 'failed' ? 'Mail transport failed' : 'Not sent');
+    $taskOptions = '<option value="">Choose a current Tester Task</option>';
+    foreach ($tasks as $task) {
+        $taskOptions .= '<option value="' . e($task['id']) . '"' . (($task['state'] ?? '') === 'future' ? ' disabled' : '') . '>' . e($task['id'] . ' — ' . $task['title'] . (($task['state'] ?? '') === 'future' ? ' (Future / Blocked)' : '')) . '</option>';
+    }
+    $stationOptions = '';
+    foreach (STATION_SCOPES as $station) {
+        $stationOptions .= '<option value="' . e($station) . '">' . e($station) . '</option>';
+    }
+    $assignmentCards = '';
+    foreach ($assignments as $assignment) {
+        $task = $tasks[$assignment['task_id']] ?? null;
+        if (!is_array($task)) {
+            continue;
+        }
+        $currentStatusOptions = '';
+        foreach (ASSIGNMENT_STATUSES as $candidate) {
+            $currentStatusOptions .= '<option value="' . e($candidate) . '"' . ($assignment['task_status'] === $candidate ? ' selected' : '') . '>' . e(ucwords(str_replace('_', ' ', $candidate))) . '</option>';
+        }
+        $currentStationOptions = '';
+        foreach (STATION_SCOPES as $station) {
+            $currentStationOptions .= '<option value="' . e($station) . '"' . ($assignment['station_scope'] === $station ? ' selected' : '') . '>' . e($station) . '</option>';
+        }
+        $assignmentCards .= '<article class="assignment-existing"><h4>' . e($task['id'] . ' — ' . $task['title']) . '</h4><p><strong>PT cases:</strong> ' . e(implode(', ', $task['ptIds'])) . ' · <a href="/product-testing/?task=' . rawurlencode($task['id']) . '">Open cases</a></p><p><strong>Assignment email:</strong> ' . e($assignment['assignment_email_status'] === 'accepted' ? 'Accepted by the mail transport' : ($assignment['assignment_email_status'] === 'failed' ? 'Mail transport failed' : 'Not sent')) . '</p><form method="post"><input type="hidden" name="action" value="update_task"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="assignment_id" value="' . (int) $assignment['id'] . '"><label>Status<select name="task_status">' . $currentStatusOptions . '</select></label><label>Station scope<select name="station_scope">' . $currentStationOptions . '</select></label><label>Device / accessory scope<input name="configuration_scope" maxlength="' . MAX_ASSIGNMENT_CONFIGURATION_LENGTH . '" value="' . e($assignment['configuration_scope']) . '"></label><label>Coordinator note<textarea name="coordinator_note" maxlength="' . MAX_ASSIGNMENT_NOTE_LENGTH . '">' . e($assignment['coordinator_note']) . '</textarea></label><button type="submit">Save assignment</button></form></article>';
+    }
+    $message = $notice === '' ? '' : '<p class="notice">' . e($notice) . '</p>';
+    $message .= $error === '' ? '' : '<p class="notice error">' . e($error) . '</p>';
+    $content = '<p><a href="/private-tester-queue.php">← Tester operations</a></p><div><p class="muted">Tester workspace</p><h1>' . e($tester['display_name']) . '</h1><p class="muted">' . e($tester['device']) . ' · ' . e($tester['android_version']) . ' · ' . e($tester['country'] ?: 'Country not provided') . '</p></div>' . $message
+        . '<section><h2>Onboarding</h2>' . onboardingBadge($status) . $profileBlock . '<form method="post"><input type="hidden" name="action" value="update_onboarding"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $testerId . '"><label>Onboarding status<select name="onboarding_status">' . $statusOptions . '</select></label><label>Coordinator note<textarea name="onboarding_note" maxlength="' . MAX_ONBOARDING_NOTE_LENGTH . '" placeholder="Private operational note; never add credentials or secrets.">' . e($tester['onboarding_note'] ?? '') . '</textarea></label><button type="submit">Save onboarding progress</button></form><p><strong>Orientation email:</strong> ' . e($orientation) . ' <small>(' . (int) ($tester['orientation_email_attempts'] ?? 0) . ' handoff attempt' . ((int) ($tester['orientation_email_attempts'] ?? 0) === 1 ? '' : 's') . ')</small></p>' . ($profile['complete'] ? '<form method="post"><input type="hidden" name="action" value="send_onboarding_email"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $testerId . '"><button class="secondary" type="submit">Send orientation email</button></form>' : '') . '</section>'
+        . '<section><h2>Focused Tester Tasks</h2><p class="muted">Assign only a focused bundle that matches this tester’s coverage. Each PT case still receives its own result.</p>' . ($assignmentCards === '' ? '<p class="muted">No task assigned yet.</p>' : $assignmentCards) . '<article class="onboarding-card"><h3>Assign a focused Tester Task</h3><form method="post" data-task-assignment-form><input type="hidden" name="action" value="assign_task"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $testerId . '"><label>Tester Task<select name="task_id" data-task-select required>' . $taskOptions . '</select></label><div class="task-preview" data-task-preview aria-live="polite">Choose a current task to see its PT cases, prerequisites, and safety boundary.</div><label>Station scope<select name="station_scope">' . $stationOptions . '</select></label><label>Device / accessory / form factor scope<input name="configuration_scope" maxlength="' . MAX_ASSIGNMENT_CONFIGURATION_LENGTH . '" placeholder="For example, Pixel 9, Bluetooth headset, folded"></label><label>Coordinator note<textarea name="coordinator_note" maxlength="' . MAX_ASSIGNMENT_NOTE_LENGTH . '"></textarea></label><label class="mutation-authorization" data-mutation-authorization hidden><input type="checkbox" name="mutation_authorized" value="1"> I explicitly authorize the controlled subcase described above.</label><button type="submit">Assign Tester Task</button></form></article></section><script id="tester-task-registry" type="application/json">' . json_encode(array_values($tasks), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES) . '</script><script src="/assets/private-tester-queue.js?v=onboarding-1" defer></script>';
+    renderPage('Tester workspace', $content);
+}
+
 function renderDashboard(PDO $database, string $notice = '', string $error = ''): never
+{
+    renderOperationsDashboard($database, $notice, $error);
+}
+
+function renderDashboardLegacy(PDO $database, string $notice = '', string $error = ''): never
 {
     $tasks = taskRegistry();
     $testers = $database->query("SELECT id, display_name, email, country, device, android_version, interests_json, experience, received_at FROM testers WHERE status = 'active' ORDER BY received_at, id")->fetchAll();
@@ -741,6 +974,23 @@ try {
             session_destroy();
             redirect();
         }
+        if ($action === 'update_onboarding') {
+            $testerId = testerId();
+            $tester = $database->prepare('SELECT * FROM testers WHERE id = ? AND status = \'active\'');
+            $tester->execute([$testerId]);
+            $tester = $tester->fetch();
+            if ($tester === false) {
+                throw new InvalidArgumentException('The tester is no longer active.');
+            }
+            [$status, $note] = onboardingInput($tester);
+            saveOnboarding($database, $testerId, $status, $note);
+            redirect('?tester=' . $testerId . '&notice=' . rawurlencode('Onboarding progress saved.'));
+        }
+        if ($action === 'send_onboarding_email') {
+            $testerId = testerId();
+            $accepted = sendOnboardingEmail($database, $config, $testerId);
+            redirect('?tester=' . $testerId . '&notice=' . rawurlencode('Orientation email handoff ' . ($accepted ? 'was accepted by the mail transport.' : 'failed.')));
+        }
         if ($action === 'assign_task') {
             $testerId = testerId();
             activeTester($database, $testerId);
@@ -750,7 +1000,7 @@ try {
             $insert->execute([$testerId, $task['id'], $station, $configuration, $note, $mutationAuthorized, $now, $now]);
             $assignmentId = (int) $database->lastInsertId();
             $accepted = sendAssignmentEmail($database, $config, $assignmentId);
-            redirect('?notice=' . rawurlencode($task['id'] . ' was assigned; assignment email handoff ' . ($accepted ? 'was accepted by the mail transport.' : 'failed.')));
+            redirect('?tester=' . $testerId . '&notice=' . rawurlencode($task['id'] . ' was assigned; assignment email handoff ' . ($accepted ? 'was accepted by the mail transport.' : 'failed.')));
         }
         if ($action === 'update_task') {
             $id = assignmentId();
@@ -773,7 +1023,7 @@ try {
             $note = field('coordinator_note', MAX_ASSIGNMENT_NOTE_LENGTH, false);
             $update = $database->prepare('UPDATE tester_task_assignments SET task_status = ?, station_scope = ?, configuration_scope = ?, coordinator_note = ?, updated_at = ? WHERE id = ?');
             $update->execute([$status, $station, $configuration, $note, gmdate('c'), $id]);
-            redirect('?notice=' . rawurlencode('Tester Task assignment updated.'));
+            redirect('?tester=' . (int) $assignment['tester_id'] . '&notice=' . rawurlencode('Tester Task assignment updated.'));
         }
         if ($action === 'remove_task') {
             $id = assignmentId();
@@ -785,12 +1035,15 @@ try {
             }
             activeTester($database, (int) $assignment['tester_id']);
             $database->prepare('DELETE FROM tester_task_assignments WHERE id = ?')->execute([$id]);
-            redirect('?notice=' . rawurlencode('Tester Task assignment removed.'));
+            redirect('?tester=' . (int) $assignment['tester_id'] . '&notice=' . rawurlencode('Tester Task assignment removed.'));
         }
         if ($action === 'resend_assignment_email') {
             $id = assignmentId();
             $accepted = sendAssignmentEmail($database, $config, $id);
-            redirect('?notice=' . rawurlencode('Assignment email handoff ' . ($accepted ? 'was accepted by the mail transport.' : 'failed.')));
+            $owner = $database->prepare('SELECT tester_id FROM tester_task_assignments WHERE id = ?');
+            $owner->execute([$id]);
+            $owner = $owner->fetch();
+            redirect('?tester=' . (int) ($owner['tester_id'] ?? 0) . '&notice=' . rawurlencode('Assignment email handoff ' . ($accepted ? 'was accepted by the mail transport.' : 'failed.')));
         }
         if ($action === 'prepare') {
             $ids = selectedTesterIds();
@@ -843,6 +1096,9 @@ try {
     }
     if (isset($_GET['batch']) && ctype_digit((string) $_GET['batch'])) {
         renderConfirmation($database, (int) $_GET['batch']);
+    }
+    if (isset($_GET['tester']) && ctype_digit((string) $_GET['tester'])) {
+        renderTesterWorkspace($database, (int) $_GET['tester'], (string) ($_GET['notice'] ?? ''), (string) ($_GET['error'] ?? ''));
     }
     renderDashboard($database, (string) ($_GET['notice'] ?? ''), (string) ($_GET['error'] ?? ''));
 } catch (InvalidArgumentException $exception) {
