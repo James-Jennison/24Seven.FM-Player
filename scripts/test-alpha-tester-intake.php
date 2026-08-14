@@ -58,6 +58,10 @@ expectIntake($application['accessibility_capabilities'] === ['none'], 'None must
 expectIntake($application['controlled_actions'] === ['none'], 'None must be exclusive for controlled actions.');
 expectIntake($application['interests'] === ['playback', 'network_recovery'], 'Duplicate checkbox values must normalize.');
 
+expectIntake(turnstileVerificationAccepted(['success' => true, 'action' => TURNSTILE_ACTION, 'hostname' => TURNSTILE_HOSTNAME]), 'A matching Turnstile verification must be accepted.');
+expectIntake(!turnstileVerificationAccepted(['success' => true, 'action' => 'turnstile-test', 'hostname' => TURNSTILE_HOSTNAME]), 'A Turnstile action mismatch must be rejected.');
+expectIntake(!turnstileVerificationAccepted(['success' => true, 'action' => TURNSTILE_ACTION, 'hostname' => 'example.test']), 'A Turnstile hostname mismatch must be rejected.');
+
 foreach (array_keys(PRIMARY_STATIONS) as $station) {
     $_POST = validApplication();
     $_POST['primaryStation'] = $station;
@@ -121,7 +125,12 @@ expectIntake(is_string($form), 'Unable to inspect the tester-interest form.');
 foreach (['<fieldset>', 'What is your primary 24Seven.FM station?', 'name="primaryStation" required', 'name="deviceFormFactor" required', 'name="testingComfort" value="readonly" required', 'Do not enter your username, password, security answer, CAPTCHA answer, or any other login information.', 'name="company"', 'name="consent" value="yes" required'] as $needle) {
     expectIntake(str_contains($form, $needle), "Form contract is missing {$needle}");
 }
+expectIntake(str_contains($form, 'class="cf-turnstile" data-sitekey="0x4AAAAAAEPR2A0JwM5Qhrvt" data-action="alpha-tester-interest"'), 'The Alpha signup form must embed its dedicated Turnstile action.');
 expectIntake(!str_contains($form, 'name="username"') && !str_contains($form, 'name="password"'), 'The form must not collect credentials.');
+
+$source = file_get_contents(dirname(__DIR__) . '/privacy-site/alpha-tester-interest.php');
+expectIntake(is_string($source), 'Unable to inspect the tester-interest handler.');
+expectIntake(strpos($source, 'verifyTurnstile($turnstileToken, $turnstileConfig[\'secret\'])') < strpos($source, '$application = applicationFromRequest();'), 'Turnstile must be verified before application processing.');
 
 expectIntake(!is_file(dirname(__DIR__) . '/workers/alpha-tester-interest/worker.mjs') && !is_file(dirname(__DIR__) . '/workers/alpha-tester-interest/wrangler.toml'), 'The unused Cloudflare Worker must not remain in the repository workflow.');
 

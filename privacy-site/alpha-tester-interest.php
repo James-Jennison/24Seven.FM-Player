@@ -12,6 +12,9 @@ declare(strict_types=1);
 const FORM_ORIGIN = 'https://player.jamesjennison.net';
 const FALLBACK_LOCATION = '/product-testing/';
 const DELIVERY_DOMAIN = 'jamesjennison.net';
+const TURNSTILE_CONFIG_FILE = '.turnstile-test-config.php';
+const TURNSTILE_ACTION = 'alpha-tester-interest';
+const TURNSTILE_HOSTNAME = 'player.jamesjennison.net';
 const MAX_REQUEST_BYTES = 16_384;
 const RATE_WINDOW_SECONDS = 1_800;
 const RATE_LIMIT = 3;
@@ -161,6 +164,37 @@ function requestChoices(string $name, array $allowed, int $maximum, bool $noneEx
         return ['none'];
     }
     return $result;
+}
+
+function turnstileVerificationAccepted(array $verification): bool
+{
+    return ($verification['success'] ?? false) === true
+        && ($verification['action'] ?? '') === TURNSTILE_ACTION
+        && ($verification['hostname'] ?? '') === TURNSTILE_HOSTNAME;
+}
+
+function verifyTurnstile(string $token, string $secret): bool
+{
+    if ($token === '' || strlen($token) > 2048 || trim($secret) === '') {
+        return false;
+    }
+
+    $payload = http_build_query([
+        'secret' => $secret,
+        'response' => $token,
+        'remoteip' => $_SERVER['REMOTE_ADDR'] ?? '',
+    ], '', '&', PHP_QUERY_RFC3986);
+    $context = stream_context_create(['http' => [
+        'method' => 'POST',
+        'header' => "Content-Type: application/x-www-form-urlencoded\r\nContent-Length: " . strlen($payload) . "\r\n",
+        'content' => $payload,
+        'timeout' => 10,
+        'ignore_errors' => true,
+    ]]);
+    $response = @file_get_contents('https://challenges.cloudflare.com/turnstile/v0/siteverify', false, $context);
+    $verification = is_string($response) ? json_decode($response, true) : null;
+
+    return is_array($verification) && turnstileVerificationAccepted($verification);
 }
 
 function labels(array $values, array $allowed, string $fallback = 'Not provided'): string
@@ -531,6 +565,15 @@ try {
     }
     if (!hash_equals(FORM_ORIGIN, $_SERVER['HTTP_ORIGIN'] ?? '')) {
         respond(403, 'This application request is not allowed.', 'error', $wantsJson);
+    }
+
+    $turnstileConfig = require dirname(__DIR__) . '/' . TURNSTILE_CONFIG_FILE;
+    if (!is_array($turnstileConfig) || !isset($turnstileConfig['secret']) || !is_string($turnstileConfig['secret'])) {
+        throw new RuntimeException('Missing Turnstile configuration.');
+    }
+    $turnstileToken = $_POST['cf-turnstile-response'] ?? '';
+    if (!is_string($turnstileToken) || !verifyTurnstile($turnstileToken, $turnstileConfig['secret'])) {
+        respond(403, 'Please complete the verification and try again.', 'error', $wantsJson);
     }
 
     $config = require dirname(__DIR__) . '/.alpha-tester-interest-config.php';
