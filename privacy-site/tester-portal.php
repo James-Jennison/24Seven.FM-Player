@@ -357,10 +357,12 @@ try {
         if (!hash_equals(TESTER_PORTAL_ORIGIN, $_SERVER['HTTP_ORIGIN'] ?? '')) fail(403, 'This request is not allowed.');
         portalRequestLink($database, $config);
     }
-    if (isset($_GET['token']) && is_string($_GET['token'])) portalRenderLinkConfirmation($database, $_GET['token']);
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && ($_POST['action'] ?? '') === 'consume_link') {
         if (!validCsrf()) fail(403, 'The request could not be verified.');
         portalConsumeLink($database, (string) ($_POST['token'] ?? ''));
+    }
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && isset($_GET['token']) && is_string($_GET['token'])) {
+        portalRenderLinkConfirmation($database, $_GET['token']);
     }
     if (!isset($_SESSION['tester_portal_id'])) portalRenderLogin();
     $tester = portalTester($database);
