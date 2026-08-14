@@ -12,6 +12,7 @@ const TEST_ACTION = 'turnstile-test';
 const TEST_HOSTNAME = 'player.jamesjennison.net';
 const TEST_CONFIG_FILE = '.turnstile-test-config.php';
 const TEST_MAIL_CONFIG_FILE = '.turnstile-test-mail-config.php';
+const ALPHA_TESTER_CONFIG_FILE = '.alpha-tester-interest-config.php';
 
 function result(int $status, string $message): never
 {
@@ -51,6 +52,19 @@ if (!is_array($config) || !isset($config['secret']) || !is_string($config['secre
     result(503, 'The isolated Turnstile test is not configured.');
 }
 
+$mailConfig = require dirname(__DIR__) . '/' . TEST_MAIL_CONFIG_FILE;
+$deliveryConfig = require dirname(__DIR__) . '/' . ALPHA_TESTER_CONFIG_FILE;
+if (!is_array($mailConfig)
+    || !isset($mailConfig['recipient'])
+    || !is_string($mailConfig['recipient'])
+    || !filter_var($mailConfig['recipient'], FILTER_VALIDATE_EMAIL)
+    || !is_array($deliveryConfig)
+    || !isset($deliveryConfig['sender'])
+    || !is_string($deliveryConfig['sender'])
+    || !filter_var($deliveryConfig['sender'], FILTER_VALIDATE_EMAIL)) {
+    result(503, 'The isolated Turnstile test confirmation is not configured.');
+}
+
 $payload = http_build_query([
     'secret' => $config['secret'],
     'response' => $token,
@@ -74,16 +88,6 @@ if (!is_array($verification)
     result(403, 'Turnstile verification was rejected. Refresh the test page and try again.');
 }
 
-$mailConfig = require dirname(__DIR__) . '/' . TEST_MAIL_CONFIG_FILE;
-if (!is_array($mailConfig)
-    || !isset($mailConfig['recipient'], $mailConfig['sender'])
-    || !is_string($mailConfig['recipient'])
-    || !is_string($mailConfig['sender'])
-    || !filter_var($mailConfig['recipient'], FILTER_VALIDATE_EMAIL)
-    || !filter_var($mailConfig['sender'], FILTER_VALIDATE_EMAIL)) {
-    result(503, 'Turnstile verification succeeded, but the test confirmation is not configured.');
-}
-
 putenv('ALPHA_TESTER_INTEREST_TEST_LIBRARY=1');
 require dirname(__DIR__) . '/alpha-tester-interest.php';
 putenv('ALPHA_TESTER_INTEREST_TEST_LIBRARY');
@@ -91,8 +95,8 @@ putenv('ALPHA_TESTER_INTEREST_TEST_LIBRARY');
 $confirmation = testConfirmationEmail();
 if (!smtpDeliver(
     $mailConfig['recipient'],
-    $mailConfig['sender'],
-    $mailConfig['sender'],
+    $deliveryConfig['sender'],
+    $deliveryConfig['sender'],
     $confirmation['subject'],
     $confirmation['plainText'],
 )) {
