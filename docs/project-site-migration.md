@@ -41,7 +41,7 @@ materially benefit a dedicated domain:
 | Webuzo | Version 4.7.4, revision 3723; Apache 2.4.68 serves the public virtual hosts directly |
 | Webuzo user | `jamesjen` |
 | Webuzo document root | `/home/jamesjen/player.jamesjennison.net` |
-| Deployment connection | Use the managed `website-vm-admin` SSH alias only. `webuzo-production-admin` is not a Player deployment target. |
+| Deployment connection | Use the managed `website-vm-admin` SSH alias only. The mail/Webuzo role (`mail-vm-admin`, with `webuzo-production-admin` retained only as deprecated compatibility) is not a Player deployment target. |
 | Origin SSL owner and method | Webuzo Automatic SSL; dedicated Let's Encrypt certificate for only `player.jamesjennison.net`, valid through October 21, 2026, with next renewal registered for September 20 |
 | Cloudflare record and proxy state | Exactly one proxied A record for `player.jamesjennison.net`, TTL Auto; Full (Strict); no public `www.player`, `mail.player`, AAAA, CNAME, or wildcard record |
 | Cache behavior | HTML returns `public, max-age=0, must-revalidate, no-transform`; other cache behavior remains unchanged |
@@ -115,7 +115,7 @@ artifact locally, stage it as a sibling directory, compare hashes with relative
 artifact paths, then atomically swap only the verified staging directory into
 place. Retain the former live directory as the rollback point and verify the
 public HTTPS routes after promotion. Do not reuse a document root discovered
-for another site or treat `webuzo-production-admin` as a fallback.
+for another site or substitute the mail/Webuzo role (`mail-vm-admin` or its deprecated `webuzo-production-admin` compatibility alias) as a fallback.
 
 Use Webuzo as the authority for the subdomain, user, document root, web server,
 certificate, ownership, permissions, logs, and backups.

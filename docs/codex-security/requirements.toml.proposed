@@ -1,32 +1,43 @@
-# OWNER ACTION REQUIRED — install as /etc/codex/requirements.toml on Linux.
-# Verified against Codex CLI 0.147.0 and current official OpenAI Codex docs.
-# This is not active merely because it is committed in this repository.
+# RETIRED HISTORICAL ARTIFACT — DO NOT INSTALL.
+# This file preserves the failed 2026-08-13 proposal for auditability. It is not
+# an active configuration source and must not replace the healthy managed
+# /etc/codex/requirements.toml baseline.
 
-allowed_approval_policies = ["on-request"]
+allowed_approval_policies = ["on-request", "never"]
 allowed_approvals_reviewers = ["user"]
 default_permissions = "owner_local_development"
 
 [allowed_permission_profiles]
 ":read-only" = true
+":workspace" = true
 owner_local_development = true
-# :danger-full-access and every unlisted current/future profile are denied.
+# Keep this available only for the owner's deliberate --yolo invocation.
+":danger-full-access" = true
 
 [permissions.owner_local_development]
 description = "Normal workspace editing with policy and credential paths protected."
 extends = ":workspace"
 
 [permissions.owner_local_development.filesystem]
-"~/.ssh" = "deny"
+glob_scan_max_depth = 16
+":minimal" = "read"
+"~/.ssh" = "read"
 "~/.codex/auth.json" = "deny"
 "~/.codex/history.jsonl" = "deny"
 "~/.codex/AGENTS.md" = "read"
 "~/.codex/config.toml" = "read"
 "~/.codex/rules" = "read"
+"/mnt/faststorage" = "write"
 
 [permissions.owner_local_development.filesystem.":workspace_roots"]
+"." = "write"
 "AGENTS.md" = "read"
 ".codex" = "read"
 "**/*.env" = "deny"
+
+[apps.gmail]
+# System-wide prohibition; applies to reads and writes.
+enabled = false
 
 [rules]
 prefix_rules = [

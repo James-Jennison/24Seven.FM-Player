@@ -35,6 +35,8 @@ expect(str_contains($confirmation['plainText'], "At this stage, there's nothing 
 expect(substr_count($confirmation['plainText'], "\n- ") === 6, 'Plain-text must have the six-item list.');
 expect(str_contains($confirmation['plainText'], 'Once you\'ve been added to the testing program, you\'ll receive a separate welcome email'), 'Plain text must keep signup and acceptance separate.');
 expect(str_contains($confirmation['plainText'], 'James — 24Seven.FM Player Testing Team'), 'Plain-text signature is incorrect.');
+expect(str_contains($confirmation['plainText'], 'alpha-testing@jamesjennison.net is not a monitored inbox. Please do not reply to this confirmation email.'), 'Plain-text non-monitored-address disclaimer is missing.');
+expect(str_contains($confirmation['html'], '<strong>Please note:</strong> alpha-testing@jamesjennison.net is not a monitored inbox. Please do not reply to this confirmation email.'), 'HTML non-monitored-address disclaimer is missing.');
 expect(str_contains($confirmation['html'], '—') && str_contains($confirmation['plainText'], '—'), 'Unicode em dash is missing from the template.');
 expect(!str_contains($confirmation['plainText'], '<p>') && !str_contains($confirmation['plainText'], '<li>'), 'HTML markup leaked into the plain-text alternative.');
 expect(!str_contains($confirmation['html'], 'https://play.google.com') && !str_contains($confirmation['plainText'], 'https://play.google.com'), 'Confirmation must not provide installation links.');
