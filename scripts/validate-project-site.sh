@@ -28,6 +28,7 @@ fi
 node --check "${repository_root}/scripts/test-project-site-browser.mjs"
 node --check "${repository_root}/scripts/test-project-site-firefox.mjs"
 node "${repository_root}/scripts/test-private-tester-queue.mjs"
+node "${repository_root}/scripts/test-mfa-enrollment-helper.mjs"
 node "${repository_root}/scripts/test-tester-portal.mjs"
 python3 "${script_dir}/validate-project-site.py" "${repository_root}/_site"
 

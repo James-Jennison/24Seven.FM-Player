@@ -71,10 +71,20 @@ if [[ ! "${totp_secret}" =~ ^[A-Z2-7]{32}$ ]]; then
   exit 1
 fi
 
-printf '\n%s\n' 'Add a manual TOTP account in your authenticator app:'
-printf '%s\n' 'Account: 24Seven.FM Player administrator'
-printf '%s\n' 'Issuer: 24Seven.FM Player'
-printf 'Secret: %s\n' "${totp_secret}"
+if ! command -v qrencode >/dev/null 2>&1; then
+  unset administrator_username password password_hash totp_secret
+  printf '%s\n' 'The local QR renderer is unavailable; no change was made.' >&2
+  exit 1
+fi
+
+totp_uri="otpauth://totp/24Seven.FM%20Player:${administrator_username}?secret=${totp_secret}&issuer=24Seven.FM%20Player&algorithm=SHA1&digits=6&period=30"
+printf '\n%s\n' 'Scan this QR code with your authenticator app to add 24Seven.FM Player administrator:'
+if ! printf '%s' "${totp_uri}" | qrencode -t UTF8 -m 2 -s 1; then
+  unset administrator_username password password_hash totp_secret totp_uri
+  printf '%s\n' 'The local QR code could not be rendered; no change was made.' >&2
+  exit 1
+fi
+unset totp_uri
 read -r -s -p 'Enter the current six-digit code to confirm enrollment: ' totp_code
 printf '\n'
 if ! printf '%s\n%s\n' "${totp_secret}" "${totp_code}" | php -r '
