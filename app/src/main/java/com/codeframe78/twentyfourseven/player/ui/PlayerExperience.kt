@@ -30,7 +30,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.BluetoothAudio
-import androidx.compose.material.icons.filled.CastConnected
 import androidx.compose.material.icons.filled.Headphones
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -441,7 +440,7 @@ private val AudioOutputKind.icon: ImageVector
         AudioOutputKind.Device -> Icons.Default.Speaker
         AudioOutputKind.Bluetooth -> Icons.Default.BluetoothAudio
         AudioOutputKind.Wired -> Icons.Default.Headphones
-        AudioOutputKind.Remote -> Icons.Default.CastConnected
+        AudioOutputKind.Remote -> Icons.Default.Speaker
     }
 
 @Composable

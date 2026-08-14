@@ -89,7 +89,7 @@ remain project-maintenance material rather than public release promises.
 | Community delivery | M36–M38 | ⏳ Authorization-gated | Authorized event source, secure delivery, and lifecycle/privacy certification |
 | Alpha delivery | M39–M41 | ⏳ Planned | Candidate freeze, Play-delivered remediation, and explicitly authorized Alpha publication |
 | Production readiness | M42–M45 | ⏳ Planned | Closed-test stabilization, production access, staged rollout, and operations |
-| Bounded future scope | M46–M60 | 🧊 Planned/deferred | Architecture sustainability, repaired Private Messages, retired Forum scope, Cast feasibility, extended station/account capabilities, and authorized native VIP/RIP commerce |
+| Bounded future scope | M46–M60 | 🧊 Planned/deferred/retired | Architecture sustainability, repaired Private Messages, retired Forum and Google Cast scope, extended station/account capabilities, and authorized native VIP/RIP commerce |
 
 ### Current progression
 

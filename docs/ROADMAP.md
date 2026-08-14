@@ -73,7 +73,7 @@ owner or provider supplies the required input. The next-step model is recorded i
 | M22 | Android 16 and API 36 readiness | Complete | API 36 target, edge-to-edge, predictive Back, and device regression evidence |
 | M23 | Adaptive launcher and store polish | Complete | Legacy, adaptive, and monochrome launcher resources |
 | M24 | Sleep Timer | Complete | Service-owned bounded timer with restoration and deterministic expiry |
-| M25 | System Audio-Output Selection | Complete | Android-managed output chooser and accurate route state; Cast remains separate |
+| M25 | System Audio-Output Selection | Complete | Android-managed output chooser and accurate route state; Google Cast is permanently out of scope |
 | M26 | In-App Diagnostics | Complete | User-reviewed fixed-allowlist snapshot with explicit copy/share |
 | M27 | Local Chat-Mention Notifications | Complete | Opt-in exact-name detection for actively observed Chat with privacy-minimized alerts |
 
@@ -136,7 +136,7 @@ None of these milestones blocks M41 unless a later owner decision explicitly mov
 | M52 | Native Forum Read-Only Foundation | Retired by project decision | Native Forum retrieval and rendering are permanently out of Player scope | No forecast |
 | M53 | Authenticated Forum Participation | Retired by project decision | Forum sign-in reuse, posting, replies, and moderation actions are permanently out of Player scope | No forecast |
 | M54 | Forum Five-Station and Notification Certification | Retired by project decision | Forum certification and Forum notifications are permanently out of Player scope | No forecast |
-| M55 | Google Cast Feasibility and Certification | Planned research gate | Permitted stream use, receiver compatibility, lifecycle/route behavior, rights review, and five-station validation before implementation | Conditional · 2–4 active weeks; may end in a no-go |
+| M55 | Google Cast Feasibility and Certification | Retired by project decision | Google Cast sender/receiver work is permanently out of Player scope; retain the prior M25 route-boundary evidence as historical context | No forecast |
 | M56 | Extended Station Capability Certification | Planned research gate | Independently verify non-SST request messages, activity/cooldown, membership, and other capability differences without inheritance | Medium · 1–3 active weeks |
 | M57 | Account Registration, Recovery, and Management Access | Planned research gate | Verify permitted station routes and deletion/recovery behavior, then choose trusted browser or authorized native interfaces without sharing browser/app sessions | Medium · 1–3 active weeks |
 | M58 | Membership Commerce Authorization and Billing Architecture | Planned research/authorization gate | Confirm station-owner and merchant authority, choose Play Billing or an enrolled regional alternative, define VIP/RIP products and trusted activation contracts, and close tax, support, refund, privacy, and security obligations | Conditional · 2–4 active weeks for architecture; contract timing external |
@@ -151,11 +151,12 @@ None of these milestones blocks M41 unless a later owner decision explicitly mov
 4. M40 proves Play delivery and resolves automated/reviewer findings.
 5. M41 requires explicit owner publication authorization.
 6. M42–M45 form the production path; Alpha publication is not production readiness.
-7. M47–M60 remain capability- and authorization-gated future work. M58 must authorize commerce before M59 adds a
-   purchase surface, and M60 must certify the complete subscription lifecycle before release.
+7. M47–M50 and M56–M60 remain capability- and authorization-gated future work. M55 is permanently retired. M58
+   must authorize commerce before M59 adds a purchase surface, and M60 must certify the complete subscription
+   lifecycle before release.
 
 The manual acceptance catalog is maintained on the
-[Product Testing page](../privacy-site/product-testing/index.html). Its 35 `PT-*` cases are grouped by the canonical
+[Product Testing page](../privacy-site/product-testing/index.html). Its 34 `PT-*` cases are grouped by the canonical
 23-task `TT-*` registry for coordinator-distributed testing; one result remains required for each PT case. Current
 tasks are assignable through the protected Tester Queue, while future task bundles remain blocked until their milestone.
 `PT-*` identifiers do not change during milestone renumbering so existing tester reports remain traceable.

@@ -1,6 +1,7 @@
 # M25 System Audio-Output Selection validation
 
-Status: Complete through the dedicated Android audio-output path; Google Cast remains capability-gated.
+Status: Historical M25 validation record. The dedicated Android audio-output path remains complete; Google Cast was
+subsequently retired by project decision on August 14, 2026.
 
 ## Delivered scope
 
@@ -16,7 +17,10 @@ Android documents the system Output Switcher as the route surface for local spea
 
 This milestone satisfies the roadmap's **Cast and/or dedicated audio-output selection** requirement through the supported Android system route path. It does not add a Google Cast sender, receiver application, relay, rebroadcast proxy, or stream URL.
 
-Google Cast uses a separate sender/receiver architecture. The five station streams currently remain direct Media3 connections to the already verified station-provided relays; choosing a device route does not proxy or encrypt that source. A Cast control can be added only after receiver compatibility and permitted stream use are verified. Until then, the UI does not imply that Cast is available.
+Google Cast uses a separate sender/receiver architecture. The five station streams remain direct Media3 connections to
+the already verified station-provided relays; choosing a device route does not proxy or encrypt that source. The
+subsequent M55 retirement means a Cast control will not be added. The UI retains only Android-managed standard audio
+routes and does not imply that Cast is available.
 
 Official references:
 
