@@ -485,6 +485,115 @@
 
   enhanceTestCatalog();
 
+  function enhanceCompactPortal() {
+    const section = document.body.dataset.pageSection;
+    const layouts = {
+      features: [
+        {
+          selectors: ['#community', '#station-matrix', '#boundaries'],
+          eyebrow: 'Product reference',
+          title: 'Community, station support, and boundaries',
+          description: 'Open the detailed capability map and supported-use boundaries.'
+        }
+      ],
+      development: [
+        {
+          selectors: ['#source-map', '#toolchain', '#contribute'],
+          eyebrow: 'Engineering reference',
+          title: 'Source map, toolchain, and contribution guide',
+          description: 'Open the repository-level implementation reference.'
+        }
+      ],
+      testing: [
+        {
+          selectors: ['#specialized', '#ci', '#evidence', '#remaining'],
+          eyebrow: 'Evidence library',
+          title: 'Specialized checks, CI, and remaining gates',
+          description: 'Open the detailed validation record and the work that remains.'
+        }
+      ],
+      roadmap: [
+        {
+          selectors: ['#history', '#notifications', '#production', '#future'],
+          eyebrow: 'Roadmap reference',
+          title: 'Historical milestones and later delivery gates',
+          description: 'Open the full chronology, future work, and non-current programs.'
+        }
+      ],
+      resources: [
+        {
+          selectors: ['#station-certification', '#readiness'],
+          eyebrow: 'Reference library',
+          title: 'Station certification and release-readiness records',
+          description: 'Open the detailed source and validation library.'
+        }
+      ],
+      'product-testing': [
+        {
+          selectors: ['#alpha-tester-interest'],
+          eyebrow: 'New tester',
+          title: 'Apply for Closed Alpha access',
+          description: 'Open the private application when you are ready to provide your device and testing coverage.'
+        },
+        {
+          selectors: ['#testing-tasks'],
+          eyebrow: 'Task library',
+          title: 'Browse coordinator-assigned testing tasks',
+          description: 'Open the available task bundles, their prerequisites, and their safety boundaries.'
+        },
+        {
+          selectors: ['#catalog-controls', '[data-test-empty-state]', '#start', '#listening-tests', '#member-tests', '#device-tests', '#future-tests', '#coverage', '#report', '#safety'],
+          eyebrow: 'Testing reference',
+          title: 'Open the complete test catalog and reporting guide',
+          description: 'Search cases, review detailed instructions, and consult coverage and safety guidance only when your assignment needs it.'
+        }
+      ]
+    };
+    const groups = layouts[section];
+    if (!groups) return;
+
+    groups.forEach(function (group) {
+      const items = group.selectors.map(function (selector) {
+        return document.querySelector(selector);
+      }).filter(Boolean);
+      if (!items.length) return;
+
+      const first = items[0];
+      const disclosure = document.createElement('details');
+      disclosure.className = 'reference-disclosure';
+      disclosure.dataset.referenceDisclosure = '';
+      const summary = document.createElement('summary');
+      summary.innerHTML = '<span><small></small><strong></strong><em></em></span><span class="reference-disclosure-action">Open <b aria-hidden="true">+</b></span>';
+      summary.querySelector('small').textContent = group.eyebrow;
+      summary.querySelector('strong').textContent = group.title;
+      summary.querySelector('em').textContent = group.description;
+      const body = document.createElement('div');
+      body.className = 'reference-disclosure-body';
+
+      first.parentNode.insertBefore(disclosure, first);
+      disclosure.appendChild(summary);
+      disclosure.appendChild(body);
+      items.forEach(function (item) { body.appendChild(item); });
+    });
+
+    function openDisclosureForHash() {
+      if (!window.location.hash) return;
+      let target;
+      try {
+        target = document.querySelector(window.location.hash);
+      } catch (error) {
+        return;
+      }
+      const disclosure = target && target.closest('details.reference-disclosure');
+      if (disclosure) disclosure.open = true;
+    }
+
+    window.addEventListener('hashchange', openDisclosureForHash);
+    openDisclosureForHash();
+  }
+
+  enhanceCompactPortal();
+
   function enhanceAlphaTesterApplication() {
     const form = document.querySelector('[data-alpha-tester-form]');
     if (!form) return;

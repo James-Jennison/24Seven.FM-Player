@@ -2,34 +2,42 @@ navigation:
   - section: overview
     label: Overview
     path: /
+    primary: true
     description: Product overview, current program, screenshots, and project entry points.
   - section: features
-    label: Features
+    label: Product
     path: /features/
+    primary: true
     description: Playback, discovery, accounts, community, stations, and boundaries.
   - section: development
-    label: Development
+    label: Engineering
     path: /development/
+    primary: true
     description: Native architecture, engineering principles, workflow, and source map.
   - section: testing
-    label: Testing
+    label: Quality
     path: /testing/
+    primary: true
     description: Automated, emulator, physical-device, accessibility, and release evidence.
   - section: product-testing
-    label: Test the Player
+    label: Tester Hub
     path: /product-testing/
+    primary: true
     description: Searchable acceptance catalog with private browser-local progress.
   - section: roadmap
     label: Roadmap
     path: /roadmap/
+    primary: true
     description: Canonical M01–M60 milestones, dependencies, evidence, and future scope.
   - section: resources
     label: Resources
     path: /resources/
+    primary: false
     description: Searchable architecture, research, testing, release, and contributor library.
   - section: privacy
     label: Privacy
     path: /privacy/
+    primary: false
     description: Canonical app privacy notice with plain-language data boundaries.
 
 site_meta:

@@ -5,25 +5,19 @@ description: An unofficial, community-built native Android player for five 24sev
 permalink: /
 section: overview
 ---
-<section class="hero" aria-labelledby="hero-title">
+<section class="hero overview-hero" aria-labelledby="hero-title">
   <div class="hero-copy">
-    <p class="eyebrow">Native Android · Alpha</p>
+    <p class="eyebrow">Native Android · Closed Alpha</p>
     <h1 id="hero-title">Five stations.<br><span>One native player.</span></h1>
-    <p class="hero-lede">A responsive, community-built Android experience for StreamingSoundtracks.com, 1980s.FM, Adagio.FM, Death.FM, and Entranced.FM.</p>
+    <p class="hero-lede">A focused Android listening experience for StreamingSoundtracks.com, 1980s.FM, Adagio.FM, Death.FM, and Entranced.FM.</p>
     <div class="actions">
-      <a class="button primary" href="{{ site.github_url }}">Explore the source</a>
-      <a class="button secondary" href="{{ '/roadmap/' | relative_url }}">View the roadmap</a>
+      <a class="button primary" href="{{ '/features/' | relative_url }}">Explore the product</a>
+      <a class="button secondary" href="{{ '/product-testing/' | relative_url }}">Visit the Tester Hub</a>
     </div>
-    <ul class="tech-list" aria-label="Core technologies">
-      <li>Kotlin</li>
-      <li>Jetpack Compose</li>
-      <li>Media3</li>
-      <li>No WebView</li>
-    </ul>
-    <a class="hero-status" href="#google-play-status">
+    <a class="hero-status" href="#release-status">
       <span class="live-dot" aria-hidden="true"></span>
       <span><small>{{ site.data.project.play_status.label }}</small><strong>{{ site.data.project.play_status.headline }}</strong></span>
-      <span>View status <span aria-hidden="true">→</span></span>
+      <span>Release status <span aria-hidden="true">→</span></span>
     </a>
   </div>
   <div class="hero-art" aria-hidden="true">
@@ -32,21 +26,8 @@ section: overview
   </div>
 </section>
 
-<section class="section" id="google-play-status" aria-labelledby="google-play-status-title">
-  <div class="roadmap-callout migration-callout">
-    <div>
-      <p class="eyebrow">{{ site.data.project.play_status.label }}</p>
-      <h2 id="google-play-status-title">{{ site.data.project.play_status.headline }}</h2>
-    </div>
-    <div>
-      <p>{{ site.data.project.play_status.detail }}</p>
-      <div class="actions"><a class="button secondary" href="{{ '/roadmap/' | relative_url }}#alpha">View release roadmap</a></div>
-    </div>
-  </div>
-</section>
-
 <section class="station-strip" aria-labelledby="stations-title">
-  <h2 id="stations-title">The network in your pocket</h2>
+  <h2 id="stations-title">Built for the full 24Seven.FM network</h2>
   <ul>
     <li>StreamingSoundtracks.com</li>
     <li>1980s.FM</li>
@@ -56,117 +37,58 @@ section: overview
   </ul>
 </section>
 
-<section class="section" aria-labelledby="built-title">
-  <div class="section-heading">
-    <p class="eyebrow">Built for listening</p>
-    <h2 id="built-title">More than a stream button</h2>
-    <p>The Alpha brings the network's live listening and community workflows into an adaptive Android interface, while keeping station-specific behavior behind clear capability boundaries.</p>
+<section class="section overview-brief" aria-labelledby="choose-title">
+  <div class="section-heading split-heading compact-heading">
+    <div>
+      <p class="eyebrow">Choose your path</p>
+      <h2 id="choose-title">A clearer project portal</h2>
+    </div>
+    <p>Product information, engineering evidence, and Closed Alpha participation each have their own place.</p>
   </div>
-  <div class="feature-grid">
-    <article>
-      <span class="feature-number">01</span>
-      <h3>Playback that follows you</h3>
-      <p>Service-owned Media3 playback, system media controls, audio focus, notification-to-app navigation, and automatic recovery after validated connectivity returns.</p>
-    </article>
-    <article>
-      <span class="feature-number">02</span>
-      <h3>Live station context</h3>
-      <p>Now-playing metadata and artwork, bounded Queue and History views, five-station switching, and station-scoped request availability.</p>
-    </article>
-    <article>
-      <span class="feature-number">03</span>
-      <h3>Member workflows</h3>
-      <p>Independent protected station sessions, chat, song requests, request history, membership details, and responsive 1,500-track Favorites lists.</p>
-    </article>
-    <article>
-      <span class="feature-number">04</span>
-      <h3>Community safeguards</h3>
-      <p>Adult and Terms gates, mature-content reveal, report-content and report-user flows, plus local station-scoped blocking and management.</p>
-    </article>
+  <div class="brief-grid">
+    <a class="brief-card" href="{{ '/features/' | relative_url }}"><span>Product</span><strong>What the player does</strong><small>Playback, station data, accounts, community, and safeguards.</small><b>Explore product →</b></a>
+    <a class="brief-card" href="{{ '/development/' | relative_url }}"><span>Engineering</span><strong>How it is built</strong><small>Native Android architecture, capability boundaries, and source map.</small><b>See engineering →</b></a>
+    <a class="brief-card" href="{{ '/testing/' | relative_url }}"><span>Quality</span><strong>How it is verified</strong><small>Automated, device, accessibility, and release evidence.</small><b>Review quality →</b></a>
+    <a class="brief-card accent-card" href="{{ '/product-testing/' | relative_url }}"><span>Closed Alpha</span><strong>Join or manage testing</strong><small>Applications, tester sign-in, focused assignments, and task reports.</small><b>Open Tester Hub →</b></a>
   </div>
 </section>
 
-<section class="section portal-map" aria-labelledby="portal-title">
-  <div class="section-heading">
-    <p class="eyebrow">Inside the project</p>
-    <h2 id="portal-title">Follow the product and the process</h2>
-    <p>This portal connects the user experience to the architecture, validation evidence, milestone history, and release work behind it.</p>
+<section class="section product-proof" aria-labelledby="product-title">
+  <div class="section-heading compact-heading">
+    <p class="eyebrow">Designed for listening</p>
+    <h2 id="product-title">Native where it matters</h2>
+    <p>One adaptive Android shell keeps listening, station context, and safe community workflows coherent across phones, foldables, and tablets.</p>
   </div>
-  <div class="portal-grid">
-    <a href="{{ '/features/' | relative_url }}"><span>Product</span><strong>Explore every major Alpha capability</strong><small>Playback, station data, accounts, requests, community, and safeguards</small></a>
-    <a href="{{ '/development/' | relative_url }}"><span>Engineering</span><strong>See how the native app is built</strong><small>Architecture, repository boundaries, workflow, and source map</small></a>
-    <a href="{{ '/testing/' | relative_url }}"><span>Quality</span><strong>Read the validation evidence</strong><small>Automated tests, emulator matrix, Razr testing, and release checks</small></a>
-    <a href="{{ '/product-testing/' | relative_url }}"><span>Testers</span><strong>Run a product test and report the result</strong><small>Guided smoke, feature, device, and accessibility sessions with structured public reporting</small></a>
-    <a href="{{ '/roadmap/' | relative_url }}"><span>Progress</span><strong>Trace the complete M01–M60 journey</strong><small>36 verified achievements, internal-test review in progress, a production path, and bounded future scope</small></a>
-    <a href="{{ '/resources/' | relative_url }}"><span>Reference</span><strong>Browse the curated evidence library</strong><small>Architecture, station certifications, release notes, and contributor guides</small></a>
+  <div class="feature-grid compact-feature-grid">
+    <article><span class="feature-number">01</span><h3>Continuous playback</h3><p>Service-owned Media3 playback, system controls, audio focus, and recovery after validated connectivity returns.</p></article>
+    <article><span class="feature-number">02</span><h3>Five-station context</h3><p>Station switching, truthful metadata, Queue and History, and station-scoped behavior without invented capability.</p></article>
+    <article><span class="feature-number">03</span><h3>Protected member features</h3><p>Independent station sessions, Favorites, Chat, requests, and explicit boundaries around every account workflow.</p></article>
   </div>
 </section>
 
-<section class="showcase section" aria-labelledby="showcase-title">
-  <div class="section-heading">
-    <p class="eyebrow">Adaptive by design</p>
-    <h2 id="showcase-title">Phone, foldable, and tablet ready</h2>
-    <p>Compact, medium, and expanded layouts are exercised across emulator and physical-device states, including a complete Motorola Razr hinge cycle.</p>
+<section class="section program-status" id="release-status" aria-labelledby="status-title">
+  <div>
+    <p class="eyebrow">Current program</p>
+    <h2 id="status-title">{{ site.data.project.play_status.headline }}</h2>
+    <p>{{ site.data.project.play_status.detail }}</p>
+    <div class="actions"><a class="button secondary" href="{{ '/roadmap/' | relative_url }}#alpha">View release roadmap</a></div>
   </div>
-  <div class="device-gallery">
-    <figure class="phone-shot">
-      <a class="gallery-open" href="{{ '/assets/project/screenshots/player.png' | relative_url }}" data-lightbox="{{ '/assets/project/screenshots/player.png' | relative_url }}" data-lightbox-alt="Player screen showing live track artwork, metadata, station carousel, and playback controls" data-lightbox-caption="Live Player · Artwork, metadata, stations, and playback" aria-label="Open larger Live Player screenshot">
-        <img src="{{ '/assets/project/screenshots/player.png' | relative_url }}" alt="Player screen showing live track artwork, metadata, station carousel, and playback controls" width="1080" height="1920" loading="lazy" decoding="async">
-      </a>
-      <figcaption><strong>Live Player</strong><span>Artwork, metadata, stations, and playback</span></figcaption>
-    </figure>
-    <figure class="phone-shot offset">
-      <a class="gallery-open" href="{{ '/assets/project/screenshots/queue.png' | relative_url }}" data-lightbox="{{ '/assets/project/screenshots/queue.png' | relative_url }}" data-lightbox-alt="Queue screen showing upcoming tracks and persistent playback controls" data-lightbox-caption="Queue · Upcoming station tracks at a glance" aria-label="Open larger Queue screenshot">
-        <img src="{{ '/assets/project/screenshots/queue.png' | relative_url }}" alt="Queue screen showing upcoming tracks and persistent playback controls" width="1080" height="1920" loading="lazy" decoding="async">
-      </a>
-      <figcaption><strong>Queue</strong><span>Upcoming station tracks at a glance</span></figcaption>
-    </figure>
-  </div>
-</section>
-
-<section class="metrics section" aria-labelledby="quality-title">
-  <div class="section-heading">
-    <p class="eyebrow">Evidence before claims</p>
-    <h2 id="quality-title">A tested Alpha</h2>
-  </div>
-  <dl>
-    <div><dt>36</dt><dd>achieved milestone checkpoints</dd></div>
-    <div><dt>163</dt><dd>unit tests passing</dd></div>
-    <div><dt>20/20</dt><dd>M32 Razr security regressions</dd></div>
+  <dl class="compact-metrics" aria-label="Recorded validation evidence at a glance">
+    <div><dt>36</dt><dd>documented checkpoints</dd></div>
+    <div><dt>163</dt><dd>recorded unit tests</dd></div>
+    <div><dt>20/20</dt><dd>recorded Razr regressions</dd></div>
     <div><dt>5</dt><dd>certified station integrations</dd></div>
   </dl>
-  <p class="coverage">Validated across API 26 through API 36, a 16 KB runtime, Pixel Fold and Tablet emulator states, accessibility enlargement, network loss/recovery, and a physical Razr hinge cycle.</p>
-</section>
-
-<section class="section roadmap" aria-labelledby="roadmap-title">
-  <div class="section-heading split-heading">
-    <div>
-      <p class="eyebrow">Toward Google Play testing</p>
-      <h2 id="roadmap-title">Roadmap checkpoint</h2>
-    </div>
-    <a class="text-link" href="{{ '/roadmap/' | relative_url }}">Explore the full roadmap <span aria-hidden="true">→</span></a>
-  </div>
-  {% assign alpha_readiness = site.data.project.roadmap | where: "phase", "alpha-readiness" %}
-  <div class="roadmap-grid">
-    {% for item in alpha_readiness %}
-    <article class="roadmap-card {{ item.state }}">
-      <p class="status"><span></span>{{ item.state_label }}</p>
-      <h3>{{ item.id }} · {{ item.name }}</h3>
-      <p>{{ item.summary }}</p>
-    </article>
-    {% endfor %}
-  </div>
-  <p class="roadmap-note">This dated checkpoint separates verified achievements, external gates, and planned work without presenting internal forecasts as public release promises. M01–M35 and M39 preserve 36 verified achievements. M40 is in Google Play internal-test review; closed-app notifications remain separately gated by M36–M38, and production readiness is M42–M45.</p>
 </section>
 
 <section class="cta" aria-labelledby="cta-title">
   <div>
     <p class="eyebrow">Follow the build</p>
-    <h2 id="cta-title">Development is open.</h2>
-    <p>Review the implementation, milestone evidence, and active release gates on GitHub.</p>
+    <h2 id="cta-title">Start with what you need.</h2>
+    <p>Explore the public project, review its evidence, or step into the Closed Alpha workflow.</p>
   </div>
   <div class="actions">
-    <a class="button primary" href="{{ site.github_url }}">GitHub repository</a>
-    <a class="button secondary" href="{{ '/resources/' | relative_url }}">Browse project resources</a>
+    <a class="button primary" href="{{ '/product-testing/' | relative_url }}">Closed Alpha Tester Hub</a>
+    <a class="button secondary" href="{{ '/resources/' | relative_url }}">Project resources</a>
   </div>
 </section>
