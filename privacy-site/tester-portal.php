@@ -217,10 +217,14 @@ function portalRequestLink(PDO $database, array $config): void
     $expires = gmdate('c', time() + PORTAL_TOKEN_TTL_SECONDS);
     $database->prepare('DELETE FROM tester_portal_tokens WHERE expires_at < ? OR consumed_at IS NOT NULL')->execute([$now]);
     $database->prepare('INSERT INTO tester_portal_tokens(tester_id, token_hash, requested_at, expires_at) VALUES (?, ?, ?, ?)')->execute([(int) $tester['id'], portalTokenHash($raw), $now, $expires]);
+    $tokenId = (int) $database->lastInsertId();
     $link = TESTER_PORTAL_URL . '?token=' . rawurlencode($raw);
     $plain = "Hi {$tester['display_name']},\n\nUse this one-time link to open your 24Seven.FM Player tester portal:\n{$link}\n\nIt expires in 30 minutes. If you did not request it, you can ignore this message.\n\n24Seven.FM Player Testing Team";
     $html = '<p>Hi ' . e($tester['display_name']) . ',</p><p>Use this one-time link to open your <strong>24Seven.FM Player</strong> tester portal:</p><p><a href="' . e($link) . '">Open my tester portal</a></p><p>This link expires in 30 minutes. If you did not request it, you can ignore this message.</p><p>24Seven.FM Player Testing Team</p>';
-    sendIndividualMail($config, $tester['email'], 'Your 24Seven.FM Player tester portal sign-in link', $plain, $html);
+    if (!sendIndividualMail($config, $tester['email'], 'Your 24Seven.FM Player tester portal sign-in link', $plain, $html)) {
+        $database->prepare('DELETE FROM tester_portal_tokens WHERE id = ?')->execute([$tokenId]);
+        throw new InvalidArgumentException('We could not send a sign-in link. Please try again later.');
+    }
     portalRedirect('?notice=' . rawurlencode($generic));
 }
 

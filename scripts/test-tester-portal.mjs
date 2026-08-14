@@ -36,6 +36,8 @@ assert(portal.includes("name=\"experience\""), "Tester profile must allow a test
 assert(portal.includes("Email changes are reviewed by the coordinator"), "Tester email must remain a reviewed identity change.");
 assert(portal.includes("TESTER_PORTAL_TURNSTILE_ACTION"), "Magic-link requests must be protected by Turnstile.");
 assert(portal.includes("portalVerifyTurnstile($turnstileToken"), "Turnstile must be verified before a magic link is sent.");
+assert(portal.includes("We could not send a sign-in link. Please try again later."), "Portal link requests must report a failed transport instead of claiming delivery.");
+assert(portal.includes("DELETE FROM tester_portal_tokens WHERE id = ?"), "A failed portal-link delivery must remove its unusable token.");
 assert(portal.includes("function portalAdminPreviewTesterId"), "The coordinator must have an authenticated tester-view preview path.");
 assert(portal.includes("($_SESSION['authenticated'] ?? false) === true"), "Tester previews must require the coordinator session.");
 assert(portal.includes("Tester previews are read-only."), "Tester previews must reject state-changing requests.");
