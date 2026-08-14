@@ -48,4 +48,24 @@ assertion(str_contains($message, 'Content-Type: text/plain; charset=UTF-8'), 'Pl
 assertion(str_contains($message, 'Content-Type: text/html; charset=UTF-8'), 'Rich HTML MIME part is missing.');
 assertion(str_contains(base64_decode(base64MimePart($plainText), true) ?: '', 'We’re'), 'UTF-8 text must survive MIME encoding.');
 
+$archivePath = tempnam(sys_get_temp_dir(), 'tester-mail-archive-');
+if ($archivePath === false) {
+    throw new RuntimeException('Unable to create a temporary mail-archive database.');
+}
+try {
+    $database = database(['database_path' => $archivePath]);
+    $database->prepare("INSERT INTO testers(source_message_uid, received_at, display_name, email, device, android_version, interests_json, status, imported_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?)")
+        ->execute(['archive-test', '2026-08-14T00:00:00Z', 'Archive Test', 'archive@example.test', 'Test Device', '16', '[]', '2026-08-14T00:00:00Z']);
+    $archiveId = prepareMailArchive($database, 1, 'orientation', 'Welcome', 'Plain archive body', '<p>HTML archive body</p>');
+    completeMailArchive($database, $archiveId, true);
+    $archive = $database->query('SELECT message_type, subject, body, body_html, handoff_status, attempted_at FROM tester_mail_archive WHERE id = 1')->fetch();
+    assertion(is_array($archive) && $archive['message_type'] === 'orientation', 'Coordinator mail archive must retain its message type.');
+    assertion(($archive['subject'] ?? '') === 'Welcome' && ($archive['body'] ?? '') === 'Plain archive body', 'Coordinator mail archive must retain the exact plain-text message.');
+    assertion(($archive['body_html'] ?? '') === '<p>HTML archive body</p>', 'Coordinator mail archive must retain the exact HTML message.');
+    assertion(($archive['handoff_status'] ?? '') === 'accepted' && is_string($archive['attempted_at'] ?? null), 'Coordinator mail archive must record the transport outcome.');
+} finally {
+    unset($database);
+    @unlink($archivePath);
+}
+
 echo 'Private Tester Queue email encoding contract: valid' . (class_exists('DOMDocument') ? '.' : ' (DOM extension unavailable in local PHP; parser declaration statically verified).') . "\n";
