@@ -142,6 +142,42 @@
 (function () {
   'use strict';
 
+  var search = document.querySelector('[data-roster-search]');
+  var rows = Array.prototype.slice.call(document.querySelectorAll('[data-roster-row]'));
+  var filters = Array.prototype.slice.call(document.querySelectorAll('[data-roster-filter]'));
+  var count = document.querySelector('[data-roster-count]');
+  if (!rows.length) return;
+  var stage = new URLSearchParams(window.location.search).get('stage') || 'all';
+
+  function applyRosterFilter() {
+    var term = (search && search.value || '').trim().toLowerCase();
+    var visible = 0;
+    rows.forEach(function (row) {
+      var matchesStage = stage === 'all' || row.dataset.stage === stage;
+      var matchesSearch = !term || (row.dataset.search || '').indexOf(term) !== -1;
+      var show = matchesStage && matchesSearch;
+      row.hidden = !show;
+      if (show) visible += 1;
+    });
+    if (count) count.textContent = visible + ' tester' + (visible === 1 ? '' : 's') + ' shown';
+    filters.forEach(function (button) {
+      button.setAttribute('aria-pressed', String(button.dataset.rosterFilter === stage));
+    });
+  }
+
+  filters.forEach(function (button) {
+    button.addEventListener('click', function () {
+      stage = button.dataset.rosterFilter || 'all';
+      applyRosterFilter();
+    });
+  });
+  if (search) search.addEventListener('input', applyRosterFilter);
+  applyRosterFilter();
+}());
+
+(function () {
+  'use strict';
+
   var registryElement = document.getElementById('tester-task-registry');
   if (!registryElement) return;
   var tasks;
@@ -183,11 +219,14 @@
       var detail = task.state === 'future' && task.blockReason
         ? '<p><strong>Future / Blocked:</strong> ' + task.blockReason + '</p>'
         : '';
+      var mode = task.mutation && task.mutation.mode;
+      var controlledAction = mode === 'none'
+        ? '<p><strong>Controlled action:</strong> Not part of this testing task.</p>'
+        : '<p><strong>Controlled action:</strong> ' + (task.mutation && task.mutation.label ? task.mutation.label : 'Explicit authorization required.') + '</p>';
       preview.innerHTML = '<p><strong>' + task.id + ' — ' + task.title + '</strong></p>' +
         '<p><strong>PT cases:</strong> ' + task.ptIds.join(', ') + '</p>' +
         '<p><strong>Prerequisites:</strong> ' + task.prerequisites.join('; ') + '</p>' +
-        '<p class="warning"><strong>Safety:</strong> ' + task.safetyWarning + '</p>' + detail;
-      var mode = task.mutation && task.mutation.mode;
+        controlledAction + '<p class="warning"><strong>Safety:</strong> ' + task.safetyWarning + '</p>' + detail;
       authorization.hidden = mode !== 'required' && mode !== 'optional';
       var checkbox = authorization.querySelector('input');
       if (checkbox) {
