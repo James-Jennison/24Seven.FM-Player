@@ -21,9 +21,17 @@ Before invoking an external tool, app, connector, MCP server, browser, Computer 
 
 ## PROJECT HARD RULE: browser and desktop workflow
 
-The Codex in-app-browser skill/path and in-app browser control are prohibited for this Player project, including substitute browser mechanisms used to evade that rule. When browser interaction is actually required, use only the required desktop Computer Use path: begin with a read-only desktop-state check, enumerate windows, focus the exact intended browser/window, and verify the active page. Never assume a tab, page, account, login state, location, or remote target. Browser mutations require explicit approval. Never retrieve or display secrets; the owner enters them directly.
+For ordinary authorized browser navigation or rendered-page verification, use the
+native Codex browser route when the active desktop surface exposes it. Use Computer Use only when the task
+actually requires desktop/window/UI interaction: begin with a read-only desktop
+state check, enumerate windows, focus the exact intended window, and verify the
+active page. Do not substitute native browser, Browser Agent, `node_repl`,
+Computer Use, or shell networking to evade a restriction on another route.
 
-The trusted Player `.codex/config.toml` disables the verified `in_app_browser` feature and the configured `node_repl` browser path while retaining the separate `computer-use` capability. This project-local control is not equivalent to owner-managed enforcement against deliberate CLI/config override.
+Never assume a tab, page, account, login state, location, or remote target.
+Browser mutations require explicit approval. Never retrieve or display secrets;
+the owner enters them directly. Use `openaiDeveloperDocs`, rather than a
+browser, for official OpenAI/Codex documentation.
 
 ## PROJECT HARD RULE: GMAIL PROHIBITED
 
@@ -41,7 +49,7 @@ After this hardening milestone, Codex may not weaken, remove, relocate, bypass, 
 
 ## PROJECT APPROVAL GATE: production, SSH, release, and external mutation
 
-For Player-site deployment, verification, or server investigation use only `website-vm-admin`; never use `webuzo-production-admin`. Resolve the canonical alias through `/home/jjennison/.ssh/config`; never use raw hosts/IPs, guessed identities, or manually substituted keys. Before production work, state loaded guidance and stricter rules. Discover both active HTTP and HTTPS Player virtual-host mappings and require the same active directory; never trust a historical path. Build `_site/` locally, stage it as a sibling, compare relative-path hashes, atomically swap only the verified artifact, preserve rollback, and perform public HTTPS verification. No production mutation without fresh, action-specific owner approval. This milestone does not authorize production or SSH access.
+For Player-site deployment, verification, or server investigation use only `website-vm-admin`. The mail/Webuzo role (`mail-vm-admin`, with `webuzo-production-admin` retained only as deprecated compatibility) must not be substituted as the Player website origin. Resolve the canonical alias through `/home/jjennison/.ssh/config`; never use raw hosts/IPs, guessed identities, or manually substituted keys. Before production work, state loaded guidance and stricter rules. Discover both active HTTP and HTTPS Player virtual-host mappings and require the same active directory; never trust a historical path. Build `_site/` locally, stage it as a sibling, compare relative-path hashes, atomically swap only the verified artifact, preserve rollback, and perform public HTTPS verification. No production mutation without fresh, action-specific owner approval. This milestone does not authorize production or SSH access.
 
 Push, release publication, deployment, production service changes, migrations, operational-data changes, and monitoring-authority changes each require fresh, action-specific owner approval. Local commits remain autonomous only where the established repository workflow permits them.
 

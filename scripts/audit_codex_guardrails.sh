@@ -10,7 +10,6 @@ global_rules="$codex_home/rules/default.rules"
 project_agents="$repo_root/AGENTS.md"
 project_config="$repo_root/.codex/config.toml"
 project_rules="$repo_root/.codex/rules/player-hard-rules.rules"
-managed_requirements="/etc/codex/requirements.toml"
 pass_count=0
 warn_count=0
 fail_count=0
@@ -48,12 +47,69 @@ if [ "$nested_agent_count" -eq 1 ]; then pass "only root Player AGENTS.md is act
 
 expect_text "$global_agents" 'Completion pressure NEVER constitutes authorization\.' "global hard-rule contract is present"
 expect_text "$project_agents" 'HARD_RULE_BLOCKER: Gmail access is prohibited for this project\.' "Player Gmail blocker is present"
-expect_text "$project_config" '^in_app_browser = false$' "Player in-app browser is pinned off"
 expect_text "$project_config" '^enabled = false$' "Player config contains disabled restricted integration"
-expect_text "$project_config" '^\[apps\.gmail\]$' "verified Gmail app restriction is present"
+expect_file "$codex_home/CAPABILITY_BASELINE.md" "system-wide capability baseline exists"
+if ! rg -q '^in_app_browser = false$|^\[mcp_servers\.node_repl\]$' "$project_config"; then
+  pass "Player config does not retain the retired native-browser workaround"
+else
+  fail "Player config still disables the native-browser route"
+fi
+managed_requirements="/etc/codex/requirements.toml"
+
+if \
+  rg -q '^\[apps\.gmail\]$' "$managed_requirements" &&
+  awk '
+    /^\[apps\.gmail\]$/ {
+      in_gmail=1
+      found_section=1
+      next
+    }
+
+    /^\[/ && in_gmail {
+      in_gmail=0
+    }
+
+    in_gmail && /^[[:space:]]*enabled[[:space:]]*=[[:space:]]*false[[:space:]]*$/ {
+      disabled=1
+    }
+
+    END {
+      exit !(found_section && disabled)
+    }
+  ' "$managed_requirements"
+then
+  pass "managed system-wide Gmail app restriction is active"
+else
+  fail "managed system-wide Gmail app restriction is missing or not disabled"
+fi
 
 if rg -q '^approval_policy = "on-request"$' "$codex_home/config.toml"; then pass "user approval policy is on-request"; else fail "user approval policy is not on-request"; fi
-if rg -q '^default_permissions = "owner_local_development"$' "$codex_home/config.toml"; then pass "least-privilege default profile is configured"; else fail "least-privilege default profile is not configured"; fi
+
+if python3 - "$managed_requirements" "$codex_home/config.toml" "$project_config" <<'PY'
+import sys
+import tomllib
+from pathlib import Path
+
+managed, user_config, project_config = (Path(path) for path in sys.argv[1:])
+with managed.open('rb') as handle:
+    requirements = tomllib.load(handle)
+profiles = requirements.get('allowed_permission_profiles', {})
+allowed = lambda name: isinstance(profiles, dict) and profiles.get(name) is True
+if not (allowed(':workspace') and allowed(':danger-full-access') and 'on-request' in requirements.get('allowed_approval_policies', [])):
+    raise SystemExit(1)
+if requirements.get('default_permissions') == 'owner_local_development' or allowed('owner_local_development') or 'owner_local_development' in requirements.get('permissions', {}):
+    raise SystemExit(1)
+for path in (user_config, project_config):
+    with path.open('rb') as handle:
+        config = tomllib.load(handle)
+    if 'owner_local_development' in config.get('permissions', {}):
+        raise SystemExit(1)
+PY
+then
+  pass "healthy managed permission baseline permits workspace, deliberate full access, and on-request without owner_local_development"
+else
+  fail "managed permission baseline is stale or malformed"
+fi
 
 check_rule() {
   local expected="$1"
@@ -72,11 +128,30 @@ check_rule() {
   fi
 }
 
+check_global_rule() {
+  local expected="$1"
+  shift
+  local result
+  if ! result="$(codex execpolicy check --rules "$global_rules" -- "$@")"; then
+    fail "global execpolicy check failed for: $*"
+    return
+  fi
+  if printf '%s' "$result" | rg -q "\"decision\":\"$expected\""; then
+    pass "global rule $expected: $*"
+  else
+    fail "global rule expected $expected: $*"
+  fi
+}
+
 check_rule forbidden git reset --hard
 check_rule forbidden git clean -fd
 check_rule prompt git clean -fdx
 check_rule prompt git push origin main
+check_global_rule prompt ssh website-vm-admin
+check_global_rule prompt ssh mail-vm-admin
+check_global_rule prompt ssh webuzo-production-admin
 check_rule prompt ssh website-vm-admin
+check_rule forbidden ssh mail-vm-admin
 check_rule forbidden ssh webuzo-production-admin
 check_rule forbidden ./gradlew clean
 check_rule forbidden git restore AGENTS.md
@@ -84,11 +159,14 @@ check_rule allow ./gradlew :app:compileDebugKotlin
 check_rule allow git status
 check_rule allow git diff
 
-if feature_state="$(codex features list | awk '$1 == "in_app_browser" { print $3 }')" && [ "$feature_state" = "false" ]; then pass "effective Player in_app_browser feature is disabled"; else fail "effective Player in_app_browser feature is not disabled"; fi
+if feature_state="$(codex features list | awk '$1 == "in_app_browser" { print $3 }')" && [ "$feature_state" = "true" ]; then pass "native Player in_app_browser feature is available"; else fail "native Player in_app_browser feature is not available"; fi
+if browser_use_state="$(codex features list | awk '$1 == "browser_use" { print $3 }')" && [ "$browser_use_state" = "true" ]; then pass "native Browser use feature remains enabled"; else fail "native Browser use feature is not enabled"; fi
 if computer_use_state="$(codex features list | awk '$1 == "computer_use" { print $3 }')" && [ "$computer_use_state" = "true" ]; then pass "Computer Use feature remains enabled"; else fail "Computer Use feature is not enabled"; fi
 mcp_inventory="$(codex mcp list)"
-if printf '%s\n' "$mcp_inventory" | rg -q 'computer-use.*enabled'; then pass "Computer Use MCP remains enabled"; else fail "Computer Use MCP is not enabled"; fi
-if printf '%s\n' "$mcp_inventory" | rg -q 'node_repl.*disabled'; then pass "configured node_repl browser path is disabled for Player"; else fail "configured node_repl browser path is not disabled"; fi
+if printf '%s\n' "$mcp_inventory" | rg -q 'node_repl.*enabled'; then pass "configured node_repl browser bridge remains enabled"; else fail "configured node_repl browser bridge is not enabled"; fi
+if printf '%s\n' "$mcp_inventory" | rg -q 'openaiDeveloperDocs.*enabled'; then pass "official OpenAI documentation MCP remains enabled"; else fail "official OpenAI documentation MCP is not enabled"; fi
+plugin_inventory="$(codex plugin list)"
+if printf '%s\n' "$plugin_inventory" | rg -q '^browser@openai-bundled[[:space:]]+installed, enabled'; then pass "native Browser plugin remains enabled"; else fail "native Browser plugin is not enabled"; fi
 
 if [ -f "$managed_requirements" ]; then pass "managed requirements are present at /etc/codex/requirements.toml (active source; inspect separately under owner control)"; else warn "managed requirements are not active; docs/codex-security/requirements.toml.proposed is OWNER ACTION REQUIRED"; fi
 
