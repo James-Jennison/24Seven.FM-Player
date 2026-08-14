@@ -30,6 +30,6 @@ reviewer accounts.
 ## Completion boundary
 
 This closes M30's rights gate for the five named stations and the documented Player/Google Play/Closed Alpha uses. It
-does not resolve M29's separate Data Safety, retention/deletion, exact-candidate, reviewer-access, or Play Console
-completion gates. It also does not authorize any future commerce, stream redistribution, Google Cast, or unreviewed
+does not resolve M29's separate exact-candidate, reviewer-access, or Play Console completion gates. It also does not
+authorize any future commerce, stream redistribution, Google Cast, or unreviewed
 station capability.

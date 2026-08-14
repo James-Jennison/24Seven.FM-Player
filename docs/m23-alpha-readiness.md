@@ -67,16 +67,16 @@ as already complete.
 - Google Play accepts target API 35 on July 15, 2026 but requires API 36 for new apps and updates beginning August 31, 2026. M22 therefore migrates before the closed-test/update window instead of treating API 35 as the final Alpha target.
 - The July 18 exact-artifact Data Safety worksheet is recorded in `docs/m23-data-safety.md`; it covers optional
   account/community/request data, explicit external-app handoffs, source-IP handling, local-only state, HTTPS user-data
-  paths, and the public unauthenticated stream boundary. Final answers remain gated on active Console wording and
-  station retention, processor, deletion, and IP-use facts.
+  paths, and the public unauthenticated stream boundary. The adopted network-wide retention, processor, deletion, and
+  IP-use policy is documented; final answers remain gated on active Console wording and exact-candidate evidence.
 - The non-secret M29 declaration packet now contains the release manifest/dependency/data-flow audit, a field-by-field
   Console decision ledger, five-station reviewer instructions, account-creation/deletion boundary, audience/content/UGC
   classification, conditional Child Safety Standards gate, copy-ready media-playback text, and exact video shot list.
   PT-35 is the corresponding coordinator acceptance case.
 - A credential-free M29 media-playback video rehearsal passed frame inspection on the API 35 Pixel Tablet: start,
   buffering/playback, Home, expanded media notification, notification-body return, pause, resume, and stop are visible.
-  It remains an uncommitted debug-build rehearsal; the final hosted video must use the protected signed candidate after
-  M30 closes and the intended artifact is selected.
+  It remains an uncommitted debug-build rehearsal; the final hosted video must use the protected signed candidate and
+  the intended artifact selection.
 - The non-secret `m23-owner-response-packet.md` records sanitized completion of the M28 handoff and provides a
   rights/stream/distribution request, station retention/deletion/IP table, reviewer-account confirmation, and the
   evidence required before Private Messaging research can resume. No private response, credential, or rights evidence

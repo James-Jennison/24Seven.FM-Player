@@ -50,9 +50,10 @@ no account, payment, or personal data was entered during this audit.
 
 Google Play requires every developer to answer the Data Safety deletion questions. The additional in-app and web
 account-deletion paths apply when an app enables account creation. The M31 artifact does not create a station account
-or direct users to create one. Station registration, recovery, management, and deletion remain unavailable pending
-the separately authorized M57 program. This conclusion does not convert local Sign out into station-side deletion and
-does not resolve M29's operator retention/deletion facts.
+or direct users to create one. Station registration, recovery, management, and direct deletion routes remain unavailable
+pending the separately authorized M57 program. This conclusion does not convert local Sign out into station-side
+deletion. The separate M29 policy documents the verified station Contact/Feedback request path and station-side
+retention boundary.
 
 ## Implementation boundary
 
