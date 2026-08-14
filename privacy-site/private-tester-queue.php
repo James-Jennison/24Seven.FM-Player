@@ -511,34 +511,93 @@ function assignmentInput(array $tasks): array
 
 function assignmentMessage(array $task, array $assignment): string
 {
+    $taskUrl = 'https://player.jamesjennison.net/product-testing/?task=' . rawurlencode($task['id']);
+    $portalUrl = 'https://player.jamesjennison.net/tester-portal.php';
+    $scope = $assignment['station_scope'] !== '' ? $assignment['station_scope'] : 'Network-wide / not station-specific';
+    $configuration = $assignment['configuration_scope'] !== '' ? $assignment['configuration_scope'] : 'Use your registered testing device and configuration.';
     $lines = [
-        '24Seven.FM Player testing assignment',
-        $task['id'] . ' — ' . $task['title'],
-        'PT cases: ' . implode(', ', $task['ptIds']),
-        'Scope: ' . ($assignment['station_scope'] !== '' ? $assignment['station_scope'] : 'Network-wide / not station-specific'),
+        'YOUR NEXT 24SEVEN.FM PLAYER TEST',
+        '',
+        'Assignment: ' . $task['id'] . ' — ' . $task['title'],
+        'Goal: ' . $task['purpose'],
+        '',
+        'WHAT TO DO',
+        '',
+        '1. Open the task instructions:',
+        '   ' . $taskUrl,
+        '2. Complete PT case' . (count($task['ptIds']) === 1 ? '' : 's') . ': ' . implode(', ', $task['ptIds']) . '.',
+        '3. Use the assigned Play/Alpha build only and record whether the result passed, found an issue, or was blocked.',
+        '4. Sign in to the tester portal with your registered email and submit one task report:',
+        '   ' . $portalUrl,
+        '',
+        'YOUR ASSIGNED SCOPE',
+        '',
+        'Device/configuration: ' . $configuration,
+        'Station scope: ' . $scope,
+        'Prerequisites: ' . implode('; ', $task['prerequisites']),
     ];
-    if ($assignment['configuration_scope'] !== '') {
-        $lines[] = 'Configuration: ' . $assignment['configuration_scope'];
-    }
-    $lines[] = 'Prerequisites: ' . implode('; ', $task['prerequisites']);
     if (($task['mutation']['mode'] ?? 'none') !== 'none') {
         $lines[] = 'Controlled action: ' . $task['mutation']['label'];
     }
     if ((int) $assignment['mutation_authorized'] === 1) {
         $lines[] = 'Coordinator authorization: granted for the controlled subcase described above.';
     }
-    $lines[] = 'Safety: ' . $task['safetyWarning'];
+    $lines[] = '';
+    $lines[] = 'IMPORTANT';
+    $lines[] = '';
+    $lines[] = $task['safetyWarning'];
+    $lines[] = 'If you cannot start or the instructions do not match your setup, submit a Blocked report with a short explanation.';
     if ($assignment['coordinator_note'] !== '') {
+        $lines[] = '';
         $lines[] = 'Coordinator note: ' . $assignment['coordinator_note'];
     }
-    $lines[] = 'Task cases: https://player.jamesjennison.net/product-testing/?task=' . rawurlencode($task['id']);
-    $lines[] = 'Submit one result for each PT case.';
+    $lines[] = '';
+    $lines[] = '— James';
+    $lines[] = '24Seven.FM Player Testing Team';
     return implode("\n", $lines);
+}
+
+function assignmentHtml(array $task, array $assignment, string $displayName): string
+{
+    $taskUrl = 'https://player.jamesjennison.net/product-testing/?task=' . rawurlencode($task['id']);
+    $portalUrl = 'https://player.jamesjennison.net/tester-portal.php';
+    $scope = $assignment['station_scope'] !== '' ? $assignment['station_scope'] : 'Network-wide / not station-specific';
+    $configuration = $assignment['configuration_scope'] !== '' ? $assignment['configuration_scope'] : 'Use your registered testing device and configuration.';
+    $controlledAction = '';
+    if (($task['mutation']['mode'] ?? 'none') !== 'none') {
+        $controlledAction = '<li><strong>Controlled action:</strong> ' . e($task['mutation']['label']) . '</li>';
+    }
+    $authorization = (int) $assignment['mutation_authorized'] === 1
+        ? '<p><strong>Coordinator authorization:</strong> granted for the controlled subcase described above.</p>'
+        : '';
+    $note = $assignment['coordinator_note'] !== ''
+        ? '<p><strong>Coordinator note:</strong> ' . nl2br(e($assignment['coordinator_note']), false) . '</p>'
+        : '';
+    return '<p>Hi ' . e($displayName) . ',</p>'
+        . '<h2>Your next 24Seven.FM Player test</h2>'
+        . '<p><strong>Assignment:</strong> ' . e($task['id'] . ' — ' . $task['title']) . '<br><strong>Goal:</strong> ' . e($task['purpose']) . '</p>'
+        . '<h3>What to do</h3><ol>'
+        . '<li><a href="' . e($taskUrl) . '">Open the ' . e($task['id']) . ' task instructions</a>.</li>'
+        . '<li>Complete PT case' . (count($task['ptIds']) === 1 ? '' : 's') . ': ' . e(implode(', ', $task['ptIds'])) . '.</li>'
+        . '<li>Use the assigned Play/Alpha build only, then record whether the result passed, found an issue, or was blocked.</li>'
+        . '<li><a href="' . e($portalUrl) . '">Open the tester portal</a> with your registered email and submit one task report.</li>'
+        . '</ol>'
+        . '<h3>Your assigned scope</h3><ul>'
+        . '<li><strong>Device/configuration:</strong> ' . e($configuration) . '</li>'
+        . '<li><strong>Station scope:</strong> ' . e($scope) . '</li>'
+        . '<li><strong>Prerequisites:</strong> ' . e(implode('; ', $task['prerequisites'])) . '</li>'
+        . $controlledAction
+        . '</ul>'
+        . $authorization
+        . '<h3>Important</h3><p>' . e($task['safetyWarning']) . '</p>'
+        . '<p>If you cannot start or the instructions do not match your setup, submit a <strong>Blocked</strong> report with a short explanation.</p>'
+        . $note
+        . '<p>— James<br>24Seven.FM Player Testing Team</p>';
 }
 
 function assignmentEmailSubject(array $task): string
 {
-    return '24Seven.FM Player: ' . $task['id'] . ' assignment';
+    return 'Action required: ' . $task['id'] . ' — ' . $task['title'];
 }
 
 function sendAssignmentEmail(PDO $database, array $config, int $assignmentId): bool
@@ -556,7 +615,7 @@ function sendAssignmentEmail(PDO $database, array $config, int $assignmentId): b
     }
     $message = 'Hi ' . $assignment['display_name'] . ",\n\n" . assignmentMessage($task, $assignment);
     $subject = assignmentEmailSubject($task);
-    $html = plainTextToHtml($message);
+    $html = assignmentHtml($task, $assignment, (string) $assignment['display_name']);
     $archiveId = prepareMailArchive($database, (int) $assignment['tester_id'], 'assignment', $subject, $message, $html, null, $assignmentId);
     $accepted = sendIndividualMail($config, $assignment['email'], $subject, $message, $html);
     completeMailArchive($database, $archiveId, $accepted);

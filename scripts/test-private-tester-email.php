@@ -48,6 +48,29 @@ assertion(str_contains($message, 'Content-Type: text/plain; charset=UTF-8'), 'Pl
 assertion(str_contains($message, 'Content-Type: text/html; charset=UTF-8'), 'Rich HTML MIME part is missing.');
 assertion(str_contains(base64_decode(base64MimePart($plainText), true) ?: '', 'We’re'), 'UTF-8 text must survive MIME encoding.');
 
+$assignmentTask = [
+    'id' => 'TT-01',
+    'title' => 'Install, Update & First Launch',
+    'purpose' => 'Confirm the assigned Alpha build installs or updates cleanly and opens as expected.',
+    'ptIds' => ['PT-01'],
+    'prerequisites' => ['Assigned Play/Alpha build', 'Clean-install capability'],
+    'safetyWarning' => 'Record the assigned installation path; do not substitute an unapproved build.',
+    'mutation' => ['mode' => 'none', 'label' => 'Not part of this testing task.'],
+];
+$assignment = [
+    'station_scope' => '',
+    'configuration_scope' => 'Pixel 9 / Android 16',
+    'coordinator_note' => 'Please test the update path first.',
+    'mutation_authorized' => 0,
+];
+$assignmentPlain = assignmentMessage($assignmentTask, $assignment);
+$assignmentHtml = assignmentHtml($assignmentTask, $assignment, 'Archive Test');
+assertion(str_contains($assignmentPlain, 'WHAT TO DO'), 'Assignment email must provide a clear action section.');
+assertion(str_contains($assignmentPlain, 'tester-portal.php'), 'Assignment email must link testers to submit their report.');
+assertion(str_contains($assignmentPlain, "— James\n24Seven.FM Player Testing Team"), 'Assignment email must use the approved sign-off.');
+assertion(str_contains($assignmentHtml, '<ol>') && str_contains($assignmentHtml, 'Open the tester portal'), 'Assignment HTML must provide a numbered task flow and portal link.');
+assertion(str_contains(assignmentEmailSubject($assignmentTask), 'Action required:'), 'Assignment subject must communicate a required next step.');
+
 $archivePath = tempnam(sys_get_temp_dir(), 'tester-mail-archive-');
 if ($archivePath === false) {
     throw new RuntimeException('Unable to create a temporary mail-archive database.');
