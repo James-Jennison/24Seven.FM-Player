@@ -12,6 +12,16 @@ declare(strict_types=1);
 
 const QUEUE_CONFIG_FILE = '.private-tester-queue-config.php';
 const SESSION_NAME = 'player_tester_queue';
+const ADMIN_SESSION_IDLE_SECONDS = 1_800;
+const ADMIN_SESSION_MAX_SECONDS = 28_800;
+const ADMIN_LOGIN_MAX_PASSWORD_BYTES = 4_096;
+const ADMIN_LOGIN_NAME_MAX_LENGTH = 64;
+const ADMIN_LOGIN_FREE_FAILURES = 4;
+const ADMIN_LOGIN_MAX_LOCK_SECONDS = 3_600;
+const ADMIN_LOGIN_ORIGIN = 'https://player.jamesjennison.net';
+const ADMIN_TOTP_STEP_SECONDS = 30;
+const ADMIN_TOTP_DIGITS = 6;
+const ADMIN_TOTP_ALLOWED_DRIFT_STEPS = 1;
 const MAX_SUBJECT_LENGTH = 180;
 const MAX_BODY_LENGTH = 12_000;
 const MAX_HTML_BODY_LENGTH = 24_000;
@@ -37,6 +47,7 @@ function fail(int $status, string $message): never
 {
     http_response_code($status);
     header('Content-Type: text/plain; charset=UTF-8');
+    privateResponseHeaders();
     header('Cache-Control: no-store, private');
     header('Pragma: no-cache');
     header('X-Robots-Tag: noindex, nofollow, noarchive');
@@ -168,6 +179,16 @@ function database(array $config): PDO
             details TEXT NOT NULL,
             outcome TEXT NOT NULL CHECK(outcome IN (\'pass\', \'issue\', \'blocked\', \'note\')),
             created_at TEXT NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS administrator_login_limits (
+            client_key TEXT PRIMARY KEY,
+            failed_attempts INTEGER NOT NULL,
+            locked_until INTEGER NOT NULL DEFAULT 0,
+            updated_at TEXT NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS administrator_totp_uses (
+            time_step INTEGER PRIMARY KEY,
+            consumed_at TEXT NOT NULL
         );'
     );
     $emailBatchColumns = array_column($database->query('PRAGMA table_info(email_batches)')->fetchAll(), 'name');
@@ -219,6 +240,10 @@ function database(array $config): PDO
 
 function startSession(): void
 {
+    ini_set('session.use_strict_mode', '1');
+    ini_set('session.use_only_cookies', '1');
+    ini_set('session.cookie_httponly', '1');
+    ini_set('session.cookie_secure', '1');
     session_name(SESSION_NAME);
     session_set_cookie_params([
         'httponly' => true,
@@ -227,6 +252,154 @@ function startSession(): void
         'path' => '/',
     ]);
     session_start();
+}
+
+function endSession(): void
+{
+    $_SESSION = [];
+    if (ini_get('session.use_cookies')) {
+        $cookie = session_get_cookie_params();
+        setcookie(session_name(), '', [
+            'expires' => time() - 42_000,
+            'path' => $cookie['path'] ?? '/',
+            'domain' => $cookie['domain'] ?? '',
+            'secure' => true,
+            'httponly' => true,
+            'samesite' => 'Strict',
+        ]);
+    }
+    session_destroy();
+}
+
+function administratorLoginClientKey(array $config): string
+{
+    $address = $_SERVER['REMOTE_ADDR'] ?? '';
+    if (!is_string($address) || strlen($address) > 128) {
+        $address = '';
+    }
+    // Keep the rate-limit key unlinkable to a raw address in the private DB.
+    return hash_hmac('sha256', 'admin-login:' . $address, $config['admin_password_hash']);
+}
+
+function administratorLoginName(array $config): string
+{
+    $name = $config['admin_username'] ?? null;
+    if (!is_string($name) || !preg_match('/^[A-Za-z0-9][A-Za-z0-9._@-]{2,63}$/', $name)) {
+        fail(503, 'Administrator sign-in is not configured.');
+    }
+    return $name;
+}
+
+function administratorLoginNameAccepted(array $config, string $submitted): bool
+{
+    return strlen($submitted) <= ADMIN_LOGIN_NAME_MAX_LENGTH
+        && hash_equals(administratorLoginName($config), $submitted);
+}
+
+function administratorTotpSecret(array $config): string
+{
+    $encoded = $config['admin_totp_secret'] ?? null;
+    if (!is_string($encoded)) {
+        fail(503, 'Administrator multi-factor authentication is not configured.');
+    }
+    $normalized = strtoupper(str_replace([' ', '-'], '', trim($encoded)));
+    $normalized = rtrim($normalized, '=');
+    if ($normalized === '' || !preg_match('/^[A-Z2-7]+$/', $normalized)) {
+        fail(503, 'Administrator multi-factor authentication is not configured.');
+    }
+    $alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    $buffer = 0;
+    $bits = 0;
+    $secret = '';
+    foreach (str_split($normalized) as $character) {
+        $value = strpos($alphabet, $character);
+        if ($value === false) {
+            fail(503, 'Administrator multi-factor authentication is not configured.');
+        }
+        $buffer = ($buffer << 5) | $value;
+        $bits += 5;
+        while ($bits >= 8) {
+            $bits -= 8;
+            $secret .= chr(($buffer >> $bits) & 0xff);
+        }
+        $buffer = $bits === 0 ? 0 : $buffer & ((1 << $bits) - 1);
+    }
+    if (strlen($secret) < 16) {
+        fail(503, 'Administrator multi-factor authentication is not configured.');
+    }
+    return $secret;
+}
+
+function administratorTotpCode(string $secret, int $timeStep): string
+{
+    $counter = pack('N2', intdiv($timeStep, 4_294_967_296), $timeStep % 4_294_967_296);
+    $hash = hash_hmac('sha1', $counter, $secret, true);
+    $offset = ord($hash[19]) & 0x0f;
+    $binary = ((ord($hash[$offset]) & 0x7f) << 24)
+        | (ord($hash[$offset + 1]) << 16)
+        | (ord($hash[$offset + 2]) << 8)
+        | ord($hash[$offset + 3]);
+    return str_pad((string) ($binary % (10 ** ADMIN_TOTP_DIGITS)), ADMIN_TOTP_DIGITS, '0', STR_PAD_LEFT);
+}
+
+function administratorAcceptedTotpStep(string $code, string $secret, ?int $now = null): ?int
+{
+    if (!preg_match('/^[0-9]{6}$/', $code)) {
+        return null;
+    }
+    $currentStep = intdiv($now ?? time(), ADMIN_TOTP_STEP_SECONDS);
+    $accepted = null;
+    for ($offset = -ADMIN_TOTP_ALLOWED_DRIFT_STEPS; $offset <= ADMIN_TOTP_ALLOWED_DRIFT_STEPS; $offset++) {
+        $step = $currentStep + $offset;
+        if (hash_equals(administratorTotpCode($secret, $step), $code)) {
+            $accepted = $step;
+        }
+    }
+    return $accepted;
+}
+
+function consumeAdministratorTotpStep(PDO $database, int $timeStep): bool
+{
+    $database->prepare('DELETE FROM administrator_totp_uses WHERE time_step < ?')->execute([$timeStep - 3]);
+    $insert = $database->prepare('INSERT OR IGNORE INTO administrator_totp_uses(time_step, consumed_at) VALUES (?, ?)');
+    $insert->execute([$timeStep, gmdate('c')]);
+    return $insert->rowCount() === 1;
+}
+
+function administratorLoginIsLimited(PDO $database, array $config): bool
+{
+    $query = $database->prepare('SELECT locked_until FROM administrator_login_limits WHERE client_key = ?');
+    $query->execute([administratorLoginClientKey($config)]);
+    $lockedUntil = $query->fetchColumn();
+    return $lockedUntil !== false && (int) $lockedUntil > time();
+}
+
+function recordAdministratorLoginFailure(PDO $database, array $config): void
+{
+    $key = administratorLoginClientKey($config);
+    $query = $database->prepare('SELECT failed_attempts FROM administrator_login_limits WHERE client_key = ?');
+    $query->execute([$key]);
+    $attempts = ((int) ($query->fetchColumn() ?: 0)) + 1;
+    $lockSeconds = $attempts <= ADMIN_LOGIN_FREE_FAILURES
+        ? 0
+        : min(ADMIN_LOGIN_MAX_LOCK_SECONDS, 60 * (2 ** min(6, $attempts - ADMIN_LOGIN_FREE_FAILURES - 1)));
+    $database->prepare('INSERT INTO administrator_login_limits(client_key, failed_attempts, locked_until, updated_at) VALUES (?, ?, ?, ?) ON CONFLICT(client_key) DO UPDATE SET failed_attempts = excluded.failed_attempts, locked_until = excluded.locked_until, updated_at = excluded.updated_at')
+        ->execute([$key, $attempts, time() + $lockSeconds, gmdate('c')]);
+}
+
+function clearAdministratorLoginFailures(PDO $database, array $config): void
+{
+    $database->prepare('DELETE FROM administrator_login_limits WHERE client_key = ?')->execute([administratorLoginClientKey($config)]);
+}
+
+function administratorLoginRequestIsSameOrigin(): bool
+{
+    $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+    if (is_string($origin) && $origin !== '') {
+        return hash_equals(ADMIN_LOGIN_ORIGIN, $origin);
+    }
+    $referer = $_SERVER['HTTP_REFERER'] ?? '';
+    return !is_string($referer) || $referer === '' || str_starts_with($referer, ADMIN_LOGIN_ORIGIN . '/');
 }
 
 function csrf(): string
@@ -243,6 +416,14 @@ function validCsrf(): bool
         && is_string($_POST['csrf'])
         && is_string($_SESSION['csrf'])
         && hash_equals($_SESSION['csrf'], $_POST['csrf']);
+}
+
+function privateResponseHeaders(): void
+{
+    header("Content-Security-Policy: default-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; img-src 'self'; script-src 'self'; style-src 'unsafe-inline'");
+    header('Permissions-Policy: camera=(), geolocation=(), microphone=(), payment=(), usb=()');
+    header('Referrer-Policy: no-referrer');
+    header('X-Content-Type-Options: nosniff');
 }
 
 function e(?string $value): string
@@ -262,6 +443,17 @@ function requireAuthentication(array $config): void
         renderLogin();
         exit;
     }
+    $now = time();
+    $authenticatedAt = $_SESSION['authenticated_at'] ?? null;
+    $lastSeenAt = $_SESSION['last_seen_at'] ?? null;
+    if (!is_int($authenticatedAt) || !is_int($lastSeenAt)
+        || $authenticatedAt > $now || $lastSeenAt > $now
+        || $now - $authenticatedAt > ADMIN_SESSION_MAX_SECONDS
+        || $now - $lastSeenAt > ADMIN_SESSION_IDLE_SECONDS) {
+        endSession();
+        renderLogin('Your session has expired. Please sign in again.');
+    }
+    $_SESSION['last_seen_at'] = $now;
     if (password_needs_rehash($config['admin_password_hash'], PASSWORD_DEFAULT)) {
         // The hash remains private; surface no detail to a browser.
         error_log('private-tester-queue password hash should be refreshed');
@@ -271,6 +463,7 @@ function requireAuthentication(array $config): void
 function renderPage(string $title, string $content): never
 {
     header('Content-Type: text/html; charset=UTF-8');
+    privateResponseHeaders();
     header('Cache-Control: no-store, private');
     header('Pragma: no-cache');
     header('X-Robots-Tag: noindex, nofollow, noarchive');
@@ -285,8 +478,8 @@ function renderPage(string $title, string $content): never
 function renderLogin(string $error = ''): never
 {
     $message = $error === '' ? '' : '<p class="notice error">' . e($error) . '</p>';
-    renderPage('Private tester queue', '<h1>Private tester queue</h1><p class="muted">Coordinator access only.</p>' . $message
-        . '<form method="post" action="/private-tester-queue.php"><input type="hidden" name="action" value="login"><label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" required autofocus><button type="submit">Sign in</button></form>');
+    renderPage('Administrator sign in · 24Seven.FM Player', '<section class="login"><p class="product-mark">24Seven.FM Player</p><h1>Administrator sign in</h1><p class="muted">Private coordinator access only. Use your administrator password on a trusted device.</p>' . $message
+        . '<form method="post" action="/private-tester-queue.php"><input type="hidden" name="action" value="login"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><label for="username">Administrator login name</label><input id="username" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="' . ADMIN_LOGIN_NAME_MAX_LENGTH . '" required autofocus><label for="password">Administrator password</label><input id="password" name="password" type="password" autocomplete="current-password" maxlength="' . ADMIN_LOGIN_MAX_PASSWORD_BYTES . '" required><label for="totp_code">Authenticator code</label><input id="totp_code" name="totp_code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required><button type="submit">Sign in securely</button></form><p class="muted small">Use the current six-digit code from your authenticator app. Sessions expire automatically; repeated unsuccessful attempts are temporarily limited.</p></section>');
 }
 
 function field(string $name, int $maximum, bool $required = true, bool $singleLine = false): string
@@ -1093,18 +1286,36 @@ if (defined('PRIVATE_TESTER_QUEUE_LIBRARY_ONLY')) {
 try {
     $config = config();
     startSession();
+    $database = database($config);
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && ($_POST['action'] ?? '') === 'login') {
+        $username = (string) ($_POST['username'] ?? '');
         $password = (string) ($_POST['password'] ?? '');
-        if (password_verify($password, $config['admin_password_hash'])) {
+        $totpCode = (string) ($_POST['totp_code'] ?? '');
+        $loginAllowed = validCsrf()
+            && administratorLoginRequestIsSameOrigin()
+            && !administratorLoginIsLimited($database, $config)
+            && strlen($password) <= ADMIN_LOGIN_MAX_PASSWORD_BYTES;
+        $nameAccepted = administratorLoginNameAccepted($config, $username);
+        $passwordAccepted = password_verify($password, $config['admin_password_hash']);
+        $totpStep = administratorAcceptedTotpStep($totpCode, administratorTotpSecret($config));
+        if ($loginAllowed && $nameAccepted && $passwordAccepted && $totpStep !== null && consumeAdministratorTotpStep($database, $totpStep)) {
             session_regenerate_id(true);
-            $_SESSION['authenticated'] = true;
+            $_SESSION = [
+                'authenticated' => true,
+                'authenticated_at' => time(),
+                'last_seen_at' => time(),
+            ];
+            clearAdministratorLoginFailures($database, $config);
             csrf();
             redirect();
         }
-        renderLogin('The password was not accepted.');
+        if (validCsrf() && administratorLoginRequestIsSameOrigin() && !administratorLoginIsLimited($database, $config)) {
+            recordAdministratorLoginFailure($database, $config);
+        }
+        usleep(250_000);
+        renderLogin('We could not sign you in. Check your details and try again later.');
     }
     requireAuthentication($config);
-    $database = database($config);
 
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         if (!validCsrf()) {
@@ -1112,8 +1323,7 @@ try {
         }
         $action = $_POST['action'] ?? '';
         if ($action === 'logout') {
-            $_SESSION = [];
-            session_destroy();
+            endSession();
             redirect();
         }
         if ($action === 'update_onboarding') {
