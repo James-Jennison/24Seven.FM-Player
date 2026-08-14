@@ -44,6 +44,22 @@ function portalStartSession(): void
     session_start();
 }
 
+function portalAdminPreviewTesterId(): ?int
+{
+    $value = $_GET['preview_tester'] ?? null;
+    if ($value === null) return null;
+    if (!is_string($value) || !ctype_digit($value) || (int) $value < 1) {
+        throw new InvalidArgumentException('The requested tester preview is invalid.');
+    }
+    session_name(SESSION_NAME);
+    session_set_cookie_params(['httponly' => true, 'secure' => true, 'samesite' => 'Strict', 'path' => '/']);
+    session_start();
+    $authenticated = ($_SESSION['authenticated'] ?? false) === true;
+    session_write_close();
+    if (!$authenticated) fail(403, 'Coordinator authentication is required for this preview.');
+    return (int) $value;
+}
+
 function portalRedirect(string $query = ''): never
 {
     header('Location: /tester-portal.php' . $query, true, 303);
@@ -58,7 +74,7 @@ function portalPage(string $title, string $content): never
     header('X-Robots-Tag: noindex, nofollow, noarchive');
     header('X-Frame-Options: DENY');
     echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' . e($title) . '</title><style>'
-        . ':root{color-scheme:dark;--bg:#0b0e14;--card:#151b26;--line:rgba(255,255,255,.1);--muted:#aab4c7;--text:#f7f8fc;--purple:#ad7cff;--teal:#6de5d1;--amber:#ffd27a;--red:#ff9ca6}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 85% -15%,#5c2c873d,transparent 34%),var(--bg);color:var(--text);font:16px/1.5 Inter,Roboto,system-ui,sans-serif}.shell{max-width:1120px;margin:auto;padding:30px 20px 64px}.top{display:flex;justify-content:space-between;gap:18px;align-items:center;margin-bottom:30px}.brand{display:flex;gap:11px;align-items:center;font-weight:850}.mark{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#bc93ff,#7d4df5);color:#160d26}.eyebrow{margin:0;color:#c3a6ff;font-size:11px;font-weight:850;letter-spacing:.12em;text-transform:uppercase}h1{margin:2px 0;font-size:32px;letter-spacing:-.04em}h2{margin:0;font-size:20px}h3{margin:0;font-size:15px}.muted{color:var(--muted)}.card{margin:18px 0;padding:23px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(145deg,#171e2b,#111722);box-shadow:0 14px 34px #00000025}.hero{padding:32px}.hero p{max-width:650px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.metric,.task{padding:16px;border:1px solid var(--line);border-radius:13px;background:#0e131d}.metric b{display:block;margin-top:7px;font-size:14px}.dot{display:inline-grid;place-items:center;width:24px;height:24px;border:1px solid #66728a;border-radius:50%;color:#7d8a9f}.done .dot{border-color:var(--teal);background:#174d47;color:var(--teal)}.step{display:flex;gap:11px;align-items:start;padding:11px 0;border-bottom:1px solid var(--line)}.step:last-child{border:0}.step b{display:block}.step small{color:var(--muted)}.two{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr);gap:18px}label{display:block;margin:14px 0 6px;font-size:12px;font-weight:800;color:#cbd3e2}input,select,textarea{width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:9px;background:#0d121b;color:var(--text);font:inherit}textarea{min-height:120px}input:focus,select:focus,textarea:focus{outline:3px solid #986bff30;border-color:var(--purple)}.choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:4px 0}.choices label{display:flex;gap:8px;align-items:start;margin:0;padding:9px;border:1px solid var(--line);border-radius:9px;background:#0d121b;font-size:12px;font-weight:600}.choices input{width:auto;margin-top:2px}.button{display:inline-block;margin-top:18px;padding:10px 14px;border:0;border-radius:10px;background:linear-gradient(135deg,#b582ff,#8054f8);color:#fff;font:800 13px system-ui;cursor:pointer;text-decoration:none}.secondary{background:#273148}.pill{display:inline-flex;gap:5px;align-items:center;padding:5px 8px;border-radius:999px;background:#193e39;color:#9cf5e4;font-size:11px;font-weight:850}.pill.pending{background:#493b22;color:#ffdb8d}.pill.blocked{background:#472c35;color:#ffb4bc}.notice{padding:11px 13px;border-radius:10px;background:#183d37;color:#bffcf1}.error{background:#4a2730;color:#ffdce1}.task p{margin:6px 0;color:var(--muted);font-size:13px}.task ul{padding-left:19px;color:#d6deed;font-size:13px}.right{float:right}.login{max-width:530px;margin:9vh auto}.login .card{padding:30px}.small{font-size:12px}@media(max-width:760px){.grid,.two{grid-template-columns:1fr}.choices{grid-template-columns:1fr}.shell{padding:20px 14px}.hero{padding:22px}.top{align-items:start}h1{font-size:27px}}</style></head><body><main class="shell">' . $content . '</main></body></html>';
+        . ':root{color-scheme:dark;--bg:#0b0e14;--card:#151b26;--line:rgba(255,255,255,.1);--muted:#aab4c7;--text:#f7f8fc;--purple:#ad7cff;--teal:#6de5d1;--amber:#ffd27a;--red:#ff9ca6}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 85% -15%,#5c2c873d,transparent 34%),var(--bg);color:var(--text);font:16px/1.5 Inter,Roboto,system-ui,sans-serif}.shell{max-width:1120px;margin:auto;padding:30px 20px 64px}.top{display:flex;justify-content:space-between;gap:18px;align-items:center;margin-bottom:30px}.brand{display:flex;gap:11px;align-items:center;font-weight:850}.mark{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#bc93ff,#7d4df5);color:#160d26}.eyebrow{margin:0;color:#c3a6ff;font-size:11px;font-weight:850;letter-spacing:.12em;text-transform:uppercase}h1{margin:2px 0;font-size:32px;letter-spacing:-.04em}h2{margin:0;font-size:20px}h3{margin:0;font-size:15px}.muted{color:var(--muted)}.card{margin:18px 0;padding:23px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(145deg,#171e2b,#111722);box-shadow:0 14px 34px #00000025}.hero{padding:32px}.hero p{max-width:650px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.metric,.task{padding:16px;border:1px solid var(--line);border-radius:13px;background:#0e131d}.metric b{display:block;margin-top:7px;font-size:14px}.dot{display:inline-grid;place-items:center;width:24px;height:24px;border:1px solid #66728a;border-radius:50%;color:#7d8a9f}.done .dot{border-color:var(--teal);background:#174d47;color:var(--teal)}.step{display:flex;gap:11px;align-items:start;padding:11px 0;border-bottom:1px solid var(--line)}.step:last-child{border:0}.step b{display:block}.step small{color:var(--muted)}.two{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr);gap:18px}fieldset{border:0;margin:0;padding:0}label{display:block;margin:14px 0 6px;font-size:12px;font-weight:800;color:#cbd3e2}input,select,textarea{width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:9px;background:#0d121b;color:var(--text);font:inherit}textarea{min-height:120px}input:focus,select:focus,textarea:focus{outline:3px solid #986bff30;border-color:var(--purple)}.choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:4px 0}.choices label{display:flex;gap:8px;align-items:start;margin:0;padding:9px;border:1px solid var(--line);border-radius:9px;background:#0d121b;font-size:12px;font-weight:600}.choices input{width:auto;margin-top:2px}.button{display:inline-block;margin-top:18px;padding:10px 14px;border:0;border-radius:10px;background:linear-gradient(135deg,#b582ff,#8054f8);color:#fff;font:800 13px system-ui;cursor:pointer;text-decoration:none}.secondary{background:#273148}.pill{display:inline-flex;gap:5px;align-items:center;padding:5px 8px;border-radius:999px;background:#193e39;color:#9cf5e4;font-size:11px;font-weight:850}.pill.pending{background:#493b22;color:#ffdb8d}.pill.blocked{background:#472c35;color:#ffb4bc}.notice{padding:11px 13px;border-radius:10px;background:#183d37;color:#bffcf1}.error{background:#4a2730;color:#ffdce1}.admin-preview{border:1px solid #b685ff66;background:#332551;color:#eadfff}.task p{margin:6px 0;color:var(--muted);font-size:13px}.task ul{padding-left:19px;color:#d6deed;font-size:13px}.right{float:right}.login{max-width:530px;margin:9vh auto}.login .card{padding:30px}.small{font-size:12px}@media(max-width:760px){.grid,.two{grid-template-columns:1fr}.choices{grid-template-columns:1fr}.shell{padding:20px 14px}.hero{padding:22px}.top{align-items:start}h1{font-size:27px}}</style></head><body><main class="shell">' . $content . '</main></body></html>';
     exit;
 }
 
@@ -130,11 +146,22 @@ function portalTester(PDO $database): array
 {
     $id = $_SESSION['tester_portal_id'] ?? null;
     if (!is_int($id) && !ctype_digit((string) $id)) portalRedirect();
+    try {
+        return portalTesterById($database, (int) $id);
+    } catch (InvalidArgumentException) {
+        $_SESSION = [];
+        session_destroy();
+        portalRedirect('?error=' . rawurlencode('This tester access is no longer active.'));
+    }
+}
+
+function portalTesterById(PDO $database, int $id): array
+{
     $query = $database->prepare("SELECT testers.*, onboarding.play_opt_in_confirmed_at, onboarding.onboarding_status FROM testers LEFT JOIN tester_onboarding AS onboarding ON onboarding.tester_id = testers.id WHERE testers.id = ? AND testers.status = 'active'");
-    $query->execute([(int) $id]);
+    $query->execute([$id]);
     $tester = $query->fetch();
     if ($tester === false) {
-        $_SESSION = []; session_destroy(); portalRedirect('?error=' . rawurlencode('This tester access is no longer active.'));
+        throw new InvalidArgumentException('This tester access is no longer active.');
     }
     return $tester;
 }
@@ -277,7 +304,7 @@ function portalRenderLinkConfirmation(PDO $database, string $token): never
     portalPage('Continue to tester portal', $content);
 }
 
-function portalRenderDashboard(PDO $database, array $tester): never
+function portalRenderDashboard(PDO $database, array $tester, bool $adminPreview = false): never
 {
     $profile = profileSummary($tester);
     $assignments = portalAssignments($database, (int) $tester['id']);
@@ -302,13 +329,21 @@ function portalRenderDashboard(PDO $database, array $tester): never
         . '<div class="two"><section class="card"><p class="eyebrow">Profile & device</p><h2>Keep your coverage current</h2><form method="post"><input type="hidden" name="action" value="save_profile"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><label>Current device</label><input name="device" value="' . e($tester['device']) . '" required><label>Android version</label><input name="android_version" value="' . e($tester['android_version']) . '" required><label>Primary station</label>' . portalSelect('primary_station', PORTAL_PRIMARY_STATIONS, $tester['primary_station'], 'Choose a primary station') . '<label>Device form factor</label>' . portalSelect('device_form_factor', PORTAL_DEVICE_TYPES, $tester['device_form_factor'], 'Choose a device type') . '<label>Other devices or configuration notes</label><textarea name="other_devices">' . e($tester['other_devices']) . '</textarea><label>Station accounts available (station names only)</label>' . portalCheckboxes('station_accounts', PORTAL_STATIONS + ['none' => 'None'], listFromJson($tester['station_accounts_json'])) . '<label>Network capabilities</label>' . portalCheckboxes('network_capabilities', PORTAL_NETWORK, listFromJson($tester['network_capabilities_json'])) . '<label>Audio/accessory capabilities</label>' . portalCheckboxes('audio_capabilities', PORTAL_AUDIO, listFromJson($tester['audio_capabilities_json'])) . '<label>Accessibility and alternative input</label>' . portalCheckboxes('accessibility_capabilities', PORTAL_ACCESSIBILITY, listFromJson($tester['accessibility_capabilities_json'])) . '<label>Testing comfort</label>' . portalSelect('testing_comfort', PORTAL_TESTING_COMFORT, $tester['testing_comfort'], 'Choose a testing comfort level') . '<label>Controlled-test preferences</label>' . portalCheckboxes('controlled_actions', PORTAL_CONTROLLED_ACTIONS, listFromJson($tester['controlled_actions_json'])) . '<label>Typical two-week availability</label>' . portalSelect('testing_availability', PORTAL_AVAILABILITY, $tester['testing_availability'], 'Choose availability') . '<button class="button" type="submit">Save profile and device</button></form></section>'
         . '<section class="card"><p class="eyebrow">Active assignments</p><h2>Your focused testing work</h2><div class="grid" style="grid-template-columns:1fr">' . $assignmentCards . '</div></section></div>'
         . '<section class="card"><p class="eyebrow">Task report</p><h2>Submit feedback for a focused task</h2><p class="muted">Include what you tried, expected, and observed. Do not include passwords, credentials, private messages, session information, or private screenshots.</p><form method="post"><input type="hidden" name="action" value="submit_feedback"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><label>Assigned task</label><select name="assignment_id" required><option value="">Choose an assigned task</option>' . implode('', array_map(static fn (array $assignment): string => '<option value="' . (int) $assignment['id'] . '">' . e($assignment['task_id'] . ' — ' . ucwords(str_replace('_', ' ', $assignment['task_status']))) . '</option>', $assignments)) . '</select><label>Outcome</label><select name="outcome" required><option value="pass">Pass / worked as expected</option><option value="issue">Issue found</option><option value="blocked">Blocked</option><option value="note">Usability note</option></select><label>Short title</label><input name="subject" maxlength="' . PORTAL_MAX_FEEDBACK_SUBJECT . '" required><label>Steps and result</label><textarea name="details" maxlength="' . PORTAL_MAX_FEEDBACK_DETAILS . '" required></textarea><button class="button" type="submit">Submit task report</button></form>' . ($reports === [] ? '' : '<h3 style="margin-top:24px">Recent reports</h3>' . implode('', array_map(static fn (array $report): string => '<p class="small"><span class="pill">' . e($report['outcome']) . '</span> ' . e($report['subject']) . ' <span class="muted">' . e($report['created_at']) . '</span></p>', $reports))) . '</section>';
-    portalPage('My tester portal', $content);
+    if ($adminPreview) {
+        $content = '<p class="notice admin-preview"><strong>Read-only coordinator preview.</strong> This is what the tester sees. Profile, opt-in, and report controls are disabled here; no tester session or data is changed. <a href="/private-tester-queue.php?tester=' . (int) $tester['id'] . '">Return to the coordinator workspace</a>.</p>' . str_replace(['<form method="post">', '</form>'], ['<form method="post"><fieldset disabled>', '</fieldset></form>'], $content);
+    }
+    portalPage($adminPreview ? 'Tester portal preview' : 'My tester portal', $content);
 }
 
 try {
     $config = config();
+    $adminPreviewTesterId = portalAdminPreviewTesterId();
     portalStartSession();
     $database = database($config);
+    if ($adminPreviewTesterId !== null) {
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') fail(405, 'Tester previews are read-only.');
+        portalRenderDashboard($database, portalTesterById($database, $adminPreviewTesterId), true);
+    }
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && ($_POST['action'] ?? '') === 'request_link') {
         if (!hash_equals(TESTER_PORTAL_ORIGIN, $_SERVER['HTTP_ORIGIN'] ?? '')) fail(403, 'This request is not allowed.');
         portalRequestLink($database, $config);
