@@ -554,7 +554,10 @@ function sanitizeHtmlBody(string $html): string
     }
     $source = new DOMDocument('1.0', 'UTF-8');
     $prior = libxml_use_internal_errors(true);
-    $loaded = $source->loadHTML('<!doctype html><html><body><div id="queue-editor">' . $html . '</div></body></html>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+    // DOMDocument defaults HTML input to a legacy encoding unless the document
+    // declares UTF-8. Without this declaration, curly punctuation and bullets
+    // become mojibake before the message reaches the MIME encoder.
+    $loaded = $source->loadHTML('<!doctype html><html><head><meta charset="UTF-8"></head><body><div id="queue-editor">' . $html . '</div></body></html>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
     libxml_clear_errors();
     libxml_use_internal_errors($prior);
     if (!$loaded) {
@@ -673,16 +676,19 @@ function base64MimePart(string $content): string
     return rtrim(chunk_split(base64_encode($content), 76, "\r\n"), "\r\n");
 }
 
-function sendIndividualMail(array $config, string $recipient, string $subject, string $plainText, string $html): bool
+function encodedMimeHeader(string $value): string
 {
-    $senderName = trim((string) ($config['from_name'] ?? '24Seven.FM Player'));
-    $from = $config['from_email'];
-    $encodedName = '=?UTF-8?B?' . base64_encode($senderName) . '?=';
+    return '=?UTF-8?B?' . base64_encode($value) . '?=';
+}
+
+function multipartAlternativeMessage(string $fromName, string $from, string $recipient, string $subject, string $plainText, string $html): array
+{
     $boundary = '=_24Seven_' . bin2hex(random_bytes(16));
     $headers = [
-        'From: ' . $encodedName . ' <' . $from . '>',
+        'From: ' . encodedMimeHeader($fromName) . ' <' . $from . '>',
         'To: ' . $recipient,
         'Reply-To: ' . $from,
+        'Subject: ' . encodedMimeHeader($subject),
         'MIME-Version: 1.0',
         'Content-Type: multipart/alternative; boundary="' . $boundary . '"',
     ];
@@ -701,6 +707,14 @@ function sendIndividualMail(array $config, string $recipient, string $subject, s
         '',
     ]);
     $message = preg_replace('/(?m)^\./', '..', $message) ?? $message;
+    return [$headers, $message];
+}
+
+function sendIndividualMail(array $config, string $recipient, string $subject, string $plainText, string $html): bool
+{
+    $senderName = trim((string) ($config['from_name'] ?? '24Seven.FM Player'));
+    $from = $config['from_email'];
+    [$headers, $message] = multipartAlternativeMessage($senderName, $from, $recipient, $subject, $plainText, $html);
     $socket = null;
     $stage = 'connect';
     try {
@@ -746,7 +760,7 @@ function sendIndividualMail(array $config, string $recipient, string $subject, s
         $stage = 'data';
         smtpCommand($socket, 'DATA', [354]);
         $stage = 'message';
-        smtpWrite($socket, implode("\r\n", $headers) . "\r\nSubject: " . $subject . "\r\n\r\n" . $message . "\r\n.\r\n");
+        smtpWrite($socket, implode("\r\n", $headers) . "\r\n\r\n" . $message . "\r\n.\r\n");
         [$accepted] = smtpResponse($socket);
         if ($accepted !== 250) {
             throw new RuntimeException('SMTP message rejected.');
@@ -946,6 +960,10 @@ function renderConfirmation(PDO $database, int $batchId): never
     $html = is_string($batch['body_html'] ?? null) && $batch['body_html'] !== '' ? $batch['body_html'] : plainTextToHtml($batch['body']);
     $content = '<h1>Review delivery</h1><section><h2>Recipients</h2><p class="muted">Each recipient receives an individual email. No recipient is placed in To, Cc, or Bcc with another tester.</p><ol>' . $list . '</ol></section><section><h2>' . e($batch['subject']) . '</h2><div style="background:#fff;color:#182033;padding:1rem;border-radius:.4rem">' . $html . '</div><h3>Plain-text alternative</h3><pre style="white-space:pre-wrap;font:inherit">' . e($batch['body']) . '</pre></section><form method="post"><input type="hidden" name="action" value="send"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="batch_id" value="' . (int) $batch['id'] . '"><button class="danger" type="submit">Send to these recipients</button></form><p><a href="/private-tester-queue.php">Cancel and return to queue</a></p>';
     renderPage('Review tester email', $content);
+}
+
+if (defined('PRIVATE_TESTER_QUEUE_LIBRARY_ONLY')) {
+    return;
 }
 
 try {
