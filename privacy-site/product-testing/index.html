@@ -51,45 +51,201 @@ section: product-testing
   </div>
   <div class="tester-application-layout">
     <form class="tester-application-form" data-alpha-tester-form action="/alpha-tester-interest.php" method="post" novalidate>
-      <div class="form-grid">
-        <div class="form-field">
-          <label for="tester-name">Display name <span aria-hidden="true">*</span></label>
-          <input id="tester-name" name="name" autocomplete="name" maxlength="100" required>
-        </div>
-        <div class="form-field">
-          <label for="tester-email">Google Play account email <span aria-hidden="true">*</span></label>
-          <input id="tester-email" name="email" type="email" autocomplete="email" maxlength="254" inputmode="email" required>
-        </div>
-        <div class="form-field">
-          <label for="tester-country">Country or region <small>Optional</small></label>
-          <input id="tester-country" name="country" autocomplete="country-name" maxlength="80">
-        </div>
-        <div class="form-field">
-          <label for="tester-device">Android device model <span aria-hidden="true">*</span></label>
-          <input id="tester-device" name="device" autocomplete="off" maxlength="160" placeholder="For example, Pixel 9 or Razr 2026" required>
-        </div>
-        <div class="form-field">
-          <label for="tester-android-version">Android version <span aria-hidden="true">*</span></label>
-          <input id="tester-android-version" name="androidVersion" autocomplete="off" maxlength="48" placeholder="For example, Android 16" required>
-        </div>
-      </div>
       <fieldset>
-        <legend>What would you like to test? <small>Optional</small></legend>
-        <div class="choice-grid">
-          <label><input type="checkbox" name="interests[]" value="Playback"> Playback and media controls</label>
-          <label><input type="checkbox" name="interests[]" value="Foldable and tablet"> Foldable, tablet, or adaptive layouts</label>
-          <label><input type="checkbox" name="interests[]" value="Accessibility"> Accessibility or alternative input</label>
-          <label><input type="checkbox" name="interests[]" value="Account and community"> Account and community workflows</label>
-          <label><input type="checkbox" name="interests[]" value="General testing"> General testing</label>
+        <legend>About you</legend>
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="tester-name">Display name <span aria-hidden="true">*</span></label>
+            <input id="tester-name" name="name" autocomplete="name" maxlength="100" required>
+          </div>
+          <div class="form-field">
+            <label for="tester-email">Google Play account email <span aria-hidden="true">*</span></label>
+            <input id="tester-email" name="email" type="email" autocomplete="email" maxlength="254" inputmode="email" required>
+          </div>
+          <div class="form-field">
+            <label for="tester-country">Country or region <small>Optional</small></label>
+            <input id="tester-country" name="country" autocomplete="country-name" maxlength="80">
+          </div>
         </div>
       </fieldset>
-      <div class="form-field">
-        <label for="tester-experience">Prior testing experience <small>Optional</small></label>
-        <textarea id="tester-experience" name="experience" maxlength="1200" rows="4" placeholder="Device coverage, accessibility experience, or anything else that may help assign a test."></textarea>
-      </div>
+
+      <fieldset>
+        <legend>Your 24Seven.FM listening</legend>
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="tester-primary-station">What is your primary 24Seven.FM station? <span aria-hidden="true">*</span></label>
+            <select id="tester-primary-station" name="primaryStation" required>
+              <option value="">Choose a station</option>
+              <option value="sst">StreamingSoundtracks.com</option>
+              <option value="1980s">1980s.FM</option>
+              <option value="afm">Adagio.FM</option>
+              <option value="dfm">Death.FM</option>
+              <option value="efm">Entranced.FM</option>
+              <option value="multiple">I regularly listen to more than one</option>
+              <option value="none">I don't have a primary station</option>
+            </select>
+            <p class="form-helper">This helps us assign station-specific tests. You may still be asked to test another station when broader coverage is needed.</p>
+          </div>
+        </div>
+        <fieldset class="nested-fieldset">
+          <legend>Which other 24Seven.FM stations do you regularly listen to? <small>Optional</small></legend>
+          <div class="choice-grid">
+            <label><input type="checkbox" name="otherStations[]" value="sst"> StreamingSoundtracks.com</label>
+            <label><input type="checkbox" name="otherStations[]" value="1980s"> 1980s.FM</label>
+            <label><input type="checkbox" name="otherStations[]" value="afm"> Adagio.FM</label>
+            <label><input type="checkbox" name="otherStations[]" value="dfm"> Death.FM</label>
+            <label><input type="checkbox" name="otherStations[]" value="efm"> Entranced.FM</label>
+          </div>
+        </fieldset>
+        <fieldset class="nested-fieldset">
+          <legend>Which 24Seven.FM stations do you currently have an account with? <small>Optional</small></legend>
+          <p class="form-helper">Select stations only. <strong>Do not enter your username, password, security answer, CAPTCHA answer, or any other login information.</strong></p>
+          <div class="choice-grid">
+            <label><input type="checkbox" name="stationAccounts[]" value="sst"> StreamingSoundtracks.com</label>
+            <label><input type="checkbox" name="stationAccounts[]" value="1980s"> 1980s.FM</label>
+            <label><input type="checkbox" name="stationAccounts[]" value="afm"> Adagio.FM</label>
+            <label><input type="checkbox" name="stationAccounts[]" value="dfm"> Death.FM</label>
+            <label><input type="checkbox" name="stationAccounts[]" value="efm"> Entranced.FM</label>
+            <label><input type="checkbox" name="stationAccounts[]" value="none"> None</label>
+          </div>
+        </fieldset>
+      </fieldset>
+
+      <fieldset>
+        <legend>Your Android setup</legend>
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="tester-device">Android device model <span aria-hidden="true">*</span></label>
+            <input id="tester-device" name="device" autocomplete="off" maxlength="160" placeholder="For example, Pixel 9 or Razr 2026" required>
+          </div>
+          <div class="form-field">
+            <label for="tester-android-version">Android version <span aria-hidden="true">*</span></label>
+            <input id="tester-android-version" name="androidVersion" autocomplete="off" maxlength="48" placeholder="For example, Android 16" required>
+          </div>
+          <div class="form-field">
+            <label for="tester-device-form-factor">What type of Android device will you primarily use for testing? <span aria-hidden="true">*</span></label>
+            <select id="tester-device-form-factor" name="deviceFormFactor" required>
+              <option value="">Choose a device type</option>
+              <option value="phone">Standard phone</option>
+              <option value="foldable">Foldable / flip phone</option>
+              <option value="tablet">Android tablet</option>
+              <option value="chromebook">Chromebook with Android app support</option>
+              <option value="other">Other Android device</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="tester-other-devices">Other Android devices you may also be able to test <small>Optional</small></label>
+            <input id="tester-other-devices" name="otherDevices" autocomplete="off" maxlength="500" placeholder="For example: Pixel Tablet on Android 16, Galaxy S22 on Android 15">
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>What you can test</legend>
+        <fieldset class="nested-fieldset">
+          <legend>What would you like to test? <small>Optional</small></legend>
+          <div class="choice-grid">
+            <label><input type="checkbox" name="interests[]" value="playback"> Playback and media controls</label>
+            <label><input type="checkbox" name="interests[]" value="queue_history_data"> Queue, History, and station data</label>
+            <label><input type="checkbox" name="interests[]" value="accounts_favorites"> Accounts and Favorites</label>
+            <label><input type="checkbox" name="interests[]" value="request_safety"> Song request browsing and safety</label>
+            <label><input type="checkbox" name="interests[]" value="chat_community"> Chat and community features</label>
+            <label><input type="checkbox" name="interests[]" value="network_recovery"> Network loss and recovery</label>
+            <label><input type="checkbox" name="interests[]" value="audio_accessories"> Audio devices and accessories</label>
+            <label><input type="checkbox" name="interests[]" value="adaptive_layouts"> Foldable, tablet, and adaptive layouts</label>
+            <label><input type="checkbox" name="interests[]" value="accessibility"> Accessibility and alternative input</label>
+            <label><input type="checkbox" name="interests[]" value="general"> General testing / anything needed</label>
+          </div>
+        </fieldset>
+        <fieldset class="nested-fieldset">
+          <legend>Which network conditions can you test? <small>Optional</small></legend>
+          <p class="form-helper">Do not manipulate a network unless you are comfortable doing so.</p>
+          <div class="choice-grid">
+            <label><input type="checkbox" name="networkCapabilities[]" value="wifi"> Wi-Fi</label>
+            <label><input type="checkbox" name="networkCapabilities[]" value="mobile_data"> Mobile/cellular data</label>
+            <label><input type="checkbox" name="networkCapabilities[]" value="network_handoff"> Switching between Wi-Fi and mobile data</label>
+            <label><input type="checkbox" name="networkCapabilities[]" value="network_disconnect"> Temporarily disconnecting network access to test recovery</label>
+          </div>
+        </fieldset>
+        <fieldset class="nested-fieldset">
+          <legend>Which audio devices or accessories could you test with? <small>Optional</small></legend>
+          <div class="choice-grid">
+            <label><input type="checkbox" name="audioCapabilities[]" value="device_speaker"> Device speaker</label>
+            <label><input type="checkbox" name="audioCapabilities[]" value="bluetooth_headphones"> Bluetooth headphones or earbuds</label>
+            <label><input type="checkbox" name="audioCapabilities[]" value="bluetooth_speaker"> Bluetooth speaker</label>
+            <label><input type="checkbox" name="audioCapabilities[]" value="wired_headphones"> Wired headphones/headset</label>
+            <label><input type="checkbox" name="audioCapabilities[]" value="usb_audio"> USB audio device</label>
+            <label><input type="checkbox" name="audioCapabilities[]" value="android_auto"> Android Auto / automotive media</label>
+            <label><input type="checkbox" name="audioCapabilities[]" value="hearing_aid"> Hearing aid / assistive audio device</label>
+            <label><input type="checkbox" name="audioCapabilities[]" value="hdmi_audio"> HDMI / external display audio</label>
+            <label><input type="checkbox" name="audioCapabilities[]" value="external_input"> External keyboard or mouse/trackpad</label>
+            <label><input type="checkbox" name="audioCapabilities[]" value="none"> None beyond the device itself</label>
+          </div>
+        </fieldset>
+        <fieldset class="nested-fieldset">
+          <legend>Are you able or interested in testing any accessibility or alternative-input features? <small>Optional</small></legend>
+          <p class="form-helper">Accessibility experience is welcome, never required for joining the program.</p>
+          <div class="choice-grid">
+            <label><input type="checkbox" name="accessibilityCapabilities[]" value="talkback"> TalkBack</label>
+            <label><input type="checkbox" name="accessibilityCapabilities[]" value="large_text"> Large text / enlarged display</label>
+            <label><input type="checkbox" name="accessibilityCapabilities[]" value="voice_access"> Voice Access</label>
+            <label><input type="checkbox" name="accessibilityCapabilities[]" value="switch_access"> Switch Access</label>
+            <label><input type="checkbox" name="accessibilityCapabilities[]" value="accessibility_scanner"> Accessibility Scanner / touch-target review</label>
+            <label><input type="checkbox" name="accessibilityCapabilities[]" value="external_keyboard"> External keyboard</label>
+            <label><input type="checkbox" name="accessibilityCapabilities[]" value="mouse_trackpad"> Mouse / trackpad</label>
+            <label><input type="checkbox" name="accessibilityCapabilities[]" value="general_accessibility"> General accessibility testing</label>
+            <label><input type="checkbox" name="accessibilityCapabilities[]" value="none"> None</label>
+          </div>
+        </fieldset>
+      </fieldset>
+
+      <fieldset>
+        <legend>Testing preferences</legend>
+        <fieldset class="nested-fieldset">
+          <legend>What kind of testing are you comfortable with? <span aria-hidden="true">*</span></legend>
+          <p class="form-helper">Choosing an option only tells us what you're comfortable with. Live song requests, Chat posts, reports, or other state-changing tests are allowed only when your specific testing assignment authorizes them.</p>
+          <div class="choice-grid choice-grid-single">
+            <label><input type="radio" name="testingComfort" value="readonly" required> <span><strong>Read-only and general testing</strong><br>I'm comfortable navigating the app, playing stations, browsing data, testing layouts, and reporting what I find, but I prefer not to perform live state-changing actions.</span></label>
+            <label><input type="radio" name="testingComfort" value="account"> <span><strong>Account testing</strong><br>I'm comfortable signing in to my own approved station accounts and testing account-based features.</span></label>
+            <label><input type="radio" name="testingComfort" value="controlled"> <span><strong>Controlled live testing</strong><br>I'm comfortable performing a specifically assigned live action when the instructions clearly authorize it.</span></label>
+            <label><input type="radio" name="testingComfort" value="any"> <span><strong>Any appropriate testing</strong><br>I'm comfortable with any assignment I qualify for, including controlled testing when specifically authorized.</span></label>
+          </div>
+        </fieldset>
+        <fieldset class="nested-fieldset">
+          <legend>If specifically assigned, which controlled tests would you be comfortable performing? <small>Optional</small></legend>
+          <p class="form-helper">These are preferences only. Checking an item does not authorize the action. Follow only the instructions in your assigned Tester Task.</p>
+          <div class="choice-grid">
+            <label><input type="checkbox" name="controlledActions[]" value="song_request"> One authorized song request</label>
+            <label><input type="checkbox" name="controlledActions[]" value="chat_message"> One harmless authorized Chat message</label>
+            <label><input type="checkbox" name="controlledActions[]" value="chat_mention"> Two-account Chat mention testing</label>
+            <label><input type="checkbox" name="controlledActions[]" value="session_testing"> Sign-in / sign-out / session testing</label>
+            <label><input type="checkbox" name="controlledActions[]" value="report_block"> Report/block/unblock workflow without sending a moderation email</label>
+            <label><input type="checkbox" name="controlledActions[]" value="account_testing"> General account-based testing</label>
+            <label><input type="checkbox" name="controlledActions[]" value="none"> None</label>
+          </div>
+        </fieldset>
+        <div class="form-field">
+          <label for="tester-availability">About how much time would you usually be able to spend testing during a two-week testing cycle? <small>Optional</small></label>
+          <select id="tester-availability" name="testingAvailability">
+            <option value="">Choose an estimate</option>
+            <option value="under_30m">Less than 30 minutes</option>
+            <option value="30_60m">About 30–60 minutes</option>
+            <option value="1_2h">About 1–2 hours</option>
+            <option value="2_4h">About 2–4 hours</option>
+            <option value="over_4h">More than 4 hours</option>
+            <option value="varies">It varies</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="tester-experience">Anything else that may help us assign testing? <small>Optional</small></label>
+          <textarea id="tester-experience" name="experience" maxlength="1200" rows="4" placeholder="Optional. Tell us about previous app testing, accessibility experience, unusual Android hardware, audio accessories, or anything else that may help us choose a good assignment."></textarea>
+          <p class="form-helper">No testing experience is required.</p>
+        </div>
+      </fieldset>
       <div class="visually-hidden" aria-hidden="true"><label for="tester-company">Leave this field blank</label><input id="tester-company" name="company" tabindex="-1" autocomplete="off"></div>
       <label class="consent-check"><input type="checkbox" name="consent" value="yes" required> I agree that the project coordinator may use these details to contact me about 24Seven.FM Player Alpha testing. I will not submit passwords, station credentials, CAPTCHA answers, or other authentication secrets.</label>
-      <p class="form-privacy">The form sends your application directly to the project coordinator without a public record or a website database. Details are used only to assess and manage Alpha invitations; use the Player support route to request deletion.</p>
+      <p class="form-privacy">Your application is sent privately to the project coordinator and may be retained in the private tester-intake record for Alpha review and assignment. It is not published. Account availability means only whether you have an account; never submit passwords, security answers, CAPTCHA answers, or other login information. Testing preferences help us match focused assignments; use the Player support route to request deletion.</p>
+      <div class="cf-turnstile" data-sitekey="0x4AAAAAAEPR2A0JwM5Qhrvt" data-action="alpha-tester-interest"></div>
       <p class="form-status" data-alpha-tester-status role="status" aria-live="polite"></p>
       <button class="button primary" type="submit" data-alpha-tester-submit>Send tester-interest application</button>
     </form>
@@ -105,6 +261,7 @@ section: product-testing
     </aside>
   </div>
 </section>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
 <section class="content-section testing-tasks-section" id="testing-tasks" data-testing-tasks>
   <div class="content-intro wide">

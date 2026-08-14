@@ -20,12 +20,14 @@ EXPECTED_PAGES = {
     "/roadmap/": "roadmap/index.html",
     "/resources/": "resources/index.html",
     "/privacy/": "privacy/index.html",
+    "/turnstile-test/": "turnstile-test/index.html",
     "/404.html": "404.html",
 }
 REQUIRED_FILES = {
     ".htaccess",
     "alpha-tester-interest.php",
     "private-tester-queue.php",
+    "turnstile-test.php",
     "assets/privacy.css",
     "assets/private-tester-queue.js",
     "assets/tester-tasks.json",
@@ -63,7 +65,7 @@ SECRET_MARKERS = {
 REQUIRED_HTACCESS_DIRECTIVES = {
     "ErrorDocument 404 /404.html",
     "<IfModule mod_headers.c>",
-    "Header always set Content-Security-Policy \"default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'self'; form-action 'self'; frame-ancestors 'none'; frame-src 'none'; img-src 'self' data:; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; upgrade-insecure-requests\"",
+    "Header always set Content-Security-Policy \"default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'self'; form-action 'self'; frame-ancestors 'none'; frame-src https://challenges.cloudflare.com; img-src 'self' data:; object-src 'none'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; upgrade-insecure-requests\"",
     "Header always set Permissions-Policy \"camera=(), geolocation=(), microphone=(), payment=(), usb=()\"",
     "Header always set Referrer-Policy \"strict-origin-when-cross-origin\"",
     "Header always set X-Content-Type-Options \"nosniff\"",
@@ -272,8 +274,11 @@ def audit() -> int:
         fail("robots.txt does not identify the production sitemap", failures)
 
     sitemap = (artifact_root / "sitemap.xml").read_text(encoding="utf-8") if (artifact_root / "sitemap.xml").is_file() else ""
-    for route in EXPECTED_PAGES:
+    for route, relative_path in EXPECTED_PAGES.items():
         if route == "/404.html":
+            continue
+        document = html_documents.get(artifact_root / relative_path)
+        if document is not None and "noindex" in document.meta.get("robots", "").lower():
             continue
         if f"<loc>{PRODUCTION_ORIGIN}{route}</loc>" not in sitemap:
             fail(f"Sitemap is missing {route}", failures)

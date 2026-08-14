@@ -1,0 +1,45 @@
+---
+layout: project
+title: Turnstile verification test · 24Seven.FM Player
+description: Isolated verification of the 24Seven.FM Player Turnstile integration.
+permalink: /turnstile-test/
+section: turnstile-test
+robots: noindex, nofollow, noarchive
+---
+<section class="page-hero">
+  <div>
+    <p class="eyebrow">Isolated integration check</p>
+    <h1>Turnstile verification test</h1>
+    <p class="page-lede">This form sends one test-only confirmation email after verifying a Cloudflare Turnstile token. It does not record an application or change any account state.</p>
+  </div>
+  <aside class="page-summary" aria-label="Test scope">
+    <span>Verification-only route</span>
+    <strong>Test confirmation only</strong>
+    <dl>
+      <div><dt>Email</dt><dd>One test confirmation</dd></div>
+      <div><dt>Storage</dt><dd>None</dd></div>
+      <div><dt>Action</dt><dd>turnstile-test</dd></div>
+    </dl>
+  </aside>
+</section>
+
+<section class="content-section" aria-labelledby="turnstile-test-heading">
+  <div class="content-intro wide">
+    <p class="eyebrow">Cloudflare</p>
+    <h2 id="turnstile-test-heading">Complete the check, then submit</h2>
+    <p>A successful response confirms server-side token verification and test-email delivery. A token can be used only once; refresh the page before another attempt.</p>
+  </div>
+  <div class="tester-application-layout">
+    <form class="tester-application-form" action="/turnstile-test.php" method="post">
+      <div class="cf-turnstile" data-sitekey="0x4AAAAAAEPR2A0JwM5Qhrvt" data-action="turnstile-test"></div>
+      <button class="button primary" type="submit">Verify Turnstile</button>
+      <p class="form-status" role="status" aria-live="polite"></p>
+    </form>
+    <aside class="tester-application-notes" aria-label="Test notes">
+      <p class="eyebrow">Expected result</p>
+      <h3>One successful verification</h3>
+      <p>The endpoint validates the Cloudflare response, action, and exact public hostname before sending its test-only confirmation.</p>
+    </aside>
+  </div>
+</section>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>

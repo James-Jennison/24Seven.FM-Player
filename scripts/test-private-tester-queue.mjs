@@ -19,6 +19,14 @@ const future = tasks.filter((task) => task.state === "future");
 assert(current.length === 19 && future.length === 4, "Queue task availability must match the canonical registry");
 assert(!endpoint.includes("email_batches (\n            id INTEGER PRIMARY KEY,\n            tester_id"), "Existing email persistence must remain separate from task assignments");
 assert(endpoint.includes("CREATE TABLE IF NOT EXISTS tester_task_assignments"), "Queue must add the assignment table additively");
+assert(endpoint.includes("CREATE TABLE IF NOT EXISTS tester_onboarding"), "Queue must persist onboarding separately from enrollment and assignments");
+assert(endpoint.includes("profile_pending', 'profile_complete', 'invited', 'orientation_sent', 'ready', 'paused"), "Onboarding lifecycle statuses are incomplete");
+assert(endpoint.includes("function profileSummary(array $tester): array"), "Queue must evaluate assignment-relevant profile completeness");
+assert(endpoint.includes("function renderOperationsDashboard"), "Queue must render an operations dashboard instead of every tester form at once");
+assert(endpoint.includes("function renderTesterWorkspace"), "Queue must provide a focused per-tester workspace");
+assert(endpoint.includes("send_onboarding_email"), "Queue must support an individual orientation-email action");
+assert(endpoint.includes("This tester needs their profile update before an orientation email can be sent."), "Orientation must not bypass profile completion");
+assert(endpoint.includes("orientation_email_attempts"), "Orientation-email handoff attempts must be auditable");
 assert(endpoint.includes("task_status TEXT NOT NULL DEFAULT \\'assigned\\'"), "Assignments must have a separate default status");
 assert(endpoint.includes("task_status IN (\\'assigned\\', \\'in_progress\\', \\'complete\\', \\'blocked\\')"), "Assignment statuses are incomplete");
 assert(endpoint.includes("if (($task['state'] ?? '') !== 'current')"), "Future task server-side block is missing");
@@ -39,6 +47,7 @@ assert(!assignmentMessageSource.includes("$assignment['email']"), "Copy assignme
 assert(!assignmentMessageSource.includes("$assignment['display_name']"), "Copy assignment must not include tester name");
 assert(client.includes("data-assignment-copy"), "Copy assignment client action is missing");
 assert(client.includes("data-task-assignment-form"), "Task preview client integration is missing");
+assert(client.includes("'profile-update'"), "Profile-update email template is missing");
 assert(client.includes("checkbox.required = mode === 'required'"), "Required mutation authorization is not enforced in the UI");
 assert(tasks.find((task) => task.id === "TT-09").safetyWarning.includes("ONE LIVE REQUEST MAXIMUM"), "TT-09 safety boundary is missing");
 for (const id of ["TT-19", "TT-20"]) {

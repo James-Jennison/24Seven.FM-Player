@@ -58,7 +58,7 @@ jobs:
           destination: ./_site
 
       - name: Stage public Tester Task metadata
-        run: install -m 0644 privacy-site/_data/tester_tasks.json _site/assets/tester-tasks.json
+        run: sudo install -m 0644 privacy-site/_data/tester_tasks.json _site/assets/tester-tasks.json
 
       - name: Validate dedicated-domain artifact
         run: |
@@ -67,6 +67,7 @@ jobs:
           node --check privacy-site/assets/private-tester-queue.js
           python3 scripts/validate-tester-tasks.py
           node scripts/test-private-tester-queue.mjs
+          node scripts/test-tester-portal.mjs
           python3 scripts/validate-project-site.py _site
 
       - name: Prepare temporary GitHub Pages transition
