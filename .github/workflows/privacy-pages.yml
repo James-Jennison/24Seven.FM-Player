@@ -58,7 +58,7 @@ jobs:
           destination: ./_site
 
       - name: Stage public Tester Task metadata
-        run: install -m 0644 privacy-site/_data/tester_tasks.json _site/assets/tester-tasks.json
+        run: sudo install -m 0644 privacy-site/_data/tester_tasks.json _site/assets/tester-tasks.json
 
       - name: Validate dedicated-domain artifact
         run: |
