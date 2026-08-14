@@ -131,4 +131,7 @@ expectIntake(!str_contains($form, 'name="username"') && !str_contains($form, 'na
 $source = file_get_contents(dirname(__DIR__) . '/privacy-site/alpha-tester-interest.php');
 expectIntake(is_string($source), 'Unable to inspect the tester-interest handler.');
 expectIntake(strpos($source, 'verifyTurnstile($turnstileToken, $turnstileConfig[\'secret\'])') < strpos($source, '$application = applicationFromRequest();'), 'Turnstile must be verified before application processing.');
+
+expectIntake(!is_file(dirname(__DIR__) . '/workers/alpha-tester-interest/worker.mjs') && !is_file(dirname(__DIR__) . '/workers/alpha-tester-interest/wrangler.toml'), 'The unused Cloudflare Worker must not remain in the repository workflow.');
+
 fwrite(STDOUT, "Alpha tester intake contract: valid.\n");

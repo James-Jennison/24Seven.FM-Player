@@ -1,7 +1,0 @@
-name = "24seven-player-alpha-tester-interest"
-main = "worker.mjs"
-compatibility_date = "2026-08-11"
-
-# The production EMAIL binding, TURNSTILE_SECRET, and RECIPIENT_EMAIL are
-# configured in Cloudflare's protected Worker state. They are deliberately not
-# represented in this repository because the recipient address is private.
