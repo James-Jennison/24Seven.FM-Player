@@ -245,6 +245,7 @@ section: product-testing
       <div class="visually-hidden" aria-hidden="true"><label for="tester-company">Leave this field blank</label><input id="tester-company" name="company" tabindex="-1" autocomplete="off"></div>
       <label class="consent-check"><input type="checkbox" name="consent" value="yes" required> I agree that the project coordinator may use these details to contact me about 24Seven.FM Player Alpha testing. I will not submit passwords, station credentials, CAPTCHA answers, or other authentication secrets.</label>
       <p class="form-privacy">Your application is sent privately to the project coordinator and may be retained in the private tester-intake record for Alpha review and assignment. It is not published. Account availability means only whether you have an account; never submit passwords, security answers, CAPTCHA answers, or other login information. Testing preferences help us match focused assignments; use the Player support route to request deletion.</p>
+      <div class="cf-turnstile" data-sitekey="0x4AAAAAAEPR2A0JwM5Qhrvt" data-action="alpha-tester-interest"></div>
       <p class="form-status" data-alpha-tester-status role="status" aria-live="polite"></p>
       <button class="button primary" type="submit" data-alpha-tester-submit>Send tester-interest application</button>
     </form>
@@ -260,6 +261,7 @@ section: product-testing
     </aside>
   </div>
 </section>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
 <section class="content-section testing-tasks-section" id="testing-tasks" data-testing-tasks>
   <div class="content-intro wide">
