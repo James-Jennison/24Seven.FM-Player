@@ -89,7 +89,7 @@ if (!is_array($verification)
 }
 
 putenv('ALPHA_TESTER_INTEREST_TEST_LIBRARY=1');
-require dirname(__DIR__) . '/alpha-tester-interest.php';
+require __DIR__ . '/alpha-tester-interest.php';
 putenv('ALPHA_TESTER_INTEREST_TEST_LIBRARY');
 
 $confirmation = testConfirmationEmail();
