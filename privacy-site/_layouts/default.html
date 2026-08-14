@@ -29,7 +29,9 @@
       </button>
       <nav id="project-navigation" aria-label="Primary navigation">
         {% for item in site.data.project.navigation %}
+        {% if item.primary %}
         <a{% if item.section == 'privacy' %} aria-current="page"{% endif %} href="{{ item.path | relative_url }}">{{ item.label }}</a>
+        {% endif %}
         {% endfor %}
       </nav>
       <div class="header-actions">
@@ -78,7 +80,7 @@
       </div>
       <nav aria-label="Footer navigation">
         <a href="{{ '/' | relative_url }}">Project overview</a>
-        <a href="{{ '/product-testing/' | relative_url }}">Test the Player</a>
+        <a href="{{ '/product-testing/' | relative_url }}">Tester Hub</a>
         <a href="{{ '/roadmap/' | relative_url }}">Roadmap</a>
         <a href="{{ site.github_url }}/issues">Report an app issue</a>
         <a href="{{ site.master_url }}">JamesJennison.net</a>

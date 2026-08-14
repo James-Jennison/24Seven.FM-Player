@@ -1,7 +1,7 @@
 ---
 layout: project
-title: Product testing · 24Seven.FM Player
-description: Run the complete manual test catalog for the 24Seven.FM Player and submit structured, privacy-safe results.
+title: Closed Alpha tester hub · 24Seven.FM Player
+description: Join the Closed Alpha, manage your tester profile, and complete focused 24Seven.FM Player assignments.
 permalink: /product-testing/
 section: product-testing
 ---
@@ -9,13 +9,13 @@ section: product-testing
 {% assign task_summary = task_registry.summary %}
 <section class="page-hero">
   <div>
-    <p class="eyebrow">Tester workspace</p>
-    <h1>Test the player. Record every result.</h1>
-    <p class="page-lede">This is the canonical manual acceptance catalog for the M01–M60 roadmap. A coordinator assigns current, specialist, campaign, or future cases with the stations, accounts, devices, accessories, and approved commerce environments needed for each run; no single tester is expected to own the entire matrix.</p>
+    <p class="eyebrow">Closed Alpha tester hub</p>
+    <h1>Everything for a focused test.</h1>
+    <p class="page-lede">Apply to join the Closed Alpha, keep your tester profile current, and complete only the assignments matched to your device and coverage. The full catalog remains here for reference; no one is expected to test it alone.</p>
     <div class="actions">
-      <a class="button primary" href="#alpha-tester-interest">Apply to test the Alpha</a>
-      <a class="button primary" href="{{ site.github_url }}/issues/new?template=product-test.yml">Submit a test result</a>
-      <a class="button secondary" href="{{ site.github_url }}/issues?q=is%3Aissue+label%3Atesting-feedback">Browse tester reports</a>
+      <a class="button primary" href="#alpha-tester-interest">Apply to join</a>
+      <a class="button secondary" href="{{ '/tester-portal.php' | relative_url }}">Existing tester sign in</a>
+      <a class="button secondary" href="#testing-tasks">Browse the task catalog</a>
     </div>
   </div>
   <aside class="page-summary" aria-label="Testing workspace summary">
@@ -31,23 +31,17 @@ section: product-testing
 </section>
 
 <nav class="section-jump" aria-label="On this page">
-  <a href="#start">Before testing</a>
-  <a href="#alpha-tester-interest">Apply to test</a>
-  <a href="#testing-tasks">Testing tasks</a>
-  <a href="#listening-tests">Listening</a>
-  <a href="#member-tests">Account and community</a>
-  <a href="#device-tests">Devices and access</a>
-  <a href="#future-tests">Future programs</a>
-  <a href="#coverage">Coverage matrix</a>
-  <a href="#report">Report a result</a>
-  <a href="#safety">Safety</a>
+  <a href="#alpha-tester-interest">Apply</a>
+  <a href="{{ '/tester-portal.php' | relative_url }}">Tester sign in</a>
+  <a href="#testing-tasks">Task library</a>
+  <a href="#catalog-controls">Testing reference</a>
 </nav>
 
 <section class="content-section" id="alpha-tester-interest">
   <div class="content-intro wide">
-    <p class="eyebrow">Google Play internal testing is open</p>
-    <h2>Apply to test the Alpha</h2>
-    <p>Internal testing is limited. Apply with the Google-account email that should receive the Play testing invitation. An application is interest only; an invitation is not guaranteed.</p>
+    <p class="eyebrow">Closed Alpha enrollment</p>
+    <h2>Apply for Closed Alpha access</h2>
+    <p>Closed Alpha space is limited. Apply with the Google-account email that should be eligible for Google Play access. An application is interest only; admission is not guaranteed.</p>
   </div>
   <div class="tester-application-layout">
     <form class="tester-application-form" data-alpha-tester-form action="/alpha-tester-interest.php" method="post" novalidate>
@@ -254,8 +248,8 @@ section: product-testing
       <h3>Invitation, then a focused assignment</h3>
       <ol>
         <li>The coordinator reviews device coverage and current testing needs.</li>
-        <li>If selected, your specified Google account receives the internal-test invitation.</li>
-        <li>Install from Google Play, then use the public catalog to record redacted results.</li>
+        <li>If selected, your specified Google account is added to the Closed Alpha eligibility group.</li>
+        <li>Complete the Google Play opt-in, then use the Tester Hub to receive and report focused assignments.</li>
       </ol>
       <p><strong>Please do not submit:</strong> station usernames or passwords, CAPTCHA answers, screenshots with personal information, or private messages.</p>
     </aside>

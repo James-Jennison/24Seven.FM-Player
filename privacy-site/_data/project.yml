@@ -2,52 +2,60 @@ navigation:
   - section: overview
     label: Overview
     path: /
+    primary: true
     description: Product overview, current program, screenshots, and project entry points.
   - section: features
-    label: Features
+    label: Product
     path: /features/
+    primary: true
     description: Playback, discovery, accounts, community, stations, and boundaries.
   - section: development
-    label: Development
+    label: Engineering
     path: /development/
+    primary: true
     description: Native architecture, engineering principles, workflow, and source map.
   - section: testing
-    label: Testing
+    label: Quality
     path: /testing/
+    primary: true
     description: Automated, emulator, physical-device, accessibility, and release evidence.
   - section: product-testing
-    label: Test the Player
+    label: Tester Hub
     path: /product-testing/
+    primary: true
     description: Searchable acceptance catalog with private browser-local progress.
   - section: roadmap
     label: Roadmap
     path: /roadmap/
+    primary: true
     description: Canonical M01–M60 milestones, dependencies, evidence, and future scope.
   - section: resources
     label: Resources
     path: /resources/
+    primary: false
     description: Searchable architecture, research, testing, release, and contributor library.
   - section: privacy
     label: Privacy
     path: /privacy/
+    primary: false
     description: Canonical app privacy notice with plain-language data boundaries.
 
 site_meta:
-  verified: 2026-08-11
+  verified: 2026-08-14
   source_commit: 15aa3d1
-  verification_label: Google Play internal-test release submitted on August 11, 2026
+  verification_label: Closed Alpha tester onboarding and focused testing are active
 
 play_status:
-  label: M40 · Google Play internal testing
-  headline: Internal-test release submitted for review
-  detail: The signed 24Seven.FM Player internal-test release has been submitted to Google Play and is under review. It is not publicly available yet; tester access will be shared after Google makes the release available.
+  label: Closed Alpha · active cohort
+  headline: Closed Alpha testing is underway
+  detail: Eligible testers complete their profile, join the Google Play test, and receive focused assignments through the private Tester Hub. The program operates as a limited, coverage-based cohort rather than a broad public test.
 
 roadmap_meta:
-  updated: 2026-08-11
+  updated: 2026-08-14
   achieved_count: 36
   total_count: 60
-  active_phase: M40
-  active_label: Google Play internal-test delivery and review
+  active_phase: Closed Alpha
+  active_label: Closed Alpha onboarding and focused testing
 
 milestones:
   - order: 1
@@ -487,43 +495,43 @@ roadmap:
     blocking: false
     dependencies: "Completed with the exact signed version 2 / 0.1.0-alpha01 candidate and required listing and release materials"
     evidence: "docs/ROADMAP.md"
-    summary: "The signed internal-test candidate, store listing, release notes, roadmap, and testing materials were prepared for submission."
+    summary: "The signed Closed Alpha candidate, store listing, release notes, roadmap, and testing materials were prepared for controlled delivery."
 
   - id: "M40"
     legacy_id: "M28 delivery slice"
     phase: "alpha-distribution"
-    name: "Play Alpha Delivery and Pre-launch Remediation"
+    name: "Play Alpha Delivery and Operational Remediation"
     state: "active"
-    state_label: "In review"
+    state_label: "Active · Closed Alpha"
     blocking: true
-    dependencies: "Google Play review and internal-test availability"
+    dependencies: "Active Closed Alpha operation; Play delivery evidence and remediation"
     forecast: "3–10 calendar days after trigger"
     forecast_confidence: "Medium"
     forecast_model: "Terra High; Sol High for release decisions"
     evidence: "docs/play-console-checklist.md"
-    summary: "The signed internal-test bundle is uploaded. Await Google Play review, then verify Play-delivered fresh install and update, generated splits, and any review or pre-launch findings."
+    summary: "Closed Alpha onboarding is active. Continue reconciling Play-delivered install and update behavior, generated splits, and any pre-launch finding or remediation."
 
   - id: "M41"
     legacy_id: "M28 publication slice"
     phase: "alpha-distribution"
-    name: "Explicit Alpha Publication"
-    state: "planned"
-    state_label: "Planned after M40"
+    name: "Closed Alpha Activation and Operations"
+    state: "active"
+    state_label: "Active · controlled cohort"
     blocking: true
-    dependencies: "M40 and owner authorization"
+    dependencies: "Closed Alpha testers and ongoing M40 remediation"
     forecast: "0.5–1 active day after trigger"
     forecast_confidence: "High once authorized"
     forecast_model: "Sol High"
     evidence: "docs/play-console-checklist.md"
-    summary: "After M40 availability and explicit authorization, share tester access, verify installation and playback, and retain support and rollback records."
+    summary: "Access is active for the limited testing cohort. Continue verifying cohort installation, playback, support handling, and rollback records through assigned testing."
 
   - id: "M42"
     phase: "production"
     name: "Closed-Test Operations and Stabilization"
     state: "planned"
-    state_label: "Planned after M41"
+    state_label: "Planned after the Closed Alpha"
     blocking: false
-    dependencies: "M41"
+    dependencies: "Closed Alpha results and exit criteria"
     forecast: "3–5 calendar weeks after trigger"
     forecast_confidence: "Medium"
     forecast_model: "Terra Medium; Sol High checkpoints"

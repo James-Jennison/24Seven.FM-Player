@@ -1,7 +1,7 @@
 ---
 layout: project
 title: Canonical roadmap · 24Seven.FM Player
-description: Explore the dependency-ordered M01–M60 roadmap, verified completion history, active Alpha gates, production path, and bounded future work.
+description: Explore the dependency-ordered M01–M60 roadmap, recorded completion history, active Closed Alpha operations, production path, and bounded future work.
 permalink: /roadmap/
 section: roadmap
 ---
@@ -40,13 +40,13 @@ section: roadmap
 {% assign alpha_readiness = site.data.project.roadmap | where: "phase", "alpha-readiness" %}
 <section class="content-section" id="current">
   <div class="content-intro wide">
-    <p class="eyebrow">{{ site.data.project.roadmap_meta.active_phase }} · Verified snapshot</p>
+    <p class="eyebrow">{{ site.data.project.roadmap_meta.active_phase }} · Current program</p>
     <h2>{{ site.data.project.roadmap_meta.active_label }}</h2>
-    <p>M29–M35 are complete. The active gate is Google Play internal-test delivery and review; unrelated notification authorization remains separately scoped.</p>
+    <p>The current program is the Closed Alpha: eligible testers complete their profile and Google Play opt-in, then receive focused assignments based on their device and coverage. Unrelated notification authorization remains separately scoped.</p>
   </div>
   <div class="roadmap-callout migration-callout">
-    <div><p class="eyebrow">Repository checkpoint · {{ site.data.project.site_meta.source_commit }}</p><h2>State is dated, not implied live</h2></div>
-    <div><p>This public view records the durable delivery stages and the repository state verified on {{ site.data.project.site_meta.verified | date: "%B %-d, %Y" }}. External waits remain visible, while speculative schedules and internal planning details stay out of the website.</p><div class="actions"><a class="button secondary" href="{{ site.github_url }}/blob/main/docs/ROADMAP.md">Read the roadmap source</a></div></div>
+    <div><p class="eyebrow">Status discipline</p><h2>Current operations and recorded evidence stay distinct</h2></div>
+    <div><p>Closed Alpha operations are current as of {{ site.data.project.site_meta.verified | date: "%B %-d, %Y" }}. Commit references, test counts, and milestone records below remain dated evidence—not live telemetry or a claim that every later gate is complete.</p><div class="actions"><a class="button secondary" href="{{ site.github_url }}/blob/main/docs/ROADMAP.md">Read supporting roadmap records</a></div></div>
   </div>
   <div class="roadmap-tools" data-filter-controls data-target="#alpha-readiness-grid">
     <label class="filter-search" for="alpha-readiness-search">Find an Alpha-readiness gate<input id="alpha-readiness-search" type="search" placeholder="Search ID, policy, security, device…" autocomplete="off" data-filter-query></label>
@@ -115,7 +115,7 @@ section: roadmap
 
 {% assign alpha_distribution = site.data.project.roadmap | where: "phase", "alpha-distribution" %}
 <section class="content-section" id="alpha">
-  <div class="content-intro wide"><p class="eyebrow">M39–M41 · Exact artifact to authorized release</p><h2>Freeze, prove delivery, then publish</h2><p>Candidate creation, Play delivery/remediation, and publication are separate gates. A green build never publishes itself.</p></div>
+  <div class="content-intro wide"><p class="eyebrow">M39–M41 · Candidate to active Closed Alpha</p><h2>Operate the cohort with evidence</h2><p>Candidate preparation, Play delivery/remediation, and limited-cohort operations are separate gates. Active testing does not turn historical evidence into live telemetry or imply broader availability.</p></div>
   <div class="roadmap-callout migration-callout">
     <div><p class="eyebrow">{{ site.data.project.play_status.label }}</p><h2>{{ site.data.project.play_status.headline }}</h2></div>
     <div><p>{{ site.data.project.play_status.detail }}</p></div>
@@ -148,6 +148,6 @@ section: roadmap
 </section>
 
 <section class="cta" aria-labelledby="roadmap-cta-title">
-  <div><p class="eyebrow">Canonical source</p><h2 id="roadmap-cta-title">Inspect the roadmap in the repository.</h2><p>The public website is a curated checkpoint. The repository roadmap remains the detailed planning and evidence authority.</p></div>
-  <div class="actions"><a class="button primary" href="{{ site.github_url }}/blob/main/docs/ROADMAP.md">Read the roadmap source</a><a class="button secondary" href="{{ site.github_url }}">Open the repository</a></div>
+  <div><p class="eyebrow">Supporting records</p><h2 id="roadmap-cta-title">Inspect the detailed roadmap evidence.</h2><p>The public site reports the current program; repository documents preserve the detailed planning model and dated supporting evidence.</p></div>
+  <div class="actions"><a class="button primary" href="{{ site.github_url }}/blob/main/docs/ROADMAP.md">Read roadmap records</a><a class="button secondary" href="{{ site.github_url }}">Open the repository</a></div>
 </section>
