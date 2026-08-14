@@ -1,0 +1,126 @@
+#!/usr/bin/env php
+<?php
+declare(strict_types=1);
+
+putenv('ALPHA_TESTER_INTEREST_TEST_LIBRARY=1');
+require dirname(__DIR__) . '/privacy-site/alpha-tester-interest.php';
+
+function expectIntake(bool $condition, string $message): void
+{
+    if (!$condition) {
+        throw new RuntimeException($message);
+    }
+}
+
+function expectInvalid(callable $callback, string $message): void
+{
+    try {
+        $callback();
+    } catch (InvalidArgumentException) {
+        return;
+    }
+    throw new RuntimeException($message);
+}
+
+function validApplication(): array
+{
+    return [
+        'name' => 'Example Tester',
+        'email' => 'tester@example.test',
+        'country' => 'United States',
+        'primaryStation' => 'sst',
+        'otherStations' => ['sst', '1980s', '1980s'],
+        'stationAccounts' => ['sst', 'none'],
+        'device' => 'Pixel Test',
+        'androidVersion' => 'Android 16',
+        'deviceFormFactor' => 'phone',
+        'otherDevices' => 'Tablet test device',
+        'interests' => ['playback', 'network_recovery', 'playback'],
+        'networkCapabilities' => ['wifi', 'network_handoff'],
+        'audioCapabilities' => ['device_speaker', 'none'],
+        'accessibilityCapabilities' => ['talkback', 'none'],
+        'testingComfort' => 'controlled',
+        'controlledActions' => ['song_request', 'none'],
+        'testingAvailability' => '1_2h',
+        'experience' => 'Interested in accessibility testing.',
+        'company' => '',
+        'consent' => 'yes',
+    ];
+}
+
+$_POST = validApplication();
+$application = applicationFromRequest();
+expectIntake($application['primary_station'] === 'sst', 'Primary station must retain its canonical ID.');
+expectIntake($application['other_stations'] === ['1980s'], 'Primary-station and duplicate other-station values must normalize safely.');
+expectIntake($application['station_accounts'] === ['none'], 'None must be exclusive for station accounts.');
+expectIntake($application['audio_capabilities'] === ['none'], 'None must be exclusive for audio capabilities.');
+expectIntake($application['accessibility_capabilities'] === ['none'], 'None must be exclusive for accessibility capabilities.');
+expectIntake($application['controlled_actions'] === ['none'], 'None must be exclusive for controlled actions.');
+expectIntake($application['interests'] === ['playback', 'network_recovery'], 'Duplicate checkbox values must normalize.');
+
+foreach (array_keys(PRIMARY_STATIONS) as $station) {
+    $_POST = validApplication();
+    $_POST['primaryStation'] = $station;
+    expectIntake(applicationFromRequest()['primary_station'] === $station, "Primary station {$station} was rejected.");
+}
+
+foreach ([
+    ['primaryStation', 'unknown'], ['deviceFormFactor', 'watch'], ['testingComfort', 'unsafe'], ['testingAvailability', 'always'],
+] as [$field, $value]) {
+    $_POST = validApplication();
+    $_POST[$field] = $value;
+    expectInvalid(static fn (): array => applicationFromRequest(), "{$field} must be allowlisted.");
+}
+foreach ([['otherStations', ['unknown']], ['stationAccounts', ['unknown']], ['networkCapabilities', ['unknown']], ['audioCapabilities', ['unknown']], ['accessibilityCapabilities', ['unknown']], ['interests', ['unknown']], ['controlledActions', ['unknown']]] as [$field, $value]) {
+    $_POST = validApplication();
+    $_POST[$field] = $value;
+    expectInvalid(static fn (): array => applicationFromRequest(), "{$field} must reject unknown values.");
+}
+$_POST = validApplication();
+unset($_POST['primaryStation']);
+expectInvalid(static fn (): array => applicationFromRequest(), 'Primary station must be required.');
+$_POST = validApplication();
+unset($_POST['deviceFormFactor']);
+expectInvalid(static fn (): array => applicationFromRequest(), 'Device form factor must be required.');
+$_POST = validApplication();
+unset($_POST['testingComfort']);
+expectInvalid(static fn (): array => applicationFromRequest(), 'Testing comfort must be required.');
+$_POST = validApplication();
+$_POST['otherDevices'] = str_repeat('a', 501);
+expectInvalid(static fn (): array => applicationFromRequest(), 'Other-device text must be bounded.');
+$_POST = validApplication();
+$_POST['experience'] = str_repeat('é', 601);
+expectInvalid(static fn (): array => applicationFromRequest(), 'Assignment notes must be byte-bounded UTF-8.');
+
+$_POST = validApplication();
+$message = coordinatorIntakeMessage(applicationFromRequest());
+foreach (['Primary station:', 'Other familiar stations:', 'Station accounts available:', 'Device form factor:', 'Other Android devices:', 'Network capabilities:', 'Audio/accessory capabilities:', 'Accessibility/alternative-input capabilities:', 'Testing comfort level:', 'Controlled-action preferences:', 'Two-week availability:', 'Assignment notes:'] as $label) {
+    expectIntake(str_contains($message, $label), "Coordinator intake email is missing {$label}");
+}
+expectIntake(!str_contains($message, 'password') && !str_contains($message, 'CAPTCHA answer'), 'Coordinator message must not create secret fields.');
+
+$maximum = validApplication();
+$maximum['name'] = str_repeat('a', 100);
+$maximum['email'] = str_repeat('a', 240) . '@example.test';
+$maximum['country'] = str_repeat('a', 80);
+$maximum['device'] = str_repeat('a', 160);
+$maximum['androidVersion'] = str_repeat('a', 48);
+$maximum['otherDevices'] = str_repeat('a', 500);
+$maximum['experience'] = str_repeat('a', 1200);
+$maximum['otherStations'] = array_keys(STATIONS);
+$maximum['stationAccounts'] = array_keys(STATIONS);
+$maximum['interests'] = array_keys(TESTING_INTERESTS);
+$maximum['networkCapabilities'] = array_keys(NETWORK_CAPABILITIES);
+$maximum['audioCapabilities'] = array_keys(AUDIO_CAPABILITIES);
+$maximum['accessibilityCapabilities'] = array_keys(ACCESSIBILITY_CAPABILITIES);
+$maximum['controlledActions'] = array_keys(CONTROLLED_ACTIONS);
+expectIntake(strlen(http_build_query($maximum)) < MAX_REQUEST_BYTES, 'Maximum legitimate form payload exceeds request-size limit.');
+
+$form = file_get_contents(dirname(__DIR__) . '/privacy-site/product-testing/index.html');
+expectIntake(is_string($form), 'Unable to inspect the tester-interest form.');
+foreach (['<fieldset>', 'What is your primary 24Seven.FM station?', 'name="primaryStation" required', 'name="deviceFormFactor" required', 'name="testingComfort" value="readonly" required', 'Do not enter your username, password, security answer, CAPTCHA answer, or any other login information.', 'name="company"', 'name="consent" value="yes" required'] as $needle) {
+    expectIntake(str_contains($form, $needle), "Form contract is missing {$needle}");
+}
+expectIntake(!str_contains($form, 'name="username"') && !str_contains($form, 'name="password"'), 'The form must not collect credentials.');
+
+fwrite(STDOUT, "Alpha tester intake contract: valid.\n");

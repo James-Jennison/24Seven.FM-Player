@@ -139,6 +139,25 @@ function database(array $config): PDO
     if (!in_array('assignment_email_attempts', $assignmentColumns, true)) {
         $database->exec('ALTER TABLE tester_task_assignments ADD COLUMN assignment_email_attempts INTEGER NOT NULL DEFAULT 0');
     }
+    $testerColumns = array_column($database->query('PRAGMA table_info(testers)')->fetchAll(), 'name');
+    $testerMigrations = [
+        'primary_station' => 'TEXT',
+        'other_stations_json' => "TEXT NOT NULL DEFAULT '[]'",
+        'station_accounts_json' => "TEXT NOT NULL DEFAULT '[]'",
+        'device_form_factor' => 'TEXT',
+        'other_devices' => 'TEXT',
+        'network_capabilities_json' => "TEXT NOT NULL DEFAULT '[]'",
+        'audio_capabilities_json' => "TEXT NOT NULL DEFAULT '[]'",
+        'accessibility_capabilities_json' => "TEXT NOT NULL DEFAULT '[]'",
+        'testing_comfort' => 'TEXT',
+        'controlled_actions_json' => "TEXT NOT NULL DEFAULT '[]'",
+        'testing_availability' => 'TEXT',
+    ];
+    foreach ($testerMigrations as $column => $definition) {
+        if (!in_array($column, $testerColumns, true)) {
+            $database->exec("ALTER TABLE testers ADD COLUMN {$column} {$definition}");
+        }
+    }
     return $database;
 }
 
