@@ -135,9 +135,9 @@ section: roadmap
 
 {% assign future_items = site.data.project.roadmap | where: "phase", "future" %}
 <section class="content-section" id="future">
-  <div class="content-intro wide"><p class="eyebrow">M46–M60 · Nonblocking future scope</p><h2>Bounded programs with honest prerequisites</h2><p>Architecture, Private Messages, retired Forum scope, Cast, extended station behavior, account lifecycle access, and authorized native VIP/RIP commerce are visible without pretending they belong in the current Alpha.</p></div>
+  <div class="content-intro wide"><p class="eyebrow">M46–M60 · Nonblocking future scope</p><h2>Bounded programs with honest prerequisites</h2><p>Architecture, Private Messages, retired Forum and Google Cast scope, extended station behavior, account lifecycle access, and authorized native VIP/RIP commerce are visible without pretending they belong in the current Alpha.</p></div>
   <div class="roadmap-tools" data-filter-controls data-target="#future-grid">
-    <label class="filter-search" for="future-search">Search future milestones<input id="future-search" type="search" placeholder="Search PM, Cast, accounts, retired scope…" autocomplete="off" data-filter-query></label>
+    <label class="filter-search" for="future-search">Search future milestones<input id="future-search" type="search" placeholder="Search PM, accounts, retired scope…" autocomplete="off" data-filter-query></label>
     <div class="filter-buttons" role="group" aria-label="Filter future milestones by status"><button type="button" data-filter-state="all" aria-pressed="true">All</button><button type="button" data-filter-state="planned" aria-pressed="false">Planned</button><button type="button" data-filter-state="deferred" aria-pressed="false">Deferred</button><button type="button" data-filter-state="retired" aria-pressed="false">Retired</button></div>
     <p class="filter-count" aria-live="polite"><strong data-filter-count>{{ future_items.size }}</strong> visible</p>
   </div>

@@ -67,7 +67,6 @@ authorization or repair trigger is still authoritative.
 | M48 | M47 is complete | 1–2 active weeks | Medium | Terra High |
 | M49 | M48 is complete and mutation authorization is explicit | 1–2 active weeks | Medium | Terra High |
 | M50 | M49 and M38 are complete | 2–4 active weeks | Medium | Sol Extra High |
-| M55 | Stream-use permission and a compatible receiver are available | 2–4 active weeks; may end with an explicit no-go | Conditional | Sol High |
 | M56 | Controlled station evidence and approved test accounts are available | 1–3 active weeks | Medium | Sol High |
 | M57 | Station route authorization and account-lifecycle facts are available | 1–3 active weeks | Medium | Sol High |
 | M58 | Written station/merchant authority and a viable billing/activation partner are available | 2–4 active weeks for architecture; full contract timing is external | Conditional | Sol Extra High |
@@ -78,7 +77,7 @@ authorization or repair trigger is still authoritative.
 
 Refresh this document immediately when any of the following changes:
 
-1. A station/operator/rightsholder responds to M29, M30, M36, M47, M55, M56, M57, or M58.
+1. A station/operator/rightsholder responds to M29, M30, M36, M47, M56, M57, or M58.
 2. A candidate scope decision changes M39's current M28–M38 dependency.
 3. The Play Console changes the account's test or production-access requirements.
 4. A pre-launch, policy, device, accessibility, or tester finding adds a release-critical remediation.

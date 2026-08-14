@@ -523,7 +523,7 @@ section: product-testing
 
 <section class="content-section" id="future-tests">
   <div class="content-intro wide">
-    <p class="eyebrow">PT-26–PT-28, PT-32–PT-34, and PT-36–PT-38 · Deferred and future capability contracts</p>
+    <p class="eyebrow">PT-26–PT-28, PT-33–PT-34, and PT-36–PT-38 · Deferred and future capability contracts</p>
     <h2>Publish the test boundary before the feature</h2>
     <p>These cases are intentionally visible and marked Future. Run them only when the named milestone supplies an authorized build, accounts, station evidence, and mutation allowance; otherwise record Blocked rather than treating absence as a defect.</p>
   </div>
@@ -545,12 +545,6 @@ section: product-testing
       <h3>Private Message station, lifecycle, and notification certification</h3>
       <ol><li>Repeat PT-26 and PT-27 across all five stations with independent accounts and representative content.</li><li>Verify logout, expiry, process recreation, adaptive layouts, large text, TalkBack, and Razr lifecycle behavior.</li><li>If M38 is complete, test opt-in PM notifications, minimal payloads, duplicate suppression, sign-out, blocked identities where applicable, and gated navigation.</li><li>Confirm Chat and PM event controls and content never cross.</li></ol>
       <p class="test-pass"><strong>Pass:</strong> each station passes independently and optional delivery uses only the authorized notification architecture.</p>
-    </article>
-    <article class="future-test-case" id="pt-32">
-      <span>PT-32 · M55 Cast-certified build</span>
-      <h3>Google Cast receiver, handoff, and recovery</h3>
-      <ol><li>Verify only approved receivers and permitted station streams appear.</li><li>Start local playback, Cast, switch stations, pause/resume/stop, background, remove/reopen the task, and return to local output.</li><li>Verify metadata/artwork, timer semantics, notification/system state, disconnect, receiver loss, network loss, and reconnection.</li><li>Repeat the certified stream path across all five stations and confirm no custom relay or second logical player appears.</li></ol>
-      <p class="test-pass"><strong>Pass:</strong> sender/receiver ownership, rights, lifecycle, and station behavior match the M55 contract.</p>
     </article>
     <article class="future-test-case" id="pt-33">
       <span>PT-33 · M56 capability assignment</span>
@@ -664,7 +658,7 @@ section: product-testing
     <div><p class="eyebrow">Public report</p><h2>Redact before submitting</h2></div>
     <div>
       <p>GitHub issues are public. Never include passwords, security answers or CAPTCHA images, cookies, session values, account email addresses, real dates of birth, private messages, abuse-report content, signing material, private endpoints, full network captures, or screenshots containing personal information.</p>
-      <p>Do not repeatedly submit a song request, Chat post, Private Message, membership purchase, activation, or moderation report while investigating an indeterminate response. Inspect the relevant visible destination once, record the outcome, and stop. Forum access is permanently out of scope. PT-23 is a current M31 regression. PT-24 and PT-25 are current M32 regressions only when the supplied controlled harnesses and assignment are available. Do not test PT-22, PT-26–PT-28, PT-32–PT-34, or PT-36–PT-38 as shipped capabilities until their named roadmap milestones provide an authorized build and assignment. PT-35 may be run only by the M29 Play coordinator with current candidate, Console, and operator evidence.</p>
+      <p>Do not repeatedly submit a song request, Chat post, Private Message, membership purchase, activation, or moderation report while investigating an indeterminate response. Inspect the relevant visible destination once, record the outcome, and stop. Forum access and Google Cast are permanently out of scope. PT-23 is a current M31 regression. PT-24 and PT-25 are current M32 regressions only when the supplied controlled harnesses and assignment are available. Do not test PT-22, PT-26–PT-28, PT-33–PT-34, or PT-36–PT-38 as shipped capabilities until their named roadmap milestones provide an authorized build and assignment. PT-35 may be run only by the M29 Play coordinator with current candidate, Console, and operator evidence.</p>
       <ul class="inline-requirements"><li>Case ID included</li><li>Public metadata only</li><li>One environment per result</li><li>Redacted screenshots</li><li>No account secrets</li><li>No raw traffic captures</li></ul>
     </div>
   </div>

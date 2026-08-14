@@ -1,6 +1,6 @@
 # Milestone Real-World Time Ledger
 
-Last updated: `July 22, 2026 at 4:36:32 PM PDT (UTC−07:00)`
+Last updated: `August 14, 2026 at 1:01:09 PM PDT (UTC−07:00)`
 
 This is the permanent time-accounting record for the canonical M01–M60 milestones in [ROADMAP.md](ROADMAP.md). It
 preserves historical uncertainty instead of treating commit spans as labor time. Future milestone work must be
@@ -12,7 +12,7 @@ measured prospectively from the actual authorized execution start.
 | --- | ---: | --- |
 | Total canonical milestones planned | 60 | M01–M60 |
 | Total canonical milestones completed | 33 | M01–M28 and M31–M35 |
-| Confirmed or reconstructed active hours | 0.00 h identified | Historical active intervals were not recorded, so the real total is unknown. |
+| Confirmed or reconstructed active hours | 0.34 h identified | M55 retirement is prospectively measured; historical active intervals remain unknown. |
 | Total automated wait hours | Unknown | Workflow durations exist, but there is no evidence that execution waited on every run. |
 | Total user-blocked hours | Unknown | Historical owner, device, approval, credential, and external waits lack complete pause/resume timestamps. |
 | Total counted project hours | Unknown | Active execution plus automated wait cannot be reconstructed defensibly. |
@@ -22,8 +22,8 @@ measured prospectively from the actual authorized execution start.
 | Longest completed milestone | Unknown by counted time | M34 has the longest observable elapsed lower bound at 90.27 h. |
 | Shortest completed milestone | Unknown by counted time | M31 has the shortest observable elapsed lower bound at 0.03 h. |
 | Overall forecast versus actual variance | Unknown | Only M13, M14, and M17–M21 retained milestone-specific forecasts, and their actual counted time was not recorded. |
-| Confidence classifications | Confirmed 0; Reconstructed 0; Estimated 28; Unknown 32 | One classification per canonical milestone. |
-| Ledger last updated | `July 20, 2026 at 7:43:14 PM PDT (UTC−07:00)` | Full date, 12-hour time, seconds, timezone abbreviation, and UTC offset. |
+| Confidence classifications | Confirmed 1; Reconstructed 0; Estimated 28; Unknown 31 | One classification per canonical milestone. |
+| Ledger last updated | `August 14, 2026 at 1:01:09 PM PDT (UTC−07:00)` | Full date, 12-hour time, seconds, timezone abbreviation, and UTC offset. |
 
 Elapsed totals are arithmetic milestone totals, not unique calendar time. Milestones overlapped, so counted work must
 be assigned to only one milestone while each milestone retains its own wall-clock elapsed period. The confidence counts
@@ -441,7 +441,7 @@ active execution.
 | M52 | Retired | — | Retired `July 19, 2026 at 8:55:35 AM PDT (UTC−07:00)` | No forecast | — | — | — | — | — | — | Unknown |
 | M53 | Retired | — | Retired `July 19, 2026 at 8:55:35 AM PDT (UTC−07:00)` | No forecast | — | — | — | — | — | — | Unknown |
 | M54 | Retired | — | Retired `July 19, 2026 at 8:55:35 AM PDT (UTC−07:00)` | No forecast | — | — | — | — | — | — | Unknown |
-| M55 | Planned research gate | — | — | 2–4 active wk; may be no-go | — | — | — | — | — | — | Unknown |
+| M55 | Retired | `August 14, 2026 at 12:36:32 PM PDT (UTC−07:00)` | Retired `August 14, 2026 at 1:01:09 PM PDT (UTC−07:00)` | 80–160 active h (original 2–4 active wk) | 0.34 h | 0.00 h | 0.07 h | 0.34 h | 0.41 h | 79.66 h below lower bound (99.6%) | Confirmed |
 | M56 | Planned research gate | — | — | 1–3 active wk | — | — | — | — | — | — | Unknown |
 | M57 | Planned research gate | — | — | 1–3 active wk | — | — | — | — | — | — | Unknown |
 | M58 | Planned authorization gate | — | — | 2–4 active wk; contract time external | — | — | — | — | — | — | Unknown |
@@ -1132,15 +1132,40 @@ independently.
 - **Time, variance, evidence, confidence, and forecasting lessons:** No counted or elapsed time and no variance can be assigned. Roadmap `e249071`
   and retirement `8b9980f`; no implementation/PR/release/workflow. **Unknown** rather than zero.
 
-### M55 — Google Cast Feasibility and Certification
+### M55 — Google Cast Feasibility and Certification (retired)
 
-- **Objective:** Decide go/no-go only after permitted stream use, receiver compatibility, lifecycle/route behavior,
-  rights review, and five-station validation.
-- **Start, completion, and intervals:** Not started; all actual intervals and totals are not applicable.
-- **Model, reasoning strength, and original forecast:** Sol High; current forecast 2–4 active weeks after permission/receiver triggers and
-  may end in an explicit no-go.
-- **Time, variance, evidence, confidence, and forecasting lessons:** No actual variance. Roadmap `e249071`, forecast `f971a9e`; no Cast evidence.
-  **Unknown**. A no-go remains a valid timed outcome when the gate is authorized.
+- **Objective:** Retire Google Cast permanently while preserving Android-managed Bluetooth, wired/USB, and other
+  standard system output routing as the Player's supported audio-output boundary.
+- **Authorization and completion:** The owner confirmed the product decision on `August 14, 2026 at 12:36:32 PM PDT
+  (UTC−07:00)`; retirement documentation, the reduced tester catalog, and the neutral output icon completed `August 14, 2026 at 1:01:09 PM PDT
+  (UTC−07:00)`.
+- **Model, reasoning strength, and original forecast:** Sol High; original forecast 2–4 active weeks, normalized to
+  80–160 active hours using a 40-hour active workweek for the required variance calculation.
+- **Intervals:**
+
+| Started | Ended | Category | Reason or work | Evidence | Hours |
+| --- | --- | --- | --- | --- | ---: |
+| `August 14, 2026 at 12:36:32 PM PDT (UTC−07:00)` | `August 14, 2026 at 12:50:07 PM PDT (UTC−07:00)` | Active | Confirm the owner-selected Bluetooth/standard-route boundary and identify active Cast roadmap, public-site, and tester references. | Owner decision; paused task record | 0.23 h |
+| `August 14, 2026 at 12:50:07 PM PDT (UTC−07:00)` | `August 14, 2026 at 12:54:10 PM PDT (UTC−07:00)` | User-blocked | Prior task was interrupted; wait for the owner's resume request. | Task interruption and subsequent resume request | 0.07 h |
+| `August 14, 2026 at 12:54:10 PM PDT (UTC−07:00)` | `August 14, 2026 at 1:01:09 PM PDT (UTC−07:00)` | Active | Retire M55, remove PT-32 and Cast-only tester scope, rebuild the portal, replace the Cast icon, and run focused validation. | `scripts/validate-project-site.sh` and `:app:compileDebugKotlin` passes | 0.12 h |
+
+- **Counted project time, total elapsed time, and forecast variance:** Active 0.34 h; automated wait 0.00 h;
+  user-blocked 0.07 h; counted project time 0.34 h; total elapsed 0.41 h. This is 79.66 h (99.6%) below the
+  normalized 80 h lower forecast bound because the owner selected a scope retirement rather than the originally
+  forecast research and certification program. **Confirmed**.
+- **Evidence and forecasting lesson:** `docs/ROADMAP.md`, `docs/future-scope.md`, the public roadmap, and the Tester
+  Task registry now retire M55; PT-32 is removed. M25's standard Android routing remains intact. A clear product
+  boundary can convert a multi-week research forecast into a short, auditable documentation and test-scope change.
+
+```text
+Milestone M55 time:
+Forecast: 80–160 active hours (original 2–4 active weeks)
+Counted project time: 0.34 h
+Total elapsed time: 0.41 h
+User-blocked time excluded: 0.07 h
+Forecast variance: 79.66 h below the lower bound (99.6%)
+Cumulative counted project time through Milestone M55: Unknown overall; 0.34 h prospectively measured
+```
 
 ### M56 — Extended Station Capability Certification
 

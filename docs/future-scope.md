@@ -48,15 +48,15 @@ not be revived by station authorization alone. The Player must not expose Forum 
 native Forum retrieval, authenticated Forum participation, or Forum notifications. The July 19 route and policy audit
 remains in `m51-forum-links-research.md` as historical evidence only.
 
-## M55 — Google Cast Feasibility and Certification
+## M55 — Google Cast Feasibility and Certification (retired)
 
-M25 completed Android's system-managed audio-output path; it did not implement or promise Cast.
+Google Cast is permanently out of Player scope by project decision. M25's Android-managed audio-output path remains
+the supported boundary for local speakers, Bluetooth, wired/USB, and other system-managed device routes.
 
-- Verify permitted stream use and receiver compatibility before implementation.
-- Resolve station/rights implications, route ownership, fallback, reconnection, metadata, notification, and timer behavior.
-- Preserve a single logical playback owner and do not create a custom audio relay.
-- Certify all five stations and physical sender/receiver lifecycle before exposing a Cast capability.
-- If these gates cannot be met, record Cast as an explicit non-goal rather than leaving an implied promise.
+- Do not add a Google Cast sender, receiver application, Cast control, relay, rebroadcast proxy, or Cast test scope.
+- Preserve M25's Media3 ownership and Android system output selection; these are not Google Cast implementations.
+- Retain the prior M25 route-boundary documentation as historical evidence only; M55 has no implementation forecast
+  and must not be revived by station authorization alone.
 
 ## M56 — Extended Station Capability Certification
 

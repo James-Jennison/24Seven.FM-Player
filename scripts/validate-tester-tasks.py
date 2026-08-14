@@ -14,8 +14,8 @@ ROOT = Path(__file__).resolve().parent.parent
 REGISTRY = ROOT / "privacy-site/_data/tester_tasks.json"
 CATALOG = ROOT / "privacy-site/product-testing/index.html"
 PT_PATTERN = re.compile(r'<article(?:\s+[^>]*?)?\sid="(pt-\d{2})"', re.IGNORECASE)
-EXPECTED_PT_IDS = {f"PT-{number:02d}" for number in range(1, 29)} | {f"PT-{number:02d}" for number in range(32, 39)}
-EXPECTED_FUTURE_PT_IDS = {"PT-22", "PT-26", "PT-27", "PT-28", "PT-32", "PT-33", "PT-34", "PT-36", "PT-37", "PT-38"}
+EXPECTED_PT_IDS = {f"PT-{number:02d}" for number in range(1, 29)} | {f"PT-{number:02d}" for number in range(33, 39)}
+EXPECTED_FUTURE_PT_IDS = {"PT-22", "PT-26", "PT-27", "PT-28", "PT-33", "PT-34", "PT-36", "PT-37", "PT-38"}
 
 
 def fail(message: str) -> None:
@@ -36,9 +36,9 @@ def main() -> None:
 
     catalog_ids = {case.upper() for case in PT_PATTERN.findall(CATALOG.read_text(encoding="utf-8"))}
     if catalog_ids != EXPECTED_PT_IDS:
-        fail(f"catalog IDs differ from the 35-case canonical set: {sorted(catalog_ids)}")
-    if len(catalog_ids) != 35:
-        fail(f"expected 35 catalog PT cases, found {len(catalog_ids)}")
+        fail(f"catalog IDs differ from the 34-case canonical set: {sorted(catalog_ids)}")
+    if len(catalog_ids) != 34:
+        fail(f"expected 34 catalog PT cases, found {len(catalog_ids)}")
 
     task_ids = [task.get("id") for task in tasks if isinstance(task, dict)]
     if len(tasks) != 23 or len(set(task_ids)) != 23:
@@ -83,20 +83,20 @@ def main() -> None:
     }
     if future_pt_ids != EXPECTED_FUTURE_PT_IDS:
         fail(f"future PT cases differ: {sorted(future_pt_ids)}")
-    if len(current_pt_ids) != 25 or len(future_pt_ids) != 10:
-        fail("expected 25 current and 10 future PT cases")
+    if len(current_pt_ids) != 25 or len(future_pt_ids) != 9:
+        fail("expected 25 current and 9 future PT cases")
     if future_task_ids != ["TT-17", "TT-21", "TT-22", "TT-23"]:
         fail(f"future task set differs: {future_task_ids}")
     if len(tasks) - len(future_task_ids) != 19:
         fail("expected exactly 19 currently assignable tasks")
 
     expected_summary = {
-        "ptCaseCount": 35,
+        "ptCaseCount": 34,
         "taskCount": 23,
         "assignableTaskCount": 19,
         "futureTaskCount": 4,
         "currentPtCaseCount": 25,
-        "futurePtCaseCount": 10,
+        "futurePtCaseCount": 9,
     }
     if summary != expected_summary:
         fail(f"summary must be exactly {expected_summary}")
@@ -105,7 +105,7 @@ def main() -> None:
     if artifact_registry.exists() and artifact_registry.read_bytes() != REGISTRY.read_bytes():
         fail("built public task metadata differs from the canonical registry")
 
-    print("Tester Task registry: 35 PT cases, 23 tasks, 19 current, 4 future — valid.")
+    print("Tester Task registry: 34 PT cases, 23 tasks, 19 current, 4 future — valid.")
 
 
 if __name__ == "__main__":
