@@ -20,6 +20,12 @@ assert(current.length === 19 && future.length === 4, "Queue task availability mu
 assert(!endpoint.includes("email_batches (\n            id INTEGER PRIMARY KEY,\n            tester_id"), "Existing email persistence must remain separate from task assignments");
 assert(endpoint.includes("CREATE TABLE IF NOT EXISTS tester_task_assignments"), "Queue must add the assignment table additively");
 assert(endpoint.includes("CREATE TABLE IF NOT EXISTS tester_onboarding"), "Queue must persist onboarding separately from enrollment and assignments");
+assert(endpoint.includes("CREATE TABLE IF NOT EXISTS tester_mail_archive"), "Queue must retain a protected coordinator mail archive");
+assert(endpoint.includes("function prepareMailArchive(PDO $database"), "Queue must archive coordinator mail before handoff");
+assert(endpoint.includes("function completeMailArchive(PDO $database"), "Queue must record the coordinator-mail handoff outcome");
+assert(endpoint.includes("function renderMailArchive(PDO $database)"), "Queue must provide a coordinator mail-archive view");
+assert(endpoint.includes("function renderMailRecord(PDO $database, int $archiveId)"), "Queue must provide an exact archived-message view");
+assert(endpoint.includes("?mail_archive=1"), "Queue must link coordinators to the sent-mail archive");
 assert(endpoint.includes("profile_pending', 'profile_complete', 'invited', 'orientation_sent', 'ready', 'paused"), "Onboarding lifecycle statuses are incomplete");
 assert(endpoint.includes("function profileSummary(array $tester): array"), "Queue must evaluate assignment-relevant profile completeness");
 assert(endpoint.includes("function renderOperationsDashboard"), "Queue must render an operations dashboard instead of every tester form at once");

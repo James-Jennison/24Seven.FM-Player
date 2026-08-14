@@ -111,6 +111,22 @@ function database(array $config): PDO
             accepted_at TEXT,
             PRIMARY KEY (batch_id, tester_id)
         );
+        CREATE TABLE IF NOT EXISTS tester_mail_archive (
+            id INTEGER PRIMARY KEY,
+            tester_id INTEGER NOT NULL REFERENCES testers(id) ON DELETE CASCADE,
+            batch_id INTEGER REFERENCES email_batches(id) ON DELETE CASCADE,
+            assignment_id INTEGER REFERENCES tester_task_assignments(id) ON DELETE SET NULL,
+            message_type TEXT NOT NULL CHECK(message_type IN (\'batch\', \'orientation\', \'assignment\')),
+            subject TEXT NOT NULL,
+            body TEXT NOT NULL,
+            body_html TEXT NOT NULL,
+            handoff_status TEXT NOT NULL CHECK(handoff_status IN (\'prepared\', \'accepted\', \'failed\')),
+            prepared_at TEXT NOT NULL,
+            attempted_at TEXT,
+            UNIQUE(batch_id, tester_id)
+        );
+        CREATE INDEX IF NOT EXISTS tester_mail_archive_recent ON tester_mail_archive(prepared_at DESC, id DESC);
+        CREATE INDEX IF NOT EXISTS tester_mail_archive_tester ON tester_mail_archive(tester_id, prepared_at DESC);
         CREATE TABLE IF NOT EXISTS tester_task_assignments (
             id INTEGER PRIMARY KEY,
             tester_id INTEGER NOT NULL REFERENCES testers(id) ON DELETE CASCADE,
@@ -191,6 +207,13 @@ function database(array $config): PDO
             $database->exec("ALTER TABLE testers ADD COLUMN {$column} {$definition}");
         }
     }
+    // Preserve the exact content and recipient outcomes of already-dispatched
+    // coordinator batches before new mail types start using the common archive.
+    $database->exec("INSERT OR IGNORE INTO tester_mail_archive (tester_id, batch_id, message_type, subject, body, body_html, handoff_status, prepared_at, attempted_at)
+        SELECT recipients.tester_id, recipients.batch_id, 'batch', batches.subject, batches.body, COALESCE(batches.body_html, ''), recipients.delivery_status, batches.created_at, COALESCE(recipients.accepted_at, batches.dispatched_at, batches.created_at)
+        FROM email_batch_recipients AS recipients
+        JOIN email_batches AS batches ON batches.id = recipients.batch_id
+        WHERE recipients.delivery_status IN ('accepted', 'failed')");
     return $database;
 }
 
@@ -417,7 +440,11 @@ function sendOnboardingEmail(PDO $database, array $config, int $testerId): bool
         throw new InvalidArgumentException('This tester needs their profile update before an orientation email can be sent.');
     }
     $message = onboardingMessage($tester);
-    $accepted = sendIndividualMail($config, $tester['email'], 'Welcome to 24Seven.FM Player Closed Alpha', $message, plainTextToHtml($message));
+    $subject = 'Welcome to 24Seven.FM Player Closed Alpha';
+    $html = plainTextToHtml($message);
+    $archiveId = prepareMailArchive($database, (int) $tester['id'], 'orientation', $subject, $message, $html);
+    $accepted = sendIndividualMail($config, $tester['email'], $subject, $message, $html);
+    completeMailArchive($database, $archiveId, $accepted);
     $status = onboardingStatus($tester);
     if ($accepted && $status !== 'ready') {
         $status = 'orientation_sent';
@@ -512,7 +539,7 @@ function assignmentEmailSubject(array $task): string
 
 function sendAssignmentEmail(PDO $database, array $config, int $assignmentId): bool
 {
-    $statement = $database->prepare('SELECT assignments.id, assignments.task_id, assignments.station_scope, assignments.configuration_scope, assignments.coordinator_note, assignments.mutation_authorized, testers.display_name, testers.email FROM tester_task_assignments AS assignments JOIN testers ON testers.id = assignments.tester_id WHERE assignments.id = ? AND testers.status = \'active\'');
+    $statement = $database->prepare('SELECT assignments.id, assignments.tester_id, assignments.task_id, assignments.station_scope, assignments.configuration_scope, assignments.coordinator_note, assignments.mutation_authorized, testers.display_name, testers.email FROM tester_task_assignments AS assignments JOIN testers ON testers.id = assignments.tester_id WHERE assignments.id = ? AND testers.status = \'active\'');
     $statement->execute([$assignmentId]);
     $assignment = $statement->fetch();
     if ($assignment === false) {
@@ -524,7 +551,11 @@ function sendAssignmentEmail(PDO $database, array $config, int $assignmentId): b
         throw new RuntimeException('The assigned Tester Task is unavailable.');
     }
     $message = 'Hi ' . $assignment['display_name'] . ",\n\n" . assignmentMessage($task, $assignment);
-    $accepted = sendIndividualMail($config, $assignment['email'], assignmentEmailSubject($task), $message, plainTextToHtml($message));
+    $subject = assignmentEmailSubject($task);
+    $html = plainTextToHtml($message);
+    $archiveId = prepareMailArchive($database, (int) $assignment['tester_id'], 'assignment', $subject, $message, $html, null, $assignmentId);
+    $accepted = sendIndividualMail($config, $assignment['email'], $subject, $message, $html);
+    completeMailArchive($database, $archiveId, $accepted);
     $database->prepare('UPDATE tester_task_assignments SET assignment_email_status = ?, assignment_email_attempted_at = ?, assignment_email_attempts = assignment_email_attempts + 1, updated_at = ? WHERE id = ?')
         ->execute([$accepted ? 'accepted' : 'failed', gmdate('c'), gmdate('c'), $assignmentId]);
     return $accepted;
@@ -800,6 +831,40 @@ function sendIndividualMail(array $config, string $recipient, string $subject, s
     }
 }
 
+function prepareMailArchive(PDO $database, int $testerId, string $messageType, string $subject, string $body, string $html, ?int $batchId = null, ?int $assignmentId = null): int
+{
+    if (!in_array($messageType, ['batch', 'orientation', 'assignment'], true)) {
+        throw new InvalidArgumentException('The mail archive type is invalid.');
+    }
+    $statement = $database->prepare('INSERT INTO tester_mail_archive(tester_id, batch_id, assignment_id, message_type, subject, body, body_html, handoff_status, prepared_at) VALUES (?, ?, ?, ?, ?, ?, ?, \'prepared\', ?)');
+    $statement->execute([$testerId, $batchId, $assignmentId, $messageType, $subject, $body, $html, gmdate('c')]);
+    return (int) $database->lastInsertId();
+}
+
+function completeMailArchive(PDO $database, int $archiveId, bool $accepted): void
+{
+    $database->prepare('UPDATE tester_mail_archive SET handoff_status = ?, attempted_at = ? WHERE id = ? AND handoff_status = \'prepared\'')
+        ->execute([$accepted ? 'accepted' : 'failed', gmdate('c'), $archiveId]);
+}
+
+function mailArchiveStatusLabel(string $status): string
+{
+    return match ($status) {
+        'accepted' => 'Accepted by mail transport',
+        'failed' => 'Mail transport failed',
+        default => 'Prepared; no send outcome recorded',
+    };
+}
+
+function mailArchiveTypeLabel(string $type): string
+{
+    return match ($type) {
+        'orientation' => 'Orientation',
+        'assignment' => 'Tester Task assignment',
+        default => 'Coordinator batch',
+    };
+}
+
 function onboardingBadge(string $status): string
 {
     return '<span class="onboarding-status">' . e(onboardingStatusLabel($status)) . '</span>';
@@ -831,7 +896,8 @@ function renderOperationsDashboard(PDO $database, string $notice = '', string $e
     $message = $notice === '' ? '' : '<p class="notice">' . e($notice) . '</p>';
     $message .= $error === '' ? '' : '<p class="notice error">' . e($error) . '</p>';
     $editor = '<label for="email-template">Email template</label><select id="email-template"><option value="">Custom email</option><option value="profile-update">Profile update request</option><option value="welcome">Welcome to the 24Seven.FM Player Closed Alpha Test</option><option value="feedback">Testing feedback request</option><option value="new-build">New build available</option><option value="reminder">Reminder to test</option><option value="known-issue">Known issue / workaround</option><option value="test-session">Test session request</option><option value="test-complete">Thank you / test complete</option><option value="tester-status">Tester status update</option><option value="release-signoff">Release candidate sign-off</option></select><p class="muted">Choose a template or write a custom message. The queue always sends one individual, multipart email per selected tester.</p><label for="body-editor">Message</label><div class="toolbar" role="toolbar" aria-label="Email text formatting"><button type="button" data-format="bold"><strong>B</strong><span class="visually-hidden">Bold</span></button><button type="button" data-format="italic"><em>I</em><span class="visually-hidden">Italic</span></button><button type="button" data-format="underline"><u>U</u><span class="visually-hidden">Underline</span></button><button type="button" data-format="insertUnorderedList">Bullets</button><button type="button" data-format="insertOrderedList">Numbered list</button><button type="button" data-format="createLink">Link</button><button type="button" data-format="removeFormat">Clear format</button></div><div id="body-editor" class="editor" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Write a message for the selected testers."></div><input type="hidden" name="body_html" id="body-html"><noscript><label for="body">Message</label><textarea id="body" name="body" maxlength="' . MAX_BODY_LENGTH . '" required></textarea></noscript>';
-    $content = '<div class="actions"><div><p class="muted">24Seven.FM Player · closed alpha</p><h1>Tester operations</h1><p class="muted">A private workspace for moving accepted volunteers from a complete profile to a focused, safe testing assignment.</p></div><form method="post"><input type="hidden" name="action" value="logout"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><button class="secondary" type="submit">Sign out</button></form></div>' . $message
+    $archiveCount = (int) $database->query('SELECT COUNT(*) FROM tester_mail_archive')->fetchColumn();
+    $content = '<div class="actions"><div><p class="muted">24Seven.FM Player · closed alpha</p><h1>Tester operations</h1><p class="muted">A private workspace for moving accepted volunteers from a complete profile to a focused, safe testing assignment.</p><p><a href="/private-tester-queue.php?mail_archive=1">Sent mail archive (' . $archiveCount . ')</a></p></div><form method="post"><input type="hidden" name="action" value="logout"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><button class="secondary" type="submit">Sign out</button></form></div>' . $message
         . '<section><h2>Onboarding pipeline</h2><div class="onboarding-overview"><div class="onboarding-metric"><strong>' . $metrics['profile_pending'] . '</strong>Profile updates needed</div><div class="onboarding-metric"><strong>' . $metrics['profile_complete'] . '</strong>Ready to invite</div><div class="onboarding-metric"><strong>' . $metrics['orientation_sent'] . '</strong>Orientation sent</div><div class="onboarding-metric"><strong>' . $metrics['ready'] . '</strong>Ready for assignment</div></div><p class="muted">Workflow: confirm coverage → invite and orient → mark ready → assign a focused Tester Task. Enrollment and onboarding stay separate.</p></section>'
         . '<section><h2>Tester roster</h2><p class="muted">Open one workspace to review coverage, record onboarding progress, send an individual orientation email, and manage focused tasks.</p><table><thead><tr><th scope="col">Tester</th><th scope="col">Device</th><th scope="col">Onboarding</th><th scope="col">Assignments</th><th scope="col"><span class="visually-hidden">Open</span></th></tr></thead><tbody>' . $rows . '</tbody></table></section>'
         . '<details><summary><strong>Compose a coordinator email</strong></summary><form method="post" id="email-form"><input type="hidden" name="action" value="prepare"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><section><h2>Recipients and message</h2><p><label><input type="checkbox" id="select-all"> Select all active testers</label></p><table><thead><tr><th scope="col">Select</th><th scope="col">Tester</th><th scope="col">Onboarding</th></tr></thead><tbody>' . implode('', array_map(static fn (array $tester): string => '<tr><td><input aria-label="Select ' . e($tester['display_name']) . '" type="checkbox" name="tester_ids[]" value="' . (int) $tester['id'] . '"></td><td>' . e($tester['display_name']) . '<br><small>' . e($tester['email']) . '</small></td><td>' . onboardingBadge(onboardingStatus($tester)) . '</td></tr>', $testers)) . '</tbody></table><label for="subject">Subject</label><input id="subject" name="subject" maxlength="' . MAX_SUBJECT_LENGTH . '" required>' . $editor . '<button type="submit">Review selected recipients</button></section></form></details><script src="/assets/private-tester-queue.js?v=onboarding-1" defer></script>';
@@ -966,7 +1032,8 @@ function renderDashboardLegacy(PDO $database, string $notice = '', string $error
         $panels .= '<article class="tester-task-panel" id="tester-' . $id . '"><h3>' . e($tester['display_name']) . '</h3><p class="muted">' . e($tester['device']) . ' · ' . e($tester['android_version']) . '</p>' . ($existing === '' ? '<p class="muted">No Tester Task assigned yet.</p>' : $existing) . '<form method="post" class="assignment-create" data-task-assignment-form><input type="hidden" name="action" value="assign_task"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $id . '"><h4>Assign a focused Tester Task</h4><label>Tester Task<select name="task_id" data-task-select required>' . $taskOptions . '</select></label><div class="task-preview" data-task-preview aria-live="polite">Choose a current task to see its PT cases, prerequisites, and safety boundary.</div><label>Station scope<select name="station_scope">' . $stationOptions . '</select></label><label>Device / accessory / form factor scope<input name="configuration_scope" maxlength="' . MAX_ASSIGNMENT_CONFIGURATION_LENGTH . '" placeholder="For example, Pixel 9, Bluetooth headset, folded"></label><label>Coordinator note<textarea name="coordinator_note" maxlength="' . MAX_ASSIGNMENT_NOTE_LENGTH . '" placeholder="Only information the tester needs to carry out this assignment."></textarea></label><label class="mutation-authorization" data-mutation-authorization hidden><input type="checkbox" name="mutation_authorized" value="1"> I explicitly authorize the controlled subcase described above.</label><button type="submit">Assign Tester Task</button></form></article>';
     }
     $registryJson = json_encode(array_values($tasks), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES);
-    $content = '<div class="actions"><div><h1>Private tester queue</h1><p class="muted">' . count($testers) . ' active tester' . (count($testers) === 1 ? '' : 's') . '. Enrollment status and task status are separate. Each send is delivered individually; recipients are never exposed to one another.</p></div><form method="post"><input type="hidden" name="action" value="logout"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><button class="secondary" type="submit">Sign out</button></form></div>' . $message
+    $archiveCount = (int) $database->query('SELECT COUNT(*) FROM tester_mail_archive')->fetchColumn();
+    $content = '<div class="actions"><div><h1>Private tester queue</h1><p class="muted">' . count($testers) . ' active tester' . (count($testers) === 1 ? '' : 's') . '. Enrollment status and task status are separate. Each send is delivered individually; recipients are never exposed to one another.</p><p><a href="/private-tester-queue.php?mail_archive=1">Sent mail archive (' . $archiveCount . ')</a></p></div><form method="post"><input type="hidden" name="action" value="logout"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><button class="secondary" type="submit">Sign out</button></form></div>' . $message
         . '<section><h2>Tester Task assignments</h2><p class="muted">Assign focused bundles, not the entire catalog. Each assignment can contain more than one PT case; testers submit one result for each PT case. Future / Blocked tasks remain visible for planning and cannot be assigned.</p><div class="tester-task-panels">' . $panels . '</div></section>'
         . '<form method="post" id="email-form"><input type="hidden" name="action" value="prepare"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><section><h2>Active testers</h2><p><label><input type="checkbox" id="select-all"> Select all active testers</label></p><table><thead><tr><th scope="col">Select</th><th scope="col">Tester</th><th scope="col">Device</th><th class="optional" scope="col">Coverage</th><th class="optional" scope="col">Experience</th><th scope="col">Tester Tasks</th></tr></thead><tbody>' . $rows . '</tbody></table></section><section><h2>Prepare HTML email</h2><p class="muted">Use the formatting bar, then review the selected recipients and rendered message before any delivery is attempted. A plain-text alternative is included for mail clients that cannot show HTML.</p><label for="subject">Subject</label><input id="subject" name="subject" maxlength="' . MAX_SUBJECT_LENGTH . '" required>' . $editor . '<button type="submit">Review selected recipients</button></section></form><script id="tester-task-registry" type="application/json">' . $registryJson . '</script><script src="/assets/private-tester-queue.js?v=tasks-1" defer></script>';
     renderPage('Private tester queue', $content);
@@ -989,6 +1056,34 @@ function renderConfirmation(PDO $database, int $batchId): never
     $html = is_string($batch['body_html'] ?? null) && $batch['body_html'] !== '' ? $batch['body_html'] : plainTextToHtml($batch['body']);
     $content = '<h1>Review delivery</h1><section><h2>Recipients</h2><p class="muted">Each recipient receives an individual email. No recipient is placed in To, Cc, or Bcc with another tester.</p><ol>' . $list . '</ol></section><section><h2>' . e($batch['subject']) . '</h2><div style="background:#fff;color:#182033;padding:1rem;border-radius:.4rem">' . $html . '</div><h3>Plain-text alternative</h3><pre style="white-space:pre-wrap;font:inherit">' . e($batch['body']) . '</pre></section><form method="post"><input type="hidden" name="action" value="send"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="batch_id" value="' . (int) $batch['id'] . '"><button class="danger" type="submit">Send to these recipients</button></form><p><a href="/private-tester-queue.php">Cancel and return to queue</a></p>';
     renderPage('Review tester email', $content);
+}
+
+function renderMailArchive(PDO $database): never
+{
+    $records = $database->query('SELECT archive.id, archive.message_type, archive.subject, archive.handoff_status, archive.prepared_at, archive.attempted_at, testers.display_name, testers.email FROM tester_mail_archive AS archive JOIN testers ON testers.id = archive.tester_id ORDER BY archive.prepared_at DESC, archive.id DESC LIMIT 250')->fetchAll();
+    $rows = '';
+    foreach ($records as $record) {
+        $rows .= '<tr><td>' . e((string) ($record['attempted_at'] ?: $record['prepared_at'])) . '</td><td><strong>' . e($record['display_name']) . '</strong><br><small>' . e($record['email']) . '</small></td><td>' . e(mailArchiveTypeLabel((string) $record['message_type'])) . '</td><td>' . e(mailArchiveStatusLabel((string) $record['handoff_status'])) . '</td><td>' . e($record['subject']) . '</td><td><a href="/private-tester-queue.php?mail_record=' . (int) $record['id'] . '">View message</a></td></tr>';
+    }
+    $content = '<p><a href="/private-tester-queue.php">← Tester operations</a></p><h1>Sent mail archive</h1><p class="muted">This protected record preserves the recipient, exact multipart content, and mail-transport handoff outcome for coordinator batches, orientation emails, and Tester Task assignments. “Accepted” means the transport accepted the message; it does not prove inbox delivery or reading.</p>'
+        . '<section><table><thead><tr><th>Attempt</th><th>Recipient</th><th>Type</th><th>Handoff</th><th>Subject</th><th><span class="visually-hidden">Open</span></th></tr></thead><tbody>' . ($rows === '' ? '<tr><td colspan="6" class="muted">No coordinator email handoffs are archived yet.</td></tr>' : $rows) . '</tbody></table></section>';
+    renderPage('Sent mail archive', $content);
+}
+
+function renderMailRecord(PDO $database, int $archiveId): never
+{
+    $statement = $database->prepare('SELECT archive.*, testers.display_name, testers.email FROM tester_mail_archive AS archive JOIN testers ON testers.id = archive.tester_id WHERE archive.id = ?');
+    $statement->execute([$archiveId]);
+    $record = $statement->fetch();
+    if ($record === false) {
+        redirect('?mail_archive=1&error=' . rawurlencode('The requested mail record is unavailable.'));
+    }
+    $html = (string) $record['body_html'];
+    if ($html === '') {
+        $html = plainTextToHtml((string) $record['body']);
+    }
+    $content = '<p><a href="/private-tester-queue.php?mail_archive=1">← Sent mail archive</a></p><h1>Archived coordinator email</h1><section><dl><dt>Recipient</dt><dd>' . e($record['display_name']) . ' &lt;' . e($record['email']) . '&gt;</dd><dt>Type</dt><dd>' . e(mailArchiveTypeLabel((string) $record['message_type'])) . '</dd><dt>Prepared</dt><dd>' . e($record['prepared_at']) . '</dd><dt>Handoff</dt><dd>' . e(mailArchiveStatusLabel((string) $record['handoff_status'])) . ($record['attempted_at'] ? ' · ' . e($record['attempted_at']) : '') . '</dd><dt>Subject</dt><dd>' . e($record['subject']) . '</dd></dl></section><section><h2>Rendered HTML</h2><div style="background:#fff;color:#182033;padding:1rem;border-radius:.4rem">' . $html . '</div><h2>Plain-text alternative</h2><pre style="white-space:pre-wrap;font:inherit">' . e($record['body']) . '</pre></section>';
+    renderPage('Archived coordinator email', $content);
 }
 
 if (defined('PRIVATE_TESTER_QUEUE_LIBRARY_ONLY')) {
@@ -1132,7 +1227,9 @@ try {
             $failed = 0;
             foreach ($recipients->fetchAll() as $recipient) {
                 $html = is_string($batch['body_html'] ?? null) && $batch['body_html'] !== '' ? $batch['body_html'] : plainTextToHtml($batch['body']);
+                $archiveId = prepareMailArchive($database, (int) $recipient['id'], 'batch', $batch['subject'], $batch['body'], $html, $batchId);
                 $delivered = sendIndividualMail($config, $recipient['email'], $batch['subject'], $batch['body'], $html);
+                completeMailArchive($database, $archiveId, $delivered);
                 $update->execute([$delivered ? 'accepted' : 'failed', gmdate('c'), $batchId, $recipient['id']]);
                 $delivered ? $accepted++ : $failed++;
             }
@@ -1143,6 +1240,12 @@ try {
     }
     if (isset($_GET['batch']) && ctype_digit((string) $_GET['batch'])) {
         renderConfirmation($database, (int) $_GET['batch']);
+    }
+    if (isset($_GET['mail_record']) && ctype_digit((string) $_GET['mail_record'])) {
+        renderMailRecord($database, (int) $_GET['mail_record']);
+    }
+    if (isset($_GET['mail_archive'])) {
+        renderMailArchive($database);
     }
     if (isset($_GET['tester']) && ctype_digit((string) $_GET['tester'])) {
         renderTesterWorkspace($database, (int) $_GET['tester'], (string) ($_GET['notice'] ?? ''), (string) ($_GET['error'] ?? ''));
