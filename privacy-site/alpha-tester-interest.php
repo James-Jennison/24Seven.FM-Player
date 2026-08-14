@@ -355,6 +355,8 @@ Some tests may require a particular station account, Android version, device typ
 
 Please keep an eye on your inbox for the welcome email once your tester access has been activated.
 
+Please note: alpha-testing@jamesjennison.net is not a monitored inbox. Please do not reply to this confirmation email.
+
 Thanks again for volunteering to help make the 24Seven.FM Player better.
 
 James — 24Seven.FM Player Testing Team
@@ -382,6 +384,8 @@ TEXT,
 <p>Some tests may require a particular station account, Android version, device type, accessory, or other setup. If that's the case, your assignment will tell you exactly what you need.</p>
 
 <p>Please keep an eye on your inbox for the welcome email once your tester access has been activated.</p>
+
+<p><strong>Please note:</strong> alpha-testing@jamesjennison.net is not a monitored inbox. Please do not reply to this confirmation email.</p>
 
 <p>Thanks again for volunteering to help make the <strong>24Seven.FM Player</strong> better.</p>
 
