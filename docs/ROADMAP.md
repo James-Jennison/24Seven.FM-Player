@@ -23,7 +23,7 @@ requirement; the new work receives its own milestone and regression evidence.
 The dated, dependency-aware forecast for every unfinished milestone is maintained in
 [MILESTONE_FORECAST.md](MILESTONE_FORECAST.md). It uses active-work ranges only after their triggers occur, identifies
 owner/external blockers explicitly, and records the model required for the next substantive step. Under the current
-scope, M39 remains blocked by M29, M30, and M36–M38; no Alpha calendar date is credible until the M36 event-source
+scope, M39 remains blocked by M29 and M36–M38; no Alpha calendar date is credible until the M36 event-source
 authorization is resolved.
 
 Actual and historically reconstructed timing is maintained separately in
@@ -86,7 +86,7 @@ allow, but no partial checkpoint should be described as release-ready.
 | --- | --- | --- | --- | --- |
 | M28 | UGC Safety and Ongoing Moderation | Complete | Existing safeguards plus fixed-recipient Contact/report email handoff, physical composer validation, and one owner-confirmed one-shot receipt check | Complete |
 | M29 | Play Declarations, Privacy, and Data Safety | Waiting externally | PT-35 exact-artifact reconciliation, five-station reviewer access, audience/content/UGC classification, retention/deletion/processor/IP facts, account-boundary audit, final media-playback video, and saved Console/privacy consistency | Conditional · 2–5 active days |
-| M30 | Brand, Content, and Distribution Rights | Waiting externally | Written authorization for app/station naming, logos, artwork/metadata, streams, screenshots, and Play testing/distribution | Conditional · 0.5–1 active day |
+| M30 | Brand, Content, and Distribution Rights | Complete | Authorized network-wide use of the five stations' names, controlled assets, station metadata, public streams, screenshots, and Player/Google Play/Closed Alpha materials; third-party artwork remains rights-holder property | Complete · August 14, 2026 |
 | M31 | Payments, External Links, and Account Lifecycle Compliance | Complete | Contact-only external catalog; VIP/RIP purchase/registration and direct privacy browser routes removed; declarations and account boundary reconciled in `9e340b9` | Complete |
 | M32 | Session, Controller, Network, and Supply-Chain Security | Complete | Least-privilege MediaSession controller policy, coherent station-isolated cookie rotation/absolute expiry, trusted redirects, canonical station-ID migration, pinned/verified build inputs, and adversarial Razr harness evidence in `2bc45f7` | Complete |
 | M33 | Request Transaction Integrity | Complete | Fresh station/Queue/account/membership/cooldown/limit/identity validation, exact availability semantics, explicit station/account confirmation, and bounded one-shot result handling in `572d419` | Complete |
@@ -145,7 +145,7 @@ None of these milestones blocks M41 unless a later owner decision explicitly mov
 
 ## Program dependencies
 
-1. M28 and M31–M35 are complete; M29 and M30 close the remaining Alpha policy and rights gaps.
+1. M28, M30, and M31–M35 are complete; M29 remains the Alpha policy/declaration gate.
 2. M36 authorizes the event source before M37 implementation; M38 certifies the result.
 3. M39 freezes the exact candidate only after all intended Alpha code has landed.
 4. M40 proves Play delivery and resolves automated/reviewer findings.

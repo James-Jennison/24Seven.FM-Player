@@ -59,10 +59,10 @@ runs on an approved `main` push. See [the migration and deployment plan](docs/pr
 
 ## Alpha status
 
-The canonical roadmap now runs from **M01 through M60**. **M01–M28 and M31–M35 are complete**, preserving 33 verified achievements. The active Alpha-readiness program is **M29–M35** with two gates still open; authorized closed-app community delivery is **M36–M38**; candidate delivery and publication are **M39–M41**.
+The canonical roadmap now runs from **M01 through M60**. **M01–M28, M30–M35 are complete**, preserving 34 verified achievements. The active Alpha-readiness program is **M29–M35** with M29 still open; authorized closed-app community delivery is **M36–M38**; candidate delivery and publication are **M39–M41**.
 
 > [!IMPORTANT]
-> **Current focus:** close M29–M35 without weakening external approval, security, accessibility, signing, or request-integrity gates. M36–M38 cannot begin until an authorized event source exists, and M41 requires explicit publication authorization.
+> **Current focus:** close M29 without weakening privacy, security, accessibility, signing, or request-integrity gates. M36–M38 cannot begin until an authorized event source exists, and M41 requires explicit publication authorization.
 
 <details>
 <summary><strong>Explore the current Alpha capability and validation summary</strong></summary>
@@ -85,7 +85,7 @@ remain project-maintenance material rather than public release promises.
 | Phase | Milestones | State | Required outcome |
 | --- | --- | :---: | --- |
 | Verified product baseline | M01–M28 | ✅ Complete | Native foundation, five certified stations, API/launcher readiness, Sleep Timer, system audio output, diagnostics, local Chat mentions, and validated UGC safeguards |
-| Alpha readiness | M29–M35 | 🚧 Active | Play declarations, rights, payments/account lifecycle, security, request integrity, device/accessibility, and signing |
+| Alpha readiness | M29–M35 | 🚧 Active | Play declarations/privacy remains open; rights, payments/account lifecycle, security, request integrity, device/accessibility, and signing are complete |
 | Community delivery | M36–M38 | ⏳ Authorization-gated | Authorized event source, secure delivery, and lifecycle/privacy certification |
 | Alpha delivery | M39–M41 | ⏳ Planned | Candidate freeze, Play-delivered remediation, and explicitly authorized Alpha publication |
 | Production readiness | M42–M45 | ⏳ Planned | Closed-test stabilization, production access, staged rollout, and operations |
@@ -93,13 +93,13 @@ remain project-maintenance material rather than public release promises.
 
 ### Current progression
 
-- **Completed:** M01–M28 and M31–M35. M31 establishes the Contact-only Play boundary and moves any future native VIP/RIP purchase and activation into M58–M60; M32 hardens controller authority, protected sessions, redirects, canonical station IDs, and build integrity; M33 binds every one-shot request to fresh station, account, Queue, readiness, and track identity; M34 accepts adaptive, assistive, and physical alternative-input evidence; M35 proves the protected upload identity, local release install/update lineage, package registration, and version-code eligibility.
-- **Active:** two M29–M35 gates remain: M29 and M30. Each milestone has an independent acceptance gate.
+- **Completed:** M01–M28 and M30–M35. M30 records authorized five-station Player, Google Play, and Closed Alpha asset/stream use within the stated rights boundary. M31 establishes the Contact-only Play boundary and moves any future native VIP/RIP purchase and activation into M58–M60; M32 hardens controller authority, protected sessions, redirects, canonical station IDs, and build integrity; M33 binds every one-shot request to fresh station, account, Queue, readiness, and track identity; M34 accepts adaptive, assistive, and physical alternative-input evidence; M35 proves the protected upload identity, local release install/update lineage, package registration, and version-code eligibility.
+- **Active:** M29 remains: exact-candidate reconciliation, saved Play declarations, reviewer access, and a formally disclosed station retention/deletion policy.
 - **Authorization-gated:** M36–M38 require an approved station-side event source or privacy-compatible relay before implementation.
 - **Publication:** M39–M41 deliberately separate candidate freeze, Play delivery, and the final user-authorized Alpha action.
 - **Production:** M42–M45 add stabilization, production-access evidence, staged release, and operational recertification.
 - **Deferred/future:** Private Messages remain excluded until M47 repairs and verifies server delivery. M51–M55 are retired by project decision: the Player will not expose, retrieve, or participate in station Forums or Google Cast; historical research and M25 route-boundary evidence remain retained. Native VIP/RIP commerce is authorization-gated across M58–M60.
-- **Testing:** the [Product Testing catalog](https://player.jamesjennison.net/product-testing/) contains 35 stable test cases covering the current product, Alpha gates, release campaigns, and capability-gated future slices. PT-29–PT-31 were retired with the permanent removal of Forum scope. PT-35 is the exact-artifact M29 Play declaration/privacy/reviewer-access case; PT-36–PT-38 define the future authorized VIP/RIP purchase, activation, and lifecycle evidence.
+- **Testing:** the [Product Testing catalog](https://player.jamesjennison.net/product-testing/) contains 34 stable test cases covering the current product, Alpha gates, release campaigns, and capability-gated future slices. PT-29–PT-32 are retired with the permanent removal of Forum and Google Cast scope. PT-35 is the exact-artifact M29 Play declaration/privacy/reviewer-access case; PT-36–PT-38 define the future authorized VIP/RIP purchase, activation, and lifecycle evidence.
 - **Alpha intake:** the tester-interest form collects only assignment-relevant station familiarity, non-secret account availability, device/accessory/network/accessibility coverage, testing comfort, and time preference. A signup is reviewed before any invitation or Tester Task assignment; each task still produces one PT result per case.
 
 Use these sources as the current planning authority:
