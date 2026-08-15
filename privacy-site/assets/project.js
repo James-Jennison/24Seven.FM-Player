@@ -610,6 +610,31 @@
     const requestedSource = new URLSearchParams(window.location.search).get('source');
     if (source && requestedSource && sources[requestedSource]) source.value = sources[requestedSource];
 
+    if (requestedSource === 'testers-community') {
+      const replaceText = function (selector, value) {
+        const element = document.querySelector(selector);
+        if (element) element.textContent = value;
+      };
+      replaceText('[data-alpha-tester-eyebrow]', 'Testers Community Pack');
+      replaceText('[data-alpha-tester-title]', 'Join, opt in, then register your profile');
+      replaceText('[data-alpha-tester-description]', 'First follow the Testers Community Pack instructions to join the dedicated Google Group and opt in through Google Play with the same Google account. Then register your device coverage and testing preferences here. This profile does not grant access and is not proof of Google Play opt-in, installation, or activity. Guest testing does not require a 24Seven.FM station account.');
+      replaceText('[data-alpha-tester-submit]', 'Register Testers Community profile');
+      replaceText('[data-alpha-tester-next-title]', 'Join, opt in, then a focused assignment');
+      const steps = document.querySelector('[data-alpha-tester-next-steps]');
+      if (steps) {
+        steps.replaceChildren();
+        [
+          'Join the dedicated Google Group using the Testers Community Pack instructions.',
+          'Open the Google Play closed-test opt-in link and opt in with that same Google account.',
+          'Register your coverage here, then use the Tester Hub for focused assignments and private feedback.'
+        ].forEach(function (step) {
+          const item = document.createElement('li');
+          item.textContent = step;
+          steps.appendChild(item);
+        });
+      }
+    }
+
     function setStatus(message, state) {
       if (!status) return;
       status.textContent = message;
@@ -617,7 +642,7 @@
     }
 
     const applicationResult = new URLSearchParams(window.location.search).get('application');
-    if (applicationResult === 'sent') setStatus('Your tester-interest application was sent.', 'success');
+    if (applicationResult === 'sent') setStatus(requestedSource === 'testers-community' ? 'Your Testers Community profile was sent.' : 'Your tester profile was sent.', 'success');
     if (applicationResult === 'error') setStatus('The application could not be delivered. Please try again later.', 'error');
 
     form.addEventListener('submit', async function (event) {

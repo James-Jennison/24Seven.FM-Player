@@ -372,8 +372,36 @@ function smtpDiagnostic(string $stage): void
     error_log('alpha-tester-interest delivery failure stage=' . $stage);
 }
 
-function signupConfirmationEmail(): array
+function signupConfirmationEmail(string $recruitmentSource = 'direct'): array
 {
+    if ($recruitmentSource === 'testers_community') {
+        return [
+            'subject' => SIGNUP_CONFIRMATION_SUBJECT,
+            'plainText' => <<<'TEXT'
+Thanks for registering your Testers Community profile for the independently developed, unofficial 24Seven.FM Player!
+
+Testers Community Pack access uses the dedicated Google Group and Google Play Closed Test instructions supplied in the Pack. Join that Group and opt in through Google Play with the same Google account you registered here.
+
+This profile helps the coordinator match device coverage and focused assignments. It does not itself grant Play access, prove a Play opt-in, or prove installation or activity. Guest testing does not require a 24Seven.FM station account.
+
+After your profile is reviewed for coverage, you will receive a separate Tester Hub sign-in link for focused assignments and private feedback. Please do not reply to this confirmation address, and never provide passwords, station credentials, CAPTCHA answers, or verification codes.
+
+James — 24Seven.FM Player Testing Team
+TEXT,
+            'html' => <<<'HTML'
+<p>Thanks for registering your Testers Community profile for the independently developed, unofficial <strong>24Seven.FM Player</strong>!</p>
+
+<p>Testers Community Pack access uses the dedicated Google Group and Google Play Closed Test instructions supplied in the Pack. Join that Group and opt in through Google Play with the same Google account you registered here.</p>
+
+<p>This profile helps the coordinator match device coverage and focused assignments. It does not itself grant Play access, prove a Play opt-in, or prove installation or activity. Guest testing does not require a 24Seven.FM station account.</p>
+
+<p>After your profile is reviewed for coverage, you will receive a separate Tester Hub sign-in link for focused assignments and private feedback. Please do not reply to this confirmation address, and never provide passwords, station credentials, CAPTCHA answers, or verification codes.</p>
+
+<p><strong>James —</strong> <strong>24Seven.FM Player Testing Team</strong></p>
+HTML,
+        ];
+    }
+
     return [
         'subject' => SIGNUP_CONFIRMATION_SUBJECT,
         'plainText' => <<<'TEXT'
@@ -612,7 +640,7 @@ try {
         throw new RuntimeException('Mail transport rejected the submission.');
     }
 
-    $confirmation = signupConfirmationEmail();
+    $confirmation = signupConfirmationEmail($application['recruitment_source']);
     if (!smtpDeliver(
         $application['email'],
         $config['sender'],

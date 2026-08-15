@@ -36,7 +36,7 @@ Operate toward 20–25 active, opted-in testers, with recruiting headroom for no
 - `betafamily` — supplemental coverage-gap recruitment only;
 - `direct` and `other` — manual or approved additional recruitment.
 
-All sources use the same public application and converge on the same private roster, Google Play closed-test opt-in, tester portal, task registry, and feedback path. Source attribution changes neither privileges nor the build a tester receives. Duplicate records are rejected by the case-insensitive Google Play email identity in the existing roster.
+All sources converge on the same private roster, Google Play closed-test build, tester portal, task registry, and feedback path. Source attribution changes neither the build nor focused-task privileges. The Testers Community Pack route is the access-sequencing exception: a tester first joins the dedicated self-join Google Group, opts in to the same Google Play Closed Test, then registers the existing profile form for coverage and assignment. Other sources remain coordinator-reviewed before Play access. Duplicate records are rejected by the case-insensitive Google Play email identity in the existing roster.
 
 Suggested source links are:
 
@@ -56,7 +56,7 @@ The existing onboarding state remains the coordinator-controlled workflow. The f
 | --- | --- | --- |
 | Applicant | Valid private application imported to roster | Acceptance or Play eligibility |
 | Profile complete | Existing coverage-completeness check | Play access |
-| Play access granted | Coordinator records an invitation / orientation step | Opt-in or installation |
+| Play access granted | Coordinator records an invitation / orientation step, or Testers Community Pack membership in the dedicated Google Group enables eligibility | Opt-in or installation |
 | Opted in | Tester’s dated portal self-confirmation | Installation or use |
 | Initial test completed | Tester’s dated smoke-test self-confirmation | Broader task completion |
 | Active testing | Assigned task plus feedback / coordinator evidence | Activity from an email address alone |
@@ -72,7 +72,7 @@ Testers must never create, share, or submit station credentials. Guest testers r
 
 ## Privacy, retention, and deletion
 
-The existing public privacy notice covers the private application/queue and deletion-support route. The new source label, self-confirmation timestamps, and feedback category are collected only to manage recruitment, cohort coverage, and focused testing; they are not analytics or advertising data.
+The existing public privacy notice covers the private application/queue and deletion-support route. The new source label, self-confirmation timestamps, and feedback category are collected only to manage recruitment, cohort coverage, and focused testing; they are not analytics or advertising data. For the approved Testers Community Pack route, a dedicated Google Group is used only to control Google Play Closed Test eligibility; it is not a discussion forum, does not carry credentials, and has restricted member visibility.
 
 The adopted tester-program policy is to delete or anonymize a withdrawn or rejected applicant’s private tester record, related task feedback, and invitation correspondence within 90 days of a verified request or decision. An active tester’s record is retained only through the closed test and for no more than 90 days after the program closes. Only irreversibly anonymized aggregate coverage and test counts may remain afterward. A documented security, abuse, or legal hold is a separate, time-bounded exception.
 

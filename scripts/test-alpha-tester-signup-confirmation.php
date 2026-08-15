@@ -23,6 +23,7 @@ function decodedMimePart(string $message, string $contentType): string
 
 $confirmation = signupConfirmationEmail();
 $again = signupConfirmationEmail();
+$testersCommunityConfirmation = signupConfirmationEmail('testers_community');
 
 expect($confirmation === $again, 'Signup confirmation template must be deterministic.');
 expect($confirmation['subject'] === 'Thanks for signing up to test the 24Seven.FM Player', 'Signup confirmation subject is incorrect.');
@@ -42,6 +43,11 @@ expect(!str_contains($confirmation['plainText'], '<p>') && !str_contains($confir
 expect(!str_contains($confirmation['html'], 'https://play.google.com') && !str_contains($confirmation['plainText'], 'https://play.google.com'), 'Confirmation must not provide installation links.');
 expect(!str_contains(strtolower($confirmation['plainText']), 'you are already a tester'), 'Confirmation must not imply acceptance.');
 expect(!str_contains($confirmation['html'], 'Tester Queue') && !str_contains($confirmation['plainText'], 'Tester Queue'), 'Private Queue data leaked into confirmation.');
+expect($testersCommunityConfirmation === signupConfirmationEmail('testers_community'), 'Testers Community confirmation template must be deterministic.');
+expect(str_contains($testersCommunityConfirmation['plainText'], 'Testers Community Pack access uses the dedicated Google Group'), 'Testers Community confirmation must explain the Group-based access path.');
+expect(str_contains($testersCommunityConfirmation['plainText'], 'does not itself grant Play access'), 'Testers Community confirmation must not imply automatic access.');
+expect(!str_contains($testersCommunityConfirmation['plainText'], 'https://play.google.com'), 'Testers Community confirmation must not expose an installation link.');
+expect(!str_contains(strtolower($testersCommunityConfirmation['plainText']), 'password:'), 'Testers Community confirmation must not expose credentials.');
 
 $message = smtpMessage('tester@example.test', 'alpha@jamesjennison.net', 'alpha@jamesjennison.net', $confirmation['subject'], $confirmation['plainText'], $confirmation['html']);
 expect(str_contains($message, 'Content-Type: multipart/alternative; boundary="=_24Seven_'), 'Confirmation must use multipart alternative delivery.');
@@ -53,9 +59,9 @@ expect(str_contains(decodedMimePart($message, 'text/html'), '—'), 'Unicode em 
 $source = file_get_contents(dirname(__DIR__) . '/privacy-site/alpha-tester-interest.php');
 expect(is_string($source), 'Unable to inspect signup handler.');
 $intakePosition = strpos($source, '$sent = smtpDeliver(');
-$confirmationPosition = strpos($source, '$confirmation = signupConfirmationEmail();');
+$confirmationPosition = strpos($source, '$confirmation = signupConfirmationEmail($application[\'recruitment_source\']);');
 expect($intakePosition !== false && $confirmationPosition !== false && $confirmationPosition > $intakePosition, 'Confirmation must occur only after coordinator intake succeeds.');
-expect(substr_count($source, '$confirmation = signupConfirmationEmail();') === 1, 'A successful signup must have one normal confirmation attempt.');
+expect(substr_count($source, '$confirmation = signupConfirmationEmail($application[\'recruitment_source\']);') === 1, 'A successful signup must have one source-aware confirmation attempt.');
 expect(str_contains($source, "smtpDiagnostic('signup_confirmation');"), 'Bounded non-sensitive confirmation failure handling is missing.');
 expect(!str_contains($source, 'tester_task_assignments'), 'Signup confirmation must not create Tester Task assignments.');
 

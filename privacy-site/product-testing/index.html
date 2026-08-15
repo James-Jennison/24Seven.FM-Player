@@ -39,9 +39,9 @@ section: product-testing
 
 <section class="content-section" id="alpha-tester-interest">
   <div class="content-intro wide">
-    <p class="eyebrow">Closed Alpha enrollment</p>
-    <h2>Apply for Closed Alpha access</h2>
-    <p>Closed-test space is limited. Apply with the Google-account email that should be eligible for Google Play access. Expect a short initial smoke test and roughly two weeks of normal beta use if accepted. Guest testing does not require a 24Seven.FM station account. An application is interest only; admission is not guaranteed.</p>
+    <p class="eyebrow" data-alpha-tester-eyebrow>Closed Alpha enrollment</p>
+    <h2 data-alpha-tester-title>Register your Closed Alpha testing profile</h2>
+    <p data-alpha-tester-description>Use the instructions from your recruitment source, then register the Google-account email, device coverage, and testing preferences you will use. Expect a short initial smoke test and roughly two weeks of normal beta use. Guest testing does not require a 24Seven.FM station account. This profile is not proof of Google Play opt-in, installation, or activity.</p>
   </div>
   <div class="tester-application-layout">
     <form class="tester-application-form" data-alpha-tester-form action="/alpha-tester-interest.php" method="post" novalidate>
@@ -242,15 +242,15 @@ section: product-testing
       <p class="form-privacy">Your application is sent privately to the project coordinator and may be retained in the private tester-intake record for closed-test review and assignment. It is not published. Guest testing does not require a station account. Existing access means only whether you already have an account; never create an account or submit passwords, security answers, CAPTCHA answers, or other login information. Testing preferences help us match focused assignments; use the Player support route to withdraw or request deletion.</p>
       <div class="cf-turnstile" data-sitekey="0x4AAAAAAEPR2A0JwM5Qhrvt" data-action="alpha-tester-interest"></div>
       <p class="form-status" data-alpha-tester-status role="status" aria-live="polite"></p>
-      <button class="button primary" type="submit" data-alpha-tester-submit>Send tester-interest application</button>
+      <button class="button primary" type="submit" data-alpha-tester-submit>Send tester profile</button>
     </form>
     <aside class="tester-application-notes" aria-label="Tester application details">
       <p class="eyebrow">What happens next</p>
-      <h3>Invitation, then a focused assignment</h3>
-      <ol>
-        <li>The coordinator reviews device coverage and current testing needs.</li>
-        <li>If selected, your specified Google account is added to the Closed Alpha eligibility group.</li>
-        <li>Complete the Google Play opt-in, then use the Tester Hub to receive and report focused assignments.</li>
+      <h3 data-alpha-tester-next-title>Access, then a focused assignment</h3>
+      <ol data-alpha-tester-next-steps>
+        <li>Follow the access instructions supplied by your recruitment source.</li>
+        <li>Register the device coverage and Google-account email you will use for testing.</li>
+        <li>Complete Google Play opt-in only after you are eligible, then use the Tester Hub to receive and report focused assignments.</li>
       </ol>
       <p><strong>Please do not submit:</strong> station usernames or passwords, CAPTCHA answers, screenshots with personal information, or private messages. You need your own Google account only to opt in to Google Play; guest testing does not require a station account.</p>
     </aside>
