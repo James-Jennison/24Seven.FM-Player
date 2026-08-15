@@ -44,7 +44,7 @@ expect(!str_contains($confirmation['html'], 'https://play.google.com') && !str_c
 expect(!str_contains(strtolower($confirmation['plainText']), 'you are already a tester'), 'Confirmation must not imply acceptance.');
 expect(!str_contains($confirmation['html'], 'Tester Queue') && !str_contains($confirmation['plainText'], 'Tester Queue'), 'Private Queue data leaked into confirmation.');
 expect($testersCommunityConfirmation === signupConfirmationEmail('testers_community'), 'Testers Community confirmation template must be deterministic.');
-expect(str_contains($testersCommunityConfirmation['plainText'], 'Testers Community Pack access uses the dedicated Google Group'), 'Testers Community confirmation must explain the Group-based access path.');
+expect(str_contains($testersCommunityConfirmation['plainText'], 'Testers Community enrolled for the Pack'), 'Testers Community confirmation must require the enrolled Google account.');
 expect(str_contains($testersCommunityConfirmation['plainText'], 'does not itself grant Play access'), 'Testers Community confirmation must not imply automatic access.');
 expect(!str_contains($testersCommunityConfirmation['plainText'], 'https://play.google.com'), 'Testers Community confirmation must not expose an installation link.');
 expect(!str_contains(strtolower($testersCommunityConfirmation['plainText']), 'password:'), 'Testers Community confirmation must not expose credentials.');

@@ -380,7 +380,7 @@ function signupConfirmationEmail(string $recruitmentSource = 'direct'): array
             'plainText' => <<<'TEXT'
 Thanks for registering your Testers Community profile for the independently developed, unofficial 24Seven.FM Player!
 
-Testers Community Pack access uses the dedicated Google Group and Google Play Closed Test instructions supplied in the Pack. Join that Group and opt in through Google Play with the same Google account you registered here.
+Testers Community Pack access uses the Google Play Closed Test opt-in instructions supplied in the Pack. Opt in through Google Play with the same Google account that Testers Community enrolled for the Pack and that you registered here.
 
 This profile helps the coordinator match device coverage and focused assignments. It does not itself grant Play access, prove a Play opt-in, or prove installation or activity. Guest testing does not require a 24Seven.FM station account.
 
@@ -391,7 +391,7 @@ TEXT,
             'html' => <<<'HTML'
 <p>Thanks for registering your Testers Community profile for the independently developed, unofficial <strong>24Seven.FM Player</strong>!</p>
 
-<p>Testers Community Pack access uses the dedicated Google Group and Google Play Closed Test instructions supplied in the Pack. Join that Group and opt in through Google Play with the same Google account you registered here.</p>
+<p>Testers Community Pack access uses the Google Play Closed Test opt-in instructions supplied in the Pack. Opt in through Google Play with the same Google account that Testers Community enrolled for the Pack and that you registered here.</p>
 
 <p>This profile helps the coordinator match device coverage and focused assignments. It does not itself grant Play access, prove a Play opt-in, or prove installation or activity. Guest testing does not require a 24Seven.FM station account.</p>
 

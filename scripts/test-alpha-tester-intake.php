@@ -129,7 +129,7 @@ foreach (['<fieldset>', 'What is your primary 24Seven.FM station?', 'Guest testi
 expectIntake(str_contains($form, 'name="recruitmentSource" value="direct" data-recruitment-source'), 'Form must retain a safe direct-recruitment fallback.');
 $projectScript = file_get_contents(dirname(__DIR__) . '/privacy-site/assets/project.js');
 expectIntake(is_string($projectScript) && str_contains($projectScript, "'testers-community': 'testers_community'") && str_contains($projectScript, "betafamily: 'betafamily'"), 'Tagged recruitment sources must be explicitly allowlisted in the public form enhancement.');
-expectIntake(is_string($projectScript) && str_contains($projectScript, "requestedSource === 'testers-community'") && str_contains($projectScript, 'Join, opt in, then register your profile'), 'Testers Community must receive the explicit Group-to-Play-to-profile sequence.');
+expectIntake(is_string($projectScript) && str_contains($projectScript, "requestedSource === 'testers-community'") && str_contains($projectScript, 'Opt in, then register your profile'), 'Testers Community must receive the explicit opt-in-to-profile sequence.');
 expectIntake(str_contains($form, 'class="cf-turnstile" data-sitekey="0x4AAAAAAEPR2A0JwM5Qhrvt" data-action="alpha-tester-interest"'), 'The Alpha signup form must embed its dedicated Turnstile action.');
 expectIntake(!str_contains($form, 'name="username"') && !str_contains($form, 'name="password"'), 'The form must not collect credentials.');
 

@@ -616,16 +616,16 @@
         if (element) element.textContent = value;
       };
       replaceText('[data-alpha-tester-eyebrow]', 'Testers Community Pack');
-      replaceText('[data-alpha-tester-title]', 'Join, opt in, then register your profile');
-      replaceText('[data-alpha-tester-description]', 'First follow the Testers Community Pack instructions to join the dedicated Google Group and opt in through Google Play with the same Google account. Then register your device coverage and testing preferences here. This profile does not grant access and is not proof of Google Play opt-in, installation, or activity. Guest testing does not require a 24Seven.FM station account.');
+      replaceText('[data-alpha-tester-title]', 'Opt in, then register your profile');
+      replaceText('[data-alpha-tester-description]', 'First use the Google Play closed-test opt-in link supplied in the Testers Community Pack instructions, signed in with the same Google account enrolled through Testers Community. Then register your device coverage and testing preferences here. This profile does not grant access and is not proof of Google Play opt-in, installation, or activity. Guest testing does not require a 24Seven.FM station account.');
       replaceText('[data-alpha-tester-submit]', 'Register Testers Community profile');
-      replaceText('[data-alpha-tester-next-title]', 'Join, opt in, then a focused assignment');
+      replaceText('[data-alpha-tester-next-title]', 'Opt in, then a focused assignment');
       const steps = document.querySelector('[data-alpha-tester-next-steps]');
       if (steps) {
         steps.replaceChildren();
         [
-          'Join the dedicated Google Group using the Testers Community Pack instructions.',
-          'Open the Google Play closed-test opt-in link and opt in with that same Google account.',
+          'Open the Google Play closed-test opt-in link from the Testers Community Pack instructions.',
+          'Opt in with the same Google account that Testers Community enrolled for the Pack.',
           'Register your coverage here, then use the Tester Hub for focused assignments and private feedback.'
         ].forEach(function (step) {
           const item = document.createElement('li');
