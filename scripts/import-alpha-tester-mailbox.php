@@ -61,6 +61,7 @@ function database(string $path): PDO
         'testing_comfort' => 'TEXT',
         'controlled_actions_json' => "TEXT NOT NULL DEFAULT '[]'",
         'testing_availability' => 'TEXT',
+        'recruitment_source' => "TEXT NOT NULL DEFAULT 'direct'",
     ];
     foreach ($migrations as $column => $definition) {
         if (!in_array($column, $columns, true)) {
@@ -140,7 +141,20 @@ function parseFields(string $raw): array
     foreach ($optional as $key => $label) {
         $fields[$key] = preg_match('/^' . preg_quote($label, '/') . ':\\s*(.*)$/mi', $body, $match) ? trim($match[1]) : 'Not provided';
     }
+    $fields['recruitment_source'] = preg_match('/^Recruitment source:\s*(.*)$/mi', $body, $match) ? trim($match[1]) : 'Direct / project site';
     return $fields;
+}
+
+function canonicalRecruitmentSource(string $value): string
+{
+    return match ($value) {
+        'Direct / project site' => 'direct',
+        'Testers Community' => 'testers_community',
+        'Betabound' => 'betabound',
+        'BetaFamily' => 'betafamily',
+        'Other approved source' => 'other',
+        default => throw new RuntimeException('Unknown recruitment source.'),
+    };
 }
 
 function canonicalValue(string $field, string $value): ?string
@@ -187,7 +201,7 @@ if ($messages === [] || !preg_match('/^[0-9A-Za-z._:-]+$/', $uid) || strtotime($
 }
 
 $database = database($databasePath);
-$insert = $database->prepare("INSERT INTO testers(source_message_uid, received_at, display_name, email, country, device, android_version, interests_json, experience, status, imported_at, primary_station, other_stations_json, station_accounts_json, device_form_factor, other_devices, network_capabilities_json, audio_capabilities_json, accessibility_capabilities_json, testing_comfort, controlled_actions_json, testing_availability) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(source_message_uid) DO NOTHING");
+$insert = $database->prepare("INSERT INTO testers(source_message_uid, received_at, display_name, email, country, device, android_version, interests_json, experience, status, imported_at, primary_station, other_stations_json, station_accounts_json, device_form_factor, other_devices, network_capabilities_json, audio_capabilities_json, accessibility_capabilities_json, testing_comfort, controlled_actions_json, testing_availability, recruitment_source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(source_message_uid) DO NOTHING");
 $imported = 0;
 foreach ($messages as $offset => $messagePath) {
     if (!is_string($messagePath)) {
@@ -230,6 +244,7 @@ foreach ($messages as $offset => $messagePath) {
         canonicalValue('testing_comfort', $fields['testing_comfort']),
         json_encode(canonicalList('controlled_actions', $fields['controlled_actions']), JSON_THROW_ON_ERROR),
         canonicalValue('testing_availability', $fields['testing_availability']),
+        canonicalRecruitmentSource($fields['recruitment_source']),
     ]);
     $imported += $insert->rowCount();
 }

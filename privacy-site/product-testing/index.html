@@ -11,7 +11,7 @@ section: product-testing
   <div>
     <p class="eyebrow">Closed Alpha tester hub</p>
     <h1>Everything for a focused test.</h1>
-    <p class="page-lede">Apply to join the Closed Alpha, keep your tester profile current, and complete only the assignments matched to your device and coverage. The full catalog remains here for reference; no one is expected to test it alone.</p>
+    <p class="page-lede">Join the Google Play Closed Test for an independently developed, unofficial player for the 24Seven.FM network of internet radio stations. Keep your tester profile current and complete only the assignments matched to your device and coverage; no one is expected to test the full catalog alone.</p>
     <div class="actions">
       <a class="button primary" href="#alpha-tester-interest">Apply to join</a>
       <a class="button secondary" href="{{ '/tester-portal.php' | relative_url }}">Existing tester sign in</a>
@@ -41,10 +41,11 @@ section: product-testing
   <div class="content-intro wide">
     <p class="eyebrow">Closed Alpha enrollment</p>
     <h2>Apply for Closed Alpha access</h2>
-    <p>Closed Alpha space is limited. Apply with the Google-account email that should be eligible for Google Play access. Guest testing does not require a 24Seven.FM station account. An application is interest only; admission is not guaranteed.</p>
+    <p>Closed-test space is limited. Apply with the Google-account email that should be eligible for Google Play access. Expect a short initial smoke test and roughly two weeks of normal beta use if accepted. Guest testing does not require a 24Seven.FM station account. An application is interest only; admission is not guaranteed.</p>
   </div>
   <div class="tester-application-layout">
     <form class="tester-application-form" data-alpha-tester-form action="/alpha-tester-interest.php" method="post" novalidate>
+      <input type="hidden" name="recruitmentSource" value="direct" data-recruitment-source>
       <fieldset>
         <legend>About you</legend>
         <div class="form-grid">
@@ -237,8 +238,8 @@ section: product-testing
         </div>
       </fieldset>
       <div class="visually-hidden" aria-hidden="true"><label for="tester-company">Leave this field blank</label><input id="tester-company" name="company" tabindex="-1" autocomplete="off"></div>
-      <label class="consent-check"><input type="checkbox" name="consent" value="yes" required> I agree that the project coordinator may use these details to contact me about 24Seven.FM Player Alpha testing. I will not submit passwords, station credentials, CAPTCHA answers, or other authentication secrets.</label>
-      <p class="form-privacy">Your application is sent privately to the project coordinator and may be retained in the private tester-intake record for Alpha review and assignment. It is not published. Guest testing does not require a station account. Existing access means only whether you already have an account; never create an account or submit passwords, security answers, CAPTCHA answers, or other login information. Testing preferences help us match focused assignments; use the Player support route to request deletion.</p>
+      <label class="consent-check"><input type="checkbox" name="consent" value="yes" required> I agree that the project coordinator may use these details to contact me about 24Seven.FM Player closed testing. I understand that it is independently developed and unofficial, and I will not submit passwords, station credentials, CAPTCHA answers, or other authentication secrets.</label>
+      <p class="form-privacy">Your application is sent privately to the project coordinator and may be retained in the private tester-intake record for closed-test review and assignment. It is not published. Guest testing does not require a station account. Existing access means only whether you already have an account; never create an account or submit passwords, security answers, CAPTCHA answers, or other login information. Testing preferences help us match focused assignments; use the Player support route to withdraw or request deletion.</p>
       <div class="cf-turnstile" data-sitekey="0x4AAAAAAEPR2A0JwM5Qhrvt" data-action="alpha-tester-interest"></div>
       <p class="form-status" data-alpha-tester-status role="status" aria-live="polite"></p>
       <button class="button primary" type="submit" data-alpha-tester-submit>Send tester-interest application</button>

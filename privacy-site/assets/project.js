@@ -599,6 +599,16 @@
     if (!form) return;
     const status = form.querySelector('[data-alpha-tester-status]');
     const submit = form.querySelector('[data-alpha-tester-submit]');
+    const source = form.querySelector('[data-recruitment-source]');
+    const sources = {
+      direct: 'direct',
+      'testers-community': 'testers_community',
+      betabound: 'betabound',
+      betafamily: 'betafamily',
+      other: 'other'
+    };
+    const requestedSource = new URLSearchParams(window.location.search).get('source');
+    if (source && requestedSource && sources[requestedSource]) source.value = sources[requestedSource];
 
     function setStatus(message, state) {
       if (!status) return;

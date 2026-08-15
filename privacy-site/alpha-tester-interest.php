@@ -101,6 +101,13 @@ const TESTING_AVAILABILITY = [
     'over_4h' => 'More than 4 hours',
     'varies' => 'It varies',
 ];
+const RECRUITMENT_SOURCES = [
+    'direct' => 'Direct / project site',
+    'testers_community' => 'Testers Community',
+    'betabound' => 'Betabound',
+    'betafamily' => 'BetaFamily',
+    'other' => 'Other approved source',
+];
 
 ini_set('display_errors', '0');
 
@@ -226,6 +233,7 @@ function applicationFromRequest(): array
         'controlled_actions' => requestChoices('controlledActions', CONTROLLED_ACTIONS, count(CONTROLLED_ACTIONS), true),
         'testing_availability' => requestChoice('testingAvailability', TESTING_AVAILABILITY),
         'experience' => requestField('experience', 1200),
+        'recruitment_source' => requestChoice('recruitmentSource', RECRUITMENT_SOURCES) ?? 'direct',
         'company' => requestField('company', 100),
         'consent' => requestField('consent', 3, true),
     ];
@@ -261,6 +269,7 @@ function coordinatorIntakeMessage(array $application): string
         'Controlled-action preferences: ' . labels($application['controlled_actions'], CONTROLLED_ACTIONS),
         'Two-week availability: ' . ($application['testing_availability'] === null ? 'Not provided' : TESTING_AVAILABILITY[$application['testing_availability']]),
         'Assignment notes: ' . ($application['experience'] !== '' ? $application['experience'] : 'Not provided'),
+        'Recruitment source: ' . RECRUITMENT_SOURCES[$application['recruitment_source']],
         'Consent: Confirmed',
     ]);
 }
@@ -368,9 +377,9 @@ function signupConfirmationEmail(): array
     return [
         'subject' => SIGNUP_CONFIRMATION_SUBJECT,
         'plainText' => <<<'TEXT'
-Thanks for signing up to help test the 24Seven.FM Player!
+Thanks for signing up to help test the independently developed, unofficial 24Seven.FM Player!
 
-We've received your interest in joining the internal testing program. We really appreciate your willingness to help us test the app, find bugs, and improve the experience before a wider release.
+We've received your interest in joining the Google Play Closed Testing program. The Player is an independently developed, unofficial player for the 24Seven.FM network of internet radio stations. We appreciate your willingness to help test the app, find bugs, and improve the experience before a wider release.
 
 At this stage, there's nothing else you need to do yet.
 
@@ -396,9 +405,9 @@ Thanks again for volunteering to help make the 24Seven.FM Player better.
 James — 24Seven.FM Player Testing Team
 TEXT,
         'html' => <<<'HTML'
-<p>Thanks for signing up to help test the <strong>24Seven.FM Player</strong>!</p>
+<p>Thanks for signing up to help test the independently developed, unofficial <strong>24Seven.FM Player</strong>!</p>
 
-<p>We've received your interest in joining the internal testing program. We really appreciate your willingness to help us test the app, find bugs, and improve the experience before a wider release.</p>
+<p>We've received your interest in joining the Google Play Closed Testing program. The Player is an independently developed, unofficial player for the 24Seven.FM network of internet radio stations. We appreciate your willingness to help test the app, find bugs, and improve the experience before a wider release.</p>
 
 <p>At this stage, <strong>there's nothing else you need to do yet</strong>.</p>
 

@@ -1,4 +1,6 @@
-# 24Seven.FM Player Alpha testing guide
+# 24Seven.FM Player closed-testing guide
+
+24Seven.FM Player is an independently developed, unofficial player for the 24Seven.FM network of internet radio stations.
 
 ## Supported devices
 
@@ -10,7 +12,7 @@
 
 ## Installation and updates
 
-Only install an APK supplied through the approved project distribution channel. Android may require the tester to permit installs from that source.
+Google Play Closed Testing is the authoritative distribution channel. Install and update the closed-test build only through its Google Play opt-in link; do not use a development debug APK or a separately shared release APK for this program.
 
 Guest closed-test volunteers use their own Google account only to opt in to Google Play. They do not need a 24Seven.FM station account, must not create or share one for this program, and receive only the account-free Guest testing tasks.
 
@@ -20,9 +22,11 @@ An update installs over an earlier Alpha only when all of the following match:
 - the same signing identity;
 - a higher version code.
 
-Do not distribute the development debug APK as the public Alpha. Its machine-local debug signature will not match a future production signing identity, forcing testers to uninstall and lose protected station sessions before changing builds.
+Do not distribute the development debug APK to closed testers. Its machine-local debug signature will not match the Google Play signing identity, forcing testers to uninstall and lose protected station sessions before changing builds.
 
 ## First-run checklist
+
+The tester portal’s initial smoke confirmation covers a short version of steps 1, 4, and 5 below: launch the Player, play one station for a few minutes, switch stations, background playback and try Android media controls, then return to the Player. It is a tester self-confirmation, not automated installation or activity telemetry.
 
 1. Confirm the launcher shows the purple 24Seven.FM icon.
 2. Open the app and grant notification permission when desired.
@@ -49,7 +53,7 @@ Do not distribute the development debug APK as the public Alpha. Its machine-loc
 
 ## Reporting a problem
 
-Use the public [product-testing workspace](https://player.jamesjennison.net/product-testing/) to open the assigned Tester Task and the structured GitHub result form. The canonical catalog has 35 PT cases organized into 23 Tester Tasks; 19 current bundles are assignable and four future bundles remain blocked by their milestones. A Tester Task can contain more than one PT case, but every PT case needs its own result. The coordinator distributes focused tasks through the private Tester Queue rather than asking one volunteer to complete the full catalog.
+Use your private tester portal for assigned-task reports whenever possible; it keeps reports visible only to the coordinator. The public [product-testing workspace](https://player.jamesjennison.net/product-testing/) and structured GitHub form remain supplementary routes for non-sensitive results. The canonical catalog has 34 PT cases organized into 23 Tester Tasks; 19 current bundles are assignable and four future bundles remain blocked by their milestones. A Tester Task can contain more than one PT case, but every PT case needs its own result. The coordinator distributes focused tasks through the private Tester Queue rather than asking one volunteer to complete the full catalog.
 
 Include:
 

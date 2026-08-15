@@ -20,6 +20,9 @@ assert(current.length === 19 && future.length === 4, "Queue task availability mu
 assert(!endpoint.includes("email_batches (\n            id INTEGER PRIMARY KEY,\n            tester_id"), "Existing email persistence must remain separate from task assignments");
 assert(endpoint.includes("CREATE TABLE IF NOT EXISTS tester_task_assignments"), "Queue must add the assignment table additively");
 assert(endpoint.includes("CREATE TABLE IF NOT EXISTS tester_onboarding"), "Queue must persist onboarding separately from enrollment and assignments");
+assert(endpoint.includes("initial_smoke_test_confirmed_at"), "Queue must retain the tester's initial smoke-test self-confirmation.");
+assert(endpoint.includes("recruitment_source"), "Queue must retain validated recruitment-source attribution.");
+assert(endpoint.includes("FEEDBACK_CATEGORIES"), "Queue must retain structured feedback categories.");
 assert(endpoint.includes("CREATE TABLE IF NOT EXISTS tester_mail_archive"), "Queue must retain a protected coordinator mail archive");
 assert(endpoint.includes("CREATE TABLE IF NOT EXISTS administrator_login_limits"), "Queue must persist private administrator-login rate limits.");
 assert(endpoint.includes("function administratorLoginClientKey"), "Administrator login rate limiting must not persist a raw client address.");

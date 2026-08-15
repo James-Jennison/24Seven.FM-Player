@@ -192,7 +192,7 @@ Audio stream addresses come from station-provided playlists and remain subject t
 
 M17 tracks the native Private Messages experience, which remains deferred until the website's underlying server issues and production behavior are settled. See [docs/future-scope.md](docs/future-scope.md).
 
-Alpha testers and distributors should read [the privacy notice](PRIVACY.md), [Alpha testing guide](docs/alpha-testing.md), [release notes](docs/releases/0.1.0-alpha01.md), [Play Console checklist](docs/play-console-checklist.md), and [M23 signing handoff](docs/m23-alpha-readiness.md). Development debug APKs are not intended for external distribution.
+Closed-test testers and recruiters should read [the privacy notice](PRIVACY.md), [closed-testing guide](docs/alpha-testing.md), [tester onboarding operations](docs/tester-onboarding-operations.md), [release notes](docs/releases/0.1.0-alpha01.md), [Play Console checklist](docs/play-console-checklist.md), and [M23 signing handoff](docs/m23-alpha-readiness.md). Development debug APKs are not intended for external distribution.
 
 ## Building
 

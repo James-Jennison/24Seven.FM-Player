@@ -34,11 +34,12 @@ exec($command, $output, $status);
 expectImport($status === 0 && $output === ['Imported 1 tester application(s).'], 'New intake email did not import.');
 
 $pdo = new PDO('sqlite:' . $database, null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
-$row = $pdo->query('SELECT primary_station, other_stations_json, station_accounts_json, device_form_factor, network_capabilities_json, testing_comfort, controlled_actions_json, testing_availability FROM testers')->fetch(PDO::FETCH_ASSOC);
+$row = $pdo->query('SELECT primary_station, other_stations_json, station_accounts_json, device_form_factor, network_capabilities_json, testing_comfort, controlled_actions_json, testing_availability, recruitment_source FROM testers')->fetch(PDO::FETCH_ASSOC);
 expectImport(is_array($row), 'Imported tester record is missing.');
 expectImport($row['primary_station'] === 'sst' && $row['device_form_factor'] === 'phone' && $row['testing_comfort'] === 'controlled', 'Canonical scalar intake values were not preserved.');
 expectImport($row['other_stations_json'] === '["1980s","efm"]' && $row['network_capabilities_json'] === '["wifi"]' && $row['controlled_actions_json'] === '["song_request"]', 'Canonical list intake values were not preserved.');
 expectImport($row['testing_availability'] === '1_2h', 'Testing availability was not preserved.');
+expectImport($row['recruitment_source'] === 'direct', 'Legacy direct recruitment attribution was not preserved.');
 
 file_put_contents($message, "From: alpha@example.test\r\n\r\nDisplay name: Legacy Tester\nGoogle Play account email: legacy@example.test\nCountry or region: Not provided\nAndroid device: Legacy Phone\nAndroid version: Android 15\nInterests: Playback\nPrior testing experience: Not provided\n");
 $command = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(dirname(__DIR__) . '/scripts/import-alpha-tester-mailbox.php')

@@ -26,6 +26,9 @@ assert(portal.includes("tester_portal_tokens"), "Tester portal token storage is 
 assert(portal.includes("tester_feedback"), "Tester portal feedback persistence is missing.");
 assert(portal.includes("WHERE id = ? AND tester_id = ?"), "Feedback must be bound to the signed-in tester's own assignment.");
 assert(portal.includes("play_opt_in_confirmed_at"), "Tester opt-in confirmation state is missing.");
+assert(portal.includes("confirm_initial_smoke_test"), "Tester portal must provide an initial smoke-test self-confirmation.");
+assert(portal.includes("This is my own confirmation, not automated installation or activity evidence."), "Smoke-test evidence must not be overstated.");
+assert(portal.includes("FEEDBACK_CATEGORIES"), "Tester portal must use the queue's structured feedback categories.");
 assert(portal.includes("onboarding_status = 'ready'"), "A completed opt-in must advance a complete tester to ready for assignment.");
 assert(portal.includes("PORTAL_TESTING_INTERESTS"), "Tester profile must include the original testing-interest intake options.");
 assert(portal.includes("name=\"display_name\""), "Tester profile must allow a tester to update their name.");
