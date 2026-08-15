@@ -54,6 +54,8 @@ assert(portal.includes("function portalAdminPreviewTesterId"), "The coordinator 
 assert(portal.includes("($_SESSION['authenticated'] ?? false) === true"), "Tester previews must require the coordinator session.");
 assert(portal.includes("Tester previews are read-only."), "Tester previews must reject state-changing requests.");
 assert(portal.includes("Read-only coordinator preview."), "Tester previews must be visibly identified as read-only.");
+assert(portal.includes('class="brand-icon" src="/assets/project/app-icon.png"'), "Tester portal branding must use the established Player icon.");
+assert(!portal.includes('class="mark">7</span>'), "Tester portal must not use an invented numeric brand mark.");
 assert(!portal.includes("password_verify("), "Tester portal must not collect or verify tester passwords.");
 assert(queue.includes("CREATE TABLE IF NOT EXISTS tester_portal_tokens"), "Queue database migration must create portal token storage.");
 assert(queue.includes("CREATE TABLE IF NOT EXISTS tester_feedback"), "Queue database migration must create feedback storage.");
