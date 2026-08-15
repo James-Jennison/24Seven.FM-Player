@@ -1125,6 +1125,8 @@ figcaption span { color: var(--muted); font-size: 0.88rem; }
 .tester-application-notes { padding: clamp(1.4rem, 3vw, 2rem); border: 1px solid var(--border); border-radius: 1rem; background: linear-gradient(145deg, rgba(103, 230, 209, 0.07), rgba(210, 156, 255, 0.025)); box-shadow: 0 1rem 2.5rem var(--shadow); }
 .tester-application-form { display: grid; gap: 1.35rem; }
 .tester-application-form .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.15rem; }
+.tester-application-form .form-grid > :only-child,
+.tester-application-form .form-grid > :last-child:nth-child(odd) { grid-column: 1 / -1; }
 .tester-application-form .form-field { display: grid; min-width: 0; gap: 0.45rem; }
 .tester-application-form label { color: var(--text); font-size: 0.84rem; font-weight: 780; line-height: 1.3; }
 .tester-application-form label small,
@@ -1153,7 +1155,7 @@ figcaption span { color: var(--muted); font-size: 0.88rem; }
 .form-status[data-state="success"] { color: var(--cyan); }
 .form-status[data-state="error"] { color: var(--warning); }
 .tester-application-form .button { justify-self: start; }
-.tester-application-notes { border-color: rgba(210, 156, 255, 0.38); background: linear-gradient(145deg, rgba(210, 156, 255, 0.11), rgba(103, 230, 209, 0.04)); }
+.tester-application-notes { position: sticky; top: calc(var(--header-height) + 4rem); border-color: rgba(210, 156, 255, 0.38); background: linear-gradient(145deg, rgba(210, 156, 255, 0.11), rgba(103, 230, 209, 0.04)); }
 .tester-application-notes h3 { margin: 0.4rem 0 1rem; }
 .tester-application-notes ol { padding-left: 1.25rem; color: var(--muted); }
 .tester-application-notes li + li { margin-top: 0.7rem; }
@@ -1723,6 +1725,8 @@ h2:hover .anchor-copy,
   .brief-grid,
   .compact-feature-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .program-status { grid-template-columns: 1fr; }
+  .tester-application-layout { grid-template-columns: 1fr; }
+  .tester-application-notes { position: static; }
   .metrics dl div:nth-child(2) { border-right: 0; }
   .metrics dl div:nth-child(-n + 2) { border-bottom: 1px solid var(--border); }
   .cta { align-items: flex-start; flex-direction: column; }
