@@ -42,6 +42,9 @@ assert(endpoint.includes("function renderMailRecord(PDO $database, int $archiveI
 assert(endpoint.includes("?mail_archive=1"), "Queue must link coordinators to the sent-mail archive");
 assert(endpoint.includes("profile_pending', 'profile_complete', 'invited', 'orientation_sent', 'ready', 'paused"), "Onboarding lifecycle statuses are incomplete");
 assert(endpoint.includes("function profileSummary(array $tester): array"), "Queue must evaluate assignment-relevant profile completeness");
+assert(endpoint.includes("function isGuestTester(array $tester): bool"), "Queue must identify testers with no station account as guest testers.");
+assert(endpoint.includes("function taskAllowsGuestTester(array $task): bool"), "Queue must use an explicit guest-task eligibility flag.");
+assert(endpoint.includes("Guest testers can receive only the account-free Guest testing tasks."), "Queue must block account-dependent assignments for guest testers.");
 assert(endpoint.includes("function renderOperationsDashboard"), "Queue must render an operations dashboard instead of every tester form at once");
 assert(endpoint.includes("function renderTesterWorkspace"), "Queue must provide a focused per-tester workspace");
 assert(endpoint.includes("send_onboarding_email"), "Queue must support an individual orientation-email action");
@@ -70,6 +73,10 @@ assert(client.includes("data-task-assignment-form"), "Task preview client integr
 assert(client.includes("'profile-update'"), "Profile-update email template is missing");
 assert(client.includes("checkbox.required = mode === 'required'"), "Required mutation authorization is not enforced in the UI");
 assert(tasks.find((task) => task.id === "TT-09").safetyWarning.includes("ONE LIVE REQUEST MAXIMUM"), "TT-09 safety boundary is missing");
+for (const id of ["TT-01", "TT-02", "TT-03", "TT-04", "TT-05", "TT-06", "TT-14", "TT-15", "TT-16"]) {
+  assert(tasks.find((task) => task.id === id).guestEligible === true, `${id} must be explicitly available to guest testers`);
+}
+assert(tasks.find((task) => task.id === "TT-07").guestEligible !== true, "Account-dependent work must remain unavailable to guest testers");
 for (const id of ["TT-19", "TT-20"]) {
   const task = tasks.find((candidate) => candidate.id === id);
   assert(task.requiresConfiguration === true && task.mutation.mode === "required", `${id} must require a harness and explicit authorization`);

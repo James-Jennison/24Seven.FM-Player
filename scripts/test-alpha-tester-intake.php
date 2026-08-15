@@ -98,7 +98,7 @@ expectInvalid(static fn (): array => applicationFromRequest(), 'Assignment notes
 
 $_POST = validApplication();
 $message = coordinatorIntakeMessage(applicationFromRequest());
-foreach (['Primary station:', 'Other familiar stations:', 'Station accounts available:', 'Device form factor:', 'Other Android devices:', 'Network capabilities:', 'Audio/accessory capabilities:', 'Accessibility/alternative-input capabilities:', 'Testing comfort level:', 'Controlled-action preferences:', 'Two-week availability:', 'Assignment notes:'] as $label) {
+foreach (['Primary station:', 'Other familiar stations:', 'Existing station access (optional):', 'Device form factor:', 'Other Android devices:', 'Network capabilities:', 'Audio/accessory capabilities:', 'Accessibility/alternative-input capabilities:', 'Testing comfort level:', 'Controlled-action preferences:', 'Two-week availability:', 'Assignment notes:'] as $label) {
     expectIntake(str_contains($message, $label), "Coordinator intake email is missing {$label}");
 }
 expectIntake(!str_contains($message, 'password') && !str_contains($message, 'CAPTCHA answer'), 'Coordinator message must not create secret fields.');
@@ -122,7 +122,7 @@ expectIntake(strlen(http_build_query($maximum)) < MAX_REQUEST_BYTES, 'Maximum le
 
 $form = file_get_contents(dirname(__DIR__) . '/privacy-site/product-testing/index.html');
 expectIntake(is_string($form), 'Unable to inspect the tester-interest form.');
-foreach (['<fieldset>', 'What is your primary 24Seven.FM station?', 'name="primaryStation" required', 'name="deviceFormFactor" required', 'name="testingComfort" value="readonly" required', 'Do not enter your username, password, security answer, CAPTCHA answer, or any other login information.', 'name="company"', 'name="consent" value="yes" required'] as $needle) {
+foreach (['<fieldset>', 'What is your primary 24Seven.FM station?', 'Guest testing does not require a 24Seven.FM station account.', 'Existing 24Seven.FM station access', 'name="primaryStation" required', 'name="deviceFormFactor" required', 'name="testingComfort" value="readonly" required', 'do not create an account or enter your username, password, security answer, CAPTCHA answer, or any other login information.', 'name="company"', 'name="consent" value="yes" required'] as $needle) {
     expectIntake(str_contains($form, $needle), "Form contract is missing {$needle}");
 }
 expectIntake(str_contains($form, 'class="cf-turnstile" data-sitekey="0x4AAAAAAEPR2A0JwM5Qhrvt" data-action="alpha-tester-interest"'), 'The Alpha signup form must embed its dedicated Turnstile action.');

@@ -12,6 +12,8 @@
 
 Only install an APK supplied through the approved project distribution channel. Android may require the tester to permit installs from that source.
 
+Guest closed-test volunteers use their own Google account only to opt in to Google Play. They do not need a 24Seven.FM station account, must not create or share one for this program, and receive only the account-free Guest testing tasks.
+
 An update installs over an earlier Alpha only when all of the following match:
 
 - application ID `com.codeframe78.twentyfourseven.player`;

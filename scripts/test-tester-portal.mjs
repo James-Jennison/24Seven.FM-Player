@@ -34,6 +34,8 @@ assert(portal.includes("portalCheckboxes('other_stations'"), "Tester profile mus
 assert(portal.includes("portalCheckboxes('testing_interests'"), "Tester profile must allow a tester to update testing interests.");
 assert(portal.includes("name=\"experience\""), "Tester profile must allow a tester to update assignment notes or experience.");
 assert(portal.includes("Email changes are reviewed by the coordinator"), "Tester email must remain a reviewed identity change.");
+assert(portal.includes("Guest testing does not require a 24Seven.FM station account."), "Tester portal must explain that a station account is optional.");
+assert(portal.includes("Existing station access (optional; station names only)"), "Tester portal must label existing station access as optional.");
 assert(portal.includes("TESTER_PORTAL_TURNSTILE_ACTION"), "Magic-link requests must be protected by Turnstile.");
 assert(portal.includes("portalVerifyTurnstile($turnstileToken"), "Turnstile must be verified before a magic link is sent.");
 assert(portal.includes("We could not send a sign-in link. Please try again later."), "Portal link requests must report a failed transport instead of claiming delivery.");

@@ -538,7 +538,6 @@ function profileSummary(array $tester): array
 {
     $required = [
         'primary_station' => 'primary station',
-        'station_accounts_json' => 'station account availability',
         'device_form_factor' => 'Android device type',
         'network_capabilities_json' => 'network-testing preferences',
         'audio_capabilities_json' => 'audio/accessory preferences',
@@ -558,6 +557,17 @@ function profileSummary(array $tester): array
         }
     }
     return ['complete' => $missing === [], 'missing' => $missing];
+}
+
+function isGuestTester(array $tester): bool
+{
+    $accounts = listFromJson(is_string($tester['station_accounts_json'] ?? null) ? $tester['station_accounts_json'] : null);
+    return $accounts === [] || $accounts === ['none'];
+}
+
+function taskAllowsGuestTester(array $task): bool
+{
+    return ($task['guestEligible'] ?? false) === true;
 }
 
 function onboardingStatus(array $tester): string
@@ -617,6 +627,7 @@ function onboardingMessage(array $tester): string
         . "3. Install or update 24Seven.FM Player, then complete the first-run checklist at https://player.jamesjennison.net/product-testing/.\n"
         . "4. Use only the focused Tester Tasks you are assigned. Each task has its own safety boundary and needs one result per PT case.\n"
         . "5. Send results through the linked feedback form, including the app version, device, Android version, station, steps, and outcome.\n\n"
+        . "You need your own Google account only to opt in to Google Play. Guest testing does not require a 24Seven.FM station account; do not create, use, or share one for this program.\n\n"
         . "Please do not send passwords, usernames, security answers, CAPTCHA answers, session information, or screenshots containing private information.\n\n"
         . "Thank you,\n24Seven.FM Player Testing Team";
 }
@@ -670,7 +681,7 @@ function testerId(): int
     return $id;
 }
 
-function assignmentInput(array $tasks): array
+function assignmentInput(array $tasks, array $tester): array
 {
     $taskId = strtoupper(trim((string) ($_POST['task_id'] ?? '')));
     $task = $tasks[$taskId] ?? null;
@@ -679,6 +690,9 @@ function assignmentInput(array $tasks): array
     }
     if (($task['state'] ?? '') !== 'current') {
         throw new InvalidArgumentException('Future / Blocked Tester Tasks cannot be assigned.');
+    }
+    if (isGuestTester($tester) && !taskAllowsGuestTester($task)) {
+        throw new InvalidArgumentException('Guest testers can receive only the account-free Guest testing tasks.');
     }
     $station = trim((string) ($_POST['station_scope'] ?? ''));
     if (!in_array($station, STATION_SCOPES, true)) {
@@ -1128,9 +1142,15 @@ function renderTesterWorkspace(PDO $database, int $testerId, string $notice = ''
     $orientation = ($tester['orientation_email_status'] ?? 'not_sent') === 'accepted'
         ? 'Accepted by the mail transport'
         : (($tester['orientation_email_status'] ?? 'not_sent') === 'failed' ? 'Mail transport failed' : 'Not sent');
+    $guestTester = isGuestTester($tester);
     $taskOptions = '<option value="">Choose a current Tester Task</option>';
     foreach ($tasks as $task) {
-        $taskOptions .= '<option value="' . e($task['id']) . '"' . (($task['state'] ?? '') === 'future' ? ' disabled' : '') . '>' . e($task['id'] . ' — ' . $task['title'] . (($task['state'] ?? '') === 'future' ? ' (Future / Blocked)' : '')) . '</option>';
+        $notEligibleForGuest = $guestTester && !taskAllowsGuestTester($task);
+        $disabled = (($task['state'] ?? '') === 'future' || $notEligibleForGuest) ? ' disabled' : '';
+        $suffix = ($task['state'] ?? '') === 'future'
+            ? ' (Future / Blocked)'
+            : ($notEligibleForGuest ? ' (Requires station account or controlled setup)' : '');
+        $taskOptions .= '<option value="' . e($task['id']) . '"' . $disabled . '>' . e($task['id'] . ' — ' . $task['title'] . $suffix) . '</option>';
     }
     $stationOptions = '';
     foreach (STATION_SCOPES as $station) {
@@ -1154,9 +1174,12 @@ function renderTesterWorkspace(PDO $database, int $testerId, string $notice = ''
     }
     $message = $notice === '' ? '' : '<p class="notice">' . e($notice) . '</p>';
     $message .= $error === '' ? '' : '<p class="notice error">' . e($error) . '</p>';
+    $guestTaskNotice = $guestTester
+        ? '<p class="notice"><strong>Guest tester.</strong> Guest testers can receive only the account-free Guest testing tasks. Do not ask them to create, use, or share a station account.</p>'
+        : '';
     $content = '<p><a href="/private-tester-queue.php">← Tester operations</a> · <a href="/tester-portal.php?preview_tester=' . $testerId . '">Preview tester view</a></p><div><p class="muted">Tester workspace</p><h1>' . e($tester['display_name']) . '</h1><p class="muted">' . e($tester['device']) . ' · ' . e($tester['android_version']) . ' · ' . e($tester['country'] ?: 'Country not provided') . '</p></div>' . $message
         . '<section><h2>Onboarding</h2>' . onboardingBadge($status) . $profileBlock . '<form method="post"><input type="hidden" name="action" value="update_onboarding"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $testerId . '"><label>Onboarding status<select name="onboarding_status">' . $statusOptions . '</select></label><label>Coordinator note<textarea name="onboarding_note" maxlength="' . MAX_ONBOARDING_NOTE_LENGTH . '" placeholder="Private operational note; never add credentials or secrets.">' . e($tester['onboarding_note'] ?? '') . '</textarea></label><button type="submit">Save onboarding progress</button></form><p><strong>Orientation email:</strong> ' . e($orientation) . ' <small>(' . (int) ($tester['orientation_email_attempts'] ?? 0) . ' handoff attempt' . ((int) ($tester['orientation_email_attempts'] ?? 0) === 1 ? '' : 's') . ')</small></p>' . ($profile['complete'] ? '<form method="post"><input type="hidden" name="action" value="send_onboarding_email"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $testerId . '"><button class="secondary" type="submit">Send orientation email</button></form>' : '') . '</section>'
-        . '<section><h2>Focused Tester Tasks</h2><p class="muted">Assign only a focused bundle that matches this tester’s coverage. Each PT case still receives its own result.</p>' . ($assignmentCards === '' ? '<p class="muted">No task assigned yet.</p>' : $assignmentCards) . '<article class="onboarding-card"><h3>Assign a focused Tester Task</h3><form method="post" data-task-assignment-form><input type="hidden" name="action" value="assign_task"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $testerId . '"><label>Tester Task<select name="task_id" data-task-select required>' . $taskOptions . '</select></label><div class="task-preview" data-task-preview aria-live="polite">Choose a current task to see its PT cases, prerequisites, and safety boundary.</div><label>Station scope<select name="station_scope">' . $stationOptions . '</select></label><label>Device / accessory / form factor scope<input name="configuration_scope" maxlength="' . MAX_ASSIGNMENT_CONFIGURATION_LENGTH . '" placeholder="For example, Pixel 9, Bluetooth headset, folded"></label><label>Coordinator note<textarea name="coordinator_note" maxlength="' . MAX_ASSIGNMENT_NOTE_LENGTH . '"></textarea></label><label class="mutation-authorization" data-mutation-authorization hidden><input type="checkbox" name="mutation_authorized" value="1"> I explicitly authorize the controlled subcase described above.</label><button type="submit">Assign Tester Task</button></form></article></section><section><h2>Tester task reports</h2><p class="muted">Private reports submitted through the tester portal.</p>' . ($feedbackItems === '' ? '<p class="muted">No task reports submitted yet.</p>' : $feedbackItems) . '</section><script id="tester-task-registry" type="application/json">' . json_encode(array_values($tasks), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES) . '</script><script src="/assets/private-tester-queue.js?v=onboarding-1" defer></script>';
+        . '<section><h2>Focused Tester Tasks</h2><p class="muted">Assign only a focused bundle that matches this tester’s coverage. Each PT case still receives its own result.</p>' . $guestTaskNotice . ($assignmentCards === '' ? '<p class="muted">No task assigned yet.</p>' : $assignmentCards) . '<article class="onboarding-card"><h3>Assign a focused Tester Task</h3><form method="post" data-task-assignment-form><input type="hidden" name="action" value="assign_task"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $testerId . '"><label>Tester Task<select name="task_id" data-task-select required>' . $taskOptions . '</select></label><div class="task-preview" data-task-preview aria-live="polite">Choose a current task to see its PT cases, prerequisites, and safety boundary.</div><label>Station scope<select name="station_scope">' . $stationOptions . '</select></label><label>Device / accessory / form factor scope<input name="configuration_scope" maxlength="' . MAX_ASSIGNMENT_CONFIGURATION_LENGTH . '" placeholder="For example, Pixel 9, Bluetooth headset, folded"></label><label>Coordinator note<textarea name="coordinator_note" maxlength="' . MAX_ASSIGNMENT_NOTE_LENGTH . '"></textarea></label><label class="mutation-authorization" data-mutation-authorization hidden><input type="checkbox" name="mutation_authorized" value="1"> I explicitly authorize the controlled subcase described above.</label><button type="submit">Assign Tester Task</button></form></article></section><section><h2>Tester task reports</h2><p class="muted">Private reports submitted through the tester portal.</p>' . ($feedbackItems === '' ? '<p class="muted">No task reports submitted yet.</p>' : $feedbackItems) . '</section><script id="tester-task-registry" type="application/json">' . json_encode(array_values($tasks), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES) . '</script><script src="/assets/private-tester-queue.js?v=onboarding-1" defer></script>';
     renderPage('Tester workspace', $content);
 }
 
@@ -1346,7 +1369,13 @@ try {
         if ($action === 'assign_task') {
             $testerId = testerId();
             activeTester($database, $testerId);
-            [$task, $station, $configuration, $note, $mutationAuthorized] = assignmentInput(taskRegistry());
+            $testerQuery = $database->prepare('SELECT * FROM testers WHERE id = ? AND status = \'active\'');
+            $testerQuery->execute([$testerId]);
+            $tester = $testerQuery->fetch();
+            if ($tester === false) {
+                throw new InvalidArgumentException('The tester is no longer active. Refresh the queue and try again.');
+            }
+            [$task, $station, $configuration, $note, $mutationAuthorized] = assignmentInput(taskRegistry(), $tester);
             $insert = $database->prepare('INSERT INTO tester_task_assignments(tester_id, task_id, task_status, station_scope, configuration_scope, coordinator_note, mutation_authorized, created_at, updated_at) VALUES (?, ?, \'assigned\', ?, ?, ?, ?, ?, ?)');
             $now = gmdate('c');
             $insert->execute([$testerId, $task['id'], $station, $configuration, $note, $mutationAuthorized, $now, $now]);

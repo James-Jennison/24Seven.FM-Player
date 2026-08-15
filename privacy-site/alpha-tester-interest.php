@@ -248,7 +248,7 @@ function coordinatorIntakeMessage(array $application): string
         'Country or region: ' . ($application['country'] !== '' ? $application['country'] : 'Not provided'),
         'Primary station: ' . PRIMARY_STATIONS[$application['primary_station']],
         'Other familiar stations: ' . labels($application['other_stations'], STATIONS),
-        'Station accounts available: ' . labels($application['station_accounts'], STATIONS + ['none' => 'None']),
+        'Existing station access (optional): ' . labels($application['station_accounts'], STATIONS + ['none' => 'None']),
         'Android device: ' . $application['device'],
         'Android version: ' . $application['android_version'],
         'Device form factor: ' . DEVICE_FORM_FACTORS[$application['device_form_factor']],
@@ -383,7 +383,7 @@ Once you've been added to the testing program, you'll receive a separate welcome
 - How to report passes, bugs, and other feedback
 - Important testing and privacy guidelines
 
-Testing will be divided into focused assignments, so you won't be expected to test every feature or complete the entire testing catalog yourself.
+Testing will be divided into focused assignments, so you won't be expected to test every feature or complete the entire testing catalog yourself. You need your own Google account only to opt in to Google Play; guest testing does not require a 24Seven.FM station account.
 
 Some tests may require a particular station account, Android version, device type, accessory, or other setup. If that's the case, your assignment will tell you exactly what you need.
 
