@@ -181,6 +181,8 @@ function database(array $config): PDO
             orientation_email_attempted_at TEXT,
             orientation_email_attempts INTEGER NOT NULL DEFAULT 0,
             initial_smoke_test_confirmed_at TEXT,
+            withdrawal_requested_at TEXT,
+            deletion_requested_at TEXT,
             updated_at TEXT NOT NULL
         );
         CREATE TABLE IF NOT EXISTS tester_portal_tokens (
@@ -233,6 +235,12 @@ function database(array $config): PDO
     }
     if (!in_array('initial_smoke_test_confirmed_at', $onboardingColumns, true)) {
         $database->exec('ALTER TABLE tester_onboarding ADD COLUMN initial_smoke_test_confirmed_at TEXT');
+    }
+    if (!in_array('withdrawal_requested_at', $onboardingColumns, true)) {
+        $database->exec('ALTER TABLE tester_onboarding ADD COLUMN withdrawal_requested_at TEXT');
+    }
+    if (!in_array('deletion_requested_at', $onboardingColumns, true)) {
+        $database->exec('ALTER TABLE tester_onboarding ADD COLUMN deletion_requested_at TEXT');
     }
     $feedbackColumns = array_column($database->query('PRAGMA table_info(tester_feedback)')->fetchAll(), 'name');
     if (!in_array('category', $feedbackColumns, true)) {
@@ -1155,7 +1163,7 @@ function renderOperationsDashboard(PDO $database, string $notice = '', string $e
 
 function renderTesterWorkspace(PDO $database, int $testerId, string $notice = '', string $error = ''): never
 {
-    $testerQuery = $database->prepare("SELECT testers.*, onboarding.onboarding_status, onboarding.coordinator_note AS onboarding_note, onboarding.orientation_email_status, onboarding.orientation_email_attempted_at, onboarding.orientation_email_attempts, onboarding.play_opt_in_confirmed_at, onboarding.initial_smoke_test_confirmed_at FROM testers LEFT JOIN tester_onboarding AS onboarding ON onboarding.tester_id = testers.id WHERE testers.id = ? AND testers.status = 'active'");
+    $testerQuery = $database->prepare("SELECT testers.*, onboarding.onboarding_status, onboarding.coordinator_note AS onboarding_note, onboarding.orientation_email_status, onboarding.orientation_email_attempted_at, onboarding.orientation_email_attempts, onboarding.play_opt_in_confirmed_at, onboarding.initial_smoke_test_confirmed_at, onboarding.withdrawal_requested_at, onboarding.deletion_requested_at FROM testers LEFT JOIN tester_onboarding AS onboarding ON onboarding.tester_id = testers.id WHERE testers.id = ? AND testers.status = 'active'");
     $testerQuery->execute([$testerId]);
     $tester = $testerQuery->fetch();
     if ($tester === false) {
@@ -1221,8 +1229,10 @@ function renderTesterWorkspace(PDO $database, int $testerId, string $notice = ''
         : '';
     $playOptIn = ($tester['play_opt_in_confirmed_at'] ?? '') !== '' ? (string) $tester['play_opt_in_confirmed_at'] : 'Not self-confirmed';
     $smokeTest = ($tester['initial_smoke_test_confirmed_at'] ?? '') !== '' ? (string) $tester['initial_smoke_test_confirmed_at'] : 'Not self-confirmed';
+    $withdrawalRequest = ($tester['withdrawal_requested_at'] ?? '') !== '' ? (string) $tester['withdrawal_requested_at'] : 'None';
+    $deletionRequest = ($tester['deletion_requested_at'] ?? '') !== '' ? (string) $tester['deletion_requested_at'] : 'None';
     $content = '<p><a href="/private-tester-queue.php">← Tester operations</a> · <a href="/tester-portal.php?preview_tester=' . $testerId . '">Preview tester view</a></p><div><p class="muted">Tester workspace</p><h1>' . e($tester['display_name']) . '</h1><p class="muted">' . e($tester['device']) . ' · ' . e($tester['android_version']) . ' · ' . e($tester['country'] ?: 'Country not provided') . ' · ' . e(recruitmentSourceLabel($tester['recruitment_source'] ?? null)) . '</p></div>' . $message
-        . '<section><h2>Onboarding</h2>' . onboardingBadge($status) . $profileBlock . '<form method="post"><input type="hidden" name="action" value="update_onboarding"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $testerId . '"><label>Onboarding status<select name="onboarding_status">' . $statusOptions . '</select></label><label>Coordinator note<textarea name="onboarding_note" maxlength="' . MAX_ONBOARDING_NOTE_LENGTH . '" placeholder="Private operational note; never add credentials or secrets.">' . e($tester['onboarding_note'] ?? '') . '</textarea></label><button type="submit">Save onboarding progress</button></form><p><strong>Google Play opt-in:</strong> ' . e($playOptIn) . '<br><strong>Initial smoke test:</strong> ' . e($smokeTest) . '<br><small>These are tester self-confirmations, not inferred installation or usage telemetry.</small></p><p><strong>Orientation email:</strong> ' . e($orientation) . ' <small>(' . (int) ($tester['orientation_email_attempts'] ?? 0) . ' handoff attempt' . ((int) ($tester['orientation_email_attempts'] ?? 0) === 1 ? '' : 's') . ')</small></p>' . ($profile['complete'] ? '<form method="post"><input type="hidden" name="action" value="send_onboarding_email"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $testerId . '"><button class="secondary" type="submit">Send orientation email</button></form>' : '') . '</section>'
+        . '<section><h2>Onboarding</h2>' . onboardingBadge($status) . $profileBlock . '<form method="post"><input type="hidden" name="action" value="update_onboarding"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $testerId . '"><label>Onboarding status<select name="onboarding_status">' . $statusOptions . '</select></label><label>Coordinator note<textarea name="onboarding_note" maxlength="' . MAX_ONBOARDING_NOTE_LENGTH . '" placeholder="Private operational note; never add credentials or secrets.">' . e($tester['onboarding_note'] ?? '') . '</textarea></label><button type="submit">Save onboarding progress</button></form><p><strong>Google Play opt-in:</strong> ' . e($playOptIn) . '<br><strong>Initial smoke test:</strong> ' . e($smokeTest) . '<br><small>These are tester self-confirmations, not inferred installation or usage telemetry.</small></p><p><strong>Withdrawal request:</strong> ' . e($withdrawalRequest) . '<br><strong>Record-deletion request:</strong> ' . e($deletionRequest) . '<br><small>Verify the request, stop program access promptly, and delete or anonymize the private tester record within the adopted 90-day policy period. A request is not evidence that deletion is already complete.</small></p>' . ($withdrawalRequest === 'None' ? '' : '<form method="post"><input type="hidden" name="action" value="deactivate_withdrawn_tester"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $testerId . '"><label><input style="width:auto" type="checkbox" name="confirm_deactivate" value="withdraw" required> I verified this withdrawal request and will stop this tester’s program access.</label><button class="danger" type="submit">Deactivate withdrawn tester</button></form>') . '<p><strong>Orientation email:</strong> ' . e($orientation) . ' <small>(' . (int) ($tester['orientation_email_attempts'] ?? 0) . ' handoff attempt' . ((int) ($tester['orientation_email_attempts'] ?? 0) === 1 ? '' : 's') . ')</small></p>' . ($profile['complete'] ? '<form method="post"><input type="hidden" name="action" value="send_onboarding_email"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $testerId . '"><button class="secondary" type="submit">Send orientation email</button></form>' : '') . '</section>'
         . '<section><h2>Focused Tester Tasks</h2><p class="muted">Assign only a focused bundle that matches this tester’s coverage. Each PT case still receives its own result.</p>' . $guestTaskNotice . ($assignmentCards === '' ? '<p class="muted">No task assigned yet.</p>' : $assignmentCards) . '<article class="onboarding-card"><h3>Assign a focused Tester Task</h3><form method="post" data-task-assignment-form><input type="hidden" name="action" value="assign_task"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $testerId . '"><label>Tester Task<select name="task_id" data-task-select required>' . $taskOptions . '</select></label><div class="task-preview" data-task-preview aria-live="polite">Choose a current task to see its PT cases, prerequisites, and safety boundary.</div><label>Station scope<select name="station_scope">' . $stationOptions . '</select></label><label>Device / accessory / form factor scope<input name="configuration_scope" maxlength="' . MAX_ASSIGNMENT_CONFIGURATION_LENGTH . '" placeholder="For example, Pixel 9, Bluetooth headset, folded"></label><label>Coordinator note<textarea name="coordinator_note" maxlength="' . MAX_ASSIGNMENT_NOTE_LENGTH . '"></textarea></label><label class="mutation-authorization" data-mutation-authorization hidden><input type="checkbox" name="mutation_authorized" value="1"> I explicitly authorize the controlled subcase described above.</label><button type="submit">Assign Tester Task</button></form></article></section><section><h2>Tester task reports</h2><p class="muted">Private reports submitted through the tester portal.</p>' . ($feedbackItems === '' ? '<p class="muted">No task reports submitted yet.</p>' : $feedbackItems) . '</section><script id="tester-task-registry" type="application/json">' . json_encode(array_values($tasks), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES) . '</script><script src="/assets/private-tester-queue.js?v=onboarding-1" defer></script>';
     renderPage('Tester workspace', $content);
 }
@@ -1409,6 +1419,20 @@ try {
             $testerId = testerId();
             $accepted = sendOnboardingEmail($database, $config, $testerId);
             redirect('?tester=' . $testerId . '&notice=' . rawurlencode('Orientation email handoff ' . ($accepted ? 'was accepted by the mail transport.' : 'failed.')));
+        }
+        if ($action === 'deactivate_withdrawn_tester') {
+            $testerId = testerId();
+            if (($_POST['confirm_deactivate'] ?? '') !== 'withdraw') {
+                throw new InvalidArgumentException('Confirm the verified withdrawal before deactivating this tester.');
+            }
+            $request = $database->prepare("SELECT onboarding.withdrawal_requested_at FROM testers JOIN tester_onboarding AS onboarding ON onboarding.tester_id = testers.id WHERE testers.id = ? AND testers.status = 'active'");
+            $request->execute([$testerId]);
+            $request = $request->fetch();
+            if ($request === false || !is_string($request['withdrawal_requested_at']) || $request['withdrawal_requested_at'] === '') {
+                throw new InvalidArgumentException('A recorded withdrawal request is required before deactivating this tester.');
+            }
+            $database->prepare("UPDATE testers SET status = 'inactive' WHERE id = ? AND status = 'active'")->execute([$testerId]);
+            redirect('?notice=' . rawurlencode('Tester access was deactivated after the recorded withdrawal request.'));
         }
         if ($action === 'assign_task') {
             $testerId = testerId();

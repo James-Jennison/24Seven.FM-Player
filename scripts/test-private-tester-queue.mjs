@@ -21,6 +21,10 @@ assert(!endpoint.includes("email_batches (\n            id INTEGER PRIMARY KEY,\
 assert(endpoint.includes("CREATE TABLE IF NOT EXISTS tester_task_assignments"), "Queue must add the assignment table additively");
 assert(endpoint.includes("CREATE TABLE IF NOT EXISTS tester_onboarding"), "Queue must persist onboarding separately from enrollment and assignments");
 assert(endpoint.includes("initial_smoke_test_confirmed_at"), "Queue must retain the tester's initial smoke-test self-confirmation.");
+assert(endpoint.includes("withdrawal_requested_at") && endpoint.includes("deletion_requested_at"), "Queue must retain tester withdrawal and deletion requests.");
+assert(endpoint.includes("Record-deletion request:"), "Coordinator workspaces must surface tester record-deletion requests.");
+assert(endpoint.includes("deactivate_withdrawn_tester"), "The coordinator must have a verified-withdrawal deactivation action.");
+assert(endpoint.includes("A recorded withdrawal request is required before deactivating this tester."), "Tester access must not be deactivated without a recorded withdrawal request.");
 assert(endpoint.includes("recruitment_source"), "Queue must retain validated recruitment-source attribution.");
 assert(endpoint.includes("FEEDBACK_CATEGORIES"), "Queue must retain structured feedback categories.");
 assert(endpoint.includes("CREATE TABLE IF NOT EXISTS tester_mail_archive"), "Queue must retain a protected coordinator mail archive");

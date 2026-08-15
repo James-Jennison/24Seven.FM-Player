@@ -28,6 +28,11 @@ assert(portal.includes("WHERE id = ? AND tester_id = ?"), "Feedback must be boun
 assert(portal.includes("play_opt_in_confirmed_at"), "Tester opt-in confirmation state is missing.");
 assert(portal.includes("confirm_initial_smoke_test"), "Tester portal must provide an initial smoke-test self-confirmation.");
 assert(portal.includes("This is my own confirmation, not automated installation or activity evidence."), "Smoke-test evidence must not be overstated.");
+assert(portal.includes("function portalRequestPrivacyAction"), "Tester portal must provide a bounded withdrawal/deletion-request action.");
+assert(portal.includes("request_privacy_action"), "Tester portal must route authenticated privacy requests.");
+assert(portal.includes("name=\"confirm_privacy_request\""), "Tester privacy requests must require an explicit confirmation.");
+assert(portal.includes("withdrawal_requested_at") && portal.includes("deletion_requested_at"), "Tester privacy request timestamps must be retained separately.");
+assert(portal.includes("The coordinator will verify and process it under the retention policy."), "Tester portal must not claim that a recorded request is already completed.");
 assert(portal.includes("FEEDBACK_CATEGORIES"), "Tester portal must use the queue's structured feedback categories.");
 assert(portal.includes("onboarding_status = 'ready'"), "A completed opt-in must advance a complete tester to ready for assignment.");
 assert(portal.includes("PORTAL_TESTING_INTERESTS"), "Tester profile must include the original testing-interest intake options.");
@@ -53,6 +58,8 @@ assert(!portal.includes("password_verify("), "Tester portal must not collect or 
 assert(queue.includes("CREATE TABLE IF NOT EXISTS tester_portal_tokens"), "Queue database migration must create portal token storage.");
 assert(queue.includes("CREATE TABLE IF NOT EXISTS tester_feedback"), "Queue database migration must create feedback storage.");
 assert(queue.includes("play_opt_in_confirmed_at"), "Queue database migration must retain tester opt-in confirmation.");
+assert(queue.includes("withdrawal_requested_at") && queue.includes("deletion_requested_at"), "Queue database migration must retain tester privacy request timestamps.");
+assert(queue.includes("Record-deletion request:"), "Coordinator workspace must surface tester deletion requests.");
 assert(queue.includes("Tester task reports"), "Coordinator workspaces must display submitted tester reports.");
 assert(queue.includes("Preview tester view"), "Coordinator roster and workspaces must link to the tester-view preview.");
 assert(build.includes("test-tester-portal.mjs"), "Site validator must run the tester portal contract.");

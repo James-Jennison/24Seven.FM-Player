@@ -1,6 +1,6 @@
 # Milestone Real-World Time Ledger
 
-Last updated: `August 14, 2026 at 3:35:01 PM PDT (UTC−07:00)`
+Last updated: `August 14, 2026 at 6:23:19 PM PDT (UTC−07:00)`
 
 This is the permanent time-accounting record for the canonical M01–M60 milestones in [ROADMAP.md](ROADMAP.md). It
 preserves historical uncertainty instead of treating commit spans as labor time. Future milestone work must be
@@ -12,7 +12,7 @@ measured prospectively from the actual authorized execution start.
 | --- | ---: | --- |
 | Total canonical milestones planned | 60 | M01–M60 |
 | Total canonical milestones completed | 34 | M01–M28 and M30–M35 |
-| Confirmed or reconstructed active hours | 0.73 h identified | M29 policy reconciliation, M30 authorization reconciliation, and M55 retirement are prospectively measured; historical active intervals remain unknown. |
+| Confirmed or reconstructed active hours | 0.85 h identified | M29 policy reconciliation, M30 authorization reconciliation, and M55 retirement are prospectively measured; historical active intervals remain unknown. |
 | Total automated wait hours | Unknown | Workflow durations exist, but there is no evidence that execution waited on every run. |
 | Total user-blocked hours | Unknown | Historical owner, device, approval, credential, and external waits lack complete pause/resume timestamps. |
 | Total counted project hours | Unknown | Active execution plus automated wait cannot be reconstructed defensibly. |
@@ -415,7 +415,7 @@ active execution.
 | M26 | Complete | No later than `July 16, 2026 at 6:07:48 PM PDT (UTC−07:00)` | `July 16, 2026 at 6:21:05 PM PDT (UTC−07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥0.22 h | Unknown | Estimated |
 | M27 | Complete | No later than `July 16, 2026 at 7:05:07 PM PDT (UTC−07:00)` | `July 16, 2026 at 7:09:16 PM PDT (UTC−07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥0.07 h | Unknown | Estimated |
 | M28 | Complete | No later than `July 15, 2026 at 10:32:07 PM PDT (UTC−07:00)` | `July 18, 2026 at 3:04:15 PM PDT (UTC−07:00)` | Not recorded individually | Unknown | Unknown | Unknown | Unknown | ≥64.54 h | Unknown | Estimated |
-| M29 | Waiting externally | `August 14, 2026 at 3:15:26 PM PDT (UTC−07:00)` | — | Original not recorded; current 2–5 active d | 0.33 h | 0.00 h | Ongoing | 0.33 h | Ongoing | Not calculated before completion | Confirmed partial interval |
+| M29 | In progress | `August 14, 2026 at 3:15:26 PM PDT (UTC−07:00)` | — | Original not recorded; current 2–5 active d | 0.45 h | 0.00 h | 2.69 h excluded | 0.45 h | 3.13 h | Not calculated before completion | Confirmed partial interval |
 | M30 | Complete | `August 14, 2026 at 3:15:26 PM PDT (UTC−07:00)` | `August 14, 2026 at 3:19:08 PM PDT (UTC−07:00)` | 4–8 active h (original 0.5–1 active d) | 0.06 h | 0.00 h | 0.00 h | 0.06 h | 0.06 h | 3.94 h below lower bound (98.5%) | Confirmed |
 | M31 | Complete | No later than `July 18, 2026 at 5:30:30 PM PDT (UTC−07:00)` | `July 18, 2026 at 5:32:28 PM PDT (UTC−07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥0.03 h | Unknown | Estimated |
 | M32 | Complete | Unknown | `July 18, 2026 at 6:21:38 PM PDT (UTC−07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown |
@@ -861,11 +861,12 @@ independently.
 - **Start, completion, and intervals:** Earliest Play-declaration evidence `July 15, 2026 at 10:42:33 PM PDT (UTC−07:00)`.
   Authorized execution resumed `August 14, 2026 at 3:15:26 PM PDT (UTC−07:00)` when the Network/Station Administrator
   adopted the network-wide retention/deletion policy. Active policy reconciliation paused `August 14, 2026 at 3:35:01
-  PM PDT (UTC−07:00)` awaiting protected reviewer-account, selected-candidate, video, and Play Console evidence. The
-  earlier historical active intervals and user-blocked pause are Unknown.
+  PM PDT (UTC−07:00)` awaiting protected reviewer-account, selected-candidate, video, and Play Console evidence.
+  Owner approval resumed local tester-retention implementation and deployment preparation `August 14, 2026 at
+  6:16:23 PM PDT (UTC−07:00)`. The earlier historical active intervals and user-blocked pause are Unknown.
 - **Model, reasoning strength, and original forecast:** Original execution model/reasoning and forecast were not recorded at start.
   Current routing, added `July 19, 2026 at 6:17:38 AM PDT (UTC−07:00)`, is Sol High with 2–5 active days after all named facts/candidate exist.
-- **Counted project time, total elapsed time, and forecast variance:** The measured August 14 active interval is 0.33 h;
+- **Counted project time, total elapsed time, and forecast variance:** The measured August 14 active intervals total 0.45 h;
   automated wait is 0.00 h and the new external/user-blocked interval is ongoing. Historical durations remain Unknown.
   Variance is not calculated before completion.
 - **Evidence used and confidence classification:** `4aa36d9`, `0fa5040`, `59d6096`, `849b5a0`, `93e8110`, `d3467cf`,
@@ -878,7 +879,8 @@ independently.
 | Started | Ended | Category | Reason or work | Evidence | Hours |
 | --- | --- | --- | --- | --- | ---: |
 | `August 14, 2026 at 3:15:26 PM PDT (UTC−07:00)` | `August 14, 2026 at 3:35:01 PM PDT (UTC−07:00)` | Active | Reconcile the adopted network-wide retention/deletion policy across public, native, reviewer, roadmap, and portal materials; audit local persistence and current Play requirements. | Authorized administrator policy; source/persistence audit; official Google Play policy review | 0.33 h |
-| `August 14, 2026 at 3:35:01 PM PDT (UTC−07:00)` | Ongoing | User-blocked | Await the protected five-station reviewer accounts, selected-candidate PT-35 run, final reviewer video, and saved/reviewed active Play Console answers. | M29 completion gate; no credentials, private Console state, or final video is available in the repository | Ongoing excluded |
+| `August 14, 2026 at 3:35:01 PM PDT (UTC−07:00)` | `August 14, 2026 at 6:16:23 PM PDT (UTC−07:00)` | User-blocked | Await the protected five-station reviewer accounts, selected-candidate PT-35 run, final reviewer video, and saved/reviewed active Play Console answers. | M29 completion gate; no credentials, private Console state, or final video is available in the repository | 2.69 h excluded |
+| `August 14, 2026 at 6:16:23 PM PDT (UTC−07:00)` | `August 14, 2026 at 6:23:19 PM PDT (UTC−07:00)` | Active | Adopt the owner-approved tester-record retention policy, extend the existing withdrawal/deletion workflow, and validate it. | Owner approval; existing queue/portal architecture; full project-site validation | 0.12 h |
 
 ### M30 — Brand, Content, and Distribution Rights
 

@@ -74,7 +74,9 @@ Testers must never create, share, or submit station credentials. Guest testers r
 
 The existing public privacy notice covers the private application/queue and deletion-support route. The new source label, self-confirmation timestamps, and feedback category are collected only to manage recruitment, cohort coverage, and focused testing; they are not analytics or advertising data.
 
-The exact retention period for private tester-program records is an owner operational-policy decision not established by the current repository. Until it is adopted, do not claim an automatic deletion schedule. Recommended policy for owner adoption: delete or anonymize a withdrawn/rejected applicant’s private tester record and related mail/feedback within 90 days of the completed request; retain an active tester’s record only through the closed test and no more than 90 days after the program closes; retain only anonymized aggregate coverage and test counts after that. A documented security, abuse, or legal hold would be a separate, time-bounded exception.
+The adopted tester-program policy is to delete or anonymize a withdrawn or rejected applicant’s private tester record, related task feedback, and invitation correspondence within 90 days of a verified request or decision. An active tester’s record is retained only through the closed test and for no more than 90 days after the program closes. Only irreversibly anonymized aggregate coverage and test counts may remain afterward. A documented security, abuse, or legal hold is a separate, time-bounded exception.
+
+The tester portal records dated withdrawal and record-deletion requests; the protected coordinator queue shows those requests without treating them as already completed. The coordinator verifies the requester, stops program access promptly for a withdrawal, and completes deletion or anonymization within the 90-day policy period. No request should contain credentials or authentication secrets. These tester-program records are separate from any station-account data, which remains under the applicable station or network process.
 
 ## Google Play requirements checked
 
