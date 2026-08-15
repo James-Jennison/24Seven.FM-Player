@@ -40,6 +40,7 @@ expectImport($row['primary_station'] === 'sst' && $row['device_form_factor'] ===
 expectImport($row['other_stations_json'] === '["1980s","efm"]' && $row['network_capabilities_json'] === '["wifi"]' && $row['controlled_actions_json'] === '["song_request"]', 'Canonical list intake values were not preserved.');
 expectImport($row['testing_availability'] === '1_2h', 'Testing availability was not preserved.');
 expectImport($row['recruitment_source'] === 'direct', 'Legacy direct recruitment attribution was not preserved.');
+expectImport($pdo->query("SELECT onboarding_status FROM tester_onboarding WHERE tester_id = 1")->fetchColumn() === 'profile_pending', 'Imported applications must enter the private onboarding lifecycle conservatively.');
 
 file_put_contents($message, "From: alpha@example.test\r\n\r\nDisplay name: Legacy Tester\nGoogle Play account email: legacy@example.test\nCountry or region: Not provided\nAndroid device: Legacy Phone\nAndroid version: Android 15\nInterests: Playback\nPrior testing experience: Not provided\n");
 $command = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(dirname(__DIR__) . '/scripts/import-alpha-tester-mailbox.php')

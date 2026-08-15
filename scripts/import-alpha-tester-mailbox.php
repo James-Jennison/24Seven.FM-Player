@@ -68,6 +68,19 @@ function database(string $path): PDO
             $database->exec("ALTER TABLE testers ADD COLUMN {$column} {$definition}");
         }
     }
+    $database->exec("CREATE TABLE IF NOT EXISTS tester_onboarding (
+        tester_id INTEGER PRIMARY KEY REFERENCES testers(id) ON DELETE CASCADE,
+        onboarding_status TEXT NOT NULL DEFAULT 'profile_pending' CHECK(onboarding_status IN ('profile_pending', 'profile_complete', 'invited', 'orientation_sent', 'ready', 'paused')),
+        coordinator_note TEXT NOT NULL DEFAULT '',
+        orientation_email_status TEXT NOT NULL DEFAULT 'not_sent' CHECK(orientation_email_status IN ('not_sent', 'accepted', 'failed')),
+        orientation_email_attempted_at TEXT,
+        orientation_email_attempts INTEGER NOT NULL DEFAULT 0,
+        play_opt_in_confirmed_at TEXT,
+        initial_smoke_test_confirmed_at TEXT,
+        withdrawal_requested_at TEXT,
+        deletion_requested_at TEXT,
+        updated_at TEXT NOT NULL
+    )");
     return $database;
 }
 
@@ -202,6 +215,7 @@ if ($messages === [] || !preg_match('/^[0-9A-Za-z._:-]+$/', $uid) || strtotime($
 
 $database = database($databasePath);
 $insert = $database->prepare("INSERT INTO testers(source_message_uid, received_at, display_name, email, country, device, android_version, interests_json, experience, status, imported_at, primary_station, other_stations_json, station_accounts_json, device_form_factor, other_devices, network_capabilities_json, audio_capabilities_json, accessibility_capabilities_json, testing_comfort, controlled_actions_json, testing_availability, recruitment_source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(source_message_uid) DO NOTHING");
+$onboarding = $database->prepare("INSERT OR IGNORE INTO tester_onboarding(tester_id, onboarding_status, coordinator_note, orientation_email_status, orientation_email_attempted_at, orientation_email_attempts, updated_at) SELECT id, 'profile_pending', '', 'not_sent', NULL, 0, ? FROM testers WHERE source_message_uid = ?");
 $imported = 0;
 foreach ($messages as $offset => $messagePath) {
     if (!is_string($messagePath)) {
@@ -246,6 +260,7 @@ foreach ($messages as $offset => $messagePath) {
         canonicalValue('testing_availability', $fields['testing_availability']),
         canonicalRecruitmentSource($fields['recruitment_source']),
     ]);
+    $onboarding->execute([gmdate('c'), $sourceId]);
     $imported += $insert->rowCount();
 }
 fwrite(STDOUT, "Imported {$imported} tester application(s).\n");
