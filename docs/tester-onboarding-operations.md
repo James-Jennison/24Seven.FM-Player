@@ -1,6 +1,6 @@
 # Tester recruitment and closed-testing operations
 
-Last reviewed: 2026-08-14
+Last reviewed: 2026-08-15
 
 This document matures the existing tester system. It does not establish a second distribution path or a replacement portal.
 
@@ -12,7 +12,7 @@ This document matures the existing tester system. It does not establish a second
 
 | Component | Decision | Existing behavior retained or extended |
 | --- | --- | --- |
-| Public tester-interest form | EXTEND | Keeps same-origin validation, Turnstile, rate limiting, honeypot, bounded input, consent, and private mail delivery. Adds validated recruitment-source attribution. |
+| Public tester-interest form | EXTEND | Keeps same-origin validation, Turnstile, rate limiting, honeypot, bounded input, consent, and private mail delivery. A validated application now creates one email-deduplicated, review-pending protected Tester Hub record before coordinator-mail handoff. |
 | Private SQLite tester roster | EXTEND | Keeps the email-deduplicated roster, mailbox-import idempotency, existing coverage fields, and inactive state. Adds source attribution without a duplicate roster. |
 | Private coordinator queue | EXTEND | Keeps password + TOTP protection, CSRF, individual mail handoff, assignment safety controls, and mail archive. Shows recruitment source and tester-provided opt-in/smoke evidence. |
 | Tester portal | EXTEND | Keeps one-time-link authentication, separate session, no roster access, profile updates, opt-in confirmation, and private feedback. Adds a bounded first-use smoke confirmation and feedback categories. |
@@ -23,7 +23,7 @@ This document matures the existing tester system. It does not establish a second
 
 ### What exists today
 
-Applicants can provide their Google Play email, Android coverage, optional station familiarity, safe testing preferences, and consent. The coordinator can review a private roster, send individual orientation and assignment emails, assign only permitted task bundles, and review portal feedback. Testers can use a short-lived sign-in link to update their own profile, self-confirm a completed Google Play opt-in, complete the short initial smoke check, and submit private assigned-task feedback.
+Applicants can provide their Google Play email, Android coverage, optional station familiarity, safe testing preferences, and consent. A validated submission is stored once by its case-insensitive email in the protected roster before its coordinator notification is handed off, so normal form delivery no longer relies on later mailbox import. The coordinator can review that private roster, send individual orientation and assignment emails, assign only permitted task bundles, and review portal feedback. Testers can use a short-lived sign-in link to update their own profile, self-confirm a completed Google Play opt-in, complete the short initial smoke check, and submit private assigned-task feedback.
 
 An invitation or a mail-transport acceptance does **not** prove a Play opt-in, installation, or ongoing use. Those states remain explicitly unknown unless the tester self-confirms them or the operator has separate Play Console evidence.
 
@@ -54,7 +54,7 @@ The existing onboarding state remains the coordinator-controlled workflow. The f
 
 | Lifecycle point | Evidence | Do not infer |
 | --- | --- | --- |
-| Applicant | Valid private application imported to roster | Acceptance or Play eligibility |
+| Applicant | Valid private application stored in the protected roster (or, for a legacy receipt, privately imported) | Acceptance or Play eligibility |
 | Profile complete | Existing coverage-completeness check | Play access |
 | Play access granted | Coordinator records an invitation / orientation step, or the selected Testers Community Pack email CSV enables eligibility | Opt-in or installation |
 | Opted in | Tester’s dated portal self-confirmation | Installation or use |

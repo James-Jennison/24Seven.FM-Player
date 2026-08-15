@@ -1,6 +1,6 @@
 # Privacy notice for 24Seven.FM Player Alpha
 
-Last updated: August 14, 2026.
+Last updated: August 15, 2026.
 
 24Seven.FM Player is an unofficial, non-commercial native Android client for the five public 24Seven.FM radio stations. It is not affiliated with or endorsed by 24Seven.FM or its stations.
 
@@ -51,7 +51,7 @@ This is pre-release software. Testers should use a non-administrator station acc
 
 ## Closed-test tester-interest form
 
-The project website offers an optional closed-test tester-interest form for an independently developed, unofficial player for the 24Seven.FM network of internet radio stations. It collects the applicant's display name, Google Play account email, Android device model and version, a validated recruitment-source label, and any optional country, testing-interest, or experience details the applicant chooses to provide. The same-origin server validates the submission and applies a rate limit. It sends the application directly to the project coordinator's dedicated mailbox. Approved applications are kept in a private, password-protected coordinator queue backed by a server-side database outside the public website directory; it is not a public record.
+The project website offers an optional closed-test tester-interest form for an independently developed, unofficial player for the 24Seven.FM network of internet radio stations. It collects the applicant's display name, Google Play account email, Android device model and version, a validated recruitment-source label, and any optional country, testing-interest, or experience details the applicant chooses to provide. The same-origin server validates the submission and applies a rate limit. A validated application creates one private, email-deduplicated, review-pending coordinator record in a server-side database outside the public website directory before the same application is sent to the project coordinator's dedicated mailbox. This private record is not a grant of Google Play access, an opt-in, installation, acceptance, or an assignment, and it is not a public record.
 
 These details are used only to assess device coverage and manage closed-test recruitment, eligibility, assignments, and feedback. The coordinator may use the queue to send individual program messages to selected testers; other testers' addresses are not exposed to recipients. The queue records whether the server's mail transport accepted or rejected a send attempt, not whether an email reached or was read in an inbox. A tester may also self-confirm a completed Google Play opt-in and short initial smoke test, then label private task feedback by broad category. These confirmations are not installation, usage, analytics, or crash telemetry.
 

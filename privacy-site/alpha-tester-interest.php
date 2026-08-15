@@ -15,6 +15,7 @@ const DELIVERY_DOMAIN = 'jamesjennison.net';
 const TURNSTILE_CONFIG_FILE = '.turnstile-test-config.php';
 const TURNSTILE_ACTION = 'alpha-tester-interest';
 const TURNSTILE_HOSTNAME = 'player.jamesjennison.net';
+const TESTER_ONBOARDING_STORAGE_FILE = 'tester-onboarding-storage.php';
 const MAX_REQUEST_BYTES = 16_384;
 const RATE_WINDOW_SECONDS = 1_800;
 const RATE_LIMIT = 3;
@@ -372,6 +373,22 @@ function smtpDiagnostic(string $stage): void
     error_log('alpha-tester-interest delivery failure stage=' . $stage);
 }
 
+function onboardingStorageDiagnostic(): void
+{
+    // Do not include form content, identifiers, or storage paths in logs.
+    error_log('alpha-tester-interest onboarding storage failure');
+}
+
+function storeAcceptedApplication(array $config, array $application): array
+{
+    $path = $config['database_path'] ?? null;
+    if (!is_string($path) || $path === '') {
+        throw new RuntimeException('Tester onboarding storage is not configured.');
+    }
+    require_once __DIR__ . '/' . TESTER_ONBOARDING_STORAGE_FILE;
+    return storeTesterOnboardingApplication(testerOnboardingDatabase($path), $application);
+}
+
 function signupConfirmationEmail(string $recruitmentSource = 'direct'): array
 {
     if ($recruitmentSource === 'testers_community') {
@@ -626,6 +643,13 @@ try {
     }
     if (!consumeRateLimit($config)) {
         respond(429, 'Please wait before sending another application.', 'error', $wantsJson);
+    }
+
+    try {
+        storeAcceptedApplication($config, $application);
+    } catch (Throwable $exception) {
+        onboardingStorageDiagnostic();
+        throw $exception;
     }
 
     $message = coordinatorIntakeMessage($application);

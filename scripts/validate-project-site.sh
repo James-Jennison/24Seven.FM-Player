@@ -11,6 +11,7 @@ node --check "${repository_root}/privacy-site/assets/theme-init.js"
 node --check "${repository_root}/privacy-site/assets/private-tester-queue.js"
 if command -v php >/dev/null 2>&1; then
   php -l "${repository_root}/privacy-site/alpha-tester-interest.php"
+  php -l "${repository_root}/privacy-site/tester-onboarding-storage.php"
   php -l "${repository_root}/privacy-site/private-tester-queue.php"
   php "${repository_root}/scripts/test-administrator-login-security.php"
   php -l "${repository_root}/privacy-site/tester-portal.php"
@@ -21,6 +22,7 @@ if command -v php >/dev/null 2>&1; then
   php -l "${repository_root}/scripts/reroute-private-tester-batch.php"
   php "${repository_root}/scripts/test-alpha-tester-signup-confirmation.php"
   php "${repository_root}/scripts/test-alpha-tester-intake.php"
+  php "${repository_root}/scripts/test-alpha-tester-auto-onboarding.php"
   php "${repository_root}/scripts/test-alpha-tester-import.php"
 else
   printf '%s\n' 'PHP CLI is unavailable locally; the exact staged artifact must be linted by the Player PHP runtime before promotion.'
