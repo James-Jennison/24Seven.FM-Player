@@ -79,8 +79,23 @@ function database(string $path): PDO
         initial_smoke_test_confirmed_at TEXT,
         withdrawal_requested_at TEXT,
         deletion_requested_at TEXT,
+        reviewed_at TEXT,
+        rejected_at TEXT,
         updated_at TEXT NOT NULL
     )");
+    $onboardingColumns = array_column($database->query('PRAGMA table_info(tester_onboarding)')->fetchAll(), 'name');
+    foreach ([
+        'play_opt_in_confirmed_at' => 'TEXT',
+        'initial_smoke_test_confirmed_at' => 'TEXT',
+        'withdrawal_requested_at' => 'TEXT',
+        'deletion_requested_at' => 'TEXT',
+        'reviewed_at' => 'TEXT',
+        'rejected_at' => 'TEXT',
+    ] as $column => $definition) {
+        if (!in_array($column, $onboardingColumns, true)) {
+            $database->exec("ALTER TABLE tester_onboarding ADD COLUMN {$column} {$definition}");
+        }
+    }
     return $database;
 }
 

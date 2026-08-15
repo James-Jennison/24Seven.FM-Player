@@ -32,6 +32,7 @@ const MAX_ASSIGNMENT_NOTE_LENGTH = 1_000;
 const MAX_ONBOARDING_NOTE_LENGTH = 1_000;
 const ASSIGNMENT_STATUSES = ['assigned', 'in_progress', 'complete', 'blocked'];
 const ONBOARDING_STATUSES = ['profile_pending', 'profile_complete', 'invited', 'orientation_sent', 'ready', 'paused'];
+const APPLICATION_STAGES = ['pending_review', 'accepted', 'invited', 'active'];
 const RECRUITMENT_SOURCE_LABELS = [
     'direct' => 'Direct / project site',
     'testers_community' => 'Testers Community',
@@ -183,6 +184,8 @@ function database(array $config): PDO
             initial_smoke_test_confirmed_at TEXT,
             withdrawal_requested_at TEXT,
             deletion_requested_at TEXT,
+            reviewed_at TEXT,
+            rejected_at TEXT,
             updated_at TEXT NOT NULL
         );
         CREATE TABLE IF NOT EXISTS tester_portal_tokens (
@@ -241,6 +244,12 @@ function database(array $config): PDO
     }
     if (!in_array('deletion_requested_at', $onboardingColumns, true)) {
         $database->exec('ALTER TABLE tester_onboarding ADD COLUMN deletion_requested_at TEXT');
+    }
+    if (!in_array('reviewed_at', $onboardingColumns, true)) {
+        $database->exec('ALTER TABLE tester_onboarding ADD COLUMN reviewed_at TEXT');
+    }
+    if (!in_array('rejected_at', $onboardingColumns, true)) {
+        $database->exec('ALTER TABLE tester_onboarding ADD COLUMN rejected_at TEXT');
     }
     $feedbackColumns = array_column($database->query('PRAGMA table_info(tester_feedback)')->fetchAll(), 'name');
     if (!in_array('category', $feedbackColumns, true)) {
@@ -508,7 +517,107 @@ function renderPage(string $title, string $content): never
     header('X-Frame-Options: DENY');
     echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'
         . e($title) . '</title><style>'
-        . 'body{margin:0;background:#090c15;color:#f7f4ec;font:16px/1.5 system-ui,sans-serif}.shell{max-width:72rem;margin:3rem auto;padding:0 1rem}h1,h2{line-height:1.15}section{margin:1rem 0;padding:1.25rem;border:1px solid #30394d;border-radius:.8rem;background:#111624}.muted{color:#b7bdca}.notice{padding:.8rem;border-radius:.5rem;background:#173631}.error{background:#4a2229}.warning{padding:.65rem;border-left:3px solid #ffcb6b;background:#302719}.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}label{display:block;margin:.75rem 0 .3rem;font-weight:700}input,textarea,select,.editor{box-sizing:border-box;width:100%;padding:.65rem;border:1px solid #59647a;border-radius:.4rem;background:#fff;color:#182033;font:inherit}input[type="checkbox"]{width:auto;padding:0}textarea{min-height:12rem}.toolbar{display:flex;flex-wrap:wrap;gap:.4rem;margin:.35rem 0}.toolbar button{margin:0;padding:.35rem .55rem;background:#e8edf5;color:#182033;font-size:.86rem}.editor{min-height:14rem;overflow:auto}.editor:focus{outline:3px solid #67e6d1;outline-offset:3px}.editor:empty:before{color:#58647a;content:attr(data-placeholder);pointer-events:none}.editor p:first-child{margin-top:0}.editor p:last-child{margin-bottom:0}button{margin-top:1rem;padding:.65rem 1rem;border:0;border-radius:.4rem;background:#67e6d1;color:#071411;font:700 1rem system-ui;cursor:pointer}button.secondary{margin-left:.5rem;background:#d29cff;color:#22102f}table{width:100%;border-collapse:collapse}th,td{padding:.6rem;text-align:left;border-bottom:1px solid #30394d;vertical-align:top}th:first-child,td:first-child{width:2.4rem}small{color:#b7bdca}.actions{display:flex;gap:.6rem;flex-wrap:wrap}.actions form{margin:0}.onboarding-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.75rem}.onboarding-metric{padding:.8rem;border:1px solid #3b4964;border-radius:.55rem;background:#0c101c}.onboarding-metric strong{display:block;font-size:1.6rem;color:#67e6d1}.tester-task-panels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}.tester-task-panel,.assignment-existing,.onboarding-card{min-width:0;padding:1rem;border:1px solid #30394d;border-radius:.6rem}.assignment-existing,.onboarding-card{margin:1rem 0;background:#0c101c}.assignment-existing h4,.tester-task-panel h3,.onboarding-card h4{margin:.1rem 0}.assignment-existing textarea,.tester-task-panel textarea,.onboarding-card textarea{min-height:5rem}.inline-form{margin-top:.5rem}.onboarding-status{display:inline-block;padding:.16rem .5rem;border-radius:99px;background:#233552;color:#dfeaff;font-size:.84rem;font-weight:700}.profile-missing{margin:.65rem 0;padding:.65rem;border-left:3px solid #ffcb6b;background:#302719}.profile-complete{margin:.65rem 0;padding:.65rem;border-left:3px solid #67e6d1;background:#173631}.mutation-authorization{padding:.65rem;border-left:3px solid #ffcb6b;background:#302719}.task-preview{min-height:3rem;padding:.75rem;border:1px solid #30394d;border-radius:.4rem;color:#b7bdca}.task-preview strong{color:#f7f4ec}.copy-assignment{margin-left:.5rem}@media(max-width:44rem){table{font-size:.86rem}.optional{display:none}.onboarding-overview,.tester-task-panels{grid-template-columns:1fr}.shell{margin:1rem auto}.copy-assignment{margin-left:0}}</style></head><body><main class="shell">'
+        . 'body{margin:0;background:#090c15;color:#f7f4ec;font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+.shell{max-width:72rem;margin:2.5rem auto;padding:0 1.25rem}
+h1,h2{line-height:1.2;letter-spacing:-.01em}
+h1{font-size:1.7rem;margin:.2rem 0 .4rem}
+h2{font-size:1.15rem;margin:0 0 .6rem}
+section{margin:1.25rem 0;padding:1.4rem 1.5rem;border:1px solid #232c40;border-radius:1rem;background:#111624;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.muted{color:#b7bdca}
+.notice{padding:.8rem 1rem;border-radius:.6rem;background:#173631;border:1px solid #235349}
+.error{background:#4a2229;border-color:#7a3441}
+.warning{padding:.65rem .85rem;border-radius:.4rem;border-left:3px solid #ffcb6b;background:#302719}
+.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+label{display:block;margin:.85rem 0 .35rem;font-weight:700;font-size:.92rem}
+input,textarea,select,.editor{box-sizing:border-box;width:100%;padding:.65rem .75rem;border:1px solid #59647a;border-radius:.5rem;background:#fff;color:#182033;font:inherit}
+input:focus,textarea:focus,select:focus{outline:2px solid #67e6d1;outline-offset:1px}
+input[type="checkbox"]{width:auto;padding:0;accent-color:#67e6d1}
+textarea{min-height:12rem}
+.toolbar{display:flex;flex-wrap:wrap;gap:.4rem;margin:.35rem 0}
+.toolbar button{margin:0;padding:.35rem .6rem;background:#e8edf5;color:#182033;font-size:.86rem}
+.editor{min-height:14rem;overflow:auto}
+.editor:focus{outline:3px solid #67e6d1;outline-offset:3px}
+.editor:empty:before{color:#58647a;content:attr(data-placeholder);pointer-events:none}
+.editor p:first-child{margin-top:0}
+.editor p:last-child{margin-bottom:0}
+a{color:#d29cff;text-decoration:none;font-weight:600}
+a:hover{text-decoration:underline}
+a:focus-visible{outline:2px solid #67e6d1;outline-offset:2px;border-radius:.2rem}
+.link-button{display:inline-block;margin:.2rem .5rem .2rem 0;padding:.4rem .75rem;border:1px solid #3b4964;border-radius:.5rem;background:#161c2c;font-size:.84rem;font-weight:600}
+.link-button:last-child{margin-right:0}
+.link-button:hover{background:#1d2438;text-decoration:none}
+button{margin-top:1rem;padding:.65rem 1.1rem;border:0;border-radius:.55rem;background:#67e6d1;color:#071411;font:700 .96rem/1 system-ui;cursor:pointer;transition:filter .12s ease}
+button:hover{filter:brightness(1.07)}
+button:focus-visible{outline:2px solid #f7f4ec;outline-offset:2px}
+button.secondary{margin-left:.5rem;background:#d29cff;color:#22102f}
+button.danger{background:#ff6b81;color:#31060d}
+table{width:100%;border-collapse:collapse}
+th,td{padding:.65rem .5rem;text-align:left;border-bottom:1px solid #232c40;vertical-align:top}
+thead th{color:#9aa3b8;font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;font-weight:700}
+th:first-child,td:first-child{width:2.4rem}
+.table-scroll{overflow-x:auto}
+small{color:#b7bdca}
+.actions{display:flex;gap:.6rem;flex-wrap:wrap}
+.actions form{margin:0}
+.dashboard-header{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;margin-bottom:1.75rem}
+.dashboard-header form{margin:0}
+.dashboard-header h1{margin:.1rem 0 .4rem}
+.eyebrow,.product-mark{margin:0 0 .35rem;color:#9fe6d8;text-transform:uppercase;font-size:.76rem;font-weight:700;letter-spacing:.09em}
+.login{max-width:26rem;margin:3rem auto}
+.onboarding-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.75rem}
+.onboarding-metric{padding:1rem;border:1px solid #2b3448;border-radius:.7rem;background:#0c101c}
+.onboarding-metric strong{display:block;font-size:1.8rem;line-height:1.15;color:#67e6d1}
+.onboarding-metric span{color:#b7bdca;font-size:.86rem}
+.onboarding-metric.stage-pending_review strong{color:#ffcb6b}
+.onboarding-metric.stage-accepted strong{color:#7fb2ff}
+.onboarding-metric.stage-invited strong{color:#d29cff}
+.onboarding-metric.stage-active strong{color:#67e6d1}
+.applications-card{border-color:#3d3320;background:#161307}
+.application-rows{display:flex;flex-direction:column;gap:.75rem;margin-top:.75rem}
+.application-row{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;padding:.9rem 1rem;border:1px solid #3d3d2c;border-radius:.65rem;background:#0f0d06}
+.application-summary strong{font-size:1rem}
+.application-actions{display:flex;flex-wrap:wrap;align-items:flex-start;gap:.5rem}
+.application-actions form{margin:0}
+.application-actions button{margin-top:0}
+.reject-disclosure{margin:0}
+.reject-disclosure summary{cursor:pointer;padding:.65rem 1.1rem;border-radius:.55rem;background:#2c1620;color:#ffb3c0;font-weight:700;font-size:.94rem;list-style:none}
+.reject-disclosure summary::-webkit-details-marker{display:none}
+.reject-disclosure[open] summary{border-radius:.55rem .55rem 0 0}
+.reject-disclosure form{padding:.85rem;border:1px solid #3d2029;border-top:0;border-radius:0 0 .55rem .55rem;background:#150c10}
+.reject-disclosure button{margin-top:.5rem}
+.compose-card{margin:1.25rem 0;padding:1.1rem 1.4rem 1.4rem;border:1px solid #232c40;border-radius:1rem;background:#111624}
+.compose-card summary{cursor:pointer;font-size:1.05rem;padding:.4rem 0;list-style:none}
+.compose-card summary::-webkit-details-marker{display:none}
+.compose-card summary:before{content:"▸ ";color:#67e6d1}
+.compose-card[open] summary:before{content:"▾ "}
+.compose-card section{border:0;padding:0;margin:.75rem 0 0;background:transparent;box-shadow:none}
+.tester-task-panels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+.tester-task-panel,.assignment-existing,.onboarding-card{min-width:0;padding:1rem;border:1px solid #232c40;border-radius:.65rem}
+.assignment-existing,.onboarding-card{margin:1rem 0;background:#0c101c}
+.assignment-existing h4,.tester-task-panel h3,.onboarding-card h4{margin:.1rem 0}
+.assignment-existing textarea,.tester-task-panel textarea,.onboarding-card textarea{min-height:5rem}
+.inline-form{margin-top:.5rem}
+.onboarding-status,.stage-badge{display:inline-block;padding:.2rem .6rem;border-radius:99px;font-size:.78rem;font-weight:700;letter-spacing:.01em}
+.status-profile_pending{background:rgba(255,203,107,.16);color:#ffcb6b}
+.status-profile_complete{background:rgba(127,178,255,.16);color:#7fb2ff}
+.status-invited{background:rgba(210,156,255,.16);color:#d29cff}
+.status-orientation_sent{background:rgba(79,209,197,.16);color:#4fd1c5}
+.status-ready{background:rgba(103,230,209,.16);color:#67e6d1}
+.status-paused{background:rgba(139,147,167,.2);color:#c3c9d6}
+.status-unknown{background:rgba(183,189,202,.16);color:#b7bdca}
+.stage-badge.stage-pending_review{background:rgba(255,203,107,.16);color:#ffcb6b}
+.stage-badge.stage-accepted{background:rgba(127,178,255,.16);color:#7fb2ff}
+.stage-badge.stage-invited{background:rgba(210,156,255,.16);color:#d29cff}
+.stage-badge.stage-active{background:rgba(103,230,209,.16);color:#67e6d1}
+.stage-badge.stage-unknown{background:rgba(183,189,202,.16);color:#b7bdca}
+.profile-missing{margin:.65rem 0;padding:.65rem;border-left:3px solid #ffcb6b;background:#302719}
+.profile-complete{margin:.65rem 0;padding:.65rem;border-left:3px solid #67e6d1;background:#173631}
+.mutation-authorization{padding:.65rem;border-left:3px solid #ffcb6b;background:#302719}
+.task-preview{min-height:3rem;padding:.75rem;border:1px solid #232c40;border-radius:.5rem;color:#b7bdca}
+.task-preview strong{color:#f7f4ec}
+.copy-assignment{margin-left:.5rem}
+@media(max-width:44rem){table{font-size:.86rem}.optional{display:none}.onboarding-overview,.tester-task-panels{grid-template-columns:1fr}.shell{margin:1rem auto}.copy-assignment{margin-left:0}.dashboard-header{flex-direction:column}.application-row{flex-direction:column}.application-actions{width:100%}}
+</style></head><body><main class="shell">'
         . $content . '</main></body></html>';
     exit;
 }
@@ -634,6 +743,70 @@ function onboardingStatusLabel(string $status): string
 function recruitmentSourceLabel(?string $source): string
 {
     return RECRUITMENT_SOURCE_LABELS[$source ?? 'direct'] ?? RECRUITMENT_SOURCE_LABELS['other'];
+}
+
+/**
+ * The four coordinator-facing application stages. These are computed, not
+ * stored: they combine the coordinator's review action (reviewed_at) with
+ * the existing onboarding_status lifecycle so a newly submitted or imported
+ * application is never mistaken for one a coordinator has already actioned.
+ *
+ * pending_review  — not yet accepted, sent a details request, or rejected.
+ * accepted        — reviewed; still short of an invitation (this covers both
+ *                    "missing coverage details" and "profile complete, ready
+ *                    to invite" — the roster row and onboarding badge show
+ *                    which one applies).
+ * invited         — invitation/orientation sent; waiting on tester opt-in.
+ * active          — self-confirmed and ready for focused assignment.
+ */
+function applicationStage(array $tester): string
+{
+    if (($tester['reviewed_at'] ?? null) === null || $tester['reviewed_at'] === '') {
+        return 'pending_review';
+    }
+    $status = onboardingStatus($tester);
+    if (in_array($status, ['invited', 'orientation_sent'], true)) {
+        return 'invited';
+    }
+    if ($status === 'ready') {
+        return 'active';
+    }
+    return 'accepted';
+}
+
+function applicationStageLabel(string $stage): string
+{
+    return match ($stage) {
+        'pending_review' => 'Pending review',
+        'accepted' => 'Accepted, needs details',
+        'invited' => 'Invited, awaiting opt-in',
+        'active' => 'Active',
+        default => 'Unknown',
+    };
+}
+
+function applicationStageBadgeClass(string $stage): string
+{
+    return 'stage-badge stage-' . (in_array($stage, APPLICATION_STAGES, true) ? $stage : 'unknown');
+}
+
+function onboardingStatusBadgeClass(string $status): string
+{
+    return 'onboarding-status status-' . (in_array($status, ONBOARDING_STATUSES, true) ? $status : 'unknown');
+}
+
+/**
+ * Mark an application as actioned by a coordinator (accept, request details,
+ * or reject all pass through here). Idempotent: an already-reviewed record
+ * keeps its original review timestamp.
+ */
+function markApplicationReviewed(PDO $database, int $testerId): void
+{
+    $now = gmdate('c');
+    $database->prepare('INSERT OR IGNORE INTO tester_onboarding(tester_id, onboarding_status, coordinator_note, orientation_email_status, orientation_email_attempted_at, orientation_email_attempts, updated_at) VALUES (?, \'profile_pending\', \'\', \'not_sent\', NULL, 0, ?)')
+        ->execute([$testerId, $now]);
+    $database->prepare('UPDATE tester_onboarding SET reviewed_at = COALESCE(reviewed_at, ?) WHERE tester_id = ?')
+        ->execute([$now, $testerId]);
 }
 
 function onboardingInput(array $tester): array
@@ -923,11 +1096,18 @@ function selectedTesterIds(): array
 function selectedActiveTesters(PDO $database, array $ids): array
 {
     $placeholders = implode(',', array_fill(0, count($ids), '?'));
-    $statement = $database->prepare("SELECT id, display_name, email FROM testers WHERE status = 'active' AND id IN ($placeholders) ORDER BY id");
+    // Reviewed testers only: a pending application is handled with Accept /
+    // Request details / Reject, not folded into a bulk coordinator send.
+    $statement = $database->prepare("SELECT testers.id, testers.display_name, testers.email, onboarding.reviewed_at, onboarding.onboarding_status FROM testers LEFT JOIN tester_onboarding AS onboarding ON onboarding.tester_id = testers.id WHERE testers.status = 'active' AND testers.id IN ($placeholders) ORDER BY testers.id");
     $statement->execute($ids);
     $testers = $statement->fetchAll();
     if (count($testers) !== count($ids)) {
         throw new InvalidArgumentException('One or more selected testers are no longer active. Refresh the queue and try again.');
+    }
+    foreach ($testers as $tester) {
+        if (applicationStage($tester) === 'pending_review') {
+            throw new InvalidArgumentException('Applications awaiting review cannot receive a coordinator email yet. Accept, request details, or reject them first.');
+        }
     }
     return $testers;
 }
@@ -1117,27 +1297,39 @@ function mailArchiveTypeLabel(string $type): string
 
 function onboardingBadge(string $status): string
 {
-    return '<span class="onboarding-status">' . e(onboardingStatusLabel($status)) . '</span>';
+    return '<span class="' . e(onboardingStatusBadgeClass($status)) . '">' . e(onboardingStatusLabel($status)) . '</span>';
+}
+
+function applicationStageBadge(string $stage): string
+{
+    return '<span class="' . e(applicationStageBadgeClass($stage)) . '">' . e(applicationStageLabel($stage)) . '</span>';
 }
 
 function renderOperationsDashboard(PDO $database, string $notice = '', string $error = ''): never
 {
     $tasks = taskRegistry();
-    $testers = $database->query("SELECT testers.*, onboarding.onboarding_status, onboarding.orientation_email_status, onboarding.orientation_email_attempted_at, onboarding.orientation_email_attempts FROM testers LEFT JOIN tester_onboarding AS onboarding ON onboarding.tester_id = testers.id WHERE testers.status = 'active' ORDER BY testers.received_at, testers.id")->fetchAll();
+    $testers = $database->query("SELECT testers.*, onboarding.onboarding_status, onboarding.reviewed_at, onboarding.orientation_email_status, onboarding.orientation_email_attempted_at, onboarding.orientation_email_attempts FROM testers LEFT JOIN tester_onboarding AS onboarding ON onboarding.tester_id = testers.id WHERE testers.status = 'active' ORDER BY testers.received_at, testers.id")->fetchAll();
     $assignments = $database->query("SELECT tester_id, task_status FROM tester_task_assignments ORDER BY id")->fetchAll();
     $assignmentCounts = [];
     foreach ($assignments as $assignment) {
         $id = (int) $assignment['tester_id'];
         $assignmentCounts[$id] = ($assignmentCounts[$id] ?? 0) + 1;
     }
-    $metrics = ['profile_pending' => 0, 'profile_complete' => 0, 'orientation_sent' => 0, 'ready' => 0];
+
+    // A pending application is not a roster tester: it has not been looked at
+    // by a coordinator yet, so it is never mixed into onboarding/assignment
+    // workflow below. See applicationStage() for the stage computation.
+    $pendingApplications = [];
+    $rosterTesters = [];
+    $stageCounts = array_fill_keys(APPLICATION_STAGES, 0);
     $sourceCounts = array_fill_keys(array_keys(RECRUITMENT_SOURCE_LABELS), 0);
-    $rows = '';
     foreach ($testers as $tester) {
-        $id = (int) $tester['id'];
-        $status = onboardingStatus($tester);
-        if (isset($metrics[$status])) {
-            $metrics[$status]++;
+        $stage = applicationStage($tester);
+        $stageCounts[$stage]++;
+        if ($stage === 'pending_review') {
+            $pendingApplications[] = $tester;
+        } else {
+            $rosterTesters[] = $tester;
         }
         $source = $tester['recruitment_source'] ?? 'direct';
         if (isset($sourceCounts[$source])) {
@@ -1145,19 +1337,62 @@ function renderOperationsDashboard(PDO $database, string $notice = '', string $e
         } else {
             $sourceCounts['other']++;
         }
+    }
+
+    // ?compose_for=<id> pre-selects a just-accepted applicant in the compose
+    // form below (see request_profile_details); only honored for a tester who
+    // has actually cleared review, so a stale or tampered link cannot reopen
+    // the pending-application actions through the compose path.
+    $rosterIds = array_map(static fn (array $tester): int => (int) $tester['id'], $rosterTesters);
+    $composeForId = filter_var($_GET['compose_for'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+    $composeForId = $composeForId !== false && in_array($composeForId, $rosterIds, true) ? $composeForId : null;
+
+    $applicationRows = '';
+    foreach ($pendingApplications as $tester) {
+        $id = (int) $tester['id'];
+        $source = $tester['recruitment_source'] ?? 'direct';
+        $applicationRows .= '<article class="application-row">'
+            . '<div class="application-summary"><strong>' . e($tester['display_name']) . '</strong><br><small>' . e($tester['email']) . '</small><br><small>' . e($tester['device']) . ' · ' . e($tester['android_version']) . '</small><br><small>' . e(recruitmentSourceLabel(is_string($source) ? $source : null)) . ' · Received ' . e($tester['received_at']) . '</small></div>'
+            . '<div class="application-actions">'
+            . '<form method="post"><input type="hidden" name="action" value="accept_application"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $id . '"><button type="submit">Accept</button></form>'
+            . '<form method="post"><input type="hidden" name="action" value="request_profile_details"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $id . '"><button class="secondary" type="submit">Request details</button></form>'
+            . '<details class="reject-disclosure"><summary>Reject</summary><form method="post"><input type="hidden" name="action" value="reject_application"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $id . '"><label>Rejection reason<textarea name="rejection_reason" maxlength="' . MAX_ONBOARDING_NOTE_LENGTH . '" required placeholder="Kept in the private coordinator record only."></textarea></label><button class="danger" type="submit">Confirm reject</button></form></details>'
+            . '</div></article>';
+    }
+
+    $rows = '';
+    foreach ($rosterTesters as $tester) {
+        $id = (int) $tester['id'];
+        $status = onboardingStatus($tester);
+        $stage = applicationStage($tester);
+        $source = $tester['recruitment_source'] ?? 'direct';
         $profile = profileSummary($tester);
         $profileText = $profile['complete'] ? 'Complete' : count($profile['missing']) . ' update' . (count($profile['missing']) === 1 ? '' : 's') . ' needed';
         $taskText = ($assignmentCounts[$id] ?? 0) === 0 ? 'No focused task' : ($assignmentCounts[$id] . ' focused task' . ($assignmentCounts[$id] === 1 ? '' : 's'));
-        $rows .= '<tr><td><strong>' . e($tester['display_name']) . '</strong><br><small>' . e($tester['email']) . '</small></td><td>' . e($tester['device']) . '<br><small>' . e($tester['android_version']) . '</small></td><td><small>' . e(recruitmentSourceLabel(is_string($source) ? $source : null)) . '</small></td><td>' . onboardingBadge($status) . '<br><small>' . e($profileText) . '</small></td><td><small>' . e($taskText) . '</small></td><td><a href="/private-tester-queue.php?tester=' . $id . '">Open workspace</a><br><a href="/tester-portal.php?preview_tester=' . $id . '">Preview tester view</a></td></tr>';
+        $rows .= '<tr><td><strong>' . e($tester['display_name']) . '</strong><br><small>' . e($tester['email']) . '</small></td><td>' . e($tester['device']) . '<br><small>' . e($tester['android_version']) . '</small></td><td><small>' . e(recruitmentSourceLabel(is_string($source) ? $source : null)) . '</small></td><td>' . applicationStageBadge($stage) . '<br>' . onboardingBadge($status) . '<br><small>' . e($profileText) . '</small></td><td><small>' . e($taskText) . '</small></td><td><a class="link-button" href="/private-tester-queue.php?tester=' . $id . '">Open workspace</a><a class="link-button" href="/tester-portal.php?preview_tester=' . $id . '">Preview tester view</a></td></tr>';
     }
+
     $message = $notice === '' ? '' : '<p class="notice">' . e($notice) . '</p>';
     $message .= $error === '' ? '' : '<p class="notice error">' . e($error) . '</p>';
     $editor = '<label for="email-template">Email template</label><select id="email-template"><option value="">Custom email</option><option value="profile-update">Profile update request</option><option value="welcome">Welcome to the 24Seven.FM Player Google Play Closed Test</option><option value="feedback">Testing feedback request</option><option value="new-build">New build available</option><option value="reminder">Reminder to test</option><option value="known-issue">Known issue / workaround</option><option value="test-session">Test session request</option><option value="test-complete">Thank you / test complete</option><option value="tester-status">Tester status update</option><option value="release-signoff">Release candidate sign-off</option></select><p class="muted">Choose a template or write a custom message. The queue always sends one individual, multipart email per selected tester.</p><label for="body-editor">Message</label><div class="toolbar" role="toolbar" aria-label="Email text formatting"><button type="button" data-format="bold"><strong>B</strong><span class="visually-hidden">Bold</span></button><button type="button" data-format="italic"><em>I</em><span class="visually-hidden">Italic</span></button><button type="button" data-format="underline"><u>U</u><span class="visually-hidden">Underline</span></button><button type="button" data-format="insertUnorderedList">Bullets</button><button type="button" data-format="insertOrderedList">Numbered list</button><button type="button" data-format="createLink">Link</button><button type="button" data-format="removeFormat">Clear format</button></div><div id="body-editor" class="editor" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Write a message for the selected testers."></div><input type="hidden" name="body_html" id="body-html"><noscript><label for="body">Message</label><textarea id="body" name="body" maxlength="' . MAX_BODY_LENGTH . '" required></textarea></noscript>';
     $archiveCount = (int) $database->query('SELECT COUNT(*) FROM tester_mail_archive')->fetchColumn();
-    $content = '<div class="actions"><div><p class="muted">24Seven.FM Player · closed alpha</p><h1>Tester operations</h1><p class="muted">A private workspace for moving accepted volunteers from a complete profile to a focused, safe testing assignment.</p><p><a href="/private-tester-queue.php?mail_archive=1">Sent mail archive (' . $archiveCount . ')</a></p></div><form method="post"><input type="hidden" name="action" value="logout"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><button class="secondary" type="submit">Sign out</button></form></div>' . $message
-        . '<section><h2>Onboarding pipeline</h2><div class="onboarding-overview"><div class="onboarding-metric"><strong>' . $metrics['profile_pending'] . '</strong>Profile updates needed</div><div class="onboarding-metric"><strong>' . $metrics['profile_complete'] . '</strong>Ready to invite</div><div class="onboarding-metric"><strong>' . $metrics['orientation_sent'] . '</strong>Orientation sent</div><div class="onboarding-metric"><strong>' . $metrics['ready'] . '</strong>Ready for assignment</div></div><p class="muted">Workflow: confirm coverage → grant Play access → tester self-confirms opt-in and initial smoke test → assign focused work. An invitation is not treated as opt-in, installation, or activity evidence.</p><p class="muted">Recruitment: ' . e('Direct ' . $sourceCounts['direct'] . ' · Testers Community ' . $sourceCounts['testers_community'] . ' · Betabound ' . $sourceCounts['betabound'] . ' · BetaFamily ' . $sourceCounts['betafamily'] . ' · Other ' . $sourceCounts['other']) . '</p></section>'
-        . '<section><h2>Tester roster</h2><p class="muted">Open one workspace to review coverage, record onboarding progress, send an individual orientation email, and manage focused tasks.</p><table><thead><tr><th scope="col">Tester</th><th scope="col">Device</th><th scope="col">Recruitment</th><th scope="col">Onboarding</th><th scope="col">Assignments</th><th scope="col"><span class="visually-hidden">Open</span></th></tr></thead><tbody>' . $rows . '</tbody></table></section>'
-        . '<details><summary><strong>Compose a coordinator email</strong></summary><form method="post" id="email-form"><input type="hidden" name="action" value="prepare"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><section><h2>Recipients and message</h2><p><label><input type="checkbox" id="select-all"> Select all active testers</label></p><table><thead><tr><th scope="col">Select</th><th scope="col">Tester</th><th scope="col">Onboarding</th></tr></thead><tbody>' . implode('', array_map(static fn (array $tester): string => '<tr><td><input aria-label="Select ' . e($tester['display_name']) . '" type="checkbox" name="tester_ids[]" value="' . (int) $tester['id'] . '"></td><td>' . e($tester['display_name']) . '<br><small>' . e($tester['email']) . '</small></td><td>' . onboardingBadge(onboardingStatus($tester)) . '</td></tr>', $testers)) . '</tbody></table><label for="subject">Subject</label><input id="subject" name="subject" maxlength="' . MAX_SUBJECT_LENGTH . '" required>' . $editor . '<button type="submit">Review selected recipients</button></section></form></details><script src="/assets/private-tester-queue.js?v=onboarding-1" defer></script>';
+
+    $recipientRows = implode('', array_map(static function (array $tester) use ($composeForId): string {
+        $checked = $composeForId !== null && (int) $tester['id'] === $composeForId ? ' checked' : '';
+        return '<tr><td><input aria-label="Select ' . e($tester['display_name']) . '" type="checkbox" name="tester_ids[]" value="' . (int) $tester['id'] . '"' . $checked . '></td><td>' . e($tester['display_name']) . '<br><small>' . e($tester['email']) . '</small></td><td>' . onboardingBadge(onboardingStatus($tester)) . '</td></tr>';
+    }, $rosterTesters));
+    // CSP is script-src 'self' — no inline <script> logic is allowed, so the
+    // compose_for pre-selection is handed to the external JS file as a JSON
+    // data island, matching the existing #tester-task-registry pattern.
+    $composeHint = $composeForId === null ? '' : '<script id="compose-for-tester" type="application/json">' . json_encode(['testerId' => $composeForId, 'template' => 'profile-update'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES) . '</script>';
+
+    $content = '<header class="dashboard-header"><div><p class="eyebrow">24Seven.FM Player · Closed alpha</p><h1>Tester operations</h1><p class="muted">A private workspace for moving a new application through review to a focused, safe testing assignment.</p><p><a class="link-button" href="/private-tester-queue.php?mail_archive=1">Sent mail archive (' . $archiveCount . ')</a></p></div><form method="post"><input type="hidden" name="action" value="logout"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><button class="secondary" type="submit">Sign out</button></form></header>' . $message
+        . '<section><h2>Onboarding pipeline</h2><div class="onboarding-overview"><div class="onboarding-metric stage-pending_review"><strong>' . $stageCounts['pending_review'] . '</strong><span>Pending review</span></div><div class="onboarding-metric stage-accepted"><strong>' . $stageCounts['accepted'] . '</strong><span>Accepted, needs details</span></div><div class="onboarding-metric stage-invited"><strong>' . $stageCounts['invited'] . '</strong><span>Invited, awaiting opt-in</span></div><div class="onboarding-metric stage-active"><strong>' . $stageCounts['active'] . '</strong><span>Active</span></div></div><p class="muted">Workflow: review a new application → accept, request details, or reject → grant Play access and invite → tester self-confirms opt-in and initial smoke test → assign focused work. An invitation is not treated as opt-in, installation, or activity evidence.</p><p class="muted">Recruitment: ' . e('Direct ' . $sourceCounts['direct'] . ' · Testers Community ' . $sourceCounts['testers_community'] . ' · Betabound ' . $sourceCounts['betabound'] . ' · BetaFamily ' . $sourceCounts['betafamily'] . ' · Other ' . $sourceCounts['other']) . '</p></section>'
+        . '<section class="applications-card"><h2>Applications awaiting review (' . count($pendingApplications) . ')</h2>' . ($applicationRows === '' ? '<p class="muted">No new applications right now.</p>' : '<p class="muted">Newly submitted or imported applications stay here, separate from the accepted roster, until a coordinator accepts, requests details, or rejects them.</p><div class="application-rows">' . $applicationRows . '</div>') . '</section>'
+        . '<section><h2>Tester roster</h2><p class="muted">Open one workspace to review coverage, record onboarding progress, send an individual orientation email, and manage focused tasks.</p><div class="table-scroll"><table><thead><tr><th scope="col">Tester</th><th scope="col">Device</th><th scope="col">Recruitment</th><th scope="col">Stage &amp; onboarding</th><th scope="col">Assignments</th><th scope="col"><span class="visually-hidden">Open</span></th></tr></thead><tbody>' . ($rows === '' ? '<tr><td colspan="6" class="muted">No accepted testers yet.</td></tr>' : $rows) . '</tbody></table></div></section>'
+        . '<details class="compose-card"' . ($composeForId !== null ? ' open' : '') . '><summary><strong>Compose a coordinator email</strong></summary><form method="post" id="email-form"><input type="hidden" name="action" value="prepare"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><section><h2>Recipients and message</h2><p class="muted">Only reviewed testers (accepted, invited, or active) can receive a coordinator email; applications awaiting review use the Accept / Request details / Reject actions above instead.</p><p><label><input type="checkbox" id="select-all"> Select all reviewed testers</label></p><div class="table-scroll"><table><thead><tr><th scope="col">Select</th><th scope="col">Tester</th><th scope="col">Onboarding</th></tr></thead><tbody>' . ($recipientRows === '' ? '<tr><td colspan="3" class="muted">No reviewed testers yet.</td></tr>' : $recipientRows) . '</tbody></table></div><label for="subject">Subject</label><input id="subject" name="subject" maxlength="' . MAX_SUBJECT_LENGTH . '" required>' . $editor . '<button type="submit">Review selected recipients</button></section></form></details>'
+        . $composeHint
+        . '<script src="/assets/private-tester-queue.js?v=onboarding-2" defer></script>';
     renderPage('Tester operations', $content);
 }
 
@@ -1233,80 +1468,13 @@ function renderTesterWorkspace(PDO $database, int $testerId, string $notice = ''
     $deletionRequest = ($tester['deletion_requested_at'] ?? '') !== '' ? (string) $tester['deletion_requested_at'] : 'None';
     $content = '<p><a href="/private-tester-queue.php">← Tester operations</a> · <a href="/tester-portal.php?preview_tester=' . $testerId . '">Preview tester view</a></p><div><p class="muted">Tester workspace</p><h1>' . e($tester['display_name']) . '</h1><p class="muted">' . e($tester['device']) . ' · ' . e($tester['android_version']) . ' · ' . e($tester['country'] ?: 'Country not provided') . ' · ' . e(recruitmentSourceLabel($tester['recruitment_source'] ?? null)) . '</p></div>' . $message
         . '<section><h2>Onboarding</h2>' . onboardingBadge($status) . $profileBlock . '<form method="post"><input type="hidden" name="action" value="update_onboarding"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $testerId . '"><label>Onboarding status<select name="onboarding_status">' . $statusOptions . '</select></label><label>Coordinator note<textarea name="onboarding_note" maxlength="' . MAX_ONBOARDING_NOTE_LENGTH . '" placeholder="Private operational note; never add credentials or secrets.">' . e($tester['onboarding_note'] ?? '') . '</textarea></label><button type="submit">Save onboarding progress</button></form><p><strong>Google Play opt-in:</strong> ' . e($playOptIn) . '<br><strong>Initial smoke test:</strong> ' . e($smokeTest) . '<br><small>These are tester self-confirmations, not inferred installation or usage telemetry.</small></p><p><strong>Withdrawal request:</strong> ' . e($withdrawalRequest) . '<br><strong>Record-deletion request:</strong> ' . e($deletionRequest) . '<br><small>Verify the request, stop program access promptly, and delete or anonymize the private tester record within the adopted 90-day policy period. A request is not evidence that deletion is already complete.</small></p>' . ($withdrawalRequest === 'None' ? '' : '<form method="post"><input type="hidden" name="action" value="deactivate_withdrawn_tester"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $testerId . '"><label><input style="width:auto" type="checkbox" name="confirm_deactivate" value="withdraw" required> I verified this withdrawal request and will stop this tester’s program access.</label><button class="danger" type="submit">Deactivate withdrawn tester</button></form>') . '<p><strong>Orientation email:</strong> ' . e($orientation) . ' <small>(' . (int) ($tester['orientation_email_attempts'] ?? 0) . ' handoff attempt' . ((int) ($tester['orientation_email_attempts'] ?? 0) === 1 ? '' : 's') . ')</small></p>' . ($profile['complete'] ? '<form method="post"><input type="hidden" name="action" value="send_onboarding_email"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $testerId . '"><button class="secondary" type="submit">Send orientation email</button></form>' : '') . '</section>'
-        . '<section><h2>Focused Tester Tasks</h2><p class="muted">Assign only a focused bundle that matches this tester’s coverage. Each PT case still receives its own result.</p>' . $guestTaskNotice . ($assignmentCards === '' ? '<p class="muted">No task assigned yet.</p>' : $assignmentCards) . '<article class="onboarding-card"><h3>Assign a focused Tester Task</h3><form method="post" data-task-assignment-form><input type="hidden" name="action" value="assign_task"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $testerId . '"><label>Tester Task<select name="task_id" data-task-select required>' . $taskOptions . '</select></label><div class="task-preview" data-task-preview aria-live="polite">Choose a current task to see its PT cases, prerequisites, and safety boundary.</div><label>Station scope<select name="station_scope">' . $stationOptions . '</select></label><label>Device / accessory / form factor scope<input name="configuration_scope" maxlength="' . MAX_ASSIGNMENT_CONFIGURATION_LENGTH . '" placeholder="For example, Pixel 9, Bluetooth headset, folded"></label><label>Coordinator note<textarea name="coordinator_note" maxlength="' . MAX_ASSIGNMENT_NOTE_LENGTH . '"></textarea></label><label class="mutation-authorization" data-mutation-authorization hidden><input type="checkbox" name="mutation_authorized" value="1"> I explicitly authorize the controlled subcase described above.</label><button type="submit">Assign Tester Task</button></form></article></section><section><h2>Tester task reports</h2><p class="muted">Private reports submitted through the tester portal.</p>' . ($feedbackItems === '' ? '<p class="muted">No task reports submitted yet.</p>' : $feedbackItems) . '</section><script id="tester-task-registry" type="application/json">' . json_encode(array_values($tasks), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES) . '</script><script src="/assets/private-tester-queue.js?v=onboarding-1" defer></script>';
+        . '<section><h2>Focused Tester Tasks</h2><p class="muted">Assign only a focused bundle that matches this tester’s coverage. Each PT case still receives its own result.</p>' . $guestTaskNotice . ($assignmentCards === '' ? '<p class="muted">No task assigned yet.</p>' : $assignmentCards) . '<article class="onboarding-card"><h3>Assign a focused Tester Task</h3><form method="post" data-task-assignment-form><input type="hidden" name="action" value="assign_task"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $testerId . '"><label>Tester Task<select name="task_id" data-task-select required>' . $taskOptions . '</select></label><div class="task-preview" data-task-preview aria-live="polite">Choose a current task to see its PT cases, prerequisites, and safety boundary.</div><label>Station scope<select name="station_scope">' . $stationOptions . '</select></label><label>Device / accessory / form factor scope<input name="configuration_scope" maxlength="' . MAX_ASSIGNMENT_CONFIGURATION_LENGTH . '" placeholder="For example, Pixel 9, Bluetooth headset, folded"></label><label>Coordinator note<textarea name="coordinator_note" maxlength="' . MAX_ASSIGNMENT_NOTE_LENGTH . '"></textarea></label><label class="mutation-authorization" data-mutation-authorization hidden><input type="checkbox" name="mutation_authorized" value="1"> I explicitly authorize the controlled subcase described above.</label><button type="submit">Assign Tester Task</button></form></article></section><section><h2>Tester task reports</h2><p class="muted">Private reports submitted through the tester portal.</p>' . ($feedbackItems === '' ? '<p class="muted">No task reports submitted yet.</p>' : $feedbackItems) . '</section><script id="tester-task-registry" type="application/json">' . json_encode(array_values($tasks), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES) . '</script><script src="/assets/private-tester-queue.js?v=onboarding-2" defer></script>';
     renderPage('Tester workspace', $content);
 }
 
 function renderDashboard(PDO $database, string $notice = '', string $error = ''): never
 {
     renderOperationsDashboard($database, $notice, $error);
-}
-
-function renderDashboardLegacy(PDO $database, string $notice = '', string $error = ''): never
-{
-    $tasks = taskRegistry();
-    $testers = $database->query("SELECT id, display_name, email, country, device, android_version, interests_json, experience, received_at FROM testers WHERE status = 'active' ORDER BY received_at, id")->fetchAll();
-    $assignments = $database->query("SELECT id, tester_id, task_id, task_status, station_scope, configuration_scope, coordinator_note, mutation_authorized, assignment_email_status, assignment_email_attempted_at, assignment_email_attempts, created_at, updated_at FROM tester_task_assignments ORDER BY created_at, id")->fetchAll();
-    $assignmentsByTester = [];
-    foreach ($assignments as $assignment) {
-        if (isset($tasks[$assignment['task_id']])) {
-            $assignmentsByTester[(int) $assignment['tester_id']][] = $assignment;
-        }
-    }
-    $rows = '';
-    foreach ($testers as $tester) {
-        $interests = json_decode($tester['interests_json'], true);
-        $interests = is_array($interests) && $interests !== [] ? implode(', ', array_map('strval', $interests)) : 'Not provided';
-        $assignmentLinks = '';
-        foreach ($assignmentsByTester[(int) $tester['id']] ?? [] as $assignment) {
-            $task = $tasks[$assignment['task_id']];
-            $assignmentLinks .= '<a href="#tester-' . (int) $tester['id'] . '">' . e($task['id']) . '</a> <small>(' . e(str_replace('_', ' ', $assignment['task_status'])) . ')</small><br>';
-        }
-        if ($assignmentLinks === '') {
-            $assignmentLinks = '<small>Unassigned</small>';
-        }
-        $rows .= '<tr><td><input aria-label="Select ' . e($tester['display_name']) . '" type="checkbox" name="tester_ids[]" value="' . (int) $tester['id'] . '"></td><td>'
-            . e($tester['display_name']) . '<br><small>' . e($tester['email']) . '</small></td><td>' . e($tester['device']) . '<br><small>' . e($tester['android_version']) . '</small></td><td class="optional">' . e($tester['country'] ?: 'Not provided') . '<br><small>' . e($interests) . '</small></td><td class="optional"><small>' . e($tester['experience'] ?: 'Not provided') . '</small></td><td>' . $assignmentLinks . '</td></tr>';
-    }
-    $message = $notice === '' ? '' : '<p class="notice">' . e($notice) . '</p>';
-    $message .= $error === '' ? '' : '<p class="notice error">' . e($error) . '</p>';
-    $editor = '<label for="email-template">Email template</label><select id="email-template"><option value="">Custom email</option><option value="welcome">Welcome to the 24Seven.FM Player Closed Alpha Test</option><option value="feedback">Testing feedback request</option><option value="new-build">New build available</option><option value="reminder">Reminder to test</option><option value="known-issue">Known issue / workaround</option><option value="test-session">Test session request</option><option value="test-complete">Thank you / test complete</option><option value="tester-status">Tester status update</option><option value="release-signoff">Release candidate sign-off</option></select><p class="muted">Selecting a template replaces the subject and message; you can edit either before review.</p><label for="body-editor">Message</label><div class="toolbar" role="toolbar" aria-label="Email text formatting"><button type="button" data-format="bold"><strong>B</strong><span class="visually-hidden">Bold</span></button><button type="button" data-format="italic"><em>I</em><span class="visually-hidden">Italic</span></button><button type="button" data-format="underline"><u>U</u><span class="visually-hidden">Underline</span></button><button type="button" data-format="insertUnorderedList">Bullets</button><button type="button" data-format="insertOrderedList">Numbered list</button><button type="button" data-format="createLink">Link</button><button type="button" data-format="removeFormat">Clear format</button></div><div id="body-editor" class="editor" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Write a message for the selected testers."></div><input type="hidden" name="body_html" id="body-html"><noscript><label for="body">Message</label><textarea id="body" name="body" maxlength="' . MAX_BODY_LENGTH . '" required></textarea></noscript>';
-    $taskOptions = '<option value="">Choose a Tester Task</option>';
-    foreach ($tasks as $task) {
-        $taskOptions .= '<option value="' . e($task['id']) . '"' . (($task['state'] ?? '') === 'future' ? ' disabled' : '') . '>' . e($task['id'] . ' — ' . $task['title'] . (($task['state'] ?? '') === 'future' ? ' (Future / Blocked)' : '')) . '</option>';
-    }
-    $stationOptions = '';
-    foreach (STATION_SCOPES as $station) {
-        $stationOptions .= '<option value="' . e($station) . '">' . e($station) . '</option>';
-    }
-    $panels = '';
-    foreach ($testers as $tester) {
-        $id = (int) $tester['id'];
-        $existing = '';
-        foreach ($assignmentsByTester[$id] ?? [] as $assignment) {
-            $task = $tasks[$assignment['task_id']];
-            $copy = assignmentMessage($task, $assignment);
-            $statusOptions = '';
-            foreach (ASSIGNMENT_STATUSES as $status) {
-                $statusOptions .= '<option value="' . e($status) . '"' . ($assignment['task_status'] === $status ? ' selected' : '') . '>' . e(ucwords(str_replace('_', ' ', $status))) . '</option>';
-            }
-            $stationUpdateOptions = '';
-            foreach (STATION_SCOPES as $station) {
-                $stationUpdateOptions .= '<option value="' . e($station) . '"' . ($assignment['station_scope'] === $station ? ' selected' : '') . '>' . e($station) . '</option>';
-            }
-            $handoff = $assignment['assignment_email_status'] === 'accepted'
-                ? 'Accepted by the mail transport'
-                : ($assignment['assignment_email_status'] === 'failed' ? 'Mail transport failed — resend only if appropriate.' : 'Not sent yet');
-            $existing .= '<div class="assignment-existing"><h4>' . e($task['id'] . ' — ' . $task['title']) . '</h4><p><strong>PT cases:</strong> ' . e(implode(', ', $task['ptIds'])) . ' · <a href="/product-testing/?task=' . rawurlencode($task['id']) . '">Open cases</a></p><p><strong>Assignment email:</strong> ' . e($handoff) . ' <small>(' . (int) $assignment['assignment_email_attempts'] . ' handoff attempt' . ((int) $assignment['assignment_email_attempts'] === 1 ? '' : 's') . ')</small></p><p class="warning"><strong>Safety:</strong> ' . e($task['safetyWarning']) . '</p><form method="post" class="assignment-update"><input type="hidden" name="action" value="update_task"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="assignment_id" value="' . (int) $assignment['id'] . '"><label>Status<select name="task_status">' . $statusOptions . '</select></label><label>Station scope<select name="station_scope">' . $stationUpdateOptions . '</select></label><label>Device / accessory / form factor scope<input name="configuration_scope" maxlength="' . MAX_ASSIGNMENT_CONFIGURATION_LENGTH . '" value="' . e($assignment['configuration_scope']) . '"></label><label>Coordinator note<textarea name="coordinator_note" maxlength="' . MAX_ASSIGNMENT_NOTE_LENGTH . '">' . e($assignment['coordinator_note']) . '</textarea></label><button type="submit">Save assignment</button><button class="secondary copy-assignment" type="button" data-assignment-copy="' . e($copy) . '">Copy assignment</button></form><form method="post" class="inline-form"><input type="hidden" name="action" value="resend_assignment_email"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="assignment_id" value="' . (int) $assignment['id'] . '"><button class="secondary" type="submit">Send assignment email</button></form><form method="post" class="inline-form"><input type="hidden" name="action" value="remove_task"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="assignment_id" value="' . (int) $assignment['id'] . '"><button class="danger" type="submit">Remove assignment</button></form></div>';
-        }
-        $panels .= '<article class="tester-task-panel" id="tester-' . $id . '"><h3>' . e($tester['display_name']) . '</h3><p class="muted">' . e($tester['device']) . ' · ' . e($tester['android_version']) . '</p>' . ($existing === '' ? '<p class="muted">No Tester Task assigned yet.</p>' : $existing) . '<form method="post" class="assignment-create" data-task-assignment-form><input type="hidden" name="action" value="assign_task"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $id . '"><h4>Assign a focused Tester Task</h4><label>Tester Task<select name="task_id" data-task-select required>' . $taskOptions . '</select></label><div class="task-preview" data-task-preview aria-live="polite">Choose a current task to see its PT cases, prerequisites, and safety boundary.</div><label>Station scope<select name="station_scope">' . $stationOptions . '</select></label><label>Device / accessory / form factor scope<input name="configuration_scope" maxlength="' . MAX_ASSIGNMENT_CONFIGURATION_LENGTH . '" placeholder="For example, Pixel 9, Bluetooth headset, folded"></label><label>Coordinator note<textarea name="coordinator_note" maxlength="' . MAX_ASSIGNMENT_NOTE_LENGTH . '" placeholder="Only information the tester needs to carry out this assignment."></textarea></label><label class="mutation-authorization" data-mutation-authorization hidden><input type="checkbox" name="mutation_authorized" value="1"> I explicitly authorize the controlled subcase described above.</label><button type="submit">Assign Tester Task</button></form></article>';
-    }
-    $registryJson = json_encode(array_values($tasks), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES);
-    $archiveCount = (int) $database->query('SELECT COUNT(*) FROM tester_mail_archive')->fetchColumn();
-    $content = '<div class="actions"><div><h1>Private tester queue</h1><p class="muted">' . count($testers) . ' active tester' . (count($testers) === 1 ? '' : 's') . '. Enrollment status and task status are separate. Each send is delivered individually; recipients are never exposed to one another.</p><p><a href="/private-tester-queue.php?mail_archive=1">Sent mail archive (' . $archiveCount . ')</a></p></div><form method="post"><input type="hidden" name="action" value="logout"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><button class="secondary" type="submit">Sign out</button></form></div>' . $message
-        . '<section><h2>Tester Task assignments</h2><p class="muted">Assign focused bundles, not the entire catalog. Each assignment can contain more than one PT case; testers submit one result for each PT case. Future / Blocked tasks remain visible for planning and cannot be assigned.</p><div class="tester-task-panels">' . $panels . '</div></section>'
-        . '<form method="post" id="email-form"><input type="hidden" name="action" value="prepare"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><section><h2>Active testers</h2><p><label><input type="checkbox" id="select-all"> Select all active testers</label></p><table><thead><tr><th scope="col">Select</th><th scope="col">Tester</th><th scope="col">Device</th><th class="optional" scope="col">Coverage</th><th class="optional" scope="col">Experience</th><th scope="col">Tester Tasks</th></tr></thead><tbody>' . $rows . '</tbody></table></section><section><h2>Prepare HTML email</h2><p class="muted">Use the formatting bar, then review the selected recipients and rendered message before any delivery is attempted. A plain-text alternative is included for mail clients that cannot show HTML.</p><label for="subject">Subject</label><input id="subject" name="subject" maxlength="' . MAX_SUBJECT_LENGTH . '" required>' . $editor . '<button type="submit">Review selected recipients</button></section></form><script id="tester-task-registry" type="application/json">' . $registryJson . '</script><script src="/assets/private-tester-queue.js?v=tasks-1" defer></script>';
-    renderPage('Private tester queue', $content);
 }
 
 function renderConfirmation(PDO $database, int $batchId): never
@@ -1402,6 +1570,31 @@ try {
         if ($action === 'logout') {
             endSession();
             redirect();
+        }
+        if ($action === 'accept_application') {
+            $testerId = testerId();
+            activeTester($database, $testerId);
+            markApplicationReviewed($database, $testerId);
+            redirect('?notice=' . rawurlencode('Application accepted.'));
+        }
+        if ($action === 'request_profile_details') {
+            $testerId = testerId();
+            activeTester($database, $testerId);
+            markApplicationReviewed($database, $testerId);
+            redirect('?compose_for=' . $testerId . '&notice=' . rawurlencode('Application accepted. Compose the profile-update request below.'));
+        }
+        if ($action === 'reject_application') {
+            $testerId = testerId();
+            activeTester($database, $testerId);
+            $reason = trim((string) ($_POST['rejection_reason'] ?? ''));
+            if ($reason === '' || mb_strlen($reason) > MAX_ONBOARDING_NOTE_LENGTH || str_contains($reason, "\0")) {
+                throw new InvalidArgumentException('A rejection reason is required to reject an application.');
+            }
+            markApplicationReviewed($database, $testerId);
+            $database->prepare("UPDATE testers SET status = 'inactive' WHERE id = ? AND status = 'active'")->execute([$testerId]);
+            $database->prepare('UPDATE tester_onboarding SET rejected_at = COALESCE(rejected_at, ?), coordinator_note = ? WHERE tester_id = ?')
+                ->execute([gmdate('c'), $reason, $testerId]);
+            redirect('?notice=' . rawurlencode('Application rejected.'));
         }
         if ($action === 'update_onboarding') {
             $testerId = testerId();

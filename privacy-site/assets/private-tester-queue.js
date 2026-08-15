@@ -111,6 +111,22 @@
   editor.addEventListener('input', saveRange);
   document.addEventListener('selectionchange', saveRange);
 
+  // Coming from "Request details" (?compose_for=<id>): auto-select the
+  // profile-update template and fire its change handler so the subject and
+  // body populate the same way a manual template pick would.
+  var composeHint = document.getElementById('compose-for-tester');
+  if (composeHint) {
+    try {
+      var hint = JSON.parse(composeHint.textContent || '{}');
+      if (hint.template && templates[hint.template]) {
+        template.value = hint.template;
+        template.dispatchEvent(new Event('change'));
+      }
+    } catch (error) {
+      // Ignore a malformed data island; the compose form still works manually.
+    }
+  }
+
   document.querySelectorAll('[data-format]').forEach(function (button) {
     button.addEventListener('mousedown', function (event) {
       event.preventDefault();
