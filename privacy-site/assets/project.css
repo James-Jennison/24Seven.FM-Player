@@ -836,6 +836,7 @@ figcaption span { color: var(--muted); font-size: 0.88rem; }
   z-index: 20;
   top: var(--header-height);
   display: flex;
+  justify-content: center;
   gap: 0.35rem;
   overflow-x: auto;
   padding-block: 0.7rem;
@@ -1753,6 +1754,7 @@ h2:hover .anchor-copy,
 }
 
 @media (max-width: 560px) {
+  .section-jump { justify-content: flex-start; }
   .site-explorer-toggle { display: none; }
   .project-header { position: relative; align-items: flex-start; justify-content: center; gap: 0.75rem; }
   .project-header nav { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.35rem; }
