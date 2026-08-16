@@ -19,6 +19,8 @@ bash -n "${runner_path}"
 for required_fragment in \
   "EXPECTED_ADMIN_USERNAME='jjennison'" \
   'read -r -s -p' \
+  '[[ ${#password} -lt 8 ]]' \
+  'strlen($password) < 8' \
   'password_hash($password, PASSWORD_DEFAULT)' \
   'DELETE FROM administrator_login_limits' \
   'password_verify($password, $updated["admin_password_hash"])' \

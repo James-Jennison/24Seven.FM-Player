@@ -31,8 +31,8 @@ read -r -s -p 'Confirm staging administrator password: ' password_confirmation
 printf '\n'
 trap 'unset password password_confirmation' EXIT
 
-if [[ ${#password} -lt 16 ]]; then
-  printf '%s\n' 'The staging administrator password must be at least 16 characters; no change was made.' >&2
+if [[ ${#password} -lt 8 ]]; then
+  printf '%s\n' 'The staging administrator password must be at least 8 characters; no change was made.' >&2
   exit 1
 fi
 if [[ "${password}" != "${password_confirmation}" ]]; then
@@ -61,8 +61,8 @@ if (!is_string($password) || !str_ends_with($password, "\0")) {
     exit(1);
 }
 $password = substr($password, 0, -1);
-if (strlen($password) < 16) {
-    fwrite(STDERR, "The staging administrator password must be at least 16 characters; no change was made.\n");
+if (strlen($password) < 8) {
+    fwrite(STDERR, "The staging administrator password must be at least 8 characters; no change was made.\n");
     exit(1);
 }
 
