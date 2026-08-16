@@ -38,6 +38,7 @@ node "${repository_root}/scripts/test-staging-admin-access-helper.mjs"
 node "${repository_root}/scripts/test-tester-portal.mjs"
 node "${repository_root}/scripts/test-onboarding-phase2-ui.mjs"
 node "${repository_root}/scripts/test-staging-root-route.mjs"
+bash "${repository_root}/scripts/test-staging-credential-reset-command.sh"
 python3 "${script_dir}/validate-project-site.py" "${repository_root}/_site"
 
 "${script_dir}/prepare-pages-transition.sh" "_pages-transition"
