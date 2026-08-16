@@ -24,6 +24,11 @@ assert(portal.includes("action\" value=\"consume_link"), "Sign-in link consumpti
 assert(portal.includes("($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && isset($_GET['token'])"), "The confirmation screen must only render for a GET so its POST can consume the link.");
 assert(portal.includes("tester_portal_tokens"), "Tester portal token storage is missing.");
 assert(portal.includes("tester_feedback"), "Tester portal feedback persistence is missing.");
+assert(portal.includes("Applied") && portal.includes("Profile & Device") && portal.includes("Play Opt-In") && portal.includes("First-Use Smoke Test") && portal.includes("Active Assignment"), "Tester portal must render the five-stage evidence lifecycle.");
+assert(!portal.includes("Agreement</li>"), "Agreement must remain in the application consent record rather than become a portal stage.");
+assert(portal.includes("portalChatPoll") && portal.includes("chat_stream") && portal.includes("chat_poll"), "Tester Live Chat must offer SSE delivery with a polling fallback.");
+assert(portal.includes("chatPostMessage($database, (int) $tester['id'], 'tester'"), "Tester Live Chat must bind submissions to the signed-in tester.");
+assert(portal.includes("portalPage('Live Chat — ' . $coordinatorName") && queue.includes("renderPage('Live Chat — ' . (string) $selected['display_name']"), "Detached Live Chat titles must identify the other participant.");
 assert(portal.includes("WHERE id = ? AND tester_id = ?"), "Feedback must be bound to the signed-in tester's own assignment.");
 assert(portal.includes("play_opt_in_confirmed_at"), "Tester opt-in confirmation state is missing.");
 assert(portal.includes("confirm_initial_smoke_test"), "Tester portal must provide an initial smoke-test self-confirmation.");
@@ -59,6 +64,9 @@ assert(!portal.includes('class="mark">7</span>'), "Tester portal must not use an
 assert(!portal.includes("password_verify("), "Tester portal must not collect or verify tester passwords.");
 assert(queue.includes("CREATE TABLE IF NOT EXISTS tester_portal_tokens"), "Queue database migration must create portal token storage.");
 assert(queue.includes("CREATE TABLE IF NOT EXISTS tester_feedback"), "Queue database migration must create feedback storage.");
+assert(queue.includes("CREATE TABLE IF NOT EXISTS chat_threads") && queue.includes("CREATE TABLE IF NOT EXISTS chat_messages"), "Queue database migration must create isolated Live Chat storage.");
+assert(queue.includes("chat_submission_limits") && queue.includes("CHAT_RETENTION_DAYS"), "Live Chat must retain rate-limit and purge controls.");
+assert(queue.includes("coordinatorChatPoll") && queue.includes("chatPostMessage($database, $testerId, 'coordinator'"), "Coordinator Live Chat must use the same protected thread boundary.");
 assert(queue.includes("play_opt_in_confirmed_at"), "Queue database migration must retain tester opt-in confirmation.");
 assert(queue.includes("withdrawal_requested_at") && queue.includes("deletion_requested_at"), "Queue database migration must retain tester privacy request timestamps.");
 assert(queue.includes("Record-deletion request:"), "Coordinator workspace must surface tester deletion requests.");

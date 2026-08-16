@@ -190,6 +190,67 @@ function portalAssignments(PDO $database, int $testerId): array
     return $query->fetchAll();
 }
 
+function portalChatPayload(PDO $database, array $tester, string $coordinatorName, int $afterId = 0): array
+{
+    $messages = chatMessages($database, (int) $tester['id'], 'tester', $afterId);
+    return array_map(static fn (array $message): array => [
+        'id' => (int) $message['id'],
+        'sender' => $message['sender_role'] === 'tester' ? 'You' : $coordinatorName,
+        'role' => $message['sender_role'],
+        'body' => (string) $message['body'],
+        'createdAt' => (string) $message['created_at'],
+    ], $messages);
+}
+
+function portalChatPoll(PDO $database, array $tester, string $coordinatorName, int $afterId, bool $stream = false): never
+{
+    session_write_close();
+    if ($stream) {
+        header('Content-Type: text/event-stream; charset=UTF-8');
+        header('Cache-Control: no-store, private');
+        header('X-Accel-Buffering: no');
+        for ($attempt = 0; $attempt < 20 && !connection_aborted(); $attempt++) {
+            $messages = portalChatPayload($database, $tester, $coordinatorName, $afterId);
+            if ($messages !== []) {
+                $afterId = (int) end($messages)['id'];
+                echo "event: messages\ndata: " . json_encode($messages, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES) . "\n\n";
+            } else {
+                echo ": keepalive\n\n";
+            }
+            @ob_flush();
+            flush();
+            sleep(1);
+        }
+        exit;
+    }
+    for ($attempt = 0; $attempt < 12; $attempt++) {
+        $messages = portalChatPayload($database, $tester, $coordinatorName, $afterId);
+        if ($messages !== []) break;
+        sleep(1);
+    }
+    header('Content-Type: application/json; charset=UTF-8');
+    header('Cache-Control: no-store, private');
+    echo json_encode(['messages' => $messages ?? []], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
+    exit;
+}
+
+function portalChatPanel(PDO $database, array $tester, string $coordinatorName): string
+{
+    $messages = portalChatPayload($database, $tester, $coordinatorName);
+    $items = '';
+    foreach ($messages as $message) {
+        $items .= '<article class="chat-message ' . ($message['role'] === 'tester' ? 'mine' : 'coordinator') . '" data-chat-message-id="' . (int) $message['id'] . '"><strong>' . e($message['sender']) . '</strong><div>' . nl2br(e($message['body'])) . '</div><small>' . e($message['createdAt']) . '</small><form method="post"><input type="hidden" name="action" value="delete_chat_message"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="message_id" value="' . (int) $message['id'] . '"><button class="button secondary" type="submit">Delete from my view</button></form></article>';
+    }
+    if ($items === '') $items = '<p class="muted" data-chat-empty>No messages yet. Use Live Chat for testing-program support; do not send credentials or account secrets.</p>';
+    $items = '<style>.live-chat .card-title{display:flex;justify-content:space-between;gap:1rem;align-items:start}.chat-messages{display:flex;min-height:14rem;max-height:30rem;overflow:auto;flex-direction:column;gap:.75rem;margin:1rem 0;padding:.2rem}.chat-message{max-width:82%;padding:.8rem .9rem;border:1px solid var(--line);border-radius:13px;background:#0e131d}.chat-message.mine{align-self:end;border-color:#3e988a;background:#173d38}.chat-message strong,.chat-message small{display:block}.chat-message small{margin-top:.4rem}.chat-message form{margin:0}.chat-message .button{margin-top:.55rem;padding:.45rem .65rem;font-size:11px}.chat-composer{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.7rem;align-items:end}.chat-composer textarea{min-height:3.7rem;margin:0}.chat-composer .button{margin:0}@media(max-width:560px){.live-chat .card-title,.chat-composer{display:block}.chat-composer .button{margin-top:.7rem}.chat-message{max-width:94%}}</style>' . $items;
+    return '<section class="card live-chat" data-live-chat data-chat-poll="/tester-portal.php?chat_poll=1" data-chat-stream="/tester-portal.php?chat_stream=1"><div class="card-title"><div><p class="eyebrow">Private support</p><h2>Live Chat with ' . e($coordinatorName) . '</h2><p class="muted small">Only you and ' . e($coordinatorName) . ' can view this tester-program conversation.</p></div><button class="button secondary" type="button" data-chat-detach>Detach ↗</button></div><div class="chat-messages" data-chat-messages aria-live="polite">' . $items . '</div><form method="post" class="chat-composer" data-chat-form><input type="hidden" name="action" value="send_chat"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><label class="visually-hidden" for="chat_body">Write a private chat message</label><textarea id="chat_body" name="chat_body" maxlength="' . CHAT_MAX_MESSAGE_LENGTH . '" required placeholder="Write a private message…"></textarea><button type="submit">Send</button></form></section><script src="/assets/onboarding-live-chat.js" defer></script>';
+}
+
+function portalRenderChatPopout(PDO $database, array $tester, string $coordinatorName): never
+{
+    portalPage('Live Chat — ' . $coordinatorName, '<div class="top"><div class="brand"><img class="brand-icon" src="/assets/project/app-icon.png" alt=""><span>24Seven.FM Player<br><small class="muted">Tester Live Chat with ' . e($coordinatorName) . '</small></span></div></div>' . portalChatPanel($database, $tester, $coordinatorName));
+}
+
 function portalRequestLink(PDO $database, array $config): void
 {
     $email = strtolower(portalText('email', 254, true));
@@ -287,8 +348,10 @@ function portalConfirmOptIn(PDO $database, array $tester): void
         throw new InvalidArgumentException('Save your complete profile and device details before confirming opt-in.');
     }
     $now = gmdate('c');
-    $database->prepare("INSERT INTO tester_onboarding(tester_id, onboarding_status, coordinator_note, orientation_email_status, orientation_email_attempts, updated_at, play_opt_in_confirmed_at) VALUES (?, 'ready', '', 'not_sent', 0, ?, ?) ON CONFLICT(tester_id) DO UPDATE SET onboarding_status = 'ready', play_opt_in_confirmed_at = excluded.play_opt_in_confirmed_at, updated_at = excluded.updated_at")->execute([(int) $tester['id'], $now, $now]);
-    portalRedirect('?notice=' . rawurlencode('Your Google Play opt-in confirmation is recorded. You are ready for a focused assignment.'));
+    $ready = is_string($tester['initial_smoke_test_confirmed_at'] ?? null) && $tester['initial_smoke_test_confirmed_at'] !== '';
+    $database->prepare("INSERT INTO tester_onboarding(tester_id, onboarding_status, coordinator_note, orientation_email_status, orientation_email_attempts, updated_at, play_opt_in_confirmed_at) VALUES (?, ?, '', 'not_sent', 0, ?, ?) ON CONFLICT(tester_id) DO UPDATE SET onboarding_status = excluded.onboarding_status, play_opt_in_confirmed_at = excluded.play_opt_in_confirmed_at, updated_at = excluded.updated_at")
+        ->execute([(int) $tester['id'], $ready ? 'ready' : 'profile_complete', $now, $now]);
+    portalRedirect('?notice=' . rawurlencode($ready ? 'Your Google Play opt-in confirmation is recorded. You are ready for a focused assignment.' : 'Your Google Play opt-in confirmation is recorded. Complete the short first-use smoke test next.'));
 }
 
 function portalConfirmInitialSmokeTest(PDO $database, array $tester): void
@@ -298,8 +361,8 @@ function portalConfirmInitialSmokeTest(PDO $database, array $tester): void
         throw new InvalidArgumentException('Record your Google Play opt-in before confirming the initial smoke test.');
     }
     $now = gmdate('c');
-    $database->prepare('UPDATE tester_onboarding SET initial_smoke_test_confirmed_at = ?, updated_at = ? WHERE tester_id = ?')->execute([$now, $now, (int) $tester['id']]);
-    portalRedirect('?notice=' . rawurlencode('Your initial smoke-test confirmation is recorded. Thank you.'));
+    $database->prepare("UPDATE tester_onboarding SET initial_smoke_test_confirmed_at = ?, onboarding_status = 'ready', updated_at = ? WHERE tester_id = ?")->execute([$now, $now, (int) $tester['id']]);
+    portalRedirect('?notice=' . rawurlencode('Your initial smoke-test confirmation is recorded. You are ready for a focused assignment.'));
 }
 
 function portalRequestPrivacyAction(PDO $database, array $tester): void
@@ -350,7 +413,7 @@ function portalRenderLinkConfirmation(PDO $database, string $token): never
     portalPage('Continue to tester portal', $content);
 }
 
-function portalRenderDashboard(PDO $database, array $tester, bool $adminPreview = false): never
+function portalRenderDashboard(PDO $database, array $tester, bool $adminPreview = false, string $coordinatorName = '24Seven.FM Coordinator'): never
 {
     $profile = profileSummary($tester);
     $assignments = portalAssignments($database, (int) $tester['id']);
@@ -361,7 +424,7 @@ function portalRenderDashboard(PDO $database, array $tester, bool $adminPreview 
     $optedIn = is_string($tester['play_opt_in_confirmed_at'] ?? null) && $tester['play_opt_in_confirmed_at'] !== '';
     $smokeTested = is_string($tester['initial_smoke_test_confirmed_at'] ?? null) && $tester['initial_smoke_test_confirmed_at'] !== '';
     $assigned = array_filter($assignments, static fn (array $assignment): bool => in_array($assignment['task_status'], ['assigned', 'in_progress', 'blocked'], true));
-    $steps = [[true, 'Profile identity', 'Your registered tester identity is active.'], [$profile['complete'], 'Profile and device', $profile['complete'] ? 'Your assignment coverage is complete.' : count($profile['missing']) . ' coverage updates are still needed.'], [$optedIn, 'Google Play opt-in', $optedIn ? 'Your self-confirmation is recorded.' : 'Complete opt-in in Google Play, then confirm it here.'], [$smokeTested, 'Initial smoke test', $smokeTested ? 'Your self-confirmation is recorded.' : 'Launch, play one station, switch stations, briefly background playback, and return to the Player.'], [count($assigned) > 0, 'Focused Tester Task', count($assigned) > 0 ? 'A coordinator has assigned focused work.' : 'You will see focused work here when it is assigned.']];
+    $steps = [[true, 'Applied', 'Your protected application and participation consent are recorded.'], [$profile['complete'], 'Profile & Device', $profile['complete'] ? 'Your assignment coverage is complete.' : count($profile['missing']) . ' coverage updates are still needed.'], [$optedIn, 'Play Opt-In', $optedIn ? 'Your self-confirmation is recorded.' : 'Complete opt-in in Google Play, then confirm it here.'], [$smokeTested, 'First-Use Smoke Test', $smokeTested ? 'Your self-confirmation is recorded.' : 'Launch, play one station, switch stations, briefly background playback, and return to the Player.'], [count($assigned) > 0, 'Active Assignment', count($assigned) > 0 ? 'Your current focused work is available below.' : 'A coordinator will add focused work when coverage is needed.']];
     $optInAction = !$optedIn
         ? '<section class="task" style="margin-top:22px"><p class="eyebrow">Next step after saving</p><h3>Google Play opt-in</h3><p>Save your current profile and device details above first. Then complete the opt-in and record it here.</p><p><a class="button secondary" href="https://play.google.com/apps/testing/com.codeframe78.twentyfourseven.player">Open Google Play opt-in</a></p><form method="post"><input type="hidden" name="action" value="confirm_opt_in"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><label><input style="width:auto" type="checkbox" name="confirm_opt_in" value="yes" required> I completed the Google Play opt-in with my registered account.</label><button class="button" type="submit">Record my opt-in confirmation</button></form></section>'
         : '';
@@ -391,7 +454,7 @@ function portalRenderDashboard(PDO $database, array $tester, bool $adminPreview 
         . '<section class="card"><h2>Onboarding checklist</h2><div>' . implode('', array_map(static fn (array $step): string => '<div class="step ' . ($step[0] ? 'done' : '') . '"><span class="dot">' . ($step[0] ? '✓' : '○') . '</span><span><b>' . e($step[1]) . '</b><small>' . e($step[2]) . '</small></span></div>', $steps)) . '</div></section>'
         . '<div class="two"><section class="card"><p class="eyebrow">Intake profile</p><h2>Keep your testing profile current</h2><form method="post"><input type="hidden" name="action" value="save_profile"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><label>Name</label><input name="display_name" maxlength="100" value="' . e($tester['display_name']) . '" required><label>Country or region</label><input name="country" maxlength="80" value="' . e($tester['country']) . '"><p class="muted small"><strong>Registered email:</strong> ' . e($tester['email']) . '<br>Email changes are reviewed by the coordinator because this address is your sign-in and Google Play eligibility identity.</p><label>Current device</label><input name="device" value="' . e($tester['device']) . '" required><label>Android version</label><input name="android_version" value="' . e($tester['android_version']) . '" required><label>Primary station</label>' . portalSelect('primary_station', PORTAL_PRIMARY_STATIONS, $tester['primary_station'], 'Choose a primary station') . '<label>Other familiar stations</label>' . portalCheckboxes('other_stations', PORTAL_STATIONS, listFromJson($tester['other_stations_json'])) . '<label>Device form factor</label>' . portalSelect('device_form_factor', PORTAL_DEVICE_TYPES, $tester['device_form_factor'], 'Choose a device type') . '<label>Other devices or configuration notes</label><textarea name="other_devices">' . e($tester['other_devices']) . '</textarea><label>Testing interests</label>' . portalCheckboxes('testing_interests', PORTAL_TESTING_INTERESTS, listFromJson($tester['interests_json'])) . '<label>Existing station access (optional; station names only)</label><p class="muted small">Guest testing does not require a 24Seven.FM account. Leave this clear or choose None; never create an account or enter credentials for this program.</p>' . portalCheckboxes('station_accounts', PORTAL_STATIONS + ['none' => 'None'], listFromJson($tester['station_accounts_json'])) . '<label>Network capabilities</label>' . portalCheckboxes('network_capabilities', PORTAL_NETWORK, listFromJson($tester['network_capabilities_json'])) . '<label>Audio/accessory capabilities</label>' . portalCheckboxes('audio_capabilities', PORTAL_AUDIO, listFromJson($tester['audio_capabilities_json'])) . '<label>Accessibility and alternative input</label>' . portalCheckboxes('accessibility_capabilities', PORTAL_ACCESSIBILITY, listFromJson($tester['accessibility_capabilities_json'])) . '<label>Testing comfort</label>' . portalSelect('testing_comfort', PORTAL_TESTING_COMFORT, $tester['testing_comfort'], 'Choose a testing comfort level') . '<label>Controlled-test preferences</label>' . portalCheckboxes('controlled_actions', PORTAL_CONTROLLED_ACTIONS, listFromJson($tester['controlled_actions_json'])) . '<label>Typical two-week availability</label>' . portalSelect('testing_availability', PORTAL_AVAILABILITY, $tester['testing_availability'], 'Choose availability') . '<label>Assignment notes or prior testing experience</label><textarea name="experience" maxlength="1200">' . e($tester['experience']) . '</textarea><button class="button" type="submit">Save intake profile and device</button></form>' . $optInAction . $smokeTestAction . '</section>'
         . '<section class="card"><p class="eyebrow">Active assignments</p><h2>Your focused testing work</h2><div class="grid" style="grid-template-columns:1fr">' . $assignmentCards . '</div></section></div>'
-        . '<section class="card"><p class="eyebrow">Task report</p><h2>Submit feedback for a focused task</h2><p class="muted">Include what you tried, expected, and observed. Do not include passwords, credentials, private messages, session information, or private screenshots.</p><form method="post"><input type="hidden" name="action" value="submit_feedback"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><label>Assigned task</label><select name="assignment_id" required><option value="">Choose an assigned task</option>' . implode('', array_map(static fn (array $assignment): string => '<option value="' . (int) $assignment['id'] . '">' . e($assignment['task_id'] . ' — ' . ucwords(str_replace('_', ' ', $assignment['task_status']))) . '</option>', $assignments)) . '</select><label>Feedback category</label><select name="category" required>' . implode('', array_map(static fn (string $key, string $label): string => '<option value="' . e($key) . '">' . e($label) . '</option>', array_keys(FEEDBACK_CATEGORIES), FEEDBACK_CATEGORIES)) . '</select><label>Outcome</label><select name="outcome" required><option value="pass">Pass / worked as expected</option><option value="issue">Issue found</option><option value="blocked">Blocked</option><option value="note">Usability note</option></select><label>Short title</label><input name="subject" maxlength="' . PORTAL_MAX_FEEDBACK_SUBJECT . '" required><label>Steps and result</label><textarea name="details" maxlength="' . PORTAL_MAX_FEEDBACK_DETAILS . '" required></textarea><button class="button" type="submit">Submit task report</button></form>' . ($reports === [] ? '' : '<h3 style="margin-top:24px">Recent reports</h3>' . implode('', array_map(static fn (array $report): string => '<p class="small"><span class="pill">' . e($report['outcome']) . '</span> ' . e(FEEDBACK_CATEGORIES[$report['category']] ?? FEEDBACK_CATEGORIES['other']) . ' · ' . e($report['subject']) . ' <span class="muted">' . e($report['created_at']) . '</span></p>', $reports))) . '</section>' . $privacyAction;
+        . '<section class="card"><p class="eyebrow">Task report</p><h2>Submit feedback for a focused task</h2><p class="muted">Include what you tried, expected, and observed. Do not include passwords, credentials, private messages, session information, or private screenshots.</p><form method="post"><input type="hidden" name="action" value="submit_feedback"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><label>Assigned task</label><select name="assignment_id" required><option value="">Choose an assigned task</option>' . implode('', array_map(static fn (array $assignment): string => '<option value="' . (int) $assignment['id'] . '">' . e($assignment['task_id'] . ' — ' . ucwords(str_replace('_', ' ', $assignment['task_status']))) . '</option>', $assignments)) . '</select><label>Feedback category</label><select name="category" required>' . implode('', array_map(static fn (string $key, string $label): string => '<option value="' . e($key) . '">' . e($label) . '</option>', array_keys(FEEDBACK_CATEGORIES), FEEDBACK_CATEGORIES)) . '</select><label>Outcome</label><select name="outcome" required><option value="pass">Pass / worked as expected</option><option value="issue">Issue found</option><option value="blocked">Blocked</option><option value="note">Usability note</option></select><label>Short title</label><input name="subject" maxlength="' . PORTAL_MAX_FEEDBACK_SUBJECT . '" required><label>Steps and result</label><textarea name="details" maxlength="' . PORTAL_MAX_FEEDBACK_DETAILS . '" required></textarea><button class="button" type="submit">Submit task report</button></form>' . ($reports === [] ? '' : '<h3 style="margin-top:24px">Recent reports</h3>' . implode('', array_map(static fn (array $report): string => '<p class="small"><span class="pill">' . e($report['outcome']) . '</span> ' . e(FEEDBACK_CATEGORIES[$report['category']] ?? FEEDBACK_CATEGORIES['other']) . ' · ' . e($report['subject']) . ' <span class="muted">' . e($report['created_at']) . '</span></p>', $reports))) . '</section>' . portalChatPanel($database, $tester, $coordinatorName) . $privacyAction;
     if ($adminPreview) {
         $content = '<p class="notice admin-preview"><strong>Read-only coordinator preview.</strong> This is what the tester sees. Profile, opt-in, and report controls are disabled here; no tester session or data is changed. <a href="/private-tester-queue.php?tester=' . (int) $tester['id'] . '">Return to the coordinator workspace</a>.</p>' . str_replace(['<form method="post">', '</form>'], ['<form method="post"><fieldset disabled>', '</fieldset></form>'], $content);
     }
@@ -405,7 +468,7 @@ try {
     $database = database($config);
     if ($adminPreviewTesterId !== null) {
         if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') fail(405, 'Tester previews are read-only.');
-        portalRenderDashboard($database, portalTesterById($database, $adminPreviewTesterId), true);
+        portalRenderDashboard($database, portalTesterById($database, $adminPreviewTesterId), true, coordinatorDisplayName($config));
     }
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && ($_POST['action'] ?? '') === 'request_link') {
         if (!hash_equals(TESTER_PORTAL_ORIGIN, $_SERVER['HTTP_ORIGIN'] ?? '')) fail(403, 'This request is not allowed.');
@@ -420,6 +483,10 @@ try {
     }
     if (!isset($_SESSION['tester_portal_id'])) portalRenderLogin();
     $tester = portalTester($database);
+    $coordinatorName = coordinatorDisplayName($config);
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && isset($_GET['chat_stream'])) portalChatPoll($database, $tester, $coordinatorName, max(0, (int) ($_GET['after'] ?? 0)), true);
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && isset($_GET['chat_poll'])) portalChatPoll($database, $tester, $coordinatorName, max(0, (int) ($_GET['after'] ?? 0)));
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && isset($_GET['chat_popout'])) portalRenderChatPopout($database, $tester, $coordinatorName);
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         if (!validCsrf()) fail(403, 'The request could not be verified.');
         $action = (string) ($_POST['action'] ?? '');
@@ -429,9 +496,19 @@ try {
         if ($action === 'confirm_initial_smoke_test') portalConfirmInitialSmokeTest($database, $tester);
         if ($action === 'request_privacy_action') portalRequestPrivacyAction($database, $tester);
         if ($action === 'submit_feedback') portalSubmitFeedback($database, $tester);
+        if ($action === 'send_chat') {
+            chatPostMessage($database, (int) $tester['id'], 'tester', (string) ($_POST['chat_body'] ?? ''));
+            portalRedirect('?notice=' . rawurlencode('Your Live Chat message was sent.'));
+        }
+        if ($action === 'delete_chat_message') {
+            $messageId = filter_var($_POST['message_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+            if ($messageId === false) throw new InvalidArgumentException('The requested chat message is invalid.');
+            chatSoftDeleteMessage($database, (int) $tester['id'], 'tester', $messageId);
+            portalRedirect('?notice=' . rawurlencode('Chat message removed from your view.'));
+        }
         throw new InvalidArgumentException('The requested portal action is invalid.');
     }
-    portalRenderDashboard($database, $tester);
+    portalRenderDashboard($database, $tester, false, $coordinatorName);
 } catch (InvalidArgumentException $exception) {
     portalRedirect('?error=' . rawurlencode($exception->getMessage()));
 } catch (Throwable $exception) {

@@ -32,12 +32,12 @@ navigation:
   - section: resources
     label: Resources
     path: /resources/
-    primary: false
+    primary: true
     description: Searchable architecture, research, testing, release, and contributor library.
   - section: privacy
     label: Privacy
     path: /privacy/
-    primary: false
+    primary: true
     description: Canonical app privacy notice with plain-language data boundaries.
 
 site_meta:
