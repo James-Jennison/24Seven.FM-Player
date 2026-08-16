@@ -62,6 +62,7 @@ assert(endpoint.includes("function isGuestTester(array $tester): bool"), "Queue 
 assert(endpoint.includes("function taskAllowsGuestTester(array $task): bool"), "Queue must use an explicit guest-task eligibility flag.");
 assert(endpoint.includes("Guest testers can receive only the account-free Guest testing tasks."), "Queue must block account-dependent assignments for guest testers.");
 assert(endpoint.includes("function renderOperationsDashboard"), "Queue must render an operations dashboard instead of every tester form at once");
+assert(endpoint.includes('class="roster-card"') && endpoint.includes('.operations-workspace>.roster-card{grid-column:1/-1}'), "Tester roster must use the full Operations workspace width.");
 assert(endpoint.includes("function renderTesterWorkspace"), "Queue must provide a focused per-tester workspace");
 assert(endpoint.includes("send_onboarding_email"), "Queue must support an individual orientation-email action");
 assert(endpoint.includes("This tester needs their profile update before an orientation email can be sent."), "Orientation must not bypass profile completion");
