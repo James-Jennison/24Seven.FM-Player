@@ -54,6 +54,7 @@ assert(endpoint.includes("Draft preview"), "The email composer must provide a re
 assert(client.includes("data-insert-variable"), "The email composer must provide variable insertion controls.");
 assert(endpoint.includes("function renderOperationsDashboard(PDO $database, string $notice = '', string $error = '', bool $emailOnly = false)"), "The admin workspace must support a separate Email surface.");
 assert(endpoint.includes("?email=1"), "The admin workspace must route Email separately from operations.");
+assert(!endpoint.includes('<details class="compose-card"'), "Operations must not duplicate the dedicated Email composer.");
 assert(endpoint.includes("profile_pending', 'profile_complete', 'ready', 'paused"), "Onboarding lifecycle statuses must exclude mail-only invitation/orientation events.");
 assert(endpoint.includes("Invitation and orientation are mail/archive events, not lifecycle gates."), "Legacy invitation/orientation states must migrate out of the evidence lifecycle.");
 assert(endpoint.includes("function profileSummary(array $tester): array"), "Queue must evaluate assignment-relevant profile completeness");
