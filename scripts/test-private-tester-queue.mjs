@@ -47,6 +47,9 @@ assert(endpoint.includes("function completeMailArchive(PDO $database"), "Queue m
 assert(endpoint.includes("function renderMailArchive(PDO $database)"), "Queue must provide a coordinator mail-archive view");
 assert(endpoint.includes("function renderMailRecord(PDO $database, int $archiveId)"), "Queue must provide an exact archived-message view");
 assert(endpoint.includes("?mail_archive=1"), "Queue must link coordinators to the sent-mail archive");
+assert(endpoint.includes("function mergeCoordinatorMailHtml"), "The email composer must resolve a bounded set of per-recipient variables.");
+assert(endpoint.includes("Draft preview"), "The email composer must provide a resolved draft preview before sending.");
+assert(client.includes("data-insert-variable"), "The email composer must provide variable insertion controls.");
 assert(endpoint.includes("profile_pending', 'profile_complete', 'invited', 'orientation_sent', 'ready', 'paused"), "Onboarding lifecycle statuses are incomplete");
 assert(endpoint.includes("function profileSummary(array $tester): array"), "Queue must evaluate assignment-relevant profile completeness");
 assert(endpoint.includes("function isGuestTester(array $tester): bool"), "Queue must identify testers with no station account as guest testers.");

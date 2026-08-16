@@ -146,6 +146,17 @@
     });
   });
 
+  document.querySelectorAll('[data-insert-variable]').forEach(function (button) {
+    button.addEventListener('mousedown', function (event) {
+      event.preventDefault();
+    });
+    button.addEventListener('click', function () {
+      restoreRange();
+      document.execCommand('insertText', false, button.dataset.insertVariable || '');
+      saveRange();
+    });
+  });
+
   form.addEventListener('submit', function (event) {
     hidden.value = editor.innerHTML;
     if (editor.textContent.trim()) return;

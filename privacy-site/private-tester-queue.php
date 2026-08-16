@@ -26,6 +26,7 @@ const MAX_SUBJECT_LENGTH = 180;
 const MAX_BODY_LENGTH = 12_000;
 const MAX_HTML_BODY_LENGTH = 24_000;
 const MAIL_SUBMISSION_HOST = 'mail.jamesjennison.net';
+const TESTER_PORTAL_PUBLIC_URL = 'https://player.jamesjennison.net/tester-portal.php';
 const TASK_REGISTRY_FILE = 'assets/tester-tasks.json';
 const MAX_ASSIGNMENT_CONFIGURATION_LENGTH = 300;
 const MAX_ASSIGNMENT_NOTE_LENGTH = 1_000;
@@ -1225,6 +1226,23 @@ function plainTextToHtml(string $text): string
     return $html;
 }
 
+/**
+ * Resolve the small, explicit set of coordinator-mail variables for one
+ * recipient. Values are escaped because HTML templates can place a variable
+ * in either a text node or a link attribute. The stored batch remains the
+ * editable draft; every archive record receives the resolved exact message.
+ */
+function mergeCoordinatorMailHtml(string $html, array $tester): string
+{
+    $status = onboardingStatus($tester);
+    return strtr($html, [
+        '{{tester_name}}' => e((string) ($tester['display_name'] ?? 'Tester')),
+        '{{onboarding_status}}' => e(onboardingStatusLabel($status)),
+        '{{tester_portal_url}}' => e(TESTER_PORTAL_PUBLIC_URL),
+        '{{program_name}}' => '24Seven.FM Player Closed Alpha',
+    ]);
+}
+
 function selectedTesterIds(): array
 {
     $raw = $_POST['tester_ids'] ?? [];
@@ -1522,7 +1540,7 @@ function renderOperationsDashboard(PDO $database, string $notice = '', string $e
 
     $message = $notice === '' ? '' : '<p class="notice">' . e($notice) . '</p>';
     $message .= $error === '' ? '' : '<p class="notice error">' . e($error) . '</p>';
-    $editor = '<label for="email-template">Email template</label><select id="email-template"><option value="">Custom email</option><option value="profile-update">Profile update request</option><option value="welcome">Welcome to the 24Seven.FM Player Google Play Closed Test</option><option value="feedback">Testing feedback request</option><option value="new-build">New build available</option><option value="reminder">Reminder to test</option><option value="known-issue">Known issue / workaround</option><option value="test-session">Test session request</option><option value="test-complete">Thank you / test complete</option><option value="tester-status">Tester status update</option><option value="release-signoff">Release candidate sign-off</option></select><p class="muted">Choose a template or write a custom message. The queue always sends one individual, multipart email per selected tester.</p><label for="body-editor">Message</label><div class="toolbar" role="toolbar" aria-label="Email text formatting"><button type="button" data-format="bold"><strong>B</strong><span class="visually-hidden">Bold</span></button><button type="button" data-format="italic"><em>I</em><span class="visually-hidden">Italic</span></button><button type="button" data-format="underline"><u>U</u><span class="visually-hidden">Underline</span></button><button type="button" data-format="insertUnorderedList">Bullets</button><button type="button" data-format="insertOrderedList">Numbered list</button><button type="button" data-format="createLink">Link</button><button type="button" data-format="removeFormat">Clear format</button></div><div id="body-editor" class="editor" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Write a message for the selected testers."></div><input type="hidden" name="body_html" id="body-html"><noscript><label for="body">Message</label><textarea id="body" name="body" maxlength="' . MAX_BODY_LENGTH . '" required></textarea></noscript>';
+    $editor = '<label for="email-template">Email template</label><select id="email-template"><option value="">Custom email</option><option value="profile-update">Profile update request</option><option value="welcome">Welcome to the 24Seven.FM Player Google Play Closed Test</option><option value="feedback">Testing feedback request</option><option value="new-build">New build available</option><option value="reminder">Reminder to test</option><option value="known-issue">Known issue / workaround</option><option value="test-session">Test session request</option><option value="test-complete">Thank you / test complete</option><option value="tester-status">Tester status update</option><option value="release-signoff">Release candidate sign-off</option></select><p class="muted">Choose a template or write a custom message. The queue always sends one individual, multipart email per selected tester.</p><label for="body-editor">Message</label><div class="toolbar" role="toolbar" aria-label="Email text formatting"><button type="button" data-format="bold"><strong>B</strong><span class="visually-hidden">Bold</span></button><button type="button" data-format="italic"><em>I</em><span class="visually-hidden">Italic</span></button><button type="button" data-format="underline"><u>U</u><span class="visually-hidden">Underline</span></button><button type="button" data-format="insertUnorderedList">Bullets</button><button type="button" data-format="insertOrderedList">Numbered list</button><button type="button" data-format="createLink">Link</button><button type="button" data-format="removeFormat">Clear format</button></div><div class="toolbar" role="toolbar" aria-label="Email variables"><button type="button" data-insert-variable="{{tester_name}}">Tester name</button><button type="button" data-insert-variable="{{onboarding_status}}">Onboarding status</button><button type="button" data-insert-variable="{{tester_portal_url}}">Tester portal URL</button><button type="button" data-insert-variable="{{program_name}}">Program name</button></div><p class="muted small">Variables resolve separately for each recipient and the exact sent version is retained in the protected archive.</p><div id="body-editor" class="editor" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Write a message for the selected testers."></div><input type="hidden" name="body_html" id="body-html"><noscript><label for="body">Message</label><textarea id="body" name="body" maxlength="' . MAX_BODY_LENGTH . '" required></textarea></noscript>';
     $archiveCount = (int) $database->query('SELECT COUNT(*) FROM tester_mail_archive')->fetchColumn();
 
     $recipientRows = implode('', array_map(static function (array $tester) use ($composeForId): string {
@@ -1633,14 +1651,21 @@ function renderConfirmation(PDO $database, int $batchId): never
     if ($batch === false) {
         redirect('?error=' . rawurlencode('The prepared email is no longer available.'));
     }
-    $recipients = $database->prepare('SELECT display_name, email FROM email_batch_recipients JOIN testers ON testers.id = tester_id WHERE batch_id = ? ORDER BY testers.id');
+    $recipients = $database->prepare('SELECT testers.display_name, testers.email, onboarding.onboarding_status FROM email_batch_recipients JOIN testers ON testers.id = tester_id LEFT JOIN tester_onboarding AS onboarding ON onboarding.tester_id = testers.id WHERE batch_id = ? ORDER BY testers.id');
     $recipients->execute([$batchId]);
     $list = '';
-    foreach ($recipients->fetchAll() as $recipient) {
+    $recipientRecords = $recipients->fetchAll();
+    foreach ($recipientRecords as $recipient) {
         $list .= '<li>' . e($recipient['display_name']) . ' <small>&lt;' . e($recipient['email']) . '&gt;</small></li>';
     }
-    $html = is_string($batch['body_html'] ?? null) && $batch['body_html'] !== '' ? $batch['body_html'] : plainTextToHtml($batch['body']);
-    $content = '<h1>Review delivery</h1><section><h2>Recipients</h2><p class="muted">Each recipient receives an individual email. No recipient is placed in To, Cc, or Bcc with another tester.</p><ol>' . $list . '</ol></section><section><h2>' . e($batch['subject']) . '</h2><div style="background:#fff;color:#182033;padding:1rem;border-radius:.4rem">' . $html . '</div><h3>Plain-text alternative</h3><pre style="white-space:pre-wrap;font:inherit">' . e($batch['body']) . '</pre></section><form method="post"><input type="hidden" name="action" value="send"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="batch_id" value="' . (int) $batch['id'] . '"><button class="danger" type="submit">Send to these recipients</button></form><p><a href="/private-tester-queue.php">Cancel and return to queue</a></p>';
+    $previewRecipient = $recipientRecords[0] ?? null;
+    if (!is_array($previewRecipient)) {
+        redirect('?error=' . rawurlencode('This prepared email has no active recipients.'));
+    }
+    $template = is_string($batch['body_html'] ?? null) && $batch['body_html'] !== '' ? $batch['body_html'] : plainTextToHtml($batch['body']);
+    $html = mergeCoordinatorMailHtml($template, $previewRecipient);
+    $body = plainTextFromHtml($html);
+    $content = '<h1>Review delivery</h1><section><h2>Recipients</h2><p class="muted">Each recipient receives an individual email. No recipient is placed in To, Cc, or Bcc with another tester.</p><ol>' . $list . '</ol></section><section><p class="eyebrow">Draft preview</p><h2>' . e($batch['subject']) . '</h2><p class="muted">This preview resolves variables for the first selected recipient. Each recipient receives their own resolved message, and that exact version is preserved in the sent archive.</p><div style="background:#fff;color:#182033;padding:1rem;border-radius:.4rem">' . $html . '</div><h3>Plain-text alternative</h3><pre style="white-space:pre-wrap;font:inherit">' . e($body) . '</pre></section><form method="post"><input type="hidden" name="action" value="send"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="batch_id" value="' . (int) $batch['id'] . '"><button class="danger" type="submit">Send to these recipients</button></form><p><a href="/private-tester-queue.php">Cancel and return to queue</a></p>';
     renderPage('Review tester email', $content);
 }
 
@@ -1960,15 +1985,17 @@ try {
             if ($batch === false) {
                 throw new InvalidArgumentException('This email batch was already sent or is unavailable.');
             }
-            $recipients = $database->prepare("SELECT testers.id, testers.email FROM email_batch_recipients JOIN testers ON testers.id = tester_id WHERE batch_id = ? AND delivery_status = 'pending' ORDER BY testers.id");
+            $recipients = $database->prepare("SELECT testers.id, testers.email, testers.display_name, onboarding.onboarding_status FROM email_batch_recipients JOIN testers ON testers.id = tester_id LEFT JOIN tester_onboarding AS onboarding ON onboarding.tester_id = testers.id WHERE batch_id = ? AND delivery_status = 'pending' ORDER BY testers.id");
             $recipients->execute([$batchId]);
             $update = $database->prepare('UPDATE email_batch_recipients SET delivery_status = ?, accepted_at = ? WHERE batch_id = ? AND tester_id = ?');
             $accepted = 0;
             $failed = 0;
             foreach ($recipients->fetchAll() as $recipient) {
-                $html = is_string($batch['body_html'] ?? null) && $batch['body_html'] !== '' ? $batch['body_html'] : plainTextToHtml($batch['body']);
-                $archiveId = prepareMailArchive($database, (int) $recipient['id'], 'batch', $batch['subject'], $batch['body'], $html, $batchId);
-                $delivered = sendIndividualMail($config, $recipient['email'], $batch['subject'], $batch['body'], $html);
+                $template = is_string($batch['body_html'] ?? null) && $batch['body_html'] !== '' ? $batch['body_html'] : plainTextToHtml($batch['body']);
+                $html = mergeCoordinatorMailHtml($template, $recipient);
+                $body = plainTextFromHtml($html);
+                $archiveId = prepareMailArchive($database, (int) $recipient['id'], 'batch', $batch['subject'], $body, $html, $batchId);
+                $delivered = sendIndividualMail($config, $recipient['email'], $batch['subject'], $body, $html);
                 completeMailArchive($database, $archiveId, $delivered);
                 $update->execute([$delivered ? 'accepted' : 'failed', gmdate('c'), $batchId, $recipient['id']]);
                 $delivered ? $accepted++ : $failed++;
