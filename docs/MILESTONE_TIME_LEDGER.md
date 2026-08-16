@@ -1252,10 +1252,10 @@ This addendum is a three-phase operational gate for the private onboarding porta
 | Phase | Status | Authorized objective | Required evidence before advancing |
 | --- | --- | --- | --- |
 | Phase 1 — Pre-Flight | Complete locally on `August 15, 2026 at 9:18:47 PM PDT (UTC−07:00)` | Validate schema migration behavior, Live Chat isolation/security, retention, and email rendering. | Passing local migration, security, chat, and mail-rendering contracts; commit/PR reference. |
-| Phase 2 — Staging & Internal Smoke Test | Pending | Validate coordinator composer/task/chat flows and retention purge with staging-only records. | Isolated staging worksheet and aggregate-only results. |
+| Phase 2 — Staging & Internal Smoke Test | In progress — local harness complete; isolated-host run pending | Validate coordinator composer/task/chat flows and retention purge with staging-only records. | Isolated staging worksheet and aggregate-only results. |
 | Phase 3 — Controlled Release | Pending | Feature-flagged initial Alpha cohort rollout. | Explicit owner approval, database backup, migration result, flag/cohort record, rollback evidence, and aggregate post-enable result. |
 
-Phase 1 was executed locally with `test-onboarding-live-chat.php`, importer/auto-onboarding migration contracts, administrator security, coordinator email rendering, private email encoding, task-routing, and tester-portal contracts. No staging, deployment, mail handoff, or production data action occurred. Active-time totals are not reconstructed here because this gate was authorized and recorded after implementation work; preserve any future Phase 2/3 intervals prospectively under the operating procedure below.
+Phase 1 was executed locally with `test-onboarding-live-chat.php`, importer/auto-onboarding migration contracts, administrator security, coordinator email rendering, private email encoding, task-routing, and tester-portal contracts. Phase 2 now adds `test-onboarding-phase2-ui.mjs` to verify the separate coordinator workspaces, resolved-email review surface, named tester/coordinator pop-out titles, same-origin chat transport, SSE/polling fallback, and retention-purge hook before the isolated-host session. No staging, deployment, mail handoff, or production data action occurred. Active-time totals are not reconstructed here because these gates were authorized and recorded after implementation work; preserve any future isolated-host Phase 2/3 intervals prospectively under the operating procedure below.
 
 ## Historical milestone and legacy-ID crosswalk
 

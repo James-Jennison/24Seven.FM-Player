@@ -94,6 +94,12 @@ Required evidence: the legacy invitation/orientation-state migration resolves to
 
 **Purpose:** Use an isolated staging copy and non-production test records to validate the protected operator flow.
 
+Run before the staging session to verify the local workspace/pop-out contract:
+
+```bash
+node scripts/test-onboarding-phase2-ui.mjs
+```
+
 Required checks:
 
 1. Sign in as a coordinator and validate the separate Operations, Email, and Live Chat workspaces.
