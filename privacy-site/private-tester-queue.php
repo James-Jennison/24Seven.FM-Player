@@ -578,7 +578,7 @@ function requireAuthentication(array $config): void
     }
 }
 
-function renderPage(string $title, string $content): never
+function renderPage(string $title, string $content, bool $showCoordinatorNavigation = true): never
 {
     header('Content-Type: text/html; charset=UTF-8');
     privateResponseHeaders();
@@ -590,8 +590,9 @@ function renderPage(string $title, string $content): never
     $operationsClass = $activeWorkspace === 'operations' ? ' active' : '';
     $chatClass = $activeWorkspace === 'chat' ? ' active' : '';
     $emailClass = $activeWorkspace === 'email' ? ' active' : '';
+    $loginLayout = $showCoordinatorNavigation ? '' : '<style>.global-rail{display:none}.app-shell{display:block}.desktop{padding:1.5rem}</style>';
     echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'
-        . e($title) . '</title><style>'
+        . e($title) . '</title>' . $loginLayout . '<style>'
         . 'body{margin:0;background:#090c15;color:#f7f4ec;font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
 .shell{max-width:72rem;margin:2.5rem auto;padding:0 1.25rem}
 h1,h2{line-height:1.2;letter-spacing:-.01em}
@@ -707,7 +708,7 @@ function renderLogin(string $error = ''): never
         ? 'Use the current six-digit code from your authenticator app. Sessions expire automatically; repeated unsuccessful attempts are temporarily limited.'
         : 'Staging coordinator sign-in uses the administrator password only. Sessions expire automatically; repeated unsuccessful attempts are temporarily limited.';
     renderPage('Administrator sign in · 24Seven.FM Player', '<section class="login"><p class="product-mark">24Seven.FM Player</p><h1>Administrator sign in</h1><p class="muted">Private coordinator access only. Use your administrator password on a trusted device.</p>' . $message
-        . '<form method="post" action="/private-tester-queue.php"><input type="hidden" name="action" value="login"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><label for="username">Administrator login name</label><input id="username" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="' . ADMIN_LOGIN_NAME_MAX_LENGTH . '" required autofocus><label for="password">Administrator password</label><input id="password" name="password" type="password" autocomplete="current-password" maxlength="' . ADMIN_LOGIN_MAX_PASSWORD_BYTES . '" required>' . $mfaFields . '<button type="submit">Sign in securely</button></form><p class="muted small">' . e($mfaNotice) . '</p></section>');
+        . '<form method="post" action="/private-tester-queue.php"><input type="hidden" name="action" value="login"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><label for="username">Administrator login name</label><input id="username" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="' . ADMIN_LOGIN_NAME_MAX_LENGTH . '" required autofocus><label for="password">Administrator password</label><input id="password" name="password" type="password" autocomplete="current-password" maxlength="' . ADMIN_LOGIN_MAX_PASSWORD_BYTES . '" required>' . $mfaFields . '<button type="submit">Sign in securely</button></form><p class="muted small">' . e($mfaNotice) . '</p></section>', false);
 }
 
 function field(string $name, int $maximum, bool $required = true, bool $singleLine = false): string
