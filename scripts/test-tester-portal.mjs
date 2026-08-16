@@ -65,6 +65,7 @@ assert(!portal.includes("password_verify("), "Tester portal must not collect or 
 assert(queue.includes("CREATE TABLE IF NOT EXISTS tester_portal_tokens"), "Queue database migration must create portal token storage.");
 assert(queue.includes("CREATE TABLE IF NOT EXISTS tester_feedback"), "Queue database migration must create feedback storage.");
 assert(queue.includes("CREATE TABLE IF NOT EXISTS chat_threads") && queue.includes("CREATE TABLE IF NOT EXISTS chat_messages"), "Queue database migration must create isolated Live Chat storage.");
+assert(queue.includes("recipient_role TEXT NOT NULL"), "Live Chat messages must persist both sender and recipient roles.");
 assert(queue.includes("chat_submission_limits") && queue.includes("CHAT_RETENTION_DAYS"), "Live Chat must retain rate-limit and purge controls.");
 assert(queue.includes("coordinatorChatPoll") && queue.includes("chatPostMessage($database, $testerId, 'coordinator'"), "Coordinator Live Chat must use the same protected thread boundary.");
 assert(queue.includes("play_opt_in_confirmed_at"), "Queue database migration must retain tester opt-in confirmation.");

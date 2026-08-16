@@ -15,6 +15,22 @@ function expectChat(bool $condition, string $message): void
     if (!$condition) throw new RuntimeException($message);
 }
 
+$legacyPath = tempnam(sys_get_temp_dir(), 'onboarding-live-chat-legacy-');
+if ($legacyPath === false) throw new RuntimeException('Unable to create legacy chat storage.');
+try {
+    $legacy = new PDO('sqlite:' . $legacyPath, null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+    $legacy->exec("CREATE TABLE chat_threads (id INTEGER PRIMARY KEY, tester_id INTEGER NOT NULL UNIQUE, tester_deleted_at TEXT, coordinator_deleted_at TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, last_message_at TEXT);
+        CREATE TABLE chat_messages (id INTEGER PRIMARY KEY, thread_id INTEGER NOT NULL, sender_role TEXT NOT NULL, body TEXT NOT NULL, created_at TEXT NOT NULL, read_at TEXT, tester_deleted_at TEXT, coordinator_deleted_at TEXT);
+        INSERT INTO chat_threads(id, tester_id, created_at, updated_at) VALUES (1, 1, '2026-08-15T00:00:00Z', '2026-08-15T00:00:00Z');
+        INSERT INTO chat_messages(id, thread_id, sender_role, body, created_at) VALUES (1, 1, 'tester', 'legacy message', '2026-08-15T00:00:00Z');");
+    unset($legacy);
+    $migrated = database(['database_path' => $legacyPath]);
+    expectChat((string) $migrated->query('SELECT recipient_role FROM chat_messages WHERE id = 1')->fetchColumn() === 'coordinator', 'Existing chat records must receive the correct recipient role during migration.');
+    unset($migrated);
+} finally {
+    @unlink($legacyPath);
+}
+
 $path = tempnam(sys_get_temp_dir(), 'onboarding-live-chat-');
 if ($path === false) throw new RuntimeException('Unable to create temporary chat storage.');
 try {
@@ -32,6 +48,7 @@ try {
     $coordinatorView = chatMessages($database, 1, 'coordinator');
     expectChat(count($testerView) === 2 && count($coordinatorView) === 2, 'Both authorized roles must see the single tester thread.');
     expectChat($testerView[1]['sender_role'] === 'coordinator', 'Tester view must preserve the coordinator sender role.');
+    expectChat($testerView[0]['recipient_role'] === 'coordinator' && $testerView[1]['recipient_role'] === 'tester', 'Each message must persist the intended recipient role.');
     expectChat(chatMessages($database, 2, 'tester') === [], 'A tester thread must never expose another tester’s messages.');
     expectChat((string) $database->query('SELECT read_at FROM chat_messages WHERE id = ' . $coordinatorMessage)->fetchColumn() !== '', 'Opening a tester thread must mark coordinator messages read.');
 

@@ -231,6 +231,7 @@ function database(array $config): PDO
             id INTEGER PRIMARY KEY,
             thread_id INTEGER NOT NULL REFERENCES chat_threads(id) ON DELETE CASCADE,
             sender_role TEXT NOT NULL CHECK(sender_role IN (\'tester\', \'coordinator\')),
+            recipient_role TEXT NOT NULL CHECK(recipient_role IN (\'tester\', \'coordinator\')),
             body TEXT NOT NULL,
             created_at TEXT NOT NULL,
             read_at TEXT,
@@ -288,6 +289,11 @@ function database(array $config): PDO
     }
     if (!in_array('rejected_at', $onboardingColumns, true)) {
         $database->exec('ALTER TABLE tester_onboarding ADD COLUMN rejected_at TEXT');
+    }
+    $chatMessageColumns = array_column($database->query('PRAGMA table_info(chat_messages)')->fetchAll(), 'name');
+    if (!in_array('recipient_role', $chatMessageColumns, true)) {
+        $database->exec("ALTER TABLE chat_messages ADD COLUMN recipient_role TEXT NOT NULL DEFAULT 'tester' CHECK(recipient_role IN ('tester', 'coordinator'))");
+        $database->exec("UPDATE chat_messages SET recipient_role = CASE sender_role WHEN 'tester' THEN 'coordinator' ELSE 'tester' END");
     }
     $feedbackColumns = array_column($database->query('PRAGMA table_info(tester_feedback)')->fetchAll(), 'name');
     if (!in_array('category', $feedbackColumns, true)) {
@@ -775,12 +781,16 @@ function chatConsumeSubmissionLimit(PDO $database, int $threadId, string $sender
 
 function chatPostMessage(PDO $database, int $testerId, string $senderRole, string $body): int
 {
+    if (!in_array($senderRole, ['tester', 'coordinator'], true)) {
+        throw new InvalidArgumentException('The chat sender is invalid.');
+    }
     $body = chatMessageBody($body);
     chatPurgeExpired($database);
     $threadId = chatThreadForTester($database, $testerId);
     chatConsumeSubmissionLimit($database, $threadId, $senderRole);
     $now = gmdate('c');
-    $database->prepare('INSERT INTO chat_messages(thread_id, sender_role, body, created_at) VALUES (?, ?, ?, ?)')->execute([$threadId, $senderRole, $body, $now]);
+    $recipientRole = $senderRole === 'tester' ? 'coordinator' : 'tester';
+    $database->prepare('INSERT INTO chat_messages(thread_id, sender_role, recipient_role, body, created_at) VALUES (?, ?, ?, ?, ?)')->execute([$threadId, $senderRole, $recipientRole, $body, $now]);
     $database->prepare('UPDATE chat_threads SET updated_at = ?, last_message_at = ?, tester_deleted_at = NULL, coordinator_deleted_at = NULL WHERE id = ?')->execute([$now, $now, $threadId]);
     return (int) $database->lastInsertId();
 }
@@ -791,10 +801,10 @@ function chatMessages(PDO $database, int $testerId, string $viewerRole, int $aft
     chatPurgeExpired($database);
     $threadId = chatThreadForTester($database, $testerId);
     $deletedColumn = $viewerRole === 'tester' ? 'tester_deleted_at' : 'coordinator_deleted_at';
-    $statement = $database->prepare("SELECT id, sender_role, body, created_at, read_at FROM chat_messages WHERE thread_id = ? AND id > ? AND {$deletedColumn} IS NULL ORDER BY id ASC LIMIT 100");
+    $statement = $database->prepare("SELECT id, sender_role, recipient_role, body, created_at, read_at FROM chat_messages WHERE thread_id = ? AND id > ? AND {$deletedColumn} IS NULL ORDER BY id ASC LIMIT 100");
     $statement->execute([$threadId, max(0, $afterId)]);
     $messages = $statement->fetchAll();
-    $database->prepare('UPDATE chat_messages SET read_at = ? WHERE thread_id = ? AND sender_role <> ? AND read_at IS NULL')->execute([gmdate('c'), $threadId, $viewerRole]);
+    $database->prepare('UPDATE chat_messages SET read_at = ? WHERE thread_id = ? AND recipient_role = ? AND read_at IS NULL')->execute([gmdate('c'), $threadId, $viewerRole]);
     return $messages;
 }
 
