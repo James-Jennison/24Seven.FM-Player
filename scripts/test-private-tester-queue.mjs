@@ -88,8 +88,13 @@ assert(!assignmentMessageSource.includes("$assignment['display_name']"), "Copy a
 assert(client.includes("data-assignment-copy"), "Copy assignment client action is missing");
 assert(client.includes("data-task-assignment-form"), "Task preview client integration is missing");
 assert(client.includes("'profile-update'"), "Profile-update email template is missing");
-assert(client.includes('Hi {{tester_name}},'), "Profile-update emails must greet each tester by display name.");
+assert((client.match(/<p>Hi \{\{tester_name\}\},<\/p>/g) || []).length === 10, "Every built-in email template must greet each tester by display name.");
 assert(client.includes('href="{{tester_portal_url}}"'), "Profile-update emails must link recipients to the self-service tester portal.");
+const templateOrder = endpoint.indexOf('<option value="welcome">') < endpoint.indexOf('<option value="profile-update">')
+  && endpoint.indexOf('<option value="profile-update">') < endpoint.indexOf('<option value="new-build">')
+  && endpoint.indexOf('<option value="new-build">') < endpoint.indexOf('<option value="feedback">')
+  && endpoint.indexOf('<option value="test-complete">') < endpoint.indexOf('<option value="">Custom email</option>');
+assert(templateOrder, "Email templates must start with Welcome and keep Custom email last.");
 assert(client.includes("checkbox.required = mode === 'required'"), "Required mutation authorization is not enforced in the UI");
 assert(tasks.find((task) => task.id === "TT-09").safetyWarning.includes("ONE LIVE REQUEST MAXIMUM"), "TT-09 safety boundary is missing");
 for (const id of ["TT-01", "TT-02", "TT-03", "TT-04", "TT-05", "TT-06", "TT-14", "TT-15", "TT-16"]) {
