@@ -3,9 +3,12 @@
 
   var operationsPanels = document.querySelector('[data-operations-panels]');
   if (operationsPanels) {
+    var applicationsPanel = operationsPanels.querySelector('[data-operations-panel="applications"]');
+    var applicationsEmpty = applicationsPanel && !applicationsPanel.querySelector('.application-rows');
+    if (applicationsEmpty) applicationsPanel.classList.add('is-empty');
     var layoutStorageKey = 'player-operations-freeform-layout-v1';
     var defaultLayout = {
-      applications: { x: 0, y: 0, width: 59, height: 544 },
+      applications: { x: 0, y: 0, width: 59, height: applicationsEmpty ? 96 : 544 },
       roster: { x: 62, y: 0, width: 38, height: 544 }
     };
     var layout = JSON.parse(JSON.stringify(defaultLayout));
@@ -23,17 +26,25 @@
       // A blocked storage area only affects layout persistence, never the workspace.
     }
 
+    // An empty review queue is a compact, movable status window. Its former
+    // expanded dimensions remain in local storage for when applications return.
+    if (applicationsEmpty) layout.applications.height = 96;
+
     function isCompactViewport() {
       return window.matchMedia('(max-width: 1040px)').matches;
     }
 
-    function limits() {
+    function limits(id) {
       var bounds = operationsPanels.getBoundingClientRect();
-      return { width: Math.max(1, bounds.width), minWidth: Math.min(56, Math.max(24, (240 / Math.max(1, bounds.width)) * 100)), minHeight: 288 };
+      return {
+        width: Math.max(1, bounds.width),
+        minWidth: Math.min(56, Math.max(24, (240 / Math.max(1, bounds.width)) * 100)),
+        minHeight: id === 'applications' && applicationsEmpty ? 84 : 288
+      };
     }
 
-    function clampPanel(panel) {
-      var limit = limits();
+    function clampPanel(panel, id) {
+      var limit = limits(id);
       panel.width = Math.max(limit.minWidth, Math.min(100, panel.width));
       panel.height = Math.max(limit.minHeight, panel.height);
       panel.x = Math.max(0, Math.min(100 - panel.width, panel.x));
@@ -52,8 +63,9 @@
       if (isCompactViewport()) return;
       var bottom = 0;
       operationsPanels.querySelectorAll('[data-operations-panel]').forEach(function (panel) {
-        var state = layout[panel.dataset.operationsPanel];
-        clampPanel(state);
+        var id = panel.dataset.operationsPanel;
+        var state = layout[id];
+        clampPanel(state, id);
         panel.style.left = state.x + '%';
         panel.style.top = state.y + 'px';
         panel.style.width = state.width + '%';
@@ -65,17 +77,17 @@
 
     function movePanel(id, deltaX, deltaY) {
       var state = layout[id];
-      state.x += (deltaX / limits().width) * 100;
+      state.x += (deltaX / limits(id).width) * 100;
       state.y += deltaY;
-      clampPanel(state);
+      clampPanel(state, id);
       applyOperationsLayout();
     }
 
     function resizePanel(id, deltaX, deltaY) {
       var state = layout[id];
-      state.width += (deltaX / limits().width) * 100;
+      state.width += (deltaX / limits(id).width) * 100;
       state.height += deltaY;
-      clampPanel(state);
+      clampPanel(state, id);
       applyOperationsLayout();
     }
 
