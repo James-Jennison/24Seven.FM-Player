@@ -67,6 +67,19 @@ The five-minute initial smoke check is: launch, play a station for a few minutes
 
 The tester dashboard presents the same five evidence points as `Applied`, `Profile & Device`, `Play Opt-In`, `First-Use Smoke Test`, and `Active Assignment`. Orientation is recorded through the existing coordinator-mail archive and is not a blocking tracker stage. `Ready` is set only after the tester records both Play opt-in and the initial smoke test; an active assignment is current work, not a prerequisite for that ready state.
 
+## Private portal interaction contract
+
+The coordinator queue and tester portal are separate authenticated surfaces. They share only the protected tester-program storage boundary; a tester session never opens the roster, coordinator notes, mail archive, or another tester’s conversation.
+
+| Surface | Authorized interaction | Result |
+| --- | --- | --- |
+| Coordinator workspace | Review applications, record onboarding, assign focused tasks, compose email, and reply to any active tester’s Live Chat | Coordinator-only state and an individual tester conversation. |
+| Tester portal | Update the user’s own coverage, self-confirm Play opt-in/smoke evidence, report assigned work, and use Live Chat | Only the authenticated tester’s records and one assigned-coordinator conversation. |
+| Live Chat polling/SSE | Same authenticated portal surface requests incremental messages; polling remains the fallback | Messages contain sender/recipient role, time, read state, and per-view soft-deletion state. |
+| Coordinator email composer | Select reviewed recipients, use a template or explicit variable, review the resolved draft, and hand off individual multipart messages | The archive records the exact resolved per-recipient content and transport outcome. |
+
+The supported composer variables are `{{tester_name}}`, `{{onboarding_status}}`, `{{tester_portal_url}}`, and `{{program_name}}`. They are resolved only inside the protected review/send flow. A preview is resolved for the first selected recipient before handoff; every recipient receives an independently resolved message, and the archive preserves that recipient’s exact text/HTML and accepted/failed transport status. This is coordinator email, not Live Chat and not Player/station private messaging.
+
 ## Feedback and safety
 
 The private portal’s existing feedback storage now categorizes reports as playback, connection/reconnection, station switching, metadata/artwork, favorites, media controls, audio accessories, layout/accessibility, performance/battery, crash/freeze, or other. It stores only the tester’s entered report plus the existing task association and timestamp. It does not attach logs, credentials, tokens, private files, or device identifiers.
