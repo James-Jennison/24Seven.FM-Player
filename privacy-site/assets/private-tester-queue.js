@@ -12,7 +12,7 @@
   var templates = {
     'profile-update': {
       subject: 'Apology: please complete your 24Seven.FM Player Alpha tester profile',
-      html: '<p>Hi,</p><p>Thank you for volunteering to test <strong>24Seven.FM Player</strong>. Your existing application is active; we need a few assignment-relevant details that were not part of the earlier form.</p><p>Please reply with your primary station, other stations you regularly use, station account availability (station names only), Android device type, network, audio/accessory, and accessibility preferences, testing comfort, controlled-test preferences, and typical two-week availability.</p><p><strong>Please do not send passwords, usernames, security answers, CAPTCHA answers, session information, or screenshots containing private information.</strong></p><p>Thank you,<br>24Seven.FM Player Testing Team</p>'
+      html: '<p>Hi {{tester_name}},</p><p>Thank you for volunteering to test <strong>24Seven.FM Player</strong>. Your existing application is active; please use your private tester portal to complete your Profile &amp; Device details.</p><p><a href="{{tester_portal_url}}">Open your tester portal</a></p><p>Enter the email address used for this application. The portal will send a single-use sign-in link, then you can update your profile yourself.</p><p><strong>Please do not send passwords, usernames, security answers, CAPTCHA answers, session information, or screenshots containing private information.</strong></p><p>Thank you,<br>24Seven.FM Player Testing Team</p>'
     },
     welcome: {
       subject: 'Welcome to the 24Seven.FM Player Google Play Closed Test',

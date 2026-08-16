@@ -1987,7 +1987,7 @@ try {
             $testerId = testerId();
             activeTester($database, $testerId);
             markApplicationReviewed($database, $testerId);
-            redirect('?email=1&compose_for=' . $testerId . '&notice=' . rawurlencode('Application accepted. Compose the profile-update request below.'));
+            redirect('?email=1&compose_for=' . $testerId . '&notice=' . rawurlencode('Application accepted. The self-service profile-update email is ready below.'));
         }
         if ($action === 'reject_application') {
             $testerId = testerId();
