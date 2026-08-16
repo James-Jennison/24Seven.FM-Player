@@ -8,6 +8,7 @@ set -euo pipefail
 readonly EXPECTED_ADMIN_USERNAME='jjennison'
 readonly STAGING_CONFIRMATION='onboarding-staging.player.jamesjennison.net'
 readonly EXPECTED_QUEUE_HANDLER_SHA256='384104ec7f264872313f87ce8e67fc3ec3d357648dd0cdebe71d3f03f6ab0e6c'
+readonly STAGING_ACCOUNT_ROOT='/home/jamesjen'
 
 if [[ ! -t 0 || ! -t 1 ]]; then
   printf '%s\n' 'An interactive owner terminal is required; no change was made.' >&2
@@ -56,8 +57,6 @@ if [[ -z "${vhost_file}" ]]; then
   exit 1
 fi
 
-staging_document_root="$(awk 'tolower($1) == "documentroot" { print $2; exit }' "${vhost_file}")"
-staging_account_root="$(dirname "$(dirname "${staging_document_root}")")"
 queue_handler=''
 configuration_path=''
 
@@ -75,7 +74,7 @@ while IFS= read -r handler_candidate; do
   fi
   queue_handler="${handler_candidate}"
   configuration_path="${candidate_store}"
-done < <(find "${staging_account_root}" -xdev -type f -name private-tester-queue.php 2>/dev/null)
+done < <(find "${STAGING_ACCOUNT_ROOT}" -xdev -type f -name private-tester-queue.php 2>/dev/null)
 
 if [[ -z "${queue_handler}" ]]; then
   printf '%s\n' 'The deployed staging queue handler is unavailable; no change was made.' >&2

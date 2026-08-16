@@ -22,7 +22,8 @@ for required_fragment in \
   '[[ ${#password} -lt 8 ]]' \
   'strlen($password) < 8' \
   "EXPECTED_QUEUE_HANDLER_SHA256='384104ec7f264872313f87ce8e67fc3ec3d357648dd0cdebe71d3f03f6ab0e6c'" \
-  'find "${staging_account_root}" -xdev -type f -name private-tester-queue.php' \
+  "STAGING_ACCOUNT_ROOT='/home/jamesjen'" \
+  'find "${STAGING_ACCOUNT_ROOT}" -xdev -type f -name private-tester-queue.php' \
   'The staging queue handler mapping is ambiguous' \
   'password_hash($password, PASSWORD_DEFAULT)' \
   'DELETE FROM administrator_login_limits' \
