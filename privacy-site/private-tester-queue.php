@@ -590,7 +590,7 @@ function renderPage(string $title, string $content, bool $showCoordinatorNavigat
     $operationsClass = $activeWorkspace === 'operations' ? ' active' : '';
     $chatClass = $activeWorkspace === 'chat' ? ' active' : '';
     $emailClass = $activeWorkspace === 'email' ? ' active' : '';
-    $loginLayout = $showCoordinatorNavigation ? '' : '<style>.global-rail{display:none}.app-shell{display:block}.desktop{padding:1.5rem}</style>';
+    $loginLayout = $showCoordinatorNavigation ? '' : '<style>.global-rail{display:none!important}.app-shell{display:block}.desktop{padding:1.5rem}</style>';
     echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'
         . e($title) . '</title>' . $loginLayout . '<style>'
         . 'body{margin:0;background:#090c15;color:#f7f4ec;font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
