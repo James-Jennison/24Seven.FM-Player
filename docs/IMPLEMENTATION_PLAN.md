@@ -33,7 +33,7 @@ The active program is M29–M35 Alpha readiness:
 
 | ID | Size | State | Implementation focus | Principal dependency |
 | --- | --- | --- | --- | --- |
-| M29 Play Declarations, Privacy, and Data Safety | M | Waiting externally | Adopted retention/deletion/processor/IP policy and account boundary; PT-35 exact-artifact privacy/Data Safety, five-station reviewer access, audience/content/UGC classification, and foreground-media evidence remain | Final candidate and Play Console |
+| M29 Play Declarations, Privacy, and Data Safety | M | Waiting externally | Adopted retention/deletion/processor/IP policy, account boundary, and five-station reviewer clean-install access; PT-35 exact-artifact privacy/Data Safety, audience/content/UGC classification, and foreground-media evidence remain | Final candidate and Play Console |
 | M30 Brand, Content, and Distribution Rights | S | Complete · August 14 | Sanitized authorization record covers the five stations, normal live playback, and Player/Google Play/Closed Alpha materials; third-party artwork remains rights-holder property | [M30 authorization record](m30-brand-content-distribution-authorization.md) |
 | M31 Payments, External Links, and Account Lifecycle | M | Complete | Contact-only external catalog; membership/account browser routes removed; privacy, declarations, release notes, testing, and evidence reconciled | Re-audit before M57 or M58–M60 ships |
 | M32 Session, Controller, Network, and Supply-Chain Security | XL, split | Complete | Controller command policy, protected-session coherence, trusted redirects, station-ID migration, dependency/action integrity, and adversarial tests | Re-audit when controller, session, redirect, station-ID, or build-input boundaries change |

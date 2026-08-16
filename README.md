@@ -94,7 +94,7 @@ remain project-maintenance material rather than public release promises.
 ### Current progression
 
 - **Completed:** M01–M28 and M30–M35. M30 records authorized five-station Player, Google Play, and Closed Alpha asset/stream use within the stated rights boundary. M31 establishes the Contact-only Play boundary and moves any future native VIP/RIP purchase and activation into M58–M60; M32 hardens controller authority, protected sessions, redirects, canonical station IDs, and build integrity; M33 binds every one-shot request to fresh station, account, Queue, readiness, and track identity; M34 accepts adaptive, assistive, and physical alternative-input evidence; M35 proves the protected upload identity, local release install/update lineage, package registration, and version-code eligibility.
-- **Active:** M29 remains: exact-candidate reconciliation, saved Play declarations, reviewer access, audience/content/UGC decisions, and the final foreground-media video. The station retention/deletion policy is adopted and disclosed.
+- **Active:** M29 remains: exact-candidate reconciliation, saved Play declarations, audience/content/UGC decisions, and the final foreground-media video. The station retention/deletion policy and five-station reviewer clean-install access are confirmed and documented.
 - **Authorization-gated:** M36–M38 require an approved station-side event source or privacy-compatible relay before implementation.
 - **Publication:** M39–M41 deliberately separate candidate freeze, Play delivery, and the final user-authorized Alpha action.
 - **Production:** M42–M45 add stabilization, production-access evidence, staged release, and operational recertification.

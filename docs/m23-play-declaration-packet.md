@@ -2,7 +2,7 @@
 
 Date: July 19, 2026
 
-Status: exact-artifact and current-policy audit complete; owner, station, final-candidate, and Play Console gates remain
+Status: exact-artifact and current-policy audit complete; reviewer-access readiness is owner-confirmed; final-candidate and Play Console gates remain
 
 This packet is the non-secret working record for M29. Reconcile every answer with the exact signed AAB and active Play
 Console wording immediately before saving or submitting it. Never commit reviewer credentials, Console captures containing
@@ -30,7 +30,7 @@ The audit used the current `main` source and release variant. `:app:processRelea
 | Console area | Current evidence-backed posture | Remaining gate |
 | --- | --- | --- |
 | Ads, government, financial, health | Saved as No/None; artifact audit agrees | Recheck only if the candidate or Console wording changes |
-| App access | Public playback, Queue, and History work signed out; protected features require one station-specific session at a time | Supply and validate five reusable, least-privileged reviewer accounts only in Play Console |
+| App access | Public playback, Queue, and History work signed out; protected features require one station-specific session at a time | Owner confirmed on August 16, 2026 that the five reusable, least-privileged reviewer accounts pass the clean-install/non-owner-network check. Credentials remain only in Play Console. |
 | Target audience | Owner selected 18+; the app uses a neutral age screen and is not designed for children | Verify the saved selection and decide whether to enable Restrict Minor Access |
 | Content rating | Music & Audio app with public text Chat, requester identity/message, possible mature themes/profanity, and no user image/video upload | Owner must answer actual content frequency/intensity and submit the generated IARC ratings |
 | UGC | M28 provides Terms acceptance, objectionable-content rules, content/user reporting, blocking, ongoing monitored moderation, and a separate mature-content reveal | Reconcile the exact UGC and incidental-content answers with the candidate and active questionnaire |
@@ -175,10 +175,12 @@ ephemeral processing or a Data Safety deletion badge without reconciling the exa
 
 ## M29 completion gate
 
-M29 remains **Waiting externally** until all of the following are true:
+M29 remains **Waiting externally** until all remaining items below are true. Reviewer-access item 2 is complete by
+owner confirmation on August 16, 2026.
 
 1. PT-35 is run against the exact signed candidate and its release manifest/dependencies/data flows match this packet.
-2. Five reusable reviewer accounts and English access instructions pass a clean-install/non-owner-network check.
+2. **Complete:** Five reusable reviewer accounts and English access instructions passed the owner-confirmed
+   clean-install/non-owner-network check.
 3. The adopted station retention, deletion/contact, processor, and IP-use policy is reflected accurately in the privacy
    policy and Data Safety form.
 4. Ads, app access, target audience, Restrict Minor Access decision, content rating, UGC, account deletion, privacy,
