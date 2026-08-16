@@ -51,6 +51,10 @@ assert(portal.includes("name=\"experience\""), "Tester profile must allow a test
 assert(portal.includes("Email changes are reviewed by the coordinator"), "Tester email must remain a reviewed identity change.");
 assert(portal.includes("Guest testing does not require a 24Seven.FM station account."), "Tester portal must explain that a station account is optional.");
 assert(portal.includes("Existing station access (optional; station names only)"), "Tester portal must label existing station access as optional.");
+assert(portal.includes("const PORTAL_REQUIRED_PROFILE_FIELDS"), "Tester profile must declare the fields required to save the intake.");
+assert(portal.includes("profile_missing") && portal.includes("Complete the required fields marked with *"), "A rejected profile save must name every missing required field.");
+assert(portal.includes("portalChoices('station_accounts', PORTAL_STATIONS + ['none' => 'None'])"), "Optional station access must not block a tester from saving their profile.");
+assert(portal.includes("required-mark") && portal.includes("first.focus({preventScroll:true})"), "The tester portal must mark required profile fields and focus the first missing field.");
 assert(portal.includes("TESTER_PORTAL_TURNSTILE_ACTION"), "Magic-link requests must be protected by Turnstile.");
 assert(portal.includes("portalVerifyTurnstile($turnstileToken"), "Turnstile must be verified before a magic link is sent.");
 assert(portal.includes("We could not send a sign-in link. Please try again later."), "Portal link requests must report a failed transport instead of claiming delivery.");

@@ -37,6 +37,19 @@ const PORTAL_TESTING_COMFORT = ['readonly' => 'Read-only and general testing', '
 const PORTAL_CONTROLLED_ACTIONS = ['song_request' => 'One authorized song request', 'chat_message' => 'One harmless authorized Chat message', 'chat_mention' => 'Two-account Chat mention testing', 'session_testing' => 'Sign-in / sign-out / session testing', 'report_block' => 'Report/block/unblock without sending a moderation email', 'account_testing' => 'General account-based testing', 'none' => 'None'];
 const PORTAL_AVAILABILITY = ['under_30m' => 'Less than 30 minutes', '30_60m' => 'About 30–60 minutes', '1_2h' => 'About 1–2 hours', '2_4h' => 'About 2–4 hours', 'over_4h' => 'More than 4 hours', 'varies' => 'It varies'];
 const PORTAL_STATIONS = ['sst' => 'StreamingSoundtracks.com', '1980s' => '1980s.FM', 'afm' => 'Adagio.FM', 'dfm' => 'Death.FM', 'efm' => 'Entranced.FM'];
+const PORTAL_REQUIRED_PROFILE_FIELDS = [
+    'display_name' => 'Name',
+    'device' => 'Current device',
+    'android_version' => 'Android version',
+    'primary_station' => 'Primary station',
+    'device_form_factor' => 'Device form factor',
+    'network_capabilities' => 'Network capabilities',
+    'audio_capabilities' => 'Audio/accessory capabilities',
+    'accessibility_capabilities' => 'Accessibility and alternative input',
+    'testing_comfort' => 'Testing comfort',
+    'controlled_actions' => 'Controlled-test preferences',
+    'testing_availability' => 'Typical two-week availability',
+];
 
 function portalStartSession(): void
 {
@@ -77,6 +90,7 @@ function portalPage(string $title, string $content): never
     $page = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' . e($title) . '</title><style>'
         . ':root{color-scheme:dark;--bg:#0b0e14;--card:#151b26;--line:rgba(255,255,255,.1);--muted:#aab4c7;--text:#f7f8fc;--purple:#ad7cff;--teal:#6de5d1;--amber:#ffd27a;--red:#ff9ca6}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 85% -15%,#5c2c873d,transparent 34%),var(--bg);color:var(--text);font:16px/1.5 Inter,Roboto,system-ui,sans-serif}.shell{max-width:1120px;margin:auto;padding:30px 20px 64px}.top{display:flex;justify-content:space-between;gap:18px;align-items:center;margin-bottom:30px}.brand{display:flex;gap:11px;align-items:center;font-weight:850}.brand-icon{width:34px;height:34px;border-radius:10px;object-fit:cover}.eyebrow{margin:0;color:#c3a6ff;font-size:11px;font-weight:850;letter-spacing:.12em;text-transform:uppercase}h1{margin:2px 0;font-size:32px;letter-spacing:-.04em}h2{margin:0;font-size:20px}h3{margin:0;font-size:15px}.muted{color:var(--muted)}.card{margin:18px 0;padding:23px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(145deg,#171e2b,#111722);box-shadow:0 14px 34px #00000025}.hero{padding:32px}.hero p{max-width:650px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.metric,.task{padding:16px;border:1px solid var(--line);border-radius:13px;background:#0e131d}.metric b{display:block;margin-top:7px;font-size:14px}.dot{display:inline-grid;place-items:center;width:24px;height:24px;border:1px solid #66728a;border-radius:50%;color:#7d8a9f}.done .dot{border-color:var(--teal);background:#174d47;color:var(--teal)}.step{display:flex;gap:11px;align-items:start;padding:11px 0;border-bottom:1px solid var(--line)}.step:last-child{border:0}.step b{display:block}.step small{color:var(--muted)}.two{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr);gap:18px}fieldset{border:0;margin:0;padding:0}label{display:block;margin:14px 0 6px;font-size:12px;font-weight:800;color:#cbd3e2}input,select,textarea{width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:9px;background:#0d121b;color:var(--text);font:inherit}textarea{min-height:120px}input:focus,select:focus,textarea:focus{outline:3px solid #986bff30;border-color:var(--purple)}.choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:4px 0}.choices label{display:flex;gap:8px;align-items:start;margin:0;padding:9px;border:1px solid var(--line);border-radius:9px;background:#0d121b;font-size:12px;font-weight:600}.choices input{width:auto;margin-top:2px}.button{display:inline-block;margin-top:18px;padding:10px 14px;border:0;border-radius:10px;background:linear-gradient(135deg,#b582ff,#8054f8);color:#fff;font:800 13px system-ui;cursor:pointer;text-decoration:none}.secondary{background:#273148}.pill{display:inline-flex;gap:5px;align-items:center;padding:5px 8px;border-radius:999px;background:#193e39;color:#9cf5e4;font-size:11px;font-weight:850}.pill.pending{background:#493b22;color:#ffdb8d}.pill.blocked{background:#472c35;color:#ffb4bc}.notice{padding:11px 13px;border-radius:10px;background:#183d37;color:#bffcf1}.error{background:#4a2730;color:#ffdce1}.admin-preview{border:1px solid #b685ff66;background:#332551;color:#eadfff}.task p{margin:6px 0;color:var(--muted);font-size:13px}.task ul{padding-left:19px;color:#d6deed;font-size:13px}.right{float:right}.login{max-width:530px;margin:9vh auto}.login .card{padding:30px}.small{font-size:12px}@media(max-width:760px){.grid,.two{grid-template-columns:1fr}.choices{grid-template-columns:1fr}.shell{padding:20px 14px}.hero{padding:22px}.top{align-items:start}h1{font-size:27px}}</style></head><body><main class="shell">' . $content . '</main></body></html>';
     $page = str_replace('</style></head><body><main class="shell">', '</style><link rel="stylesheet" href="/assets/onboarding-portal.css"></head><body><a class="skip-link" href="#tester-portal">Skip to tester portal</a><main id="tester-portal" class="portal-preview-shell">', $page);
+    $page = str_replace('</main></body></html>', '<script>(function(){const form=document.querySelector("form input[name=action][value=save_profile]")?.form;if(!form)return;const required=["display_name","device","android_version","primary_station","device_form_factor","network_capabilities","audio_capabilities","accessibility_capabilities","testing_comfort","controlled_actions","testing_availability"];const missing=new URLSearchParams(location.search).get("profile_missing")?.split(",")||[];for(const name of required){const group=form.querySelector(`[name="${name}[]"]`)?.closest(".choices");const control=group||form.querySelector(`[name="${name}"]`);if(!control)continue;const label=group?group.previousElementSibling:control.previousElementSibling;const id=`profile-${name}`;control.id=id;if(label?.tagName==="LABEL"){label.id=`${id}-label`;if(!label.querySelector(".required-mark")){label.insertAdjacentHTML("beforeend",` <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden"> (required)</span>`);}if(group){group.setAttribute("role","group");group.setAttribute("aria-labelledby",label.id);group.setAttribute("aria-required","true");}}if(missing.includes(name)){control.classList.add("profile-field-missing");}}const first=missing.map(name=>document.getElementById(`profile-${name}`)).find(Boolean);if(first){first.scrollIntoView({block:"center"});first.focus({preventScroll:true});}})();</script></main></body></html>', $page);
     echo $page;
     exit;
 }
@@ -84,7 +98,8 @@ function portalPage(string $title, string $content): never
 function portalNotice(string $name): string
 {
     $value = $_GET[$name] ?? '';
-    return is_string($value) && $value !== '' ? '<p class="notice' . ($name === 'error' ? ' error' : '') . '">' . e($value) . '</p>' : '';
+    $notice = is_string($value) && $value !== '' ? '<p class="notice' . ($name === 'error' ? ' error' : '') . '">' . e($value) . '</p>' : '';
+    return $notice . ($name === 'error' ? portalProfileMissingNotice() : '');
 }
 
 function portalText(string $name, int $maximum, bool $required = false): string
@@ -114,6 +129,29 @@ function portalChoices(string $name, array $options, bool $required = false, boo
         $result[$value] = true;
     }
     return $noneExclusive && isset($result['none']) ? ['none'] : array_keys($result);
+}
+
+function portalRequiredProfileFields(): array
+{
+    $missing = [];
+    foreach (PORTAL_REQUIRED_PROFILE_FIELDS as $field => $_label) {
+        $value = $_POST[$field] ?? null;
+        $provided = str_ends_with($field, 'capabilities') || $field === 'controlled_actions'
+            ? is_array($value) && $value !== []
+            : is_string($value) && trim($value) !== '';
+        if (!$provided) $missing[] = $field;
+    }
+    return $missing;
+}
+
+function portalProfileMissingNotice(): string
+{
+    $raw = $_GET['profile_missing'] ?? '';
+    if (!is_string($raw) || $raw === '') return '';
+    $fields = array_values(array_filter(explode(',', $raw), static fn (string $field): bool => array_key_exists($field, PORTAL_REQUIRED_PROFILE_FIELDS)));
+    if ($fields === []) return '';
+    $links = array_map(static fn (string $field): string => '<a href="#profile-' . e($field) . '">' . e(PORTAL_REQUIRED_PROFILE_FIELDS[$field]) . '</a>', $fields);
+    return '<div class="notice error" role="alert"><strong>Profile not saved.</strong> Complete the required fields marked with *: ' . implode(', ', $links) . '.</div>';
 }
 
 function portalTokenHash(string $token): string { return hash('sha256', $token); }
@@ -322,6 +360,10 @@ function portalConsumeLink(PDO $database, string $token): void
 function portalSaveProfile(PDO $database, array $tester, array $config): void
 {
     $wasComplete = profileSummary($tester)['complete'];
+    $missing = portalRequiredProfileFields();
+    if ($missing !== []) {
+        portalRedirect('?error=' . rawurlencode('Please complete the required profile fields.') . '&profile_missing=' . rawurlencode(implode(',', $missing)) . '#intake-profile');
+    }
     $displayName = portalText('display_name', 100, true);
     $country = portalText('country', 80);
     $primary = portalChoice('primary_station', PORTAL_PRIMARY_STATIONS, true);
@@ -329,7 +371,7 @@ function portalSaveProfile(PDO $database, array $tester, array $config): void
     if (array_key_exists((string) $primary, PORTAL_STATIONS)) {
         $otherStations = array_values(array_diff($otherStations, [(string) $primary]));
     }
-    $accounts = portalChoices('station_accounts', PORTAL_STATIONS + ['none' => 'None'], true);
+    $accounts = portalChoices('station_accounts', PORTAL_STATIONS + ['none' => 'None']);
     $deviceType = portalChoice('device_form_factor', PORTAL_DEVICE_TYPES, true);
     $network = portalChoices('network_capabilities', PORTAL_NETWORK, true);
     $audio = portalChoices('audio_capabilities', PORTAL_AUDIO, true, true);
