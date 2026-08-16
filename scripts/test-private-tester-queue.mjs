@@ -50,6 +50,8 @@ assert(endpoint.includes("?mail_archive=1"), "Queue must link coordinators to th
 assert(endpoint.includes("function mergeCoordinatorMailHtml"), "The email composer must resolve a bounded set of per-recipient variables.");
 assert(endpoint.includes("Draft preview"), "The email composer must provide a resolved draft preview before sending.");
 assert(client.includes("data-insert-variable"), "The email composer must provide variable insertion controls.");
+assert(endpoint.includes("function renderOperationsDashboard(PDO $database, string $notice = '', string $error = '', bool $emailOnly = false)"), "The admin workspace must support a separate Email surface.");
+assert(endpoint.includes("?email=1"), "The admin workspace must route Email separately from operations.");
 assert(endpoint.includes("profile_pending', 'profile_complete', 'invited', 'orientation_sent', 'ready', 'paused"), "Onboarding lifecycle statuses are incomplete");
 assert(endpoint.includes("function profileSummary(array $tester): array"), "Queue must evaluate assignment-relevant profile completeness");
 assert(endpoint.includes("function isGuestTester(array $tester): bool"), "Queue must identify testers with no station account as guest testers.");
