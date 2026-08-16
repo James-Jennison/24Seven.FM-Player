@@ -40,8 +40,32 @@ if [[ "${password}" != "${password_confirmation}" ]]; then
   exit 1
 fi
 
-script_directory="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-configuration_path="${script_directory}/.private-tester-queue-config.php"
+vhost_file=""
+for vhost_directory in /usr/local/apps/apache2/etc/conf.d /etc/apache2 /etc/httpd; do
+  [[ -d "${vhost_directory}" ]] || continue
+  candidate="$(grep -rlE --include='*.conf' --include='*.vhost' "^[[:space:]]*ServerName[[:space:]]+${STAGING_CONFIRMATION}([[:space:]]|$)" "${vhost_directory}" 2>/dev/null | head -n 1 || true)"
+  if [[ -n "${candidate}" ]]; then
+    vhost_file="${candidate}"
+    break
+  fi
+done
+
+if [[ -z "${vhost_file}" ]]; then
+  printf '%s\n' 'The staging virtual-host mapping is unavailable; no change was made.' >&2
+  exit 1
+fi
+
+staging_document_root="$(awk 'tolower($1) == "documentroot" { print $2; exit }' "${vhost_file}")"
+queue_handler="$(readlink -f "${staging_document_root}/private-tester-queue.php" 2>/dev/null || true)"
+if [[ ! -f "${queue_handler}" ]]; then
+  printf '%s\n' 'The staging queue login handler is unavailable; no change was made.' >&2
+  exit 1
+fi
+
+# `config()` resolves the private store from dirname(__DIR__) of the deployed
+# PHP handler. Resolve the handler first so this remains correct when Apache
+# serves it through a symlinked staging document root.
+configuration_path="$(dirname "$(dirname "${queue_handler}")")/.private-tester-queue-config.php"
 
 if [[ ! -r "${configuration_path}" || ! -w "${configuration_path}" ]]; then
   printf '%s\n' 'The staging queue credential store is unavailable; no change was made.' >&2

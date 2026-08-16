@@ -21,6 +21,8 @@ for required_fragment in \
   'read -r -s -p' \
   '[[ ${#password} -lt 8 ]]' \
   'strlen($password) < 8' \
+  'readlink -f "${staging_document_root}/private-tester-queue.php"' \
+  'dirname "$(dirname "${queue_handler}")"' \
   'password_hash($password, PASSWORD_DEFAULT)' \
   'DELETE FROM administrator_login_limits' \
   'password_verify($password, $updated["admin_password_hash"])' \
