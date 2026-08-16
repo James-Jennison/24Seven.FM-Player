@@ -1,6 +1,100 @@
 (function () {
   'use strict';
 
+  var operationsPanels = document.querySelector('[data-operations-panels]');
+  if (operationsPanels) {
+    var layoutStorageKey = 'player-operations-panel-layout-v1';
+    var defaultLayout = { split: 61, order: 'applications-first', wide: '' };
+    var layout = Object.assign({}, defaultLayout);
+    var resizeHandle = operationsPanels.querySelector('[data-operations-resize]');
+
+    try {
+      var savedLayout = JSON.parse(window.localStorage.getItem(layoutStorageKey) || '{}');
+      if (Number.isFinite(savedLayout.split) && savedLayout.split >= 35 && savedLayout.split <= 70) layout.split = savedLayout.split;
+      if (savedLayout.order === 'roster-first') layout.order = savedLayout.order;
+      if (savedLayout.wide === 'applications' || savedLayout.wide === 'roster') layout.wide = savedLayout.wide;
+    } catch (error) {
+      // A blocked storage area only affects layout persistence, never the workspace.
+    }
+
+    function saveOperationsLayout() {
+      try {
+        window.localStorage.setItem(layoutStorageKey, JSON.stringify(layout));
+      } catch (error) {
+        // Keep the current-session arrangement if persistent storage is unavailable.
+      }
+    }
+
+    function applyOperationsLayout() {
+      operationsPanels.dataset.order = layout.order;
+      if (layout.wide) {
+        operationsPanels.dataset.wide = layout.wide;
+      } else {
+        delete operationsPanels.dataset.wide;
+      }
+      operationsPanels.style.setProperty('--panel-split', layout.split + '%');
+      if (resizeHandle) resizeHandle.setAttribute('aria-valuenow', String(layout.split));
+      document.querySelectorAll('[data-operations-wide]').forEach(function (button) {
+        var target = button.dataset.operationsWide;
+        button.setAttribute('aria-pressed', String(layout.wide === target));
+        button.textContent = layout.wide === target ? 'Return to split' : 'Widen ' + target;
+      });
+    }
+
+    function setSplitFromPointer(clientX) {
+      if (window.matchMedia('(max-width: 1040px)').matches || layout.wide) return;
+      var bounds = operationsPanels.getBoundingClientRect();
+      layout.split = Math.max(35, Math.min(70, Math.round(((clientX - bounds.left) / bounds.width) * 100)));
+      applyOperationsLayout();
+    }
+
+    applyOperationsLayout();
+    document.querySelectorAll('[data-operations-swap]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        layout.order = layout.order === 'applications-first' ? 'roster-first' : 'applications-first';
+        saveOperationsLayout();
+        applyOperationsLayout();
+      });
+    });
+    document.querySelectorAll('[data-operations-wide]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        var target = button.dataset.operationsWide;
+        layout.wide = layout.wide === target ? '' : target;
+        saveOperationsLayout();
+        applyOperationsLayout();
+      });
+    });
+    document.querySelectorAll('[data-operations-reset]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        layout = Object.assign({}, defaultLayout);
+        saveOperationsLayout();
+        applyOperationsLayout();
+      });
+    });
+    if (resizeHandle) {
+      resizeHandle.addEventListener('pointerdown', function (event) {
+        if (window.matchMedia('(max-width: 1040px)').matches || layout.wide) return;
+        resizeHandle.setPointerCapture(event.pointerId);
+        setSplitFromPointer(event.clientX);
+      });
+      resizeHandle.addEventListener('pointermove', function (event) {
+        if (resizeHandle.hasPointerCapture(event.pointerId)) setSplitFromPointer(event.clientX);
+      });
+      resizeHandle.addEventListener('pointerup', function (event) {
+        if (resizeHandle.hasPointerCapture(event.pointerId)) resizeHandle.releasePointerCapture(event.pointerId);
+        saveOperationsLayout();
+      });
+      resizeHandle.addEventListener('keydown', function (event) {
+        if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+        event.preventDefault();
+        layout.wide = '';
+        layout.split = Math.max(35, Math.min(70, layout.split + (event.key === 'ArrowRight' ? 5 : -5)));
+        saveOperationsLayout();
+        applyOperationsLayout();
+      });
+    }
+  }
+
   var all = document.getElementById('select-all');
   var editor = document.getElementById('body-editor');
   var hidden = document.getElementById('body-html');
