@@ -24,7 +24,6 @@
     }
     return controls[0].value.trim() !== '';
   });
-  const preview = Boolean(document.querySelector('fieldset[disabled]'));
 
   const overlay = document.createElement('div');
   overlay.className = 'onboarding-wizard-overlay';
@@ -120,7 +119,6 @@
         back.type = 'button';
         back.className = 'button secondary';
         back.textContent = '← Back';
-        back.disabled = preview;
         back.addEventListener('click', () => { profilePage = 0; render(); });
         controls.append(back);
       }
@@ -129,7 +127,6 @@
         next.type = 'button';
         next.className = 'button';
         next.textContent = 'Next →';
-        next.disabled = preview;
         next.addEventListener('click', () => { profilePage = 1; render(); });
         controls.append(next);
       }

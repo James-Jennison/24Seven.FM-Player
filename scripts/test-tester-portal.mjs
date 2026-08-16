@@ -2,10 +2,11 @@
 
 import { readFile } from "node:fs/promises";
 
-const [portal, queue, build] = await Promise.all([
+const [portal, queue, build, wizard] = await Promise.all([
   readFile(new URL("../privacy-site/tester-portal.php", import.meta.url), "utf8"),
   readFile(new URL("../privacy-site/private-tester-queue.php", import.meta.url), "utf8"),
   readFile(new URL("validate-project-site.sh", import.meta.url), "utf8"),
+  readFile(new URL("../privacy-site/assets/onboarding-wizard.js", import.meta.url), "utf8"),
 ]);
 
 function assert(condition, message) {
@@ -58,6 +59,8 @@ assert(portal.includes("required-mark") && portal.includes("first.focus({prevent
 assert(portal.includes('/assets/onboarding-profile-form.js'), "Tester profile requirements and draft recovery must use the CSP-safe external form asset.");
 assert(portal.includes('/assets/onboarding-wizard.js'), "Tester onboarding must load the gated wizard asset.");
 assert(portal.includes('/assets/onboarding-wizard.css'), "Tester onboarding must load the wizard presentation asset.");
+assert(wizard.includes("Next →") && wizard.includes("← Back"), "The onboarding wizard must provide forward and back controls.");
+assert(!wizard.includes("disabled = preview"), "Coordinator previews must allow read-only navigation through onboarding pages.");
 assert(portal.includes("TESTER_PORTAL_TURNSTILE_ACTION"), "Magic-link requests must be protected by Turnstile.");
 assert(portal.includes("portalVerifyTurnstile($turnstileToken"), "Turnstile must be verified before a magic link is sent.");
 assert(portal.includes("We could not send a sign-in link. Please try again later."), "Portal link requests must report a failed transport instead of claiming delivery.");
