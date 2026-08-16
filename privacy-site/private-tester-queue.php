@@ -30,6 +30,10 @@ const TASK_REGISTRY_FILE = 'assets/tester-tasks.json';
 const MAX_ASSIGNMENT_CONFIGURATION_LENGTH = 300;
 const MAX_ASSIGNMENT_NOTE_LENGTH = 1_000;
 const MAX_ONBOARDING_NOTE_LENGTH = 1_000;
+const CHAT_MAX_MESSAGE_LENGTH = 2_000;
+const CHAT_SUBMISSION_WINDOW_SECONDS = 60;
+const CHAT_SUBMISSION_MAXIMUM = 12;
+const CHAT_RETENTION_DAYS = 90;
 const ASSIGNMENT_STATUSES = ['assigned', 'in_progress', 'complete', 'blocked'];
 const ONBOARDING_STATUSES = ['profile_pending', 'profile_complete', 'invited', 'orientation_sent', 'ready', 'paused'];
 const APPLICATION_STAGES = ['pending_review', 'accepted', 'invited', 'active'];
@@ -95,6 +99,13 @@ function config(): array
         fail(503, 'The private tester queue sender configuration is invalid.');
     }
     return $config;
+}
+
+function coordinatorDisplayName(array $config): string
+{
+    $name = trim((string) ($config['from_name'] ?? '24Seven.FM Coordinator'));
+    if ($name === '' || !preg_match('//u', $name)) return '24Seven.FM Coordinator';
+    return function_exists('mb_substr') ? mb_substr($name, 0, 100) : substr($name, 0, 100);
 }
 
 function database(array $config): PDO
@@ -206,6 +217,33 @@ function database(array $config): PDO
             outcome TEXT NOT NULL CHECK(outcome IN (\'pass\', \'issue\', \'blocked\', \'note\')),
             category TEXT NOT NULL DEFAULT \'other\' CHECK(category IN (\'playback\', \'connection_recovery\', \'station_switching\', \'metadata_artwork\', \'favorites\', \'media_controls\', \'audio_accessories\', \'layout_accessibility\', \'performance_battery\', \'crash_freeze\', \'other\')),
             created_at TEXT NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS chat_threads (
+            id INTEGER PRIMARY KEY,
+            tester_id INTEGER NOT NULL UNIQUE REFERENCES testers(id) ON DELETE CASCADE,
+            tester_deleted_at TEXT,
+            coordinator_deleted_at TEXT,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            last_message_at TEXT
+        );
+        CREATE TABLE IF NOT EXISTS chat_messages (
+            id INTEGER PRIMARY KEY,
+            thread_id INTEGER NOT NULL REFERENCES chat_threads(id) ON DELETE CASCADE,
+            sender_role TEXT NOT NULL CHECK(sender_role IN (\'tester\', \'coordinator\')),
+            body TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            read_at TEXT,
+            tester_deleted_at TEXT,
+            coordinator_deleted_at TEXT
+        );
+        CREATE INDEX IF NOT EXISTS chat_messages_thread_recent ON chat_messages(thread_id, id DESC);
+        CREATE TABLE IF NOT EXISTS chat_submission_limits (
+            thread_id INTEGER NOT NULL REFERENCES chat_threads(id) ON DELETE CASCADE,
+            sender_role TEXT NOT NULL CHECK(sender_role IN (\'tester\', \'coordinator\')),
+            window_started_at INTEGER NOT NULL,
+            submitted_count INTEGER NOT NULL,
+            PRIMARY KEY(thread_id, sender_role)
         );
         CREATE TABLE IF NOT EXISTS administrator_login_limits (
             client_key TEXT PRIMARY KEY,
@@ -672,6 +710,103 @@ function activeTester(PDO $database, int $testerId): void
     }
 }
 
+/**
+ * Portal chat is intentionally separate from station and Player messaging.
+ * Every thread belongs to exactly one active tester; coordinators select that
+ * tester through their protected workspace and never supply an arbitrary
+ * recipient from the browser.
+ */
+function chatThreadForTester(PDO $database, int $testerId): int
+{
+    activeTester($database, $testerId);
+    $statement = $database->prepare('SELECT id FROM chat_threads WHERE tester_id = ?');
+    $statement->execute([$testerId]);
+    $id = $statement->fetchColumn();
+    if ($id !== false) return (int) $id;
+    $now = gmdate('c');
+    $database->prepare('INSERT INTO chat_threads(tester_id, created_at, updated_at) VALUES (?, ?, ?) ON CONFLICT(tester_id) DO NOTHING')
+        ->execute([$testerId, $now, $now]);
+    $statement->execute([$testerId]);
+    $id = $statement->fetchColumn();
+    if ($id === false) throw new RuntimeException('The chat thread is unavailable.');
+    return (int) $id;
+}
+
+function chatMessageBody(string $value): string
+{
+    $value = trim(str_replace(["\r\n", "\r"], "\n", $value));
+    $length = function_exists('mb_strlen') ? mb_strlen($value) : strlen($value);
+    if ($value === '' || $length > CHAT_MAX_MESSAGE_LENGTH || str_contains($value, "\0") || !preg_match('//u', $value)) {
+        throw new InvalidArgumentException('Write a private message of no more than 2,000 characters.');
+    }
+    return $value;
+}
+
+function chatPurgeExpired(PDO $database): void
+{
+    $cutoff = gmdate('c', time() - CHAT_RETENTION_DAYS * 86_400);
+    $database->prepare('DELETE FROM chat_messages WHERE created_at < ? OR (tester_deleted_at IS NOT NULL AND coordinator_deleted_at IS NOT NULL)')->execute([$cutoff]);
+    $database->prepare('DELETE FROM chat_threads WHERE last_message_at IS NOT NULL AND last_message_at < ? AND NOT EXISTS (SELECT 1 FROM chat_messages WHERE chat_messages.thread_id = chat_threads.id)')->execute([$cutoff]);
+}
+
+function chatConsumeSubmissionLimit(PDO $database, int $threadId, string $senderRole): void
+{
+    if (!in_array($senderRole, ['tester', 'coordinator'], true)) throw new InvalidArgumentException('The chat sender is invalid.');
+    $now = time();
+    $database->beginTransaction();
+    try {
+        $statement = $database->prepare('SELECT window_started_at, submitted_count FROM chat_submission_limits WHERE thread_id = ? AND sender_role = ?');
+        $statement->execute([$threadId, $senderRole]);
+        $limit = $statement->fetch();
+        if (!is_array($limit) || $now - (int) $limit['window_started_at'] >= CHAT_SUBMISSION_WINDOW_SECONDS) {
+            $database->prepare('INSERT INTO chat_submission_limits(thread_id, sender_role, window_started_at, submitted_count) VALUES (?, ?, ?, 1) ON CONFLICT(thread_id, sender_role) DO UPDATE SET window_started_at = excluded.window_started_at, submitted_count = excluded.submitted_count')
+                ->execute([$threadId, $senderRole, $now]);
+        } elseif ((int) $limit['submitted_count'] >= CHAT_SUBMISSION_MAXIMUM) {
+            throw new InvalidArgumentException('Please wait a moment before sending another chat message.');
+        } else {
+            $database->prepare('UPDATE chat_submission_limits SET submitted_count = submitted_count + 1 WHERE thread_id = ? AND sender_role = ?')->execute([$threadId, $senderRole]);
+        }
+        $database->commit();
+    } catch (Throwable $exception) {
+        if ($database->inTransaction()) $database->rollBack();
+        throw $exception;
+    }
+}
+
+function chatPostMessage(PDO $database, int $testerId, string $senderRole, string $body): int
+{
+    $body = chatMessageBody($body);
+    chatPurgeExpired($database);
+    $threadId = chatThreadForTester($database, $testerId);
+    chatConsumeSubmissionLimit($database, $threadId, $senderRole);
+    $now = gmdate('c');
+    $database->prepare('INSERT INTO chat_messages(thread_id, sender_role, body, created_at) VALUES (?, ?, ?, ?)')->execute([$threadId, $senderRole, $body, $now]);
+    $database->prepare('UPDATE chat_threads SET updated_at = ?, last_message_at = ?, tester_deleted_at = NULL, coordinator_deleted_at = NULL WHERE id = ?')->execute([$now, $now, $threadId]);
+    return (int) $database->lastInsertId();
+}
+
+function chatMessages(PDO $database, int $testerId, string $viewerRole, int $afterId = 0): array
+{
+    if (!in_array($viewerRole, ['tester', 'coordinator'], true)) throw new InvalidArgumentException('The chat viewer is invalid.');
+    chatPurgeExpired($database);
+    $threadId = chatThreadForTester($database, $testerId);
+    $deletedColumn = $viewerRole === 'tester' ? 'tester_deleted_at' : 'coordinator_deleted_at';
+    $statement = $database->prepare("SELECT id, sender_role, body, created_at, read_at FROM chat_messages WHERE thread_id = ? AND id > ? AND {$deletedColumn} IS NULL ORDER BY id ASC LIMIT 100");
+    $statement->execute([$threadId, max(0, $afterId)]);
+    $messages = $statement->fetchAll();
+    $database->prepare('UPDATE chat_messages SET read_at = ? WHERE thread_id = ? AND sender_role <> ? AND read_at IS NULL')->execute([gmdate('c'), $threadId, $viewerRole]);
+    return $messages;
+}
+
+function chatSoftDeleteMessage(PDO $database, int $testerId, string $viewerRole, int $messageId): void
+{
+    if (!in_array($viewerRole, ['tester', 'coordinator'], true) || $messageId < 1) throw new InvalidArgumentException('The chat message is invalid.');
+    $threadId = chatThreadForTester($database, $testerId);
+    $column = $viewerRole === 'tester' ? 'tester_deleted_at' : 'coordinator_deleted_at';
+    $database->prepare("UPDATE chat_messages SET {$column} = COALESCE({$column}, ?) WHERE id = ? AND thread_id = ?")->execute([gmdate('c'), $messageId, $threadId]);
+    chatPurgeExpired($database);
+}
+
 function listFromJson(?string $value): array
 {
     $decoded = json_decode((string) $value, true);
@@ -818,6 +953,9 @@ function onboardingInput(array $tester): array
     $profile = profileSummary($tester);
     if (!$profile['complete'] && $status !== 'profile_pending') {
         throw new InvalidArgumentException('This tester needs their profile update before advancing onboarding.');
+    }
+    if ($status === 'ready' && (!is_string($tester['play_opt_in_confirmed_at'] ?? null) || $tester['play_opt_in_confirmed_at'] === '' || !is_string($tester['initial_smoke_test_confirmed_at'] ?? null) || $tester['initial_smoke_test_confirmed_at'] === '')) {
+        throw new InvalidArgumentException('Ready is recorded automatically after both the Play opt-in and first-use smoke-test confirmations.');
     }
     return [$status, field('onboarding_note', MAX_ONBOARDING_NOTE_LENGTH, false)];
 }
@@ -1386,7 +1524,7 @@ function renderOperationsDashboard(PDO $database, string $notice = '', string $e
     // data island, matching the existing #tester-task-registry pattern.
     $composeHint = $composeForId === null ? '' : '<script id="compose-for-tester" type="application/json">' . json_encode(['testerId' => $composeForId, 'template' => 'profile-update'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES) . '</script>';
 
-    $content = '<header class="dashboard-header"><div><p class="eyebrow">24Seven.FM Player · Closed alpha</p><h1>Tester operations</h1><p class="muted">A private workspace for moving a new application through review to a focused, safe testing assignment.</p><p><a class="link-button" href="/private-tester-queue.php?mail_archive=1">Sent mail archive (' . $archiveCount . ')</a></p></div><form method="post"><input type="hidden" name="action" value="logout"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><button class="secondary" type="submit">Sign out</button></form></header>' . $message
+    $content = '<header class="dashboard-header"><div><p class="eyebrow">24Seven.FM Player · Closed alpha</p><h1>Tester operations</h1><p class="muted">A private workspace for moving a new application through review to a focused, safe testing assignment.</p><p><a class="link-button" href="/private-tester-queue.php?live_chat=1">Live Chat</a><a class="link-button" href="/private-tester-queue.php?mail_archive=1">Email / sent archive (' . $archiveCount . ')</a></p></div><form method="post"><input type="hidden" name="action" value="logout"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><button class="secondary" type="submit">Sign out</button></form></header>' . $message
         . '<section><h2>Onboarding pipeline</h2><div class="onboarding-overview"><div class="onboarding-metric stage-pending_review"><strong>' . $stageCounts['pending_review'] . '</strong><span>Pending review</span></div><div class="onboarding-metric stage-accepted"><strong>' . $stageCounts['accepted'] . '</strong><span>Accepted, needs details</span></div><div class="onboarding-metric stage-invited"><strong>' . $stageCounts['invited'] . '</strong><span>Invited, awaiting opt-in</span></div><div class="onboarding-metric stage-active"><strong>' . $stageCounts['active'] . '</strong><span>Active</span></div></div><p class="muted">Workflow: review a new application → accept, request details, or reject → grant Play access and invite → tester self-confirms opt-in and initial smoke test → assign focused work. An invitation is not treated as opt-in, installation, or activity evidence.</p><p class="muted">Recruitment: ' . e('Direct ' . $sourceCounts['direct'] . ' · Testers Community ' . $sourceCounts['testers_community'] . ' · Betabound ' . $sourceCounts['betabound'] . ' · BetaFamily ' . $sourceCounts['betafamily'] . ' · Other ' . $sourceCounts['other']) . '</p></section>'
         . '<section class="applications-card"><h2>Applications awaiting review (' . count($pendingApplications) . ')</h2>' . ($applicationRows === '' ? '<p class="muted">No new applications right now.</p>' : '<p class="muted">Newly submitted or imported applications stay here, separate from the accepted roster, until a coordinator accepts, requests details, or rejects them.</p><div class="application-rows">' . $applicationRows . '</div>') . '</section>'
         . '<section><h2>Tester roster</h2><p class="muted">Open one workspace to review coverage, record onboarding progress, send an individual orientation email, and manage focused tasks.</p><div class="table-scroll"><table><thead><tr><th scope="col">Tester</th><th scope="col">Device</th><th scope="col">Recruitment</th><th scope="col">Stage &amp; onboarding</th><th scope="col">Assignments</th><th scope="col"><span class="visually-hidden">Open</span></th></tr></thead><tbody>' . ($rows === '' ? '<tr><td colspan="6" class="muted">No accepted testers yet.</td></tr>' : $rows) . '</tbody></table></div></section>'
@@ -1508,6 +1646,76 @@ function renderMailArchive(PDO $database): never
     renderPage('Sent mail archive', $content);
 }
 
+function coordinatorChatPayload(PDO $database, array $tester, int $afterId = 0): array
+{
+    $messages = chatMessages($database, (int) $tester['id'], 'coordinator', $afterId);
+    return array_map(static fn (array $message): array => [
+        'id' => (int) $message['id'],
+        'sender' => $message['sender_role'] === 'tester' ? (string) $tester['display_name'] : 'Coordinator',
+        'role' => $message['sender_role'],
+        'body' => (string) $message['body'],
+        'createdAt' => (string) $message['created_at'],
+    ], $messages);
+}
+
+function coordinatorChatPoll(PDO $database, array $tester, int $afterId, bool $stream = false): never
+{
+    session_write_close();
+    if ($stream) {
+        header('Content-Type: text/event-stream; charset=UTF-8');
+        header('Cache-Control: no-store, private');
+        header('X-Accel-Buffering: no');
+        for ($attempt = 0; $attempt < 20 && !connection_aborted(); $attempt++) {
+            $messages = coordinatorChatPayload($database, $tester, $afterId);
+            if ($messages !== []) {
+                $afterId = (int) end($messages)['id'];
+                echo "event: messages\ndata: " . json_encode($messages, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES) . "\n\n";
+            } else {
+                echo ": keepalive\n\n";
+            }
+            @ob_flush();
+            flush();
+            sleep(1);
+        }
+        exit;
+    }
+    for ($attempt = 0; $attempt < 12; $attempt++) {
+        $messages = coordinatorChatPayload($database, $tester, $afterId);
+        if ($messages !== []) break;
+        sleep(1);
+    }
+    header('Content-Type: application/json; charset=UTF-8');
+    header('Cache-Control: no-store, private');
+    echo json_encode(['messages' => $messages ?? []], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
+    exit;
+}
+
+function renderLiveChatWorkspace(PDO $database, int $selectedTesterId = 0): never
+{
+    $testers = $database->query("SELECT id, display_name, device, android_version FROM testers WHERE status = 'active' ORDER BY received_at, id")->fetchAll();
+    if ($testers === []) {
+        renderPage('Live Chat · 24Seven.FM Player', '<p><a href="/private-tester-queue.php">← Tester operations</a></p><h1>Live Chat</h1><section><p class="muted">There are no active tester conversations yet.</p></section>');
+    }
+    $selected = null;
+    foreach ($testers as $candidate) if ((int) $candidate['id'] === $selectedTesterId) $selected = $candidate;
+    $selected ??= $testers[0];
+    $messages = coordinatorChatPayload($database, $selected);
+    $rows = '';
+    foreach ($testers as $tester) {
+        $active = (int) $tester['id'] === (int) $selected['id'] ? ' style="border-color:#67e6d1;background:#183f3c"' : '';
+        $rows .= '<a class="link-button"' . $active . ' href="/private-tester-queue.php?live_chat=1&amp;chat_tester=' . (int) $tester['id'] . '">' . e($tester['display_name']) . '<br><small>' . e($tester['device'] . ' · ' . $tester['android_version']) . '</small></a>';
+    }
+    $items = '';
+    foreach ($messages as $message) {
+        $class = $message['role'] === 'coordinator' ? ' style="margin-left:auto;border-color:#67e6d177;background:#183f3c"' : '';
+        $items .= '<article data-chat-message-id="' . (int) $message['id'] . '" style="max-width:80%;padding:.7rem .8rem;border:1px solid #33405a;border-radius:.7rem;margin:.65rem 0' . $class . '"><strong>' . e($message['sender']) . '</strong><div>' . nl2br(e($message['body'])) . '</div><small>' . e($message['createdAt']) . '</small><form method="post"><input type="hidden" name="action" value="delete_chat_message"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . (int) $selected['id'] . '"><input type="hidden" name="message_id" value="' . (int) $message['id'] . '"><button class="secondary" type="submit">Delete from my view</button></form></article>';
+    }
+    if ($items === '') $items = '<p class="muted" data-chat-empty>No messages yet. Use this channel only for tester-program support; never request credentials or secrets.</p>';
+    $id = (int) $selected['id'];
+    $content = '<p><a href="/private-tester-queue.php">← Tester operations</a> · <a href="/private-tester-queue.php?mail_archive=1">Email archive</a></p><div class="dashboard-header"><div><p class="eyebrow">Private coordinator workspace</p><h1>Live Chat — ' . e($selected['display_name']) . '</h1><p class="muted">Per-tester private conversation. Tester portal access never exposes this coordinator workspace.</p></div><button type="button" class="secondary" data-chat-detach>Detach ↗</button></div><div style="display:grid;grid-template-columns:minmax(12rem,.42fr) minmax(0,1fr);gap:1rem"><section style="margin:0"><h2>Conversations</h2>' . $rows . '</section><section style="margin:0" data-live-chat data-chat-poll="/private-tester-queue.php?chat_poll=1&amp;chat_tester=' . $id . '" data-chat-stream="/private-tester-queue.php?chat_stream=1&amp;chat_tester=' . $id . '"><h2>Live Chat</h2><div data-chat-messages aria-live="polite">' . $items . '</div><form method="post" data-chat-form><input type="hidden" name="action" value="send_chat"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $id . '"><label for="chat_body">Reply to ' . e($selected['display_name']) . '</label><textarea id="chat_body" name="chat_body" maxlength="' . CHAT_MAX_MESSAGE_LENGTH . '" required placeholder="Write a private message…"></textarea><button type="submit">Send</button></form></section></div><script src="/assets/onboarding-live-chat.js" defer></script>';
+    renderPage('Live Chat — ' . (string) $selected['display_name'], $content);
+}
+
 function renderMailRecord(PDO $database, int $archiveId): never
 {
     $statement = $database->prepare('SELECT archive.*, testers.display_name, testers.email FROM tester_mail_archive AS archive JOIN testers ON testers.id = archive.tester_id WHERE archive.id = ?');
@@ -1562,6 +1770,16 @@ try {
     }
     requireAuthentication($config);
 
+    $chatTesterId = filter_var($_GET['chat_tester'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && (isset($_GET['chat_stream']) || isset($_GET['chat_poll']))) {
+        if ($chatTesterId === false) fail(400, 'The requested chat is invalid.');
+        $testerStatement = $database->prepare("SELECT id, display_name FROM testers WHERE id = ? AND status = 'active'");
+        $testerStatement->execute([$chatTesterId]);
+        $chatTester = $testerStatement->fetch();
+        if ($chatTester === false) fail(404, 'The requested chat is unavailable.');
+        coordinatorChatPoll($database, $chatTester, max(0, (int) ($_GET['after'] ?? 0)), isset($_GET['chat_stream']));
+    }
+
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         if (!validCsrf()) {
             fail(403, 'The request could not be verified.');
@@ -1570,6 +1788,18 @@ try {
         if ($action === 'logout') {
             endSession();
             redirect();
+        }
+        if ($action === 'send_chat') {
+            $testerId = testerId();
+            chatPostMessage($database, $testerId, 'coordinator', (string) ($_POST['chat_body'] ?? ''));
+            redirect('?live_chat=1&chat_tester=' . $testerId . '&notice=' . rawurlencode('Live Chat message sent.'));
+        }
+        if ($action === 'delete_chat_message') {
+            $testerId = testerId();
+            $messageId = filter_var($_POST['message_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+            if ($messageId === false) throw new InvalidArgumentException('The requested chat message is invalid.');
+            chatSoftDeleteMessage($database, $testerId, 'coordinator', $messageId);
+            redirect('?live_chat=1&chat_tester=' . $testerId . '&notice=' . rawurlencode('Chat message removed from your view.'));
         }
         if ($action === 'accept_application') {
             $testerId = testerId();
@@ -1598,7 +1828,7 @@ try {
         }
         if ($action === 'update_onboarding') {
             $testerId = testerId();
-            $tester = $database->prepare('SELECT * FROM testers WHERE id = ? AND status = \'active\'');
+            $tester = $database->prepare('SELECT testers.*, onboarding.play_opt_in_confirmed_at, onboarding.initial_smoke_test_confirmed_at FROM testers LEFT JOIN tester_onboarding AS onboarding ON onboarding.tester_id = testers.id WHERE testers.id = ? AND testers.status = \'active\'');
             $tester->execute([$testerId]);
             $tester = $tester->fetch();
             if ($tester === false) {
@@ -1746,6 +1976,9 @@ try {
     }
     if (isset($_GET['mail_archive'])) {
         renderMailArchive($database);
+    }
+    if (isset($_GET['live_chat'])) {
+        renderLiveChatWorkspace($database, $chatTesterId === false ? 0 : (int) $chatTesterId);
     }
     if (isset($_GET['tester']) && ctype_digit((string) $_GET['tester'])) {
         renderTesterWorkspace($database, (int) $_GET['tester'], (string) ($_GET['notice'] ?? ''), (string) ($_GET['error'] ?? ''));
