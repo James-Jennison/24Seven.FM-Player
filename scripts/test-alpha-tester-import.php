@@ -42,6 +42,15 @@ expectImport($row['testing_availability'] === '1_2h', 'Testing availability was 
 expectImport($row['recruitment_source'] === 'direct', 'Legacy direct recruitment attribution was not preserved.');
 expectImport($pdo->query("SELECT onboarding_status FROM tester_onboarding WHERE tester_id = 1")->fetchColumn() === 'profile_pending', 'Imported applications must enter the private onboarding lifecycle conservatively.');
 
+file_put_contents($message, "From: alpha@example.test\r\n\r\nAlpha tester-interest application\n\nDisplay name: Comma Tester\nGoogle Play account email: comma@example.test\nCountry or region: Not provided\nPrimary station: Death.FM\nOther familiar stations: Not provided\nStation accounts available: Death.FM\nAndroid device: Pixel Test\nAndroid version: Android 16\nDevice form factor: Standard phone\nOther Android devices: Not provided\nTesting interests: Playback and media controls, Queue, History, and station data, Accounts and Favorites, Song request browsing and safety, Chat and community features, Audio devices and accessories, Accessibility and alternative input\nNetwork capabilities: Wi-Fi, Mobile/cellular data, Switching between Wi-Fi and mobile data\nAudio/accessory capabilities: Bluetooth headphones or earbuds, Bluetooth speaker\nAccessibility/alternative-input capabilities: Not provided\nTesting comfort level: Read-only and general testing\nControlled-action preferences: None\nTwo-week availability: Less than 30 minutes\nAssignment notes: Not provided\nConsent: Confirmed\n");
+$command = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(dirname(__DIR__) . '/scripts/import-alpha-tester-mailbox.php')
+    . ' --database ' . escapeshellarg($database)
+    . ' --uid 44 --received-at 2026-08-15T14:56:00Z --message ' . escapeshellarg($message);
+exec($command, $output, $status);
+expectImport($status === 0 && end($output) === 'Imported 1 tester application(s).', 'Comma-containing intake labels did not import.');
+$commaLists = $pdo->query("SELECT interests_json, network_capabilities_json, audio_capabilities_json FROM testers WHERE source_message_uid = '44'")->fetch(PDO::FETCH_ASSOC);
+expectImport(is_array($commaLists) && $commaLists['interests_json'] === '["playback","queue_history_data","accounts_favorites","request_safety","chat_community","audio_accessories","accessibility"]' && $commaLists['network_capabilities_json'] === '["wifi","mobile_data","network_handoff"]' && $commaLists['audio_capabilities_json'] === '["bluetooth_headphones","bluetooth_speaker"]', 'Comma-containing list labels were not canonicalized correctly.');
+
 file_put_contents($message, "From: alpha@example.test\r\n\r\nDisplay name: Legacy Tester\nGoogle Play account email: legacy@example.test\nCountry or region: Not provided\nAndroid device: Legacy Phone\nAndroid version: Android 15\nInterests: Playback\nPrior testing experience: Not provided\n");
 $command = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(dirname(__DIR__) . '/scripts/import-alpha-tester-mailbox.php')
     . ' --database ' . escapeshellarg($database)

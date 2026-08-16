@@ -202,12 +202,34 @@ function canonicalList(string $field, string $value): array
     if ($value === 'Not provided') {
         return [];
     }
-    $values = array_values(array_filter(array_map('trim', explode(',', $value))));
     $canonical = [];
-    foreach ($values as $item) {
-        $candidate = canonicalValue($field, $item);
-        if ($candidate !== null) {
-            $canonical[$candidate] = true;
+    $remaining = trim($value);
+    $labels = array_keys(INTAKE_VALUE_MAPS[$field] ?? []);
+    usort($labels, static fn (string $left, string $right): int => strlen($right) <=> strlen($left));
+
+    // The intake email joins selected labels with commas, but several labels
+    // themselves contain commas. Consume the longest known label at each
+    // position instead of splitting the entire value first.
+    while ($remaining !== '') {
+        $matched = false;
+        foreach ($labels as $label) {
+            if (!str_starts_with($remaining, $label)) {
+                continue;
+            }
+            $after = substr($remaining, strlen($label));
+            if ($after !== '' && !str_starts_with($after, ',')) {
+                continue;
+            }
+            $candidate = canonicalValue($field, $label);
+            if ($candidate !== null) {
+                $canonical[$candidate] = true;
+            }
+            $remaining = ltrim($after, ', ');
+            $matched = true;
+            break;
+        }
+        if (!$matched) {
+            throw new RuntimeException("Unknown {$field} value.");
         }
     }
     if (isset($canonical['none'])) {
