@@ -67,6 +67,51 @@ The five-minute initial smoke check is: launch, play a station for a few minutes
 
 The tester dashboard presents the same five evidence points as `Applied`, `Profile & Device`, `Play Opt-In`, `First-Use Smoke Test`, and `Active Assignment`. Orientation is recorded through the existing coordinator-mail archive and is not a blocking tracker stage. `Ready` is set only after the tester records both Play opt-in and the initial smoke test; an active assignment is current work, not a prerequisite for that ready state.
 
+## Portal rollout milestones
+
+The portal is released only through the following ordered gates. Passing a gate records evidence for the next one; it does not authorize deployment by itself.
+
+### Phase 1 — Pre-Flight
+
+**Purpose:** Verify the local database transition, Live Chat security boundary, and coordinator-mail rendering before any environment is changed.
+
+Run locally:
+
+```bash
+php scripts/test-onboarding-live-chat.php
+php scripts/test-alpha-tester-import.php
+php scripts/test-alpha-tester-auto-onboarding.php
+php scripts/test-administrator-login-security.php
+php scripts/test-coordinator-email-composer.php
+php scripts/test-private-tester-email.php
+node scripts/test-private-tester-queue.mjs
+node scripts/test-tester-portal.mjs
+```
+
+Required evidence: the legacy invitation/orientation-state migration resolves to the evidence lifecycle; a tester cannot access another tester's chat; role-bound soft deletion, rate limits, and the 90-day purge are exercised; only the four approved email variables render; and the tester/coordinator routes retain their separate authentication boundaries.
+
+### Phase 2 — Staging & internal smoke test
+
+**Purpose:** Use an isolated staging copy and non-production test records to validate the protected operator flow.
+
+Required checks:
+
+1. Sign in as a coordinator and validate the separate Operations, Email, and Live Chat workspaces.
+2. Confirm an individual resolved email draft and inspect its protected archive record without sending to a real tester.
+3. Complete the five-stage tester flow with a staging test record; verify that task assignment remains blocked until both Play Opt-In and First-Use Smoke Test evidence exist.
+4. Open both detached Live Chat windows and confirm their titles identify the other participant without exposing another thread.
+5. Seed an expired test message in the staging database, invoke `chatPurgeExpired`, and verify removal from messages and empty threads.
+
+Required evidence: a dated smoke-test worksheet, redacted screenshots or test IDs only, and staging database aggregate counts. Never attach names, addresses, message content, credentials, tokens, or paths to Git.
+
+### Phase 3 — Controlled release
+
+**Purpose:** Prepare a feature-flagged release for a small initial Alpha cohort, with a verified rollback boundary.
+
+Required checks: approve the exact review commit; identify the feature-flag default and initial-cohort allow list through the protected deployment configuration; take the private database backup; apply the verified migration; run the Phase 2 smoke test against the release candidate; enable the feature only for the approved cohort; and monitor only aggregate error/usage evidence during the agreed observation window.
+
+Required evidence: release approval, backup identifier, migration result, feature-flag state, cohort-size count, rollback command/owner, and post-enable aggregate health result. Production mail handoff, feature enablement, and deployment each require separate owner approval.
+
 ## Private portal interaction contract
 
 The coordinator queue and tester portal are separate authenticated surfaces. They share only the protected tester-program storage boundary; a tester session never opens the roster, coordinator notes, mail archive, or another tester’s conversation.

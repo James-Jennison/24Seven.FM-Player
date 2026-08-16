@@ -1245,6 +1245,18 @@ Cumulative counted project time through Milestone M55: Unknown overall; 0.34 h p
 - **Time, variance, evidence, confidence, and forecasting lessons:** No actual variance. Roadmap `e249071`, forecast `f971a9e`; no certification.
   **Unknown**. Time lifecycle matrices and external sandbox availability independently.
 
+## Onboarding portal release-gate addendum
+
+This addendum is a three-phase operational gate for the private onboarding portal. It does not renumber or alter the canonical M01–M60 totals.
+
+| Phase | Status | Authorized objective | Required evidence before advancing |
+| --- | --- | --- | --- |
+| Phase 1 — Pre-Flight | Complete locally on `August 15, 2026 at 9:18:47 PM PDT (UTC−07:00)` | Validate schema migration behavior, Live Chat isolation/security, retention, and email rendering. | Passing local migration, security, chat, and mail-rendering contracts; commit/PR reference. |
+| Phase 2 — Staging & Internal Smoke Test | Pending | Validate coordinator composer/task/chat flows and retention purge with staging-only records. | Isolated staging worksheet and aggregate-only results. |
+| Phase 3 — Controlled Release | Pending | Feature-flagged initial Alpha cohort rollout. | Explicit owner approval, database backup, migration result, flag/cohort record, rollback evidence, and aggregate post-enable result. |
+
+Phase 1 was executed locally with `test-onboarding-live-chat.php`, importer/auto-onboarding migration contracts, administrator security, coordinator email rendering, private email encoding, task-routing, and tester-portal contracts. No staging, deployment, mail handoff, or production data action occurred. Active-time totals are not reconstructed here because this gate was authorized and recorded after implementation work; preserve any future Phase 2/3 intervals prospectively under the operating procedure below.
+
 ## Historical milestone and legacy-ID crosswalk
 
 The roadmap was renumbered on July 18, 2026. Historical records and commit messages retain their original identifiers,
