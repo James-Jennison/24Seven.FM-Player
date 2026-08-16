@@ -7,6 +7,7 @@ set -euo pipefail
 
 readonly EXPECTED_ADMIN_USERNAME='jjennison'
 readonly STAGING_CONFIRMATION='onboarding-staging.player.jamesjennison.net'
+readonly EXPECTED_QUEUE_HANDLER_SHA256='384104ec7f264872313f87ce8e67fc3ec3d357648dd0cdebe71d3f03f6ab0e6c'
 
 if [[ ! -t 0 || ! -t 1 ]]; then
   printf '%s\n' 'An interactive owner terminal is required; no change was made.' >&2
@@ -56,21 +57,31 @@ if [[ -z "${vhost_file}" ]]; then
 fi
 
 staging_document_root="$(awk 'tolower($1) == "documentroot" { print $2; exit }' "${vhost_file}")"
-queue_handler="$(readlink -f "${staging_document_root}/private-tester-queue.php" 2>/dev/null || true)"
-if [[ ! -f "${queue_handler}" ]]; then
-  printf '%s\n' 'The staging queue login handler is unavailable; no change was made.' >&2
+staging_account_root="$(dirname "$(dirname "${staging_document_root}")")"
+queue_handler=''
+configuration_path=''
+
+# The staging vhost uses an Alias-backed release layout. Select the sole
+# deployed handler matching the reviewed source hash and an adjacent writable
+# private store; fail closed if the release mapping becomes ambiguous.
+while IFS= read -r handler_candidate; do
+  candidate_hash="$(sha256sum "${handler_candidate}" | awk '{print $1}')"
+  [[ "${candidate_hash}" == "${EXPECTED_QUEUE_HANDLER_SHA256}" ]] || continue
+  candidate_store="$(dirname "$(dirname "${handler_candidate}")")/.private-tester-queue-config.php"
+  [[ -r "${candidate_store}" && -w "${candidate_store}" ]] || continue
+  if [[ -n "${queue_handler}" ]]; then
+    printf '%s\n' 'The staging queue handler mapping is ambiguous; no change was made.' >&2
+    exit 1
+  fi
+  queue_handler="${handler_candidate}"
+  configuration_path="${candidate_store}"
+done < <(find "${staging_account_root}" -xdev -type f -name private-tester-queue.php 2>/dev/null)
+
+if [[ -z "${queue_handler}" ]]; then
+  printf '%s\n' 'The deployed staging queue handler is unavailable; no change was made.' >&2
   exit 1
 fi
 
-# `config()` resolves the private store from dirname(__DIR__) of the deployed
-# PHP handler. Resolve the handler first so this remains correct when Apache
-# serves it through a symlinked staging document root.
-configuration_path="$(dirname "$(dirname "${queue_handler}")")/.private-tester-queue-config.php"
-
-if [[ ! -r "${configuration_path}" || ! -w "${configuration_path}" ]]; then
-  printf '%s\n' 'The staging queue credential store is unavailable; no change was made.' >&2
-  exit 1
-fi
 
 # The password travels to PHP only on stdin, never through a process argument
 # or environment variable. PHP atomically replaces the existing private config,
