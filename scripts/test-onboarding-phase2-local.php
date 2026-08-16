@@ -20,6 +20,7 @@ if ($path === false) throw new RuntimeException('Unable to create isolated local
 
 try {
     $database = database(['database_path' => $path]);
+    expectPhaseTwo((int) $database->query("SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'tester_profile_completion_notifications'")->fetchColumn() === 1, 'Profile-completion notification handoffs must have dedicated local audit storage.');
     $database->prepare("INSERT INTO testers(source_message_uid, received_at, display_name, email, device, android_version, interests_json, status, imported_at, primary_station, device_form_factor, network_capabilities_json, audio_capabilities_json, accessibility_capabilities_json, testing_comfort, controlled_actions_json, testing_availability) VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, ?, ?, ?, ?, ?, ?)")
         ->execute(['phase-two-local', '2026-08-15T00:00:00Z', 'Local Stage Tester', 'local-stage@example.test', 'Local stage device', 'Android 16', '["playback"]', '2026-08-15T00:00:00Z', 'sst', 'phone', '["wifi"]', '["device_speaker"]', '["general_accessibility"]', 'readonly', '["none"]', '1_2h']);
 

@@ -173,6 +173,13 @@ function database(array $config): PDO
         );
         CREATE INDEX IF NOT EXISTS tester_mail_archive_recent ON tester_mail_archive(prepared_at DESC, id DESC);
         CREATE INDEX IF NOT EXISTS tester_mail_archive_tester ON tester_mail_archive(tester_id, prepared_at DESC);
+        CREATE TABLE IF NOT EXISTS tester_profile_completion_notifications (
+            tester_id INTEGER PRIMARY KEY REFERENCES testers(id) ON DELETE CASCADE,
+            handoff_status TEXT NOT NULL CHECK(handoff_status IN (\'prepared\', \'accepted\', \'failed\')),
+            prepared_at TEXT NOT NULL,
+            attempted_at TEXT,
+            attempts INTEGER NOT NULL DEFAULT 0
+        );
         CREATE TABLE IF NOT EXISTS tester_task_assignments (
             id INTEGER PRIMARY KEY,
             tester_id INTEGER NOT NULL REFERENCES testers(id) ON DELETE CASCADE,
@@ -1539,6 +1546,43 @@ function sendIndividualMail(array $config, string $recipient, string $subject, s
         }
         return false;
     }
+}
+
+function profileCompletionNotificationRecipient(array $config): string
+{
+    $recipient = trim((string) ($config['coordinator_email'] ?? $config['from_email']));
+    if (!filter_var($recipient, FILTER_VALIDATE_EMAIL)) {
+        throw new RuntimeException('The coordinator notification recipient is invalid.');
+    }
+    return $recipient;
+}
+
+/**
+ * Notify the coordinator once when a tester first completes the required
+ * Profile & Device coverage. The tester's profile data stays in the private
+ * workspace; the notification includes only their display name and link.
+ */
+function sendProfileCompletionNotification(PDO $database, array $config, array $tester): bool
+{
+    $testerId = (int) ($tester['id'] ?? 0);
+    if ($testerId < 1) {
+        throw new InvalidArgumentException('The tester profile notification is invalid.');
+    }
+    $preparedAt = gmdate('c');
+    $prepare = $database->prepare('INSERT OR IGNORE INTO tester_profile_completion_notifications(tester_id, handoff_status, prepared_at, attempts) VALUES (?, \'prepared\', ?, 0)');
+    $prepare->execute([$testerId, $preparedAt]);
+    if ($prepare->rowCount() !== 1) {
+        return false;
+    }
+
+    $displayName = trim((string) ($tester['display_name'] ?? 'Tester'));
+    $subject = 'Tester profile complete — ' . $displayName;
+    $workspaceUrl = ADMIN_LOGIN_ORIGIN . '/private-tester-queue.php?tester=' . $testerId;
+    $body = "{$displayName} has completed their Profile & Device details.\n\nReview the updated private tester workspace:\n{$workspaceUrl}\n";
+    $accepted = sendIndividualMail($config, profileCompletionNotificationRecipient($config), $subject, $body, plainTextToHtml($body));
+    $database->prepare('UPDATE tester_profile_completion_notifications SET handoff_status = ?, attempted_at = ?, attempts = attempts + 1 WHERE tester_id = ? AND handoff_status = \'prepared\'')
+        ->execute([$accepted ? 'accepted' : 'failed', gmdate('c'), $testerId]);
+    return $accepted;
 }
 
 function prepareMailArchive(PDO $database, int $testerId, string $messageType, string $subject, string $body, string $html, ?int $batchId = null, ?int $assignmentId = null): int

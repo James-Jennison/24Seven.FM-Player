@@ -319,8 +319,9 @@ function portalConsumeLink(PDO $database, string $token): void
     portalRedirect('?notice=' . rawurlencode('You are signed in to your tester portal.'));
 }
 
-function portalSaveProfile(PDO $database, array $tester): void
+function portalSaveProfile(PDO $database, array $tester, array $config): void
 {
+    $wasComplete = profileSummary($tester)['complete'];
     $displayName = portalText('display_name', 100, true);
     $country = portalText('country', 80);
     $primary = portalChoice('primary_station', PORTAL_PRIMARY_STATIONS, true);
@@ -340,7 +341,11 @@ function portalSaveProfile(PDO $database, array $tester): void
     $experience = portalText('experience', 1200);
     $update = $database->prepare('UPDATE testers SET display_name = ?, country = ?, device = ?, android_version = ?, primary_station = ?, other_stations_json = ?, station_accounts_json = ?, device_form_factor = ?, other_devices = ?, interests_json = ?, network_capabilities_json = ?, audio_capabilities_json = ?, accessibility_capabilities_json = ?, testing_comfort = ?, controlled_actions_json = ?, testing_availability = ?, experience = ? WHERE id = ?');
     $update->execute([$displayName, $country, portalText('device', 160, true), portalText('android_version', 48, true), $primary, json_encode($otherStations, JSON_THROW_ON_ERROR), json_encode($accounts, JSON_THROW_ON_ERROR), $deviceType, portalText('other_devices', 500), json_encode($interests, JSON_THROW_ON_ERROR), json_encode($network, JSON_THROW_ON_ERROR), json_encode($audio, JSON_THROW_ON_ERROR), json_encode($accessibility, JSON_THROW_ON_ERROR), $comfort, json_encode($controlled, JSON_THROW_ON_ERROR), $availability, $experience, (int) $tester['id']]);
-    synchronizeOnboardingProfile($database, (int) $tester['id']);
+    $onboardingStatus = synchronizeOnboardingProfile($database, (int) $tester['id']);
+    if (!$wasComplete && $onboardingStatus !== 'profile_pending') {
+        $updatedTester = portalTesterById($database, (int) $tester['id']);
+        sendProfileCompletionNotification($database, $config, $updatedTester);
+    }
     portalRedirect('?notice=' . rawurlencode('Your intake profile and device details are saved.'));
 }
 
@@ -484,7 +489,7 @@ try {
         if (!validCsrf()) fail(403, 'The request could not be verified.');
         $action = (string) ($_POST['action'] ?? '');
         if ($action === 'logout') { $_SESSION = []; session_destroy(); portalRedirect('?notice=' . rawurlencode('You are signed out.')); }
-        if ($action === 'save_profile') portalSaveProfile($database, $tester);
+        if ($action === 'save_profile') portalSaveProfile($database, $tester, $config);
         if ($action === 'confirm_opt_in') portalConfirmOptIn($database, $tester);
         if ($action === 'confirm_initial_smoke_test') portalConfirmInitialSmokeTest($database, $tester);
         if ($action === 'request_privacy_action') portalRequestPrivacyAction($database, $tester);

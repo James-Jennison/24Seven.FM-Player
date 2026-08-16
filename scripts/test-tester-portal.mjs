@@ -73,6 +73,9 @@ assert(queue.includes("coordinatorChatPoll") && queue.includes("chatPostMessage(
 assert(queue.includes("play_opt_in_confirmed_at"), "Queue database migration must retain tester opt-in confirmation.");
 assert(queue.includes("function synchronizeOnboardingProfile"), "Profile & Device completion must be persisted in the onboarding lifecycle.");
 assert(portal.includes("synchronizeOnboardingProfile($database, (int) $tester['id'])"), "Saving a tester profile must synchronize the five-stage lifecycle.");
+assert(queue.includes("CREATE TABLE IF NOT EXISTS tester_profile_completion_notifications"), "Profile completion notifications must have one auditable record per tester.");
+assert(queue.includes("function sendProfileCompletionNotification") && portal.includes("sendProfileCompletionNotification($database, $config, $updatedTester)"), "A tester's first complete profile save must notify the coordinator without exposing profile fields in the email.");
+assert(queue.includes("profileCompletionNotificationRecipient") && queue.includes("$config['coordinator_email'] ?? $config['from_email']"), "Profile-completion notices must use the configured coordinator recipient without embedding an address in source.");
 assert(queue.includes("withdrawal_requested_at") && queue.includes("deletion_requested_at"), "Queue database migration must retain tester privacy request timestamps.");
 assert(queue.includes("Record-deletion request:"), "Coordinator workspace must surface tester deletion requests.");
 assert(queue.includes("Tester task reports"), "Coordinator workspaces must display submitted tester reports.");
