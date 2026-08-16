@@ -45,12 +45,21 @@ try {
     clearAdministratorLoginFailures($database, $config);
     adminLoginAssert(!administratorLoginIsLimited($database, $config), 'A successful administrator sign-in must clear its rate limit.');
 
+    $_SERVER['HTTP_HOST'] = 'player.jamesjennison.net';
     $_SERVER['HTTP_ORIGIN'] = ADMIN_LOGIN_ORIGIN;
+    adminLoginAssert(administratorMfaRequired(), 'The live coordinator host must require MFA.');
     adminLoginAssert(administratorLoginRequestIsSameOrigin(), 'The canonical administrator origin must be accepted.');
     $_SERVER['HTTP_ORIGIN'] = 'https://attacker.example';
     adminLoginAssert(!administratorLoginRequestIsSameOrigin(), 'A cross-origin administrator sign-in must be rejected.');
 
     $_SERVER['HTTP_HOST'] = STAGING_ADMIN_BYPASS_HOST;
+    $_SERVER['HTTP_ORIGIN'] = STAGING_ADMIN_LOGIN_ORIGIN;
+    adminLoginAssert(!administratorMfaRequired(), 'The isolated staging coordinator host must not require MFA.');
+    adminLoginAssert(administratorLoginRequestIsSameOrigin(), 'The staging administrator origin must be accepted.');
+    $_SERVER['HTTP_ORIGIN'] = ADMIN_LOGIN_ORIGIN;
+    adminLoginAssert(!administratorLoginRequestIsSameOrigin(), 'The live administrator origin must not be accepted on staging.');
+    $authenticationSource = file_get_contents(dirname(__DIR__) . '/privacy-site/private-tester-queue.php');
+    adminLoginAssert(is_string($authenticationSource) && !str_contains($authenticationSource, 'if (stagingAdministratorBypassIsAuthorized($config))'), 'Staging access must still require the administrator password.');
     $_SERVER['REMOTE_ADDR'] = '203.0.113.54';
     $stagingBypass = ['staging_admin_bypass' => ['expires_at' => 10_001, 'allowed_addresses' => ['203.0.113.54']]];
     adminLoginAssert(stagingAdministratorBypassIsAuthorized($stagingBypass, 10_000), 'An exact staging host, source address, and short expiry must permit staging-only access.');
