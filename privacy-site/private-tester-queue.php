@@ -591,8 +591,9 @@ function renderPage(string $title, string $content, bool $showCoordinatorNavigat
     $chatClass = $activeWorkspace === 'chat' ? ' active' : '';
     $emailClass = $activeWorkspace === 'email' ? ' active' : '';
     $loginLayout = $showCoordinatorNavigation ? '' : '<style>.global-rail{display:none!important}.app-shell{display:block}.desktop{padding:1.5rem}section.login{width:min(calc(100% - 3rem),31rem);margin:9vh auto!important}</style>';
+    $workspaceRestoration = '<style>.operations-workspace{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(20rem,.9fr);gap:1rem;align-items:start}.operations-workspace>section,.operations-workspace>details{margin:0}.operations-workspace>.evidence-board{grid-column:1/-1}.operations-workspace>section:nth-of-type(2){grid-column:1/-1}.operations-workspace>.applications-card{min-height:34rem}.operations-workspace>section:nth-of-type(4){min-height:34rem}.operations-workspace>.compose-card{grid-column:1/-1}.evidence-board .board{display:grid;grid-template-columns:repeat(5,minmax(9rem,1fr));gap:.65rem;overflow:auto}.evidence-board .board-column{min-height:9.5rem;padding:.75rem;border:1px solid var(--line);border-radius:.65rem;background:var(--canvas-2)}.evidence-board .column-head{display:flex;align-items:start;justify-content:space-between;gap:.5rem}.evidence-board .column-head span{display:grid;width:1.35rem;height:1.35rem;place-items:center;border-radius:50%;background:#493b22;color:var(--amber);font-size:.68rem;font-weight:850}.evidence-board .column-head strong{font-size:.78rem}.evidence-board .column-head b{color:var(--cyan);font-size:1rem}.evidence-board .board-column p{margin:.85rem 0 0;color:var(--muted);font-size:.72rem}.operations-workspace .applications-card{border-color:#d29cff66}.operations-workspace .application-rows{max-height:26rem;overflow:auto;padding-right:.2rem}.operations-workspace .application-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start}.operations-workspace .application-actions{justify-content:flex-end}.operations-workspace .table-scroll{max-height:26rem;overflow:auto}.operations-workspace>section:nth-of-type(4) .link-button{display:block;width:max-content;margin:.15rem 0;padding:.36rem .48rem;font-size:.7rem}.operations-workspace .compose-card{padding:0;overflow:hidden}.operations-workspace .compose-card>summary{padding:.85rem 1rem;border-bottom:1px solid var(--line);background:linear-gradient(145deg,var(--surface-2),var(--surface))}.operations-workspace .compose-card>form>section{margin:0;border:0;border-radius:0;box-shadow:none}.operations-workspace h2{font-size:1.05rem}@media(max-width:1040px){.operations-workspace{grid-template-columns:1fr}.operations-workspace>.evidence-board,.operations-workspace>section:nth-of-type(2),.operations-workspace>.compose-card{grid-column:auto}.operations-workspace .application-rows,.operations-workspace .table-scroll{max-height:none}}@media(max-width:720px){.operations-workspace .application-row{grid-template-columns:1fr}.operations-workspace .application-actions{justify-content:flex-start;margin-top:.65rem}}</style>';
     echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'
-        . e($title) . '</title>' . $loginLayout . '<style>'
+        . e($title) . '</title>' . $loginLayout . $workspaceRestoration . '<style>'
         . 'body{margin:0;background:#090c15;color:#f7f4ec;font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
 .shell{max-width:72rem;margin:2.5rem auto;padding:0 1.25rem}
 h1,h2{line-height:1.2;letter-spacing:-.01em}
@@ -1586,7 +1587,7 @@ function applicationStageBadge(string $stage): string
 function renderOperationsDashboard(PDO $database, string $notice = '', string $error = '', bool $emailOnly = false): never
 {
     $tasks = taskRegistry();
-    $testers = $database->query("SELECT testers.*, onboarding.onboarding_status, onboarding.reviewed_at, onboarding.orientation_email_status, onboarding.orientation_email_attempted_at, onboarding.orientation_email_attempts FROM testers LEFT JOIN tester_onboarding AS onboarding ON onboarding.tester_id = testers.id WHERE testers.status = 'active' ORDER BY testers.received_at, testers.id")->fetchAll();
+    $testers = $database->query("SELECT testers.*, onboarding.onboarding_status, onboarding.reviewed_at, onboarding.orientation_email_status, onboarding.orientation_email_attempted_at, onboarding.orientation_email_attempts, onboarding.play_opt_in_confirmed_at, onboarding.initial_smoke_test_confirmed_at FROM testers LEFT JOIN tester_onboarding AS onboarding ON onboarding.tester_id = testers.id WHERE testers.status = 'active' ORDER BY testers.received_at, testers.id")->fetchAll();
     $assignments = $database->query("SELECT tester_id, task_status FROM tester_task_assignments ORDER BY id")->fetchAll();
     $assignmentCounts = [];
     foreach ($assignments as $assignment) {
@@ -1600,14 +1601,26 @@ function renderOperationsDashboard(PDO $database, string $notice = '', string $e
     $pendingApplications = [];
     $rosterTesters = [];
     $stageCounts = array_fill_keys(APPLICATION_STAGES, 0);
+    $boardCounts = ['applied' => 0, 'profile' => 0, 'play_opt_in' => 0, 'smoke_test' => 0, 'active' => 0];
     $sourceCounts = array_fill_keys(array_keys(RECRUITMENT_SOURCE_LABELS), 0);
     foreach ($testers as $tester) {
         $stage = applicationStage($tester);
         $stageCounts[$stage]++;
         if ($stage === 'pending_review') {
             $pendingApplications[] = $tester;
+            $boardCounts['applied']++;
         } else {
             $rosterTesters[] = $tester;
+            $profile = profileSummary($tester);
+            if (!$profile['complete']) {
+                $boardCounts['profile']++;
+            } elseif (empty($tester['play_opt_in_confirmed_at'])) {
+                $boardCounts['play_opt_in']++;
+            } elseif (empty($tester['initial_smoke_test_confirmed_at'])) {
+                $boardCounts['smoke_test']++;
+            } else {
+                $boardCounts['active']++;
+            }
         }
         $source = $tester['recruitment_source'] ?? 'direct';
         if (isset($sourceCounts[$source])) {
@@ -1672,12 +1685,15 @@ function renderOperationsDashboard(PDO $database, string $notice = '', string $e
         renderPage('Coordinator email', $content);
     }
 
+    $fiveStageBoard = '<section class="evidence-board"><h2>Five-stage evidence path</h2><div class="board"><article class="board-column"><div class="column-head"><span>1</span><strong>Applied</strong><b>' . $boardCounts['applied'] . '</b></div><p>New applications waiting for a coordinator decision.</p></article><article class="board-column"><div class="column-head"><span>2</span><strong>Profile &amp; Device</strong><b>' . $boardCounts['profile'] . '</b></div><p>Coverage details needed before safe assignment.</p></article><article class="board-column"><div class="column-head"><span>3</span><strong>Play Opt-In</strong><b>' . $boardCounts['play_opt_in'] . '</b></div><p>Tester self-confirms their opt-in.</p></article><article class="board-column"><div class="column-head"><span>4</span><strong>Smoke Test</strong><b>' . $boardCounts['smoke_test'] . '</b></div><p>First-use evidence is recorded by the tester.</p></article><article class="board-column"><div class="column-head"><span>5</span><strong>Active assignment</strong><b>' . $boardCounts['active'] . '</b></div><p>Focused work may now be assigned.</p></article></div></section>';
+    $message .= '<div class="operations-workspace">' . $fiveStageBoard;
+
     $content = '<header class="dashboard-header"><div><p class="eyebrow">24Seven.FM Player · Closed alpha</p><h1>Tester operations</h1><p class="muted">A private workspace for moving a new application through review to a focused, safe testing assignment.</p><p><a class="link-button" href="/private-tester-queue.php?live_chat=1">Live Chat</a><a class="link-button" href="/private-tester-queue.php?email=1">Email (' . $archiveCount . ')</a><a class="link-button" href="/private-tester-queue.php?mail_archive=1">Sent archive</a></p></div><form method="post"><input type="hidden" name="action" value="logout"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><button class="secondary" type="submit">Sign out</button></form></header>' . $message
         . '<section><h2>Onboarding pipeline</h2><div class="onboarding-overview"><div class="onboarding-metric stage-pending_review"><strong>' . $stageCounts['pending_review'] . '</strong><span>Pending review</span></div><div class="onboarding-metric stage-accepted"><strong>' . $stageCounts['accepted'] . '</strong><span>Evidence in progress</span></div><div class="onboarding-metric stage-active"><strong>' . $stageCounts['active'] . '</strong><span>Active assignments</span></div></div><p class="muted">Workflow: review a new application → complete Profile &amp; Device → tester self-confirms Play opt-in and the first-use smoke test → assign focused work. Orientation and invitation messages remain archived mail events; they never advance the lifecycle or prove opt-in, installation, or activity.</p><p class="muted">Recruitment: ' . e('Direct ' . $sourceCounts['direct'] . ' · Testers Community ' . $sourceCounts['testers_community'] . ' · Betabound ' . $sourceCounts['betabound'] . ' · BetaFamily ' . $sourceCounts['betafamily'] . ' · Other ' . $sourceCounts['other']) . '</p></section>'
         . '<section class="applications-card"><h2>Applications awaiting review (' . count($pendingApplications) . ')</h2>' . ($applicationRows === '' ? '<p class="muted">No new applications right now.</p>' : '<p class="muted">Newly submitted or imported applications stay here, separate from the accepted roster, until a coordinator accepts, requests details, or rejects them.</p><div class="application-rows">' . $applicationRows . '</div>') . '</section>'
         . '<section><h2>Tester roster</h2><p class="muted">Open one workspace to review coverage, record onboarding progress, send an individual orientation email, and manage focused tasks.</p><div class="table-scroll"><table><thead><tr><th scope="col">Tester</th><th scope="col">Device</th><th scope="col">Recruitment</th><th scope="col">Stage &amp; onboarding</th><th scope="col">Assignments</th><th scope="col"><span class="visually-hidden">Open</span></th></tr></thead><tbody>' . ($rows === '' ? '<tr><td colspan="6" class="muted">No accepted testers yet.</td></tr>' : $rows) . '</tbody></table></div></section>'
         . '<details class="compose-card"' . ($composeForId !== null ? ' open' : '') . '><summary><strong>Compose a coordinator email</strong></summary><form method="post" id="email-form"><input type="hidden" name="action" value="prepare"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><section><h2>Recipients and message</h2><p class="muted">Only reviewed testers can receive a coordinator email; applications awaiting review use the Accept / Request details / Reject actions above instead.</p><p><label><input type="checkbox" id="select-all"> Select all reviewed testers</label></p><div class="table-scroll"><table><thead><tr><th scope="col">Select</th><th scope="col">Tester</th><th scope="col">Onboarding</th></tr></thead><tbody>' . ($recipientRows === '' ? '<tr><td colspan="3" class="muted">No reviewed testers yet.</td></tr>' : $recipientRows) . '</tbody></table></div><label for="subject">Subject</label><input id="subject" name="subject" maxlength="' . MAX_SUBJECT_LENGTH . '" required>' . $editor . '<button type="submit">Review selected recipients</button></section></form></details>'
-        . $composeHint
+        . '</div>' . $composeHint
         . '<script src="/assets/private-tester-queue.js?v=onboarding-2" defer></script>';
     renderPage('Tester operations', $content);
 }
@@ -1971,7 +1987,7 @@ try {
             $testerId = testerId();
             activeTester($database, $testerId);
             markApplicationReviewed($database, $testerId);
-            redirect('?compose_for=' . $testerId . '&notice=' . rawurlencode('Application accepted. Compose the profile-update request below.'));
+            redirect('?email=1&compose_for=' . $testerId . '&notice=' . rawurlencode('Application accepted. Compose the profile-update request below.'));
         }
         if ($action === 'reject_application') {
             $testerId = testerId();

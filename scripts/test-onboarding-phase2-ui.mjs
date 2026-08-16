@@ -15,6 +15,8 @@ function assert(condition, message) {
 
 assert(queue.includes('?email=1') && queue.includes('?live_chat=1'), "Coordinator Operations must route Email and Live Chat as separate workspaces.");
 assert(queue.includes('/assets/onboarding-portal.css') && queue.includes('global-rail'), "Coordinator routes must use the approved workspace rail and shared visual treatment.");
+assert(queue.includes('operations-workspace') && queue.includes('Five-stage evidence path') && queue.includes('boardCounts'), "Coordinator Operations must preserve the approved compact five-stage workspace hierarchy.");
+assert(queue.includes('?email=1&compose_for='), "Profile-detail requests must land in the dedicated Email workspace with the recipient preserved.");
 assert(portal.includes('/assets/onboarding-portal.css') && portal.includes('portal-preview-shell'), "Tester routes must use the same approved workspace visual treatment.");
 assert(workspaceStyles.includes('.global-rail') && workspaceStyles.includes('.window') && workspaceStyles.includes('@media(max-width:720px)'), "The promoted workspace styling must preserve its rail, window, and responsive behavior.");
 assert(queue.includes('Draft preview') && queue.includes('exact version is preserved in the sent archive'), "Coordinator Email must provide a resolved review step and archived delivery evidence.");
