@@ -49,6 +49,18 @@ try {
     adminLoginAssert(administratorLoginRequestIsSameOrigin(), 'The canonical administrator origin must be accepted.');
     $_SERVER['HTTP_ORIGIN'] = 'https://attacker.example';
     adminLoginAssert(!administratorLoginRequestIsSameOrigin(), 'A cross-origin administrator sign-in must be rejected.');
+
+    $_SERVER['HTTP_HOST'] = STAGING_ADMIN_BYPASS_HOST;
+    $_SERVER['REMOTE_ADDR'] = '203.0.113.54';
+    $stagingBypass = ['staging_admin_bypass' => ['expires_at' => 10_001, 'allowed_addresses' => ['203.0.113.54']]];
+    adminLoginAssert(stagingAdministratorBypassIsAuthorized($stagingBypass, 10_000), 'An exact staging host, source address, and short expiry must permit staging-only access.');
+    $_SERVER['REMOTE_ADDR'] = '203.0.113.55';
+    adminLoginAssert(!stagingAdministratorBypassIsAuthorized($stagingBypass, 10_000), 'A staging bypass must reject a different source address.');
+    $_SERVER['REMOTE_ADDR'] = '203.0.113.54';
+    $_SERVER['HTTP_HOST'] = 'player.jamesjennison.net';
+    adminLoginAssert(!stagingAdministratorBypassIsAuthorized($stagingBypass, 10_000), 'A staging bypass must never authorize the live host.');
+    $_SERVER['HTTP_HOST'] = STAGING_ADMIN_BYPASS_HOST;
+    adminLoginAssert(!stagingAdministratorBypassIsAuthorized($stagingBypass, 10_001), 'A staging bypass must expire without a cleanup job.');
 } finally {
     unset($database);
     @unlink($databasePath);

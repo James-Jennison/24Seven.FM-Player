@@ -22,6 +22,8 @@ const ADMIN_LOGIN_ORIGIN = 'https://player.jamesjennison.net';
 const ADMIN_TOTP_STEP_SECONDS = 30;
 const ADMIN_TOTP_DIGITS = 6;
 const ADMIN_TOTP_ALLOWED_DRIFT_STEPS = 1;
+const STAGING_ADMIN_BYPASS_MAX_SECONDS = 86_400;
+const STAGING_ADMIN_BYPASS_HOST = 'onboarding-staging.player.jamesjennison.net';
 const MAX_SUBJECT_LENGTH = 180;
 const MAX_BODY_LENGTH = 12_000;
 const MAX_HTML_BODY_LENGTH = 24_000;
@@ -100,6 +102,11 @@ function config(): array
     }
     if (!filter_var($config['from_email'], FILTER_VALIDATE_EMAIL)) {
         fail(503, 'The private tester queue sender configuration is invalid.');
+    }
+    $bypassPath = dirname(__DIR__) . '/.onboarding-staging-bypass.php';
+    if (is_file($bypassPath)) {
+        $bypass = require $bypassPath;
+        if (is_array($bypass)) $config['staging_admin_bypass'] = $bypass;
     }
     return $config;
 }
@@ -570,6 +577,13 @@ function redirect(string $location = ''): never
 
 function requireAuthentication(array $config): void
 {
+    if (stagingAdministratorBypassIsAuthorized($config)) {
+        $_SESSION['authenticated'] = true;
+        $_SESSION['authenticated_at'] = time();
+        $_SESSION['last_seen_at'] = time();
+        csrf();
+        return;
+    }
     if (($_SESSION['authenticated'] ?? false) !== true) {
         renderLogin();
         exit;
@@ -589,6 +603,32 @@ function requireAuthentication(array $config): void
         // The hash remains private; surface no detail to a browser.
         error_log('private-tester-queue password hash should be refreshed');
     }
+}
+
+/**
+ * A staging-only, IP-bound temporary access escape hatch. It is disabled by
+ * default, cannot run on any other host, and expires without a scheduled job.
+ */
+function stagingAdministratorBypassIsAuthorized(array $config, ?int $now = null): bool
+{
+    $bypass = $config['staging_admin_bypass'] ?? null;
+    if (!is_array($bypass)) return false;
+    $host = strtolower(trim((string) ($_SERVER['HTTP_HOST'] ?? '')));
+    if ($host !== STAGING_ADMIN_BYPASS_HOST) return false;
+    $expiresAt = $bypass['expires_at'] ?? null;
+    if (!is_int($expiresAt)) return false;
+    $currentTime = $now ?? time();
+    if ($expiresAt <= $currentTime || $expiresAt > $currentTime + STAGING_ADMIN_BYPASS_MAX_SECONDS) return false;
+    $address = $_SERVER['REMOTE_ADDR'] ?? null;
+    if (!is_string($address) || filter_var($address, FILTER_VALIDATE_IP) === false) return false;
+    $allowedAddresses = $bypass['allowed_addresses'] ?? null;
+    if (!is_array($allowedAddresses)) return false;
+    foreach ($allowedAddresses as $allowedAddress) {
+        if (is_string($allowedAddress) && filter_var($allowedAddress, FILTER_VALIDATE_IP) !== false && hash_equals($allowedAddress, $address)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 function renderPage(string $title, string $content): never
