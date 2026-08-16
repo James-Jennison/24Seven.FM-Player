@@ -48,6 +48,14 @@
 
   const draft = document.createElement('section');
   const coverage = document.createElement('section');
+  const formContent = form.querySelector(':scope > fieldset') ?? form;
+  const draftFields = document.createElement('fieldset');
+  const coverageFields = document.createElement('fieldset');
+  const readOnlyPreview = formContent instanceof HTMLFieldSetElement && formContent.disabled;
+  if (readOnlyPreview) {
+    draftFields.disabled = true;
+    coverageFields.disabled = true;
+  }
   draft.className = 'onboarding-wizard-panel';
   coverage.className = 'onboarding-wizard-panel';
   draft.innerHTML = '<p class="eyebrow">Step 1 of 5</p><h3>About you</h3><p class="muted">Tell us how you would like to test. Fields marked * are required.</p>';
@@ -59,19 +67,22 @@
     'Assignment notes or prior testing experience',
   ]);
   const saveControls = new Set([saveButton]);
-  let destination = draft;
-  for (const child of [...form.children]) {
+  let destination = draftFields;
+  for (const child of [...formContent.children]) {
     if (saveControls.has(child)) continue;
     if (child.tagName === 'LABEL') {
       const label = child.textContent.replace(/\s*\*\s*(?:\(?required\)?)?\s*$/i, '').trim();
-      destination = intakeLabels.has(label) ? draft : coverage;
+      destination = intakeLabels.has(label) ? draftFields : coverageFields;
     }
     destination.append(child);
   }
   if (saveButton) {
     saveButton.textContent = 'Save and continue →';
-    coverage.append(saveButton);
+    coverageFields.append(saveButton);
   }
+  if (formContent !== form) formContent.remove();
+  draft.append(draftFields);
+  coverage.append(coverageFields);
   form.append(draft, coverage);
 
   const stagePanel = (id, label, element, complete = false) => ({ id, label, element, complete });
