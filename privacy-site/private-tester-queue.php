@@ -1786,7 +1786,7 @@ function renderConfirmation(PDO $database, int $batchId): never
     if ($batch === false) {
         redirect('?error=' . rawurlencode('The prepared email is no longer available.'));
     }
-    $recipients = $database->prepare('SELECT testers.display_name, testers.email, onboarding.onboarding_status FROM email_batch_recipients JOIN testers ON testers.id = tester_id LEFT JOIN tester_onboarding AS onboarding ON onboarding.tester_id = testers.id WHERE batch_id = ? ORDER BY testers.id');
+    $recipients = $database->prepare('SELECT testers.display_name, testers.email, onboarding.onboarding_status FROM email_batch_recipients AS recipients JOIN testers ON testers.id = recipients.tester_id LEFT JOIN tester_onboarding AS onboarding ON onboarding.tester_id = recipients.tester_id WHERE recipients.batch_id = ? ORDER BY testers.id');
     $recipients->execute([$batchId]);
     $list = '';
     $recipientRecords = $recipients->fetchAll();
@@ -2127,7 +2127,7 @@ try {
             if ($batch === false) {
                 throw new InvalidArgumentException('This email batch was already sent or is unavailable.');
             }
-            $recipients = $database->prepare("SELECT testers.id, testers.email, testers.display_name, onboarding.onboarding_status FROM email_batch_recipients JOIN testers ON testers.id = tester_id LEFT JOIN tester_onboarding AS onboarding ON onboarding.tester_id = testers.id WHERE batch_id = ? AND delivery_status = 'pending' ORDER BY testers.id");
+            $recipients = $database->prepare("SELECT testers.id, testers.email, testers.display_name, onboarding.onboarding_status FROM email_batch_recipients AS recipients JOIN testers ON testers.id = recipients.tester_id LEFT JOIN tester_onboarding AS onboarding ON onboarding.tester_id = recipients.tester_id WHERE recipients.batch_id = ? AND recipients.delivery_status = 'pending' ORDER BY testers.id");
             $recipients->execute([$batchId]);
             $update = $database->prepare('UPDATE email_batch_recipients SET delivery_status = ?, accepted_at = ? WHERE batch_id = ? AND tester_id = ?');
             $accepted = 0;

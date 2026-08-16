@@ -63,6 +63,19 @@ try {
     assertion(($archive['subject'] ?? '') === 'Welcome' && ($archive['body'] ?? '') === 'Plain archive body', 'Coordinator mail archive must retain the exact plain-text message.');
     assertion(($archive['body_html'] ?? '') === '<p>HTML archive body</p>', 'Coordinator mail archive must retain the exact HTML message.');
     assertion(($archive['handoff_status'] ?? '') === 'accepted' && is_string($archive['attempted_at'] ?? null), 'Coordinator mail archive must record the transport outcome.');
+
+    $database->prepare("INSERT INTO email_batches(subject, body, body_html, created_at, status) VALUES (?, ?, ?, ?, 'prepared')")
+        ->execute(['Profile update', 'Hi {{tester_name}}', '<p>Hi {{tester_name}},</p>', '2026-08-16T00:00:00Z']);
+    $batchId = (int) $database->lastInsertId();
+    $database->prepare("INSERT INTO email_batch_recipients(batch_id, tester_id, delivery_status) VALUES (?, ?, 'pending')")
+        ->execute([$batchId, 1]);
+    $confirmationRecipients = $database->prepare('SELECT testers.display_name, testers.email, onboarding.onboarding_status FROM email_batch_recipients AS recipients JOIN testers ON testers.id = recipients.tester_id LEFT JOIN tester_onboarding AS onboarding ON onboarding.tester_id = recipients.tester_id WHERE recipients.batch_id = ? ORDER BY testers.id');
+    $confirmationRecipients->execute([$batchId]);
+    assertion(count($confirmationRecipients->fetchAll()) === 1, 'Prepared batches must load their recipient preview after the onboarding join.');
+
+    $pendingRecipients = $database->prepare("SELECT testers.id, testers.email, testers.display_name, onboarding.onboarding_status FROM email_batch_recipients AS recipients JOIN testers ON testers.id = recipients.tester_id LEFT JOIN tester_onboarding AS onboarding ON onboarding.tester_id = recipients.tester_id WHERE recipients.batch_id = ? AND recipients.delivery_status = 'pending' ORDER BY testers.id");
+    $pendingRecipients->execute([$batchId]);
+    assertion(count($pendingRecipients->fetchAll()) === 1, 'Prepared batches must load pending recipients for individual handoff.');
 } finally {
     unset($database);
     @unlink($archivePath);
