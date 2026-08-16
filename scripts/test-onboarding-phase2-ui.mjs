@@ -23,7 +23,7 @@ assert(queue.includes('Draft preview') && queue.includes('exact version is prese
 assert(queue.includes("renderPage('Live Chat — ' . (string) $selected['display_name']"), "Coordinator detached chat must use the selected tester name in its document title.");
 assert(portal.includes("portalPage('Live Chat — ' . $coordinatorName"), "Tester detached chat must use the assigned coordinator name in its document title.");
 assert(queue.includes('Tester portal access never exposes this coordinator workspace.'), "Coordinator Live Chat must state the tester-portal isolation boundary.");
-assert(queue.includes('class="conversation-item') && queue.includes('</strong><span>'), "Coordinator Live Chat must render tester names and device details as separate lines.");
+assert(queue.includes('class="conversation-item') && queue.includes('display:block;margin-top:.18rem'), "Coordinator Live Chat must render tester names and device details as separate lines.");
 assert(portal.includes('Only you and ') && portal.includes('can view this tester-program conversation.'), "Tester Live Chat must state its per-tester conversation boundary.");
 assert(chatClient.includes('url.searchParams.set("chat_popout", "1")'), "Detached Live Chat must preserve the authenticated same-origin portal route.");
 assert(chatClient.includes('window.open(url, "twentyfourseven_onboarding_chat"'), "Detached Live Chat must open in the dedicated pop-out window.");

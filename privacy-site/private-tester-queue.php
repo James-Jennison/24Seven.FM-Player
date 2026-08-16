@@ -1874,7 +1874,7 @@ function renderLiveChatWorkspace(PDO $database, int $selectedTesterId = 0): neve
     $rows = '';
     foreach ($testers as $tester) {
         $active = (int) $tester['id'] === (int) $selected['id'] ? ' active' : '';
-        $rows .= '<a class="conversation-item' . $active . '" href="/private-tester-queue.php?live_chat=1&amp;chat_tester=' . (int) $tester['id'] . '"><strong>' . e($tester['display_name']) . '</strong><span>' . e($tester['device'] . ' · ' . $tester['android_version']) . '</span></a>';
+        $rows .= '<a class="conversation-item' . $active . '" href="/private-tester-queue.php?live_chat=1&amp;chat_tester=' . (int) $tester['id'] . '"><strong style="display:block">' . e($tester['display_name']) . '</strong><span style="display:block;margin-top:.18rem;color:#b7bdca;font-size:.74rem;font-weight:600">' . e($tester['device'] . ' · ' . $tester['android_version']) . '</span></a>';
     }
     $items = '';
     foreach ($messages as $message) {
