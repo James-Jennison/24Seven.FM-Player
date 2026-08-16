@@ -42,10 +42,6 @@ const port = await freePort();
 const driver = spawn(geckodriver, ["--host", "127.0.0.1", "--port", String(port)], {
   stdio: ["ignore", "ignore", "pipe"],
 });
-driver.on("error", () => {
-  // A sandboxed driver can reject a redundant shutdown signal after its
-  // WebDriver session has already been deleted.
-});
 let driverError = "";
 driver.stderr.on("data", (chunk) => {
   driverError = `${driverError}${chunk}`.slice(-5000);
@@ -153,7 +149,7 @@ try {
               const style = getComputedStyle(node);
               return rect.width > 0 && rect.height > 0 && style.visibility !== "hidden" && style.display !== "none";
             };
-            const controls = [...document.querySelectorAll("button,input:not([type=checkbox]):not([type=radio]),summary,a.button,#project-navigation a")].filter(visible);
+            const controls = [...document.querySelectorAll("button,input,summary,a.button,#project-navigation a")].filter(visible);
             return {
               title: document.title,
               h1: document.querySelectorAll("h1").length,
@@ -202,14 +198,6 @@ try {
   if (sessionId) {
     await request(`/session/${sessionId}`, { method: "DELETE", body: "{}" }).catch(() => {});
   }
-  try {
-    driver.kill("SIGTERM");
-  } catch (error) {
-    if (error?.code !== "EACCES") throw error;
-  }
-  // Snap can mediate the child process and reject a redundant signal even
-  // after the WebDriver session has closed. Do not retain its stdio handles.
-  driver.unref();
-  driver.stderr.destroy();
-  await delay(250);
+  driver.kill("SIGTERM");
+  await Promise.race([new Promise((resolve) => driver.once("exit", resolve)), delay(2000)]);
 }

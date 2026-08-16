@@ -9,7 +9,6 @@ python3 "${script_dir}/validate-tester-tasks.py"
 node --check "${repository_root}/privacy-site/assets/project.js"
 node --check "${repository_root}/privacy-site/assets/theme-init.js"
 node --check "${repository_root}/privacy-site/assets/private-tester-queue.js"
-node --check "${repository_root}/privacy-site/assets/onboarding-live-chat.js"
 if command -v php >/dev/null 2>&1; then
   php -l "${repository_root}/privacy-site/alpha-tester-interest.php"
   php -l "${repository_root}/privacy-site/tester-onboarding-storage.php"
@@ -25,7 +24,6 @@ if command -v php >/dev/null 2>&1; then
   php "${repository_root}/scripts/test-alpha-tester-intake.php"
   php "${repository_root}/scripts/test-alpha-tester-auto-onboarding.php"
   php "${repository_root}/scripts/test-alpha-tester-import.php"
-  php "${repository_root}/scripts/test-onboarding-live-chat.php"
 else
   printf '%s\n' 'PHP CLI is unavailable locally; the exact staged artifact must be linted by the Player PHP runtime before promotion.'
 fi

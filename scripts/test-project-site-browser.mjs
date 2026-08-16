@@ -195,17 +195,14 @@ try {
     document.querySelector('.site-explorer-toggle').click();
     const explorerOpen = document.querySelector('#site-explorer').open;
     document.querySelector('.site-explorer-close').click();
-    return { before, after, menuOpen, explorerOpen };
+    document.querySelector('[data-lightbox]').click();
+    const lightboxOpen = document.querySelector('.media-dialog').open;
+    return { before, after, menuOpen, explorerOpen, lightboxOpen };
   })()`);
   assert(homeInteractions.before !== homeInteractions.after, "Theme control did not change theme");
   assert(homeInteractions.menuOpen === "true", "Mobile navigation did not open");
   assert(homeInteractions.explorerOpen, "Site explorer did not open");
-  await navigate("/features/");
-  const lightboxOpen = await evaluate(`(() => {
-    document.querySelector('[data-lightbox]').click();
-    return document.querySelector('.media-dialog').open;
-  })()`);
-  assert(lightboxOpen, "Screenshot dialog did not open");
+  assert(homeInteractions.lightboxOpen, "Screenshot dialog did not open");
   await send("Input.dispatchKeyEvent", { type: "keyDown", key: "Escape", code: "Escape" });
   await send("Input.dispatchKeyEvent", { type: "keyUp", key: "Escape", code: "Escape" });
   await delay(50);
@@ -248,7 +245,7 @@ try {
     first.click();
     return { cases: cases.length, checked: first.getAttribute('aria-pressed'), stored: localStorage.getItem('project-test-checklist-v1') };
   })()`);
-  assert(testingState.cases === 34, `Expected 34 test cases; found ${testingState.cases}`);
+  assert(testingState.cases === 35, `Expected 35 test cases; found ${testingState.cases}`);
   assert(testingState.checked === "true", "Tester progress control did not update");
   assert(testingState.stored, "Tester progress was not stored locally");
 
@@ -262,7 +259,7 @@ try {
     taskNote: document.querySelector('[data-test-task-note]')?.textContent ?? ''
   }))()`);
   assert(taskFilterState.taskCards === 23, `Expected 23 Tester Tasks; found ${taskFilterState.taskCards}`);
-  assert(taskFilterState.summary.includes("34") && taskFilterState.summary.includes("19") && taskFilterState.summary.includes("4"), "Tester Task summary is incomplete");
+  assert(taskFilterState.summary.includes("35") && taskFilterState.summary.includes("19") && taskFilterState.summary.includes("4"), "Tester Task summary is incomplete");
   assert(taskFilterState.focused === "true", "TT-02 was not focused from the task URL");
   assert(taskFilterState.visibleCases.join(",") === "pt-02,pt-03", `TT-02 exposed the wrong PT cases: ${taskFilterState.visibleCases.join(",")}`);
   assert(taskFilterState.taskNote.includes("one result for each"), "Task filter did not explain per-case reporting");
@@ -287,11 +284,11 @@ try {
     field.dispatchEvent(new Event('input', { bubbles: true }));
     return {
       visible: [...document.querySelectorAll('[data-privacy-document] > section')].filter((item) => !item.hidden).length,
-      stationDeletionGuidance: document.body.textContent.includes('applicable station’s Contact/Feedback system')
+      stationDeletionContact: document.body.textContent.includes('morg@24seven.fm')
     };
   })()`);
   assert(privacyState.visible > 0, "Privacy search returned no session results");
-  assert(privacyState.stationDeletionGuidance, "The approved station deletion guidance is missing");
+  assert(privacyState.stationDeletionContact, "The approved station deletion contact is missing");
 
   await send("Emulation.setEmulatedMedia", {
     media: "screen",
@@ -322,9 +319,9 @@ try {
   const noScript = await evaluate(`(() => ({
     h1: document.querySelectorAll('h1').length,
     navigation: document.querySelectorAll('#project-navigation a').length,
-    projectCards: document.querySelectorAll('.brief-grid a').length
+    projectCards: document.querySelectorAll('.portal-grid a').length
   }))()`);
-  assert(noScript.h1 === 1 && noScript.navigation === 8 && noScript.projectCards === 4, "No-JavaScript fallback lost essential content");
+  assert(noScript.h1 === 1 && noScript.navigation === 8 && noScript.projectCards === 6, "No-JavaScript fallback lost essential content");
 
   assert(browserErrors.length === 0, `Browser errors: ${browserErrors.join(" | ")}`);
   console.log("Validated five responsive viewports, nine routes, keyboard and pointer interactions, local-only state, reduced motion, forced colors, and no-JavaScript fallback.");

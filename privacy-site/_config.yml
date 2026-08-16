@@ -18,4 +18,3 @@ exclude:
   - .sass-cache
   - Gemfile
   - Gemfile.lock
-  - onboarding-workspace
