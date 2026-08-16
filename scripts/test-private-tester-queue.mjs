@@ -65,6 +65,7 @@ assert(endpoint.includes("function renderOperationsDashboard"), "Queue must rend
 assert(endpoint.includes('class="roster-card"') && endpoint.includes('class="roster-list"') && endpoint.includes('class="roster-entry"'), "Tester roster must use compact entries instead of a horizontally scrolling side-panel table.");
 assert(endpoint.includes('data-operations-panels') && endpoint.includes('data-panel-drag-handle') && endpoint.includes('data-panel-resize-handle') && client.includes('player-operations-freeform-layout-v1') && client.includes('setPointerCapture'), "Operations panels must support persistent direct dragging and resizing.");
 assert(endpoint.includes('private-tester-queue.js?v=onboarding-3'), "Private queue pages must load the current operations interaction asset version.");
+assert(endpoint.includes('profile-update-action') && endpoint.includes('?email=1&amp;compose_for='), "Incomplete roster profiles must open the preselected profile-update composer without sending mail.");
 assert(endpoint.includes("function renderTesterWorkspace"), "Queue must provide a focused per-tester workspace");
 assert(endpoint.includes("send_onboarding_email"), "Queue must support an individual orientation-email action");
 assert(endpoint.includes("This tester needs their profile update before an orientation email can be sent."), "Orientation must not bypass profile completion");

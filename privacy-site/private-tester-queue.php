@@ -675,7 +675,7 @@ small{color:#b7bdca}
 .assignment-existing textarea,.tester-task-panel textarea,.onboarding-card textarea{min-height:5rem}
 .inline-form{margin-top:.5rem}
 .onboarding-status,.stage-badge{display:inline-block;padding:.2rem .6rem;border-radius:99px;font-size:.78rem;font-weight:700;letter-spacing:.01em}
-.status-profile_pending{background:rgba(255,203,107,.16);color:#ffcb6b}
+.status-profile_pending{background:rgba(255,203,107,.16);color:#ffcb6b}.profile-update-action{text-decoration:none}.profile-update-action:hover,.profile-update-action:focus-visible{background:rgba(255,203,107,.28);color:#ffe0a1;outline:2px solid #ffcb6b;outline-offset:2px}
 .status-profile_complete{background:rgba(127,178,255,.16);color:#7fb2ff}
 .status-invited{background:rgba(210,156,255,.16);color:#d29cff}
 .status-orientation_sent{background:rgba(79,209,197,.16);color:#4fd1c5}
@@ -1660,7 +1660,10 @@ function renderOperationsDashboard(PDO $database, string $notice = '', string $e
         $profile = profileSummary($tester);
         $profileText = $profile['complete'] ? 'Complete' : count($profile['missing']) . ' update' . (count($profile['missing']) === 1 ? '' : 's') . ' needed';
         $taskText = ($assignmentCounts[$id] ?? 0) === 0 ? 'No focused task' : ($assignmentCounts[$id] . ' focused task' . ($assignmentCounts[$id] === 1 ? '' : 's'));
-        $rows .= '<article class="roster-entry"><strong>' . e($tester['display_name']) . '</strong><small>' . e($tester['device']) . ' · ' . e($tester['android_version']) . '</small><small>' . e(recruitmentSourceLabel(is_string($source) ? $source : null)) . ' · ' . e($taskText) . '</small><div class="roster-status">' . applicationStageBadge($stage) . onboardingBadge($status) . '</div><small>' . e($profileText) . '</small><div class="roster-actions"><a class="link-button" href="/private-tester-queue.php?tester=' . $id . '">Open workspace</a><a class="link-button" href="/tester-portal.php?preview_tester=' . $id . '">Preview tester view</a></div></article>';
+        $profileUpdateAction = $profile['complete']
+            ? onboardingBadge($status)
+            : '<a class="' . e(onboardingStatusBadgeClass('profile_pending')) . ' profile-update-action" href="/private-tester-queue.php?email=1&amp;compose_for=' . $id . '" aria-label="Compose profile-update email for ' . e($tester['display_name']) . '">Profile update needed</a>';
+        $rows .= '<article class="roster-entry"><strong>' . e($tester['display_name']) . '</strong><small>' . e($tester['device']) . ' · ' . e($tester['android_version']) . '</small><small>' . e(recruitmentSourceLabel(is_string($source) ? $source : null)) . ' · ' . e($taskText) . '</small><div class="roster-status">' . applicationStageBadge($stage) . $profileUpdateAction . '</div><small>' . e($profileText) . '</small><div class="roster-actions"><a class="link-button" href="/private-tester-queue.php?tester=' . $id . '">Open workspace</a><a class="link-button" href="/tester-portal.php?preview_tester=' . $id . '">Preview tester view</a></div></article>';
     }
 
     $message = $notice === '' ? '' : '<p class="notice">' . e($notice) . '</p>';
