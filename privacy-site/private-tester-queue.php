@@ -600,7 +600,7 @@ function renderPage(string $title, string $content): never
     header('X-Robots-Tag: noindex, nofollow, noarchive');
     header('X-Frame-Options: DENY');
     echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'
-        . e($title) . '</title><style>'
+        . e($title) . '</title><link rel="stylesheet" href="/assets/onboarding-admin.css"><style>'
         . 'body{margin:0;background:#090c15;color:#f7f4ec;font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
 .shell{max-width:72rem;margin:2.5rem auto;padding:0 1.25rem}
 h1,h2{line-height:1.2;letter-spacing:-.01em}
