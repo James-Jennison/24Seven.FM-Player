@@ -31,8 +31,10 @@ assert(endpoint.includes("CREATE TABLE IF NOT EXISTS tester_mail_archive"), "Que
 assert(endpoint.includes("CREATE TABLE IF NOT EXISTS administrator_login_limits"), "Queue must persist private administrator-login rate limits.");
 assert(endpoint.includes("function administratorLoginClientKey"), "Administrator login rate limiting must not persist a raw client address.");
 assert(endpoint.includes("function administratorLoginNameAccepted"), "Administrator sign-in must require a configured login name.");
-assert(endpoint.includes("function administratorAcceptedTotpStep"), "Administrator sign-in must require an authenticator-app code.");
+assert(endpoint.includes("function administratorAcceptedTotpStep"), "Production administrator sign-in must support authenticator-app validation.");
 assert(endpoint.includes("function consumeAdministratorTotpStep"), "Administrator authenticator codes must not be replayable.");
+assert(endpoint.includes("function administratorMfaRequired"), "Coordinator MFA must be selected from the exact request environment.");
+assert(endpoint.includes("STAGING_ADMIN_LOGIN_ORIGIN"), "Staging coordinator origin handling must remain explicit.");
 assert(endpoint.includes("hash_hmac('sha256', 'admin-login:'"), "Administrator login rate-limit identifiers must be keyed.");
 assert(endpoint.includes("function administratorLoginRequestIsSameOrigin"), "Administrator login must validate its same-origin submission.");
 assert(endpoint.includes("ADMIN_SESSION_IDLE_SECONDS"), "Administrator sessions must have an idle-expiry boundary.");

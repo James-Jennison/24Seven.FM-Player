@@ -123,6 +123,8 @@ expectIntake(strlen(http_build_query($maximum)) < MAX_REQUEST_BYTES, 'Maximum le
 
 $form = file_get_contents(dirname(__DIR__) . '/privacy-site/product-testing/index.html');
 expectIntake(is_string($form), 'Unable to inspect the tester-interest form.');
+expectIntake(FORM_ORIGIN . FALLBACK_LOCATION . '#alpha-tester-interest' === 'https://player.jamesjennison.net/product-testing/#alpha-tester-interest', 'The alpha-tester application endpoint must remain anchored to the canonical Player route.');
+expectIntake(substr_count($form, 'href="{{ site.alpha_tester_application_url }}"') === 2, 'The Tester Hub application links must use the canonical Player endpoint.');
 foreach (['<fieldset>', 'What is your primary 24Seven.FM station?', 'Guest testing does not require a 24Seven.FM station account.', 'Existing 24Seven.FM station access', 'name="primaryStation" required', 'name="deviceFormFactor" required', 'name="testingComfort" value="readonly" required', 'do not create an account or enter your username, password, security answer, CAPTCHA answer, or any other login information.', 'name="company"', 'name="consent" value="yes" required'] as $needle) {
     expectIntake(str_contains($form, $needle), "Form contract is missing {$needle}");
 }

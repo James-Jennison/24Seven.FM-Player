@@ -2,10 +2,11 @@
 
 import { readFile } from "node:fs/promises";
 
-const [queue, portal, chatClient] = await Promise.all([
+const [queue, portal, chatClient, workspaceStyles] = await Promise.all([
   readFile(new URL("../privacy-site/private-tester-queue.php", import.meta.url), "utf8"),
   readFile(new URL("../privacy-site/tester-portal.php", import.meta.url), "utf8"),
   readFile(new URL("../privacy-site/assets/onboarding-live-chat.js", import.meta.url), "utf8"),
+  readFile(new URL("../privacy-site/assets/onboarding-portal.css", import.meta.url), "utf8"),
 ]);
 
 function assert(condition, message) {
@@ -13,6 +14,9 @@ function assert(condition, message) {
 }
 
 assert(queue.includes('?email=1') && queue.includes('?live_chat=1'), "Coordinator Operations must route Email and Live Chat as separate workspaces.");
+assert(queue.includes('/assets/onboarding-portal.css') && queue.includes('global-rail'), "Coordinator routes must use the approved workspace rail and shared visual treatment.");
+assert(portal.includes('/assets/onboarding-portal.css') && portal.includes('portal-preview-shell'), "Tester routes must use the same approved workspace visual treatment.");
+assert(workspaceStyles.includes('.global-rail') && workspaceStyles.includes('.window') && workspaceStyles.includes('@media(max-width:720px)'), "The promoted workspace styling must preserve its rail, window, and responsive behavior.");
 assert(queue.includes('Draft preview') && queue.includes('exact version is preserved in the sent archive'), "Coordinator Email must provide a resolved review step and archived delivery evidence.");
 assert(queue.includes("renderPage('Live Chat — ' . (string) $selected['display_name']"), "Coordinator detached chat must use the selected tester name in its document title.");
 assert(portal.includes("portalPage('Live Chat — ' . $coordinatorName"), "Tester detached chat must use the assigned coordinator name in its document title.");

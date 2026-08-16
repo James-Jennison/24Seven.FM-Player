@@ -19,6 +19,8 @@ const ADMIN_LOGIN_NAME_MAX_LENGTH = 64;
 const ADMIN_LOGIN_FREE_FAILURES = 4;
 const ADMIN_LOGIN_MAX_LOCK_SECONDS = 3_600;
 const ADMIN_LOGIN_ORIGIN = 'https://player.jamesjennison.net';
+const STAGING_ADMIN_LOGIN_HOST = 'onboarding-staging.player.jamesjennison.net';
+const STAGING_ADMIN_LOGIN_ORIGIN = 'https://onboarding-staging.player.jamesjennison.net';
 const ADMIN_TOTP_STEP_SECONDS = 30;
 const ADMIN_TOTP_DIGITS = 6;
 const ADMIN_TOTP_ALLOWED_DRIFT_STEPS = 1;
@@ -493,14 +495,29 @@ function clearAdministratorLoginFailures(PDO $database, array $config): void
     $database->prepare('DELETE FROM administrator_login_limits WHERE client_key = ?')->execute([administratorLoginClientKey($config)]);
 }
 
+function administratorRequestHost(): string
+{
+    return strtolower(trim((string) ($_SERVER['HTTP_HOST'] ?? '')));
+}
+
+function administratorMfaRequired(): bool
+{
+    return !hash_equals(STAGING_ADMIN_LOGIN_HOST, administratorRequestHost());
+}
+
+function administratorLoginOrigin(): string
+{
+    return administratorMfaRequired() ? ADMIN_LOGIN_ORIGIN : STAGING_ADMIN_LOGIN_ORIGIN;
+}
+
 function administratorLoginRequestIsSameOrigin(): bool
 {
     $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
     if (is_string($origin) && $origin !== '') {
-        return hash_equals(ADMIN_LOGIN_ORIGIN, $origin);
+        return hash_equals(administratorLoginOrigin(), $origin);
     }
     $referer = $_SERVER['HTTP_REFERER'] ?? '';
-    return !is_string($referer) || $referer === '' || str_starts_with($referer, ADMIN_LOGIN_ORIGIN . '/');
+    return !is_string($referer) || $referer === '' || str_starts_with($referer, administratorLoginOrigin() . '/');
 }
 
 function csrf(): string
@@ -521,7 +538,7 @@ function validCsrf(): bool
 
 function privateResponseHeaders(): void
 {
-    header("Content-Security-Policy: default-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; img-src 'self'; script-src 'self'; style-src 'unsafe-inline'");
+    header("Content-Security-Policy: default-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; img-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'");
     header('Permissions-Policy: camera=(), geolocation=(), microphone=(), payment=(), usb=()');
     header('Referrer-Policy: no-referrer');
     header('X-Content-Type-Options: nosniff');
@@ -569,6 +586,10 @@ function renderPage(string $title, string $content): never
     header('Pragma: no-cache');
     header('X-Robots-Tag: noindex, nofollow, noarchive');
     header('X-Frame-Options: DENY');
+    $activeWorkspace = str_starts_with($title, 'Live Chat') ? 'chat' : (str_contains($title, 'email') ? 'email' : 'operations');
+    $operationsClass = $activeWorkspace === 'operations' ? ' active' : '';
+    $chatClass = $activeWorkspace === 'chat' ? ' active' : '';
+    $emailClass = $activeWorkspace === 'email' ? ' active' : '';
     echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'
         . e($title) . '</title><style>'
         . 'body{margin:0;background:#090c15;color:#f7f4ec;font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
@@ -671,16 +692,22 @@ small{color:#b7bdca}
 .task-preview strong{color:#f7f4ec}
 .copy-assignment{margin-left:.5rem}
 @media(max-width:44rem){table{font-size:.86rem}.optional{display:none}.onboarding-overview,.tester-task-panels{grid-template-columns:1fr}.shell{margin:1rem auto}.copy-assignment{margin-left:0}.dashboard-header{flex-direction:column}.application-row{flex-direction:column}.application-actions{width:100%}}
-</style></head><body><main class="shell">'
-        . $content . '</main></body></html>';
+</style><link rel="stylesheet" href="/assets/onboarding-portal.css"></head><body><a class="skip-link" href="#workspace">Skip to workspace</a><div class="app-shell"><aside class="global-rail" aria-label="Coordinator workspace navigation"><div class="brand-mark" aria-label="24Seven.FM Player tester operations">24</div><nav><a class="rail-button' . $operationsClass . '" href="/private-tester-queue.php" aria-label="Operations workspace">▦<span>Operations</span></a><a class="rail-button' . $chatClass . '" href="/private-tester-queue.php?live_chat=1" aria-label="Live Chat workspace">◌<span>Live Chat</span></a><a class="rail-button' . $emailClass . '" href="/private-tester-queue.php?email=1" aria-label="Email workspace">✉<span>Email</span></a></nav></aside><main id="workspace" class="desktop">'
+        . $content . '</main></div></body></html>';
     exit;
 }
 
 function renderLogin(string $error = ''): never
 {
     $message = $error === '' ? '' : '<p class="notice error">' . e($error) . '</p>';
+    $mfaFields = administratorMfaRequired()
+        ? '<label for="totp_code">Authenticator code</label><input id="totp_code" name="totp_code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>'
+        : '';
+    $mfaNotice = administratorMfaRequired()
+        ? 'Use the current six-digit code from your authenticator app. Sessions expire automatically; repeated unsuccessful attempts are temporarily limited.'
+        : 'Staging coordinator sign-in uses the administrator password only. Sessions expire automatically; repeated unsuccessful attempts are temporarily limited.';
     renderPage('Administrator sign in · 24Seven.FM Player', '<section class="login"><p class="product-mark">24Seven.FM Player</p><h1>Administrator sign in</h1><p class="muted">Private coordinator access only. Use your administrator password on a trusted device.</p>' . $message
-        . '<form method="post" action="/private-tester-queue.php"><input type="hidden" name="action" value="login"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><label for="username">Administrator login name</label><input id="username" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="' . ADMIN_LOGIN_NAME_MAX_LENGTH . '" required autofocus><label for="password">Administrator password</label><input id="password" name="password" type="password" autocomplete="current-password" maxlength="' . ADMIN_LOGIN_MAX_PASSWORD_BYTES . '" required><label for="totp_code">Authenticator code</label><input id="totp_code" name="totp_code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required><button type="submit">Sign in securely</button></form><p class="muted small">Use the current six-digit code from your authenticator app. Sessions expire automatically; repeated unsuccessful attempts are temporarily limited.</p></section>');
+        . '<form method="post" action="/private-tester-queue.php"><input type="hidden" name="action" value="login"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><label for="username">Administrator login name</label><input id="username" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="' . ADMIN_LOGIN_NAME_MAX_LENGTH . '" required autofocus><label for="password">Administrator password</label><input id="password" name="password" type="password" autocomplete="current-password" maxlength="' . ADMIN_LOGIN_MAX_PASSWORD_BYTES . '" required>' . $mfaFields . '<button type="submit">Sign in securely</button></form><p class="muted small">' . e($mfaNotice) . '</p></section>');
 }
 
 function field(string $name, int $maximum, bool $required = true, bool $singleLine = false): string
@@ -1870,15 +1897,20 @@ try {
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && ($_POST['action'] ?? '') === 'login') {
         $username = (string) ($_POST['username'] ?? '');
         $password = (string) ($_POST['password'] ?? '');
-        $totpCode = (string) ($_POST['totp_code'] ?? '');
         $loginAllowed = validCsrf()
             && administratorLoginRequestIsSameOrigin()
             && !administratorLoginIsLimited($database, $config)
             && strlen($password) <= ADMIN_LOGIN_MAX_PASSWORD_BYTES;
         $nameAccepted = administratorLoginNameAccepted($config, $username);
         $passwordAccepted = password_verify($password, $config['admin_password_hash']);
-        $totpStep = administratorAcceptedTotpStep($totpCode, administratorTotpSecret($config));
-        if ($loginAllowed && $nameAccepted && $passwordAccepted && $totpStep !== null && consumeAdministratorTotpStep($database, $totpStep)) {
+        $totpAccepted = true;
+        $totpStep = null;
+        if (administratorMfaRequired()) {
+            $totpCode = (string) ($_POST['totp_code'] ?? '');
+            $totpStep = administratorAcceptedTotpStep($totpCode, administratorTotpSecret($config));
+            $totpAccepted = $totpStep !== null;
+        }
+        if ($loginAllowed && $nameAccepted && $passwordAccepted && $totpAccepted && ($totpStep === null || consumeAdministratorTotpStep($database, $totpStep))) {
             session_regenerate_id(true);
             $_SESSION = [
                 'authenticated' => true,
