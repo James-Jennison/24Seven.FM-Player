@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Onboarding Workspace Prototype</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#workspace">Skip to workspace</a>
+    <div class="app-shell">
+      <aside class="global-rail" aria-label="Workspace navigation">
+        <div class="brand-mark" aria-label="24Seven.FM Player tester operations">24</div>
+        <nav>
+          <button class="rail-button active" type="button" data-view="operations" aria-pressed="true" title="Operations workspace">▦<span>Operations</span></button>
+          <button class="rail-button" type="button" data-view="chat" aria-pressed="false" title="Live chat">◌<span>Live Chat</span></button>
+          <button class="rail-button" type="button" data-view="email" aria-pressed="false" title="Email">✉<span>Email</span></button>
+        </nav>
+      </aside>
+
+      <main id="workspace" class="desktop" tabindex="-1">
+        <header class="desktop-header">
+          <div>
+            <p class="eyebrow">Local-only prototype · sample data</p>
+            <h1>Tester operations workspace</h1>
+          </div>
+          <div class="header-actions">
+            <span class="connection"><i></i> Local preview</span>
+            <button class="button primary" type="button" data-action="new-intake">+ New intake</button>
+          </div>
+        </header>
+
+        <section class="view active" data-view-panel="operations" aria-label="Administrator operations workspace">
+          <article class="window control-window">
+            <header class="window-header"><span class="window-dot cyan"></span><h2>Onboarding Control</h2><span class="window-tools">— □ ×</span></header>
+            <div class="window-body">
+              <div class="window-heading"><div><p class="eyebrow">Intake &amp; activity</p><h3>Review the next right thing</h3></div><button class="text-button" type="button" data-action="filter-active">Show active work</button></div>
+              <div class="filter-row">
+                <label class="search"><span class="visually-hidden">Search testers</span><input type="search" placeholder="Search local sample records" data-search></label>
+                <button class="filter-button active" type="button" data-filter="all">All <b>12</b></button>
+                <button class="filter-button" type="button" data-filter="applied">Applied <b>2</b></button>
+                <button class="filter-button" type="button" data-filter="profile-device">Profile <b>2</b></button>
+                <button class="filter-button" type="button" data-filter="play-opt-in">Play opt-in <b>3</b></button>
+                <button class="filter-button" type="button" data-filter="active-assignment">Active <b>5</b></button>
+              </div>
+              <div class="queue-layout">
+                <div class="queue-table" role="table" aria-label="Tester intake queue">
+                  <div class="queue-head" role="row"><span>ID</span><span>Stage</span><span>Coverage</span><span>Source</span><span>Age</span></div>
+                  <div data-queue></div>
+                </div>
+                <aside class="activity-card">
+                  <div class="card-title"><h3>Activity timeline</h3><button class="text-button" type="button" data-action="open-live-chat">Open chat</button></div>
+                  <ol class="activity-list">
+                    <li><i class="dot cyan"></i><div><strong>Application review ready</strong><small>Tester record was completed</small></div></li>
+                    <li><i class="dot lime"></i><div><strong>Capability check complete</strong><small>Coverage matches an open gap</small></div></li>
+                    <li><i class="dot amber"></i><div><strong>Orientation email queued</strong><small>Mail is recorded separately; it does not block readiness</small></div></li>
+                    <li><i class="dot muted"></i><div><strong>Task feedback received</strong><small>Awaiting coordinator review</small></div></li>
+                  </ol>
+                </aside>
+              </div>
+            </div>
+          </article>
+
+          <article class="window record-window" aria-live="polite">
+            <header class="window-header"><span class="window-dot violet"></span><h2>Tester Record</h2><span class="window-tools">— □ ×</span></header>
+            <div class="window-body" data-record></div>
+          </article>
+
+          <article class="window board-window">
+            <header class="window-header"><span class="window-dot amber"></span><h2>Task Board</h2><span class="window-tools">— □ ×</span></header>
+            <div class="window-body board" data-board></div>
+          </article>
+
+          <article class="window insights-window">
+            <header class="window-header"><span class="window-dot lime"></span><h2>Insights</h2><span class="window-tools">— □ ×</span></header>
+            <div class="window-body insights">
+              <section class="metric-block"><p>Throughput <small>Last 7 days</small></p><strong>18</strong><span class="trend">↑ 24% from prior week</span><div class="sparkline" aria-label="Sample throughput chart"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></section>
+              <section class="coverage-card"><div><p>Coverage</p><strong>72%</strong><small>of planned cohort</small></div><div class="meter" role="img" aria-label="72 percent coverage"><span></span></div></section>
+              <section class="warning-list"><h3>Coverage warnings</h3><p><i class="dot amber"></i> 2 Android versions need another reviewer</p><p><i class="dot red"></i> 1 audio route has no assigned tester</p><button class="text-button" type="button" data-action="filter-active">Open active work →</button></section>
+            </div>
+          </article>
+        </section>
+
+        <section class="view messages-view" data-view-panel="chat" aria-label="Live chat workspace">
+          <article class="window messages-window">
+            <header class="window-header"><span class="window-dot cyan"></span><h2>Live Chat</h2><span class="secure-label">⌑ Private conversation history</span></header>
+            <div class="window-body conversation-layout">
+              <aside class="conversation-list"><div class="card-title"><h3>Conversations</h3><span class="counter" data-unread-count>2</span></div><button class="conversation-item active" type="button" data-chat-target="TST-101"><strong>Sample tester A</strong><span>Applied · just now</span></button><button class="conversation-item" type="button" data-chat-target="TST-102"><strong>Sample tester B</strong><span>Profile &amp; Device · awaiting coordinator</span></button></aside>
+              <section class="thread"><div class="thread-meta"><div><span class="status-dot"></span><strong data-chat-tester>Sample tester A</strong><small data-chat-context>Profile &amp; Device · private tester-program conversation</small></div><button class="text-button" type="button" data-action="detach-chat">Detach ↗</button></div><div class="messages" data-messages aria-live="polite"></div><form class="chat-composer" data-chat-form><label class="visually-hidden" for="chat-message">Write a live chat message</label><input id="chat-message" maxlength="500" autocomplete="off" placeholder="Write a message…"><button class="button primary" type="submit">Send</button></form></section>
+            </div>
+          </article>
+        </section>
+
+        <section class="view email-view" data-view-panel="email" aria-label="Email workspace">
+          <article class="window mail-window">
+            <header class="window-header"><span class="window-dot violet"></span><h2>Email</h2><span class="secure-label">⌑ Review before delivery</span></header>
+            <div class="window-body mail-layout">
+              <aside class="mail-sidebar"><button class="button primary" type="button">Compose</button><p class="eyebrow">Workspace folders</p><button class="mail-folder active" type="button">Drafts <span>1</span></button><button class="mail-folder" type="button">Scheduled <span>0</span></button><button class="mail-folder" type="button">Sent <span>—</span></button><p class="mail-boundary">Email is an administrator-only action. The tester portal remains separately authenticated.</p></aside>
+              <form class="mail-composer" data-email-form><div class="card-title"><div><p class="eyebrow">New message</p><h2>Compose email</h2></div><span class="mail-draft-label">Draft</span></div><label>Template<select data-template><option value="">Choose a template</option><option value="orientation">Orientation reminder</option><option value="review">Profile &amp; device update</option></select></label><div class="variable-row" aria-label="Insert a mail variable"><button type="button" data-mail-variable="{{tester_name}}">Tester name</button><button type="button" data-mail-variable="{{onboarding_status}}">Onboarding status</button><button type="button" data-mail-variable="{{tester_portal_url}}">Portal URL</button><button type="button" data-mail-variable="{{program_name}}">Program name</button></div><label>Subject<input data-email-subject maxlength="180" placeholder="Email subject"></label><label>Message<textarea data-email-body maxlength="8000" placeholder="Write a clear, private update"></textarea></label><div class="email-actions"><button class="button secondary" type="button" data-action="save-draft">Save draft</button><button class="button primary" type="button" data-action="send-email">Review email</button></div><p class="email-note" data-email-note>Local prototype only — no email is sent.</p><section class="mail-preview" hidden data-email-preview><p class="eyebrow">Resolved draft preview</p><h3 data-preview-subject></h3><p data-preview-body></p><small>Preview for the selected local sample tester. Production archives the exact resolved message per recipient.</small></section></form>
+            </div>
+          </article>
+        </section>
+      </main>
+    </div>
+    <template id="queue-row-template"><button class="queue-row" type="button"><span data-field="id"></span><span data-field="stage"></span><span data-field="coverage"></span><span data-field="source"></span><span data-field="age"></span></button></template>
+    <script src="./app.js"></script>
+  </body>
+</html>

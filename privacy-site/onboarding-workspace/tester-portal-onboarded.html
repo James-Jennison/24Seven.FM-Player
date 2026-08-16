@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Fully Onboarded Tester Portal Prototype</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body class="tester-preview">
+    <main class="portal-preview-shell">
+      <header class="portal-preview-header"><div class="portal-brand"><span class="brand-mark">24</span><div><strong>24Seven.FM Player</strong><small>Closed Alpha tester portal</small></div></div><span class="secure-label">⌑ Secure tester session</span></header>
+      <section class="portal-window portal-body">
+        <section class="welcome-card"><div><p class="eyebrow">Closed Alpha · ready for assignment</p><h1>You’re ready for focused testing.</h1><p>Your readiness evidence is complete. Current work, feedback, and private support live here.</p></div><div class="portal-stage"><span>Tester status</span><strong class="portal-ready-badge"><i class="dot cyan"></i> Ready</strong><span>Current work appears below</span></div></section>
+        <section class="progress-card"><div class="card-title"><h2>Onboarding evidence</h2><span>4 readiness checks complete</span></div><ol class="progress-steps"><li class="done"><i>✓</i>Applied</li><li class="done"><i>✓</i>Profile &amp; Device</li><li class="done"><i>✓</i>Play Opt-In</li><li class="done"><i>✓</i>First-Use Smoke Test</li><li class="current"><i>5</i>Active Assignment</li></ol><p class="muted small">Active Assignment is current testing work, not a prerequisite for readiness.</p></section>
+        <section class="portal-active-grid"><article class="portal-card"><p class="eyebrow">Current work</p><h2>Playback quality check</h2><p>Run the assigned listening path on your approved device, then capture concise feedback for the coordinator.</p><ol class="portal-task-list"><li><i>1</i><div><strong>Listen for 15 minutes</strong><small>Use the assigned connection path</small></div><small>Open</small></li><li><i>2</i><div><strong>Review playback controls</strong><small>Note any issue that affects repeat listening</small></div><small>Open</small></li><li><i>3</i><div><strong>Submit your report</strong><small>Confirm the task is ready for review</small></div><small>Next</small></li></ol><button class="button primary" type="button">Open active test</button></article><article class="portal-card"><p class="eyebrow">Your tester profile</p><h2>Ready for assignments</h2><p class="portal-ready-badge"><i class="dot cyan"></i> Profile verified</p><div class="tester-stat-grid"><div class="tester-stat"><span>Approved devices</span><strong>3</strong></div><div class="tester-stat"><span>Open tests</span><strong>1</strong></div><div class="tester-stat"><span>Reports sent</span><strong>2</strong></div></div><p>Only your assigned testing work appears here. Administrator operations are not available in this portal.</p><button class="button secondary" type="button" data-portal-action="open-chat">Open Live Chat</button></article></section>
+        <section class="portal-chat" hidden data-portal-chat><div class="card-title"><div><p class="eyebrow">Private support</p><h2>Live Chat</h2></div><div class="chat-panel-actions"><button class="text-button" type="button" data-portal-action="detach-chat">Detach ↗</button><button class="icon-button" type="button" data-portal-action="close-chat" aria-label="Close live chat">×</button></div></div><div class="messages" data-portal-messages><article class="message admin"><strong>Coordinator</strong><div>You’re ready for focused testing. Your first active test is available above.</div><small>Today · delivered</small></article></div><form class="chat-composer" data-portal-form><label class="visually-hidden" for="portal-message">Write a message</label><input id="portal-message" maxlength="500" placeholder="Write a private message…"><button class="button primary" type="submit">Send</button></form></section>
+      </section>
+      <p class="portal-preview-note">Local preview with sample data only. Production access remains separate and authenticated.</p>
+    </main>
+    <script src="./portal.js"></script>
+  </body>
+</html>

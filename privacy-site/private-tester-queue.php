@@ -686,10 +686,15 @@ function renderLogin(string $error = ''): never
 function field(string $name, int $maximum, bool $required = true, bool $singleLine = false): string
 {
     $value = trim((string) ($_POST[$name] ?? ''));
-    if (($required && $value === '') || mb_strlen($value) > $maximum || str_contains($value, "\0") || ($singleLine && (str_contains($value, "\r") || str_contains($value, "\n")))) {
+    if (($required && $value === '') || textLength($value) > $maximum || str_contains($value, "\0") || ($singleLine && (str_contains($value, "\r") || str_contains($value, "\n")))) {
         throw new InvalidArgumentException('Please check the email subject and body.');
     }
     return $value;
+}
+
+function textLength(string $value): int
+{
+    return function_exists('mb_strlen') ? mb_strlen($value) : strlen($value);
 }
 
 function taskRegistry(): array
@@ -699,6 +704,11 @@ function taskRegistry(): array
         return $tasks;
     }
     $path = __DIR__ . '/' . TASK_REGISTRY_FILE;
+    // The deploy artifact receives the registry under assets/. Local source
+    // validation intentionally reads the same canonical data file directly.
+    if (!is_file($path)) {
+        $path = __DIR__ . '/_data/tester_tasks.json';
+    }
     $decoded = is_file($path) ? json_decode((string) file_get_contents($path), true) : null;
     if (!is_array($decoded) || !isset($decoded['tasks']) || !is_array($decoded['tasks'])) {
         throw new RuntimeException('The Tester Task registry is unavailable.');
@@ -1246,7 +1256,7 @@ function appendSanitizedNodes(DOMDocument $output, DOMNode $source, DOMNode $des
 
 function sanitizeHtmlBody(string $html): string
 {
-    if (mb_strlen($html) > MAX_HTML_BODY_LENGTH || str_contains($html, "\0")) {
+    if (textLength($html) > MAX_HTML_BODY_LENGTH || str_contains($html, "\0")) {
         throw new InvalidArgumentException('Please keep the email message within the allowed length.');
     }
     if (!class_exists('DOMDocument')) {
@@ -1934,7 +1944,7 @@ try {
             $testerId = testerId();
             activeTester($database, $testerId);
             $reason = trim((string) ($_POST['rejection_reason'] ?? ''));
-            if ($reason === '' || mb_strlen($reason) > MAX_ONBOARDING_NOTE_LENGTH || str_contains($reason, "\0")) {
+            if ($reason === '' || textLength($reason) > MAX_ONBOARDING_NOTE_LENGTH || str_contains($reason, "\0")) {
                 throw new InvalidArgumentException('A rejection reason is required to reject an application.');
             }
             markApplicationReviewed($database, $testerId);

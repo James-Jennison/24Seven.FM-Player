@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Live Chat — Sample tester A</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main class="chat-popout-shell">
+      <article class="window messages-window">
+        <header class="window-header"><span class="window-dot cyan"></span><h1>Live Chat</h1><span class="secure-label">⌑ Private</span></header>
+        <section class="thread">
+          <div class="thread-meta"><div><span class="status-dot"></span><strong data-popout-tester>Sample tester A</strong><small>Profile &amp; Device · local sample record</small></div></div>
+          <div class="messages" data-popout-messages aria-live="polite"><article class="message"><strong data-popout-tester>Sample tester A</strong><div>Hello — I wanted to confirm the next step for my application.</div><small>10:16 AM</small></article><article class="message admin"><strong>Coordinator</strong><div>Thanks for reaching out. Your application is currently in technical screening.</div><small>10:20 AM · delivered</small></article></div>
+          <form class="chat-composer" data-popout-form><label class="visually-hidden" for="popout-message">Write a live chat message</label><input id="popout-message" maxlength="500" autocomplete="off" placeholder="Write a message…"><button class="button primary" type="submit">Send</button></form>
+        </section>
+      </article>
+    </main>
+    <script src="./chat-popout.js"></script>
+  </body>
+</html>

@@ -26,6 +26,7 @@ if command -v php >/dev/null 2>&1; then
   php "${repository_root}/scripts/test-alpha-tester-auto-onboarding.php"
   php "${repository_root}/scripts/test-alpha-tester-import.php"
   php "${repository_root}/scripts/test-onboarding-live-chat.php"
+  php "${repository_root}/scripts/test-onboarding-phase2-local.php"
 else
   printf '%s\n' 'PHP CLI is unavailable locally; the exact staged artifact must be linted by the Player PHP runtime before promotion.'
 fi

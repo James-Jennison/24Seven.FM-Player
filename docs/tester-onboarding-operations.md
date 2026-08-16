@@ -92,11 +92,12 @@ Required evidence: the legacy invitation/orientation-state migration resolves to
 
 ### Phase 2 — Staging & internal smoke test
 
-**Purpose:** Use an isolated staging copy and non-production test records to validate the protected operator flow.
+**Purpose:** Use an isolated local SQLite staging database or a staging copy with non-production test records to validate the protected operator flow.
 
-Run before the staging session to verify the local workspace/pop-out contract:
+Run the local isolated staging smoke:
 
 ```bash
+php scripts/test-onboarding-phase2-local.php
 node scripts/test-onboarding-phase2-ui.mjs
 ```
 
@@ -108,7 +109,7 @@ Required checks:
 4. Open both detached Live Chat windows and confirm their titles identify the other participant without exposing another thread.
 5. Seed an expired test message in the staging database, invoke `chatPurgeExpired`, and verify removal from messages and empty threads.
 
-Required evidence: a dated smoke-test worksheet, redacted screenshots or test IDs only, and staging database aggregate counts. Never attach names, addresses, message content, credentials, tokens, or paths to Git.
+Required evidence: the local script's passing output plus the workspace/pop-out contract. An external staging session, if later used, adds a dated smoke-test worksheet, redacted screenshots or test IDs only, and staging database aggregate counts. Never attach names, addresses, message content, credentials, tokens, or paths to Git.
 
 ### Phase 3 — Controlled release
 

@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Tester Portal Prototype</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body class="tester-preview">
+    <main class="portal-preview-shell">
+      <header class="portal-preview-header"><div class="portal-brand"><span class="brand-mark">24</span><div><strong>24Seven.FM Player</strong><small>Closed Alpha tester portal</small></div></div><span class="secure-label">⌑ Secure tester session</span></header>
+      <section class="portal-window portal-body">
+        <section class="welcome-card"><div><p class="eyebrow">Closed Alpha</p><h1>Welcome back</h1><p>Your next onboarding action is ready when you are.</p></div><div class="portal-stage"><span>Current stage</span><strong>Profile &amp; Device</strong><i class="dot amber"></i> In progress</div></section>
+        <section class="progress-card"><div class="card-title"><h2>Onboarding progress</h2><span>1 of 5 complete</span></div><ol class="progress-steps"><li class="done"><i>✓</i>Applied</li><li class="current"><i>2</i>Profile &amp; Device</li><li><i>3</i>Play Opt-In</li><li><i>4</i>First-Use Smoke Test</li><li><i>5</i>Active Assignment</li></ol><p class="muted small">Orientation is coordinated by email and does not block these five evidence points.</p></section>
+        <section class="portal-columns"><article class="portal-card"><p class="eyebrow">Your next action</p><h2>Complete your profile &amp; device</h2><p>Review the short device and capability checklist, then save the information relevant to your assigned test work.</p><button class="button primary" type="button">Continue onboarding</button></article><article class="portal-card"><p class="eyebrow">Private support</p><h2>Live Chat</h2><p>Messages are only visible to you and your assigned coordinator. The tester portal never opens administrator operations.</p><button class="button secondary" type="button" data-portal-action="open-chat">Open Live Chat</button></article></section>
+        <section class="portal-chat" hidden data-portal-chat><div class="card-title"><div><p class="eyebrow">Private support</p><h2>Live Chat</h2></div><div class="chat-panel-actions"><button class="text-button" type="button" data-portal-action="detach-chat">Detach ↗</button><button class="icon-button" type="button" data-portal-action="close-chat" aria-label="Close live chat">×</button></div></div><div class="messages" data-portal-messages><article class="message admin"><strong>Coordinator</strong><div>Thanks for completing your profile. We will post your next action here.</div><small>Today · delivered</small></article></div><form class="chat-composer" data-portal-form><label class="visually-hidden" for="portal-message">Write a message</label><input id="portal-message" maxlength="500" placeholder="Write a private message…"><button class="button primary" type="submit">Send</button></form></section>
+      </section>
+      <p class="portal-preview-note">Local preview with sample data only. Production access remains separate and authenticated.</p>
+    </main>
+    <script src="./portal.js"></script>
+  </body>
+</html>
