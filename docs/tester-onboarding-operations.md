@@ -115,6 +115,13 @@ Required evidence: the local script's passing output plus the workspace/pop-out 
 
 **Purpose:** Prepare a feature-flagged release for a small initial Alpha cohort, with a verified rollback boundary.
 
+Live Chat defaults to disabled. The protected deployment configuration must use both keys below; an absent, non-boolean, empty, or malformed allow list fails closed. Do not put real tester identifiers in source control.
+
+```php
+'live_chat_enabled' => true,
+'live_chat_tester_ids' => [/* approved initial-cohort integer tester IDs */],
+```
+
 Required checks: approve the exact review commit; identify the feature-flag default and initial-cohort allow list through the protected deployment configuration; take the private database backup; apply the verified migration; run the Phase 2 smoke test against the release candidate; enable the feature only for the approved cohort; and monitor only aggregate error/usage evidence during the agreed observation window.
 
 Required evidence: release approval, backup identifier, migration result, feature-flag state, cohort-size count, rollback command/owner, and post-enable aggregate health result. Production mail handoff, feature enablement, and deployment each require separate owner approval.

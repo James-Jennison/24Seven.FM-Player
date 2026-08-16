@@ -28,6 +28,9 @@ assert(portal.includes("Applied") && portal.includes("Profile & Device") && port
 assert(!portal.includes("Agreement</li>"), "Agreement must remain in the application consent record rather than become a portal stage.");
 assert(portal.includes("portalChatPoll") && portal.includes("chat_stream") && portal.includes("chat_poll"), "Tester Live Chat must offer SSE delivery with a polling fallback.");
 assert(portal.includes("chatPostMessage($database, (int) $tester['id'], 'tester'"), "Tester Live Chat must bind submissions to the signed-in tester.");
+assert(portal.includes("$liveChatEnabled = liveChatEnabledForTester($config, (int) $tester['id']);"), "Tester Live Chat must be evaluated against the protected rollout cohort.");
+assert(portal.includes("($liveChatEnabled ? portalChatPanel($database, $tester, $coordinatorName) : '')"), "Live Chat must remain hidden from testers outside the rollout cohort.");
+assert(portal.includes("if (!$liveChatEnabled) fail(404, 'The requested chat is unavailable.');"), "Live Chat routes must reject disabled or out-of-cohort tester access.");
 assert(portal.includes("portalPage('Live Chat — ' . $coordinatorName") && queue.includes("renderPage('Live Chat — ' . (string) $selected['display_name']"), "Detached Live Chat titles must identify the other participant.");
 assert(portal.includes("WHERE id = ? AND tester_id = ?"), "Feedback must be bound to the signed-in tester's own assignment.");
 assert(portal.includes("play_opt_in_confirmed_at"), "Tester opt-in confirmation state is missing.");

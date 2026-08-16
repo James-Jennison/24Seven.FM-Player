@@ -13,6 +13,8 @@ function assert(condition, message) {
 }
 
 assert(queue.includes('?email=1') && queue.includes('?live_chat=1'), "Coordinator Operations must route Email and Live Chat as separate workspaces.");
+assert(queue.includes("const LIVE_CHAT_FEATURE_ENABLED_KEY = 'live_chat_enabled';") && queue.includes("function liveChatEnabledForTester(array $config, int $testerId): bool"), "Live Chat must be protected by a default-off cohort flag.");
+assert(queue.includes("if (!liveChatEnabledForTester($config, (int) $chatTesterId))") && portal.includes("$liveChatEnabled = liveChatEnabledForTester($config, (int) $tester['id']);"), "Coordinator and tester chat routes must enforce the same rollout cohort boundary.");
 assert(queue.includes('Draft preview') && queue.includes('exact version is preserved in the sent archive'), "Coordinator Email must provide a resolved review step and archived delivery evidence.");
 assert(queue.includes("renderPage('Live Chat — ' . (string) $selected['display_name']"), "Coordinator detached chat must use the selected tester name in its document title.");
 assert(portal.includes("portalPage('Live Chat — ' . $coordinatorName"), "Tester detached chat must use the assigned coordinator name in its document title.");

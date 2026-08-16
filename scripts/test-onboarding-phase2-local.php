@@ -23,6 +23,10 @@ try {
     $database->prepare("INSERT INTO testers(source_message_uid, received_at, display_name, email, device, android_version, interests_json, status, imported_at, primary_station, device_form_factor, network_capabilities_json, audio_capabilities_json, accessibility_capabilities_json, testing_comfort, controlled_actions_json, testing_availability) VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, ?, ?, ?, ?, ?, ?)")
         ->execute(['phase-two-local', '2026-08-15T00:00:00Z', 'Local Stage Tester', 'local-stage@example.test', 'Local stage device', 'Android 16', '["playback"]', '2026-08-15T00:00:00Z', 'sst', 'phone', '["wifi"]', '["device_speaker"]', '["general_accessibility"]', 'readonly', '["none"]', '1_2h']);
 
+    $initialCohort = [LIVE_CHAT_FEATURE_ENABLED_KEY => true, LIVE_CHAT_FEATURE_TESTER_IDS_KEY => [1]];
+    expectPhaseTwo(liveChatEnabledForTester($initialCohort, 1), 'The isolated Phase 2 initial cohort must enable Live Chat for its explicitly selected tester.');
+    expectPhaseTwo(!liveChatEnabledForTester($initialCohort, 2), 'The isolated Phase 2 initial cohort must not enable Live Chat for another tester.');
+
     markApplicationReviewed($database, 1);
     $tester = $database->query('SELECT testers.*, onboarding.onboarding_status, onboarding.play_opt_in_confirmed_at, onboarding.initial_smoke_test_confirmed_at, onboarding.reviewed_at FROM testers JOIN tester_onboarding AS onboarding ON onboarding.tester_id = testers.id WHERE testers.id = 1')->fetch();
     expectPhaseTwo(is_array($tester) && applicationStage($tester) === 'accepted', 'A reviewed local tester must remain pre-assignment until their evidence is complete.');

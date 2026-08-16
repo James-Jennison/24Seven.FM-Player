@@ -35,6 +35,8 @@ const CHAT_MAX_MESSAGE_LENGTH = 2_000;
 const CHAT_SUBMISSION_WINDOW_SECONDS = 60;
 const CHAT_SUBMISSION_MAXIMUM = 12;
 const CHAT_RETENTION_DAYS = 90;
+const LIVE_CHAT_FEATURE_ENABLED_KEY = 'live_chat_enabled';
+const LIVE_CHAT_FEATURE_TESTER_IDS_KEY = 'live_chat_tester_ids';
 const ASSIGNMENT_STATUSES = ['assigned', 'in_progress', 'complete', 'blocked'];
 const ONBOARDING_STATUSES = ['profile_pending', 'profile_complete', 'ready', 'paused'];
 const APPLICATION_STAGES = ['pending_review', 'accepted', 'active'];
@@ -107,6 +109,34 @@ function coordinatorDisplayName(array $config): string
     $name = trim((string) ($config['from_name'] ?? '24Seven.FM Coordinator'));
     if ($name === '' || !preg_match('//u', $name)) return '24Seven.FM Coordinator';
     return function_exists('mb_substr') ? mb_substr($name, 0, 100) : substr($name, 0, 100);
+}
+
+/**
+ * Live Chat is default-off. A protected deployment configuration must enable
+ * it and name each initial-cohort tester explicitly; an absent or malformed
+ * allow list cannot expose the feature.
+ *
+ * @return list<int>
+ */
+function liveChatCohortTesterIds(array $config): array
+{
+    $ids = $config[LIVE_CHAT_FEATURE_TESTER_IDS_KEY] ?? [];
+    if (!is_array($ids)) return [];
+    $allowed = [];
+    foreach ($ids as $id) {
+        if (is_int($id) && $id > 0) $allowed[$id] = true;
+    }
+    return array_keys($allowed);
+}
+
+function liveChatFeatureEnabled(array $config): bool
+{
+    return ($config[LIVE_CHAT_FEATURE_ENABLED_KEY] ?? false) === true && liveChatCohortTesterIds($config) !== [];
+}
+
+function liveChatEnabledForTester(array $config, int $testerId): bool
+{
+    return $testerId > 0 && liveChatFeatureEnabled($config) && in_array($testerId, liveChatCohortTesterIds($config), true);
 }
 
 function database(array $config): PDO
@@ -1555,7 +1585,7 @@ function applicationStageBadge(string $stage): string
     return '<span class="' . e(applicationStageBadgeClass($stage)) . '">' . e(applicationStageLabel($stage)) . '</span>';
 }
 
-function renderOperationsDashboard(PDO $database, string $notice = '', string $error = '', bool $emailOnly = false): never
+function renderOperationsDashboard(PDO $database, array $config, string $notice = '', string $error = '', bool $emailOnly = false): never
 {
     $tasks = taskRegistry();
     $testers = $database->query("SELECT testers.*, onboarding.onboarding_status, onboarding.reviewed_at, onboarding.orientation_email_status, onboarding.orientation_email_attempted_at, onboarding.orientation_email_attempts FROM testers LEFT JOIN tester_onboarding AS onboarding ON onboarding.tester_id = testers.id WHERE testers.status = 'active' ORDER BY testers.received_at, testers.id")->fetchAll();
@@ -1626,6 +1656,7 @@ function renderOperationsDashboard(PDO $database, string $notice = '', string $e
     $message .= $error === '' ? '' : '<p class="notice error">' . e($error) . '</p>';
     $editor = '<label for="email-template">Email template</label><select id="email-template"><option value="">Custom email</option><option value="profile-update">Profile update request</option><option value="welcome">Welcome to the 24Seven.FM Player Google Play Closed Test</option><option value="feedback">Testing feedback request</option><option value="new-build">New build available</option><option value="reminder">Reminder to test</option><option value="known-issue">Known issue / workaround</option><option value="test-session">Test session request</option><option value="test-complete">Thank you / test complete</option><option value="tester-status">Tester status update</option><option value="release-signoff">Release candidate sign-off</option></select><p class="muted">Choose a template or write a custom message. The queue always sends one individual, multipart email per selected tester.</p><label for="body-editor">Message</label><div class="toolbar" role="toolbar" aria-label="Email text formatting"><button type="button" data-format="bold"><strong>B</strong><span class="visually-hidden">Bold</span></button><button type="button" data-format="italic"><em>I</em><span class="visually-hidden">Italic</span></button><button type="button" data-format="underline"><u>U</u><span class="visually-hidden">Underline</span></button><button type="button" data-format="insertUnorderedList">Bullets</button><button type="button" data-format="insertOrderedList">Numbered list</button><button type="button" data-format="createLink">Link</button><button type="button" data-format="removeFormat">Clear format</button></div><div class="toolbar" role="toolbar" aria-label="Email variables"><button type="button" data-insert-variable="{{tester_name}}">Tester name</button><button type="button" data-insert-variable="{{onboarding_status}}">Onboarding status</button><button type="button" data-insert-variable="{{tester_portal_url}}">Tester portal URL</button><button type="button" data-insert-variable="{{program_name}}">Program name</button></div><p class="muted small">Variables resolve separately for each recipient and the exact sent version is retained in the protected archive.</p><div id="body-editor" class="editor" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Write a message for the selected testers."></div><input type="hidden" name="body_html" id="body-html"><noscript><label for="body">Message</label><textarea id="body" name="body" maxlength="' . MAX_BODY_LENGTH . '" required></textarea></noscript>';
     $archiveCount = (int) $database->query('SELECT COUNT(*) FROM tester_mail_archive')->fetchColumn();
+    $liveChatLink = liveChatFeatureEnabled($config) ? '<a class="link-button" href="/private-tester-queue.php?live_chat=1">Live Chat</a>' : '';
 
     $recipientRows = implode('', array_map(static function (array $tester) use ($composeForId): string {
         $checked = $composeForId !== null && (int) $tester['id'] === $composeForId ? ' checked' : '';
@@ -1637,14 +1668,14 @@ function renderOperationsDashboard(PDO $database, string $notice = '', string $e
     $composeHint = $composeForId === null ? '' : '<script id="compose-for-tester" type="application/json">' . json_encode(['testerId' => $composeForId, 'template' => 'profile-update'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES) . '</script>';
 
     if ($emailOnly) {
-        $content = '<header class="dashboard-header"><div><p class="eyebrow">24Seven.FM Player · Closed alpha</p><h1>Coordinator email</h1><p class="muted">Compose individual tester-program email, review the resolved draft, and inspect protected handoff records.</p><p><a class="link-button" href="/private-tester-queue.php">Operations</a><a class="link-button" href="/private-tester-queue.php?live_chat=1">Live Chat</a><a class="link-button" href="/private-tester-queue.php?mail_archive=1">Sent archive (' . $archiveCount . ')</a></p></div><form method="post"><input type="hidden" name="action" value="logout"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><button class="secondary" type="submit">Sign out</button></form></header>' . $message
+        $content = '<header class="dashboard-header"><div><p class="eyebrow">24Seven.FM Player · Closed alpha</p><h1>Coordinator email</h1><p class="muted">Compose individual tester-program email, review the resolved draft, and inspect protected handoff records.</p><p><a class="link-button" href="/private-tester-queue.php">Operations</a>' . $liveChatLink . '<a class="link-button" href="/private-tester-queue.php?mail_archive=1">Sent archive (' . $archiveCount . ')</a></p></div><form method="post"><input type="hidden" name="action" value="logout"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><button class="secondary" type="submit">Sign out</button></form></header>' . $message
             . '<section class="compose-card"><h2>Compose a coordinator email</h2><form method="post" id="email-form"><input type="hidden" name="action" value="prepare"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><p class="muted">Only reviewed testers can receive a coordinator email; applications awaiting review use the Accept / Request details / Reject actions in Operations instead.</p><p><label><input type="checkbox" id="select-all"> Select all reviewed testers</label></p><div class="table-scroll"><table><thead><tr><th scope="col">Select</th><th scope="col">Tester</th><th scope="col">Onboarding</th></tr></thead><tbody>' . ($recipientRows === '' ? '<tr><td colspan="3" class="muted">No reviewed testers yet.</td></tr>' : $recipientRows) . '</tbody></table></div><label for="subject">Subject</label><input id="subject" name="subject" maxlength="' . MAX_SUBJECT_LENGTH . '" required>' . $editor . '<button type="submit">Review selected recipients</button></form></section>'
             . $composeHint
             . '<script src="/assets/private-tester-queue.js?v=onboarding-2" defer></script>';
         renderPage('Coordinator email', $content);
     }
 
-    $content = '<header class="dashboard-header"><div><p class="eyebrow">24Seven.FM Player · Closed alpha</p><h1>Tester operations</h1><p class="muted">A private workspace for moving a new application through review to a focused, safe testing assignment.</p><p><a class="link-button" href="/private-tester-queue.php?live_chat=1">Live Chat</a><a class="link-button" href="/private-tester-queue.php?email=1">Email (' . $archiveCount . ')</a><a class="link-button" href="/private-tester-queue.php?mail_archive=1">Sent archive</a></p></div><form method="post"><input type="hidden" name="action" value="logout"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><button class="secondary" type="submit">Sign out</button></form></header>' . $message
+    $content = '<header class="dashboard-header"><div><p class="eyebrow">24Seven.FM Player · Closed alpha</p><h1>Tester operations</h1><p class="muted">A private workspace for moving a new application through review to a focused, safe testing assignment.</p><p>' . $liveChatLink . '<a class="link-button" href="/private-tester-queue.php?email=1">Email (' . $archiveCount . ')</a><a class="link-button" href="/private-tester-queue.php?mail_archive=1">Sent archive</a></p></div><form method="post"><input type="hidden" name="action" value="logout"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><button class="secondary" type="submit">Sign out</button></form></header>' . $message
         . '<section><h2>Onboarding pipeline</h2><div class="onboarding-overview"><div class="onboarding-metric stage-pending_review"><strong>' . $stageCounts['pending_review'] . '</strong><span>Pending review</span></div><div class="onboarding-metric stage-accepted"><strong>' . $stageCounts['accepted'] . '</strong><span>Evidence in progress</span></div><div class="onboarding-metric stage-active"><strong>' . $stageCounts['active'] . '</strong><span>Active assignments</span></div></div><p class="muted">Workflow: review a new application → complete Profile &amp; Device → tester self-confirms Play opt-in and the first-use smoke test → assign focused work. Orientation and invitation messages remain archived mail events; they never advance the lifecycle or prove opt-in, installation, or activity.</p><p class="muted">Recruitment: ' . e('Direct ' . $sourceCounts['direct'] . ' · Testers Community ' . $sourceCounts['testers_community'] . ' · Betabound ' . $sourceCounts['betabound'] . ' · BetaFamily ' . $sourceCounts['betafamily'] . ' · Other ' . $sourceCounts['other']) . '</p></section>'
         . '<section class="applications-card"><h2>Applications awaiting review (' . count($pendingApplications) . ')</h2>' . ($applicationRows === '' ? '<p class="muted">No new applications right now.</p>' : '<p class="muted">Newly submitted or imported applications stay here, separate from the accepted roster, until a coordinator accepts, requests details, or rejects them.</p><div class="application-rows">' . $applicationRows . '</div>') . '</section>'
         . '<section><h2>Tester roster</h2><p class="muted">Open one workspace to review coverage, record onboarding progress, send an individual orientation email, and manage focused tasks.</p><div class="table-scroll"><table><thead><tr><th scope="col">Tester</th><th scope="col">Device</th><th scope="col">Recruitment</th><th scope="col">Stage &amp; onboarding</th><th scope="col">Assignments</th><th scope="col"><span class="visually-hidden">Open</span></th></tr></thead><tbody>' . ($rows === '' ? '<tr><td colspan="6" class="muted">No accepted testers yet.</td></tr>' : $rows) . '</tbody></table></div></section>'
@@ -1730,9 +1761,9 @@ function renderTesterWorkspace(PDO $database, int $testerId, string $notice = ''
     renderPage('Tester workspace', $content);
 }
 
-function renderDashboard(PDO $database, string $notice = '', string $error = ''): never
+function renderDashboard(PDO $database, array $config, string $notice = '', string $error = ''): never
 {
-    renderOperationsDashboard($database, $notice, $error);
+    renderOperationsDashboard($database, $config, $notice, $error);
 }
 
 function renderConfirmation(PDO $database, int $batchId): never
@@ -1817,9 +1848,13 @@ function coordinatorChatPoll(PDO $database, array $tester, int $afterId, bool $s
     exit;
 }
 
-function renderLiveChatWorkspace(PDO $database, int $selectedTesterId = 0): never
+function renderLiveChatWorkspace(PDO $database, array $config, int $selectedTesterId = 0): never
 {
-    $testers = $database->query("SELECT id, display_name, device, android_version FROM testers WHERE status = 'active' ORDER BY received_at, id")->fetchAll();
+    if (!liveChatFeatureEnabled($config)) {
+        throw new InvalidArgumentException('Live Chat is not enabled for the current Alpha cohort.');
+    }
+    $allowed = liveChatCohortTesterIds($config);
+    $testers = array_values(array_filter($database->query("SELECT id, display_name, device, android_version FROM testers WHERE status = 'active' ORDER BY received_at, id")->fetchAll(), static fn (array $tester): bool => in_array((int) $tester['id'], $allowed, true)));
     if ($testers === []) {
         renderPage('Live Chat · 24Seven.FM Player', '<p><a href="/private-tester-queue.php">← Tester operations</a></p><h1>Live Chat</h1><section><p class="muted">There are no active tester conversations yet.</p></section>');
     }
@@ -1900,6 +1935,7 @@ try {
     $chatTesterId = filter_var($_GET['chat_tester'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && (isset($_GET['chat_stream']) || isset($_GET['chat_poll']))) {
         if ($chatTesterId === false) fail(400, 'The requested chat is invalid.');
+        if (!liveChatEnabledForTester($config, (int) $chatTesterId)) fail(404, 'The requested chat is unavailable.');
         $testerStatement = $database->prepare("SELECT id, display_name FROM testers WHERE id = ? AND status = 'active'");
         $testerStatement->execute([$chatTesterId]);
         $chatTester = $testerStatement->fetch();
@@ -1918,11 +1954,13 @@ try {
         }
         if ($action === 'send_chat') {
             $testerId = testerId();
+            if (!liveChatEnabledForTester($config, $testerId)) fail(404, 'The requested chat is unavailable.');
             chatPostMessage($database, $testerId, 'coordinator', (string) ($_POST['chat_body'] ?? ''));
             redirect('?live_chat=1&chat_tester=' . $testerId . '&notice=' . rawurlencode('Live Chat message sent.'));
         }
         if ($action === 'delete_chat_message') {
             $testerId = testerId();
+            if (!liveChatEnabledForTester($config, $testerId)) fail(404, 'The requested chat is unavailable.');
             $messageId = filter_var($_POST['message_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
             if ($messageId === false) throw new InvalidArgumentException('The requested chat message is invalid.');
             chatSoftDeleteMessage($database, $testerId, 'coordinator', $messageId);
@@ -2109,18 +2147,18 @@ try {
         renderMailArchive($database);
     }
     if (isset($_GET['email'])) {
-        renderOperationsDashboard($database, (string) ($_GET['notice'] ?? ''), (string) ($_GET['error'] ?? ''), true);
+        renderOperationsDashboard($database, $config, (string) ($_GET['notice'] ?? ''), (string) ($_GET['error'] ?? ''), true);
     }
     if (isset($_GET['live_chat'])) {
-        renderLiveChatWorkspace($database, $chatTesterId === false ? 0 : (int) $chatTesterId);
+        renderLiveChatWorkspace($database, $config, $chatTesterId === false ? 0 : (int) $chatTesterId);
     }
     if (isset($_GET['tester']) && ctype_digit((string) $_GET['tester'])) {
         renderTesterWorkspace($database, (int) $_GET['tester'], (string) ($_GET['notice'] ?? ''), (string) ($_GET['error'] ?? ''));
     }
-    renderDashboard($database, (string) ($_GET['notice'] ?? ''), (string) ($_GET['error'] ?? ''));
+    renderDashboard($database, $config, (string) ($_GET['notice'] ?? ''), (string) ($_GET['error'] ?? ''));
 } catch (InvalidArgumentException $exception) {
     if (isset($database) && $database instanceof PDO) {
-        renderDashboard($database, '', $exception->getMessage());
+        renderDashboard($database, $config, '', $exception->getMessage());
     }
     fail(400, 'The request is invalid.');
 } catch (Throwable $exception) {

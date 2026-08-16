@@ -45,6 +45,13 @@ try {
     $database->prepare("INSERT INTO testers(source_message_uid, received_at, display_name, email, device, android_version, interests_json, status, imported_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?)")
         ->execute(['chat-contract-second', '2026-08-15T00:00:01Z', 'Second Tester', 'second@example.test', 'Second test device', 'Android 16', '[]', '2026-08-15T00:00:01Z']);
 
+    $disabledChat = [];
+    $initialCohort = [LIVE_CHAT_FEATURE_ENABLED_KEY => true, LIVE_CHAT_FEATURE_TESTER_IDS_KEY => [1]];
+    expectChat(!liveChatFeatureEnabled($disabledChat), 'Live Chat must remain default-off without protected rollout configuration.');
+    expectChat(liveChatFeatureEnabled($initialCohort) && liveChatEnabledForTester($initialCohort, 1), 'A configured initial cohort must be able to enable its explicitly listed tester.');
+    expectChat(!liveChatEnabledForTester($initialCohort, 2), 'A configured initial cohort must not enable a different tester.');
+    expectChat(!liveChatFeatureEnabled([LIVE_CHAT_FEATURE_ENABLED_KEY => true, LIVE_CHAT_FEATURE_TESTER_IDS_KEY => ['1']]), 'Malformed rollout identifiers must fail closed.');
+
     expectChat(synchronizeOnboardingProfile($database, 1) === 'profile_pending', 'An incomplete profile must remain at the Profile & Device stage.');
     try {
         recordTesterPlayOptIn($database, 1);

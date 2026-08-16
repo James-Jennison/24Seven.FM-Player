@@ -50,8 +50,12 @@ assert(endpoint.includes("?mail_archive=1"), "Queue must link coordinators to th
 assert(endpoint.includes("function mergeCoordinatorMailHtml"), "The email composer must resolve a bounded set of per-recipient variables.");
 assert(endpoint.includes("Draft preview"), "The email composer must provide a resolved draft preview before sending.");
 assert(client.includes("data-insert-variable"), "The email composer must provide variable insertion controls.");
-assert(endpoint.includes("function renderOperationsDashboard(PDO $database, string $notice = '', string $error = '', bool $emailOnly = false)"), "The admin workspace must support a separate Email surface.");
+assert(endpoint.includes("function renderOperationsDashboard(PDO $database, array $config, string $notice = '', string $error = '', bool $emailOnly = false)"), "The admin workspace must support a separate Email surface.");
 assert(endpoint.includes("?email=1"), "The admin workspace must route Email separately from operations.");
+assert(endpoint.includes("const LIVE_CHAT_FEATURE_ENABLED_KEY = 'live_chat_enabled';") && endpoint.includes("const LIVE_CHAT_FEATURE_TESTER_IDS_KEY = 'live_chat_tester_ids';"), "Live Chat must use explicit protected rollout-config keys.");
+assert(endpoint.includes("function liveChatEnabledForTester(array $config, int $testerId): bool"), "Live Chat must enforce an explicit tester-level rollout allow list.");
+assert(endpoint.includes("Live Chat is default-off."), "Live Chat rollout must be default-off when the protected configuration is absent or incomplete.");
+assert(endpoint.includes("if (!liveChatEnabledForTester($config, (int) $chatTesterId))"), "Coordinator chat routes must reject testers outside the allowed rollout cohort.");
 assert(endpoint.includes("profile_pending', 'profile_complete', 'ready', 'paused"), "Onboarding lifecycle statuses must exclude mail-only invitation/orientation events.");
 assert(endpoint.includes("Invitation and orientation are mail/archive events, not lifecycle gates."), "Legacy invitation/orientation states must migrate out of the evidence lifecycle.");
 assert(endpoint.includes("function profileSummary(array $tester): array"), "Queue must evaluate assignment-relevant profile completeness");

@@ -404,7 +404,7 @@ function portalRenderLinkConfirmation(PDO $database, string $token): never
     portalPage('Continue to tester portal', $content);
 }
 
-function portalRenderDashboard(PDO $database, array $tester, bool $adminPreview = false, string $coordinatorName = '24Seven.FM Coordinator'): never
+function portalRenderDashboard(PDO $database, array $tester, bool $adminPreview = false, string $coordinatorName = '24Seven.FM Coordinator', bool $liveChatEnabled = false): never
 {
     $profile = profileSummary($tester);
     $assignments = portalAssignments($database, (int) $tester['id']);
@@ -445,7 +445,7 @@ function portalRenderDashboard(PDO $database, array $tester, bool $adminPreview 
         . '<section class="card"><h2>Onboarding checklist</h2><div>' . implode('', array_map(static fn (array $step): string => '<div class="step ' . ($step[0] ? 'done' : '') . '"><span class="dot">' . ($step[0] ? '✓' : '○') . '</span><span><b>' . e($step[1]) . '</b><small>' . e($step[2]) . '</small></span></div>', $steps)) . '</div></section>'
         . '<div class="two"><section class="card"><p class="eyebrow">Intake profile</p><h2>Keep your testing profile current</h2><form method="post"><input type="hidden" name="action" value="save_profile"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><label>Name</label><input name="display_name" maxlength="100" value="' . e($tester['display_name']) . '" required><label>Country or region</label><input name="country" maxlength="80" value="' . e($tester['country']) . '"><p class="muted small"><strong>Registered email:</strong> ' . e($tester['email']) . '<br>Email changes are reviewed by the coordinator because this address is your sign-in and Google Play eligibility identity.</p><label>Current device</label><input name="device" value="' . e($tester['device']) . '" required><label>Android version</label><input name="android_version" value="' . e($tester['android_version']) . '" required><label>Primary station</label>' . portalSelect('primary_station', PORTAL_PRIMARY_STATIONS, $tester['primary_station'], 'Choose a primary station') . '<label>Other familiar stations</label>' . portalCheckboxes('other_stations', PORTAL_STATIONS, listFromJson($tester['other_stations_json'])) . '<label>Device form factor</label>' . portalSelect('device_form_factor', PORTAL_DEVICE_TYPES, $tester['device_form_factor'], 'Choose a device type') . '<label>Other devices or configuration notes</label><textarea name="other_devices">' . e($tester['other_devices']) . '</textarea><label>Testing interests</label>' . portalCheckboxes('testing_interests', PORTAL_TESTING_INTERESTS, listFromJson($tester['interests_json'])) . '<label>Existing station access (optional; station names only)</label><p class="muted small">Guest testing does not require a 24Seven.FM account. Leave this clear or choose None; never create an account or enter credentials for this program.</p>' . portalCheckboxes('station_accounts', PORTAL_STATIONS + ['none' => 'None'], listFromJson($tester['station_accounts_json'])) . '<label>Network capabilities</label>' . portalCheckboxes('network_capabilities', PORTAL_NETWORK, listFromJson($tester['network_capabilities_json'])) . '<label>Audio/accessory capabilities</label>' . portalCheckboxes('audio_capabilities', PORTAL_AUDIO, listFromJson($tester['audio_capabilities_json'])) . '<label>Accessibility and alternative input</label>' . portalCheckboxes('accessibility_capabilities', PORTAL_ACCESSIBILITY, listFromJson($tester['accessibility_capabilities_json'])) . '<label>Testing comfort</label>' . portalSelect('testing_comfort', PORTAL_TESTING_COMFORT, $tester['testing_comfort'], 'Choose a testing comfort level') . '<label>Controlled-test preferences</label>' . portalCheckboxes('controlled_actions', PORTAL_CONTROLLED_ACTIONS, listFromJson($tester['controlled_actions_json'])) . '<label>Typical two-week availability</label>' . portalSelect('testing_availability', PORTAL_AVAILABILITY, $tester['testing_availability'], 'Choose availability') . '<label>Assignment notes or prior testing experience</label><textarea name="experience" maxlength="1200">' . e($tester['experience']) . '</textarea><button class="button" type="submit">Save intake profile and device</button></form>' . $optInAction . $smokeTestAction . '</section>'
         . '<section class="card"><p class="eyebrow">Active assignments</p><h2>Your focused testing work</h2><div class="grid" style="grid-template-columns:1fr">' . $assignmentCards . '</div></section></div>'
-        . '<section class="card"><p class="eyebrow">Task report</p><h2>Submit feedback for a focused task</h2><p class="muted">Include what you tried, expected, and observed. Do not include passwords, credentials, private messages, session information, or private screenshots.</p><form method="post"><input type="hidden" name="action" value="submit_feedback"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><label>Assigned task</label><select name="assignment_id" required><option value="">Choose an assigned task</option>' . implode('', array_map(static fn (array $assignment): string => '<option value="' . (int) $assignment['id'] . '">' . e($assignment['task_id'] . ' — ' . ucwords(str_replace('_', ' ', $assignment['task_status']))) . '</option>', $assignments)) . '</select><label>Feedback category</label><select name="category" required>' . implode('', array_map(static fn (string $key, string $label): string => '<option value="' . e($key) . '">' . e($label) . '</option>', array_keys(FEEDBACK_CATEGORIES), FEEDBACK_CATEGORIES)) . '</select><label>Outcome</label><select name="outcome" required><option value="pass">Pass / worked as expected</option><option value="issue">Issue found</option><option value="blocked">Blocked</option><option value="note">Usability note</option></select><label>Short title</label><input name="subject" maxlength="' . PORTAL_MAX_FEEDBACK_SUBJECT . '" required><label>Steps and result</label><textarea name="details" maxlength="' . PORTAL_MAX_FEEDBACK_DETAILS . '" required></textarea><button class="button" type="submit">Submit task report</button></form>' . ($reports === [] ? '' : '<h3 style="margin-top:24px">Recent reports</h3>' . implode('', array_map(static fn (array $report): string => '<p class="small"><span class="pill">' . e($report['outcome']) . '</span> ' . e(FEEDBACK_CATEGORIES[$report['category']] ?? FEEDBACK_CATEGORIES['other']) . ' · ' . e($report['subject']) . ' <span class="muted">' . e($report['created_at']) . '</span></p>', $reports))) . '</section>' . portalChatPanel($database, $tester, $coordinatorName) . $privacyAction;
+        . '<section class="card"><p class="eyebrow">Task report</p><h2>Submit feedback for a focused task</h2><p class="muted">Include what you tried, expected, and observed. Do not include passwords, credentials, private messages, session information, or private screenshots.</p><form method="post"><input type="hidden" name="action" value="submit_feedback"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><label>Assigned task</label><select name="assignment_id" required><option value="">Choose an assigned task</option>' . implode('', array_map(static fn (array $assignment): string => '<option value="' . (int) $assignment['id'] . '">' . e($assignment['task_id'] . ' — ' . ucwords(str_replace('_', ' ', $assignment['task_status']))) . '</option>', $assignments)) . '</select><label>Feedback category</label><select name="category" required>' . implode('', array_map(static fn (string $key, string $label): string => '<option value="' . e($key) . '">' . e($label) . '</option>', array_keys(FEEDBACK_CATEGORIES), FEEDBACK_CATEGORIES)) . '</select><label>Outcome</label><select name="outcome" required><option value="pass">Pass / worked as expected</option><option value="issue">Issue found</option><option value="blocked">Blocked</option><option value="note">Usability note</option></select><label>Short title</label><input name="subject" maxlength="' . PORTAL_MAX_FEEDBACK_SUBJECT . '" required><label>Steps and result</label><textarea name="details" maxlength="' . PORTAL_MAX_FEEDBACK_DETAILS . '" required></textarea><button class="button" type="submit">Submit task report</button></form>' . ($reports === [] ? '' : '<h3 style="margin-top:24px">Recent reports</h3>' . implode('', array_map(static fn (array $report): string => '<p class="small"><span class="pill">' . e($report['outcome']) . '</span> ' . e(FEEDBACK_CATEGORIES[$report['category']] ?? FEEDBACK_CATEGORIES['other']) . ' · ' . e($report['subject']) . ' <span class="muted">' . e($report['created_at']) . '</span></p>', $reports))) . '</section>' . ($liveChatEnabled ? portalChatPanel($database, $tester, $coordinatorName) : '') . $privacyAction;
     if ($adminPreview) {
         $content = '<p class="notice admin-preview"><strong>Read-only coordinator preview.</strong> This is what the tester sees. Profile, opt-in, and report controls are disabled here; no tester session or data is changed. <a href="/private-tester-queue.php?tester=' . (int) $tester['id'] . '">Return to the coordinator workspace</a>.</p>' . str_replace(['<form method="post">', '</form>'], ['<form method="post"><fieldset disabled>', '</fieldset></form>'], $content);
     }
@@ -459,7 +459,8 @@ try {
     $database = database($config);
     if ($adminPreviewTesterId !== null) {
         if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') fail(405, 'Tester previews are read-only.');
-        portalRenderDashboard($database, portalTesterById($database, $adminPreviewTesterId), true, coordinatorDisplayName($config));
+        $previewTester = portalTesterById($database, $adminPreviewTesterId);
+        portalRenderDashboard($database, $previewTester, true, coordinatorDisplayName($config), liveChatEnabledForTester($config, (int) $previewTester['id']));
     }
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && ($_POST['action'] ?? '') === 'request_link') {
         if (!hash_equals(TESTER_PORTAL_ORIGIN, $_SERVER['HTTP_ORIGIN'] ?? '')) fail(403, 'This request is not allowed.');
@@ -475,9 +476,19 @@ try {
     if (!isset($_SESSION['tester_portal_id'])) portalRenderLogin();
     $tester = portalTester($database);
     $coordinatorName = coordinatorDisplayName($config);
-    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && isset($_GET['chat_stream'])) portalChatPoll($database, $tester, $coordinatorName, max(0, (int) ($_GET['after'] ?? 0)), true);
-    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && isset($_GET['chat_poll'])) portalChatPoll($database, $tester, $coordinatorName, max(0, (int) ($_GET['after'] ?? 0)));
-    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && isset($_GET['chat_popout'])) portalRenderChatPopout($database, $tester, $coordinatorName);
+    $liveChatEnabled = liveChatEnabledForTester($config, (int) $tester['id']);
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && isset($_GET['chat_stream'])) {
+        if (!$liveChatEnabled) fail(404, 'The requested chat is unavailable.');
+        portalChatPoll($database, $tester, $coordinatorName, max(0, (int) ($_GET['after'] ?? 0)), true);
+    }
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && isset($_GET['chat_poll'])) {
+        if (!$liveChatEnabled) fail(404, 'The requested chat is unavailable.');
+        portalChatPoll($database, $tester, $coordinatorName, max(0, (int) ($_GET['after'] ?? 0)));
+    }
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && isset($_GET['chat_popout'])) {
+        if (!$liveChatEnabled) fail(404, 'The requested chat is unavailable.');
+        portalRenderChatPopout($database, $tester, $coordinatorName);
+    }
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         if (!validCsrf()) fail(403, 'The request could not be verified.');
         $action = (string) ($_POST['action'] ?? '');
@@ -488,10 +499,12 @@ try {
         if ($action === 'request_privacy_action') portalRequestPrivacyAction($database, $tester);
         if ($action === 'submit_feedback') portalSubmitFeedback($database, $tester);
         if ($action === 'send_chat') {
+            if (!$liveChatEnabled) fail(404, 'The requested chat is unavailable.');
             chatPostMessage($database, (int) $tester['id'], 'tester', (string) ($_POST['chat_body'] ?? ''));
             portalRedirect('?notice=' . rawurlencode('Your Live Chat message was sent.'));
         }
         if ($action === 'delete_chat_message') {
+            if (!$liveChatEnabled) fail(404, 'The requested chat is unavailable.');
             $messageId = filter_var($_POST['message_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
             if ($messageId === false) throw new InvalidArgumentException('The requested chat message is invalid.');
             chatSoftDeleteMessage($database, (int) $tester['id'], 'tester', $messageId);
@@ -499,7 +512,7 @@ try {
         }
         throw new InvalidArgumentException('The requested portal action is invalid.');
     }
-    portalRenderDashboard($database, $tester, false, $coordinatorName);
+    portalRenderDashboard($database, $tester, false, $coordinatorName, $liveChatEnabled);
 } catch (InvalidArgumentException $exception) {
     portalRedirect('?error=' . rawurlencode($exception->getMessage()));
 } catch (Throwable $exception) {
