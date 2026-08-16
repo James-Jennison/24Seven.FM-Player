@@ -338,30 +338,21 @@ function portalSaveProfile(PDO $database, array $tester): void
     $experience = portalText('experience', 1200);
     $update = $database->prepare('UPDATE testers SET display_name = ?, country = ?, device = ?, android_version = ?, primary_station = ?, other_stations_json = ?, station_accounts_json = ?, device_form_factor = ?, other_devices = ?, interests_json = ?, network_capabilities_json = ?, audio_capabilities_json = ?, accessibility_capabilities_json = ?, testing_comfort = ?, controlled_actions_json = ?, testing_availability = ?, experience = ? WHERE id = ?');
     $update->execute([$displayName, $country, portalText('device', 160, true), portalText('android_version', 48, true), $primary, json_encode($otherStations, JSON_THROW_ON_ERROR), json_encode($accounts, JSON_THROW_ON_ERROR), $deviceType, portalText('other_devices', 500), json_encode($interests, JSON_THROW_ON_ERROR), json_encode($network, JSON_THROW_ON_ERROR), json_encode($audio, JSON_THROW_ON_ERROR), json_encode($accessibility, JSON_THROW_ON_ERROR), $comfort, json_encode($controlled, JSON_THROW_ON_ERROR), $availability, $experience, (int) $tester['id']]);
+    synchronizeOnboardingProfile($database, (int) $tester['id']);
     portalRedirect('?notice=' . rawurlencode('Your intake profile and device details are saved.'));
 }
 
 function portalConfirmOptIn(PDO $database, array $tester): void
 {
     if (($_POST['confirm_opt_in'] ?? '') !== 'yes') throw new InvalidArgumentException('Confirm your completed opt-in before continuing.');
-    if (!profileSummary($tester)['complete']) {
-        throw new InvalidArgumentException('Save your complete profile and device details before confirming opt-in.');
-    }
-    $now = gmdate('c');
-    $ready = is_string($tester['initial_smoke_test_confirmed_at'] ?? null) && $tester['initial_smoke_test_confirmed_at'] !== '';
-    $database->prepare("INSERT INTO tester_onboarding(tester_id, onboarding_status, coordinator_note, orientation_email_status, orientation_email_attempts, updated_at, play_opt_in_confirmed_at) VALUES (?, ?, '', 'not_sent', 0, ?, ?) ON CONFLICT(tester_id) DO UPDATE SET onboarding_status = excluded.onboarding_status, play_opt_in_confirmed_at = excluded.play_opt_in_confirmed_at, updated_at = excluded.updated_at")
-        ->execute([(int) $tester['id'], $ready ? 'ready' : 'profile_complete', $now, $now]);
+    $ready = recordTesterPlayOptIn($database, (int) $tester['id']);
     portalRedirect('?notice=' . rawurlencode($ready ? 'Your Google Play opt-in confirmation is recorded. You are ready for a focused assignment.' : 'Your Google Play opt-in confirmation is recorded. Complete the short first-use smoke test next.'));
 }
 
 function portalConfirmInitialSmokeTest(PDO $database, array $tester): void
 {
     if (($_POST['confirm_initial_smoke_test'] ?? '') !== 'yes') throw new InvalidArgumentException('Confirm the completed initial smoke test before continuing.');
-    if (!is_string($tester['play_opt_in_confirmed_at'] ?? null) || $tester['play_opt_in_confirmed_at'] === '') {
-        throw new InvalidArgumentException('Record your Google Play opt-in before confirming the initial smoke test.');
-    }
-    $now = gmdate('c');
-    $database->prepare("UPDATE tester_onboarding SET initial_smoke_test_confirmed_at = ?, onboarding_status = 'ready', updated_at = ? WHERE tester_id = ?")->execute([$now, $now, (int) $tester['id']]);
+    recordTesterInitialSmokeTest($database, (int) $tester['id']);
     portalRedirect('?notice=' . rawurlencode('Your initial smoke-test confirmation is recorded. You are ready for a focused assignment.'));
 }
 

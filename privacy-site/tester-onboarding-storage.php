@@ -61,7 +61,7 @@ function testerOnboardingSchema(PDO $database): void
         );
         CREATE TABLE IF NOT EXISTS tester_onboarding (
             tester_id INTEGER PRIMARY KEY REFERENCES testers(id) ON DELETE CASCADE,
-            onboarding_status TEXT NOT NULL DEFAULT \'profile_pending\' CHECK(onboarding_status IN (\'profile_pending\', \'profile_complete\', \'invited\', \'orientation_sent\', \'ready\', \'paused\')),
+            onboarding_status TEXT NOT NULL DEFAULT \'profile_pending\' CHECK(onboarding_status IN (\'profile_pending\', \'profile_complete\', \'ready\', \'paused\')),
             coordinator_note TEXT NOT NULL DEFAULT \'\',
             orientation_email_status TEXT NOT NULL DEFAULT \'not_sent\' CHECK(orientation_email_status IN (\'not_sent\', \'accepted\', \'failed\')),
             orientation_email_attempted_at TEXT,
@@ -109,6 +109,12 @@ function testerOnboardingSchema(PDO $database): void
             $database->exec("ALTER TABLE tester_onboarding ADD COLUMN {$column} {$definition}");
         }
     }
+    $database->exec("UPDATE tester_onboarding SET onboarding_status = CASE
+        WHEN onboarding_status IN ('invited', 'orientation_sent')
+             AND play_opt_in_confirmed_at IS NOT NULL AND play_opt_in_confirmed_at <> ''
+             AND initial_smoke_test_confirmed_at IS NOT NULL AND initial_smoke_test_confirmed_at <> '' THEN 'ready'
+        WHEN onboarding_status IN ('invited', 'orientation_sent') THEN 'profile_complete'
+        ELSE onboarding_status END");
 }
 
 /**

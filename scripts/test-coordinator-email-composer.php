@@ -23,6 +23,8 @@ $html = mergeCoordinatorMailHtml(
         'testing_comfort' => 'readonly',
         'controlled_actions_json' => '["none"]',
         'testing_availability' => '1_2h',
+        'play_opt_in_confirmed_at' => '2026-08-15T00:00:00Z',
+        'initial_smoke_test_confirmed_at' => '2026-08-15T00:01:00Z',
     ]
 );
 

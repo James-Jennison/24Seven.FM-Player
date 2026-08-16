@@ -36,8 +36,8 @@ const CHAT_SUBMISSION_WINDOW_SECONDS = 60;
 const CHAT_SUBMISSION_MAXIMUM = 12;
 const CHAT_RETENTION_DAYS = 90;
 const ASSIGNMENT_STATUSES = ['assigned', 'in_progress', 'complete', 'blocked'];
-const ONBOARDING_STATUSES = ['profile_pending', 'profile_complete', 'invited', 'orientation_sent', 'ready', 'paused'];
-const APPLICATION_STAGES = ['pending_review', 'accepted', 'invited', 'active'];
+const ONBOARDING_STATUSES = ['profile_pending', 'profile_complete', 'ready', 'paused'];
+const APPLICATION_STAGES = ['pending_review', 'accepted', 'active'];
 const RECRUITMENT_SOURCE_LABELS = [
     'direct' => 'Direct / project site',
     'testers_community' => 'Testers Community',
@@ -188,7 +188,7 @@ function database(array $config): PDO
         );
         CREATE TABLE IF NOT EXISTS tester_onboarding (
             tester_id INTEGER PRIMARY KEY REFERENCES testers(id) ON DELETE CASCADE,
-            onboarding_status TEXT NOT NULL DEFAULT \'profile_pending\' CHECK(onboarding_status IN (\'profile_pending\', \'profile_complete\', \'invited\', \'orientation_sent\', \'ready\', \'paused\')),
+            onboarding_status TEXT NOT NULL DEFAULT \'profile_pending\' CHECK(onboarding_status IN (\'profile_pending\', \'profile_complete\', \'ready\', \'paused\')),
             coordinator_note TEXT NOT NULL DEFAULT \'\',
             orientation_email_status TEXT NOT NULL DEFAULT \'not_sent\' CHECK(orientation_email_status IN (\'not_sent\', \'accepted\', \'failed\')),
             orientation_email_attempted_at TEXT,
@@ -296,6 +296,15 @@ function database(array $config): PDO
         $database->exec("ALTER TABLE chat_messages ADD COLUMN recipient_role TEXT NOT NULL DEFAULT 'tester' CHECK(recipient_role IN ('tester', 'coordinator'))");
         $database->exec("UPDATE chat_messages SET recipient_role = CASE sender_role WHEN 'tester' THEN 'coordinator' ELSE 'tester' END");
     }
+    // Invitation and orientation are mail/archive events, not lifecycle gates.
+    // Older records used status values for those events; normalize them while
+    // preserving the underlying self-confirmation evidence.
+    $database->exec("UPDATE tester_onboarding SET onboarding_status = CASE
+        WHEN onboarding_status IN ('invited', 'orientation_sent')
+             AND play_opt_in_confirmed_at IS NOT NULL AND play_opt_in_confirmed_at <> ''
+             AND initial_smoke_test_confirmed_at IS NOT NULL AND initial_smoke_test_confirmed_at <> '' THEN 'ready'
+        WHEN onboarding_status IN ('invited', 'orientation_sent') THEN 'profile_complete'
+        ELSE onboarding_status END");
     $feedbackColumns = array_column($database->query('PRAGMA table_info(tester_feedback)')->fetchAll(), 'name');
     if (!in_array('category', $feedbackColumns, true)) {
         $database->exec("ALTER TABLE tester_feedback ADD COLUMN category TEXT NOT NULL DEFAULT 'other' CHECK(category IN ('playback', 'connection_recovery', 'station_switching', 'metadata_artwork', 'favorites', 'media_controls', 'audio_accessories', 'layout_accessibility', 'performance_battery', 'crash_freeze', 'other'))");
@@ -869,8 +878,84 @@ function onboardingStatus(array $tester): string
     if (!$profile['complete']) {
         return 'profile_pending';
     }
+    $optedIn = is_string($tester['play_opt_in_confirmed_at'] ?? null) && $tester['play_opt_in_confirmed_at'] !== '';
+    $smokeTested = is_string($tester['initial_smoke_test_confirmed_at'] ?? null) && $tester['initial_smoke_test_confirmed_at'] !== '';
     $status = $tester['onboarding_status'] ?? 'profile_complete';
-    return is_string($status) && in_array($status, ONBOARDING_STATUSES, true) ? $status : 'profile_complete';
+    if ($status === 'paused') return 'paused';
+    if ($optedIn && $smokeTested) return 'ready';
+    return $status === 'profile_pending' ? 'profile_pending' : 'profile_complete';
+}
+
+function testerReadyForAssignment(array $tester): bool
+{
+    return onboardingStatus($tester) === 'ready';
+}
+
+/**
+ * Keep the persisted coordinator lifecycle aligned with the tester's current
+ * profile evidence. A completed profile advances only the profile stage; it
+ * never infers Play opt-in, smoke-test completion, or an active assignment.
+ */
+function synchronizeOnboardingProfile(PDO $database, int $testerId): string
+{
+    $statement = $database->prepare("SELECT testers.*, onboarding.onboarding_status, onboarding.play_opt_in_confirmed_at, onboarding.initial_smoke_test_confirmed_at FROM testers LEFT JOIN tester_onboarding AS onboarding ON onboarding.tester_id = testers.id WHERE testers.id = ? AND testers.status = 'active'");
+    $statement->execute([$testerId]);
+    $tester = $statement->fetch();
+    if ($tester === false) {
+        throw new InvalidArgumentException('The tester is no longer active.');
+    }
+    $now = gmdate('c');
+    $database->prepare('INSERT OR IGNORE INTO tester_onboarding(tester_id, onboarding_status, coordinator_note, orientation_email_status, orientation_email_attempted_at, orientation_email_attempts, updated_at) VALUES (?, \'profile_pending\', \'\', \'not_sent\', NULL, 0, ?)')
+        ->execute([$testerId, $now]);
+    $profileComplete = profileSummary($tester)['complete'];
+    if ($profileComplete) {
+        $target = testerReadyForAssignment($tester) ? 'ready' : 'profile_complete';
+        $database->prepare("UPDATE tester_onboarding SET onboarding_status = CASE WHEN onboarding_status = 'paused' THEN 'paused' ELSE ? END, updated_at = ? WHERE tester_id = ?")
+            ->execute([$target, $now, $testerId]);
+        $status = $database->prepare('SELECT onboarding_status FROM tester_onboarding WHERE tester_id = ?');
+        $status->execute([$testerId]);
+        return (string) $status->fetchColumn();
+    }
+    $database->prepare("UPDATE tester_onboarding SET onboarding_status = CASE WHEN onboarding_status = 'paused' THEN 'paused' ELSE 'profile_pending' END, updated_at = ? WHERE tester_id = ?")
+        ->execute([$now, $testerId]);
+    return 'profile_pending';
+}
+
+function recordTesterPlayOptIn(PDO $database, int $testerId): bool
+{
+    $statement = $database->prepare("SELECT testers.*, onboarding.initial_smoke_test_confirmed_at FROM testers LEFT JOIN tester_onboarding AS onboarding ON onboarding.tester_id = testers.id WHERE testers.id = ? AND testers.status = 'active'");
+    $statement->execute([$testerId]);
+    $tester = $statement->fetch();
+    if ($tester === false) {
+        throw new InvalidArgumentException('The tester is no longer active.');
+    }
+    if (!profileSummary($tester)['complete']) {
+        throw new InvalidArgumentException('Save your complete profile and device details before confirming opt-in.');
+    }
+    $now = gmdate('c');
+    $ready = is_string($tester['initial_smoke_test_confirmed_at'] ?? null) && $tester['initial_smoke_test_confirmed_at'] !== '';
+    $database->prepare("INSERT INTO tester_onboarding(tester_id, onboarding_status, coordinator_note, orientation_email_status, orientation_email_attempts, updated_at, play_opt_in_confirmed_at) VALUES (?, ?, '', 'not_sent', 0, ?, ?) ON CONFLICT(tester_id) DO UPDATE SET onboarding_status = excluded.onboarding_status, play_opt_in_confirmed_at = excluded.play_opt_in_confirmed_at, updated_at = excluded.updated_at")
+        ->execute([$testerId, $ready ? 'ready' : 'profile_complete', $now, $now]);
+    return $ready;
+}
+
+function recordTesterInitialSmokeTest(PDO $database, int $testerId): void
+{
+    $statement = $database->prepare("SELECT testers.*, onboarding.play_opt_in_confirmed_at FROM testers LEFT JOIN tester_onboarding AS onboarding ON onboarding.tester_id = testers.id WHERE testers.id = ? AND testers.status = 'active'");
+    $statement->execute([$testerId]);
+    $tester = $statement->fetch();
+    if ($tester === false) {
+        throw new InvalidArgumentException('The tester is no longer active.');
+    }
+    if (!profileSummary($tester)['complete']) {
+        throw new InvalidArgumentException('Save your complete profile and device details before confirming the initial smoke test.');
+    }
+    if (!is_string($tester['play_opt_in_confirmed_at'] ?? null) || $tester['play_opt_in_confirmed_at'] === '') {
+        throw new InvalidArgumentException('Record your Google Play opt-in before confirming the initial smoke test.');
+    }
+    $now = gmdate('c');
+    $database->prepare("INSERT INTO tester_onboarding(tester_id, onboarding_status, coordinator_note, orientation_email_status, orientation_email_attempts, updated_at, play_opt_in_confirmed_at, initial_smoke_test_confirmed_at) VALUES (?, 'ready', '', 'not_sent', 0, ?, ?, ?) ON CONFLICT(tester_id) DO UPDATE SET onboarding_status = 'ready', initial_smoke_test_confirmed_at = excluded.initial_smoke_test_confirmed_at, updated_at = excluded.updated_at")
+        ->execute([$testerId, $now, $tester['play_opt_in_confirmed_at'], $now]);
 }
 
 function onboardingStatusLabel(string $status): string
@@ -878,8 +963,6 @@ function onboardingStatusLabel(string $status): string
     return match ($status) {
         'profile_pending' => 'Profile update needed',
         'profile_complete' => 'Profile complete',
-        'invited' => 'Invitation sent',
-        'orientation_sent' => 'Orientation sent',
         'ready' => 'Ready for assignment',
         'paused' => 'Paused',
         default => 'Unknown',
@@ -898,11 +981,9 @@ function recruitmentSourceLabel(?string $source): string
  * application is never mistaken for one a coordinator has already actioned.
  *
  * pending_review  — not yet accepted, sent a details request, or rejected.
- * accepted        — reviewed; still short of an invitation (this covers both
- *                    "missing coverage details" and "profile complete, ready
- *                    to invite" — the roster row and onboarding badge show
- *                    which one applies).
- * invited         — invitation/orientation sent; waiting on tester opt-in.
+ * accepted        — reviewed and collecting the Profile & Device / tester
+ *                    self-confirmation evidence. Mail activity is reported
+ *                    separately and does not advance this stage.
  * active          — self-confirmed and ready for focused assignment.
  */
 function applicationStage(array $tester): string
@@ -911,9 +992,6 @@ function applicationStage(array $tester): string
         return 'pending_review';
     }
     $status = onboardingStatus($tester);
-    if (in_array($status, ['invited', 'orientation_sent'], true)) {
-        return 'invited';
-    }
     if ($status === 'ready') {
         return 'active';
     }
@@ -925,7 +1003,6 @@ function applicationStageLabel(string $stage): string
     return match ($stage) {
         'pending_review' => 'Pending review',
         'accepted' => 'Accepted, needs details',
-        'invited' => 'Invited, awaiting opt-in',
         'active' => 'Active',
         default => 'Unknown',
     };
@@ -1015,9 +1092,6 @@ function sendOnboardingEmail(PDO $database, array $config, int $testerId): bool
     $accepted = sendIndividualMail($config, $tester['email'], $subject, $message, $html);
     completeMailArchive($database, $archiveId, $accepted);
     $status = onboardingStatus($tester);
-    if ($accepted && $status !== 'ready') {
-        $status = 'orientation_sent';
-    }
     $record = $database->prepare('SELECT coordinator_note, orientation_email_attempts FROM tester_onboarding WHERE tester_id = ?');
     $record->execute([$testerId]);
     $existing = $record->fetch();
@@ -1554,17 +1628,17 @@ function renderOperationsDashboard(PDO $database, string $notice = '', string $e
 
     if ($emailOnly) {
         $content = '<header class="dashboard-header"><div><p class="eyebrow">24Seven.FM Player · Closed alpha</p><h1>Coordinator email</h1><p class="muted">Compose individual tester-program email, review the resolved draft, and inspect protected handoff records.</p><p><a class="link-button" href="/private-tester-queue.php">Operations</a><a class="link-button" href="/private-tester-queue.php?live_chat=1">Live Chat</a><a class="link-button" href="/private-tester-queue.php?mail_archive=1">Sent archive (' . $archiveCount . ')</a></p></div><form method="post"><input type="hidden" name="action" value="logout"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><button class="secondary" type="submit">Sign out</button></form></header>' . $message
-            . '<section class="compose-card"><h2>Compose a coordinator email</h2><form method="post" id="email-form"><input type="hidden" name="action" value="prepare"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><p class="muted">Only reviewed testers (accepted, invited, or active) can receive a coordinator email; applications awaiting review use the Accept / Request details / Reject actions in Operations instead.</p><p><label><input type="checkbox" id="select-all"> Select all reviewed testers</label></p><div class="table-scroll"><table><thead><tr><th scope="col">Select</th><th scope="col">Tester</th><th scope="col">Onboarding</th></tr></thead><tbody>' . ($recipientRows === '' ? '<tr><td colspan="3" class="muted">No reviewed testers yet.</td></tr>' : $recipientRows) . '</tbody></table></div><label for="subject">Subject</label><input id="subject" name="subject" maxlength="' . MAX_SUBJECT_LENGTH . '" required>' . $editor . '<button type="submit">Review selected recipients</button></form></section>'
+            . '<section class="compose-card"><h2>Compose a coordinator email</h2><form method="post" id="email-form"><input type="hidden" name="action" value="prepare"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><p class="muted">Only reviewed testers can receive a coordinator email; applications awaiting review use the Accept / Request details / Reject actions in Operations instead.</p><p><label><input type="checkbox" id="select-all"> Select all reviewed testers</label></p><div class="table-scroll"><table><thead><tr><th scope="col">Select</th><th scope="col">Tester</th><th scope="col">Onboarding</th></tr></thead><tbody>' . ($recipientRows === '' ? '<tr><td colspan="3" class="muted">No reviewed testers yet.</td></tr>' : $recipientRows) . '</tbody></table></div><label for="subject">Subject</label><input id="subject" name="subject" maxlength="' . MAX_SUBJECT_LENGTH . '" required>' . $editor . '<button type="submit">Review selected recipients</button></form></section>'
             . $composeHint
             . '<script src="/assets/private-tester-queue.js?v=onboarding-2" defer></script>';
         renderPage('Coordinator email', $content);
     }
 
     $content = '<header class="dashboard-header"><div><p class="eyebrow">24Seven.FM Player · Closed alpha</p><h1>Tester operations</h1><p class="muted">A private workspace for moving a new application through review to a focused, safe testing assignment.</p><p><a class="link-button" href="/private-tester-queue.php?live_chat=1">Live Chat</a><a class="link-button" href="/private-tester-queue.php?email=1">Email (' . $archiveCount . ')</a><a class="link-button" href="/private-tester-queue.php?mail_archive=1">Sent archive</a></p></div><form method="post"><input type="hidden" name="action" value="logout"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><button class="secondary" type="submit">Sign out</button></form></header>' . $message
-        . '<section><h2>Onboarding pipeline</h2><div class="onboarding-overview"><div class="onboarding-metric stage-pending_review"><strong>' . $stageCounts['pending_review'] . '</strong><span>Pending review</span></div><div class="onboarding-metric stage-accepted"><strong>' . $stageCounts['accepted'] . '</strong><span>Accepted, needs details</span></div><div class="onboarding-metric stage-invited"><strong>' . $stageCounts['invited'] . '</strong><span>Invited, awaiting opt-in</span></div><div class="onboarding-metric stage-active"><strong>' . $stageCounts['active'] . '</strong><span>Active</span></div></div><p class="muted">Workflow: review a new application → accept, request details, or reject → grant Play access and invite → tester self-confirms opt-in and initial smoke test → assign focused work. An invitation is not treated as opt-in, installation, or activity evidence.</p><p class="muted">Recruitment: ' . e('Direct ' . $sourceCounts['direct'] . ' · Testers Community ' . $sourceCounts['testers_community'] . ' · Betabound ' . $sourceCounts['betabound'] . ' · BetaFamily ' . $sourceCounts['betafamily'] . ' · Other ' . $sourceCounts['other']) . '</p></section>'
+        . '<section><h2>Onboarding pipeline</h2><div class="onboarding-overview"><div class="onboarding-metric stage-pending_review"><strong>' . $stageCounts['pending_review'] . '</strong><span>Pending review</span></div><div class="onboarding-metric stage-accepted"><strong>' . $stageCounts['accepted'] . '</strong><span>Evidence in progress</span></div><div class="onboarding-metric stage-active"><strong>' . $stageCounts['active'] . '</strong><span>Active assignments</span></div></div><p class="muted">Workflow: review a new application → complete Profile &amp; Device → tester self-confirms Play opt-in and the first-use smoke test → assign focused work. Orientation and invitation messages remain archived mail events; they never advance the lifecycle or prove opt-in, installation, or activity.</p><p class="muted">Recruitment: ' . e('Direct ' . $sourceCounts['direct'] . ' · Testers Community ' . $sourceCounts['testers_community'] . ' · Betabound ' . $sourceCounts['betabound'] . ' · BetaFamily ' . $sourceCounts['betafamily'] . ' · Other ' . $sourceCounts['other']) . '</p></section>'
         . '<section class="applications-card"><h2>Applications awaiting review (' . count($pendingApplications) . ')</h2>' . ($applicationRows === '' ? '<p class="muted">No new applications right now.</p>' : '<p class="muted">Newly submitted or imported applications stay here, separate from the accepted roster, until a coordinator accepts, requests details, or rejects them.</p><div class="application-rows">' . $applicationRows . '</div>') . '</section>'
         . '<section><h2>Tester roster</h2><p class="muted">Open one workspace to review coverage, record onboarding progress, send an individual orientation email, and manage focused tasks.</p><div class="table-scroll"><table><thead><tr><th scope="col">Tester</th><th scope="col">Device</th><th scope="col">Recruitment</th><th scope="col">Stage &amp; onboarding</th><th scope="col">Assignments</th><th scope="col"><span class="visually-hidden">Open</span></th></tr></thead><tbody>' . ($rows === '' ? '<tr><td colspan="6" class="muted">No accepted testers yet.</td></tr>' : $rows) . '</tbody></table></div></section>'
-        . '<details class="compose-card"' . ($composeForId !== null ? ' open' : '') . '><summary><strong>Compose a coordinator email</strong></summary><form method="post" id="email-form"><input type="hidden" name="action" value="prepare"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><section><h2>Recipients and message</h2><p class="muted">Only reviewed testers (accepted, invited, or active) can receive a coordinator email; applications awaiting review use the Accept / Request details / Reject actions above instead.</p><p><label><input type="checkbox" id="select-all"> Select all reviewed testers</label></p><div class="table-scroll"><table><thead><tr><th scope="col">Select</th><th scope="col">Tester</th><th scope="col">Onboarding</th></tr></thead><tbody>' . ($recipientRows === '' ? '<tr><td colspan="3" class="muted">No reviewed testers yet.</td></tr>' : $recipientRows) . '</tbody></table></div><label for="subject">Subject</label><input id="subject" name="subject" maxlength="' . MAX_SUBJECT_LENGTH . '" required>' . $editor . '<button type="submit">Review selected recipients</button></section></form></details>'
+        . '<details class="compose-card"' . ($composeForId !== null ? ' open' : '') . '><summary><strong>Compose a coordinator email</strong></summary><form method="post" id="email-form"><input type="hidden" name="action" value="prepare"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><section><h2>Recipients and message</h2><p class="muted">Only reviewed testers can receive a coordinator email; applications awaiting review use the Accept / Request details / Reject actions above instead.</p><p><label><input type="checkbox" id="select-all"> Select all reviewed testers</label></p><div class="table-scroll"><table><thead><tr><th scope="col">Select</th><th scope="col">Tester</th><th scope="col">Onboarding</th></tr></thead><tbody>' . ($recipientRows === '' ? '<tr><td colspan="3" class="muted">No reviewed testers yet.</td></tr>' : $recipientRows) . '</tbody></table></div><label for="subject">Subject</label><input id="subject" name="subject" maxlength="' . MAX_SUBJECT_LENGTH . '" required>' . $editor . '<button type="submit">Review selected recipients</button></section></form></details>'
         . $composeHint
         . '<script src="/assets/private-tester-queue.js?v=onboarding-2" defer></script>';
     renderPage('Tester operations', $content);
@@ -1902,12 +1976,14 @@ try {
         }
         if ($action === 'assign_task') {
             $testerId = testerId();
-            activeTester($database, $testerId);
-            $testerQuery = $database->prepare('SELECT * FROM testers WHERE id = ? AND status = \'active\'');
+            $testerQuery = $database->prepare("SELECT testers.*, onboarding.onboarding_status, onboarding.play_opt_in_confirmed_at, onboarding.initial_smoke_test_confirmed_at FROM testers LEFT JOIN tester_onboarding AS onboarding ON onboarding.tester_id = testers.id WHERE testers.id = ? AND testers.status = 'active'");
             $testerQuery->execute([$testerId]);
             $tester = $testerQuery->fetch();
             if ($tester === false) {
                 throw new InvalidArgumentException('The tester is no longer active. Refresh the queue and try again.');
+            }
+            if (!testerReadyForAssignment($tester)) {
+                throw new InvalidArgumentException('Focused work can be assigned only after the tester completes Profile & Device, Play Opt-In, and the First-Use Smoke Test.');
             }
             [$task, $station, $configuration, $note, $mutationAuthorized] = assignmentInput(taskRegistry(), $tester);
             $insert = $database->prepare('INSERT INTO tester_task_assignments(tester_id, task_id, task_status, station_scope, configuration_scope, coordinator_note, mutation_authorized, created_at, updated_at) VALUES (?, ?, \'assigned\', ?, ?, ?, ?, ?, ?)');

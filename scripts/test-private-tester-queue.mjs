@@ -52,7 +52,8 @@ assert(endpoint.includes("Draft preview"), "The email composer must provide a re
 assert(client.includes("data-insert-variable"), "The email composer must provide variable insertion controls.");
 assert(endpoint.includes("function renderOperationsDashboard(PDO $database, string $notice = '', string $error = '', bool $emailOnly = false)"), "The admin workspace must support a separate Email surface.");
 assert(endpoint.includes("?email=1"), "The admin workspace must route Email separately from operations.");
-assert(endpoint.includes("profile_pending', 'profile_complete', 'invited', 'orientation_sent', 'ready', 'paused"), "Onboarding lifecycle statuses are incomplete");
+assert(endpoint.includes("profile_pending', 'profile_complete', 'ready', 'paused"), "Onboarding lifecycle statuses must exclude mail-only invitation/orientation events.");
+assert(endpoint.includes("Invitation and orientation are mail/archive events, not lifecycle gates."), "Legacy invitation/orientation states must migrate out of the evidence lifecycle.");
 assert(endpoint.includes("function profileSummary(array $tester): array"), "Queue must evaluate assignment-relevant profile completeness");
 assert(endpoint.includes("function isGuestTester(array $tester): bool"), "Queue must identify testers with no station account as guest testers.");
 assert(endpoint.includes("function taskAllowsGuestTester(array $task): bool"), "Queue must use an explicit guest-task eligibility flag.");
@@ -67,6 +68,8 @@ assert(endpoint.includes("task_status IN (\\'assigned\\', \\'in_progress\\', \\'
 assert(endpoint.includes("if (($task['state'] ?? '') !== 'current')"), "Future task server-side block is missing");
 assert(endpoint.includes("Future / Blocked Tester Tasks cannot be assigned."), "Future task rejection message is missing");
 assert(endpoint.includes("INSERT INTO tester_task_assignments"), "Queue cannot create assignments");
+assert(endpoint.includes("function testerReadyForAssignment(array $tester): bool"), "Task routing must derive readiness from the required tester evidence.");
+assert(endpoint.includes("Focused work can be assigned only after the tester completes Profile & Device, Play Opt-In, and the First-Use Smoke Test."), "Task assignment must be blocked until all lifecycle evidence is recorded.");
 assert(endpoint.includes("UPDATE tester_task_assignments SET"), "Queue cannot update assignments");
 assert(endpoint.includes("DELETE FROM tester_task_assignments"), "Queue cannot remove assignments");
 assert(endpoint.includes("assignment_email_status"), "Assignment email handoff status is not persisted");

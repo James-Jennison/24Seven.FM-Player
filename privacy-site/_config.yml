@@ -18,3 +18,5 @@ exclude:
   - .sass-cache
   - Gemfile
   - Gemfile.lock
+  # Local-only visual checkpoint fixtures; never include in the public site artifact.
+  - onboarding-workspace

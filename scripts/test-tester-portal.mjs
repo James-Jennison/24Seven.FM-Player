@@ -39,7 +39,9 @@ assert(portal.includes("name=\"confirm_privacy_request\""), "Tester privacy requ
 assert(portal.includes("withdrawal_requested_at") && portal.includes("deletion_requested_at"), "Tester privacy request timestamps must be retained separately.");
 assert(portal.includes("The coordinator will verify and process it under the retention policy."), "Tester portal must not claim that a recorded request is already completed.");
 assert(portal.includes("FEEDBACK_CATEGORIES"), "Tester portal must use the queue's structured feedback categories.");
-assert(portal.includes("onboarding_status = 'ready'"), "A completed opt-in must advance a complete tester to ready for assignment.");
+assert(queue.includes("function recordTesterPlayOptIn(PDO $database, int $testerId): bool"), "The lifecycle must persist the Play Opt-In evidence separately.");
+assert(queue.includes("function recordTesterInitialSmokeTest(PDO $database, int $testerId): void"), "The lifecycle must persist the First-Use Smoke Test evidence separately.");
+assert(portal.includes("recordTesterPlayOptIn($database, (int) $tester['id'])") && portal.includes("recordTesterInitialSmokeTest($database, (int) $tester['id'])"), "The tester portal must record both self-confirmations before it presents Ready for assignment.");
 assert(portal.includes("PORTAL_TESTING_INTERESTS"), "Tester profile must include the original testing-interest intake options.");
 assert(portal.includes("name=\"display_name\""), "Tester profile must allow a tester to update their name.");
 assert(portal.includes("name=\"country\""), "Tester profile must allow a tester to update their country or region.");
@@ -69,6 +71,8 @@ assert(queue.includes("recipient_role TEXT NOT NULL"), "Live Chat messages must 
 assert(queue.includes("chat_submission_limits") && queue.includes("CHAT_RETENTION_DAYS"), "Live Chat must retain rate-limit and purge controls.");
 assert(queue.includes("coordinatorChatPoll") && queue.includes("chatPostMessage($database, $testerId, 'coordinator'"), "Coordinator Live Chat must use the same protected thread boundary.");
 assert(queue.includes("play_opt_in_confirmed_at"), "Queue database migration must retain tester opt-in confirmation.");
+assert(queue.includes("function synchronizeOnboardingProfile"), "Profile & Device completion must be persisted in the onboarding lifecycle.");
+assert(portal.includes("synchronizeOnboardingProfile($database, (int) $tester['id'])"), "Saving a tester profile must synchronize the five-stage lifecycle.");
 assert(queue.includes("withdrawal_requested_at") && queue.includes("deletion_requested_at"), "Queue database migration must retain tester privacy request timestamps.");
 assert(queue.includes("Record-deletion request:"), "Coordinator workspace must surface tester deletion requests.");
 assert(queue.includes("Tester task reports"), "Coordinator workspaces must display submitted tester reports.");
