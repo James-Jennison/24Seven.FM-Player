@@ -56,6 +56,7 @@ assert(portal.includes("profile_missing") && portal.includes("Complete the requi
 assert(portal.includes("portalChoices('station_accounts', PORTAL_STATIONS + ['none' => 'None'])"), "Optional station access must not block a tester from saving their profile.");
 assert(portal.includes("required-mark") && portal.includes("first.focus({preventScroll:true})"), "The tester portal must mark required profile fields and focus the first missing field.");
 assert(portal.includes('/assets/onboarding-profile-form.js'), "Tester profile requirements and draft recovery must use the CSP-safe external form asset.");
+assert(portal.includes('/assets/onboarding-stepper.js'), "Tester onboarding must load the focused stage-stepper asset.");
 assert(portal.includes("TESTER_PORTAL_TURNSTILE_ACTION"), "Magic-link requests must be protected by Turnstile.");
 assert(portal.includes("portalVerifyTurnstile($turnstileToken"), "Turnstile must be verified before a magic link is sent.");
 assert(portal.includes("We could not send a sign-in link. Please try again later."), "Portal link requests must report a failed transport instead of claiming delivery.");
