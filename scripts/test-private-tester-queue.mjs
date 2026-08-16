@@ -63,7 +63,7 @@ assert(endpoint.includes("function taskAllowsGuestTester(array $task): bool"), "
 assert(endpoint.includes("Guest testers can receive only the account-free Guest testing tasks."), "Queue must block account-dependent assignments for guest testers.");
 assert(endpoint.includes("function renderOperationsDashboard"), "Queue must render an operations dashboard instead of every tester form at once");
 assert(endpoint.includes('class="roster-card"') && endpoint.includes('class="roster-list"') && endpoint.includes('class="roster-entry"'), "Tester roster must use compact entries instead of a horizontally scrolling side-panel table.");
-assert(endpoint.includes('data-operations-panels') && endpoint.includes('data-operations-resize') && client.includes('player-operations-panel-layout-v1'), "Operations panels must support persistent repositioning and resizing.");
+assert(endpoint.includes('data-operations-panels') && endpoint.includes('data-panel-drag-handle') && endpoint.includes('data-panel-resize-handle') && client.includes('player-operations-freeform-layout-v1') && client.includes('setPointerCapture'), "Operations panels must support persistent direct dragging and resizing.");
 assert(endpoint.includes("function renderTesterWorkspace"), "Queue must provide a focused per-tester workspace");
 assert(endpoint.includes("send_onboarding_email"), "Queue must support an individual orientation-email action");
 assert(endpoint.includes("This tester needs their profile update before an orientation email can be sent."), "Orientation must not bypass profile completion");

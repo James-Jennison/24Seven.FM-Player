@@ -3,18 +3,41 @@
 
   var operationsPanels = document.querySelector('[data-operations-panels]');
   if (operationsPanels) {
-    var layoutStorageKey = 'player-operations-panel-layout-v1';
-    var defaultLayout = { split: 61, order: 'applications-first', wide: '' };
-    var layout = Object.assign({}, defaultLayout);
-    var resizeHandle = operationsPanels.querySelector('[data-operations-resize]');
+    var layoutStorageKey = 'player-operations-freeform-layout-v1';
+    var defaultLayout = {
+      applications: { x: 0, y: 0, width: 59, height: 544 },
+      roster: { x: 62, y: 0, width: 38, height: 544 }
+    };
+    var layout = JSON.parse(JSON.stringify(defaultLayout));
+    var activePointer = null;
 
     try {
       var savedLayout = JSON.parse(window.localStorage.getItem(layoutStorageKey) || '{}');
-      if (Number.isFinite(savedLayout.split) && savedLayout.split >= 35 && savedLayout.split <= 70) layout.split = savedLayout.split;
-      if (savedLayout.order === 'roster-first') layout.order = savedLayout.order;
-      if (savedLayout.wide === 'applications' || savedLayout.wide === 'roster') layout.wide = savedLayout.wide;
+      ['applications', 'roster'].forEach(function (id) {
+        if (!savedLayout[id]) return;
+        ['x', 'y', 'width', 'height'].forEach(function (key) {
+          if (Number.isFinite(savedLayout[id][key])) layout[id][key] = savedLayout[id][key];
+        });
+      });
     } catch (error) {
       // A blocked storage area only affects layout persistence, never the workspace.
+    }
+
+    function isCompactViewport() {
+      return window.matchMedia('(max-width: 1040px)').matches;
+    }
+
+    function limits() {
+      var bounds = operationsPanels.getBoundingClientRect();
+      return { width: Math.max(1, bounds.width), minWidth: Math.min(56, Math.max(24, (240 / Math.max(1, bounds.width)) * 100)), minHeight: 288 };
+    }
+
+    function clampPanel(panel) {
+      var limit = limits();
+      panel.width = Math.max(limit.minWidth, Math.min(100, panel.width));
+      panel.height = Math.max(limit.minHeight, panel.height);
+      panel.x = Math.max(0, Math.min(100 - panel.width, panel.x));
+      panel.y = Math.max(0, panel.y);
     }
 
     function saveOperationsLayout() {
@@ -26,73 +49,94 @@
     }
 
     function applyOperationsLayout() {
-      operationsPanels.dataset.order = layout.order;
-      if (layout.wide) {
-        operationsPanels.dataset.wide = layout.wide;
-      } else {
-        delete operationsPanels.dataset.wide;
-      }
-      operationsPanels.style.setProperty('--panel-split', layout.split + '%');
-      if (resizeHandle) resizeHandle.setAttribute('aria-valuenow', String(layout.split));
-      document.querySelectorAll('[data-operations-wide]').forEach(function (button) {
-        var target = button.dataset.operationsWide;
-        button.setAttribute('aria-pressed', String(layout.wide === target));
-        button.textContent = layout.wide === target ? 'Return to split' : 'Widen ' + target;
+      if (isCompactViewport()) return;
+      var bottom = 0;
+      operationsPanels.querySelectorAll('[data-operations-panel]').forEach(function (panel) {
+        var state = layout[panel.dataset.operationsPanel];
+        clampPanel(state);
+        panel.style.left = state.x + '%';
+        panel.style.top = state.y + 'px';
+        panel.style.width = state.width + '%';
+        panel.style.height = state.height + 'px';
+        bottom = Math.max(bottom, state.y + state.height);
       });
+      operationsPanels.style.height = Math.max(560, bottom + 12) + 'px';
     }
 
-    function setSplitFromPointer(clientX) {
-      if (window.matchMedia('(max-width: 1040px)').matches || layout.wide) return;
-      var bounds = operationsPanels.getBoundingClientRect();
-      layout.split = Math.max(35, Math.min(70, Math.round(((clientX - bounds.left) / bounds.width) * 100)));
+    function movePanel(id, deltaX, deltaY) {
+      var state = layout[id];
+      state.x += (deltaX / limits().width) * 100;
+      state.y += deltaY;
+      clampPanel(state);
       applyOperationsLayout();
     }
 
-    applyOperationsLayout();
-    document.querySelectorAll('[data-operations-swap]').forEach(function (button) {
-      button.addEventListener('click', function () {
-        layout.order = layout.order === 'applications-first' ? 'roster-first' : 'applications-first';
+    function resizePanel(id, deltaX, deltaY) {
+      var state = layout[id];
+      state.width += (deltaX / limits().width) * 100;
+      state.height += deltaY;
+      clampPanel(state);
+      applyOperationsLayout();
+    }
+
+    function startPointer(event, kind) {
+      if (isCompactViewport() || event.button !== 0) return;
+      var panel = event.currentTarget.closest('[data-operations-panel]');
+      if (!panel) return;
+      activePointer = { id: panel.dataset.operationsPanel, kind: kind, startX: event.clientX, startY: event.clientY };
+      event.currentTarget.setPointerCapture(event.pointerId);
+      event.preventDefault();
+    }
+
+    function updatePointer(event) {
+      if (!activePointer || isCompactViewport()) return;
+      var deltaX = event.clientX - activePointer.startX;
+      var deltaY = event.clientY - activePointer.startY;
+      var state = layout[activePointer.id];
+      if (activePointer.kind === 'move') {
+        state.x = layout[activePointer.id].x;
+        state.y = layout[activePointer.id].y;
+        movePanel(activePointer.id, deltaX, deltaY);
+      } else {
+        resizePanel(activePointer.id, deltaX, deltaY);
+      }
+      activePointer.startX = event.clientX;
+      activePointer.startY = event.clientY;
+    }
+
+    operationsPanels.querySelectorAll('[data-panel-drag-handle]').forEach(function (handle) {
+      handle.addEventListener('pointerdown', function (event) { startPointer(event, 'move'); });
+      handle.addEventListener('pointermove', updatePointer);
+      handle.addEventListener('pointerup', function () { activePointer = null; saveOperationsLayout(); });
+      handle.addEventListener('keydown', function (event) {
+        if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key) || isCompactViewport()) return;
+        event.preventDefault();
+        var id = event.currentTarget.closest('[data-operations-panel]').dataset.operationsPanel;
+        movePanel(id, event.key === 'ArrowLeft' ? -24 : event.key === 'ArrowRight' ? 24 : 0, event.key === 'ArrowUp' ? -24 : event.key === 'ArrowDown' ? 24 : 0);
         saveOperationsLayout();
-        applyOperationsLayout();
       });
     });
-    document.querySelectorAll('[data-operations-wide]').forEach(function (button) {
-      button.addEventListener('click', function () {
-        var target = button.dataset.operationsWide;
-        layout.wide = layout.wide === target ? '' : target;
+    operationsPanels.querySelectorAll('[data-panel-resize-handle]').forEach(function (handle) {
+      handle.addEventListener('pointerdown', function (event) { startPointer(event, 'resize'); });
+      handle.addEventListener('pointermove', updatePointer);
+      handle.addEventListener('pointerup', function () { activePointer = null; saveOperationsLayout(); });
+      handle.addEventListener('keydown', function (event) {
+        if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key) || isCompactViewport()) return;
+        event.preventDefault();
+        var id = event.currentTarget.closest('[data-operations-panel]').dataset.operationsPanel;
+        resizePanel(id, event.key === 'ArrowLeft' ? -24 : event.key === 'ArrowRight' ? 24 : 0, event.key === 'ArrowUp' ? -24 : event.key === 'ArrowDown' ? 24 : 0);
         saveOperationsLayout();
-        applyOperationsLayout();
       });
     });
     document.querySelectorAll('[data-operations-reset]').forEach(function (button) {
       button.addEventListener('click', function () {
-        layout = Object.assign({}, defaultLayout);
+        layout = JSON.parse(JSON.stringify(defaultLayout));
         saveOperationsLayout();
         applyOperationsLayout();
       });
     });
-    if (resizeHandle) {
-      resizeHandle.addEventListener('pointerdown', function (event) {
-        if (window.matchMedia('(max-width: 1040px)').matches || layout.wide) return;
-        resizeHandle.setPointerCapture(event.pointerId);
-        setSplitFromPointer(event.clientX);
-      });
-      resizeHandle.addEventListener('pointermove', function (event) {
-        if (resizeHandle.hasPointerCapture(event.pointerId)) setSplitFromPointer(event.clientX);
-      });
-      resizeHandle.addEventListener('pointerup', function (event) {
-        if (resizeHandle.hasPointerCapture(event.pointerId)) resizeHandle.releasePointerCapture(event.pointerId);
-        saveOperationsLayout();
-      });
-      resizeHandle.addEventListener('keydown', function (event) {
-        if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
-        event.preventDefault();
-        layout.wide = '';
-        layout.split = Math.max(35, Math.min(70, layout.split + (event.key === 'ArrowRight' ? 5 : -5)));
-        saveOperationsLayout();
-        applyOperationsLayout();
-      });
-    }
+    window.addEventListener('resize', applyOperationsLayout);
+    applyOperationsLayout();
   }
 
   var all = document.getElementById('select-all');
