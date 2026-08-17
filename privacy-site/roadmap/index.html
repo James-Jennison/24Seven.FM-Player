@@ -107,7 +107,7 @@ section: roadmap
 
 {% assign notification_items = site.data.project.roadmap | where: "phase", "notifications" %}
 <section class="content-section" id="notifications">
-  <div class="content-intro wide"><p class="eyebrow">M36–M38 · Authorization before implementation</p><h2>True delivery without fake push</h2><p>M27 is complete for actively observed Chat. Closed-app delivery begins only with an authorized event source, then a secure implementation, then lifecycle/privacy certification.</p></div>
+  <div class="content-intro wide"><p class="eyebrow">M36–M38 · Deferred notification program</p><h2>True delivery without fake push</h2><p>M27 is complete for actively observed Chat. Closed-app delivery is deferred outside this Alpha unless JERIC authorizes an official station-app program; if resumed, it begins only with an authorized event source, then a secure implementation, then lifecycle/privacy certification.</p></div>
   <div class="workstream-grid">
     {% for item in notification_items %}<article class="roadmap-card {{ item.state }}"><p class="status"><span></span>{{ item.state_label }}</p><p class="milestone-id">{{ item.id }}</p><h3>{{ item.name }}</h3><p>{{ item.summary }}</p><p class="roadmap-dependency"><strong>Dependency:</strong> {{ item.dependencies }}</p></article>{% endfor %}
   </div>

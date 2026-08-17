@@ -422,9 +422,9 @@ active execution.
 | M33 | Complete | Unknown | `July 18, 2026 at 7:43:32 PM PDT (UTC−07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown |
 | M34 | Complete | No later than `July 15, 2026 at 12:09:53 PM PDT (UTC−07:00)` | `July 19, 2026 at 6:25:48 AM PDT (UTC−07:00)` | Not recorded individually | Unknown | Unknown | Unknown | Unknown | ≥90.27 h | Unknown | Estimated |
 | M35 | Complete | No later than `July 15, 2026 at 10:57:12 PM PDT (UTC−07:00)` | `July 19, 2026 at 5:41:32 AM PDT (UTC−07:00)` | Not recorded individually | Unknown | Unknown | Unknown | Unknown | ≥78.74 h | Unknown | Estimated |
-| M36 | Waiting externally | — | — | 1–3 active Sol d after trigger | — | — | — | — | — | — | Unknown |
-| M37 | Planned after M36 | — | — | 5–10 active d | — | — | — | — | — | — | Unknown |
-| M38 | Planned after M37 | — | — | 5–10 active d | — | — | — | — | — | — | Unknown |
+| M36 | Deferred unless JERIC authorizes official station-app work | — | — | 1–3 active Sol d after authorization | — | — | — | — | — | — | Unknown |
+| M37 | Deferred with M36–M38 program | — | — | 5–10 active d after M36 | — | — | — | — | — | — | Unknown |
+| M38 | Deferred with M36–M38 program | — | — | 5–10 active d after M37 | — | — | — | — | — | — | Unknown |
 | M39 | Planned | — | — | 1–2 active d | — | — | — | — | — | — | Unknown |
 | M40 | Planned after M39 | — | — | 3–10 calendar d | — | — | — | — | — | — | Unknown |
 | M41 | Planned after M40 | — | — | 0.5–1 active d | — | — | — | — | — | — | Unknown |
@@ -436,7 +436,7 @@ active execution.
 | M47 | Deferred | — | — | External repair; then 1–3 active wk | — | — | — | — | — | — | Unknown |
 | M48 | Deferred after M47 | — | — | 1–2 active wk | — | — | — | — | — | — | Unknown |
 | M49 | Deferred after M48 | — | — | 1–2 active wk | — | — | — | — | — | — | Unknown |
-| M50 | Deferred after M49/M38 | — | — | 2–4 active wk | — | — | — | — | — | — | Unknown |
+| M50 | Deferred after M49 and separately authorized notification architecture | — | — | 2–4 active wk | — | — | — | — | — | — | Unknown |
 | M51 | Retired | No later than `July 19, 2026 at 7:37:21 AM PDT (UTC−07:00)` | Retired `July 19, 2026 at 8:55:35 AM PDT (UTC−07:00)` | No forecast | Unknown | Unknown | Unknown | Unknown | ≥1.30 h decision window | — | Estimated |
 | M52 | Retired | — | Retired `July 19, 2026 at 8:55:35 AM PDT (UTC−07:00)` | No forecast | — | — | — | — | — | — | Unknown |
 | M53 | Retired | — | Retired `July 19, 2026 at 8:55:35 AM PDT (UTC−07:00)` | No forecast | — | — | — | — | — | — | Unknown |
@@ -1008,8 +1008,8 @@ Cumulative counted project time through Milestone M30: Unknown overall; 0.40 h p
 - **Objective:** Accept an authorized station event source, webhook, or privacy-compatible relay contract covering
   ownership, payloads, authentication, retention/deletion, abuse, outage behavior, and station support.
 - **Start, completion, and intervals:** Not started; no start, completion, active, automated-wait, or user-blocked interval is open.
-- **Model, reasoning strength, and original forecast:** Current planned route Sol High; 1–3 active Sol days after an accountable operator
-  supplies the triggering proposal. The original forecast will be snapshotted when authorization starts execution.
+- **Model, reasoning strength, and original forecast:** Deferred unless JERIC authorizes an official station-app program. When resumed,
+  Sol High; 1–3 active Sol days after an accountable operator supplies the triggering proposal. The original forecast will be snapshotted when authorization starts execution.
 - **Time, variance, evidence, confidence, and forecasting lessons:** No actual time or variance yet. Roadmap `e249071` and forecast `f971a9e`; no
   PR, release, tag, or workflow. **Unknown** until start. Record the external trigger and actual execution start separately.
 
@@ -1018,8 +1018,8 @@ Cumulative counted project time through Milestone M30: Unknown overall; 0.40 h p
 - **Objective:** Implement minimal opt-in, station/token-isolated event delivery with duplicate, sign-out, reinstall,
   and protected-session safeguards and no perpetual polling.
 - **Start, completion, and intervals:** Not started; all actual intervals and totals are not applicable.
-- **Model, reasoning strength, and original forecast:** Terra High, escalating unresolved delivery/privacy choices to Sol High; current
-  forecast 5–10 active days after M36 and a test environment are accepted.
+- **Model, reasoning strength, and original forecast:** Deferred with the M36–M38 program unless JERIC authorizes it. When resumed,
+  Terra High, escalating unresolved delivery/privacy choices to Sol High; forecast 5–10 active days after M36 and a test environment are accepted.
 - **Time, variance, evidence, confidence, and forecasting lessons:** No actual variance. Roadmap `e249071`, forecast `f971a9e`; no related delivery
   commit/PR/release/workflow. **Unknown**. Snapshot this range as original only when authorized.
 
@@ -1028,8 +1028,8 @@ Cumulative counted project time through Milestone M30: Unknown overall; 0.40 h p
 - **Objective:** Certify foreground/background/closed/idle/reboot/network behavior, latency, battery/traffic, payload
   privacy, deep-link safety, and all five station boundaries.
 - **Start, completion, and intervals:** Not started; all actual intervals and totals are not applicable.
-- **Model, reasoning strength, and original forecast:** Terra High execution followed by Sol High acceptance; current forecast 5–10 active
-  days after M37 is stable.
+- **Model, reasoning strength, and original forecast:** Deferred with the M36–M38 program unless JERIC authorizes it. When resumed,
+  Terra High execution followed by Sol High acceptance; forecast 5–10 active days after M37 is stable.
 - **Time, variance, evidence, confidence, and forecasting lessons:** No actual variance. Roadmap `e249071`, forecast `f971a9e`; no implementation
   evidence yet. **Unknown**. Time device campaigns and automated suites as separate intervals.
 
@@ -1038,7 +1038,8 @@ Cumulative counted project time through Milestone M30: Unknown overall; 0.40 h p
 - **Objective:** Freeze exact signed artifacts, version, signer, dependencies, permissions, listing, release notes,
   roadmap/testing, and all release-critical findings.
 - **Start, completion, and intervals:** Not started; all actual intervals and totals are not applicable.
-- **Model, reasoning strength, and original forecast:** Sol High; current forecast 1–2 active days after M36–M38 complete.
+- **Model, reasoning strength, and original forecast:** Sol High; current forecast 1–2 active days after explicit candidate-freeze authorization.
+  M36–M38 are deferred and nonblocking unless JERIC authorizes the official station-app program.
 - **Time, variance, evidence, confidence, and forecasting lessons:** No actual variance. Roadmap `e249071`, forecast `f971a9e`; no candidate-finish
   commit/PR/release/workflow. **Unknown**. Record the exact freeze authorization as start, not prior planning.
 
@@ -1141,7 +1142,8 @@ Cumulative counted project time through Milestone M30: Unknown overall; 0.40 h p
 - **Objective:** Certify independent station behavior and optional privacy-minimized delivery through the authorized
   notification architecture.
 - **Start, completion, and intervals:** Not started; all actual intervals and totals are not applicable.
-- **Model, reasoning strength, and original forecast:** Sol Extra High; current forecast 2–4 active weeks after M49 and M38.
+- **Model, reasoning strength, and original forecast:** Sol Extra High; current forecast 2–4 active weeks after M49 and any separately
+  authorized notification architecture.
 - **Time, variance, evidence, confidence, and forecasting lessons:** No actual variance. Roadmap `e249071`, forecast `f971a9e`; no certification.
   **Unknown**. Time each station/device campaign rather than relying on one final commit.
 
@@ -1288,7 +1290,7 @@ complete translation layer remains in [MILESTONE_MIGRATION.md](MILESTONE_MIGRATI
 | Legacy M18–M22 | M17–M21 | Same station-certification work shifted down one canonical ID. |
 | Legacy M23.1–M23.7 slices | M22, M23, M28–M30, M34, and M35 | Each canonical row uses its own evidence boundary; no umbrella M23 duration is added. |
 | Legacy M24–M26 and M27.1 | M24–M27 | Same work; M27.1 became canonical M27. |
-| Legacy M27.2 authorization, implementation, and validation slices | M36–M38 | Planned work; no actual interval has started. |
+| Legacy M27.2 authorization, implementation, and validation slices | M36–M38 | Deferred unless JERIC authorizes official station-app work; no actual interval has started. |
 | Legacy M28 release slices | M39–M41 | Planned work; no actual interval has started. |
 | Legacy M17 private-message repair and delivery slices | M47–M50 | Deferred work; no actual interval has started. |
 | Forum F1–F4 | M51–M54 | M51 preserves the research-to-retirement window; M52–M54 never started. |

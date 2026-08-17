@@ -22,8 +22,8 @@ unverified stream addresses, background polling represented as push, or undocume
 
 The canonical, trigger-based forecast is [MILESTONE_FORECAST.md](MILESTONE_FORECAST.md). Use its active-day ranges
 only after the named prerequisite arrives; do not convert an owner, station, rights-holder, or Play decision into a
-calendar commitment. The current critical path runs through M36, then M37–M38, before M39 can freeze an
-Alpha candidate under the existing scope.
+calendar commitment. M36–M38 are deferred and nonblocking for this Alpha unless JERIC authorizes official station-app
+work; M39 can begin only after explicit freeze authorization under the existing scope.
 
 ## Current program
 
@@ -50,13 +50,13 @@ keyboard/pointer traversals pass alongside the established adaptive and hinge ma
 clean/update path, exact package registration, and unused version code pass. Play-generated delivery, update, and
 pre-launch evidence belong exclusively to M40 after M39 freezes the exact candidate.
 
-## Notification delivery program
+## Deferred notification delivery program
 
 | ID | Size | State | Implementation focus |
 | --- | --- | --- | --- |
-| M36 Notification Event-Source Authorization | Architecture gate | Waiting externally | Identify an authorized station event source, webhook, or privacy-compatible relay and document ownership, payloads, authentication, retention/deletion, abuse, outage, and station support |
-| M37 Secure Closed-App Notification Delivery | L | Planned after M36 | Minimal opt-in events, station/token isolation, duplicate safety, sign-out/reinstall behavior, and no protected-session forwarding or perpetual polling |
-| M38 Notification Lifecycle and Privacy Certification | L | Planned after M37 | Foreground/background/closed/idle/reboot/network testing, latency, battery/traffic, payload privacy, deep-link safety, and all-station coverage |
+| M36 Notification Event-Source Authorization | Architecture gate | Deferred unless JERIC authorizes official station-app work | Identify an authorized station event source, webhook, or privacy-compatible relay and document ownership, payloads, authentication, retention/deletion, abuse, outage, and station support |
+| M37 Secure Closed-App Notification Delivery | L | Deferred after M36 | Minimal opt-in events, station/token isolation, duplicate safety, sign-out/reinstall behavior, and no protected-session forwarding or perpetual polling |
+| M38 Notification Lifecycle and Privacy Certification | L | Deferred after M37 | Foreground/background/closed/idle/reboot/network testing, latency, battery/traffic, payload privacy, deep-link safety, and all-station coverage |
 
 M27 remains complete for exact-name local notifications produced from the actively observed Chat feed. It is not
 closed-app push and does not authorize M37.

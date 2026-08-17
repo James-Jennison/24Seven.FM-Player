@@ -474,7 +474,7 @@ section: product-testing
   <div class="content-intro wide">
     <p class="eyebrow">PT-20–PT-25 and PT-35 · Device, accessibility, policy, and release integrity</p>
     <h2>Cover human and specialist boundaries</h2>
-    <p>PT-20 and PT-21 are current physical/manual acceptance gates. PT-23 is the M31 regression case; PT-24 and PT-25 are current M32 controlled security regressions using the supplied harnesses. PT-22 remains blocked for M38, and PT-35 completed the M29 Play-policy reconciliation. Re-run PT-35 only when its candidate or Console wording changes. Do not improvise a harness, credential, Console fact, operator policy, or authorization that has not been supplied.</p>
+    <p>PT-20 and PT-21 are current physical/manual acceptance gates. PT-23 is the M31 regression case; PT-24 and PT-25 are current M32 controlled security regressions using the supplied harnesses. PT-22 is deferred with M36–M38 unless JERIC authorizes official station-app work, and PT-35 completed the M29 Play-policy reconciliation. Re-run PT-35 only when its candidate or Console wording changes. Do not improvise a harness, credential, Console fact, operator policy, or authorization that has not been supplied.</p>
   </div>
   <div class="test-session-grid comprehensive-test-grid">
     <article id="pt-20">
@@ -492,7 +492,7 @@ section: product-testing
     <article class="future-test-case" id="pt-22">
       <span>PT-22 · Future M38 build only</span>
       <h3>Closed-app notification delivery</h3>
-      <ol><li>Do not run this case against the current active-Chat preview. Mark it Blocked until M36 authorizes a source and an M37 delivery build is supplied.</li><li>When supplied, test permission allow/deny, foreground, background, task-removed/closed, device-idle, reboot, reinstall/token rotation, and network outage/recovery states.</li><li>Across assigned station/account pairs, verify exact-name mapping, self/blocked/duplicate suppression, station-specific opt-in/out, sign-out, and minimal private lock-screen payloads.</li><li>Tap an alert and verify station selection plus gated native Chat navigation; no protected session or message text may pass through a relay.</li><li>Record delivery delay, duplicate count, data/battery observations, and outage behavior. Private Message delivery remains excluded until M47–M50 close.</li></ol>
+      <ol><li>Do not run this case against the current active-Chat preview. This case is deferred unless JERIC authorizes official station-app work, then M36 authorizes a source and an M37 delivery build is supplied.</li><li>When supplied, test permission allow/deny, foreground, background, task-removed/closed, device-idle, reboot, reinstall/token rotation, and network outage/recovery states.</li><li>Across assigned station/account pairs, verify exact-name mapping, self/blocked/duplicate suppression, station-specific opt-in/out, sign-out, and minimal private lock-screen payloads.</li><li>Tap an alert and verify station selection plus gated native Chat navigation; no protected session or message text may pass through a relay.</li><li>Record delivery delay, duplicate count, data/battery observations, and outage behavior. Private Message delivery remains excluded until M47–M50 close.</li></ol>
       <p class="test-pass"><strong>Pass:</strong> authorized events arrive once under the documented lifecycle states, respect privacy and user controls, and never depend on continuous background polling.</p>
     </article>
     <article id="pt-23">
@@ -610,7 +610,7 @@ section: product-testing
         <tr><th>Wi-Fi, mobile data, full outage</th><td>PT-08</td><td>One cut/restore and one handoff; do not manipulate networks carrying unrelated critical work.</td></tr>
         <tr><th>Bluetooth and available wired/USB output</th><td>PT-04, PT-06</td><td>Record exact hardware category, Android chooser behavior, media buttons, and disconnect state.</td></tr>
         <tr><th>Maximum text plus physical TalkBack</th><td>PT-21</td><td>A human audible/intelligibility result is required; the signed-release M34 baseline passes on the Razr, but repeat this check for the exact assigned candidate.</td></tr>
-        <tr><th>Authorized closed-app delivery build</th><td>PT-22</td><td>Remain Blocked until M36–M38 supply an authorized source, implementation, and certification build.</td></tr>
+        <tr><th>Authorized closed-app delivery build</th><td>PT-22</td><td>Deferred unless JERIC authorizes official station-app work; then M36–M38 must supply an authorized source, implementation, and certification build.</td></tr>
         <tr><th>Play policy and release-security coordination</th><td>PT-23–PT-25 and PT-35</td><td>PT-23 is the current M31 regression. PT-24/PT-25 are current M32 regressions but require the supplied controlled session/mock/foreign-controller harnesses. PT-35 completed M29; rerun it only with the M29 coordinator when the candidate, controlled accounts, Console, or operator facts change.</td></tr>
       </tbody>
     </table>

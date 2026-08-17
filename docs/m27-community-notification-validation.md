@@ -2,7 +2,7 @@
 
 Date: July 16, 2026
 
-Status: **Complete for the existing actively observed Chat feed. Reliable closed-app push remains M36–M38.**
+Status: **Complete for the existing actively observed Chat feed. Reliable closed-app push remains deferred in M36–M38 unless JERIC authorizes an official station-app program.**
 
 ## Delivered boundary
 
@@ -44,9 +44,9 @@ be represented as push. Private Message events remain capability-gated with M47'
   implementation plan, future scope, and README. No new endpoint, SDK, permission, background worker, or message-text
   persistence was introduced.
 
-## Remaining M36–M38 checks
+## Deferred M36–M38 checks
 
-- Obtain and document authorization for the true event source.
+- Resume only after JERIC authorizes an official station-app program, then obtain and document authorization for the true event source.
 - Define minimal authenticated Chat/PM event payloads, retention/deletion, abuse controls, outage behavior, and key
   rotation without transmitting protected station sessions.
 - Validate closed/background/idle delivery, duplicate behavior across reinstalls and token rotation, multi-station

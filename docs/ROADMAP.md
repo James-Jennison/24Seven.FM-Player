@@ -23,8 +23,8 @@ requirement; the new work receives its own milestone and regression evidence.
 The dated, dependency-aware forecast for every unfinished milestone is maintained in
 [MILESTONE_FORECAST.md](MILESTONE_FORECAST.md). It uses active-work ranges only after their triggers occur, identifies
 owner/external blockers explicitly, and records the model required for the next substantive step. Under the current
-scope, M39 remains blocked by M36–M38; no Alpha calendar date is credible until the M36 event-source
-authorization is resolved.
+scope, M36–M38 are deferred unless JERIC authorizes an official station-app program. They no longer block M39; no
+Alpha calendar date is credible until M39 is explicitly authorized and its freeze gate is met.
 
 Actual and historically reconstructed timing is maintained separately in
 [MILESTONE_TIME_LEDGER.md](MILESTONE_TIME_LEDGER.md). Historical uncertainty is preserved; future milestones record
@@ -93,16 +93,16 @@ allow, but no partial checkpoint should be described as release-ready.
 | M34 | Device and Accessibility Acceptance | Complete | Adaptive window/foldable matrix, physical Razr hinge lifecycle, human TalkBack, focused Voice Access, and signed-release Bluetooth keyboard/pointer acceptance pass; Play delivery/pre-launch belongs to M40 | Complete |
 | M35 | Release Signing and Console Eligibility | Complete | Current-head protected upload identity, local physical clean-install/update verification, package registration, eligible unused version code, and reproducible signed build accepted from evidence commit `55413bd` | Complete |
 
-## Phase 5 — Authorized closed-app community notifications
+## Phase 5 — Deferred closed-app community notifications
 
-M36 is an external authorization decision. M37 and M38 must not start by substituting background polling or forwarding
-protected station sessions.
+M36–M38 are deferred outside this Alpha unless JERIC authorizes an official station-app program. If resumed, M37 and
+M38 must not start by substituting background polling or forwarding protected station sessions.
 
 | ID | Milestone | State | Required gate | Forecast after trigger |
 | --- | --- | --- | --- | --- |
-| M36 | Notification Event-Source Authorization | Waiting externally | Authorized station event source, webhook, or privacy-compatible relay with ownership, payload, authentication, retention, deletion, abuse, and outage contracts | Conditional · 1–3 active Sol days |
-| M37 | Secure Closed-App Notification Delivery | Planned after M36 | Opt-in station-scoped token/event delivery, minimal payloads, duplicate safety, sign-out/reinstall handling, and no perpetual polling | Medium · 5–10 active days |
-| M38 | Notification Lifecycle and Privacy Certification | Planned after M37 | Foreground/background/closed/idle/reboot/network tests, delivery latency, battery/traffic, lock-screen privacy, deep-link gates, and all five station boundaries | Medium · 5–10 active days |
+| M36 | Notification Event-Source Authorization | Deferred unless JERIC authorizes official station-app work | Authorized station event source, webhook, or privacy-compatible relay with ownership, payload, authentication, retention, deletion, abuse, and outage contracts | Conditional · 1–3 active Sol days after authorization |
+| M37 | Secure Closed-App Notification Delivery | Deferred after M36 | Opt-in station-scoped token/event delivery, minimal payloads, duplicate safety, sign-out/reinstall handling, and no perpetual polling | Medium · 5–10 active days after authorization |
+| M38 | Notification Lifecycle and Privacy Certification | Deferred after M37 | Foreground/background/closed/idle/reboot/network tests, delivery latency, battery/traffic, payload privacy, deep-link gates, and all five station boundaries | Medium · 5–10 active days after authorization |
 
 ## Phase 6 — Alpha distribution
 
@@ -145,9 +145,9 @@ None of these milestones blocks M41 unless a later owner decision explicitly mov
 
 ## Program dependencies
 
-1. M28–M35 are complete; M36 remains the next Alpha delivery gate.
-2. M36 authorizes the event source before M37 implementation; M38 certifies the result.
-3. M39 freezes the exact candidate only after all intended Alpha code has landed.
+1. M28–M35 are complete; M36–M38 are deferred and nonblocking for this Alpha unless JERIC authorizes official station-app work.
+2. If resumed, M36 authorizes the event source before M37 implementation; M38 certifies the result.
+3. M39 freezes the exact candidate only after all intended Alpha code has landed and explicit freeze work is authorized.
 4. M40 proves Play delivery and resolves automated/reviewer findings.
 5. M41 requires explicit owner publication authorization.
 6. M42–M45 form the production path; Alpha publication is not production readiness.

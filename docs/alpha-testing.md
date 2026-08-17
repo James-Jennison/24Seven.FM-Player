@@ -77,7 +77,7 @@ For a controlled assignment, the Queue shows the task-specific boundary before i
   but New Message selection remains suspect and a profile-originated MorgHubby test was not delivered; the site owner
   has the reproduced result.
 - Representative authenticated certification is complete for all five stations; natural server-side session expiry was not forcibly induced.
-- M24 Sleep Timer, M25's dedicated Android audio-output path, M26's user-reviewed privacy-safe diagnostics, and M27's local actively-observed Chat mentions are included. Google Cast is permanently out of scope; Bluetooth and other standard Android-managed output routes remain supported. Authorized closed-app delivery remains M36–M38 before the M41 publication gate.
+- M24 Sleep Timer, M25's dedicated Android audio-output path, M26's user-reviewed privacy-safe diagnostics, and M27's local actively-observed Chat mentions are included. Google Cast is permanently out of scope; Bluetooth and other standard Android-managed output routes remain supported. M36–M38 closed-app delivery is deferred and nonblocking for this Alpha unless JERIC authorizes an official station-app program.
 - Station accounts are currently station-specific.
 - M31 removes station VIP/RIP purchase and account-creation browser routes from the global Play candidate. Existing
   membership status may still be shown when the station reports it, but the Player does not sell or upgrade membership.
