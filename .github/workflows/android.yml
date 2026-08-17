@@ -1,6 +1,7 @@
 name: Android CI
 
 on:
+  workflow_dispatch:
   pull_request:
   push:
     branches: [main]
@@ -41,7 +42,7 @@ jobs:
   notify-discord:
     name: Post milestone update to Discord
     needs: build
-    if: ${{ always() && vars.DISCORD_PROJECT_UPDATE != '' }}
+    if: ${{ github.event_name != 'workflow_dispatch' && always() && vars.DISCORD_PROJECT_UPDATE != '' }}
     runs-on: ubuntu-latest
     steps:
       - name: Post configured milestone update
