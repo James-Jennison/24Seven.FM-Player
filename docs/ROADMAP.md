@@ -23,8 +23,8 @@ requirement; the new work receives its own milestone and regression evidence.
 The dated, dependency-aware forecast for every unfinished milestone is maintained in
 [MILESTONE_FORECAST.md](MILESTONE_FORECAST.md). It uses active-work ranges only after their triggers occur, identifies
 owner/external blockers explicitly, and records the model required for the next substantive step. Under the current
-scope, M39 remains blocked by M29 and M36–M38; no Alpha calendar date is credible until the M36 event-source
-authorization is resolved.
+scope, M36–M38 are deferred unless JERIC authorizes an official station-app program. The owner confirms M39–M41
+completed for the current closed-test release, and M42 is active for its two-week continuity and stabilization phase.
 
 Actual and historically reconstructed timing is maintained separately in
 [MILESTONE_TIME_LEDGER.md](MILESTONE_TIME_LEDGER.md). Historical uncertainty is preserved; future milestones record
@@ -85,7 +85,7 @@ allow, but no partial checkpoint should be described as release-ready.
 | ID | Milestone | State | Required gate | Forecast after trigger |
 | --- | --- | --- | --- | --- |
 | M28 | UGC Safety and Ongoing Moderation | Complete | Existing safeguards plus fixed-recipient Contact/report email handoff, physical composer validation, and one owner-confirmed one-shot receipt check | Complete |
-| M29 | Play Declarations, Privacy, and Data Safety | Waiting externally | Retention/deletion/processor/IP policy and account boundary are documented; PT-35 exact-candidate reconciliation, five-station reviewer access, audience/content/UGC classification, final media-playback video, and saved Console/privacy consistency remain | Conditional · 2–5 active days |
+| M29 | Play Declarations, Privacy, and Data Safety | Complete | Exact-candidate PT-35 reconciliation, five-station reviewer access, privacy/Data Safety and audience/content/UGC decisions, final private media-playback video, and saved Console consistency are owner-confirmed; only sanitized evidence is committed | Complete · August 16, 2026 |
 | M30 | Brand, Content, and Distribution Rights | Complete | Authorized network-wide use of the five stations' names, controlled assets, station metadata, public streams, screenshots, and Player/Google Play/Closed Alpha materials; third-party artwork remains rights-holder property | Complete · August 14, 2026 |
 | M31 | Payments, External Links, and Account Lifecycle Compliance | Complete | Contact-only external catalog; VIP/RIP purchase/registration and direct privacy browser routes removed; declarations and account boundary reconciled in `9e340b9` | Complete |
 | M32 | Session, Controller, Network, and Supply-Chain Security | Complete | Least-privilege MediaSession controller policy, coherent station-isolated cookie rotation/absolute expiry, trusted redirects, canonical station-ID migration, pinned/verified build inputs, and adversarial Razr harness evidence in `2bc45f7` | Complete |
@@ -93,30 +93,30 @@ allow, but no partial checkpoint should be described as release-ready.
 | M34 | Device and Accessibility Acceptance | Complete | Adaptive window/foldable matrix, physical Razr hinge lifecycle, human TalkBack, focused Voice Access, and signed-release Bluetooth keyboard/pointer acceptance pass; Play delivery/pre-launch belongs to M40 | Complete |
 | M35 | Release Signing and Console Eligibility | Complete | Current-head protected upload identity, local physical clean-install/update verification, package registration, eligible unused version code, and reproducible signed build accepted from evidence commit `55413bd` | Complete |
 
-## Phase 5 — Authorized closed-app community notifications
+## Phase 5 — Deferred closed-app community notifications
 
-M36 is an external authorization decision. M37 and M38 must not start by substituting background polling or forwarding
-protected station sessions.
+M36–M38 are deferred outside this Alpha unless JERIC authorizes an official station-app program. If resumed, M37 and
+M38 must not start by substituting background polling or forwarding protected station sessions.
 
 | ID | Milestone | State | Required gate | Forecast after trigger |
 | --- | --- | --- | --- | --- |
-| M36 | Notification Event-Source Authorization | Waiting externally | Authorized station event source, webhook, or privacy-compatible relay with ownership, payload, authentication, retention, deletion, abuse, and outage contracts | Conditional · 1–3 active Sol days |
-| M37 | Secure Closed-App Notification Delivery | Planned after M36 | Opt-in station-scoped token/event delivery, minimal payloads, duplicate safety, sign-out/reinstall handling, and no perpetual polling | Medium · 5–10 active days |
-| M38 | Notification Lifecycle and Privacy Certification | Planned after M37 | Foreground/background/closed/idle/reboot/network tests, delivery latency, battery/traffic, lock-screen privacy, deep-link gates, and all five station boundaries | Medium · 5–10 active days |
+| M36 | Notification Event-Source Authorization | Deferred unless JERIC authorizes official station-app work | Authorized station event source, webhook, or privacy-compatible relay with ownership, payload, authentication, retention, deletion, abuse, and outage contracts | Conditional · 1–3 active Sol days after authorization |
+| M37 | Secure Closed-App Notification Delivery | Deferred after M36 | Opt-in station-scoped token/event delivery, minimal payloads, duplicate safety, sign-out/reinstall handling, and no perpetual polling | Medium · 5–10 active days after authorization |
+| M38 | Notification Lifecycle and Privacy Certification | Deferred after M37 | Foreground/background/closed/idle/reboot/network tests, delivery latency, battery/traffic, payload privacy, deep-link gates, and all five station boundaries | Medium · 5–10 active days after authorization |
 
 ## Phase 6 — Alpha distribution
 
 | ID | Milestone | State | Required gate | Forecast after trigger |
 | --- | --- | --- | --- | --- |
-| M39 | Alpha Candidate and Documentation Freeze | Planned | Current-head signed AAB/APK, exact version/signer/dependency audit, synchronized roadmap/testing/release notes/listing, and no open release-critical finding | High once triggered · 1–2 active days |
-| M40 | Play Alpha Delivery and Pre-launch Remediation | Planned after M39 | Upload, Play-generated split inspection, fresh install/update, pre-review/pre-launch reconciliation, reviewer access, and artifact-specific evidence | Medium · 3–10 calendar days |
-| M41 | Explicit Alpha Publication | Planned after M40 | Owner-authorized internal or closed release, tester instructions, support path, rollback record, and verified availability; never automatic | High once authorized · 0.5–1 active day |
+| M39 | Alpha Candidate and Documentation Freeze | Complete · current closed-test release | Current-head signed AAB/APK, exact version/signer/dependency audit, synchronized roadmap/testing/release notes/listing, and no open release-critical finding | Completed before the owner-confirmed active M42 phase |
+| M40 | Play Alpha Delivery and Pre-launch Remediation | Complete · current closed-test release | Upload, Play-generated split inspection, fresh install/update, pre-review/pre-launch reconciliation, reviewer access, and artifact-specific evidence | Completed before the owner-confirmed active M42 phase |
+| M41 | Explicit Alpha Publication | Complete · current closed test live | Owner-authorized internal or closed release, tester instructions, support path, rollback record, and verified availability; never automatic | Completed before the owner-confirmed active M42 phase |
 
 ## Phase 7 — Closed testing, production, and operations
 
 | ID | Milestone | State | Required gate | Forecast after trigger |
 | --- | --- | --- | --- | --- |
-| M42 | Closed-Test Operations and Stabilization | Planned after M41 | Qualifying tester continuity, structured feedback, fixes/retests, Play vitals/pre-launch review, update delivery, and exit criteria | Medium · 3–5 calendar weeks |
+| M42 | Closed-Test Operations and Stabilization | Active · owner-confirmed two-week closed test | Qualifying tester continuity, structured feedback, fixes/retests, Play vitals/pre-launch review, update delivery, and exit criteria | Medium · 3–5 calendar weeks |
 | M43 | Production Access and Policy Approval | Planned after M42 | Production-access questionnaire, testing/feedback/change evidence, final policy review, and resolved Play response | Medium · 1–2 calendar weeks |
 | M44 | Production Release and Staged Rollout | Planned after M43 | Explicit authorization, production candidate, staged percentages, health thresholds, pause/rollback, release notes, and update validation | Medium · 1–4 calendar weeks |
 | M45 | Operational Reliability and Recertification | Planned | Play vitals/support/privacy handling, station outage and contract-drift procedures, rights/moderation recertification, target/API/dependency cadence, and key recovery | High · recurring monthly, quarterly, and release-triggered review |
@@ -145,12 +145,12 @@ None of these milestones blocks M41 unless a later owner decision explicitly mov
 
 ## Program dependencies
 
-1. M28, M30, and M31–M35 are complete; M29 remains the Alpha declaration-evidence gate.
-2. M36 authorizes the event source before M37 implementation; M38 certifies the result.
-3. M39 freezes the exact candidate only after all intended Alpha code has landed.
-4. M40 proves Play delivery and resolves automated/reviewer findings.
-5. M41 requires explicit owner publication authorization.
-6. M42–M45 form the production path; Alpha publication is not production readiness.
+1. M28–M35 are complete; M36–M38 are deferred and nonblocking for this Alpha unless JERIC authorizes official station-app work.
+2. If resumed, M36 authorizes the event source before M37 implementation; M38 certifies the result.
+3. M39 froze the exact candidate after intended Alpha code landed and freeze work was authorized.
+4. M40 proved the current Play delivery path and reconciled its release evidence.
+5. M41 received explicit owner publication authorization for the current closed test.
+6. M42 is active; M43–M45 form the remaining production path, and closed-test publication is not production readiness.
 7. M47–M50 and M56–M60 remain capability- and authorization-gated future work. M55 is permanently retired. M58
    must authorize commerce before M59 adds a purchase surface, and M60 must certify the complete subscription
    lifecycle before release.

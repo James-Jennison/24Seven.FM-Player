@@ -14,6 +14,8 @@
 
 Google Play Closed Testing is the authoritative distribution channel. Install and update the closed-test build only through its Google Play opt-in link; do not use a development debug APK or a separately shared release APK for this program.
 
+The owner confirms the current M42 two-week closed-test phase is active. Keep the qualifying tester-continuity window running while recording, fixing, and retesting verified feedback; do not treat the active closed test as production approval.
+
 Guest closed-test volunteers use their own Google account only to opt in to Google Play. They do not need a 24Seven.FM station account, must not create or share one for this program, and receive only the account-free Guest testing tasks.
 
 An update installs over an earlier Alpha only when all of the following match:
@@ -77,7 +79,7 @@ For a controlled assignment, the Queue shows the task-specific boundary before i
   but New Message selection remains suspect and a profile-originated MorgHubby test was not delivered; the site owner
   has the reproduced result.
 - Representative authenticated certification is complete for all five stations; natural server-side session expiry was not forcibly induced.
-- M24 Sleep Timer, M25's dedicated Android audio-output path, M26's user-reviewed privacy-safe diagnostics, and M27's local actively-observed Chat mentions are included. Google Cast is permanently out of scope; Bluetooth and other standard Android-managed output routes remain supported. Authorized closed-app delivery remains M36–M38 before the M41 publication gate.
+- M24 Sleep Timer, M25's dedicated Android audio-output path, M26's user-reviewed privacy-safe diagnostics, and M27's local actively-observed Chat mentions are included. Google Cast is permanently out of scope; Bluetooth and other standard Android-managed output routes remain supported. M36–M38 closed-app delivery is deferred and nonblocking for this Alpha unless JERIC authorizes an official station-app program.
 - Station accounts are currently station-specific.
 - M31 removes station VIP/RIP purchase and account-creation browser routes from the global Play candidate. Existing
   membership status may still be shown when the station reports it, but the Player does not sell or upgrade membership.

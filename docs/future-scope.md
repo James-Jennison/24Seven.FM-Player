@@ -38,7 +38,7 @@ moderation boundaries, and representative accounts. Do not expose a partial ship
 
 - Certify read/send/logout/expiry independently for all five stations.
 - Validate device, accessibility, lifecycle, and account-isolation behavior.
-- Add new-message notifications only through M36–M38 after their authorization and privacy gates pass.
+- Add new-message notifications only through M36–M38 after JERIC authorizes the official station-app program and their authorization and privacy gates pass.
 
 ## M51–M54 — Retired Forum scope
 

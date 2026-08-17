@@ -5,7 +5,8 @@ The Google Play developer account was approved on July 14, 2026. Use this during
 ## Local preparation already complete
 
 - Application ID: `com.codeframe78.twentyfourseven.player`
-- Candidate: `0.1.0-alpha01`, version code 2
+- Live closed-test build: `0.1.0-alpha01`, version code 2
+- Next closed-test update: `0.1.0-alpha02`, version code 3, containing the Issue #26 request-confirmation keyboard fix; protected signing and Play upload are pending.
 - Target SDK: 36; compile SDK: 36; minimum SDK: 26
 - The current M35 audit verifies the production manifest, dependencies/licenses, explicit backup exclusions,
   protected signed release outputs, the exact registered upload certificate, and 16 KB APK/ELF packaging. The native notice is under More → Privacy →
@@ -22,7 +23,8 @@ The Google Play developer account was approved on July 14, 2026. Use this during
   server-discovered actions still require final-candidate validation without retaining secrets.
 - Privacy notice, Alpha testing guide, release notes, permission review, and current device validation evidence exist.
   The adopted network-wide retention/deletion policy is reconciled in `docs/m23-data-safety.md`; exact-candidate,
-  reviewer-access, final-video, and active-Console evidence still must be completed before M29 closes.
+  reviewer-access, final-video, and active-Console evidence completed M29 and must be rechecked for a future candidate
+  or Console-wording change.
 - Gradle accepts Play upload signing only from four `TWENTYFOURSEVEN_UPLOAD_*` environment variables. Supplying a partial set fails configuration.
 - `scripts/validate-play-bundle.ps1` builds the release AAB, requires a real signature, and prints its SHA-256 without revealing signing inputs.
 - `scripts/initialize-play-upload-key.ps1` creates the separate upload key outside Git and stores its credentials in a Windows-current-user DPAPI envelope. It refuses to overwrite either artifact.

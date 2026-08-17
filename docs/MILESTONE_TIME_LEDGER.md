@@ -1,6 +1,6 @@
 # Milestone Real-World Time Ledger
 
-Last updated: `August 14, 2026 at 6:23:19 PM PDT (UTC−07:00)`
+Last updated: `August 16, 2026 at 5:01:00 PM PDT (UTC−07:00)`
 
 This is the permanent time-accounting record for the canonical M01–M60 milestones in [ROADMAP.md](ROADMAP.md). It
 preserves historical uncertainty instead of treating commit spans as labor time. Future milestone work must be
@@ -11,19 +11,19 @@ measured prospectively from the actual authorized execution start.
 | Measure | Cumulative value | Qualification |
 | --- | ---: | --- |
 | Total canonical milestones planned | 60 | M01–M60 |
-| Total canonical milestones completed | 34 | M01–M28 and M30–M35 |
-| Confirmed or reconstructed active hours | 0.85 h identified | M29 policy reconciliation, M30 authorization reconciliation, and M55 retirement are prospectively measured; historical active intervals remain unknown. |
+| Total canonical milestones completed | 35 | M01–M35 |
+| Confirmed or reconstructed active hours | 0.99 h identified | M29 policy reconciliation/closeout, M30 authorization reconciliation, and M55 retirement are prospectively measured; historical active intervals remain unknown. |
 | Total automated wait hours | Unknown | Workflow durations exist, but there is no evidence that execution waited on every run. |
 | Total user-blocked hours | Unknown | Historical owner, device, approval, credential, and external waits lack complete pause/resume timestamps. |
 | Total counted project hours | Unknown | Active execution plus automated wait cannot be reconstructed defensibly. |
-| Total elapsed hours across completed milestones | At least 300.55 h | Lower-bound total across 26 observable milestone windows; 8 completed milestones have unknown elapsed duration. |
+| Total elapsed hours across completed milestones | At least 350.31 h | Lower-bound total across 27 observable milestone windows; 8 completed milestones have unknown elapsed duration. |
 | Average counted hours per completed milestone | Unknown | Counted project time is unknown for every historical completion. |
 | Median counted hours per completed milestone | Unknown | Counted project time is unknown for every historical completion. |
 | Longest completed milestone | Unknown by counted time | M34 has the longest observable elapsed lower bound at 90.27 h. |
 | Shortest completed milestone | Unknown by counted time | M31 has the shortest observable elapsed lower bound at 0.03 h. |
 | Overall forecast versus actual variance | Unknown | Only M13, M14, and M17–M21 retained milestone-specific forecasts, and their actual counted time was not recorded. |
-| Confidence classifications | Confirmed 3; Reconstructed 0; Estimated 27; Unknown 30 | One classification per canonical milestone. |
-| Ledger last updated | `August 14, 2026 at 3:35:01 PM PDT (UTC−07:00)` | Full date, 12-hour time, seconds, timezone abbreviation, and UTC offset. |
+| Confidence classifications | Confirmed 4; Reconstructed 0; Estimated 26; Unknown 30 | One classification per canonical milestone. |
+| Ledger last updated | `August 16, 2026 at 5:01:00 PM PDT (UTC−07:00)` | Full date, 12-hour time, seconds, timezone abbreviation, and UTC offset. |
 
 Elapsed totals are arithmetic milestone totals, not unique calendar time. Milestones overlapped, so counted work must
 be assigned to only one milestone while each milestone retains its own wall-clock elapsed period. The confidence counts
@@ -415,20 +415,20 @@ active execution.
 | M26 | Complete | No later than `July 16, 2026 at 6:07:48 PM PDT (UTC−07:00)` | `July 16, 2026 at 6:21:05 PM PDT (UTC−07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥0.22 h | Unknown | Estimated |
 | M27 | Complete | No later than `July 16, 2026 at 7:05:07 PM PDT (UTC−07:00)` | `July 16, 2026 at 7:09:16 PM PDT (UTC−07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥0.07 h | Unknown | Estimated |
 | M28 | Complete | No later than `July 15, 2026 at 10:32:07 PM PDT (UTC−07:00)` | `July 18, 2026 at 3:04:15 PM PDT (UTC−07:00)` | Not recorded individually | Unknown | Unknown | Unknown | Unknown | ≥64.54 h | Unknown | Estimated |
-| M29 | In progress | `August 14, 2026 at 3:15:26 PM PDT (UTC−07:00)` | — | Original not recorded; current 2–5 active d | 0.45 h | 0.00 h | 2.69 h excluded | 0.45 h | 3.13 h | Not calculated before completion | Confirmed partial interval |
+| M29 | Complete | `August 14, 2026 at 3:15:26 PM PDT (UTC−07:00)` | `August 16, 2026 at 5:01:00 PM PDT (UTC−07:00)` | 2–5 active d (16–40 h normalized) | 0.59 h | 0.00 h | 2.72 h recorded; historical gaps unknown | 0.59 h | 49.76 h | 15.41 h below lower bound (96.3%) | Confirmed |
 | M30 | Complete | `August 14, 2026 at 3:15:26 PM PDT (UTC−07:00)` | `August 14, 2026 at 3:19:08 PM PDT (UTC−07:00)` | 4–8 active h (original 0.5–1 active d) | 0.06 h | 0.00 h | 0.00 h | 0.06 h | 0.06 h | 3.94 h below lower bound (98.5%) | Confirmed |
 | M31 | Complete | No later than `July 18, 2026 at 5:30:30 PM PDT (UTC−07:00)` | `July 18, 2026 at 5:32:28 PM PDT (UTC−07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | ≥0.03 h | Unknown | Estimated |
 | M32 | Complete | Unknown | `July 18, 2026 at 6:21:38 PM PDT (UTC−07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown |
 | M33 | Complete | Unknown | `July 18, 2026 at 7:43:32 PM PDT (UTC−07:00)` | Not recorded | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown |
 | M34 | Complete | No later than `July 15, 2026 at 12:09:53 PM PDT (UTC−07:00)` | `July 19, 2026 at 6:25:48 AM PDT (UTC−07:00)` | Not recorded individually | Unknown | Unknown | Unknown | Unknown | ≥90.27 h | Unknown | Estimated |
 | M35 | Complete | No later than `July 15, 2026 at 10:57:12 PM PDT (UTC−07:00)` | `July 19, 2026 at 5:41:32 AM PDT (UTC−07:00)` | Not recorded individually | Unknown | Unknown | Unknown | Unknown | ≥78.74 h | Unknown | Estimated |
-| M36 | Waiting externally | — | — | 1–3 active Sol d after trigger | — | — | — | — | — | — | Unknown |
-| M37 | Planned after M36 | — | — | 5–10 active d | — | — | — | — | — | — | Unknown |
-| M38 | Planned after M37 | — | — | 5–10 active d | — | — | — | — | — | — | Unknown |
+| M36 | Deferred unless JERIC authorizes official station-app work | — | — | 1–3 active Sol d after authorization | — | — | — | — | — | — | Unknown |
+| M37 | Deferred with M36–M38 program | — | — | 5–10 active d after M36 | — | — | — | — | — | — | Unknown |
+| M38 | Deferred with M36–M38 program | — | — | 5–10 active d after M37 | — | — | — | — | — | — | Unknown |
 | M39 | Planned | — | — | 1–2 active d | — | — | — | — | — | — | Unknown |
 | M40 | Planned after M39 | — | — | 3–10 calendar d | — | — | — | — | — | — | Unknown |
 | M41 | Planned after M40 | — | — | 0.5–1 active d | — | — | — | — | — | — | Unknown |
-| M42 | Planned after M41 | — | — | 3–5 calendar wk | — | — | — | — | — | — | Unknown |
+| M42 | Active · owner-confirmed two-week closed test | `August 16, 2026 at 5:51:14 PM PDT (UTC-07:00)` first recorded remediation interval; earlier campaign start not supplied | — | 3–5 calendar wk | 0.06 h recorded Issue #26 fix and v3 preparation | 0.00 h | Earlier campaign time unmeasured | 0.06 h recorded | ≥0.06 h recorded intervals | Not assessable while active | Confirmed current phase |
 | M43 | Planned after M42 | — | — | 1–2 calendar wk | — | — | — | — | — | — | Unknown |
 | M44 | Planned after M43 | — | — | 1–4 calendar wk | — | — | — | — | — | — | Unknown |
 | M45 | Planned recurring | — | — | Monthly, quarterly, and release-triggered | — | — | — | — | — | — | Unknown |
@@ -436,7 +436,7 @@ active execution.
 | M47 | Deferred | — | — | External repair; then 1–3 active wk | — | — | — | — | — | — | Unknown |
 | M48 | Deferred after M47 | — | — | 1–2 active wk | — | — | — | — | — | — | Unknown |
 | M49 | Deferred after M48 | — | — | 1–2 active wk | — | — | — | — | — | — | Unknown |
-| M50 | Deferred after M49/M38 | — | — | 2–4 active wk | — | — | — | — | — | — | Unknown |
+| M50 | Deferred after M49 and separately authorized notification architecture | — | — | 2–4 active wk | — | — | — | — | — | — | Unknown |
 | M51 | Retired | No later than `July 19, 2026 at 7:37:21 AM PDT (UTC−07:00)` | Retired `July 19, 2026 at 8:55:35 AM PDT (UTC−07:00)` | No forecast | Unknown | Unknown | Unknown | Unknown | ≥1.30 h decision window | — | Estimated |
 | M52 | Retired | — | Retired `July 19, 2026 at 8:55:35 AM PDT (UTC−07:00)` | No forecast | — | — | — | — | — | — | Unknown |
 | M53 | Retired | — | Retired `July 19, 2026 at 8:55:35 AM PDT (UTC−07:00)` | No forecast | — | — | — | — | — | — | Unknown |
@@ -484,7 +484,7 @@ development series. M24–M27 have focused milestone PRs. M28 and M31–M35 comp
 | M26 | `7aedbfc` | `32b7355` | [#9](https://github.com/codeframe78/24Seven.FM-Player/pull/9) | [run 29547213689](https://github.com/codeframe78/24Seven.FM-Player/actions/runs/29547213689) |
 | M27 | `d902cbd` | `afd563a` | [#11](https://github.com/codeframe78/24Seven.FM-Player/pull/11) | PR Actions recorded; no merge-commit run match |
 | M28 | `c6a9450` | `9abd69f` | — | [run 29662811708](https://github.com/codeframe78/24Seven.FM-Player/actions/runs/29662811708) |
-| M29 | `4aa36d9` | Open | — | Multiple current evidence runs; no completion run |
+| M29 | `4aa36d9` | Sanitized completion record | — | Owner-confirmed closeout; local full site validation passed |
 | M30 | `c0e37ae` | Open | — | No completion run |
 | M31 | `9e340b9` | `91794bb` | — | [run 29667203553](https://github.com/codeframe78/24Seven.FM-Player/actions/runs/29667203553) |
 | M32 | — | `2bc45f7` | — | Later evidence commits/runs exist; no completion-commit run match |
@@ -863,24 +863,43 @@ independently.
   adopted the network-wide retention/deletion policy. Active policy reconciliation paused `August 14, 2026 at 3:35:01
   PM PDT (UTC−07:00)` awaiting protected reviewer-account, selected-candidate, video, and Play Console evidence.
   Owner approval resumed local tester-retention implementation and deployment preparation `August 14, 2026 at
-  6:16:23 PM PDT (UTC−07:00)`. The earlier historical active intervals and user-blocked pause are Unknown.
+  6:16:23 PM PDT (UTC−07:00)`. On `August 16, 2026 at 4:50:40 PM PDT (UTC−07:00)`, the owner confirmed the
+  five-station reviewer clean-install/non-owner-network condition. On `August 16, 2026 at 4:53:57 PM PDT (UTC−07:00)`,
+  the owner confirmed that the exact-candidate PT-35 reconciliation, saved Console answers/classifications, and final
+  private foreground-media video were also complete. Sanitized documentation reconciliation and full site validation
+  completed `August 16, 2026 at 5:01:00 PM PDT (UTC−07:00)`. The earlier historical active intervals and user-blocked
+  pause are Unknown.
 - **Model, reasoning strength, and original forecast:** Original execution model/reasoning and forecast were not recorded at start.
   Current routing, added `July 19, 2026 at 6:17:38 AM PDT (UTC−07:00)`, is Sol High with 2–5 active days after all named facts/candidate exist.
-- **Counted project time, total elapsed time, and forecast variance:** The measured August 14 active intervals total 0.45 h;
-  automated wait is 0.00 h and the new external/user-blocked interval is ongoing. Historical durations remain Unknown.
-  Variance is not calculated before completion.
+- **Counted project time, total elapsed time, and forecast variance:** The measured active intervals total 0.59 h;
+  automated wait is 0.00 h, and recorded user-blocked time is 2.72 h. Total elapsed time is 49.76 h. Against the
+  normalized 16-hour lower bound of the current 2–5 active-day forecast, counted time is 15.41 h (96.3%) below the
+  lower bound because the owner supplied already-completed external evidence. Historical durations remain Unknown.
 - **Evidence used and confidence classification:** `4aa36d9`, `0fa5040`, `59d6096`, `849b5a0`, `93e8110`, `d3467cf`,
   [m23-play-declaration-packet.md](m23-play-declaration-packet.md), and [m23-data-safety.md](m23-data-safety.md).
   **Estimated** start proxy.
 - **Explanation of variance and forecasting lessons:** Do not backdate the July 19 forecast as original. The August 14
-  resume records the real authorization timestamp. If the remaining exact-candidate, reviewer-account, Console, or
-  video evidence causes a pause, record that boundary rather than treating it as active work.
+  resume records the real authorization timestamp. When completed external evidence arrives as an owner confirmation,
+  record the sanitized closeout and validation interval rather than reconstructing unmeasured operational work.
 
 | Started | Ended | Category | Reason or work | Evidence | Hours |
 | --- | --- | --- | --- | --- | ---: |
 | `August 14, 2026 at 3:15:26 PM PDT (UTC−07:00)` | `August 14, 2026 at 3:35:01 PM PDT (UTC−07:00)` | Active | Reconcile the adopted network-wide retention/deletion policy across public, native, reviewer, roadmap, and portal materials; audit local persistence and current Play requirements. | Authorized administrator policy; source/persistence audit; official Google Play policy review | 0.33 h |
 | `August 14, 2026 at 3:35:01 PM PDT (UTC−07:00)` | `August 14, 2026 at 6:16:23 PM PDT (UTC−07:00)` | User-blocked | Await the protected five-station reviewer accounts, selected-candidate PT-35 run, final reviewer video, and saved/reviewed active Play Console answers. | M29 completion gate; no credentials, private Console state, or final video is available in the repository | 2.69 h excluded |
 | `August 14, 2026 at 6:16:23 PM PDT (UTC−07:00)` | `August 14, 2026 at 6:23:19 PM PDT (UTC−07:00)` | Active | Adopt the owner-approved tester-record retention policy, extend the existing withdrawal/deletion workflow, and validate it. | Owner approval; existing queue/portal architecture; full project-site validation | 0.12 h |
+| `August 16, 2026 at 4:50:40 PM PDT (UTC−07:00)` | `August 16, 2026 at 4:52:19 PM PDT (UTC−07:00)` | Active | Record the owner's sanitized confirmation of the five-station reviewer clean-install/non-owner-network condition, reconcile the M29 roadmap and portal wording, and validate the project site. | Owner confirmation; M29 declaration packet; `./scripts/validate-project-site.sh` pass | 0.03 h |
+| `August 16, 2026 at 4:52:19 PM PDT (UTC−07:00)` | `August 16, 2026 at 4:53:57 PM PDT (UTC−07:00)` | User-blocked | Await confirmation of the exact-candidate PT-35 reconciliation, final private foreground-media video, and saved/reviewed active Play Console answers. | M29 completion gate; private evidence remains outside the repository | 0.03 h excluded |
+| `August 16, 2026 at 4:53:57 PM PDT (UTC−07:00)` | `August 16, 2026 at 5:01:00 PM PDT (UTC−07:00)` | Active | Record the owner's full M29 completion confirmation, reconcile roadmap/portal/policy records, and run the required full site validation. | Owner confirmation; M29 declaration packet; `./scripts/validate-project-site.sh` pass | 0.12 h |
+
+```text
+Milestone M29 time:
+Forecast: 16–40 active hours (current 2–5 active-day forecast)
+Counted project time: 0.59 h
+Total elapsed time: 49.76 h
+User-blocked time excluded: 2.72 h recorded; historical gaps unknown
+Forecast variance: 15.41 h below the lower bound (96.3%)
+Cumulative counted project time through Milestone M29: Unknown overall; 0.99 h prospectively measured across recorded milestones
+```
 
 ### M30 — Brand, Content, and Distribution Rights
 
@@ -989,8 +1008,8 @@ Cumulative counted project time through Milestone M30: Unknown overall; 0.40 h p
 - **Objective:** Accept an authorized station event source, webhook, or privacy-compatible relay contract covering
   ownership, payloads, authentication, retention/deletion, abuse, outage behavior, and station support.
 - **Start, completion, and intervals:** Not started; no start, completion, active, automated-wait, or user-blocked interval is open.
-- **Model, reasoning strength, and original forecast:** Current planned route Sol High; 1–3 active Sol days after an accountable operator
-  supplies the triggering proposal. The original forecast will be snapshotted when authorization starts execution.
+- **Model, reasoning strength, and original forecast:** Deferred unless JERIC authorizes an official station-app program. When resumed,
+  Sol High; 1–3 active Sol days after an accountable operator supplies the triggering proposal. The original forecast will be snapshotted when authorization starts execution.
 - **Time, variance, evidence, confidence, and forecasting lessons:** No actual time or variance yet. Roadmap `e249071` and forecast `f971a9e`; no
   PR, release, tag, or workflow. **Unknown** until start. Record the external trigger and actual execution start separately.
 
@@ -999,8 +1018,8 @@ Cumulative counted project time through Milestone M30: Unknown overall; 0.40 h p
 - **Objective:** Implement minimal opt-in, station/token-isolated event delivery with duplicate, sign-out, reinstall,
   and protected-session safeguards and no perpetual polling.
 - **Start, completion, and intervals:** Not started; all actual intervals and totals are not applicable.
-- **Model, reasoning strength, and original forecast:** Terra High, escalating unresolved delivery/privacy choices to Sol High; current
-  forecast 5–10 active days after M36 and a test environment are accepted.
+- **Model, reasoning strength, and original forecast:** Deferred with the M36–M38 program unless JERIC authorizes it. When resumed,
+  Terra High, escalating unresolved delivery/privacy choices to Sol High; forecast 5–10 active days after M36 and a test environment are accepted.
 - **Time, variance, evidence, confidence, and forecasting lessons:** No actual variance. Roadmap `e249071`, forecast `f971a9e`; no related delivery
   commit/PR/release/workflow. **Unknown**. Snapshot this range as original only when authorized.
 
@@ -1009,8 +1028,8 @@ Cumulative counted project time through Milestone M30: Unknown overall; 0.40 h p
 - **Objective:** Certify foreground/background/closed/idle/reboot/network behavior, latency, battery/traffic, payload
   privacy, deep-link safety, and all five station boundaries.
 - **Start, completion, and intervals:** Not started; all actual intervals and totals are not applicable.
-- **Model, reasoning strength, and original forecast:** Terra High execution followed by Sol High acceptance; current forecast 5–10 active
-  days after M37 is stable.
+- **Model, reasoning strength, and original forecast:** Deferred with the M36–M38 program unless JERIC authorizes it. When resumed,
+  Terra High execution followed by Sol High acceptance; forecast 5–10 active days after M37 is stable.
 - **Time, variance, evidence, confidence, and forecasting lessons:** No actual variance. Roadmap `e249071`, forecast `f971a9e`; no implementation
   evidence yet. **Unknown**. Time device campaigns and automated suites as separate intervals.
 
@@ -1019,7 +1038,8 @@ Cumulative counted project time through Milestone M30: Unknown overall; 0.40 h p
 - **Objective:** Freeze exact signed artifacts, version, signer, dependencies, permissions, listing, release notes,
   roadmap/testing, and all release-critical findings.
 - **Start, completion, and intervals:** Not started; all actual intervals and totals are not applicable.
-- **Model, reasoning strength, and original forecast:** Sol High; current forecast 1–2 active days after M29 and M36–M38 complete.
+- **Model, reasoning strength, and original forecast:** Sol High; current forecast 1–2 active days after explicit candidate-freeze authorization.
+  M36–M38 are deferred and nonblocking unless JERIC authorizes the official station-app program.
 - **Time, variance, evidence, confidence, and forecasting lessons:** No actual variance. Roadmap `e249071`, forecast `f971a9e`; no candidate-finish
   commit/PR/release/workflow. **Unknown**. Record the exact freeze authorization as start, not prior planning.
 
@@ -1046,11 +1066,18 @@ Cumulative counted project time through Milestone M30: Unknown overall; 0.40 h p
 
 - **Objective:** Maintain qualifying tester continuity, collect structured feedback, fix/retest findings, review Play
   health, and satisfy campaign exit criteria.
-- **Start, completion, and intervals:** Not started; all actual intervals and totals are not applicable.
-- **Model, reasoning strength, and original forecast:** Terra Medium with Sol High checkpoints; current forecast 3–5 calendar weeks,
-  including the mandatory continuity window and a feedback/fix buffer.
-- **Time, variance, evidence, confidence, and forecasting lessons:** No actual variance. Roadmap `e249071`, forecast `f971a9e`; no campaign record.
-  **Unknown**. Separate active remediation, Play/test automation, and tester/user-blocked calendar time.
+- **Start, completion, and intervals:** Active. The owner confirms the two-week Google Play closed-test phase is in progress;
+  its earlier campaign-start timestamp was not supplied and is not inferred. The measured Issue #26 remediation interval ran
+  from `August 16, 2026 at 5:51:14 PM PDT (UTC-07:00)` through `August 16, 2026 at 5:52:53 PM PDT (UTC-07:00)`.
+- **Model, reasoning strength, and original forecast:** GPT-5.6 Terra High for this feedback fix; existing campaign forecast remains
+  Terra Medium with Sol High checkpoints and 3–5 calendar weeks, including the mandatory continuity window and a feedback/fix buffer.
+- **Time, variance, evidence, confidence, and forecasting lessons:** The recorded interval is 0.03 h active, 0.00 h automated
+  wait, 0.00 h user-blocked, 0.03 h counted, and at least 0.03 h elapsed; earlier campaign time remains unmeasured and excluded.
+  Issue #26 reports a reproducible Android 16 phone failure in PT-12; the focused physical-Android regression is passing.
+  The owner authorized the next closed-test update at `August 16, 2026 at 5:58:38 PM PDT (UTC-07:00)`; its version-3
+  preparation interval completed at `August 16, 2026 at 6:00:20 PM PDT (UTC-07:00)` (0.03 h active, 0.00 h automated
+  wait, 0.00 h user-blocked, 0.03 h counted). The two measured intervals total 0.06 h; earlier campaign time remains
+  excluded. **Confirmed current phase**. Keep each remediation interval separate from tester and Play calendar waits.
 
 ### M43 — Production Access and Policy Approval
 
@@ -1122,7 +1149,8 @@ Cumulative counted project time through Milestone M30: Unknown overall; 0.40 h p
 - **Objective:** Certify independent station behavior and optional privacy-minimized delivery through the authorized
   notification architecture.
 - **Start, completion, and intervals:** Not started; all actual intervals and totals are not applicable.
-- **Model, reasoning strength, and original forecast:** Sol Extra High; current forecast 2–4 active weeks after M49 and M38.
+- **Model, reasoning strength, and original forecast:** Sol Extra High; current forecast 2–4 active weeks after M49 and any separately
+  authorized notification architecture.
 - **Time, variance, evidence, confidence, and forecasting lessons:** No actual variance. Roadmap `e249071`, forecast `f971a9e`; no certification.
   **Unknown**. Time each station/device campaign rather than relying on one final commit.
 
@@ -1269,7 +1297,7 @@ complete translation layer remains in [MILESTONE_MIGRATION.md](MILESTONE_MIGRATI
 | Legacy M18–M22 | M17–M21 | Same station-certification work shifted down one canonical ID. |
 | Legacy M23.1–M23.7 slices | M22, M23, M28–M30, M34, and M35 | Each canonical row uses its own evidence boundary; no umbrella M23 duration is added. |
 | Legacy M24–M26 and M27.1 | M24–M27 | Same work; M27.1 became canonical M27. |
-| Legacy M27.2 authorization, implementation, and validation slices | M36–M38 | Planned work; no actual interval has started. |
+| Legacy M27.2 authorization, implementation, and validation slices | M36–M38 | Deferred unless JERIC authorizes official station-app work; no actual interval has started. |
 | Legacy M28 release slices | M39–M41 | Planned work; no actual interval has started. |
 | Legacy M17 private-message repair and delivery slices | M47–M50 | Deferred work; no actual interval has started. |
 | Forum F1–F4 | M51–M54 | M51 preserves the research-to-retirement window; M52–M54 never started. |
