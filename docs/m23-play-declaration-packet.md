@@ -2,11 +2,12 @@
 
 Date: July 19, 2026
 
-Status: exact-artifact and current-policy audit complete; reviewer-access readiness is owner-confirmed; final-candidate and Play Console gates remain
+Status: complete August 16, 2026; the owner confirmed all M29 completion gates against the exact candidate and active Play Console. Only sanitized evidence is retained here.
 
-This packet is the non-secret working record for M29. Reconcile every answer with the exact signed AAB and active Play
-Console wording immediately before saving or submitting it. Never commit reviewer credentials, Console captures containing
-private data, private correspondence, or an unlisted reviewer-video URL that exposes account information.
+This packet is the non-secret working record for M29. Its completion reflects the owner's confirmation that every answer
+was reconciled with the exact signed AAB and active Play Console wording before saving. Re-audit before any later candidate
+or Console-wording change. Never commit reviewer credentials, Console captures containing private data, private
+correspondence, or an unlisted reviewer-video URL that exposes account information.
 
 ## Exact artifact audit — July 18, 2026
 
@@ -27,7 +28,7 @@ The audit used the current `main` source and release variant. `:app:processRelea
 
 ## Console decision ledger
 
-| Console area | Current evidence-backed posture | Remaining gate |
+| Console area | Current evidence-backed posture | Revalidation trigger |
 | --- | --- | --- |
 | Ads, government, financial, health | Saved as No/None; artifact audit agrees | Recheck only if the candidate or Console wording changes |
 | App access | Public playback, Queue, and History work signed out; protected features require one station-specific session at a time | Owner confirmed on August 16, 2026 that the five reusable, least-privileged reviewer accounts pass the clean-install/non-owner-network check. Credentials remain only in Play Console. |
@@ -173,13 +174,14 @@ The app does not create station accounts. **Sign out** removes the protected loc
 pre-existing station account, public posts, request history, server logs, or sent email. Do not claim end-to-end
 ephemeral processing or a Data Safety deletion badge without reconciling the exact active Console wording.
 
-## M29 completion gate
+## M29 completion record
 
-M29 remains **Waiting externally** until all remaining items below are true. Reviewer-access item 2 is complete by
-owner confirmation on August 16, 2026.
+M29 is **Complete** as of August 16, 2026. The owner confirmed that every criterion below was completed against the
+exact signed candidate and active Play Console. Private credentials, Console captures, correspondence, and the unlisted
+reviewer-video URL remain outside the repository.
 
 1. PT-35 is run against the exact signed candidate and its release manifest/dependencies/data flows match this packet.
-2. **Complete:** Five reusable reviewer accounts and English access instructions passed the owner-confirmed
+2. Five reusable reviewer accounts and English access instructions passed the owner-confirmed
    clean-install/non-owner-network check.
 3. The adopted station retention, deletion/contact, processor, and IP-use policy is reflected accurately in the privacy
    policy and Data Safety form.

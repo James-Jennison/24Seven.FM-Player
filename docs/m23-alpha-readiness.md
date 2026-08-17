@@ -68,15 +68,16 @@ as already complete.
 - The July 18 exact-artifact Data Safety worksheet is recorded in `docs/m23-data-safety.md`; it covers optional
   account/community/request data, explicit external-app handoffs, source-IP handling, local-only state, HTTPS user-data
   paths, and the public unauthenticated stream boundary. The adopted network-wide retention, processor, deletion, and
-  IP-use policy is documented; final answers remain gated on active Console wording and exact-candidate evidence.
+  IP-use policy is documented; the final answers were reconciled with active Console wording and exact-candidate evidence
+  for M29 completion on August 16.
 - The non-secret M29 declaration packet now contains the release manifest/dependency/data-flow audit, a field-by-field
   Console decision ledger, five-station reviewer instructions, account-creation/deletion boundary, audience/content/UGC
   classification, conditional Child Safety Standards gate, copy-ready media-playback text, and exact video shot list.
   PT-35 is the corresponding coordinator acceptance case.
 - A credential-free M29 media-playback video rehearsal passed frame inspection on the API 35 Pixel Tablet: start,
   buffering/playback, Home, expanded media notification, notification-body return, pause, resume, and stop are visible.
-  It remains an uncommitted debug-build rehearsal; the final hosted video must use the protected signed candidate and
-  the intended artifact selection.
+  It remains an uncommitted debug-build rehearsal; the final protected-candidate video is retained privately as part of
+  the completed M29 evidence.
 - The non-secret `m23-owner-response-packet.md` records sanitized completion of the M28 handoff and provides a
   rights/stream/distribution request, station retention/deletion/IP table, reviewer-account confirmation, and the
   evidence required before Private Messaging research can resume. No private response, credential, or rights evidence
@@ -85,8 +86,11 @@ as already complete.
 - The Play Console app was created on July 15 as an English (United States), App, Free listing with the intended package. The owner explicitly accepted the Developer Program Policies, Play App Signing Terms, and US export declaration; automatic installer protection was disabled to preserve approved sideload testing.
 - Play Console App content now records the four evidence-backed objective declarations: no ads, not a government app, no financial features, and no health features. The changes are saved in Publishing overview but have not been sent for review.
 - GitHub Pages now publishes the canonical privacy notice at `https://codeframe78.github.io/24Seven.FM-Player/`; HTTPS is enforced, the live page returns HTTP 200, and the URL is saved in Play Console. The public support email and Music & Audio category are also saved.
-- Console requires reusable reviewer sign-in details before Target audience can be completed. The app has restricted, station-specific account features, so the declaration must contain least-privileged credentials and instructions sufficient to review those surfaces across the station family.
-- The owner selected an **18+** target audience on July 15, consistent with the predominantly adult legacy-station membership and the existing authenticated freeform chat. The app is not designed as a children's product, and no child age band will be claimed without a separate Families-compliance milestone. Console entry remains locked until reviewer-access details are saved.
+- Console requires reusable reviewer sign-in details before Target audience can be completed. The app has restricted, station-specific account features, so the completed declaration contains least-privileged credentials and instructions sufficient to review those surfaces across the station family.
+- The owner selected an **18+** target audience on July 15, consistent with the predominantly adult legacy-station membership and the existing authenticated freeform chat. The app is not designed as a children's product, and no child age band will be claimed without a separate Families-compliance milestone. The saved final declaration was reconciled during M29 closeout.
+- M29 closed on August 16 after the owner confirmed the exact-candidate PT-35 reconciliation, five-station reviewer access,
+  saved active-Console declarations and classifications, and final private foreground-media video. Private evidence remains
+  outside Git and must be rechecked if the candidate or Console wording changes.
 - Console confirms the account-specific production gate: publish a closed-test release, keep at least 12 testers opted in continuously for at least 14 days, then apply for production access.
 - The policy-conscious default store copy, category/contact proposal, asset inventory, and accessibility-text draft are recorded in `docs/play-store-listing.md`.
 - Play-ready icon, feature graphic, four phone screenshots, medium/expanded tablet screenshots, and an expanded

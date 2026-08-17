@@ -59,7 +59,7 @@ runs on an approved `main` push. See [the migration and deployment plan](docs/pr
 
 ## Alpha status
 
-The canonical roadmap now runs from **M01 through M60**. **M01–M28, M30–M35 are complete**, preserving 34 verified achievements. The active Alpha-readiness program is **M29–M35** with M29 still open; authorized closed-app community delivery is **M36–M38**; candidate delivery and publication are **M39–M41**.
+The canonical roadmap now runs from **M01 through M60**. **M01–M35 are complete**, preserving 35 verified achievements. Authorized closed-app community delivery is **M36–M38**; candidate delivery and publication are **M39–M41**.
 
 > [!IMPORTANT]
 > **Current focus:** close M29 without weakening privacy, security, accessibility, signing, or request-integrity gates. M36–M38 cannot begin until an authorized event source exists, and M41 requires explicit publication authorization.
@@ -85,7 +85,7 @@ remain project-maintenance material rather than public release promises.
 | Phase | Milestones | State | Required outcome |
 | --- | --- | :---: | --- |
 | Verified product baseline | M01–M28 | ✅ Complete | Native foundation, five certified stations, API/launcher readiness, Sleep Timer, system audio output, diagnostics, local Chat mentions, and validated UGC safeguards |
-| Alpha readiness | M29–M35 | 🚧 Active | Play declaration evidence remains open; the retention/deletion policy, rights, payments/account lifecycle, security, request integrity, device/accessibility, and signing work are complete |
+| Alpha readiness | M29–M35 | ✅ Complete | Play declarations, privacy/Data Safety, rights, payments/account lifecycle, security, request integrity, device/accessibility, and signing evidence are complete |
 | Community delivery | M36–M38 | ⏳ Authorization-gated | Authorized event source, secure delivery, and lifecycle/privacy certification |
 | Alpha delivery | M39–M41 | ⏳ Planned | Candidate freeze, Play-delivered remediation, and explicitly authorized Alpha publication |
 | Production readiness | M42–M45 | ⏳ Planned | Closed-test stabilization, production access, staged rollout, and operations |
@@ -93,8 +93,7 @@ remain project-maintenance material rather than public release promises.
 
 ### Current progression
 
-- **Completed:** M01–M28 and M30–M35. M30 records authorized five-station Player, Google Play, and Closed Alpha asset/stream use within the stated rights boundary. M31 establishes the Contact-only Play boundary and moves any future native VIP/RIP purchase and activation into M58–M60; M32 hardens controller authority, protected sessions, redirects, canonical station IDs, and build integrity; M33 binds every one-shot request to fresh station, account, Queue, readiness, and track identity; M34 accepts adaptive, assistive, and physical alternative-input evidence; M35 proves the protected upload identity, local release install/update lineage, package registration, and version-code eligibility.
-- **Active:** M29 remains: exact-candidate reconciliation, saved Play declarations, audience/content/UGC decisions, and the final foreground-media video. The station retention/deletion policy and five-station reviewer clean-install access are confirmed and documented.
+- **Completed:** M01–M35. M29 records the exact-candidate PT-35 reconciliation, five-station reviewer access, saved Play declarations, audience/content/UGC decisions, and final foreground-media evidence without committing private material. M30 records authorized five-station Player, Google Play, and Closed Alpha asset/stream use within the stated rights boundary. M31 establishes the Contact-only Play boundary and moves any future native VIP/RIP purchase and activation into M58–M60; M32 hardens controller authority, protected sessions, redirects, canonical station IDs, and build integrity; M33 binds every one-shot request to fresh station, account, Queue, readiness, and track identity; M34 accepts adaptive, assistive, and physical alternative-input evidence; M35 proves the protected upload identity, local release install/update lineage, package registration, and version-code eligibility.
 - **Authorization-gated:** M36–M38 require an approved station-side event source or privacy-compatible relay before implementation.
 - **Publication:** M39–M41 deliberately separate candidate freeze, Play delivery, and the final user-authorized Alpha action.
 - **Production:** M42–M45 add stabilization, production-access evidence, staged release, and operational recertification.

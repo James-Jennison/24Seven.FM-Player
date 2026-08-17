@@ -2,7 +2,7 @@
 
 Prepared July 18, 2026
 
-Status: M28 moderation destination/receipt and M30 authorization confirmed; M29 and M47 owner facts remain
+Status: M28 moderation destination/receipt, M29 Play-declaration closeout, and M30 authorization confirmed; M47 owner facts remain
 
 This packet consolidates the factual confirmations still needed from an authorized 24seven.FM representative. Send it
 privately. Retain the original response and its sender/date privately; commit only a sanitized completion note. Do not
@@ -102,9 +102,9 @@ implemented from a success page alone; both sender and recipient delivery must b
   received from an authorized network representative on [date]; original evidence retained privately.”
 - M28 is complete: the fixed-recipient implementation passed automated/device checks and one authorized Player email
   handoff was reconciled with owner-confirmed receipt on July 18, 2026.
-- M29's retention/deletion policy, processor boundary, IP-use facts, privacy/Data Safety reconciliation, and
-  five-station reviewer clean-install/non-owner-network access are documented. M29 still requires exact-candidate
-  reconciliation, the final foreground-service video, and all active Console questionnaires to be saved and reviewed.
+- M29 is complete: the owner confirmed exact-candidate reconciliation, five-station reviewer clean-install/non-owner-network
+  access, the final private foreground-service video, and saved/reviewed active Console questionnaires. Only sanitized
+  repository evidence is retained.
 - M30 is complete. The authorization excludes stream redistribution and ownership transfer; third-party artwork remains
   subject to the applicable rights holder.
 - M47 restarts only after verified PM delivery and limits are supplied.

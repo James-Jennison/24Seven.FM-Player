@@ -22,7 +22,8 @@ The Google Play developer account was approved on July 14, 2026. Use this during
   server-discovered actions still require final-candidate validation without retaining secrets.
 - Privacy notice, Alpha testing guide, release notes, permission review, and current device validation evidence exist.
   The adopted network-wide retention/deletion policy is reconciled in `docs/m23-data-safety.md`; exact-candidate,
-  reviewer-access, final-video, and active-Console evidence still must be completed before M29 closes.
+  reviewer-access, final-video, and active-Console evidence completed M29 and must be rechecked for a future candidate
+  or Console-wording change.
 - Gradle accepts Play upload signing only from four `TWENTYFOURSEVEN_UPLOAD_*` environment variables. Supplying a partial set fails configuration.
 - `scripts/validate-play-bundle.ps1` builds the release AAB, requires a real signature, and prints its SHA-256 without revealing signing inputs.
 - `scripts/initialize-play-upload-key.ps1` creates the separate upload key outside Git and stores its credentials in a Windows-current-user DPAPI envelope. It refuses to overwrite either artifact.

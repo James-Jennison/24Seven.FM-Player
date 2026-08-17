@@ -366,12 +366,12 @@ roadmap:
     legacy_id: "M23.4"
     phase: "alpha-readiness"
     name: "Play Declarations Privacy and Data Safety"
-    state: "waiting"
-    state_label: "Waiting on final candidate and Play evidence"
-    blocking: true
-    dependencies: "Exact candidate, final media video, and saved Play declarations"
+    state: "done"
+    state_label: "Complete · August 16"
+    blocking: false
+    dependencies: "Re-audit when the candidate or Play Console wording changes"
     evidence: "docs/m23-play-declaration-packet.md"
-    summary: "The adopted network-wide retention/deletion policy, request path, and five-station reviewer clean-install access are documented. Exact-candidate reconciliation, final media evidence, and saved Play declarations remain open."
+    summary: "Owner-confirmed exact-candidate PT-35, five-station reviewer access, privacy/Data Safety and audience/content/UGC decisions, final private media evidence, and saved Play declarations are complete; only sanitized evidence is retained."
 
   - id: "M30"
     legacy_id: "M23.5"

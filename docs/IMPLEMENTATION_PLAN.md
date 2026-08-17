@@ -22,18 +22,21 @@ unverified stream addresses, background polling represented as push, or undocume
 
 The canonical, trigger-based forecast is [MILESTONE_FORECAST.md](MILESTONE_FORECAST.md). Use its active-day ranges
 only after the named prerequisite arrives; do not convert an owner, station, rights-holder, or Play decision into a
-calendar commitment. The current critical path runs through M29 and M36, then M37–M38, before M39 can freeze an
+calendar commitment. The current critical path runs through M36, then M37–M38, before M39 can freeze an
 Alpha candidate under the existing scope.
 
 ## Current program
 
+M29 is complete after owner-confirmed PT-35 exact-candidate, reviewer-access, saved-Console, and foreground-media
+evidence was reconciled without committing private material.
+
 M01–M28 and M30–M35 are achieved checkpoints. Their historical commits and validation remain intact. M28 closed after the fixed-recipient native Contact/report handoff passed automated and physical Razr validation and one authorized harmless report was sent exactly once with owner-confirmed receipt; the sanitized evidence is recorded in [m23-ugc-safety-validation.md](m23-ugc-safety-validation.md). M30 closed with the authorized five-station asset/stream grant recorded in [m30-brand-content-distribution-authorization.md](m30-brand-content-distribution-authorization.md). M31 closed in `9e340b9` after removing unapproved VIP/RIP purchase and account-registration handoffs, establishing the Contact-only candidate boundary, passing local/Razr validation, and publishing separate M58–M60 commerce gates. M32 closed in `2bc45f7` with explicit MediaSession authority, coherent station-isolated protected sessions, strict same-origin redirects, canonical station-ID migration, pinned and verified build inputs, and genuine foreign-package Razr evidence recorded in [m32-security-validation.md](m32-security-validation.md). M33 closed in `572d419` with immutable station/account/track confirmation identity, fresh Queue and certified readiness checks, stable track revalidation, and bounded cross-surface duplicate suppression; 163 unit tests, debug lint, Android-test compilation, and the focused physical-Razr confirmation test pass. M34 closed after the adaptive emulator/window and physical Razr hinge matrix, human TalkBack and focused Voice Access paths, and signed-release Bluetooth keyboard/pointer traversal passed; evidence is recorded in [m23-device-compatibility.md](m23-device-compatibility.md). M35 closed from evidence commit `55413bd` after protected current-head signing, exact upload-certificate and 16 KB verification, local release clean/update validation on the Razr, automatic package-registration confirmation, and owner-confirmed unused version code 2.
 
-The active program is M29–M35 Alpha readiness:
+The completed Alpha-readiness program is M29–M35:
 
 | ID | Size | State | Implementation focus | Principal dependency |
 | --- | --- | --- | --- | --- |
-| M29 Play Declarations, Privacy, and Data Safety | M | Waiting externally | Adopted retention/deletion/processor/IP policy, account boundary, and five-station reviewer clean-install access; PT-35 exact-artifact privacy/Data Safety, audience/content/UGC classification, and foreground-media evidence remain | Final candidate and Play Console |
+| M29 Play Declarations, Privacy, and Data Safety | M | Complete · August 16 | Exact-candidate PT-35, privacy/Data Safety, reviewer access, audience/content/UGC classification, foreground-media evidence, and saved Play Console reconciliation were confirmed; private material remains outside Git | Re-audit for any candidate or Console change |
 | M30 Brand, Content, and Distribution Rights | S | Complete · August 14 | Sanitized authorization record covers the five stations, normal live playback, and Player/Google Play/Closed Alpha materials; third-party artwork remains rights-holder property | [M30 authorization record](m30-brand-content-distribution-authorization.md) |
 | M31 Payments, External Links, and Account Lifecycle | M | Complete | Contact-only external catalog; membership/account browser routes removed; privacy, declarations, release notes, testing, and evidence reconciled | Re-audit before M57 or M58–M60 ships |
 | M32 Session, Controller, Network, and Supply-Chain Security | XL, split | Complete | Controller command policy, protected-session coherence, trusted redirects, station-ID migration, dependency/action integrity, and adversarial tests | Re-audit when controller, session, redirect, station-ID, or build-input boundaries change |
