@@ -23,8 +23,8 @@ requirement; the new work receives its own milestone and regression evidence.
 The dated, dependency-aware forecast for every unfinished milestone is maintained in
 [MILESTONE_FORECAST.md](MILESTONE_FORECAST.md). It uses active-work ranges only after their triggers occur, identifies
 owner/external blockers explicitly, and records the model required for the next substantive step. Under the current
-scope, M36–M38 are deferred unless JERIC authorizes an official station-app program. They no longer block M39; no
-Alpha calendar date is credible until M39 is explicitly authorized and its freeze gate is met.
+scope, M36–M38 are deferred unless JERIC authorizes an official station-app program. The owner confirms M39–M41
+completed for the current closed-test release, and M42 is active for its two-week continuity and stabilization phase.
 
 Actual and historically reconstructed timing is maintained separately in
 [MILESTONE_TIME_LEDGER.md](MILESTONE_TIME_LEDGER.md). Historical uncertainty is preserved; future milestones record
@@ -108,15 +108,15 @@ M38 must not start by substituting background polling or forwarding protected st
 
 | ID | Milestone | State | Required gate | Forecast after trigger |
 | --- | --- | --- | --- | --- |
-| M39 | Alpha Candidate and Documentation Freeze | Planned | Current-head signed AAB/APK, exact version/signer/dependency audit, synchronized roadmap/testing/release notes/listing, and no open release-critical finding | High once triggered · 1–2 active days |
-| M40 | Play Alpha Delivery and Pre-launch Remediation | Planned after M39 | Upload, Play-generated split inspection, fresh install/update, pre-review/pre-launch reconciliation, reviewer access, and artifact-specific evidence | Medium · 3–10 calendar days |
-| M41 | Explicit Alpha Publication | Planned after M40 | Owner-authorized internal or closed release, tester instructions, support path, rollback record, and verified availability; never automatic | High once authorized · 0.5–1 active day |
+| M39 | Alpha Candidate and Documentation Freeze | Complete · current closed-test release | Current-head signed AAB/APK, exact version/signer/dependency audit, synchronized roadmap/testing/release notes/listing, and no open release-critical finding | Completed before the owner-confirmed active M42 phase |
+| M40 | Play Alpha Delivery and Pre-launch Remediation | Complete · current closed-test release | Upload, Play-generated split inspection, fresh install/update, pre-review/pre-launch reconciliation, reviewer access, and artifact-specific evidence | Completed before the owner-confirmed active M42 phase |
+| M41 | Explicit Alpha Publication | Complete · current closed test live | Owner-authorized internal or closed release, tester instructions, support path, rollback record, and verified availability; never automatic | Completed before the owner-confirmed active M42 phase |
 
 ## Phase 7 — Closed testing, production, and operations
 
 | ID | Milestone | State | Required gate | Forecast after trigger |
 | --- | --- | --- | --- | --- |
-| M42 | Closed-Test Operations and Stabilization | Planned after M41 | Qualifying tester continuity, structured feedback, fixes/retests, Play vitals/pre-launch review, update delivery, and exit criteria | Medium · 3–5 calendar weeks |
+| M42 | Closed-Test Operations and Stabilization | Active · owner-confirmed two-week closed test | Qualifying tester continuity, structured feedback, fixes/retests, Play vitals/pre-launch review, update delivery, and exit criteria | Medium · 3–5 calendar weeks |
 | M43 | Production Access and Policy Approval | Planned after M42 | Production-access questionnaire, testing/feedback/change evidence, final policy review, and resolved Play response | Medium · 1–2 calendar weeks |
 | M44 | Production Release and Staged Rollout | Planned after M43 | Explicit authorization, production candidate, staged percentages, health thresholds, pause/rollback, release notes, and update validation | Medium · 1–4 calendar weeks |
 | M45 | Operational Reliability and Recertification | Planned | Play vitals/support/privacy handling, station outage and contract-drift procedures, rights/moderation recertification, target/API/dependency cadence, and key recovery | High · recurring monthly, quarterly, and release-triggered review |
@@ -147,10 +147,10 @@ None of these milestones blocks M41 unless a later owner decision explicitly mov
 
 1. M28–M35 are complete; M36–M38 are deferred and nonblocking for this Alpha unless JERIC authorizes official station-app work.
 2. If resumed, M36 authorizes the event source before M37 implementation; M38 certifies the result.
-3. M39 freezes the exact candidate only after all intended Alpha code has landed and explicit freeze work is authorized.
-4. M40 proves Play delivery and resolves automated/reviewer findings.
-5. M41 requires explicit owner publication authorization.
-6. M42–M45 form the production path; Alpha publication is not production readiness.
+3. M39 froze the exact candidate after intended Alpha code landed and freeze work was authorized.
+4. M40 proved the current Play delivery path and reconciled its release evidence.
+5. M41 received explicit owner publication authorization for the current closed test.
+6. M42 is active; M43–M45 form the remaining production path, and closed-test publication is not production readiness.
 7. M47–M50 and M56–M60 remain capability- and authorization-gated future work. M55 is permanently retired. M58
    must authorize commerce before M59 adds a purchase surface, and M60 must certify the complete subscription
    lifecycle before release.

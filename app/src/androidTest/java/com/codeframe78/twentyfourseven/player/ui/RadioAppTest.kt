@@ -1243,7 +1243,9 @@ class RadioAppTest {
         composeRule.onNodeWithText("Station: StreamingSoundtracks.com", substring = true)
             .performScrollTo()
             .assertIsDisplayed()
-        composeRule.onNodeWithText("Message (optional)").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Message (optional)")
+            .performScrollTo()
+            .performTextInput("Please play this long request")
         composeRule.onNodeWithText("Send request").assertIsDisplayed().assertHasClickAction()
         composeRule.onNodeWithText("Cancel").assertIsDisplayed().assertHasClickAction()
     }

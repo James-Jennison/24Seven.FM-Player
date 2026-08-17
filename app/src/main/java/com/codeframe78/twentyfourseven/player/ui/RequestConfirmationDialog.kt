@@ -3,6 +3,7 @@ package com.codeframe78.twentyfourseven.player.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
@@ -41,6 +42,7 @@ internal fun RequestConfirmationDialog(
         text = {
             Column(
                 modifier = Modifier
+                    .heightIn(max = 240.dp)
                     .verticalScroll(rememberScrollState())
                     .testTag("request_confirmation_content"),
                 verticalArrangement = Arrangement.spacedBy(12.dp),

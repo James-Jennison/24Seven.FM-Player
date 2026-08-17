@@ -23,7 +23,7 @@ unverified stream addresses, background polling represented as push, or undocume
 The canonical, trigger-based forecast is [MILESTONE_FORECAST.md](MILESTONE_FORECAST.md). Use its active-day ranges
 only after the named prerequisite arrives; do not convert an owner, station, rights-holder, or Play decision into a
 calendar commitment. M36–M38 are deferred and nonblocking for this Alpha unless JERIC authorizes official station-app
-work; M39 can begin only after explicit freeze authorization under the existing scope.
+work; the owner confirms M42 is the active two-week closed-test phase.
 
 ## Current program
 
@@ -65,9 +65,9 @@ closed-app push and does not authorize M37.
 
 | ID | Size | State | Implementation focus |
 | --- | --- | --- | --- |
-| M39 Alpha Candidate and Documentation Freeze | M | Planned | Build the current-head signed artifacts, freeze version/listing/release notes/roadmap/testing, verify signer/dependencies/permissions/16 KB packaging, and require no open release-critical finding |
-| M40 Play Alpha Delivery and Pre-launch Remediation | M plus external time | Planned after M39 | Upload, inspect Play splits, install/update through Play, complete reviewer access, and reconcile pre-review/pre-launch findings |
-| M41 Explicit Alpha Publication | S plus review time | Planned after M40 | Publish only after explicit owner authorization; verify availability, instructions, support, and rollback record |
+| M39 Alpha Candidate and Documentation Freeze | M | Complete · current closed-test release | Build the current-head signed artifacts, freeze version/listing/release notes/roadmap/testing, verify signer/dependencies/permissions/16 KB packaging, and require no open release-critical finding |
+| M40 Play Alpha Delivery and Pre-launch Remediation | M plus external time | Complete · current closed-test release | Upload, inspect Play splits, install/update through Play, complete reviewer access, and reconcile pre-review/pre-launch findings |
+| M41 Explicit Alpha Publication | S plus review time | Complete · current closed test live | Publish only after explicit owner authorization; verify availability, instructions, support, and rollback record |
 
 Publication is never an automatic consequence of a passing local build or CI run.
 
@@ -75,7 +75,7 @@ Publication is never an automatic consequence of a passing local build or CI run
 
 | ID | Size | State | Implementation focus |
 | --- | --- | --- | --- |
-| M42 Closed-Test Operations and Stabilization | Campaign | Planned after M41 | Maintain qualifying tester continuity, collect structured feedback, fix/retest findings, review Play vitals, and meet exit criteria |
+| M42 Closed-Test Operations and Stabilization | Campaign | Active · owner-confirmed two-week closed test | Maintain qualifying tester continuity, collect structured feedback, fix/retest findings, review Play vitals, and meet exit criteria |
 | M43 Production Access and Policy Approval | External gate | Planned after M42 | Submit testing, feedback, change, value, and readiness evidence; reconcile any additional testing request |
 | M44 Production Release and Staged Rollout | Campaign | Planned after M43 | Final production candidate, explicit authorization, staged percentages, health thresholds, pause/rollback, release notes, and update validation |
 | M45 Operational Reliability and Recertification | Recurring | Planned | Monitor Play quality/support without invasive tracking, recertify station contracts/rights/moderation, maintain policies/toolchain/dependencies, and exercise key recovery |

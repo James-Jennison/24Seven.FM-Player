@@ -17,9 +17,9 @@ external approval into a promised date.
 
 ## Critical path and calendar floor
 
-The current roadmap makes M39 depend on the intended Alpha scope. M29 is complete, and M36–M38 are now deferred and
-nonblocking unless JERIC authorizes an official station-app program. M39 still requires explicit freeze authorization
-and its documented artifact gate.
+M29 is complete, and M36–M38 are deferred and nonblocking unless JERIC authorizes an official station-app program.
+The owner confirms M39–M41 completed for the current closed-test release; M42 is now active for the two-week
+continuity and stabilization phase.
 
 Once M41 starts a qualifying closed test, a newly created personal Play account has a fixed minimum of 12 opted-in
 testers for 14 continuous days before production access can be requested. Google says review of that request usually
@@ -35,9 +35,9 @@ takes seven days or less, while allowing that it can take longer. The earliest c
 | M36 | JERIC authorizes an official station-app program and an operator supplies an authorized event-source proposal | 1–3 active Sol days to accept or reject the contract | Deferred | Sol High |
 | M37 | M36 contract, event schema, and test environment are accepted | 5–10 active days | Deferred | Terra High; return unresolved delivery/privacy choices to Sol High |
 | M38 | M37 implementation is stable on all intended stations | 5–10 active days for lifecycle, privacy, battery, and device certification | Deferred | Terra High, then Sol High acceptance |
-| M39 | Explicit candidate-freeze authorization and no open release-critical finding in the intended Alpha scope | 1–2 active days | High once triggered | Sol High |
-| M40 | M39 frozen AAB and required Console fields are ready | 3–10 calendar days; add time only for actual Play/pre-launch findings | Medium | Terra High, with Sol High for release decisions |
-| M41 | M40 evidence is reconciled and the owner explicitly authorizes the selected Alpha track | 0.5–1 active day; tester availability follows Play processing | High once authorized | Sol High |
+| M39 | Complete for the current closed-test release | No remaining forecast | Complete | — |
+| M40 | Complete for the current closed-test release | No remaining forecast | Complete | — |
+| M41 | Complete; current Google Play closed test is live | No remaining forecast | Complete | — |
 
 M29 is complete. M34's human TalkBack, focused Voice Access, adaptive window/foldable, and physical Bluetooth
 keyboard/pointer evidence passed Sol High acceptance on July 19.
@@ -46,7 +46,7 @@ keyboard/pointer evidence passed Sol High acceptance on July 19.
 
 | ID | Trigger to start the range | Forecast | Confidence | Model at the next substantive step |
 | --- | --- | --- | --- | --- |
-| M42 | A qualifying closed-test release is available and at least 12 testers have opted in | 3–5 calendar weeks, including the mandatory 14-day continuity window and a feedback/fix buffer | Medium | Terra Medium, with Sol High checkpoint reviews |
+| M42 | Active owner-confirmed two-week closed test | Remaining campaign time is governed by the 14-day continuity window, feedback, and any verified remediation | Medium | Terra Medium, with Sol High checkpoint reviews |
 | M43 | M42 evidence and the production-access questionnaire are complete | 1–2 calendar weeks; Google's usual review target is seven days or less, but longer remains possible | Medium | Sol Extra High |
 | M44 | M43 access is granted and the owner approves a staged rollout plan | 1–4 calendar weeks, chosen by health thresholds and rollout pace | Medium | Sol Extra High |
 | M45 | M41 is published | Recurring: monthly light review, quarterly station/policy recertification, and release-triggered review | High | Terra Medium; Sol High for material policy or security changes |

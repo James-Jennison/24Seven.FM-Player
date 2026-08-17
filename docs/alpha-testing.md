@@ -14,6 +14,8 @@
 
 Google Play Closed Testing is the authoritative distribution channel. Install and update the closed-test build only through its Google Play opt-in link; do not use a development debug APK or a separately shared release APK for this program.
 
+The owner confirms the current M42 two-week closed-test phase is active. Keep the qualifying tester-continuity window running while recording, fixing, and retesting verified feedback; do not treat the active closed test as production approval.
+
 Guest closed-test volunteers use their own Google account only to opt in to Google Play. They do not need a 24Seven.FM station account, must not create or share one for this program, and receive only the account-free Guest testing tasks.
 
 An update installs over an earlier Alpha only when all of the following match:
