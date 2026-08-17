@@ -106,12 +106,11 @@ one into the Alpha contract.
 - Preserve `PT-*` IDs across milestone renumbering and release cycles so tester results remain comparable.
 - Record backend-only work as having no meaningful visual change rather than attaching unrelated screenshots.
 
-## GitHub and Discord
+## GitHub and project communication
 
 - Repository roadmap files, the public portal, and GitHub Project #1 must use the canonical IDs from ROADMAP.md.
 - Each GitHub Project card stores one canonical milestone. Legacy IDs appear only in migration/evidence notes.
 - Commit only intentional files and preserve unrelated user changes.
-- Post to the configured Discord project thread after a completed, committed roadmap milestone or when the user explicitly
-  requests a project announcement. Do not announce every push.
-- Discord updates must contain no secrets, tester identities, private endpoint details, credentials, or protected evidence,
-  and delivery must be verified before reporting success.
+- Project announcements are optional and occur only when the user explicitly requests one. Do not announce every push.
+- Any requested announcement must contain no secrets, tester identities, private endpoint details, credentials, or
+  protected evidence.

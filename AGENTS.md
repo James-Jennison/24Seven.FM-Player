@@ -26,8 +26,8 @@
 
 ## Milestone communication
 
-- After completing and committing a roadmap milestone, post a concise completion update to the configured Discord project thread and verify delivery before reporting the milestone complete.
-- Keep Discord milestone updates free of secrets, credentials, tester identities, private endpoint details, and other sensitive data.
+- Milestone announcements are optional and occur only when the user explicitly requests one.
+- Any requested announcement must remain free of secrets, credentials, tester identities, private endpoint details, and other sensitive data.
 
 ## Milestone time ledger
 
