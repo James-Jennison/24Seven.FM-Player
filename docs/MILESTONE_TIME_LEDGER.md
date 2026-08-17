@@ -428,7 +428,7 @@ active execution.
 | M39 | Planned | — | — | 1–2 active d | — | — | — | — | — | — | Unknown |
 | M40 | Planned after M39 | — | — | 3–10 calendar d | — | — | — | — | — | — | Unknown |
 | M41 | Planned after M40 | — | — | 0.5–1 active d | — | — | — | — | — | — | Unknown |
-| M42 | Active · owner-confirmed two-week closed test | `August 16, 2026 at 5:51:14 PM PDT (UTC-07:00)` recorded remediation interval; earlier campaign start not supplied | — | 3–5 calendar wk | 0.03 h recorded Issue #26 fix | 0.00 h | Earlier campaign time unmeasured | 0.03 h recorded | ≥0.03 h recorded interval | Not assessable while active | Confirmed current phase |
+| M42 | Active · owner-confirmed two-week closed test | `August 16, 2026 at 5:51:14 PM PDT (UTC-07:00)` first recorded remediation interval; earlier campaign start not supplied | — | 3–5 calendar wk | 0.06 h recorded Issue #26 fix and v3 preparation | 0.00 h | Earlier campaign time unmeasured | 0.06 h recorded | ≥0.06 h recorded intervals | Not assessable while active | Confirmed current phase |
 | M43 | Planned after M42 | — | — | 1–2 calendar wk | — | — | — | — | — | — | Unknown |
 | M44 | Planned after M43 | — | — | 1–4 calendar wk | — | — | — | — | — | — | Unknown |
 | M45 | Planned recurring | — | — | Monthly, quarterly, and release-triggered | — | — | — | — | — | — | Unknown |
@@ -1074,7 +1074,10 @@ Cumulative counted project time through Milestone M30: Unknown overall; 0.40 h p
 - **Time, variance, evidence, confidence, and forecasting lessons:** The recorded interval is 0.03 h active, 0.00 h automated
   wait, 0.00 h user-blocked, 0.03 h counted, and at least 0.03 h elapsed; earlier campaign time remains unmeasured and excluded.
   Issue #26 reports a reproducible Android 16 phone failure in PT-12; the focused physical-Android regression is passing.
-  **Confirmed current phase**. Keep each remediation interval separate from tester and Play calendar waits.
+  The owner authorized the next closed-test update at `August 16, 2026 at 5:58:38 PM PDT (UTC-07:00)`; its version-3
+  preparation interval completed at `August 16, 2026 at 6:00:20 PM PDT (UTC-07:00)` (0.03 h active, 0.00 h automated
+  wait, 0.00 h user-blocked, 0.03 h counted). The two measured intervals total 0.06 h; earlier campaign time remains
+  excluded. **Confirmed current phase**. Keep each remediation interval separate from tester and Play calendar waits.
 
 ### M43 — Production Access and Policy Approval
 

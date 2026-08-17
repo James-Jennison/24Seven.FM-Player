@@ -5,7 +5,8 @@ The Google Play developer account was approved on July 14, 2026. Use this during
 ## Local preparation already complete
 
 - Application ID: `com.codeframe78.twentyfourseven.player`
-- Candidate: `0.1.0-alpha01`, version code 2
+- Live closed-test build: `0.1.0-alpha01`, version code 2
+- Next closed-test update: `0.1.0-alpha02`, version code 3, containing the Issue #26 request-confirmation keyboard fix; protected signing and Play upload are pending.
 - Target SDK: 36; compile SDK: 36; minimum SDK: 26
 - The current M35 audit verifies the production manifest, dependencies/licenses, explicit backup exclusions,
   protected signed release outputs, the exact registered upload certificate, and 16 KB APK/ELF packaging. The native notice is under More → Privacy →
