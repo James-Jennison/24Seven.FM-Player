@@ -80,7 +80,7 @@ section: development
     <li><span>4</span><div><h3>Implement through the layers</h3><p>Compose renders state, ViewModels coordinate, repository implementations own protocols, and Media3 remains service-owned.</p></div></li>
     <li><span>5</span><div><h3>Validate narrowly first</h3><p>Target affected unit tests and Kotlin compilation before broader lint, bundle, emulator, or physical-device checks.</p></div></li>
     <li><span>6</span><div><h3>Record evidence</h3><p>Update milestone documents and the chronological README roadmap with verified results, limitations, and remaining device or owner checks.</p></div></li>
-    <li><span>7</span><div><h3>Publish and observe</h3><p>Create a focused commit and PR, let GitHub Actions validate it, and verify the merged result. Project announcements are optional and user-requested.</p></div></li>
+    <li><span>7</span><div><h3>Publish and observe</h3><p>Create a focused commit and PR, let GitHub Actions validate it, post the change summary to Discord, and verify the merged result.</p></div></li>
   </ol>
 </section>
 
@@ -97,7 +97,7 @@ section: development
     <article><code>app/src/test</code><h3>Local behavior tests</h3><p>Domain rules, parsers, repositories, ViewModels, state transitions, and release helpers.</p></article>
     <article><code>app/src/androidTest</code><h3>Connected UI tests</h3><p>Compose semantics, adaptive layouts, navigation, accessibility, screenshots, and device-state behavior.</p></article>
     <article><code>docs</code><h3>Research and evidence</h3><p>Protocol research, validation records, station certifications, device matrices, Play readiness, and release notes.</p></article>
-    <article><code>.github/workflows</code><h3>Continuous validation</h3><p>Android build/test/lint assembly and Pages generation/deployment.</p></article>
+    <article><code>.github/workflows</code><h3>Continuous validation</h3><p>Android build/test/lint assembly, Pages generation/deployment, and Discord result notification.</p></article>
   </div>
 </section>
 
