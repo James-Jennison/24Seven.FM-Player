@@ -17,7 +17,7 @@ cleanup() {
 trap cleanup EXIT
 umask 022
 
-mkdir -p -- "${privacy_directory}" "${site_root}/assets/project/screenshots" "${site_root}/assets/project/marketing"
+mkdir -p -- "${privacy_directory}" "${site_root}/assets/project/screenshots" "${site_root}/assets/project/marketing/stations"
 temporary_privacy="$(mktemp "${privacy_directory}/.index.XXXXXX")"
 
 {
@@ -47,5 +47,10 @@ cp -- "${repository_root}/docs/play-store-assets/marketing/chat-synthetic.png" "
 cp -- "${repository_root}/docs/play-store-assets/marketing/favorites-live.png" "${site_root}/assets/project/marketing/favorites-live.png"
 cp -- "${repository_root}/docs/play-store-assets/marketing/now-playing-live.png" "${site_root}/assets/project/marketing/now-playing-live.png"
 cp -- "${repository_root}/docs/play-store-assets/marketing/queue-live.png" "${site_root}/assets/project/marketing/queue-live.png"
+cp -- "${repository_root}/docs/play-store-assets/marketing/stations/sst.png" "${site_root}/assets/project/marketing/stations/sst.png"
+cp -- "${repository_root}/docs/play-store-assets/marketing/stations/1980s.png" "${site_root}/assets/project/marketing/stations/1980s.png"
+cp -- "${repository_root}/docs/play-store-assets/marketing/stations/adagio.png" "${site_root}/assets/project/marketing/stations/adagio.png"
+cp -- "${repository_root}/docs/play-store-assets/marketing/stations/death.png" "${site_root}/assets/project/marketing/stations/death.png"
+cp -- "${repository_root}/docs/play-store-assets/marketing/stations/entranced.png" "${site_root}/assets/project/marketing/stations/entranced.png"
 
 printf 'Prepared the project site source at %s\n' "${site_root}"
