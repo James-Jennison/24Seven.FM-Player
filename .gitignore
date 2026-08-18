@@ -16,6 +16,7 @@ captures/
 *.har
 .codex-remote-attachments/
 _site/
+_dev_site/
 _site-test/
 _pages-transition/
 project-site-browser-results/
