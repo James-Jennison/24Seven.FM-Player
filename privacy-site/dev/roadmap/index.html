@@ -1,12 +1,12 @@
 ---
 layout: developer
 title: Canonical roadmap · 24Seven.FM Player
-description: Explore the dependency-ordered M01–M60 roadmap, recorded completion history, active Closed Alpha operations, production path, and bounded future work.
+description: Explore the dependency-ordered M01–M60 roadmap, recorded completion history, active closed-test operations, production path, and bounded future work.
 permalink: /dev/roadmap/
 section: roadmap
 robots: noindex, nofollow
 ---
-{% assign achieved_percent = site.data.project.roadmap_meta.achieved_count | times: 100 | divided_by: site.data.project.roadmap_meta.total_count %}
+{% assign achieved_percent = site.data.project.roadmap_meta.achieved_count | times: 100 | divided_by: site.data.project.roadmap_meta.active_total_count %}
 <section class="page-hero">
   <div>
     <p class="eyebrow">Canonical delivery plan</p>
@@ -17,22 +17,22 @@ robots: noindex, nofollow
     <span>Verified program</span>
     <strong>{{ site.data.project.roadmap_meta.achieved_count }} achieved</strong>
     <dl>
-      <div><dt>Total</dt><dd>{{ site.data.project.roadmap_meta.total_count }}</dd></div>
+      <div><dt>Active</dt><dd>{{ site.data.project.roadmap_meta.active_total_count }}</dd></div>
       <div><dt>Current</dt><dd>{{ site.data.project.roadmap_meta.active_phase }}</dd></div>
       <div><dt>Stations</dt><dd>5</dd></div>
     </dl>
     <div class="program-progress">
-      <div><span>Canonical milestones achieved</span><strong>{{ achieved_percent }}%</strong></div>
-      <progress value="{{ site.data.project.roadmap_meta.achieved_count }}" max="{{ site.data.project.roadmap_meta.total_count }}">{{ site.data.project.roadmap_meta.achieved_count }} of {{ site.data.project.roadmap_meta.total_count }} achieved</progress>
+      <div><span>Active milestones achieved</span><strong>{{ achieved_percent }}%</strong></div>
+      <progress value="{{ site.data.project.roadmap_meta.achieved_count }}" max="{{ site.data.project.roadmap_meta.active_total_count }}">{{ site.data.project.roadmap_meta.achieved_count }} of {{ site.data.project.roadmap_meta.active_total_count }} active milestones achieved; {{ site.data.project.roadmap_meta.retired_count }} retired milestones excluded</progress>
     </div>
   </aside>
 </section>
 
 <nav class="section-jump" aria-label="On this page">
-  <a href="#current">Alpha readiness</a>
+  <a href="#current">Current closed test</a>
   <a href="#history">{{ site.data.project.roadmap_meta.achieved_count }} achieved checkpoints</a>
   <a href="#notifications">Notifications</a>
-  <a href="#alpha">Alpha delivery</a>
+  <a href="#alpha">Release sequence</a>
   <a href="#production">Production</a>
   <a href="#future">Future</a>
   <a href="{{ site.github_url }}">Repository ↗</a>
@@ -43,11 +43,11 @@ robots: noindex, nofollow
   <div class="content-intro wide">
     <p class="eyebrow">{{ site.data.project.roadmap_meta.active_phase }} · Current program</p>
     <h2>{{ site.data.project.roadmap_meta.active_label }}</h2>
-    <p>The current program is the Closed Alpha: eligible testers complete their profile and Google Play opt-in, then receive focused assignments based on their device and coverage. Unrelated notification authorization remains separately scoped.</p>
+    <p>The owner-confirmed Google Play closed test is live. M42 maintains qualifying tester continuity, collects structured feedback, verifies remediation, and records the evidence needed before production access can be requested. Notification delivery remains separately authorization-gated.</p>
   </div>
   <div class="roadmap-callout migration-callout">
     <div><p class="eyebrow">Status discipline</p><h2>Current operations and recorded evidence stay distinct</h2></div>
-    <div><p>Closed Alpha operations are current as of {{ site.data.project.site_meta.verified | date: "%B %-d, %Y" }}. Commit references, test counts, and milestone records below remain dated evidence—not live telemetry or a claim that every later gate is complete.</p><div class="actions"><a class="button secondary" href="{{ site.github_url }}/blob/main/docs/ROADMAP.md">Read supporting roadmap records</a></div></div>
+    <div><p>Closed-test operations are current as of {{ site.data.project.site_meta.verified | date: "%B %-d, %Y" }}. Commit references, test counts, and milestone records below remain dated evidence—not live telemetry or a claim that every later gate is complete.</p><div class="actions"><a class="button secondary" href="{{ site.github_url }}/blob/main/docs/ROADMAP.md">Read supporting roadmap records</a></div></div>
   </div>
   <div class="roadmap-tools" data-filter-controls data-target="#alpha-readiness-grid">
     <label class="filter-search" for="alpha-readiness-search">Find an Alpha-readiness gate<input id="alpha-readiness-search" type="search" placeholder="Search ID, policy, security, device…" autocomplete="off" data-filter-query></label>
@@ -116,7 +116,7 @@ robots: noindex, nofollow
 
 {% assign alpha_distribution = site.data.project.roadmap | where: "phase", "alpha-distribution" %}
 <section class="content-section" id="alpha">
-  <div class="content-intro wide"><p class="eyebrow">M39–M41 · Candidate to active Closed Alpha</p><h2>Operate the cohort with evidence</h2><p>Candidate preparation, Play delivery/remediation, and limited-cohort operations are separate gates. Active testing does not turn historical evidence into live telemetry or imply broader availability.</p></div>
+  <div class="content-intro wide"><p class="eyebrow">M39–M41 · Current closed-test release</p><h2>Release sequence complete</h2><p>Candidate freeze, Play delivery and remediation, and explicit publication are separately recorded. M42 now carries the live closed-test operations; completion does not imply production readiness.</p></div>
   <div class="roadmap-callout migration-callout">
     <div><p class="eyebrow">{{ site.data.project.play_status.label }}</p><h2>{{ site.data.project.play_status.headline }}</h2></div>
     <div><p>{{ site.data.project.play_status.detail }}</p></div>
@@ -128,7 +128,7 @@ robots: noindex, nofollow
 
 {% assign production_items = site.data.project.roadmap | where: "phase", "production" %}
 <section class="content-section" id="production">
-  <div class="content-intro wide"><p class="eyebrow">M42–M45 · Beyond Alpha</p><h2>A complete path to production and maintenance</h2><p>Closed testing, production access, staged rollout, and continuing operations now have explicit exit criteria instead of disappearing after Alpha publication.</p></div>
+  <div class="content-intro wide"><p class="eyebrow">M42–M45 · Current operations and production path</p><h2>Stabilize the closed test before production access</h2><p>M42 is active for the owner-confirmed two-week closed test. Production access, staged rollout, and continuing operations remain separate later gates with explicit exit criteria.</p></div>
   <div class="workstream-grid">
     {% for item in production_items %}<article class="roadmap-card {{ item.state }}"><p class="status"><span></span>{{ item.state_label }}</p><p class="milestone-id">{{ item.id }}</p><h3>{{ item.name }}</h3><p>{{ item.summary }}</p><p class="roadmap-dependency"><strong>Dependency:</strong> {{ item.dependencies }}</p></article>{% endfor %}
   </div>
