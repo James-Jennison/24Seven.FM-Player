@@ -75,6 +75,8 @@ assert(portal.includes("After finishing Profile &amp; Device"), "Google Play ins
 assert(portal.includes('id="intake-profile"') && portal.includes('Finish your tester profile'), "Tester profile completion must have a clear, addressable destination.");
 assert(portal.includes('Finish Profile &amp; Continue to Install') && wizard.includes('Finish Profile & Continue to Install'), "Profile completion must name the next installation step in both fallback and guided flows.");
 assert(portal.includes('Open Google Play to install Player') && portal.includes('Install the Player from Google Play'), "The first install action must be explicit and reachable after Profile & Device.");
+assert(portal.includes('function portalAssignmentSteps') && portal.includes('Complete and report') && portal.includes('Report each PT case separately'), "Every assigned task must provide ordered setup, execution, safety, and reporting instructions.");
+assert(portal.includes("'testerSteps'") && portal.includes("'expectedResult'"), "Task-specific execution steps and expected results must be rendered when the canonical task registry provides them.");
 assert(portal.includes("function portalAdminPreviewTesterId"), "The coordinator must have an authenticated tester-view preview path.");
 assert(portal.includes("($_SESSION['authenticated'] ?? false) === true"), "Tester previews must require the coordinator session.");
 assert(portal.includes("Tester previews are read-only."), "Tester previews must reject state-changing requests.");

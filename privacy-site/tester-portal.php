@@ -448,6 +448,23 @@ function portalSubmitFeedback(PDO $database, array $tester): void
     portalRedirect('?notice=' . rawurlencode('Your task report has been saved for the coordinator.'));
 }
 
+function portalAssignmentSteps(array $task, array $assignment): array
+{
+    $scope = trim((string) ($assignment['station_scope'] ?? '')) ?: (string) $task['stationScope'];
+    $configuration = trim((string) ($assignment['configuration_scope'] ?? '')) ?: 'your registered device configuration';
+    $taskSteps = $task['testerSteps'] ?? [];
+    if (!is_array($taskSteps) || $taskSteps === []) {
+        $taskSteps = ['Open ' . implode(', ', $task['ptIds']) . ' and complete each listed check in order. ' . $task['purpose']];
+    }
+    return [
+        'Set up the assigned Player build for ' . $scope . ' on ' . $configuration . '.',
+        ...array_values(array_filter($taskSteps, 'is_string')),
+        'Expected result: ' . (is_string($task['expectedResult'] ?? null) ? $task['expectedResult'] : 'the behavior remains usable and matches the detailed PT-case acceptance criteria.'),
+        'Stop at this boundary: ' . $task['safetyWarning'],
+        'Report each PT case separately: open Report a result, choose this assignment, select Pass, Issue, Blocked, or Usability note, then state the device/setup, steps taken, expected result, and observed result.',
+    ];
+}
+
 function portalRenderLogin(): never
 {
     $content = '<div class="login"><div class="top"><div class="brand"><img class="brand-icon" src="/assets/project/app-icon.png" alt=""><span>24Seven.FM Player<br><small class="muted">Closed Alpha tester portal</small></span></div></div>' . portalNotice('notice') . portalNotice('error') . '<section class="card"><p class="eyebrow">Tester self-service</p><h1>Open your tester portal</h1><p class="muted">Enter the address registered for the Closed Alpha. We will send a single-use sign-in link if it matches an active tester.</p><form method="post"><input type="hidden" name="action" value="request_link"><label for="email">Registered email</label><input id="email" name="email" type="email" autocomplete="email" required><div class="cf-turnstile" data-sitekey="' . e(TESTER_PORTAL_TURNSTILE_SITEKEY) . '" data-action="' . e(TESTER_PORTAL_TURNSTILE_ACTION) . '"></div><button class="button" type="submit">Send sign-in link</button></form><p class="muted small">Never enter a password, account credential, or verification code here.</p></section></div><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>';
@@ -494,7 +511,8 @@ function portalRenderDashboard(PDO $database, array $tester, bool $adminPreview 
         $task = $tasks[$assignment['task_id']] ?? null;
         if (!is_array($task)) continue;
         $state = $assignment['task_status'] === 'blocked' ? 'blocked' : ($assignment['task_status'] === 'complete' ? '' : 'pending');
-        $assignmentCards .= '<article class="task"><span class="pill ' . $state . '">' . e(ucwords(str_replace('_', ' ', $assignment['task_status']))) . '</span><h3 style="margin-top:10px">' . e($task['id'] . ' — ' . $task['title']) . '</h3><p>' . e($task['purpose']) . '</p><p><strong>Scope:</strong> ' . e($assignment['station_scope'] ?: $task['stationScope']) . '<br><strong>Configuration:</strong> ' . e($assignment['configuration_scope'] ?: 'Use your registered device configuration.') . '</p><ul><li>PT cases: ' . e(implode(', ', $task['ptIds'])) . '</li><li>Safety: ' . e($task['safetyWarning']) . '</li></ul><a class="button secondary" href="/product-testing/?task=' . rawurlencode($task['id']) . '">Open task cases</a></article>';
+        $plan = implode('', array_map(static fn (string $step): string => '<li>' . e($step) . '</li>', portalAssignmentSteps($task, $assignment)));
+        $assignmentCards .= '<article class="task"><span class="pill ' . $state . '">' . e(ucwords(str_replace('_', ' ', $assignment['task_status']))) . '</span><h3 style="margin-top:10px">' . e($task['id'] . ' — ' . $task['title']) . '</h3><p class="task-plan-label">Complete and report</p><ol class="task-plan">' . $plan . '</ol><p><strong>PT cases:</strong> ' . e(implode(', ', $task['ptIds'])) . '</p><a class="button secondary" href="/product-testing/?task=' . rawurlencode($task['id']) . '">Open the detailed PT checklist</a></article>';
     }
     if ($assignmentCards === '') $assignmentCards = '<article class="task"><h3>No focused task yet</h3><p>Your coordinator will match an assignment to your coverage and available setup.</p></article>';
     $content = '<div class="top"><div class="brand"><img class="brand-icon" src="/assets/project/app-icon.png" alt=""><span>24Seven.FM Player<br><small class="muted">Closed Alpha tester portal</small></span></div><form method="post"><input type="hidden" name="action" value="logout"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><button class="button secondary" type="submit">Sign out</button></form></div>' . portalNotice('notice') . portalNotice('error')

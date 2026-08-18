@@ -56,6 +56,10 @@ def main() -> None:
         for key in ("id", "title", "purpose", "state", "tags", "stationScope", "accountRequirements", "deviceRequirements", "prerequisites", "mutation", "safetyWarning", "ptIds"):
             if key not in task:
                 fail(f"{task.get('id', 'unknown')} is missing {key}")
+        if "testerSteps" in task and (not isinstance(task["testerSteps"], list) or not task["testerSteps"] or not all(isinstance(step, str) and step for step in task["testerSteps"])):
+            fail(f"{task['id']} testerSteps must be a non-empty list of text steps when provided")
+        if "expectedResult" in task and (not isinstance(task["expectedResult"], str) or not task["expectedResult"]):
+            fail(f"{task['id']} expectedResult must be non-empty text when provided")
         pt_ids = task["ptIds"]
         if not isinstance(pt_ids, list) or not pt_ids:
             fail(f"{task['id']} must contain at least one PT ID")
