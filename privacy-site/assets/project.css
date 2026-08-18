@@ -1362,30 +1362,6 @@ figcaption span { color: var(--muted); font-size: 0.88rem; }
 }
 .pointer-reactive:hover::before { opacity: 1; }
 
-/* Interactive project controls */
-
-.anchor-copy {
-  display: inline-grid;
-  place-items: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  margin-left: 0.45rem;
-  padding: 0;
-  transform: translateY(-0.12em);
-  border: 1px solid transparent;
-  border-radius: 0.45rem;
-  background: transparent;
-  color: var(--muted);
-  font: 800 0.9rem/1 ui-monospace, SFMono-Regular, Menlo, monospace;
-  opacity: 0.45;
-  cursor: pointer;
-  transition: opacity 160ms ease, color 160ms ease, border-color 160ms ease, background 160ms ease;
-}
-
-h2:hover .anchor-copy,
-.anchor-copy:focus-visible { opacity: 1; }
-.anchor-copy:hover { border-color: var(--border); background: var(--card-hover); color: var(--cyan); opacity: 1; }
-
 .roadmap-tools {
   display: flex;
   align-items: end;

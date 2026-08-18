@@ -243,25 +243,6 @@
 
   document.querySelectorAll('.section-jump, .privacy-toc').forEach(observeSectionNavigation);
 
-  document.querySelectorAll('main section[id]').forEach(function (section) {
-    const heading = section.querySelector(':scope > .content-intro h2, :scope > .section-heading h2, :scope > .roadmap-callout > div:first-child h2, :scope > h2');
-    if (!heading || heading.querySelector('.anchor-copy')) return;
-    const button = document.createElement('button');
-    button.className = 'anchor-copy';
-    button.type = 'button';
-    button.title = 'Copy link to this section';
-    button.setAttribute('aria-label', 'Copy link to ' + heading.textContent.trim());
-    button.innerHTML = '<span aria-hidden="true">#</span>';
-    button.addEventListener('click', function () {
-      const url = new URL(window.location.href);
-      url.hash = section.id;
-      copyText(url.toString())
-        .then(function () { announce('Section link copied'); })
-        .catch(function () { announce('Unable to copy this link'); });
-    });
-    heading.appendChild(button);
-  });
-
   document.querySelectorAll('[data-filter-controls]').forEach(function (controls) {
     const target = document.querySelector(controls.dataset.target);
     if (!target) return;
