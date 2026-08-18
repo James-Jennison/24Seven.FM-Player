@@ -326,9 +326,10 @@ try {
   const noScript = await evaluate(`(() => ({
     h1: document.querySelectorAll('h1').length,
     navigation: document.querySelectorAll('#project-navigation a').length,
-    listenerCards: document.querySelectorAll('.listener-feature-grid article').length
+    stationPanels: document.querySelectorAll('.station-panel').length,
+    momentScreens: document.querySelectorAll('.moment-screen').length
   }))()`);
-  assert(noScript.h1 === 1 && noScript.navigation === 3 && noScript.listenerCards === 3, "No-JavaScript fallback lost essential content");
+  assert(noScript.h1 === 1 && noScript.navigation === 3 && noScript.stationPanels === 5 && noScript.momentScreens === 2, "No-JavaScript fallback lost essential content");
 
   assert(browserErrors.length === 0, `Browser errors: ${browserErrors.join(" | ")}`);
   console.log("Validated five responsive viewports, consumer and developer routes, keyboard and pointer interactions, local-only state, reduced motion, forced colors, and no-JavaScript fallback.");

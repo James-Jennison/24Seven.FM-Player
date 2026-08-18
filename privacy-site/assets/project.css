@@ -1992,3 +1992,74 @@ h2:hover .anchor-copy,
   input:focus-visible,
   [tabindex]:focus-visible { outline: 3px solid Highlight; outline-offset: 4px; }
 }
+
+/* Visual listener home: real device captures, station-color bento, and a compact finale. */
+.listener-hero.listener-hero-visual {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 0.64fr);
+  align-items: center;
+  gap: clamp(1.5rem, 8vw, 9rem);
+  width: 100vw;
+  min-height: min(48rem, calc(100vh - var(--header-height)));
+  margin: 0 0 clamp(4rem, 8vw, 8rem) 50%;
+  padding: clamp(4rem, 9vw, 8rem) max(1rem, calc((100vw - var(--content)) / 2));
+  overflow: hidden;
+  background: linear-gradient(90deg, rgba(7, 10, 18, 0.96) 0%, rgba(7, 10, 18, 0.84) 45%, rgba(7, 10, 18, 0.4) 100%), url("/assets/project/feature-graphic.png") center / cover;
+  transform: translateX(-50%);
+}
+.listener-hero-visual::after { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(33, 14, 58, 0.3), transparent 55%); content: ""; }
+.listener-hero-visual .listener-hero-copy { position: relative; z-index: 1; }
+.listener-hero-visual h1 { max-width: 10ch; margin-bottom: 1.1rem; font-size: clamp(3.75rem, 8vw, 7.8rem); line-height: 0.88; }
+.listener-hero-visual h1 span { color: #d9b4ff; }
+.listener-hero-visual .hero-lede { max-width: 27rem; font-size: clamp(1.05rem, 1.8vw, 1.35rem); }
+.hero-phone.hero-phone-bleed { z-index: 1; align-self: end; justify-self: center; width: min(100%, 22rem); margin: -1rem -3rem -12rem 0; transform: rotate(5deg); }
+
+.station-bento-section { padding-block: 0 clamp(5rem, 10vw, 9rem); }
+.station-bento-heading { display: grid; grid-template-columns: minmax(0, 0.6fr) minmax(18rem, 1fr); gap: 2rem; align-items: end; margin-bottom: 2rem; }
+.station-bento-heading .eyebrow { grid-row: 1; margin: 0; }
+.station-bento-heading h2 { grid-row: 2; max-width: 11ch; margin: 0; font-size: clamp(2.5rem, 5vw, 5rem); line-height: 0.95; }
+.station-bento { display: grid; grid-template-columns: 1.3fr 1fr 0.9fr; grid-template-rows: 13rem 13rem; gap: 0.85rem; }
+.station-panel { position: relative; display: flex; min-height: 0; flex-direction: column; justify-content: flex-end; padding: clamp(1.2rem, 2.5vw, 2rem); overflow: hidden; border: 1px solid color-mix(in srgb, var(--station-color) 42%, var(--border)); border-radius: 1.5rem; background: linear-gradient(145deg, color-mix(in srgb, var(--station-color) 23%, var(--surface)), color-mix(in srgb, var(--station-color) 5%, var(--background))); }
+.station-panel::before { position: absolute; top: -4rem; right: -3rem; width: 12rem; aspect-ratio: 1; border: 1px solid color-mix(in srgb, var(--station-color) 35%, transparent); border-radius: 50%; box-shadow: 0 0 5rem color-mix(in srgb, var(--station-color) 28%, transparent); content: ""; }
+.station-panel > * { position: relative; z-index: 1; }
+.station-panel span { color: var(--station-color); font-size: 0.72rem; font-weight: 850; letter-spacing: 0.14em; }
+.station-panel h3 { margin: 0.45rem 0; font-size: clamp(1.3rem, 2.4vw, 2.2rem); line-height: 0.96; }
+.station-panel p { margin: 0; color: color-mix(in srgb, var(--text) 76%, var(--station-color)); font-size: 0.9rem; }
+.station-panel:nth-child(1) { grid-row: span 2; }
+.station-panel:nth-child(4) { grid-column: span 2; }
+
+.listener-moment { display: grid; grid-template-columns: minmax(15rem, 0.72fr) minmax(0, 1.28fr); gap: clamp(2rem, 7vw, 7rem); align-items: center; padding-block: clamp(4rem, 8vw, 8rem); border-top: 1px solid var(--border); }
+.moment-copy h2 { margin: 0.35rem 0 1rem; font-size: clamp(2.7rem, 5.5vw, 5.8rem); line-height: 0.9; }
+.moment-copy > p:last-child { max-width: 25rem; color: var(--muted); font-size: 1.05rem; }
+.moment-screens { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: end; gap: clamp(0.8rem, 3vw, 2.5rem); }
+.moment-screen { margin: 0; }
+.moment-screen img { display: block; width: 100%; border: 1px solid var(--border-strong); border-radius: 1.35rem; box-shadow: 0 2rem 4rem var(--shadow); }
+.moment-screen figcaption { margin-top: 0.8rem; color: var(--muted); font-size: 0.84rem; font-weight: 750; text-align: center; }
+.chat-screen { transform: translateY(2rem); }
+
+.listener-closing { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 2rem; min-height: 23rem; margin-block: clamp(4rem, 8vw, 7rem); padding: clamp(2rem, 6vw, 5rem); overflow: hidden; border: 1px solid color-mix(in srgb, var(--accent) 42%, var(--border)); border-radius: 1.75rem; background: linear-gradient(115deg, #48216f, #171f68 55%, #087f79); }
+.listener-closing > :not(.closing-watermark) { position: relative; z-index: 1; }
+.listener-closing h2 { max-width: 11ch; margin: 0.4rem 0 0.8rem; font-size: clamp(2.7rem, 5vw, 5.4rem); line-height: 0.92; }
+.listener-closing p:last-child { max-width: 31rem; margin: 0; color: rgba(255, 255, 255, 0.82); }
+.closing-watermark { position: absolute; right: -0.06em; bottom: -0.26em; color: rgba(255, 255, 255, 0.1); font-size: clamp(5rem, 15vw, 14rem); font-weight: 900; letter-spacing: -0.09em; line-height: 1; white-space: nowrap; }
+
+@media (max-width: 800px) {
+  .listener-hero.listener-hero-visual, .listener-moment { grid-template-columns: 1fr; }
+  .listener-hero.listener-hero-visual { min-height: 0; }
+  .station-bento { grid-template-columns: repeat(2, 1fr); grid-template-rows: auto; }
+  .station-panel { min-height: 13rem; }
+  .station-panel:nth-child(1), .station-panel:nth-child(4) { grid-column: span 2; grid-row: auto; }
+  .listener-closing { align-items: flex-start; flex-direction: column; }
+}
+
+@media (max-width: 560px) {
+  .listener-hero.listener-hero-visual { display: block; min-height: 43rem; padding-block: 3.2rem 0; background-position: 58% center; }
+  .hero-phone.hero-phone-bleed { width: min(72vw, 18rem); margin: 2rem -0.75rem -6rem auto; transform: rotate(4deg); }
+  .station-bento-heading { grid-template-columns: 1fr; }
+  .station-bento { grid-template-columns: 1fr; }
+  .station-panel, .station-panel:nth-child(1), .station-panel:nth-child(4) { grid-column: auto; min-height: 11rem; }
+  .moment-screens { gap: 0.75rem; }
+  .chat-screen { transform: translateY(1rem); }
+  .listener-closing { min-height: 28rem; }
+}
