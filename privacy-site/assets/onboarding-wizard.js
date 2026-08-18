@@ -25,7 +25,40 @@
     return controls[0].value.trim() !== '';
   });
 
-  if (profileComplete && !optInCard && !smokeCard) return;
+  if (profileComplete && !optInCard && !smokeCard) {
+    const collapseCard = (card, title, description) => {
+      if (!card || card.dataset.portalDisclosure === 'true') return;
+      const details = document.createElement('details');
+      details.className = 'portal-disclosure';
+      const summary = document.createElement('summary');
+      summary.innerHTML = `<span>${title}</span><small>${description}</small>`;
+      const content = document.createElement('div');
+      content.className = 'portal-disclosure-content';
+      while (card.firstChild) content.append(card.firstChild);
+      details.append(summary, content);
+      card.replaceChildren(details);
+      card.dataset.portalDisclosure = 'true';
+      card.classList.add('portal-collapsed-card');
+    };
+
+    const assignmentCard = [...twoColumn.children].find((card) =>
+      card !== profileCard && card.querySelector('h2')?.textContent.includes('focused testing work'),
+    );
+    if (assignmentCard) twoColumn.prepend(assignmentCard);
+    collapseCard(profileCard, 'Profile & Device', 'Complete — open only to update your testing coverage.');
+
+    const cardWithHeading = (heading) => [...document.querySelectorAll('.card')].find((card) =>
+      card.querySelector('h2')?.textContent.includes(heading),
+    );
+    collapseCard(cardWithHeading('Submit feedback for a focused task'), 'Report a result', 'Submit a focused result when you finish a task.');
+    collapseCard(document.querySelector('[data-live-chat]')?.closest('.card'), 'Private support', 'Open Live Chat with your tester-program coordinator.');
+    collapseCard(cardWithHeading('Withdrawal and tester-record requests'), 'Privacy and participation', 'Open withdrawal or private-record request controls.');
+    const workspaceStyles = document.createElement('style');
+    workspaceStyles.textContent = '.tester-workspace-ready .two{grid-template-columns:minmax(0,1.2fr) minmax(18rem,.8fr);align-items:start}.portal-collapsed-card{padding:0;overflow:hidden}.portal-disclosure{margin:0}.portal-disclosure>summary{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.75rem;align-items:center;cursor:pointer;padding:1.1rem 1.2rem;color:var(--text);list-style:none;font-weight:850}.portal-disclosure>summary::-webkit-details-marker{display:none}.portal-disclosure>summary::after{content:"+";grid-column:2;grid-row:1;color:var(--teal);font-size:1.25rem}.portal-disclosure[open]>summary{border-bottom:1px solid var(--line)}.portal-disclosure[open]>summary::after{content:"–"}.portal-disclosure>summary small{grid-column:1;color:var(--muted);font-weight:500}.portal-disclosure-content{padding:0 1.2rem 1.2rem}.portal-disclosure-content>.eyebrow,.portal-disclosure-content>h2,.portal-disclosure-content>h3{display:none}.portal-disclosure-content>p:first-of-type{margin-top:0}@media(max-width:720px){.tester-workspace-ready .two{grid-template-columns:1fr}.portal-disclosure>summary{grid-template-columns:minmax(0,1fr) auto}.portal-disclosure>summary small{grid-column:1}}';
+    document.head.append(workspaceStyles);
+    document.documentElement.classList.add('tester-workspace-ready');
+    return;
+  }
 
   const overlay = document.createElement('div');
   overlay.className = 'onboarding-wizard-overlay';
