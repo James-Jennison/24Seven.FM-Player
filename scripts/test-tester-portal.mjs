@@ -68,7 +68,10 @@ assert(portal.includes("portalVerifyTurnstile($turnstileToken"), "Turnstile must
 assert(portal.includes("We could not send a sign-in link. Please try again later."), "Portal link requests must report a failed transport instead of claiming delivery.");
 assert(portal.includes("DELETE FROM tester_portal_tokens WHERE id = ?"), "A failed portal-link delivery must remove its unusable token.");
 assert(portal.includes("$optInAction"), "Google Play opt-in action must be rendered after the profile form.");
-assert(portal.includes("Next step after saving"), "Google Play opt-in must explain that profile details are saved first.");
+assert(portal.includes("After finishing Profile &amp; Device"), "Google Play installation must explain that Profile & Device comes first.");
+assert(portal.includes('id="intake-profile"') && portal.includes('Finish your tester profile'), "Tester profile completion must have a clear, addressable destination.");
+assert(portal.includes('Finish Profile &amp; Continue to Install') && wizard.includes('Finish Profile & Continue to Install'), "Profile completion must name the next installation step in both fallback and guided flows.");
+assert(portal.includes('Open Google Play to install Player') && portal.includes('Install the Player from Google Play'), "The first install action must be explicit and reachable after Profile & Device.");
 assert(portal.includes("function portalAdminPreviewTesterId"), "The coordinator must have an authenticated tester-view preview path.");
 assert(portal.includes("($_SESSION['authenticated'] ?? false) === true"), "Tester previews must require the coordinator session.");
 assert(portal.includes("Tester previews are read-only."), "Tester previews must reject state-changing requests.");

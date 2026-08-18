@@ -36,7 +36,7 @@
   wizard.className = 'onboarding-wizard';
   const heading = document.createElement('header');
   heading.className = 'onboarding-wizard-header';
-  heading.innerHTML = '<p class="eyebrow">24Seven.FM Player · Closed Alpha</p><h2>Finish setting up your tester profile</h2><p class="muted">Your dashboard will unlock after the onboarding steps are complete.</p>';
+  heading.innerHTML = '<p class="eyebrow">24Seven.FM Player · Closed Alpha</p><h2>Finish Profile & Device to start testing</h2><p class="muted">Complete these two screens, then we will take you directly to Google Play to install the Player and confirm the short first-use check.</p>';
   const rail = document.createElement('nav');
   rail.className = 'onboarding-wizard-rail';
   rail.setAttribute('aria-label', 'Onboarding progress');
@@ -77,7 +77,7 @@
     destination.append(child);
   }
   if (saveButton) {
-    saveButton.textContent = 'Save and continue →';
+    saveButton.textContent = 'Finish Profile & Continue to Install →';
     coverageFields.append(saveButton);
   }
   if (formContent !== form) formContent.remove();
