@@ -63,6 +63,7 @@ assert(wizard.includes("Next →") && wizard.includes("← Back"), "The onboardi
 assert(!wizard.includes("disabled = preview"), "Coordinator previews must allow read-only navigation through onboarding pages.");
 assert(wizard.includes("form.querySelector(':scope > fieldset') ?? form") && wizard.includes("draftFields") && wizard.includes("coverageFields"), "The onboarding wizard must split a preview-wrapped profile into separate intake and device/coverage cards.");
 assert(wizard.includes("readOnlyPreview") && wizard.includes("draftFields.disabled = true") && wizard.includes("coverageFields.disabled = true"), "Splitting coordinator previews must preserve their read-only field controls.");
+assert(wizard.indexOf("if (profileComplete && !optInCard && !smokeCard) return;") < wizard.indexOf("document.body.append(overlay);"), "Completed testers must bypass the onboarding modal before it is created.");
 assert(portal.includes("TESTER_PORTAL_TURNSTILE_ACTION"), "Magic-link requests must be protected by Turnstile.");
 assert(portal.includes("portalVerifyTurnstile($turnstileToken"), "Turnstile must be verified before a magic link is sent.");
 assert(portal.includes("We could not send a sign-in link. Please try again later."), "Portal link requests must report a failed transport instead of claiming delivery.");

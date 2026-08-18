@@ -25,6 +25,8 @@
     return controls[0].value.trim() !== '';
   });
 
+  if (profileComplete && !optInCard && !smokeCard) return;
+
   const overlay = document.createElement('div');
   overlay.className = 'onboarding-wizard-overlay';
   overlay.setAttribute('role', 'dialog');
@@ -86,7 +88,6 @@
   form.append(draft, coverage);
 
   const stagePanel = (id, label, element, complete = false) => ({ id, label, element, complete });
-  if (profileComplete && !optInCard && !smokeCard) return;
   const stages = [
     stagePanel('intake', 'Intake profile', form),
     stagePanel('device', 'Device', form),
