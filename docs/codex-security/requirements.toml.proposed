@@ -1,0 +1,52 @@
+# RETIRED HISTORICAL ARTIFACT — DO NOT INSTALL.
+# This file preserves the failed 2026-08-13 proposal for auditability. It is not
+# an active configuration source and must not replace the healthy managed
+# /etc/codex/requirements.toml baseline.
+
+allowed_approval_policies = ["on-request", "never"]
+allowed_approvals_reviewers = ["user"]
+default_permissions = "owner_local_development"
+
+[allowed_permission_profiles]
+":read-only" = true
+":workspace" = true
+owner_local_development = true
+# Keep this available only for the owner's deliberate --yolo invocation.
+":danger-full-access" = true
+
+[permissions.owner_local_development]
+description = "Normal workspace editing with policy and credential paths protected."
+extends = ":workspace"
+
+[permissions.owner_local_development.filesystem]
+glob_scan_max_depth = 16
+":minimal" = "read"
+"~/.ssh" = "read"
+"~/.codex/auth.json" = "deny"
+"~/.codex/history.jsonl" = "deny"
+"~/.codex/AGENTS.md" = "read"
+"~/.codex/config.toml" = "read"
+"~/.codex/rules" = "read"
+"/mnt/faststorage" = "write"
+
+[permissions.owner_local_development.filesystem.":workspace_roots"]
+"." = "write"
+"AGENTS.md" = "read"
+".codex" = "read"
+"**/*.env" = "deny"
+
+[apps.gmail]
+# System-wide prohibition; applies to reads and writes.
+enabled = false
+
+[rules]
+prefix_rules = [
+  { pattern = [{ token = "git" }, { token = "reset" }, { token = "--hard" }], decision = "forbidden", justification = "Destructive reset requires a named owner recovery authorization." },
+  { pattern = [{ token = "git" }, { token = "clean" }, { token = "-f" }], decision = "forbidden", justification = "Destructive clean requires a named owner recovery authorization." },
+  { pattern = [{ token = "git" }, { token = "push" }], decision = "prompt", justification = "Remote mutation requires fresh owner approval." },
+  { pattern = [{ token = "ssh" }], decision = "prompt", justification = "Remote shell requires fresh owner approval." },
+  { pattern = [{ token = "scp" }], decision = "prompt", justification = "Remote transfer requires fresh owner approval." },
+  { pattern = [{ token = "rsync" }], decision = "prompt", justification = "Remote synchronization requires fresh owner approval." },
+  { pattern = [{ token = "systemctl" }], decision = "prompt", justification = "Service mutation requires fresh owner approval." },
+  { pattern = [{ token = "codex" }, { token = "update" }], decision = "prompt", justification = "Codex update requires fresh owner approval." },
+]

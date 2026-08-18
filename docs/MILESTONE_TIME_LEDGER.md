@@ -43,6 +43,32 @@ does not alter the status, numbering, or cumulative totals of the canonical Andr
 | Master M15 — Player trusted-origin hardening | Complete | `July 22, 2026 at 3:59:38 PM PDT (UTC−07:00)` | 1–2 active h | Completed `July 22, 2026 at 4:24:19 PM PDT (UTC−07:00)` | GPT-5; current default reasoning strength, unchanged | 0.41 h | 0.00 h | 0.00 h |
 | Master M16A — Cloudflare Full (Strict) hardening | Complete | `July 22, 2026 at 4:32:50 PM PDT (UTC−07:00)` | 0.25–0.5 active h | Completed `July 22, 2026 at 4:36:32 PM PDT (UTC−07:00)` | GPT-5; current default reasoning strength, unchanged | 0.03 h | 0.00 h | 0.03 h |
 
+## Codex operating-environment hardening milestones
+
+| Program milestone | Status | Started | Forecast | Expected completion | Model and reasoning | Active | Automated wait | User-blocked |
+| --- | --- | --- | --- | --- | --- | ---: | ---: | ---: |
+| Owner hardening — Codex operating environment | Complete | `August 13, 2026 at 2:09:22 PM PDT (UTC−07:00)` | 2–4 active h | Completed `August 13, 2026 at 2:40:11 PM PDT (UTC−07:00)` | GPT-5.6 Terra, high reasoning | 0.51 h | 0.00 h | 0.00 h |
+| Owner hardening — system-wide reconciliation | Complete | First auditable local mutation `August 13, 2026 at 4:16:16 PM PDT (UTC−07:00)` | 0.25–0.5 active h | Completed `August 13, 2026 at 4:57:06 PM PDT (UTC−07:00)` | GPT-5.6 Terra, high reasoning | Unknown — only the prior 0.11 h checkpoint was independently measured | 0.00 h measured | Unknown — user-response gaps were not measured |
+
+### Owner hardening — Codex operating environment
+
+- **Objective:** Convert active system-wide and Player Codex behavioral rules into defense-in-depth guardrails, with owner-managed enforcement proposals for controls that cannot be activated locally.
+- **Authorization and start:** Authorized by the owner and started `August 13, 2026 at 2:09:22 PM PDT (UTC−07:00)`.
+- **Model, reasoning strength, and original forecast:** GPT-5.6 Terra with high reasoning; 2–4 active hours; expected completion by `August 13, 2026 at 6:09:22 PM PDT (UTC−07:00)` if uninterrupted.
+- **Scope boundary:** User-level and repository Codex policy/configuration, validation, documentation, and a local commit only. Gmail, the prohibited Player in-app-browser path, production, SSH, deployments, external-service changes, package installation, Codex updates, pushes, releases, and secrets were excluded.
+- **Completion:** Completed `August 13, 2026 at 2:40:11 PM PDT (UTC−07:00)`. Counted active time 0.51 h; elapsed time 0.51 h; automated wait 0.00 h; user-blocked exclusion 0.00 h. This is 1.49–3.49 h under the original 2–4 h forecast because the installed CLI already supported the required local controls and the scope did not include external validation.
+- **Lessons:** Project config can disable the verified Gmail app and built-in browser feature without disabling the separate Computer Use MCP. Managed requirements remain necessary to prevent deliberate local/CLI policy override. Prefix rules do not prove arbitrary shell-wrapper or remote-shell semantics.
+- **Cumulative program total:** 0.51 h active; 0.51 h elapsed; 0.00 h excluded.
+
+### Owner hardening — system-wide reconciliation
+
+- **Objective:** Reconcile the authorized system-wide Codex hardening and canonical SSH alias migration while preserving the healthy managed Gmail, `:workspace`, `:danger-full-access`, `on-request`, and deliberate `--yolo` baseline.
+- **Authorization and measured start:** The owner authorized continuation. The first auditable local mutation was `August 13, 2026 at 4:16:16 PM PDT (UTC−07:00)`; earlier read-only inspection was not separately measured and is excluded rather than estimated.
+- **Model, reasoning strength, and original forecast:** GPT-5.6 Terra with high reasoning; 0.25–0.5 active hours.
+- **Measured intervals:** The prior checkpoint measured 0.11 active hours through `4:23:06 PM PDT`; later active and user-blocked intervals were not independently timestamped and are recorded as **Unknown**, not estimated. Automated wait measured 0.00 h.
+- **Completion and evidence:** Completed `August 13, 2026 at 4:57:06 PM PDT (UTC−07:00)`. The active managed requirements preserve the healthy full local-development baseline and disable Gmail. The system-wide audit passed 32 checks with 0 failures; the Player audit passed 36 checks with 0 warnings and 0 failures; and the Relay local SSH validator passed without an external connection. The old mail alias is explicitly documented as a deprecated compatibility alias and has identical material effective SSH directives to `mail-vm-admin`.
+- **Variance and lessons:** Exact total active and user-blocked time is Unknown because the continuation intervals were not independently recorded. Do not infer a restrictive filesystem profile from a policy-hardening objective; validate the active managed requirements and actual capability baseline before changing permission architecture.
+
 ### Master M12 — Player local migration implementation
 
 - **Objective:** Reuse the existing Jekyll project portal while implementing the owner-approved dedicated-domain

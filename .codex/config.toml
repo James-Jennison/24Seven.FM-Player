@@ -1,0 +1,6 @@
+# Trusted Player project controls. These tighten the user-level policy only.
+approval_policy = "on-request"
+
+[apps.gmail]
+# Verified installed app identifier; applies to reads and writes.
+enabled = false
