@@ -57,7 +57,7 @@ assert(portal.includes("profile_missing") && portal.includes("Complete the requi
 assert(portal.includes("portalChoices('station_accounts', PORTAL_STATIONS + ['none' => 'None'])"), "Optional station access must not block a tester from saving their profile.");
 assert(portal.includes("required-mark") && portal.includes("first.focus({preventScroll:true})"), "The tester portal must mark required profile fields and focus the first missing field.");
 assert(portal.includes('/assets/onboarding-profile-form.js'), "Tester profile requirements and draft recovery must use the CSP-safe external form asset.");
-assert(portal.includes('/assets/onboarding-wizard.js?v=wizard-card-split-2'), "Tester onboarding must load the current cache-busted wizard asset.");
+assert(portal.includes("hash_file('sha256', $wizardAsset)") && portal.includes('/assets/onboarding-wizard.js?v='), "Tester onboarding must derive its wizard asset version from the deployed content.");
 assert(portal.includes('/assets/onboarding-wizard.css'), "Tester onboarding must load the wizard presentation asset.");
 assert(wizard.includes("Next →") && wizard.includes("← Back"), "The onboarding wizard must provide forward and back controls.");
 assert(!wizard.includes("disabled = preview"), "Coordinator previews must allow read-only navigation through onboarding pages.");
