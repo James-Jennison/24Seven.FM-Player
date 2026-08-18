@@ -138,6 +138,12 @@ try {
     "/product-testing/",
     "/roadmap/",
     "/resources/",
+    "/dev/",
+    "/dev/development/",
+    "/dev/testing/",
+    "/dev/tester-workspace/",
+    "/dev/roadmap/",
+    "/dev/resources/",
     "/privacy/",
     "/404.html",
   ];
@@ -155,7 +161,7 @@ try {
       deviceScaleFactor: 1,
       mobile: viewport.width < 600,
     });
-    const testedRoutes = viewport.width <= 390 ? routes : ["/", "/product-testing/", "/privacy/"];
+    const testedRoutes = viewport.width <= 390 ? routes : ["/", "/product-testing/", "/privacy/", "/dev/", "/dev/tester-workspace/"];
     for (const route of testedRoutes) {
       await navigate(route);
       await evaluate("window.scrollTo(0, document.documentElement.scrollHeight)");
@@ -166,14 +172,15 @@ try {
         overflow: document.documentElement.scrollWidth > window.innerWidth + 1,
         missingImages: [...document.images].filter((image) => image.getAttribute('src') && (!image.complete || image.naturalWidth === 0)).map((image) => image.src),
         canonical: document.querySelector('link[rel="canonical"]')?.href ?? '',
-        navigation: document.querySelectorAll('#project-navigation a').length
+        navigation: document.querySelectorAll('#project-navigation a').length,
+        expectedNavigation: document.body.classList.contains('developer-workspace') ? 5 : 3
       }))()`);
       assert(state.title, `${viewport.label} ${route} has no title`);
       assert(state.h1 === 1, `${viewport.label} ${route} has ${state.h1} h1 elements`);
       assert(!state.overflow, `${viewport.label} ${route} has horizontal overflow`);
       assert(state.missingImages.length === 0, `${viewport.label} ${route} has missing images: ${state.missingImages.join(", ")}`);
       assert(state.canonical.startsWith("https://player.jamesjennison.net/"), `${route} has the wrong canonical URL`);
-      assert(state.navigation === 8, `${route} does not expose all eight primary destinations`);
+      assert(state.navigation === state.expectedNavigation, `${route} exposes the wrong workspace navigation`);
     }
   }
 
@@ -195,17 +202,14 @@ try {
     document.querySelector('.site-explorer-toggle').click();
     const explorerOpen = document.querySelector('#site-explorer').open;
     document.querySelector('.site-explorer-close').click();
-    return { before, after, menuOpen, explorerOpen };
+    document.querySelector('[data-lightbox]').click();
+    const lightboxOpen = document.querySelector('.media-dialog').open;
+    return { before, after, menuOpen, explorerOpen, lightboxOpen };
   })()`);
   assert(homeInteractions.before !== homeInteractions.after, "Theme control did not change theme");
   assert(homeInteractions.menuOpen === "true", "Mobile navigation did not open");
   assert(homeInteractions.explorerOpen, "Site explorer did not open");
-  await navigate("/features/");
-  const lightboxOpen = await evaluate(`(() => {
-    document.querySelector('[data-lightbox]').click();
-    return document.querySelector('.media-dialog').open;
-  })()`);
-  assert(lightboxOpen, "Screenshot dialog did not open");
+  assert(homeInteractions.lightboxOpen, "Screenshot dialog did not open");
   await send("Input.dispatchKeyEvent", { type: "keyDown", key: "Escape", code: "Escape" });
   await send("Input.dispatchKeyEvent", { type: "keyUp", key: "Escape", code: "Escape" });
   await delay(50);
@@ -241,7 +245,7 @@ try {
   await send("Input.dispatchKeyEvent", { type: "keyDown", key: "Escape", code: "Escape" });
   await send("Input.dispatchKeyEvent", { type: "keyUp", key: "Escape", code: "Escape" });
 
-  await navigate("/product-testing/");
+  await navigate("/dev/tester-workspace/");
   const testingState = await evaluate(`(() => {
     const cases = document.querySelectorAll('.test-session-grid article[id^="pt-"]');
     const first = document.querySelector('.test-check-button');
@@ -252,7 +256,7 @@ try {
   assert(testingState.checked === "true", "Tester progress control did not update");
   assert(testingState.stored, "Tester progress was not stored locally");
 
-  await navigate("/product-testing/?task=TT-02");
+  await navigate("/dev/tester-workspace/?task=TT-02");
   const taskFilterState = await evaluate(`(() => ({
     taskCards: document.querySelectorAll('[data-task-card]').length,
     summary: document.querySelector('.task-summary-grid')?.textContent ?? '',
@@ -267,7 +271,7 @@ try {
   assert(taskFilterState.visibleCases.join(",") === "pt-02,pt-03", `TT-02 exposed the wrong PT cases: ${taskFilterState.visibleCases.join(",")}`);
   assert(taskFilterState.taskNote.includes("one result for each"), "Task filter did not explain per-case reporting");
 
-  await navigate("/resources/");
+  await navigate("/dev/resources/");
   const resourceState = await evaluate(`(() => {
     const field = document.querySelector('[data-resource-search]');
     field.value = 'architecture';
@@ -287,11 +291,11 @@ try {
     field.dispatchEvent(new Event('input', { bubbles: true }));
     return {
       visible: [...document.querySelectorAll('[data-privacy-document] > section')].filter((item) => !item.hidden).length,
-      stationDeletionGuidance: document.body.textContent.includes('applicable station’s Contact/Feedback system')
+      stationDeletionContact: document.body.textContent.includes('morg@24seven.fm')
     };
   })()`);
   assert(privacyState.visible > 0, "Privacy search returned no session results");
-  assert(privacyState.stationDeletionGuidance, "The approved station deletion guidance is missing");
+  assert(privacyState.stationDeletionContact, "The approved station deletion contact is missing");
 
   await send("Emulation.setEmulatedMedia", {
     media: "screen",
@@ -322,12 +326,12 @@ try {
   const noScript = await evaluate(`(() => ({
     h1: document.querySelectorAll('h1').length,
     navigation: document.querySelectorAll('#project-navigation a').length,
-    projectCards: document.querySelectorAll('.brief-grid a').length
+    listenerCards: document.querySelectorAll('.listener-feature-grid article').length
   }))()`);
-  assert(noScript.h1 === 1 && noScript.navigation === 8 && noScript.projectCards === 4, "No-JavaScript fallback lost essential content");
+  assert(noScript.h1 === 1 && noScript.navigation === 3 && noScript.listenerCards === 3, "No-JavaScript fallback lost essential content");
 
   assert(browserErrors.length === 0, `Browser errors: ${browserErrors.join(" | ")}`);
-  console.log("Validated five responsive viewports, nine routes, keyboard and pointer interactions, local-only state, reduced motion, forced colors, and no-JavaScript fallback.");
+  console.log("Validated five responsive viewports, consumer and developer routes, keyboard and pointer interactions, local-only state, reduced motion, forced colors, and no-JavaScript fallback.");
 } finally {
   if (socket?.readyState === WebSocket.OPEN) socket.close();
   if (chrome.exitCode === null) {

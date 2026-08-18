@@ -102,6 +102,12 @@ try {
     "/product-testing/",
     "/roadmap/",
     "/resources/",
+    "/dev/",
+    "/dev/development/",
+    "/dev/testing/",
+    "/dev/tester-workspace/",
+    "/dev/roadmap/",
+    "/dev/resources/",
     "/privacy/",
     "/404.html",
   ];
@@ -118,7 +124,7 @@ try {
       method: "POST",
       body: JSON.stringify({ width, height, x: 0, y: 0 }),
     });
-    const testedRoutes = width === 500 ? routes : ["/", "/product-testing/", "/privacy/"];
+    const testedRoutes = width === 500 ? routes : ["/", "/product-testing/", "/privacy/", "/dev/", "/dev/tester-workspace/"];
     for (const route of testedRoutes) {
       await request(`/session/${sessionId}/url`, {
         method: "POST",
@@ -158,6 +164,7 @@ try {
               title: document.title,
               h1: document.querySelectorAll("h1").length,
               navigation: document.querySelectorAll("#project-navigation a").length,
+              expectedNavigation: document.body.classList.contains("developer-workspace") ? 5 : 3,
               clientWidth: document.documentElement.clientWidth,
               scrollWidth: document.documentElement.scrollWidth,
               missingImages: [...document.images].filter((image) => image.getAttribute("src") && (!image.complete || image.naturalWidth === 0)).map((image) => image.src),
@@ -168,7 +175,7 @@ try {
         }),
       });
       results.push({ width, height, route, ...result });
-      if (!result.title || result.h1 !== 1 || result.navigation !== 8) {
+      if (!result.title || result.h1 !== 1 || result.navigation !== result.expectedNavigation) {
         failures.push(`${width}px ${route} is missing core content`);
       }
       if (result.scrollWidth > result.clientWidth) {

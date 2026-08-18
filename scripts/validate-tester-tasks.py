@@ -12,7 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 REGISTRY = ROOT / "privacy-site/_data/tester_tasks.json"
-CATALOG = ROOT / "privacy-site/product-testing/index.html"
+CATALOG = ROOT / "privacy-site/dev/tester-workspace/index.html"
 PT_PATTERN = re.compile(r'<article(?:\s+[^>]*?)?\sid="(pt-\d{2})"', re.IGNORECASE)
 EXPECTED_PT_IDS = {f"PT-{number:02d}" for number in range(1, 29)} | {f"PT-{number:02d}" for number in range(33, 39)}
 EXPECTED_FUTURE_PT_IDS = {"PT-22", "PT-26", "PT-27", "PT-28", "PT-33", "PT-34", "PT-36", "PT-37", "PT-38"}

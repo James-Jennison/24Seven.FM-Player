@@ -1,0 +1,21 @@
+---
+layout: developer
+title: Developer workspace · 24Seven.FM Player
+description: Engineering, testing, roadmap, resources, and assigned-tester reference for the 24Seven.FM Player.
+permalink: /dev/
+section: developer-home
+robots: noindex, nofollow
+---
+<section class="page-hero developer-home">
+  <div>
+    <p class="eyebrow">Developer workspace</p>
+    <h1>Build notes, not the listening pitch.</h1>
+    <p class="page-lede">The public site is for listeners. This separate workspace retains the project’s engineering record, quality evidence, roadmap, resources, and focused tester material.</p>
+    <div class="actions"><a class="button primary" href="{{ '/dev/development/' | relative_url }}">Open engineering</a><a class="button secondary" href="{{ '/' | relative_url }}">Back to public site</a></div>
+  </div>
+</section>
+<section class="section workspace-grid" aria-label="Developer workspace areas">
+  {% for item in site.data.project.developer_navigation %}
+  <a href="{{ item.path | relative_url }}"><span>{{ item.label }}</span><strong>{{ item.description }}</strong><b>Open →</b></a>
+  {% endfor %}
+</section>

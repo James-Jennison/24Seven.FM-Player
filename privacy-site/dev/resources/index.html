@@ -1,0 +1,97 @@
+---
+layout: developer
+title: Project resources · 24Seven.FM Player
+description: Browse the architecture, milestone evidence, testing guides, release readiness, privacy, and contribution resources for 24Seven.FM Player.
+permalink: /dev/resources/
+section: resources
+robots: noindex, nofollow
+---
+<section class="page-hero">
+  <div>
+    <p class="eyebrow">Documentation index</p>
+    <h1>Project resources</h1>
+    <p class="page-lede">The repository preserves the reasoning behind the implementation—not just the resulting source. This curated index leads from product behavior to architecture, validation evidence, and safe ways to participate.</p>
+  </div>
+  <aside class="page-summary" aria-label="Repository summary">
+    <span>Public project</span>
+    <strong>Source + evidence</strong>
+    <dl>
+      <div><dt>License</dt><dd>Apache-2.0</dd></div>
+      <div><dt>Module</dt><dd>1 app</dd></div>
+      <div><dt>Backend</dt><dd>None</dd></div>
+    </dl>
+  </aside>
+</section>
+
+<nav class="section-jump" aria-label="On this page">
+  <a href="#orientation">Orientation</a>
+  <a href="#station-certification">Stations</a>
+  <a href="#readiness">Readiness</a>
+  <a href="#participation">Participation</a>
+</nav>
+
+<div class="catalog-toolbar resource-catalog-toolbar" data-resource-catalog aria-label="Resource catalog controls">
+  <label for="resource-catalog-search">Search resources</label>
+  <input id="resource-catalog-search" type="search" placeholder="Search documents, topics, or milestones" autocomplete="off" data-resource-search>
+  <div class="catalog-filters" role="group" aria-label="Filter resources">
+    <button type="button" data-resource-filter="all" aria-pressed="true">All</button>
+    <button type="button" data-resource-filter="orientation" aria-pressed="false">Orientation</button>
+    <button type="button" data-resource-filter="stations" aria-pressed="false">Stations</button>
+    <button type="button" data-resource-filter="readiness" aria-pressed="false">Readiness</button>
+    <button type="button" data-resource-filter="participation" aria-pressed="false">Participation</button>
+  </div>
+  <p class="catalog-visible-count" data-resource-visible-count role="status" aria-live="polite">20 resources visible</p>
+</div>
+<p class="catalog-empty-state" data-resource-empty-state hidden>No resources match the current search and filter.</p>
+
+<section class="content-section resource-section" id="orientation" data-resource-category="orientation">
+  <div class="content-intro">
+    <p class="eyebrow">Start here</p>
+    <h2>Project orientation</h2>
+  </div>
+  <div class="resource-grid">
+    <a href="{{ site.github_url }}"><span>Repository</span><strong>Source, README, and issue tracker</strong><small>The canonical project checkout and public collaboration surface.</small></a>
+    <a href="{{ site.github_url }}/blob/main/docs/architecture.md"><span>Architecture</span><strong>Dependency direction and feature boundaries</strong><small>Compose, ViewModels, domain contracts, data adapters, playback, and station scope.</small></a>
+    <a href="{{ site.github_url }}/blob/main/docs/IMPLEMENTATION_PLAN.md"><span>Planning records</span><strong>Milestones and historical acceptance gates</strong><small>The M01–M60 delivery model and its dated approval boundaries.</small></a>
+    <a href="{{ site.github_url }}/blob/main/CONTRIBUTING.md"><span>Contributing</span><strong>How to make a safe focused change</strong><small>Branch, architecture, testing, privacy, and pull-request expectations.</small></a>
+    <a href="{{ site.github_url }}/blob/main/docs/project-portal-validation.md"><span>Portal evidence</span><strong>Build, link, responsive, and visual validation</strong><small>The original verification record and repository screenshots for this project portal.</small></a>
+  </div>
+</section>
+
+<section class="content-section resource-section" id="station-certification" data-resource-category="stations">
+  <div class="content-intro"><p class="eyebrow">M17–M21</p><h2>Station certification</h2></div>
+  <div class="document-list station-docs">
+    <a href="{{ site.github_url }}/blob/main/docs/m18-sst-certification.md"><strong>StreamingSoundtracks.com</strong><span>M17 · public, authenticated, VIP, request-message, Favorites, and Chat evidence</span></a>
+    <a href="{{ site.github_url }}/blob/main/docs/m19-1980s-certification.md"><strong>1980s.FM</strong><span>M18 · independent account and complete supported workflow evidence</span></a>
+    <a href="{{ site.github_url }}/blob/main/docs/m20-adagio-certification.md"><strong>Adagio.FM</strong><span>M19 · classical metadata and authenticated workflow evidence</span></a>
+    <a href="{{ site.github_url }}/blob/main/docs/m21-death-certification.md"><strong>Death.FM</strong><span>M20 · sparse metadata, compact Queue, RIP, and authenticated evidence</span></a>
+    <a href="{{ site.github_url }}/blob/main/docs/m22-entranced-certification.md"><strong>Entranced.FM</strong><span>M21 · extended Queue and legacy ICY behavior evidence</span></a>
+  </div>
+</section>
+
+<section class="content-section resource-section" id="readiness" data-resource-category="readiness">
+  <div class="content-intro"><p class="eyebrow">M28–M45</p><h2>Testing, Play readiness, and release operations</h2></div>
+  <div class="document-list">
+    <a href="{{ site.github_url }}/blob/main/docs/m23-release-candidate-audit.md"><strong>Release-candidate audit</strong><span>Manifest, dependency, backup, signing, certificate, and 16 KB evidence</span></a>
+    <a href="{{ site.github_url }}/blob/main/docs/m23-device-compatibility.md"><strong>Device compatibility</strong><span>API, phone, Fold, Tablet, Razr, and accessibility matrix</span></a>
+    <a href="{{ site.github_url }}/blob/main/docs/m23-performance-validation.md"><strong>Performance validation</strong><span>Startup diagnostics and 1,500-track Favorites behavior</span></a>
+    <a href="{{ site.github_url }}/blob/main/docs/m33-request-transaction-validation.md"><strong>Request transaction validation</strong><span>Fresh station, account, Queue, readiness, identity, duplicate-suppression, and Razr evidence</span></a>
+    <a href="{{ site.github_url }}/blob/main/docs/m26-diagnostics-validation.md"><strong>In-app diagnostics validation</strong><span>Fixed allowlist, redaction contract, Android copy/share, privacy review, and physical-Razr evidence</span></a>
+    <a href="{{ site.github_url }}/blob/main/docs/releases/0.1.0-alpha01.md"><strong>Alpha release notes</strong><span>Candidate highlights, traffic behavior, and known limitations</span></a>
+  </div>
+</section>
+
+<section class="content-section resource-section" id="participation" data-resource-category="participation">
+  <div class="content-intro"><p class="eyebrow">Test and participate</p><h2>Guides and community</h2></div>
+  <div class="resource-grid">
+    <a href="{{ '/dev/tester-workspace/' | relative_url }}"><span>Tester program</span><strong>Tester workspace</strong><small>Assigned work, safety boundaries, and structured result submission.</small></a>
+    <a href="{{ site.github_url }}/blob/main/docs/ubuntu-cli-setup.md"><span>Environment</span><strong>Ubuntu CLI setup</strong><small>Local Android tooling and repository validation setup.</small></a>
+    <a href="{{ site.github_url }}/issues"><span>Feedback</span><strong>Issues and bug reports</strong><small>Report reproducible behavior without credentials or private captures.</small></a>
+    <a href="{{ '/dev/roadmap/' | relative_url }}"><span>Tracking</span><strong>Curated project roadmap</strong><small>Verified achievements, open gates, dependencies, and bounded future scope.</small></a>
+  </div>
+</section>
+
+<section class="cta" aria-labelledby="privacy-resource-title">
+  <div><p class="eyebrow">User trust</p><h2 id="privacy-resource-title">Privacy and participation terms</h2><p>The public privacy notice is generated from the same canonical document shipped in the app. Community participation terms and moderation boundaries remain separately inspectable.</p></div>
+  <div class="actions"><a class="button primary" href="{{ '/privacy/' | relative_url }}">Privacy notice</a><a class="button secondary" href="{{ site.github_url }}/blob/main/docs/terms-of-participation.md">Terms of Participation</a></div>
+</section>

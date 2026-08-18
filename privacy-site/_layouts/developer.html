@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#090c15">
+    <meta name="color-scheme" content="dark light">
+    {% include metadata.html %}
+    <title>{{ page.title | default: site.title | escape }}</title>
+    <link rel="icon" type="image/png" href="{{ '/assets/project/app-icon.png' | relative_url }}">
+    <link rel="manifest" href="{{ '/site.webmanifest' | relative_url }}">
+    {% assign asset_version = site.time | date: '%s' %}
+    <script src="{{ '/assets/theme-init.js' | relative_url }}?v={{ asset_version }}"></script>
+    <link rel="stylesheet" href="{{ '/assets/project.css' | relative_url }}?v={{ asset_version }}">
+  </head>
+  <body class="project-page developer-workspace" data-page-section="{{ page.section }}">
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <div class="ambient-stage" aria-hidden="true"><span></span><span></span></div>
+    <div class="scroll-progress" aria-hidden="true"><span></span></div>
+    <header class="project-header" data-site-header>
+      <a class="project-brand" href="{{ '/dev/' | relative_url }}" aria-label="24Seven.FM Player developer workspace">
+        <img src="{{ '/assets/project/app-icon.png' | relative_url }}" alt="" width="44" height="44">
+        <span><strong>24Seven.FM Player</strong><small>Developer workspace</small></span>
+      </a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="project-navigation"><span class="nav-toggle-icon" aria-hidden="true"><i></i><i></i><i></i></span><span>Menu</span></button>
+      <nav id="project-navigation" aria-label="Developer workspace navigation">
+        {% for item in site.data.project.developer_navigation %}
+        <a{% if page.section == item.section %} aria-current="page"{% endif %} href="{{ item.path | relative_url }}">{{ item.label }}</a>
+        {% endfor %}
+      </nav>
+      <div class="header-actions">
+        <a class="header-utility" href="https://player.jamesjennison.net/tester-portal.php">Tester Sign In <span aria-hidden="true">↗</span></a>
+        <button class="theme-toggle" type="button" aria-label="Switch color theme"><span class="theme-toggle-icon" aria-hidden="true">◐</span><span class="theme-toggle-label">Theme</span></button>
+      </div>
+    </header>
+    <main id="main-content">{{ content }}</main>
+    <footer class="project-footer">
+      <div><strong>24Seven.FM Player developer workspace</strong><p>Engineering, validation, roadmap, and assigned-tester reference for the independently developed Player.</p></div>
+      <nav aria-label="Footer navigation"><a href="{{ '/' | relative_url }}">Public site</a><a href="{{ '/privacy/' | relative_url }}">Privacy notice</a><a href="{{ '/product-testing/' | relative_url }}">Closed Alpha application</a><a href="https://player.jamesjennison.net/tester-portal.php">Developer / Tester Sign In <span aria-hidden="true">↗</span></a><a href="{{ site.github_url }}">GitHub <span aria-hidden="true">↗</span></a></nav>
+    </footer>
+    <button class="back-to-top" type="button" aria-label="Back to top" title="Back to top"><span aria-hidden="true">↑</span></button>
+    <div class="site-toast" role="status" aria-live="polite" aria-atomic="true"></div>
+    <dialog class="media-dialog" aria-labelledby="media-dialog-title"><button class="media-dialog-close" type="button" aria-label="Close image preview">×</button><img alt=""><p id="media-dialog-title"></p></dialog>
+    <script src="{{ '/assets/project.js' | relative_url }}?v={{ asset_version }}" defer></script>
+  </body>
+</html>
