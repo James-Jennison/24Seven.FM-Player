@@ -1,7 +1,7 @@
 ---
 layout: developer
 title: Canonical roadmap · 24Seven.FM Player
-description: Explore the dependency-ordered M01–M60 roadmap, recorded completion history, active closed-test operations, production path, and bounded future work.
+description: Explore the M01–M55 delivery roadmap, recorded completion history, active closed-test operations, production path, and bounded future work.
 permalink: /dev/roadmap/
 section: roadmap
 robots: noindex, nofollow
@@ -10,14 +10,14 @@ robots: noindex, nofollow
 <section class="page-hero">
   <div>
     <p class="eyebrow">Canonical delivery plan</p>
-    <h1>M01–M60. One traceable roadmap.</h1>
+    <h1>M01–M55. One traceable roadmap.</h1>
     <p class="page-lede">The roadmap was rebuilt from Git history, validation evidence, implementation findings, current Play requirements, and production operations. Every reviewable gate now has one dependency-ordered ID; historical IDs remain available through the migration ledger.</p>
   </div>
   <aside class="page-summary" aria-label="Roadmap summary">
     <span>Verified program</span>
     <strong>{{ site.data.project.roadmap_meta.achieved_count }} achieved</strong>
     <dl>
-      <div><dt>Active</dt><dd>{{ site.data.project.roadmap_meta.active_total_count }}</dd></div>
+      <div><dt>Scope</dt><dd>{{ site.data.project.roadmap_meta.scope_total_count }}</dd></div>
       <div><dt>Current</dt><dd>{{ site.data.project.roadmap_meta.active_phase }}</dd></div>
       <div><dt>Stations</dt><dd>5</dd></div>
     </dl>
@@ -134,9 +134,10 @@ robots: noindex, nofollow
   </div>
 </section>
 
-{% assign future_items = site.data.project.roadmap | where: "phase", "future" %}
+{% assign all_future_items = site.data.project.roadmap | where: "phase", "future" %}
+{% assign future_items = all_future_items | where_exp: "item", "item.display != false" %}
 <section class="content-section" id="future">
-  <div class="content-intro wide"><p class="eyebrow">M46–M60 · Nonblocking future scope</p><h2>Bounded programs with honest prerequisites</h2><p>Architecture, Private Messages, retired Forum and Google Cast scope, extended station behavior, account lifecycle access, and authorized native VIP/RIP commerce are visible without pretending they belong in the current Alpha.</p></div>
+  <div class="content-intro wide"><p class="eyebrow">M46–M55 · Nonblocking future scope</p><h2>Bounded programs with honest prerequisites</h2><p>Architecture, Private Messages, and the retired Forum and Google Cast records are visible without pretending they belong in the current Alpha. M56–M60 are retired historical IDs and are outside the active roadmap.</p></div>
   <div class="roadmap-tools" data-filter-controls data-target="#future-grid">
     <label class="filter-search" for="future-search">Search future milestones<input id="future-search" type="search" placeholder="Search PM, accounts, retired scope…" autocomplete="off" data-filter-query></label>
     <div class="filter-buttons" role="group" aria-label="Filter future milestones by status"><button type="button" data-filter-state="all" aria-pressed="true">All</button><button type="button" data-filter-state="planned" aria-pressed="false">Planned</button><button type="button" data-filter-state="deferred" aria-pressed="false">Deferred</button><button type="button" data-filter-state="retired" aria-pressed="false">Retired</button></div>

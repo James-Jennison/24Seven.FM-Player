@@ -15,7 +15,8 @@ REGISTRY = ROOT / "privacy-site/_data/tester_tasks.json"
 CATALOG = ROOT / "privacy-site/dev/tester-workspace/index.html"
 PT_PATTERN = re.compile(r'<article(?:\s+[^>]*?)?\sid="(pt-\d{2})"', re.IGNORECASE)
 EXPECTED_PT_IDS = {f"PT-{number:02d}" for number in range(1, 29)} | {f"PT-{number:02d}" for number in range(33, 39)}
-EXPECTED_FUTURE_PT_IDS = {"PT-22", "PT-26", "PT-27", "PT-28", "PT-33", "PT-34", "PT-36", "PT-37", "PT-38"}
+EXPECTED_FUTURE_PT_IDS = {"PT-22", "PT-26", "PT-27", "PT-28"}
+EXPECTED_RETIRED_PT_IDS = {"PT-33", "PT-34", "PT-36", "PT-37", "PT-38"}
 
 
 def fail(message: str) -> None:
@@ -48,6 +49,7 @@ def main() -> None:
 
     all_pt_ids: list[str] = []
     future_task_ids: list[str] = []
+    retired_task_ids: list[str] = []
     for task in tasks:
         if not isinstance(task, dict):
             fail("every task must be an object")
@@ -58,12 +60,16 @@ def main() -> None:
         if not isinstance(pt_ids, list) or not pt_ids:
             fail(f"{task['id']} must contain at least one PT ID")
         all_pt_ids.extend(pt_ids)
-        if task["state"] not in {"current", "future"}:
+        if task["state"] not in {"current", "future", "retired"}:
             fail(f"{task['id']} has invalid state {task['state']!r}")
         if task["state"] == "future":
             future_task_ids.append(task["id"])
             if not task.get("blockReason"):
                 fail(f"{task['id']} is future but has no block reason")
+        if task["state"] == "retired":
+            retired_task_ids.append(task["id"])
+            if not task.get("blockReason"):
+                fail(f"{task['id']} is retired but has no block reason")
 
     occurrences = Counter(all_pt_ids)
     mapped = set(all_pt_ids)
@@ -81,22 +87,31 @@ def main() -> None:
     future_pt_ids = {
         pt_id for task in tasks if task["state"] == "future" for pt_id in task["ptIds"]
     }
+    retired_pt_ids = {
+        pt_id for task in tasks if task["state"] == "retired" for pt_id in task["ptIds"]
+    }
     if future_pt_ids != EXPECTED_FUTURE_PT_IDS:
         fail(f"future PT cases differ: {sorted(future_pt_ids)}")
-    if len(current_pt_ids) != 25 or len(future_pt_ids) != 9:
-        fail("expected 25 current and 9 future PT cases")
-    if future_task_ids != ["TT-17", "TT-21", "TT-22", "TT-23"]:
+    if retired_pt_ids != EXPECTED_RETIRED_PT_IDS:
+        fail(f"retired PT cases differ: {sorted(retired_pt_ids)}")
+    if len(current_pt_ids) != 25 or len(future_pt_ids) != 4 or len(retired_pt_ids) != 5:
+        fail("expected 25 current, 4 future, and 5 retired PT cases")
+    if future_task_ids != ["TT-17", "TT-21"]:
         fail(f"future task set differs: {future_task_ids}")
-    if len(tasks) - len(future_task_ids) != 19:
+    if retired_task_ids != ["TT-22", "TT-23"]:
+        fail(f"retired task set differs: {retired_task_ids}")
+    if len(tasks) - len(future_task_ids) - len(retired_task_ids) != 19:
         fail("expected exactly 19 currently assignable tasks")
 
     expected_summary = {
         "ptCaseCount": 34,
         "taskCount": 23,
         "assignableTaskCount": 19,
-        "futureTaskCount": 4,
+        "futureTaskCount": 2,
+        "retiredTaskCount": 2,
         "currentPtCaseCount": 25,
-        "futurePtCaseCount": 9,
+        "futurePtCaseCount": 4,
+        "retiredPtCaseCount": 5,
     }
     if summary != expected_summary:
         fail(f"summary must be exactly {expected_summary}")
@@ -105,7 +120,7 @@ def main() -> None:
     if artifact_registry.exists() and artifact_registry.read_bytes() != REGISTRY.read_bytes():
         fail("built public task metadata differs from the canonical registry")
 
-    print("Tester Task registry: 34 PT cases, 23 tasks, 19 current, 4 future — valid.")
+    print("Tester Task registry: 34 PT cases, 23 tasks, 19 current, 2 future, 2 retired — valid.")
 
 
 if __name__ == "__main__":
