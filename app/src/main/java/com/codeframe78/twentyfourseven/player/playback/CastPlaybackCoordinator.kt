@@ -280,8 +280,8 @@ internal object CastMediaDescriptorFactory {
 }
 
 internal fun StreamFormat.castContentType(): String = when (this) {
-    // Preserve the station relay's declared media type. A Cast-compatible
-    // HLS variant is required for remote playback of this raw AAC+ transport.
+    // Preserve the station relay's declared media type so the receiver sees
+    // the same AAC+ contract that has been verified on the Cast device.
     StreamFormat.Aac -> "audio/aacp"
     StreamFormat.Mp3 -> "audio/mpeg"
     StreamFormat.Hls -> "application/x-mpegURL"
