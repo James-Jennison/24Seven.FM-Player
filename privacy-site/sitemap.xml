@@ -10,4 +10,8 @@ permalink: /sitemap.xml
     <lastmod>{{ site.data.project.site_meta.verified }}</lastmod>
   </url>
 {% endfor %}
+  <url>
+    <loc>{{ '/product-testing/' | absolute_url }}</loc>
+    <lastmod>{{ site.data.project.site_meta.verified }}</lastmod>
+  </url>
 </urlset>

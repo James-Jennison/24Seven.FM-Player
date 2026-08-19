@@ -16,7 +16,8 @@ function assert(condition, message) {
 const tasks = registry.tasks;
 const current = tasks.filter((task) => task.state === "current");
 const future = tasks.filter((task) => task.state === "future");
-assert(current.length === 19 && future.length === 4, "Queue task availability must match the canonical registry");
+const retired = tasks.filter((task) => task.state === "retired");
+assert(current.length === 19 && future.length === 2 && retired.length === 2, "Queue task availability must match the canonical registry");
 assert(!endpoint.includes("email_batches (\n            id INTEGER PRIMARY KEY,\n            tester_id"), "Existing email persistence must remain separate from task assignments");
 assert(endpoint.includes("CREATE TABLE IF NOT EXISTS tester_task_assignments"), "Queue must add the assignment table additively");
 assert(endpoint.includes("CREATE TABLE IF NOT EXISTS tester_onboarding"), "Queue must persist onboarding separately from enrollment and assignments");

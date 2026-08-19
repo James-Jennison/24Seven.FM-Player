@@ -1,94 +1,42 @@
 ---
 layout: project
-title: 24Seven.FM Player · Native Android radio
-description: An unofficial, community-built native Android player for five 24seven.FM radio stations.
+title: 24Seven.FM Player · Radio, the way it should feel
+description: A focused native Android radio player for StreamingSoundtracks.com, 1980s.FM, Adagio.FM, Death.FM, and Entranced.FM.
 permalink: /
 section: overview
 ---
-<section class="hero overview-hero" aria-labelledby="hero-title">
-  <div class="hero-copy">
-    <p class="eyebrow">Native Android · Closed Alpha</p>
-    <h1 id="hero-title">Five stations.<br><span>One native player.</span></h1>
-    <p class="hero-lede">A focused Android listening experience for StreamingSoundtracks.com, 1980s.FM, Adagio.FM, Death.FM, and Entranced.FM.</p>
-    <div class="actions">
-      <a class="button primary" href="{{ '/features/' | relative_url }}">Explore the product</a>
-      <a class="button secondary" href="{{ '/product-testing/' | relative_url }}">Visit the Tester Hub</a>
-    </div>
-    <a class="hero-status" href="#release-status">
-      <span class="live-dot" aria-hidden="true"></span>
-      <span><small>{{ site.data.project.play_status.label }}</small><strong>{{ site.data.project.play_status.headline }}</strong></span>
-      <span>Release status <span aria-hidden="true">→</span></span>
-    </a>
+<section class="listener-hero listener-hero-visual" aria-labelledby="hero-title">
+  <div class="listener-hero-copy">
+    <p class="eyebrow">24Seven.FM Player</p>
+    <h1 id="hero-title">Five worlds<br>of <span>sound.</span></h1>
+    <p class="hero-lede">Five distinct stations. One focused place to press play.</p>
+    <div class="actions"><a class="button primary" href="#live-moment">See it playing</a><a class="button secondary" href="{{ '/product-testing/' | relative_url }}">Get the app</a></div>
+    <p class="release-note" id="release-status"><span class="live-dot" aria-hidden="true"></span><span><strong>{{ site.data.project.play_status.label }}</strong> · Listening is being shaped with real listeners.</span></p>
   </div>
-  <div class="hero-art" aria-hidden="true">
-    <div class="art-glow"></div>
-    <img class="hero-icon" src="{{ '/assets/project/app-icon.png' | relative_url }}" alt="" width="512" height="512">
+  <figure class="listener-phone hero-phone hero-phone-bleed"><img src="{{ '/assets/project/marketing/now-playing-live.png' | relative_url }}" alt="24Seven.FM Player now playing screen with album artwork, playback controls, and five station choices" width="648" height="1422" fetchpriority="high"></figure>
+</section>
+
+<section class="station-bento-section" aria-labelledby="stations-title">
+  <div class="section-heading station-bento-heading"><p class="eyebrow">Choose the temperature</p><h2 id="stations-title">A station for every version of now.</h2></div>
+  <div class="station-bento">
+    <article class="station-panel station-sst"><span>01</span><h3>Streaming<br>Soundtracks</h3><p>Score the scene.</p></article>
+    <article class="station-panel station-80s"><span>02</span><h3>1980s.FM</h3><p>Neon, turned up.</p></article>
+    <article class="station-panel station-adagio"><span>03</span><h3>Adagio.FM</h3><p>Give the room a breath.</p></article>
+    <article class="station-panel station-death"><span>04</span><h3>Death.FM</h3><p>Heavy, on purpose.</p></article>
+    <article class="station-panel station-entranced"><span>05</span><h3>Entranced.FM</h3><p>Follow the pulse.</p></article>
   </div>
 </section>
 
-<section class="station-strip" aria-labelledby="stations-title">
-  <h2 id="stations-title">Built for the full 24Seven.FM network</h2>
-  <ul>
-    <li>StreamingSoundtracks.com</li>
-    <li>1980s.FM</li>
-    <li>Adagio.FM</li>
-    <li>Death.FM</li>
-    <li>Entranced.FM</li>
-  </ul>
-</section>
-
-<section class="section overview-brief" aria-labelledby="choose-title">
-  <div class="section-heading split-heading compact-heading">
-    <div>
-      <p class="eyebrow">Choose your path</p>
-      <h2 id="choose-title">A clearer project portal</h2>
-    </div>
-    <p>Product information, engineering evidence, and Closed Alpha participation each have their own place.</p>
-  </div>
-  <div class="brief-grid">
-    <a class="brief-card" href="{{ '/features/' | relative_url }}"><span>Product</span><strong>What the player does</strong><small>Playback, station data, accounts, community, and safeguards.</small><b>Explore product →</b></a>
-    <a class="brief-card" href="{{ '/development/' | relative_url }}"><span>Engineering</span><strong>How it is built</strong><small>Native Android architecture, capability boundaries, and source map.</small><b>See engineering →</b></a>
-    <a class="brief-card" href="{{ '/testing/' | relative_url }}"><span>Quality</span><strong>How it is verified</strong><small>Automated, device, accessibility, and release evidence.</small><b>Review quality →</b></a>
-    <a class="brief-card accent-card" href="{{ '/product-testing/' | relative_url }}"><span>Closed Alpha</span><strong>Join or manage testing</strong><small>Applications, tester sign-in, focused assignments, and task reports.</small><b>Open Tester Hub →</b></a>
+<section class="listener-moment" id="live-moment" aria-labelledby="moment-title">
+  <div class="section-heading moment-copy"><p class="eyebrow">The next song is already there</p><h2 id="moment-title">Less hunting.<br>More listening.</h2><p>See what is coming, keep favorites close, and let the station carry the moment.</p></div>
+  <div class="moment-screens" aria-label="Real screens from the 24Seven.FM Player">
+    <figure class="moment-screen queue-screen"><img src="{{ '/assets/project/marketing/queue-live.png' | relative_url }}" alt="Fresh capture of the Player Queue showing upcoming and recently played tracks" width="648" height="1422" loading="lazy" decoding="async"><figcaption>Up next, in view.</figcaption></figure>
+    <figure class="moment-screen chat-screen"><img src="{{ '/assets/project/marketing/chat-synthetic.png' | relative_url }}" alt="Controlled synthetic Station chat capture with fictional names and messages" width="648" height="1422" loading="lazy" decoding="async"><figcaption>A room made for the music.</figcaption></figure>
   </div>
 </section>
 
-<section class="section product-proof" aria-labelledby="product-title">
-  <div class="section-heading compact-heading">
-    <p class="eyebrow">Designed for listening</p>
-    <h2 id="product-title">Native where it matters</h2>
-    <p>One adaptive Android shell keeps listening, station context, and safe community workflows coherent across phones, foldables, and tablets.</p>
-  </div>
-  <div class="feature-grid compact-feature-grid">
-    <article><span class="feature-number">01</span><h3>Continuous playback</h3><p>Service-owned Media3 playback, system controls, audio focus, and recovery after validated connectivity returns.</p></article>
-    <article><span class="feature-number">02</span><h3>Five-station context</h3><p>Station switching, truthful metadata, Queue and History, and station-scoped behavior without invented capability.</p></article>
-    <article><span class="feature-number">03</span><h3>Protected member features</h3><p>Independent station sessions, Favorites, Chat, requests, and explicit boundaries around every account workflow.</p></article>
-  </div>
-</section>
-
-<section class="section program-status" id="release-status" aria-labelledby="status-title">
-  <div>
-    <p class="eyebrow">Current program</p>
-    <h2 id="status-title">{{ site.data.project.play_status.headline }}</h2>
-    <p>{{ site.data.project.play_status.detail }}</p>
-    <div class="actions"><a class="button secondary" href="{{ '/roadmap/' | relative_url }}#alpha">View release roadmap</a></div>
-  </div>
-  <dl class="compact-metrics" aria-label="Recorded validation evidence at a glance">
-    <div><dt>36</dt><dd>documented checkpoints</dd></div>
-    <div><dt>163</dt><dd>recorded unit tests</dd></div>
-    <div><dt>20/20</dt><dd>recorded Razr regressions</dd></div>
-    <div><dt>5</dt><dd>certified station integrations</dd></div>
-  </dl>
-</section>
-
-<section class="cta" aria-labelledby="cta-title">
-  <div>
-    <p class="eyebrow">Follow the build</p>
-    <h2 id="cta-title">Start with what you need.</h2>
-    <p>Explore the public project, review its evidence, or step into the Closed Alpha workflow.</p>
-  </div>
-  <div class="actions">
-    <a class="button primary" href="{{ '/product-testing/' | relative_url }}">Closed Alpha Tester Hub</a>
-    <a class="button secondary" href="{{ '/resources/' | relative_url }}">Project resources</a>
-  </div>
+<section class="listener-closing" aria-labelledby="closing-title">
+  <span class="closing-watermark" aria-hidden="true">24Seven.FM</span>
+  <div><p class="eyebrow">Your next listen starts here</p><h2 id="closing-title">Find your frequency.</h2><p>Take a closer look, or join the Closed Alpha and help shape what comes next.</p></div>
+  <div class="actions"><a class="button primary" href="{{ '/features/' | relative_url }}">Explore the Player</a><a class="button secondary" href="{{ '/product-testing/' | relative_url }}">Get the app</a></div>
 </section>

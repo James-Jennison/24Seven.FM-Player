@@ -9,9 +9,9 @@
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-7b52ab" alt="Apache-2.0 license"></a>
   </p>
   <p>
-    <a href="https://player.jamesjennison.net/"><strong>Project portal</strong></a> ·
-    <a href="https://player.jamesjennison.net/product-testing/"><strong>Test the Player</strong></a> ·
-    <a href="https://player.jamesjennison.net/roadmap/"><strong>Interactive roadmap</strong></a> ·
+    <a href="https://player.jamesjennison.net/"><strong>Player website</strong></a> ·
+    <a href="https://player.jamesjennison.net/product-testing/"><strong>Closed Alpha access</strong></a> ·
+    <a href="https://player.jamesjennison.net/dev/"><strong>Developer workspace</strong></a> ·
     <a href="https://github.com/James-Jennison/24Seven.FM-Player"><strong>Repository</strong></a>
   </p>
 </div>
@@ -29,7 +29,7 @@
 | :---: | :---: | :---: | :---: | :---: |
 | Soundtracks | 1980s | Classical | Extreme metal | Trance |
 
-The [comprehensive project portal](https://player.jamesjennison.net/) connects the product experience to its native architecture, development workflow, validation evidence, milestone history, release readiness, and contributor resources. The canonical [privacy notice](https://player.jamesjennison.net/privacy/) has a dedicated stable route.
+The public [Player website](https://player.jamesjennison.net/) is a listener-first introduction to the app, its stations, and privacy notice. Engineering, quality, roadmap, resources, and assigned-tester detail live separately in the [developer workspace](https://player.jamesjennison.net/dev/). Existing tester sign-in remains at `https://player.jamesjennison.net/tester-portal.php`.
 
 ### Project website development
 
@@ -42,7 +42,7 @@ digest-pinned GitHub Pages build image as the repository workflow.
 ./scripts/validate-project-site.sh
 ```
 
-This prepares the canonical privacy notice and artwork, builds `_site/`, validates routes, links, fragments, metadata,
+This prepares the canonical privacy notice and artwork, builds `_site/`, validates consumer and developer-workspace routes, links, fragments, metadata,
 public-content boundaries, and JavaScript syntax, and audits the temporary GitHub Pages transition artifact. Only the
 reviewed `_site/` directory is eligible for an approved Webuzo deployment. No script deploys it.
 

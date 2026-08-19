@@ -35,6 +35,8 @@
         {% endfor %}
       </nav>
       <div class="header-actions">
+        <a class="header-utility" href="https://dev.jamesjennison.net/">Developer Workspace <span aria-hidden="true">↗</span></a>
+        <a class="header-utility" href="https://player.jamesjennison.net/tester-portal.php">Developer / Tester Sign In <span aria-hidden="true">↗</span></a>
         <button class="theme-toggle" type="button" aria-label="Switch color theme">
           <span class="theme-toggle-icon" aria-hidden="true">◐</span>
           <span class="theme-toggle-label">Theme</span>
@@ -79,9 +81,11 @@
         <p class="site-verification">{{ site.data.project.site_meta.verification_label }}.</p>
       </div>
       <nav aria-label="Footer navigation">
-        <a href="{{ '/' | relative_url }}">Project overview</a>
-        <a href="{{ '/product-testing/' | relative_url }}">Tester Hub</a>
-        <a href="{{ '/roadmap/' | relative_url }}">Roadmap</a>
+        <a href="{{ '/' | relative_url }}">Home</a>
+        <a href="{{ '/features/' | relative_url }}">Features</a>
+        <a href="{{ '/product-testing/' | relative_url }}">Closed Alpha access</a>
+        <a href="https://dev.jamesjennison.net/">Developer workspace <span aria-hidden="true">↗</span></a>
+        <a href="https://player.jamesjennison.net/tester-portal.php">Developer / Tester Sign In <span aria-hidden="true">↗</span></a>
         <a href="{{ site.github_url }}/issues">Report an app issue</a>
         <a href="{{ site.master_url }}">JamesJennison.net</a>
         <a href="{{ site.status_url }}">Service status</a>
