@@ -7,11 +7,9 @@ branding instead of the generic Default Media Receiver screen.
 
 ## Current boundary
 
-- This directory is not deployed and contains no receiver application ID, credentials, or stream URLs.
-- A Custom Receiver application is registered in the Cast Developer Console, but its application ID is not copied
-  into source or configuration. The Android sender remains configured for the Default Media Receiver until a
-  separately approved sender update.
-- The intended deployment is a static `/cast/` path on the existing Player web origin, using the
+- This directory contains no credentials or stream URLs.
+- The Android sender uses the registered Custom Receiver application through its Android resource configuration.
+- The receiver is served as static content from the existing Player web origin under the Cast path, using the
   established atomic website deployment workflow.
 
 ## Behavior
