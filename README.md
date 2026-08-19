@@ -31,31 +31,19 @@
 
 The [comprehensive project portal](https://player.jamesjennison.net/) connects the product experience to its native architecture, development workflow, validation evidence, milestone history, release readiness, and contributor resources. The canonical [privacy notice](https://player.jamesjennison.net/privacy/) has a dedicated stable route.
 
-### Project website development
+### Repository ownership
 
-The website is live as an isolated static Webuzo deployment at
-`player.jamesjennison.net`. It requires no application background process.
-Docker is the only local build dependency; the build script uses the same
-digest-pinned GitHub Pages build image as the repository workflow.
+The Player repository now owns the native Android application. The public
+website is maintained in
+[`24Seven.FM-Website`](https://github.com/James-Jennison/24Seven.FM-Website),
+and the protected tester onboarding portal is maintained in the private
+`24Seven.FM-Onboarding` repository. See
+[repository ownership](docs/REPOSITORY_OWNERSHIP.md).
 
-```bash
-./scripts/validate-project-site.sh
-```
-
-This prepares the canonical privacy notice and artwork, builds `_site/`, validates routes, links, fragments, metadata,
-public-content boundaries, and JavaScript syntax, and audits the temporary GitHub Pages transition artifact. Only the
-reviewed `_site/` directory is eligible for an approved Webuzo deployment. No script deploys it.
-
-With `_site/` served locally on port 4173, the dependency-free Chromium contract test can be run with:
-
-```bash
-node scripts/test-project-site-browser.mjs http://127.0.0.1:4173
-node scripts/test-project-site-firefox.mjs http://127.0.0.1:4173
-```
-
-The organizational GitHub Pages site remains unchanged unless the separately approved
-`PLAYER_PAGES_TRANSITION_APPROVED` repository variable is set to `true` and the Project Site workflow is dispatched or
-runs on an approved `main` push. See [the migration and deployment plan](docs/project-site-migration.md).
+The legacy website and onboarding sources remain here only as a read-only
+recovery reference for the unchanged deployed artifact. New website or portal
+work must start in its owning repository; no repository split changes a live
+site or deployment target.
 
 ## Alpha status
 

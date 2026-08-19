@@ -7,12 +7,12 @@
 - Never commit cookies, credentials, CSRF tokens, private endpoints, or HAR files.
 - Do not add a stream URL until it has been verified and its use is permitted.
 
-## Player project site deployment
+## Repository boundaries and legacy web material
 
-- For any 24Seven.FM Player website deployment, verification, or server-side investigation, use only the canonical SSH alias `website-vm-admin`.
-- Do not use `webuzo-production-admin` for this project. Resolve the required alias through the managed SSH configuration before connecting.
-- Discover the live static artifact from the active HTTP and HTTPS `player.jamesjennison.net` virtual-host mappings; both mappings must resolve to the same directory. Do not rely on a stale documented path or infer a target from another site.
-- Build the reviewed `_site/` artifact locally, stage it as a sibling directory, compare file hashes using relative paths, then atomically swap the verified staging directory into place. Retain the previous live directory as the rollback point and run public HTTPS verification before reporting success.
+- The native Android application belongs here. New public-website work belongs in `24Seven.FM-Website`; protected tester-onboarding work belongs in private `24Seven.FM-Onboarding`.
+- `privacy-site/` and the legacy website/onboarding scripts remain only as a recovery reference for the unchanged deployed artifact. Do not modify, deploy, or validate them for new feature work.
+- A separately authorized recovery may inspect this legacy copy. Any website server-side investigation uses only the canonical SSH alias `website-vm-admin`; never use `webuzo-production-admin`.
+- No repository split authorizes a live deployment, DNS/TLS/Cloudflare change, database migration, or removal of the legacy recovery copy.
 
 ## Android validation
 
