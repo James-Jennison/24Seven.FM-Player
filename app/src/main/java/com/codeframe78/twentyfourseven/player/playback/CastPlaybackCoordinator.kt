@@ -267,10 +267,12 @@ internal object CastMediaDescriptorFactory {
 }
 
 internal fun StreamFormat.castContentType(): String = when (this) {
-    StreamFormat.Aac -> "audio/aac"
+    // The station relays are Icecast AAC+ streams and advertise audio/aacp.
+    // CAF uses this value to select its live-audio playback pipeline.
+    StreamFormat.Aac -> "audio/aacp"
     StreamFormat.Mp3 -> "audio/mpeg"
     StreamFormat.Hls -> "application/x-mpegURL"
-    StreamFormat.Unknown -> "audio/aac"
+    StreamFormat.Unknown -> "audio/aacp"
 }
 
 private fun String?.safeHttpsUri(): Uri? = this
