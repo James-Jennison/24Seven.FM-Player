@@ -28,12 +28,20 @@ jobs:
       GOOGLE_PLAY_PACKAGE_NAME: com.codeframe78.twentyfourseven.player
       GOOGLE_PLAY_TRACKS: ${{ vars.GOOGLE_PLAY_RELEASE_TRACKS || 'alpha' }}
       PLAY_RELEASE_STATE_FILE: .github/play-release-announcer-state.json
+      PLAY_RELEASE_LEDGER_BRANCH: google-play-release-ledger
       PLAY_RELEASE_BOOTSTRAP: ${{ inputs.bootstrap || 'false' }}
     steps:
       - name: Check out source and release ledger
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: main
+
+      - name: Load durable release ledger
+        run: |
+          if git ls-remote --exit-code --heads origin "refs/heads/${PLAY_RELEASE_LEDGER_BRANCH}" >/dev/null; then
+            git fetch --depth=1 origin "${PLAY_RELEASE_LEDGER_BRANCH}"
+            git show "origin/${PLAY_RELEASE_LEDGER_BRANCH}:${PLAY_RELEASE_STATE_FILE}" > "${PLAY_RELEASE_STATE_FILE}"
+          fi
 
       - name: Authenticate to Google Play API
         id: google-auth
@@ -81,6 +89,20 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          ledger_state="${RUNNER_TEMP}/play-release-announcer-state.json"
+          cp "${PLAY_RELEASE_STATE_FILE}" "${ledger_state}"
+          git restore --source=HEAD -- "${PLAY_RELEASE_STATE_FILE}"
+
+          if git ls-remote --exit-code --heads origin "refs/heads/${PLAY_RELEASE_LEDGER_BRANCH}" >/dev/null; then
+            git fetch --depth=1 origin "${PLAY_RELEASE_LEDGER_BRANCH}"
+            git switch -C "${PLAY_RELEASE_LEDGER_BRANCH}" "origin/${PLAY_RELEASE_LEDGER_BRANCH}"
+          else
+            git switch -c "${PLAY_RELEASE_LEDGER_BRANCH}"
+          fi
+
+          cp "${ledger_state}" "${PLAY_RELEASE_STATE_FILE}"
           git add .github/play-release-announcer-state.json
+          git diff --cached --quiet && exit 0
           git commit -m "chore: record announced Google Play releases"
-          git push origin HEAD:main
+          git push origin "HEAD:refs/heads/${PLAY_RELEASE_LEDGER_BRANCH}"
