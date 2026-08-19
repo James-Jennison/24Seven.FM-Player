@@ -30,5 +30,12 @@ Before enabling the hourly schedule, run **Announce Google Play releases** manua
 Only then set `GOOGLE_PLAY_RELEASE_ANNOUNCER_ENABLED` to `true`; later published Alpha releases
 are announced once and recorded in the ledger branch.
 
+## Historical backfills
+
+For an explicitly approved historical announcement, dispatch the workflow with a non-empty
+`backfill_message`. This is deliberately manual and does not alter the release ledger: it cannot
+mistake an old release for a newly published one, and the operator supplies the evidence-backed
+message to avoid inventing release notes.
+
 Google documents `PUBLISHED` as meaning that a release is available to users on its track:
 https://developers.google.com/android-publisher/api-ref/rest/v3/applications.tracks.releases
