@@ -83,6 +83,8 @@ assert(endpoint.includes("INSERT INTO tester_task_assignments"), "Queue cannot c
 assert(endpoint.includes("function testerReadyForAssignment(array $tester): bool"), "Task routing must derive readiness from the required tester evidence.");
 assert(endpoint.includes("function testerTaskRecommendations(array $tasks, array $tester): array"), "Coordinator task recommendations must be restored from the tester profile.");
 assert(endpoint.includes("$recommendedTaskId") && endpoint.includes("data-use-recommended-task") && endpoint.includes("assignmentConfigurationPrefill($tester)"), "The top safe recommendation and registered device profile must prefill coordinator assignment review.");
+assert(endpoint.includes("function testerTaskInstructions(array $task): array") && endpoint.includes("'TT-08' => ['Browse and search the assigned request library"), "Every assignable task must restore task-specific tester instructions.");
+assert(client.includes('Tester instructions:') && client.includes('task-preview-instructions') && client.includes('Expected result:'), "Coordinator task preview must show the tester instructions and expected result before assignment.");
 assert(endpoint.includes("Focused work can be assigned only after the tester completes Profile & Device, Play Opt-In, and the First-Use Smoke Test."), "Task assignment must be blocked until all lifecycle evidence is recorded.");
 assert(endpoint.includes("UPDATE tester_task_assignments SET"), "Queue cannot update assignments");
 assert(endpoint.includes("DELETE FROM tester_task_assignments"), "Queue cannot remove assignments");
@@ -109,6 +111,7 @@ const templateOrder = endpoint.indexOf('<option value="welcome">') < endpoint.in
 assert(templateOrder, "Email templates must start with Welcome and keep Custom email last.");
 assert(endpoint.includes('<option value="" selected>Custom email</option>'), "The composer must preserve Custom email as the initial blank state.");
 assert(client.includes("checkbox.required = mode === 'required'"), "Required mutation authorization is not enforced in the UI");
+assert(endpoint.includes('.mutation-authorization[hidden]{display:none!important}'), "Read-only task authorization controls must remain hidden despite the global label display rule.");
 assert(tasks.find((task) => task.id === "TT-09").safetyWarning.includes("ONE LIVE REQUEST MAXIMUM"), "TT-09 safety boundary is missing");
 for (const id of ["TT-01", "TT-02", "TT-03", "TT-04", "TT-05", "TT-06", "TT-14", "TT-15", "TT-16"]) {
   assert(tasks.find((task) => task.id === id).guestEligible === true, `${id} must be explicitly available to guest testers`);

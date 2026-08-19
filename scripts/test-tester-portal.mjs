@@ -83,6 +83,7 @@ assert(portal.includes('Finish Profile &amp; Continue to Install') && wizard.inc
 assert(portal.includes('Open Google Play to install Player') && portal.includes('Install the Player from Google Play'), "The first install action must be explicit and reachable after Profile & Device.");
 assert(portal.includes('function portalAssignmentSteps') && portal.includes('Complete and report') && portal.includes('Report each PT case separately'), "Every assigned task must provide ordered setup, execution, safety, and reporting instructions.");
 assert(portal.includes("'testerSteps'") && portal.includes("'expectedResult'"), "Task-specific execution steps and expected results must be rendered when the canonical task registry provides them.");
+assert(queue.includes('function testerTaskInstructions(array $task): array') && queue.includes("'TT-08' => ['Browse and search the assigned request library"), "Shared task instructions must populate every tester assignment, not only the adaptive-layout task.");
 assert(portal.includes('https://dev.jamesjennison.net/tester-workspace/?task=') && portal.includes("str_replace('PT-', 'pt-', $task['ptIds'][0])"), "Focused-task links must open the canonical Developer Tester Workspace at the first assigned PT-case anchor, not the public recruitment page.");
 assert(portal.includes("function portalAdminPreviewTesterId"), "The coordinator must have an authenticated tester-view preview path.");
 assert(portal.includes("($_SESSION['authenticated'] ?? false) === true"), "Tester previews must require the coordinator session.");

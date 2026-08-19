@@ -719,8 +719,10 @@ small{color:#b7bdca}
 .profile-missing{margin:.65rem 0;padding:.65rem;border-left:3px solid #ffcb6b;background:#302719}
 .profile-complete{margin:.65rem 0;padding:.65rem;border-left:3px solid #67e6d1;background:#173631}
 .mutation-authorization{padding:.65rem;border-left:3px solid #ffcb6b;background:#302719}
+.mutation-authorization[hidden]{display:none!important}
 .task-preview{min-height:3rem;padding:.75rem;border:1px solid #232c40;border-radius:.5rem;color:#b7bdca}
 .task-preview strong{color:#f7f4ec}
+.task-preview-instructions{margin:.45rem 0 .65rem;padding-left:1.3rem}
 .copy-assignment{margin-left:.5rem}
 @media(max-width:44rem){table{font-size:.86rem}.optional{display:none}.onboarding-overview,.tester-task-panels{grid-template-columns:1fr}.shell{margin:1rem auto}.copy-assignment{margin-left:0}.dashboard-header{flex-direction:column}.application-row{flex-direction:column}.application-actions{width:100%}}
 </style><link rel="stylesheet" href="/assets/onboarding-portal.css?v=70bf15c"></head><body><a class="skip-link" href="#workspace">Skip to workspace</a><div class="app-shell"><aside class="global-rail" aria-label="Coordinator workspace navigation"><a class="brand-mark" href="/" aria-label="24Seven.FM Player home"><img src="/assets/project/app-icon.png" alt=""></a><nav><a class="rail-button' . $operationsClass . '" href="/private-tester-queue.php" aria-label="Operations workspace">▦<span>Operations</span></a><a class="rail-button' . $chatClass . '" href="/private-tester-queue.php?live_chat=1" aria-label="Live Chat workspace">◌<span>Live Chat</span></a><a class="rail-button' . $emailClass . '" href="/private-tester-queue.php?email=1" aria-label="Email workspace">✉<span>Email</span></a></nav></aside><main id="workspace" class="desktop">'
@@ -777,12 +779,44 @@ function taskRegistry(): array
             || !is_string($task['id']) || !is_array($task['ptIds']) || !is_array($task['mutation'])) {
             throw new RuntimeException('The Tester Task registry is invalid.');
         }
+        if (!isset($task['testerSteps']) || !is_array($task['testerSteps']) || $task['testerSteps'] === []) {
+            $task['testerSteps'] = testerTaskInstructions($task);
+        }
+        if (!isset($task['expectedResult']) || !is_string($task['expectedResult']) || trim($task['expectedResult']) === '') {
+            $task['expectedResult'] = 'The assigned PT case is completed within its stated safety boundary and reported with the actual setup, outcome, and any blocker.';
+        }
         $tasks[$task['id']] = $task;
     }
     if (count($tasks) !== 23) {
         throw new RuntimeException('The Tester Task registry is incomplete.');
     }
     return $tasks;
+}
+
+/** @return list<string> */
+function testerTaskInstructions(array $task): array
+{
+    $instructions = [
+        'TT-01' => ['Use only the Coordinator-assigned Google Play test build and the assigned clean-install or update path.', 'Launch the Player, confirm the first-run state is understandable, then record the actual installation/update outcome without substituting an unapproved build.'],
+        'TT-02' => ['Open the assigned station, start playback, and verify audible audio, selected-station state, title/artwork behavior, and the mini-player.', 'Pause, resume, switch stations, and stop; confirm one coherent Player session rather than overlapping streams or stale station data.'],
+        'TT-03' => ['Start assigned playback, then use Android notification, lock-screen, headset, or hardware media controls that your device supports.', 'Exercise the assigned background, interruption, task-removal, or Sleep Timer path and record whether playback and system media state remain coherent.'],
+        'TT-04' => ['With the assigned available output hardware, start playback and open Android audio output controls.', 'Switch to the assigned route and back, then disconnect it if assigned; record the actual selected route and fallback behavior.'],
+        'TT-05' => ['Open Queue and History for the assigned station and inspect only the station-supplied fields that are present.', 'Refresh once, switch stations, and run the assigned stale/failure check; record stale, missing, or failed data truthfully rather than inferring values.'],
+        'TT-06' => ['Start playback on the assigned connection, then perform only the assigned Wi-Fi, mobile-data, handoff, or recovery path.', 'Restore connectivity and record recovery, cancelled intent, offline/stale states, and any failure without using tools that expose private endpoints or session data.'],
+        'TT-07' => ['Use only the Coordinator-approved station account for the assigned station and verify sign-in, restoration, or sign-out boundaries.', 'Exercise the assigned Favorites path and confirm sorting, filtering, availability, and station isolation without treating unavailable data as a request authorization.'],
+        'TT-08' => ['Browse and search the assigned request library, then inspect the confirmation path, identity, freshness, restrictions, and fail-closed states.', 'Cancel at confirmation. Do not submit a live request, retry an uncertain request, or use an account action that was not assigned.'],
+        'TT-09' => ['Confirm the assigned station, approved account, fresh Queue state, and readiness before opening the request confirmation.', 'Perform exactly one request only when the Coordinator explicitly authorized it; inspect the visible result once and never retry an indeterminate outcome.'],
+        'TT-10' => ['Using only an approved StreamingSoundtracks.com account, open Request activity and refresh manually.', 'Record the explicit membership and readiness/cooldown state plus available summaries; sign out and confirm the state remains station-scoped and clears appropriately.'],
+        'TT-11' => ['Load the assigned station Chat and verify the applicable age, Terms, reveal, loading, station-isolation, and signed-out boundaries.', 'Keep the task read-only unless the Coordinator explicitly authorizes one harmless post; do not retry an uncertain post.'],
+        'TT-12' => ['Inspect the assigned report, block, or unblock flow and verify the selected station/user, bounded preview, and handoff disclosure.', 'Cancel any email handoff unless a separate instruction explicitly authorizes delivery; record the visible state and station isolation.'],
+        'TT-13' => ['Use only the Coordinator-provided two-account controlled setup and verify the assigned mention/notification path.', 'Do not improvise accounts or post outside the assigned scenario; record opt-in, suppression, payload, and navigation behavior.'],
+        'TT-14' => ['Open the assigned Contact Us or diagnostics path and inspect the prepared handoff, recipient boundary, and return-to-app behavior.', 'Cancel email/share handoffs unless separately authorized, and do not include private diagnostics, credentials, or session data in the report.'],
+        'TT-16' => ['Use the assigned TalkBack, text/display scale, Voice Access, switch, keyboard, or pointer configuration on the physical device where available.', 'Traverse the assigned screens and record actual spoken feedback, focus order, control reachability, and any clipping or alternative-input blocker.'],
+        'TT-18' => ['This task is for the designated Play coordinator only: reconcile the exact candidate, declaration evidence, reviewer access, and policy facts.', 'Record only evidence-backed, credential-free outcomes; do not treat it as an ordinary volunteer assignment or infer Console facts.'],
+        'TT-19' => ['Use only the supplied controlled session harness and the exact Coordinator authorization for the assigned expiry/recovery case.', 'Do not inspect session values or force expiry outside the harness; record the visible recovery and station-isolation result.'],
+        'TT-20' => ['Use only the supplied security harness and assigned environment to exercise the controller or trust-boundary case.', 'Do not improvise redirects, controllers, or stream injection; record the explicit fail-closed or approved same-origin behavior.'],
+    ];
+    return $instructions[$task['id']] ?? ['Review the assigned PT case and safety boundary before starting.', 'Perform only the steps explicitly assigned by the Coordinator, then report the actual outcome and any blocker.'];
 }
 
 /**

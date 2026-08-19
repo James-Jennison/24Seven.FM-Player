@@ -360,9 +360,14 @@
       var detail = task.state === 'future' && task.blockReason
         ? '<p><strong>Future / Blocked:</strong> ' + task.blockReason + '</p>'
         : '';
+      var instructions = Array.isArray(task.testerSteps) && task.testerSteps.length
+        ? '<p><strong>Tester instructions:</strong></p><ol class="task-preview-instructions">' + task.testerSteps.map(function (step) { return '<li>' + step + '</li>'; }).join('') + '</ol>'
+        : '';
       preview.innerHTML = '<p><strong>' + task.id + ' — ' + task.title + '</strong></p>' +
+        '<p><strong>Purpose:</strong> ' + task.purpose + '</p>' +
         '<p><strong>PT cases:</strong> ' + task.ptIds.join(', ') + '</p>' +
         '<p><strong>Prerequisites:</strong> ' + task.prerequisites.join('; ') + '</p>' +
+        instructions + '<p><strong>Expected result:</strong> ' + task.expectedResult + '</p>' +
         '<p class="warning"><strong>Safety:</strong> ' + task.safetyWarning + '</p>' + detail;
       var mode = task.mutation && task.mutation.mode;
       authorization.hidden = mode !== 'required' && mode !== 'optional';
