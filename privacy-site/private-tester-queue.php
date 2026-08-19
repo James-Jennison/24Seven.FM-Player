@@ -173,6 +173,18 @@ function database(array $config): PDO
         );
         CREATE INDEX IF NOT EXISTS tester_mail_archive_recent ON tester_mail_archive(prepared_at DESC, id DESC);
         CREATE INDEX IF NOT EXISTS tester_mail_archive_tester ON tester_mail_archive(tester_id, prepared_at DESC);
+        CREATE TABLE IF NOT EXISTS tester_smoke_test_reminder_archive (
+            id INTEGER PRIMARY KEY,
+            tester_id INTEGER NOT NULL REFERENCES testers(id) ON DELETE CASCADE,
+            subject TEXT NOT NULL,
+            body TEXT NOT NULL,
+            body_html TEXT NOT NULL,
+            handoff_status TEXT NOT NULL CHECK(handoff_status IN (\'prepared\', \'accepted\', \'failed\')),
+            prepared_at TEXT NOT NULL,
+            attempted_at TEXT
+        );
+        CREATE INDEX IF NOT EXISTS tester_smoke_test_reminder_recent ON tester_smoke_test_reminder_archive(prepared_at DESC, id DESC);
+        CREATE INDEX IF NOT EXISTS tester_smoke_test_reminder_tester ON tester_smoke_test_reminder_archive(tester_id, prepared_at DESC);
         CREATE TABLE IF NOT EXISTS tester_profile_completion_notifications (
             tester_id INTEGER PRIMARY KEY REFERENCES testers(id) ON DELETE CASCADE,
             handoff_status TEXT NOT NULL CHECK(handoff_status IN (\'prepared\', \'accepted\', \'failed\')),
@@ -1274,6 +1286,26 @@ function onboardingMessage(array $tester): string
         . "Thank you,\n24Seven.FM Player Testing Team";
 }
 
+function testerNeedsSmokeTestReminder(array $tester): bool
+{
+    return profileSummary($tester)['complete']
+        && is_string($tester['play_opt_in_confirmed_at'] ?? null)
+        && $tester['play_opt_in_confirmed_at'] !== ''
+        && (!is_string($tester['initial_smoke_test_confirmed_at'] ?? null) || $tester['initial_smoke_test_confirmed_at'] === '');
+}
+
+function smokeTestReminderMessage(array $tester): string
+{
+    return 'Hi ' . $tester['display_name'] . ",\n\n"
+        . "Your 24Seven.FM Player tester profile and Google Play opt-in are recorded. Please return to your tester portal to complete the short first-use smoke-test self-report.\n\n"
+        . "1. Open https://player.jamesjennison.net/tester-portal.php and sign in with your tester link.\n"
+        . "2. Install or update the Google Play test build if needed, then launch 24Seven.FM Player.\n"
+        . "3. Complete the brief first-use smoke check: play a station, switch stations, check a short background/media-controls interaction, then return to the app.\n"
+        . "4. Submit the smoke-test confirmation in the portal when that check is complete. This is your self-report; it is not inferred from installation or usage telemetry.\n\n"
+        . "Do not send passwords, station credentials, CAPTCHA answers, session information, or private screenshots. Use the portal Live Chat if you need tester-program support.\n\n"
+        . "Thank you,\n24Seven.FM Player Testing Team";
+}
+
 function sendOnboardingEmail(PDO $database, array $config, int $testerId): bool
 {
     $statement = $database->prepare("SELECT testers.*, onboarding.onboarding_status, onboarding.coordinator_note FROM testers LEFT JOIN tester_onboarding AS onboarding ON onboarding.tester_id = testers.id WHERE testers.id = ? AND testers.status = 'active'");
@@ -1299,6 +1331,40 @@ function sendOnboardingEmail(PDO $database, array $config, int $testerId): bool
     $attempts = (is_array($existing) ? (int) $existing['orientation_email_attempts'] : 0) + 1;
     $upsert = $database->prepare('INSERT INTO tester_onboarding(tester_id, onboarding_status, coordinator_note, orientation_email_status, orientation_email_attempted_at, orientation_email_attempts, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(tester_id) DO UPDATE SET onboarding_status = excluded.onboarding_status, orientation_email_status = excluded.orientation_email_status, orientation_email_attempted_at = excluded.orientation_email_attempted_at, orientation_email_attempts = excluded.orientation_email_attempts, updated_at = excluded.updated_at');
     $upsert->execute([$testerId, $status, $note, $accepted ? 'accepted' : 'failed', gmdate('c'), $attempts, gmdate('c')]);
+    return $accepted;
+}
+
+function prepareSmokeTestReminderArchive(PDO $database, int $testerId, string $subject, string $body, string $html): int
+{
+    $statement = $database->prepare('INSERT INTO tester_smoke_test_reminder_archive(tester_id, subject, body, body_html, handoff_status, prepared_at) VALUES (?, ?, ?, ?, \'prepared\', ?)');
+    $statement->execute([$testerId, $subject, $body, $html, gmdate('c')]);
+    return (int) $database->lastInsertId();
+}
+
+function completeSmokeTestReminderArchive(PDO $database, int $archiveId, bool $accepted): void
+{
+    $database->prepare('UPDATE tester_smoke_test_reminder_archive SET handoff_status = ?, attempted_at = ? WHERE id = ? AND handoff_status = \'prepared\'')
+        ->execute([$accepted ? 'accepted' : 'failed', gmdate('c'), $archiveId]);
+}
+
+function sendSmokeTestReminder(PDO $database, array $config, int $testerId): bool
+{
+    $statement = $database->prepare("SELECT testers.*, onboarding.play_opt_in_confirmed_at, onboarding.initial_smoke_test_confirmed_at FROM testers LEFT JOIN tester_onboarding AS onboarding ON onboarding.tester_id = testers.id WHERE testers.id = ? AND testers.status = 'active'");
+    $statement->execute([$testerId]);
+    $tester = $statement->fetch();
+    if ($tester === false) {
+        throw new InvalidArgumentException('The tester is no longer active.');
+    }
+    if (!testerNeedsSmokeTestReminder($tester)) {
+        throw new InvalidArgumentException('A smoke-test reminder is available only after Profile & Device and Google Play opt-in are recorded, while the tester self-report is still outstanding.');
+    }
+
+    $subject = 'Reminder: complete your 24Seven.FM Player smoke test';
+    $message = smokeTestReminderMessage($tester);
+    $html = plainTextToHtml($message);
+    $archiveId = prepareSmokeTestReminderArchive($database, (int) $tester['id'], $subject, $message, $html);
+    $accepted = sendIndividualMail($config, $tester['email'], $subject, $message, $html);
+    completeSmokeTestReminderArchive($database, $archiveId, $accepted);
     return $accepted;
 }
 
@@ -1768,6 +1834,7 @@ function mailArchiveTypeLabel(string $type): string
     return match ($type) {
         'orientation' => 'Orientation',
         'assignment' => 'Tester Task assignment',
+        'smoke_test_reminder' => 'Smoke-test reminder',
         default => 'Coordinator batch',
     };
 }
@@ -1900,7 +1967,7 @@ function renderOperationsDashboard(PDO $database, string $notice = '', string $e
 
 function renderTesterWorkspace(PDO $database, int $testerId, string $notice = '', string $error = ''): never
 {
-    $testerQuery = $database->prepare("SELECT testers.*, onboarding.onboarding_status, onboarding.coordinator_note AS onboarding_note, onboarding.orientation_email_status, onboarding.orientation_email_attempted_at, onboarding.orientation_email_attempts, onboarding.play_opt_in_confirmed_at, onboarding.initial_smoke_test_confirmed_at, onboarding.withdrawal_requested_at, onboarding.deletion_requested_at FROM testers LEFT JOIN tester_onboarding AS onboarding ON onboarding.tester_id = testers.id WHERE testers.id = ? AND testers.status = 'active'");
+    $testerQuery = $database->prepare("SELECT testers.*, onboarding.onboarding_status, onboarding.coordinator_note AS onboarding_note, onboarding.orientation_email_status, onboarding.orientation_email_attempted_at, onboarding.orientation_email_attempts, onboarding.play_opt_in_confirmed_at, onboarding.initial_smoke_test_confirmed_at, onboarding.withdrawal_requested_at, onboarding.deletion_requested_at, (SELECT handoff_status FROM tester_smoke_test_reminder_archive WHERE tester_id = testers.id ORDER BY id DESC LIMIT 1) AS smoke_test_reminder_status, (SELECT COUNT(*) FROM tester_smoke_test_reminder_archive WHERE tester_id = testers.id) AS smoke_test_reminder_attempts FROM testers LEFT JOIN tester_onboarding AS onboarding ON onboarding.tester_id = testers.id WHERE testers.id = ? AND testers.status = 'active'");
     $testerQuery->execute([$testerId]);
     $tester = $testerQuery->fetch();
     if ($tester === false) {
@@ -1930,6 +1997,10 @@ function renderTesterWorkspace(PDO $database, int $testerId, string $notice = ''
     $orientation = ($tester['orientation_email_status'] ?? 'not_sent') === 'accepted'
         ? 'Accepted by the mail transport'
         : (($tester['orientation_email_status'] ?? 'not_sent') === 'failed' ? 'Mail transport failed' : 'Not sent');
+    $smokeTestReminder = ($tester['smoke_test_reminder_status'] ?? 'not_sent') === 'accepted'
+        ? 'Accepted by the mail transport'
+        : (($tester['smoke_test_reminder_status'] ?? 'not_sent') === 'failed' ? 'Mail transport failed' : 'Not sent');
+    $smokeTestReminderEligible = testerNeedsSmokeTestReminder($tester);
     $guestTester = isGuestTester($tester);
     $recommendations = testerTaskRecommendations($tasks, $tester);
     $recommendedTaskId = (string) ($recommendations[0]['task']['id'] ?? '');
@@ -1993,7 +2064,7 @@ function renderTesterWorkspace(PDO $database, int $testerId, string $notice = ''
     $withdrawalRequest = ($tester['withdrawal_requested_at'] ?? '') !== '' ? humanTimestamp((string) $tester['withdrawal_requested_at']) : 'None';
     $deletionRequest = ($tester['deletion_requested_at'] ?? '') !== '' ? humanTimestamp((string) $tester['deletion_requested_at']) : 'None';
     $content = '<p><a href="/private-tester-queue.php">← Tester operations</a> · <a href="/tester-portal.php?preview_tester=' . $testerId . '">Preview tester view</a></p><div><p class="muted">Tester workspace</p><h1>' . e($tester['display_name']) . '</h1><p class="muted">' . e($tester['device']) . ' · ' . e($tester['android_version']) . ' · ' . e($tester['country'] ?: 'Country not provided') . ' · ' . e(recruitmentSourceLabel($tester['recruitment_source'] ?? null)) . '</p></div>' . $message
-        . '<section><h2>Onboarding</h2>' . onboardingBadge($status) . $profileBlock . '<form method="post"><input type="hidden" name="action" value="update_onboarding"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $testerId . '"><label>Onboarding status<select name="onboarding_status">' . $statusOptions . '</select></label><label>Coordinator note<textarea name="onboarding_note" maxlength="' . MAX_ONBOARDING_NOTE_LENGTH . '" placeholder="Private operational note; never add credentials or secrets.">' . e($tester['onboarding_note'] ?? '') . '</textarea></label><button type="submit">Save onboarding progress</button></form><p><strong>Google Play opt-in:</strong> ' . e($playOptIn) . '<br><strong>Initial smoke test:</strong> ' . e($smokeTest) . '<br><small>These are tester self-confirmations, not inferred installation or usage telemetry.</small></p><p><strong>Withdrawal request:</strong> ' . e($withdrawalRequest) . '<br><strong>Record-deletion request:</strong> ' . e($deletionRequest) . '<br><small>Verify the request, stop program access promptly, and delete or anonymize the private tester record within the adopted 90-day policy period. A request is not evidence that deletion is already complete.</small></p>' . ($withdrawalRequest === 'None' ? '' : '<form method="post"><input type="hidden" name="action" value="deactivate_withdrawn_tester"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $testerId . '"><label><input style="width:auto" type="checkbox" name="confirm_deactivate" value="withdraw" required> I verified this withdrawal request and will stop this tester’s program access.</label><button class="danger" type="submit">Deactivate withdrawn tester</button></form>') . '<p><strong>Orientation email:</strong> ' . e($orientation) . ' <small>(' . (int) ($tester['orientation_email_attempts'] ?? 0) . ' handoff attempt' . ((int) ($tester['orientation_email_attempts'] ?? 0) === 1 ? '' : 's') . ')</small></p>' . ($profile['complete'] ? '<form method="post"><input type="hidden" name="action" value="send_onboarding_email"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $testerId . '"><button class="secondary" type="submit">Send orientation email</button></form>' : '') . '</section>'
+        . '<section><h2>Onboarding</h2>' . onboardingBadge($status) . $profileBlock . '<form method="post"><input type="hidden" name="action" value="update_onboarding"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $testerId . '"><label>Onboarding status<select name="onboarding_status">' . $statusOptions . '</select></label><label>Coordinator note<textarea name="onboarding_note" maxlength="' . MAX_ONBOARDING_NOTE_LENGTH . '" placeholder="Private operational note; never add credentials or secrets.">' . e($tester['onboarding_note'] ?? '') . '</textarea></label><button type="submit">Save onboarding progress</button></form><p><strong>Google Play opt-in:</strong> ' . e($playOptIn) . '<br><strong>Initial smoke test:</strong> ' . e($smokeTest) . '<br><small>These are tester self-confirmations, not inferred installation or usage telemetry.</small></p><p><strong>Withdrawal request:</strong> ' . e($withdrawalRequest) . '<br><strong>Record-deletion request:</strong> ' . e($deletionRequest) . '<br><small>Verify the request, stop program access promptly, and delete or anonymize the private tester record within the adopted 90-day policy period. A request is not evidence that deletion is already complete.</small></p>' . ($withdrawalRequest === 'None' ? '' : '<form method="post"><input type="hidden" name="action" value="deactivate_withdrawn_tester"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $testerId . '"><label><input style="width:auto" type="checkbox" name="confirm_deactivate" value="withdraw" required> I verified this withdrawal request and will stop this tester’s program access.</label><button class="danger" type="submit">Deactivate withdrawn tester</button></form>') . '<p><strong>Orientation email:</strong> ' . e($orientation) . ' <small>(' . (int) ($tester['orientation_email_attempts'] ?? 0) . ' handoff attempt' . ((int) ($tester['orientation_email_attempts'] ?? 0) === 1 ? '' : 's') . ')</small></p>' . ($profile['complete'] ? '<form method="post"><input type="hidden" name="action" value="send_onboarding_email"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $testerId . '"><button class="secondary" type="submit">Send orientation email</button></form>' : '') . ($smokeTestReminderEligible ? '<p><strong>Smoke-test reminder:</strong> ' . e($smokeTestReminder) . ' <small>(' . (int) ($tester['smoke_test_reminder_attempts'] ?? 0) . ' handoff attempt' . ((int) ($tester['smoke_test_reminder_attempts'] ?? 0) === 1 ? '' : 's') . ')</small><br><small>Available because this tester has recorded Play opt-in but has not completed the portal self-report.</small></p><form method="post"><input type="hidden" name="action" value="send_smoke_test_reminder"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $testerId . '"><button class="secondary" type="submit">Send smoke-test reminder</button></form>' : '') . '</section>'
         . '<section><h2>Focused Tester Tasks</h2><p class="muted">Assign only a focused bundle that matches this tester’s coverage. Each PT case still receives its own result.</p>' . $guestTaskNotice . $recommendationPanel . ($assignmentCards === '' ? '<p class="muted">No task assigned yet.</p>' : $assignmentCards) . '<article id="assign-focused-task" class="onboarding-card"><h3>Assign a focused Tester Task</h3><form method="post" data-task-assignment-form><input type="hidden" name="action" value="assign_task"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $testerId . '"><label>Tester Task<select name="task_id" data-task-select required>' . $taskOptions . '</select></label><div class="task-preview" data-task-preview aria-live="polite">Choose a current task to see its PT cases, prerequisites, and safety boundary.</div><label>Station scope<select name="station_scope">' . $stationOptions . '</select></label><label>Device / accessory / form factor scope<input name="configuration_scope" maxlength="' . MAX_ASSIGNMENT_CONFIGURATION_LENGTH . '" value="' . e($configurationPrefill) . '" placeholder="For example, Pixel 9, Bluetooth headset, folded"></label><label>Coordinator note<textarea name="coordinator_note" maxlength="' . MAX_ASSIGNMENT_NOTE_LENGTH . '"></textarea></label><label class="mutation-authorization" data-mutation-authorization hidden><input type="checkbox" name="mutation_authorized" value="1"> I explicitly authorize the controlled subcase described above.</label><button type="submit">Assign Tester Task</button></form></article></section><section><h2>Tester task reports</h2><p class="muted">Private reports submitted through the tester portal.</p>' . ($feedbackItems === '' ? '<p class="muted">No task reports submitted yet.</p>' : $feedbackItems) . '</section><script id="tester-task-registry" type="application/json">' . json_encode(array_values($tasks), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES) . '</script><script src="/assets/private-tester-queue.js?v=task-recommendation-3" defer></script>';
     renderPage('Tester workspace', $content);
 }
@@ -2031,12 +2102,12 @@ function renderConfirmation(PDO $database, int $batchId): never
 
 function renderMailArchive(PDO $database): never
 {
-    $records = $database->query('SELECT archive.id, archive.message_type, archive.subject, archive.handoff_status, archive.prepared_at, archive.attempted_at, testers.display_name, testers.email FROM tester_mail_archive AS archive JOIN testers ON testers.id = archive.tester_id ORDER BY archive.prepared_at DESC, archive.id DESC LIMIT 250')->fetchAll();
+    $records = $database->query("SELECT archive.id, archive.message_type, archive.subject, archive.handoff_status, archive.prepared_at, archive.attempted_at, testers.display_name, testers.email, 'mail_record' AS record_route FROM tester_mail_archive AS archive JOIN testers ON testers.id = archive.tester_id UNION ALL SELECT archive.id, 'smoke_test_reminder' AS message_type, archive.subject, archive.handoff_status, archive.prepared_at, archive.attempted_at, testers.display_name, testers.email, 'smoke_reminder_record' AS record_route FROM tester_smoke_test_reminder_archive AS archive JOIN testers ON testers.id = archive.tester_id ORDER BY prepared_at DESC, id DESC LIMIT 250")->fetchAll();
     $rows = '';
     foreach ($records as $record) {
-        $rows .= '<tr><td>' . e(humanTimestamp((string) ($record['attempted_at'] ?: $record['prepared_at']))) . '</td><td><strong>' . e($record['display_name']) . '</strong><br><small>' . e($record['email']) . '</small></td><td>' . e(mailArchiveTypeLabel((string) $record['message_type'])) . '</td><td>' . e(mailArchiveStatusLabel((string) $record['handoff_status'])) . '</td><td>' . e($record['subject']) . '</td><td><a href="/private-tester-queue.php?mail_record=' . (int) $record['id'] . '">View message</a></td></tr>';
+        $rows .= '<tr><td>' . e(humanTimestamp((string) ($record['attempted_at'] ?: $record['prepared_at']))) . '</td><td><strong>' . e($record['display_name']) . '</strong><br><small>' . e($record['email']) . '</small></td><td>' . e(mailArchiveTypeLabel((string) $record['message_type'])) . '</td><td>' . e(mailArchiveStatusLabel((string) $record['handoff_status'])) . '</td><td>' . e($record['subject']) . '</td><td><a href="/private-tester-queue.php?' . e($record['record_route']) . '=' . (int) $record['id'] . '">View message</a></td></tr>';
     }
-    $content = '<p><a href="/private-tester-queue.php">← Tester operations</a></p><h1>Sent mail archive</h1><p class="muted">This protected record preserves the recipient, exact multipart content, and mail-transport handoff outcome for coordinator batches, orientation emails, and Tester Task assignments. “Accepted” means the transport accepted the message; it does not prove inbox delivery or reading.</p>'
+    $content = '<p><a href="/private-tester-queue.php">← Tester operations</a></p><h1>Sent mail archive</h1><p class="muted">This protected record preserves the recipient, exact multipart content, and mail-transport handoff outcome for coordinator batches, orientation emails, smoke-test reminders, and Tester Task assignments. “Accepted” means the transport accepted the message; it does not prove inbox delivery or reading.</p>'
         . '<section><table><thead><tr><th>Attempt</th><th>Recipient</th><th>Type</th><th>Handoff</th><th>Subject</th><th><span class="visually-hidden">Open</span></th></tr></thead><tbody>' . ($rows === '' ? '<tr><td colspan="6" class="muted">No coordinator email handoffs are archived yet.</td></tr>' : $rows) . '</tbody></table></section>';
     renderPage('Sent mail archive', $content);
 }
@@ -2125,6 +2196,22 @@ function renderMailRecord(PDO $database, int $archiveId): never
     }
     $content = '<p><a href="/private-tester-queue.php?mail_archive=1">← Sent mail archive</a></p><h1>Archived coordinator email</h1><section><dl><dt>Recipient</dt><dd>' . e($record['display_name']) . ' &lt;' . e($record['email']) . '&gt;</dd><dt>Type</dt><dd>' . e(mailArchiveTypeLabel((string) $record['message_type'])) . '</dd><dt>Prepared</dt><dd>' . e(humanTimestamp((string) $record['prepared_at'])) . '</dd><dt>Handoff</dt><dd>' . e(mailArchiveStatusLabel((string) $record['handoff_status'])) . ($record['attempted_at'] ? ' · ' . e(humanTimestamp((string) $record['attempted_at'])) : '') . '</dd><dt>Subject</dt><dd>' . e($record['subject']) . '</dd></dl></section><section><h2>Rendered HTML</h2><div style="background:#fff;color:#182033;padding:1rem;border-radius:.4rem">' . $html . '</div><h2>Plain-text alternative</h2><pre style="white-space:pre-wrap;font:inherit">' . e($record['body']) . '</pre></section>';
     renderPage('Archived coordinator email', $content);
+}
+
+function renderSmokeTestReminderRecord(PDO $database, int $archiveId): never
+{
+    $statement = $database->prepare('SELECT archive.*, testers.display_name, testers.email FROM tester_smoke_test_reminder_archive AS archive JOIN testers ON testers.id = archive.tester_id WHERE archive.id = ?');
+    $statement->execute([$archiveId]);
+    $record = $statement->fetch();
+    if ($record === false) {
+        redirect('?mail_archive=1&error=' . rawurlencode('The requested smoke-test reminder is unavailable.'));
+    }
+    $html = (string) $record['body_html'];
+    if ($html === '') {
+        $html = plainTextToHtml((string) $record['body']);
+    }
+    $content = '<p><a href="/private-tester-queue.php?mail_archive=1">← Sent mail archive</a></p><h1>Archived smoke-test reminder</h1><section><dl><dt>Recipient</dt><dd>' . e($record['display_name']) . ' &lt;' . e($record['email']) . '&gt;</dd><dt>Type</dt><dd>Smoke-test reminder</dd><dt>Prepared</dt><dd>' . e(humanTimestamp((string) $record['prepared_at'])) . '</dd><dt>Handoff</dt><dd>' . e(mailArchiveStatusLabel((string) $record['handoff_status'])) . ($record['attempted_at'] ? ' · ' . e(humanTimestamp((string) $record['attempted_at'])) : '') . '</dd><dt>Subject</dt><dd>' . e($record['subject']) . '</dd></dl></section><section><h2>Rendered HTML</h2><div style="background:#fff;color:#182033;padding:1rem;border-radius:.4rem">' . $html . '</div><h2>Plain-text alternative</h2><pre style="white-space:pre-wrap;font:inherit">' . e($record['body']) . '</pre></section>';
+    renderPage('Archived smoke-test reminder', $content);
 }
 
 if (defined('PRIVATE_TESTER_QUEUE_LIBRARY_ONLY')) {
@@ -2242,6 +2329,11 @@ try {
             $testerId = testerId();
             $accepted = sendOnboardingEmail($database, $config, $testerId);
             redirect('?tester=' . $testerId . '&notice=' . rawurlencode('Orientation email handoff ' . ($accepted ? 'was accepted by the mail transport.' : 'failed.')));
+        }
+        if ($action === 'send_smoke_test_reminder') {
+            $testerId = testerId();
+            $accepted = sendSmokeTestReminder($database, $config, $testerId);
+            redirect('?tester=' . $testerId . '&notice=' . rawurlencode('Smoke-test reminder handoff ' . ($accepted ? 'was accepted by the mail transport.' : 'failed.')));
         }
         if ($action === 'deactivate_withdrawn_tester') {
             $testerId = testerId();
@@ -2383,6 +2475,9 @@ try {
     }
     if (isset($_GET['mail_record']) && ctype_digit((string) $_GET['mail_record'])) {
         renderMailRecord($database, (int) $_GET['mail_record']);
+    }
+    if (isset($_GET['smoke_reminder_record']) && ctype_digit((string) $_GET['smoke_reminder_record'])) {
+        renderSmokeTestReminderRecord($database, (int) $_GET['smoke_reminder_record']);
     }
     if (isset($_GET['mail_archive'])) {
         renderMailArchive($database);

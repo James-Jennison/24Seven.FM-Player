@@ -75,6 +75,12 @@ assert(endpoint.includes("function renderTesterWorkspace"), "Queue must provide 
 assert(endpoint.includes("send_onboarding_email"), "Queue must support an individual orientation-email action");
 assert(endpoint.includes("This tester needs their profile update before an orientation email can be sent."), "Orientation must not bypass profile completion");
 assert(endpoint.includes("orientation_email_attempts"), "Orientation-email handoff attempts must be auditable");
+assert(endpoint.includes("CREATE TABLE IF NOT EXISTS tester_smoke_test_reminder_archive"), "Smoke-test reminders must retain dedicated, additive archive storage.");
+assert(endpoint.includes("function testerNeedsSmokeTestReminder(array $tester): bool"), "Smoke-test reminder eligibility must be derived from the tester evidence.");
+assert(endpoint.includes("function sendSmokeTestReminder(PDO $database, array $config, int $testerId): bool"), "The Coordinator must be able to send an individual smoke-test reminder.");
+assert(endpoint.includes("send_smoke_test_reminder"), "The tester workspace must expose a smoke-test reminder action.");
+assert(endpoint.includes("while the tester self-report is still outstanding"), "The reminder must be server-side blocked after a smoke-test self-report.");
+assert(endpoint.includes("Smoke-test reminder") && endpoint.includes("renderSmokeTestReminderRecord"), "Reminder content and handoff outcome must be visible in the protected sent-mail archive.");
 assert(endpoint.includes("task_status TEXT NOT NULL DEFAULT \\'assigned\\'"), "Assignments must have a separate default status");
 assert(endpoint.includes("task_status IN (\\'assigned\\', \\'in_progress\\', \\'complete\\', \\'blocked\\')"), "Assignment statuses are incomplete");
 assert(endpoint.includes("if (($task['state'] ?? '') !== 'current')"), "Future task server-side block is missing");

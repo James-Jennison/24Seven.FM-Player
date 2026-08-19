@@ -21,6 +21,7 @@ if ($path === false) throw new RuntimeException('Unable to create isolated local
 try {
     $database = database(['database_path' => $path]);
     expectPhaseTwo((int) $database->query("SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'tester_profile_completion_notifications'")->fetchColumn() === 1, 'Profile-completion notification handoffs must have dedicated local audit storage.');
+    expectPhaseTwo((int) $database->query("SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'tester_smoke_test_reminder_archive'")->fetchColumn() === 1, 'Smoke-test reminder handoffs must have dedicated local audit storage.');
     $database->prepare("INSERT INTO testers(source_message_uid, received_at, display_name, email, device, android_version, interests_json, status, imported_at, primary_station, device_form_factor, network_capabilities_json, audio_capabilities_json, accessibility_capabilities_json, testing_comfort, controlled_actions_json, testing_availability) VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, ?, ?, ?, ?, ?, ?)")
         ->execute(['phase-two-local', '2026-08-15T00:00:00Z', 'Local Stage Tester', 'local-stage@example.test', 'Local stage device', 'Android 16', '["playback"]', '2026-08-15T00:00:00Z', 'sst', 'phone', '["wifi"]', '["device_speaker"]', '["general_accessibility"]', 'readonly', '["none"]', '1_2h']);
 
@@ -31,9 +32,15 @@ try {
 
     synchronizeOnboardingProfile($database, 1);
     expectPhaseTwo(recordTesterPlayOptIn($database, 1) === false, 'Play Opt-In alone must not unlock local task assignment.');
+    $tester = $database->query('SELECT testers.*, onboarding.onboarding_status, onboarding.play_opt_in_confirmed_at, onboarding.initial_smoke_test_confirmed_at, onboarding.reviewed_at FROM testers JOIN tester_onboarding AS onboarding ON onboarding.tester_id = testers.id WHERE testers.id = 1')->fetch();
+    expectPhaseTwo(is_array($tester) && testerNeedsSmokeTestReminder($tester), 'A completed profile with Play opt-in and no smoke-test self-report must be eligible for a Coordinator reminder.');
+    $reminderId = prepareSmokeTestReminderArchive($database, 1, 'Local smoke-test reminder', smokeTestReminderMessage($tester), plainTextToHtml(smokeTestReminderMessage($tester)));
+    completeSmokeTestReminderArchive($database, $reminderId, true);
+    expectPhaseTwo((string) $database->query('SELECT handoff_status FROM tester_smoke_test_reminder_archive WHERE id = ' . $reminderId)->fetchColumn() === 'accepted', 'A smoke-test reminder must retain its individual mail-transport handoff outcome.');
     recordTesterInitialSmokeTest($database, 1);
     $tester = $database->query('SELECT testers.*, onboarding.onboarding_status, onboarding.play_opt_in_confirmed_at, onboarding.initial_smoke_test_confirmed_at, onboarding.reviewed_at FROM testers JOIN tester_onboarding AS onboarding ON onboarding.tester_id = testers.id WHERE testers.id = 1')->fetch();
     expectPhaseTwo(is_array($tester) && testerReadyForAssignment($tester) && applicationStage($tester) === 'active', 'Both self-confirmations must unlock focused assignment in the isolated staging database.');
+    expectPhaseTwo(!testerNeedsSmokeTestReminder($tester), 'A smoke-test reminder must no longer be eligible after the tester self-report is recorded.');
 
     $_POST = ['task_id' => 'TT-01', 'station_scope' => 'StreamingSoundtracks.com', 'configuration_scope' => 'Local stage device', 'coordinator_note' => 'Local-only smoke assignment'];
     [$task, $station, $configuration, $note, $mutationAuthorized] = assignmentInput(taskRegistry(), $tester);
