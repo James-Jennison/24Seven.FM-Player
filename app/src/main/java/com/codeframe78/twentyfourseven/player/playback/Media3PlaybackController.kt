@@ -269,13 +269,13 @@ class Media3PlaybackController(context: Context) : PlaybackController {
     }
 
     private fun stopLocalPlaybackForCast() {
-        playRequested = false
         networkRecovery.cancel()
-        cancelSleepTimer()
         controller?.stop()
     }
 
     private fun updateCastState(snapshot: CastPlaybackSnapshot) {
+        val leavingCastRoute =
+            stateFlow.value.route != PlaybackRoute.Local && snapshot.route == PlaybackRoute.Local
         stateFlow.value = stateFlow.value.copy(
             stationId = selectedStation?.id ?: stateFlow.value.stationId,
             status = snapshot.status,
@@ -291,6 +291,11 @@ class Media3PlaybackController(context: Context) : PlaybackController {
                 )
             },
         )
+        if (leavingCastRoute && playRequested) {
+            selectedStation?.let { station ->
+                setStationMediaItems(station)
+            }
+        }
     }
 
     private fun updateSleepTimerState(extras: Bundle) {

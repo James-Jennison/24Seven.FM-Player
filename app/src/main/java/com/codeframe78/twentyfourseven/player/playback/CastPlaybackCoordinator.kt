@@ -47,6 +47,7 @@ internal class CastPlaybackCoordinator(
     private var castSession: CastSession? = null
     private var remoteClient: RemoteMediaClient? = null
     private var snapshot = CastPlaybackSnapshot()
+    private var localPlaybackSuspendedForCast = false
 
     private val remoteMediaCallback = object : RemoteMediaClient.Callback() {
         override fun onStatusUpdated() = publishRemoteStatus()
@@ -161,6 +162,7 @@ internal class CastPlaybackCoordinator(
         remoteClient?.unregisterCallback(remoteMediaCallback)
         remoteClient = null
         castSession = null
+        localPlaybackSuspendedForCast = false
     }
 
     private fun loadSelectedStation(autoplay: Boolean) {
@@ -183,7 +185,6 @@ internal class CastPlaybackCoordinator(
             }
             Log.i(LogTag, "remote media load result code=${result.status.statusCode}")
             if (result.status.statusCode == CastStatusCodes.SUCCESS) {
-                if (autoplay) onRemotePlaybackAccepted()
                 publishRemoteStatus()
             } else {
                 publish(
@@ -209,6 +210,10 @@ internal class CastPlaybackCoordinator(
             else -> PlaybackStatus.Idle
         }
         remotePlaybackIntentFor(status?.playerState)?.let { shouldPlay = it }
+        if (playbackStatus == PlaybackStatus.Playing && !localPlaybackSuspendedForCast) {
+            localPlaybackSuspendedForCast = true
+            onRemotePlaybackAccepted()
+        }
         val route = if (status == null || status.playerState == MediaStatus.PLAYER_STATE_IDLE) {
             PlaybackRoute.CastConnected
         } else {
