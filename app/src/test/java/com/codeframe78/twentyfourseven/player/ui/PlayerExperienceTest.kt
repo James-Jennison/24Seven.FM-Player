@@ -2,6 +2,7 @@ package com.codeframe78.twentyfourseven.player.ui
 
 import com.codeframe78.twentyfourseven.player.domain.Station
 import com.codeframe78.twentyfourseven.player.domain.StationId
+import androidx.compose.ui.unit.dp
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -33,6 +34,13 @@ class PlayerExperienceTest {
         assertEquals("0:01", formatSleepTimerRemaining(1L))
         assertEquals("29:59", formatSleepTimerRemaining(30L * 60L * 1_000L - 1_000L))
         assertEquals("1:30:00", formatSleepTimerRemaining(90L * 60L * 1_000L))
+    }
+
+    @Test
+    fun `short wide player windows use the dedicated landscape layout`() {
+        assertTrue(usesLandscapePlayerLayout(640.dp, 320.dp))
+        assertFalse(usesLandscapePlayerLayout(640.dp, 299.dp))
+        assertFalse(usesLandscapePlayerLayout(320.dp, 640.dp))
     }
 
     private fun station(id: String) = Station(

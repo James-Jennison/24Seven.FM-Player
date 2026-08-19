@@ -707,11 +707,26 @@ independently.
 
 - **Objective:** Maintain qualifying tester continuity, collect structured feedback, fix/retest findings, review Play
   health, and satisfy campaign exit criteria.
-- **Start, completion, and intervals:** Not started; all actual intervals and totals are not applicable.
-- **Model, reasoning strength, and original forecast:** Terra Medium with Sol High checkpoints; current forecast 3–5 calendar weeks,
-  including the mandatory continuity window and a feedback/fix buffer.
-- **Time, variance, evidence, confidence, and forecasting lessons:** No actual variance. Roadmap `e249071`, forecast `f971a9e`; no campaign record.
-  **Unknown**. Separate active remediation, Play/test automation, and tester/user-blocked calendar time.
+- **Start, completion, and intervals:** The regression-remediation interval ran from `August 19, 2026 at 5:24:53 AM PDT
+  (UTC-07:00)` through `August 19, 2026 at 5:30:04 AM PDT (UTC-07:00)` after the owner identified that the version-3
+  closed-test bundle had been built from a non-`main` checkout. Landscape remediation for the uploaded version-4 build
+  ran from `August 19, 2026 at 10:04:16 AM PDT (UTC-07:00)` through `August 19, 2026 at 10:14:34 AM PDT (UTC-07:00)`
+  as a version-code-5 interval. Tester and Play-calendar waits remain excluded.
+- **Model, reasoning strength, and original forecast:** GPT-5.6 at the current default reasoning strength; the completed
+  version-code-4 corrective candidate forecast was 0.5–1.0 active hours. The version-code-5 landscape remediation
+  forecast is 1.0–2.0 active hours for implementation and Android validation from `main`.
+- **Time, variance, evidence, confidence, and forecasting lessons:** 0.04 h active, 0.04 h automated validation/signing
+  wait, 0.00 h measured user-blocked, and 0.08 h counted. `main` contains the missing official station-logo and fixed
+  non-scrollable selector work. Version code 4 / `0.1.0-alpha03` passed `:app:bundleRelease` (including lint-vital) and
+  `:app:testDebugUnitTest`; its signed AAB's JAR verification passed and its signer matches the existing V2 public upload
+  certificate. The version-code-5 landscape interval adds 0.12 h active, 0.04 h automated build/test/signing wait,
+  0.00 h measured user-blocked, and 0.16 h counted (at least 0.16 h of the 0.17 h elapsed interval). It adds an
+  explicit short-wide Player layout, a breakpoint unit test, and a physical-Razr `760×400` UI test proving every control
+  and station logo is visible without the carousel. Version code 5 / `0.1.0-alpha04` passed focused Kotlin compilation,
+  unit tests, release bundle/lint, and that physical-device UI test; its signed AAB's JAR verification passed and its
+  signer matches V2. The measured corrective intervals total 0.16 h active, 0.08 h automated wait, 0.00 h measured
+  user-blocked, and 0.24 h counted. Separate future active remediation, automated validation, and user-blocked signing/
+  Play waits.
 
 ### M43 — Production Access and Policy Approval
 

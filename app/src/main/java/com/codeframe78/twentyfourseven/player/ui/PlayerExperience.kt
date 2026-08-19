@@ -73,6 +73,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.codeframe78.twentyfourseven.player.R
@@ -89,6 +90,10 @@ private val CompactPlayerHorizontalPadding = 12.dp
 private val MinimumCompactArtworkSize = 140.dp
 private val MaximumCompactArtworkSize = 384.dp
 private val CompactPlayerNoScrollHeight = 720.dp
+private val LandscapePlayerMinimumHeight = 300.dp
+private val LandscapeArtworkMinimumSize = 120.dp
+private val LandscapeArtworkMaximumSize = 200.dp
+private val LandscapeStationSelectorWidth = 56.dp
 private val SleepTimerPresetsMinutes = listOf(15, 30, 45, 60, 90)
 
 @Immutable
@@ -130,6 +135,8 @@ internal fun AdaptivePlayerScreen(
     ) {
         if (isCoverDisplay) {
             CoverPlayerContent(state, palette, onSelectStation, onPlay, onStop, sleepTimerActions, audioOutputActions)
+        } else if (usesLandscapePlayerLayout(maxWidth, maxHeight)) {
+            LandscapePlayerContent(state, palette, maxWidth, maxHeight, onSelectStation, onPlay, onStop, sleepTimerActions, audioOutputActions)
         } else if (maxWidth >= ExpandedPlayerBreakpoint) {
             ExpandedPlayerContent(state, palette, onSelectStation, onPlay, onStop, sleepTimerActions, audioOutputActions)
         } else {
@@ -147,6 +154,9 @@ internal fun AdaptivePlayerScreen(
         }
     }
 }
+
+internal fun usesLandscapePlayerLayout(width: Dp, height: Dp): Boolean =
+    width > height && height >= LandscapePlayerMinimumHeight
 
 @Composable
 private fun CoverPlayerContent(
@@ -292,6 +302,140 @@ private fun CompactPlayerContent(
         if (!isScrollable) Spacer(Modifier.weight(1f))
         StationSelector(state, onSelectStation, isCompact = true)
         if (!isScrollable) Spacer(Modifier.weight(1f))
+    }
+}
+
+@Composable
+private fun LandscapePlayerContent(
+    state: MainUiState,
+    palette: StationPalette,
+    maxWidth: Dp,
+    maxHeight: Dp,
+    onSelectStation: (StationId) -> Unit,
+    onPlay: () -> Unit,
+    onStop: () -> Unit,
+    sleepTimerActions: SleepTimerActions,
+    audioOutputActions: AudioOutputActions,
+) {
+    val artworkSize = minOf(
+        LandscapeArtworkMaximumSize,
+        (maxWidth - 400.dp).coerceIn(LandscapeArtworkMinimumSize, LandscapeArtworkMaximumSize),
+        (maxHeight - 32.dp).coerceAtLeast(LandscapeArtworkMinimumSize),
+    )
+    Row(
+        Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .testTag("landscape_player"),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        NowPlayingArtwork(state, palette, Modifier.size(artworkSize))
+        Column(
+            Modifier
+                .weight(1f)
+                .fillMaxHeight(),
+            verticalArrangement = Arrangement.Center,
+        ) {
+            LandscapeNowPlayingDetails(state, palette)
+            Spacer(Modifier.height(14.dp))
+            PrimaryPlayerControls(
+                state,
+                onSelectStation,
+                onPlay,
+                onStop,
+                sleepTimerActions,
+                audioOutputActions,
+                isCompact = true,
+            )
+        }
+        LandscapeStationSelector(state, onSelectStation)
+    }
+}
+
+@Composable
+private fun LandscapeNowPlayingDetails(
+    state: MainUiState,
+    palette: StationPalette,
+) {
+    val metadata = parseNowPlayingMetadata(state.nowPlaying.displayTitle)
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(
+            state.selectedStation?.name ?: "24Seven.FM",
+            color = palette.accent,
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            metadata.title,
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.testTag("now_playing_title"),
+        )
+        metadata.artist?.let { artist ->
+            Text(
+                artist,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        PlaybackStatusPill(state, palette)
+    }
+}
+
+@Composable
+private fun LandscapeStationSelector(
+    state: MainUiState,
+    onSelectStation: (StationId) -> Unit,
+) {
+    Column(
+        Modifier
+            .width(LandscapeStationSelectorWidth)
+            .fillMaxHeight()
+            .testTag("landscape_station_selector"),
+        verticalArrangement = Arrangement.SpaceEvenly,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        state.stations.forEach { station ->
+            val selected = station.id == state.selectedStation?.id
+            val palette = stationPalette(station.id)
+            Card(
+                onClick = { onSelectStation(station.id) },
+                colors = CardDefaults.cardColors(
+                    containerColor = if (selected) palette.glow else MaterialTheme.colorScheme.surfaceContainer,
+                ),
+                border = BorderStroke(
+                    if (selected) 2.dp else 1.dp,
+                    if (selected) palette.accent else MaterialTheme.colorScheme.outlineVariant,
+                ),
+                modifier = Modifier
+                    .size(48.dp)
+                    .semantics {
+                        this.selected = selected
+                        role = Role.RadioButton
+                        contentDescription = if (selected) "${station.name}, selected" else station.name
+                    }
+                    .testTag("landscape_station_${station.id.value}"),
+            ) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    AsyncImage(
+                        model = station.logoUrl,
+                        contentDescription = null,
+                        contentScale = ContentScale.Fit,
+                        fallback = painterResource(R.drawable.app_logo),
+                        error = painterResource(R.drawable.app_logo),
+                        placeholder = painterResource(R.drawable.app_logo),
+                        modifier = Modifier.size(36.dp),
+                    )
+                }
+            }
+        }
     }
 }
 
