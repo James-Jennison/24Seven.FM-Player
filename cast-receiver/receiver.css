@@ -39,18 +39,3 @@ cast-media-player {
   --theme-hue: 205;
   --progress-color: #35c4ff;
 }
-
-#cast-diagnostics {
-  position: fixed;
-  right: 3vw;
-  bottom: 3vw;
-  z-index: 2147483647;
-  max-width: 48vw;
-  padding: 0.65em 0.9em;
-  border: 1px solid rgba(178, 226, 255, 0.55);
-  border-radius: 0.35em;
-  background: rgba(1, 16, 34, 0.86);
-  color: #d7f1ff;
-  font: 600 2.1vw/1.35 system-ui, sans-serif;
-  text-align: right;
-}
