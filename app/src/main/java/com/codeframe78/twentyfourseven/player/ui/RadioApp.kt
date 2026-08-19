@@ -375,6 +375,7 @@ private fun StationTopBar(
             }
         },
         actions = {
+            CastRouteButton()
             IconButton(onClick = { onSelectDestination(MainDestination.More) }) {
                 Icon(Icons.Default.MoreVert, contentDescription = "Account and station options")
             }
