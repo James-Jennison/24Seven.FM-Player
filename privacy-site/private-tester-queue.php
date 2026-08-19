@@ -1297,11 +1297,14 @@ function testerNeedsSmokeTestReminder(array $tester): bool
 function smokeTestReminderMessage(array $tester): string
 {
     return 'Hi ' . $tester['display_name'] . ",\n\n"
-        . "Your 24Seven.FM Player tester profile and Google Play opt-in are recorded. Please return to your tester portal to complete the short first-use smoke-test self-report.\n\n"
-        . "1. Open https://player.jamesjennison.net/tester-portal.php and sign in with your tester link.\n"
-        . "2. Install or update the Google Play test build if needed, then launch 24Seven.FM Player.\n"
-        . "3. Complete the brief first-use smoke check: play a station, switch stations, check a short background/media-controls interaction, then return to the app.\n"
-        . "4. Submit the smoke-test confirmation in the portal when that check is complete. This is your self-report; it is not inferred from installation or usage telemetry.\n\n"
+        . "Your Profile & Device and Google Play opt-in are recorded. Your onboarding is waiting at Step 4 — First-Use Smoke Test.\n\n"
+        . "Open https://player.jamesjennison.net/product-testing/#alpha-tester-interest to return directly to that screen.\n\n"
+        . "On your Play-installed build:\n"
+        . "1. Launch 24Seven.FM Player and play one station for a few minutes.\n"
+        . "2. Switch stations.\n"
+        . "3. Briefly background playback, use Android media controls, then return to the Player.\n"
+        . "4. On the First-Use Smoke Test screen, check the self-confirmation box and select Complete onboarding.\n\n"
+        . "This is your own confirmation, not automated installation or activity evidence. Report anything that failed or felt confusing through the tester portal or Live Chat.\n\n"
         . "Do not send passwords, station credentials, CAPTCHA answers, session information, or private screenshots. Use the portal Live Chat if you need tester-program support.\n\n"
         . "Thank you,\n24Seven.FM Player Testing Team";
 }
@@ -1359,7 +1362,7 @@ function sendSmokeTestReminder(PDO $database, array $config, int $testerId): boo
         throw new InvalidArgumentException('A smoke-test reminder is available only after Profile & Device and Google Play opt-in are recorded, while the tester self-report is still outstanding.');
     }
 
-    $subject = 'Reminder: complete your 24Seven.FM Player smoke test';
+    $subject = 'Action needed: complete Step 4 — First-Use Smoke Test';
     $message = smokeTestReminderMessage($tester);
     $html = plainTextToHtml($message);
     $archiveId = prepareSmokeTestReminderArchive($database, (int) $tester['id'], $subject, $message, $html);

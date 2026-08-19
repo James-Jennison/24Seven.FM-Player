@@ -80,6 +80,7 @@ assert(endpoint.includes("function testerNeedsSmokeTestReminder(array $tester): 
 assert(endpoint.includes("function sendSmokeTestReminder(PDO $database, array $config, int $testerId): bool"), "The Coordinator must be able to send an individual smoke-test reminder.");
 assert(endpoint.includes("send_smoke_test_reminder"), "The tester workspace must expose a smoke-test reminder action.");
 assert(endpoint.includes("while the tester self-report is still outstanding"), "The reminder must be server-side blocked after a smoke-test self-report.");
+assert(endpoint.includes("Action needed: complete Step 4 — First-Use Smoke Test"), "The reminder subject must identify the onboarding wizard’s outstanding Step 4 action.");
 assert(endpoint.includes("Smoke-test reminder") && endpoint.includes("renderSmokeTestReminderRecord"), "Reminder content and handoff outcome must be visible in the protected sent-mail archive.");
 assert(endpoint.includes("task_status TEXT NOT NULL DEFAULT \\'assigned\\'"), "Assignments must have a separate default status");
 assert(endpoint.includes("task_status IN (\\'assigned\\', \\'in_progress\\', \\'complete\\', \\'blocked\\')"), "Assignment statuses are incomplete");

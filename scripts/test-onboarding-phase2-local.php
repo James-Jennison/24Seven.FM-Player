@@ -34,7 +34,9 @@ try {
     expectPhaseTwo(recordTesterPlayOptIn($database, 1) === false, 'Play Opt-In alone must not unlock local task assignment.');
     $tester = $database->query('SELECT testers.*, onboarding.onboarding_status, onboarding.play_opt_in_confirmed_at, onboarding.initial_smoke_test_confirmed_at, onboarding.reviewed_at FROM testers JOIN tester_onboarding AS onboarding ON onboarding.tester_id = testers.id WHERE testers.id = 1')->fetch();
     expectPhaseTwo(is_array($tester) && testerNeedsSmokeTestReminder($tester), 'A completed profile with Play opt-in and no smoke-test self-report must be eligible for a Coordinator reminder.');
-    $reminderId = prepareSmokeTestReminderArchive($database, 1, 'Local smoke-test reminder', smokeTestReminderMessage($tester), plainTextToHtml(smokeTestReminderMessage($tester)));
+    $reminderMessage = smokeTestReminderMessage($tester);
+    expectPhaseTwo(str_contains($reminderMessage, 'Step 4 — First-Use Smoke Test') && str_contains($reminderMessage, 'product-testing/#alpha-tester-interest') && str_contains($reminderMessage, 'Complete onboarding'), 'The reminder must direct testers to the onboarding wizard’s First-Use Smoke Test screen and completion action.');
+    $reminderId = prepareSmokeTestReminderArchive($database, 1, 'Local smoke-test reminder', $reminderMessage, plainTextToHtml($reminderMessage));
     completeSmokeTestReminderArchive($database, $reminderId, true);
     expectPhaseTwo((string) $database->query('SELECT handoff_status FROM tester_smoke_test_reminder_archive WHERE id = ' . $reminderId)->fetchColumn() === 'accepted', 'A smoke-test reminder must retain its individual mail-transport handoff outcome.');
     recordTesterInitialSmokeTest($database, 1);
