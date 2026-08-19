@@ -1138,6 +1138,18 @@ figcaption span { color: var(--muted); font-size: 0.88rem; }
 .tester-application-form,
 .tester-application-notes { padding: clamp(1.4rem, 3vw, 2rem); border: 1px solid var(--border); border-radius: 1rem; background: linear-gradient(145deg, rgba(103, 230, 209, 0.07), rgba(210, 156, 255, 0.025)); box-shadow: 0 1rem 2.5rem var(--shadow); }
 .tester-application-form { display: grid; gap: 1.35rem; }
+.tester-application-wizard { display: grid; gap: .65rem; padding-bottom: 1.1rem; border-bottom: 1px solid var(--border); }
+.tester-application-progress { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .45rem; }
+.tester-application-progress-step { display: grid; width: 100%; min-height: 2.35rem; place-items: center; border: 1px solid var(--border); border-radius: 999px; background: rgba(9, 12, 21, .58); color: var(--muted); font-size: .82rem; font-weight: 850; }
+.tester-application-progress-step:hover:not(:disabled) { border-color: var(--teal); color: var(--text); }
+.tester-application-progress-step:disabled { cursor: default; opacity: 1; }
+.tester-application-progress-step.is-current { border-color: var(--purple); background: var(--purple); color: #14101d; }
+.tester-application-progress-step.is-complete { border-color: rgba(103, 230, 209, .7); color: var(--teal); }
+.tester-application-progress-text { margin: 0; color: var(--muted); font-size: .86rem; font-weight: 720; }
+.tester-application-actions { display: flex; justify-content: space-between; gap: .75rem; }
+.tester-application-actions .button { margin: 0; }
+.tester-application-form > [data-application-step="review"] { display: grid; gap: 1rem; }
+.tester-application-form > [data-application-step="review"] > h3 { margin: 0; }
 .tester-application-form .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.15rem; }
 .tester-application-form .form-grid > :only-child,
 .tester-application-form .form-grid > :last-child:nth-child(odd) { grid-column: 1 / -1; }
@@ -1835,6 +1847,9 @@ figcaption span { color: var(--muted); font-size: 0.88rem; }
 }
 
 @media (max-width: 560px) {
+  .tester-application-progress { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .tester-application-actions { flex-direction: column-reverse; }
+  .tester-application-actions .button { width: 100%; }
   .section-jump { justify-content: flex-start; }
   .site-explorer-toggle { display: none; }
   .project-header { position: relative; align-items: flex-start; justify-content: center; gap: 0.75rem; }

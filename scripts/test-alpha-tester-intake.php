@@ -125,13 +125,17 @@ $form = file_get_contents(dirname(__DIR__) . '/privacy-site/product-testing/inde
 expectIntake(is_string($form), 'Unable to inspect the tester-interest form.');
 expectIntake(FORM_ORIGIN . FALLBACK_LOCATION . '#alpha-tester-interest' === 'https://player.jamesjennison.net/product-testing/#alpha-tester-interest', 'The alpha-tester application endpoint must remain anchored to the canonical Player route.');
 expectIntake(substr_count($form, 'href="{{ site.alpha_tester_application_url }}"') === 2, 'The Tester Hub application links must use the canonical Player endpoint.');
-foreach (['<fieldset>', 'What is your primary 24Seven.FM station?', 'Guest testing does not require a 24Seven.FM station account.', 'Existing 24Seven.FM station access', 'name="primaryStation" required', 'name="deviceFormFactor" required', 'name="testingComfort" value="readonly" required', 'do not create an account or enter your username, password, security answer, CAPTCHA answer, or any other login information.', 'name="company"', 'name="consent" value="yes" required'] as $needle) {
+foreach (['<fieldset data-application-step="identity"', 'What is your primary 24Seven.FM station?', 'Guest testing does not require a 24Seven.FM station account.', 'Existing 24Seven.FM station access', 'name="primaryStation" required', 'name="deviceFormFactor" required', 'name="testingComfort" value="readonly" required', 'do not create an account or enter your username, password, security answer, CAPTCHA answer, or any other login information.', 'name="company"', 'name="consent" value="yes" required'] as $needle) {
     expectIntake(str_contains($form, $needle), "Form contract is missing {$needle}");
 }
 expectIntake(str_contains($form, 'name="recruitmentSource" value="direct" data-recruitment-source'), 'Form must retain a safe direct-recruitment fallback.');
+foreach (['data-application-step="identity"', 'data-application-step="listening"', 'data-application-step="device"', 'data-application-step="coverage"', 'data-application-step="preferences"', 'data-application-step="review"'] as $step) {
+    expectIntake(str_contains($form, $step), "Application wizard step is missing {$step}");
+}
 $projectScript = file_get_contents(dirname(__DIR__) . '/privacy-site/assets/project.js');
 expectIntake(is_string($projectScript) && str_contains($projectScript, "'testers-community': 'testers_community'") && str_contains($projectScript, "betafamily: 'betafamily'"), 'Tagged recruitment sources must be explicitly allowlisted in the public form enhancement.');
 expectIntake(is_string($projectScript) && str_contains($projectScript, "requestedSource === 'testers-community'") && str_contains($projectScript, 'Opt in, then register your profile'), 'Testers Community must receive the explicit opt-in-to-profile sequence.');
+expectIntake(is_string($projectScript) && str_contains($projectScript, 'tester-application-progress') && str_contains($projectScript, 'firstInvalidControl'), 'Application wizard must gate each step without changing the receiver contract.');
 expectIntake(str_contains($form, 'class="cf-turnstile" data-sitekey="0x4AAAAAAEPR2A0JwM5Qhrvt" data-action="alpha-tester-interest"'), 'The Alpha signup form must embed its dedicated Turnstile action.');
 expectIntake(!str_contains($form, 'name="username"') && !str_contains($form, 'name="password"'), 'The form must not collect credentials.');
 

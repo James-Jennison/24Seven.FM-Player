@@ -190,6 +190,36 @@ try {
     deviceScaleFactor: 1,
     mobile: true,
   });
+  await navigate("/product-testing/");
+  const wizardState = await evaluate(`(() => {
+    const form = document.querySelector('[data-alpha-tester-form]');
+    const steps = [...form.querySelectorAll(':scope > [data-application-step]')];
+    const continueButton = () => form.querySelector('.tester-application-actions .button.primary');
+    const visibleStep = () => steps.find((step) => !step.hidden)?.dataset.applicationStep;
+    const initial = visibleStep();
+    const progress = form.querySelectorAll('.tester-application-progress-step');
+    form.querySelector('[name="name"]').value = 'Wizard tester';
+    form.querySelector('[name="email"]').value = 'wizard@example.test';
+    continueButton().click();
+    return {
+      initial,
+      afterIdentity: visibleStep(),
+      stepCount: steps.length,
+      progressCount: progress.length,
+      futureProgressDisabled: [...progress].slice(1).every((button) => button.disabled),
+    };
+  })()`);
+  assert(wizardState.initial === "identity", "Tester application did not begin at the identity step");
+  assert(wizardState.afterIdentity === "listening", "Tester application did not advance after valid identity details");
+  assert(wizardState.stepCount === 6 && wizardState.progressCount === 6, "Tester application wizard does not expose six stages");
+  assert(wizardState.futureProgressDisabled, "Tester application wizard permits skipping incomplete stages");
+
+  await send("Emulation.setDeviceMetricsOverride", {
+    width: 390,
+    height: 844,
+    deviceScaleFactor: 1,
+    mobile: true,
+  });
   await navigate("/");
   const homeInteractions = await evaluate(`(() => {
     const theme = document.querySelector('.theme-toggle');

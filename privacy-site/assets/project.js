@@ -626,6 +626,84 @@
     if (applicationResult === 'sent') setStatus(requestedSource === 'testers-community' ? 'Your Testers Community profile was sent.' : 'Your tester profile was sent.', 'success');
     if (applicationResult === 'error') setStatus('The application could not be delivered. Please try again later.', 'error');
 
+    const applicationSteps = Array.from(form.querySelectorAll(':scope > [data-application-step]'));
+    if (applicationSteps.length === 0) return;
+
+    const wizard = document.createElement('div');
+    wizard.className = 'tester-application-wizard';
+    const progress = document.createElement('nav');
+    progress.className = 'tester-application-progress';
+    progress.setAttribute('aria-label', 'Application progress');
+    const progressText = document.createElement('p');
+    progressText.className = 'tester-application-progress-text';
+    progressText.setAttribute('aria-live', 'polite');
+    const actions = document.createElement('div');
+    actions.className = 'tester-application-actions';
+    actions.dataset.applicationWizardActions = '';
+    wizard.append(progress, progressText);
+    form.prepend(wizard);
+    form.append(actions);
+
+    let currentStep = applicationResult === 'sent' ? applicationSteps.length - 1 : 0;
+
+    const firstInvalidControl = function (step) {
+      return Array.from(step.querySelectorAll('input, select, textarea')).find(function (control) {
+        return !control.disabled && control.willValidate && !control.validity.valid;
+      });
+    };
+
+    const showStep = function (nextStep) {
+      currentStep = Math.max(0, Math.min(nextStep, applicationSteps.length - 1));
+      applicationSteps.forEach(function (step, index) {
+        step.hidden = index !== currentStep;
+      });
+      progress.replaceChildren();
+      applicationSteps.forEach(function (step, index) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'tester-application-progress-step';
+        button.textContent = String(index + 1);
+        button.setAttribute('aria-label', 'Step ' + String(index + 1) + ': ' + (step.dataset.applicationStepTitle || 'Application step'));
+        button.setAttribute('aria-current', index === currentStep ? 'step' : 'false');
+        button.disabled = index > currentStep;
+        button.classList.toggle('is-current', index === currentStep);
+        button.classList.toggle('is-complete', index < currentStep);
+        button.addEventListener('click', function () { showStep(index); });
+        progress.append(button);
+      });
+      const title = applicationSteps[currentStep].dataset.applicationStepTitle || 'Application';
+      progressText.textContent = 'Step ' + String(currentStep + 1) + ' of ' + String(applicationSteps.length) + ': ' + title;
+
+      actions.replaceChildren();
+      if (currentStep > 0) {
+        const back = document.createElement('button');
+        back.type = 'button';
+        back.className = 'button secondary';
+        back.textContent = 'Back';
+        back.addEventListener('click', function () { showStep(currentStep - 1); });
+        actions.append(back);
+      }
+      if (currentStep < applicationSteps.length - 1) {
+        const next = document.createElement('button');
+        next.type = 'button';
+        next.className = 'button primary';
+        next.textContent = 'Continue';
+        next.addEventListener('click', function () {
+          const invalid = firstInvalidControl(applicationSteps[currentStep]);
+          if (invalid) {
+            invalid.reportValidity();
+            invalid.focus();
+            return;
+          }
+          showStep(currentStep + 1);
+        });
+        actions.append(next);
+      }
+      form.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    };
+
+    showStep(currentStep);
+
     form.addEventListener('submit', async function (event) {
       event.preventDefault();
       if (!form.reportValidity()) return;
@@ -641,6 +719,7 @@
         if (!response.ok || result.ok !== true) throw new Error(result.message || 'The application could not be sent.');
         form.reset();
         setStatus(result.message, 'success');
+        showStep(applicationSteps.length - 1);
       } catch (error) {
         setStatus(error && error.message ? error.message : 'The application could not be sent. Please try again.', 'error');
       } finally {
