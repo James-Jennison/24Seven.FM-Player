@@ -10,6 +10,11 @@ on:
         required: false
         type: boolean
         default: false
+      backfill_message:
+        description: "Explicit one-time historical release announcement; empty for normal release detection"
+        required: false
+        type: string
+        default: ""
 
 permissions:
   contents: write
@@ -22,7 +27,7 @@ concurrency:
 jobs:
   announce:
     name: Announce published Player releases
-    if: ${{ vars.GOOGLE_PLAY_RELEASE_ANNOUNCER_ENABLED == 'true' || (github.event_name == 'workflow_dispatch' && inputs.bootstrap) }}
+    if: ${{ vars.GOOGLE_PLAY_RELEASE_ANNOUNCER_ENABLED == 'true' || (github.event_name == 'workflow_dispatch' && (inputs.bootstrap || inputs.backfill_message != '')) }}
     runs-on: ubuntu-latest
     env:
       GOOGLE_PLAY_PACKAGE_NAME: com.codeframe78.twentyfourseven.player
@@ -59,11 +64,11 @@ jobs:
         run: node scripts/announce-google-play-releases.mjs
 
       - name: Post release announcement to Discord thread
-        if: ${{ steps.releases.outputs.count != '0' }}
+        if: ${{ steps.releases.outputs.count != '0' || inputs.backfill_message != '' }}
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           DISCORD_THREAD_ID: ${{ vars.DISCORD_THREAD_ID }}
-          DISCORD_MESSAGE: ${{ steps.releases.outputs.message }}
+          DISCORD_MESSAGE: ${{ inputs.backfill_message || steps.releases.outputs.message }}
         run: |
           if [[ -z "${DISCORD_WEBHOOK_URL}" ]]; then
             echo "Discord webhook is not available."
