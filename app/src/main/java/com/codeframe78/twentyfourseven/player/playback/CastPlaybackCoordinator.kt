@@ -280,12 +280,12 @@ internal object CastMediaDescriptorFactory {
 }
 
 internal fun StreamFormat.castContentType(): String = when (this) {
-    // The relays advertise the non-standard audio/aacp HTTP label. Cast's
-    // built-in receiver expects the standard raw-AAC media type instead.
-    StreamFormat.Aac -> "audio/aac"
+    // Preserve the station relay's declared media type. A Cast-compatible
+    // HLS variant is required for remote playback of this raw AAC+ transport.
+    StreamFormat.Aac -> "audio/aacp"
     StreamFormat.Mp3 -> "audio/mpeg"
     StreamFormat.Hls -> "application/x-mpegURL"
-    StreamFormat.Unknown -> "audio/aac"
+    StreamFormat.Unknown -> "audio/aacp"
 }
 
 private fun String?.safeHttpsUri(): Uri? = this
