@@ -21,15 +21,14 @@ The workflow is intentionally inert until the owner creates the following reposi
 
 The workflow requests the `androidpublisher` OAuth scope and uses workload identity federation, so
 no long-lived Google service-account key is stored in GitHub. The release ledger lives in
-`.github/play-release-announcer-state.json`; it is committed only after Discord accepts the
-announcement, preventing repeat posts on later scheduled runs.
+`.github/play-release-announcer-state.json` on the dedicated
+`google-play-release-ledger` branch. It is committed only after Discord accepts the announcement,
+preventing repeat posts on later scheduled runs without bypassing `main` branch protection.
 
 Before enabling the hourly schedule, run **Announce Google Play releases** manually with
 **bootstrap** selected. It records the releases already published to Alpha without posting them.
 Only then set `GOOGLE_PLAY_RELEASE_ANNOUNCER_ENABLED` to `true`; later published Alpha releases
-are announced once and recorded in the ledger. GitHub Actions must be allowed to push the ledger
-commit to `main`; if branch protection blocks that push, configure a narrowly scoped bypass for
-`github-actions[bot]` before enabling the scheduled workflow.
+are announced once and recorded in the ledger branch.
 
 Google documents `PUBLISHED` as meaning that a release is available to users on its track:
 https://developers.google.com/android-publisher/api-ref/rest/v3/applications.tracks.releases
