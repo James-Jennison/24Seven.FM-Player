@@ -1,0 +1,41 @@
+:root {
+  background: #07101d;
+}
+
+html,
+body,
+cast-media-player {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  --playback-logo-image: url("assets/24seven-fm-mark.svg");
+  background: #07101d;
+}
+
+cast-media-player {
+  --background-color: #07101d;
+  --background-image:
+    radial-gradient(circle at 78% 22%, rgba(29, 144, 238, 0.3), transparent 29%),
+    radial-gradient(circle at 18% 84%, rgba(20, 76, 155, 0.56), transparent 35%),
+    linear-gradient(135deg, #07101d 0%, #0a1930 48%, #09152a 100%);
+  --background-size: cover;
+  --font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+  --logo-image: url("assets/24seven-fm-mark.svg");
+  --logo-size: 30vw;
+  --logo-repeat: no-repeat;
+  --logo-background: transparent;
+  --splash-image: url("assets/24seven-fm-mark.svg");
+  --splash-size: 30vw;
+  --splash-repeat: no-repeat;
+  --splash-color: transparent;
+  --watermark-image: url("assets/24seven-fm-mark.svg");
+  --watermark-size: 9vw;
+  --watermark-position: bottom 9% right 8%;
+  --watermark-repeat: no-repeat;
+  --theme-hue: 205;
+  --progress-color: #35c4ff;
+}
