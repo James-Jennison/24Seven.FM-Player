@@ -20,3 +20,11 @@ Website and Onboarding revisions and their composed-release contract.
 Removing the recovery reference is an explicit later migration, after a
 separately approved staging cutover and rollback verification. It is not part
 of this repository split.
+
+## Product Development Workspace
+
+`dev.jamesjennison.net` is an independently served Product Development
+Workspace. It remains active and separate from the public Product at
+`player.jamesjennison.net`. No Player app, public Website, or Onboarding
+release may target, replace, or assume ownership of the Development Workspace
+without a separately authorized development-workspace change.

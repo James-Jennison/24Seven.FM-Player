@@ -13,6 +13,7 @@
 - `privacy-site/` and the legacy website/onboarding scripts remain only as a recovery reference for the unchanged deployed artifact. Do not modify, deploy, or validate them for new feature work.
 - A separately authorized recovery may inspect this legacy copy. Any website server-side investigation uses only the canonical SSH alias `website-vm-admin`; never use `webuzo-production-admin`.
 - No repository split authorizes a live deployment, DNS/TLS/Cloudflare change, database migration, or removal of the legacy recovery copy.
+- `dev.jamesjennison.net` is the independently served Product Development Workspace. It is a protected live surface: never use it as a substitute target for Product or Onboarding work, and do not change it without separately naming that hostname and scope.
 
 ## Android validation
 
