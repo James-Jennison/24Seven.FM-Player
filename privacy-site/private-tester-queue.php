@@ -192,6 +192,7 @@ function database(array $config): PDO
             assignment_email_status TEXT NOT NULL DEFAULT \'not_sent\' CHECK(assignment_email_status IN (\'not_sent\', \'accepted\', \'failed\')),
             assignment_email_attempted_at TEXT,
             assignment_email_attempts INTEGER NOT NULL DEFAULT 0,
+            submitted_for_review_at TEXT,
             created_at TEXT NOT NULL,
             updated_at TEXT NOT NULL
         );
@@ -226,6 +227,7 @@ function database(array $config): PDO
             details TEXT NOT NULL,
             outcome TEXT NOT NULL CHECK(outcome IN (\'pass\', \'issue\', \'blocked\', \'note\')),
             category TEXT NOT NULL DEFAULT \'other\' CHECK(category IN (\'playback\', \'connection_recovery\', \'station_switching\', \'metadata_artwork\', \'favorites\', \'media_controls\', \'audio_accessories\', \'layout_accessibility\', \'performance_battery\', \'crash_freeze\', \'other\')),
+            pt_case TEXT,
             created_at TEXT NOT NULL
         );
         CREATE TABLE IF NOT EXISTS chat_threads (
@@ -281,6 +283,9 @@ function database(array $config): PDO
     if (!in_array('assignment_email_attempts', $assignmentColumns, true)) {
         $database->exec('ALTER TABLE tester_task_assignments ADD COLUMN assignment_email_attempts INTEGER NOT NULL DEFAULT 0');
     }
+    if (!in_array('submitted_for_review_at', $assignmentColumns, true)) {
+        $database->exec('ALTER TABLE tester_task_assignments ADD COLUMN submitted_for_review_at TEXT');
+    }
     $onboardingColumns = array_column($database->query('PRAGMA table_info(tester_onboarding)')->fetchAll(), 'name');
     if (!in_array('play_opt_in_confirmed_at', $onboardingColumns, true)) {
         $database->exec('ALTER TABLE tester_onboarding ADD COLUMN play_opt_in_confirmed_at TEXT');
@@ -318,6 +323,10 @@ function database(array $config): PDO
     if (!in_array('category', $feedbackColumns, true)) {
         $database->exec("ALTER TABLE tester_feedback ADD COLUMN category TEXT NOT NULL DEFAULT 'other' CHECK(category IN ('playback', 'connection_recovery', 'station_switching', 'metadata_artwork', 'favorites', 'media_controls', 'audio_accessories', 'layout_accessibility', 'performance_battery', 'crash_freeze', 'other'))");
     }
+    if (!in_array('pt_case', $feedbackColumns, true)) {
+        $database->exec('ALTER TABLE tester_feedback ADD COLUMN pt_case TEXT');
+    }
+    $database->exec('CREATE UNIQUE INDEX IF NOT EXISTS tester_feedback_assignment_pt_case ON tester_feedback(assignment_id, pt_case) WHERE assignment_id IS NOT NULL AND pt_case IS NOT NULL');
     $testerColumns = array_column($database->query('PRAGMA table_info(testers)')->fetchAll(), 'name');
     $testerMigrations = [
         'primary_station' => 'TEXT',
@@ -556,6 +565,18 @@ function e(?string $value): string
     return htmlspecialchars($value ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
+function humanTimestamp(?string $value): string
+{
+    if ($value === null || trim($value) === '') return '';
+    try {
+        return (new DateTimeImmutable($value))
+            ->setTimezone(new DateTimeZone('UTC'))
+            ->format('F j, Y \\a\\t g:i:s A T');
+    } catch (Throwable) {
+        return $value;
+    }
+}
+
 function redirect(string $location = ''): never
 {
     header('Location: /private-tester-queue.php' . $location, true, 303);
@@ -764,6 +785,30 @@ function taskRegistry(): array
     return $tasks;
 }
 
+/**
+ * Returns the submitted and still-missing PT cases for one focused assignment.
+ * A tester report is evidence for one case, never a blanket completion claim.
+ */
+function assignmentReportProgress(PDO $database, int $assignmentId, array $task): array
+{
+    $required = array_values(array_filter($task['ptIds'] ?? [], 'is_string'));
+    $statement = $database->prepare('SELECT pt_case FROM tester_feedback WHERE assignment_id = ? AND pt_case IS NOT NULL');
+    $statement->execute([$assignmentId]);
+    $reported = [];
+    foreach ($statement->fetchAll(PDO::FETCH_COLUMN) as $ptCase) {
+        if (is_string($ptCase) && in_array($ptCase, $required, true)) {
+            $reported[$ptCase] = true;
+        }
+    }
+    $reportedCases = array_values(array_filter($required, static fn (string $ptCase): bool => isset($reported[$ptCase])));
+    return [
+        'required' => $required,
+        'reported' => $reportedCases,
+        'missing' => array_values(array_diff($required, $reportedCases)),
+        'complete' => $required !== [] && count($reportedCases) === count($required),
+    ];
+}
+
 function activeTester(PDO $database, int $testerId): void
 {
     $statement = $database->prepare("SELECT id FROM testers WHERE id = ? AND status = 'active'");
@@ -917,6 +962,80 @@ function isGuestTester(array $tester): bool
 function taskAllowsGuestTester(array $task): bool
 {
     return ($task['guestEligible'] ?? false) === true;
+}
+
+/**
+ * Produces advisory, coordinator-only task matches from the coverage a tester
+ * chose to provide. Reported account access remains subject to coordinator
+ * verification, and controlled or harness-only work is never recommended.
+ *
+ * @return list<array{task: array, score: int, reasons: list<string>}>
+ */
+function testerTaskRecommendations(array $tasks, array $tester): array
+{
+    if (!testerReadyForAssignment($tester)) return [];
+
+    $guest = isGuestTester($tester);
+    $interests = listFromJson($tester['interests_json'] ?? null);
+    $network = listFromJson($tester['network_capabilities_json'] ?? null);
+    $audio = array_values(array_filter(listFromJson($tester['audio_capabilities_json'] ?? null), static fn (string $value): bool => $value !== 'none'));
+    $accessibility = array_values(array_filter(listFromJson($tester['accessibility_capabilities_json'] ?? null), static fn (string $value): bool => $value !== 'none'));
+    $controlled = array_values(array_filter(listFromJson($tester['controlled_actions_json'] ?? null), static fn (string $value): bool => $value !== 'none'));
+    $formFactor = (string) ($tester['device_form_factor'] ?? '');
+    $primaryStation = (string) ($tester['primary_station'] ?? '');
+    $accountAvailable = !$guest && $primaryStation !== '' && $primaryStation !== 'none';
+    $recommendations = [];
+
+    $add = static function (string $taskId, int $score, array $reasons) use (&$recommendations, $tasks, $guest): void {
+        $task = $tasks[$taskId] ?? null;
+        if (!is_array($task) || ($task['state'] ?? '') !== 'current' || ($guest && !taskAllowsGuestTester($task))) return;
+        $recommendations[$taskId] = ['task' => $task, 'score' => $score, 'reasons' => $reasons];
+    };
+
+    $add('TT-02', 1, ['A supported Android device and a primary station are recorded.']);
+    if (in_array('playback', $interests, true)) $add('TT-03', 3, ['Interested in playback and media controls.']);
+    if (in_array('queue_history_data', $interests, true)) $add('TT-05', 3, ['Interested in Queue, History, and station data.']);
+    if ($audio !== [] || in_array('audio_accessories', $interests, true)) $add('TT-04', 5, ['Reported audio or accessory coverage.']);
+    if (array_intersect($network, ['network_handoff', 'network_disconnect']) !== [] || in_array('network_recovery', $interests, true)) $add('TT-06', 5, ['Reported Wi-Fi/mobile handoff or network-recovery coverage.']);
+    if (in_array($formFactor, ['foldable', 'tablet', 'chromebook'], true) || in_array('adaptive_layouts', $interests, true)) $add('TT-15', 5, ['Reported an adaptive device form factor or layout-testing interest.']);
+    if ($accessibility !== [] || in_array('accessibility', $interests, true)) $add('TT-16', 5, ['Reported accessibility or alternative-input coverage.']);
+    if ($accountAvailable && (in_array('accounts_favorites', $interests, true) || in_array('account_testing', $controlled, true) || in_array('session_testing', $controlled, true))) $add('TT-07', 4, ['Reported station access and account/session testing interest.', 'Verify an approved station account before assigning.']);
+    if ($accountAvailable && in_array('request_safety', $interests, true)) $add('TT-08', 4, ['Interested in read-only request browsing and safety checks.', 'Choose the station and verify the assigned account state before assigning.']);
+    if ($accountAvailable && $primaryStation === 'sst' && in_array('request_safety', $interests, true)) $add('TT-10', 4, ['Primary station is StreamingSoundtracks.com and request-safety coverage was selected.', 'Verify an approved SST account before assigning.']);
+    if ($accountAvailable && in_array('chat_community', $interests, true)) $add('TT-11', 3, ['Interested in Chat and community features.', 'Keep the assignment read-only unless a harmless post is separately authorized.']);
+    if (in_array('general', $interests, true)) $add('TT-14', 2, ['Available for general testing and privacy-safe support coverage.']);
+
+    $result = array_values($recommendations);
+    usort($result, static fn (array $left, array $right): int => $right['score'] <=> $left['score'] ?: strcmp((string) $left['task']['id'], (string) $right['task']['id']));
+    return array_slice($result, 0, 4);
+}
+
+function assignmentConfigurationPrefill(array $tester): string
+{
+    $formFactors = ['phone' => 'Standard phone', 'foldable' => 'Foldable / flip phone', 'tablet' => 'Android tablet', 'chromebook' => 'Chromebook with Android app support', 'other' => 'Other Android device'];
+    $audioLabels = ['device_speaker' => 'Device speaker', 'bluetooth_headphones' => 'Bluetooth headphones or earbuds', 'bluetooth_speaker' => 'Bluetooth speaker', 'wired_headphones' => 'Wired headphones/headset', 'usb_audio' => 'USB audio device', 'android_auto' => 'Android Auto', 'hearing_aid' => 'Hearing aid / assistive audio', 'hdmi_audio' => 'HDMI / external display audio', 'external_input' => 'External keyboard or mouse/trackpad'];
+    $device = trim((string) ($tester['device'] ?? ''));
+    $android = trim((string) ($tester['android_version'] ?? ''));
+    $parts = [];
+    if ($device !== '') $parts[] = $android === '' ? $device : $device . ' (' . $android . ')';
+    $formFactor = $formFactors[(string) ($tester['device_form_factor'] ?? '')] ?? '';
+    if ($formFactor !== '') $parts[] = 'Form factor: ' . $formFactor;
+    $audio = [];
+    foreach (listFromJson($tester['audio_capabilities_json'] ?? null) as $capability) {
+        if (isset($audioLabels[$capability])) $audio[] = $audioLabels[$capability];
+    }
+    if ($audio !== []) $parts[] = 'Audio: ' . implode(', ', $audio);
+    $prefill = implode(' · ', $parts);
+    return textLength($prefill) <= MAX_ASSIGNMENT_CONFIGURATION_LENGTH
+        ? $prefill
+        : (function_exists('mb_strimwidth') ? mb_strimwidth($prefill, 0, MAX_ASSIGNMENT_CONFIGURATION_LENGTH, '', 'UTF-8') : substr($prefill, 0, MAX_ASSIGNMENT_CONFIGURATION_LENGTH));
+}
+
+function assignmentStationScopePrefill(array $tester): string
+{
+    return match ((string) ($tester['primary_station'] ?? '')) {
+        'sst' => 'StreamingSoundtracks.com', '1980s' => '1980s.FM', 'afm' => 'Adagio.FM', 'dfm' => 'Death.FM', 'efm' => 'Entranced.FM', default => 'Network-wide / not station-specific',
+    };
 }
 
 function onboardingStatus(array $tester): string
@@ -1688,7 +1807,7 @@ function renderOperationsDashboard(PDO $database, string $notice = '', string $e
         $id = (int) $tester['id'];
         $source = $tester['recruitment_source'] ?? 'direct';
         $applicationRows .= '<article class="application-row">'
-            . '<div class="application-summary"><strong>' . e($tester['display_name']) . '</strong><br><small>' . e($tester['email']) . '</small><br><small>' . e($tester['device']) . ' · ' . e($tester['android_version']) . '</small><br><small>' . e(recruitmentSourceLabel(is_string($source) ? $source : null)) . ' · Received ' . e($tester['received_at']) . '</small></div>'
+            . '<div class="application-summary"><strong>' . e($tester['display_name']) . '</strong><br><small>' . e($tester['email']) . '</small><br><small>' . e($tester['device']) . ' · ' . e($tester['android_version']) . '</small><br><small>' . e(recruitmentSourceLabel(is_string($source) ? $source : null)) . ' · Received ' . e(humanTimestamp((string) $tester['received_at'])) . '</small></div>'
             . '<div class="application-actions">'
             . '<form method="post"><input type="hidden" name="action" value="accept_application"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $id . '"><button type="submit">Accept</button></form>'
             . '<form method="post"><input type="hidden" name="action" value="request_profile_details"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $id . '"><button class="secondary" type="submit">Request details</button></form>'
@@ -1754,14 +1873,15 @@ function renderTesterWorkspace(PDO $database, int $testerId, string $notice = ''
         redirect('?error=' . rawurlencode('The tester is no longer active.'));
     }
     $tasks = taskRegistry();
-    $assignmentsQuery = $database->prepare('SELECT id, task_id, task_status, station_scope, configuration_scope, coordinator_note, mutation_authorized, assignment_email_status, assignment_email_attempted_at, assignment_email_attempts FROM tester_task_assignments WHERE tester_id = ? ORDER BY created_at, id');
+    $assignmentsQuery = $database->prepare('SELECT id, task_id, task_status, station_scope, configuration_scope, coordinator_note, mutation_authorized, assignment_email_status, assignment_email_attempted_at, assignment_email_attempts, submitted_for_review_at FROM tester_task_assignments WHERE tester_id = ? ORDER BY created_at, id');
     $assignmentsQuery->execute([$testerId]);
     $assignments = $assignmentsQuery->fetchAll();
-    $feedbackQuery = $database->prepare('SELECT feedback.subject, feedback.details, feedback.outcome, feedback.category, feedback.created_at, assignments.task_id FROM tester_feedback AS feedback LEFT JOIN tester_task_assignments AS assignments ON assignments.id = feedback.assignment_id WHERE feedback.tester_id = ? ORDER BY feedback.created_at DESC, feedback.id DESC');
+    $feedbackQuery = $database->prepare('SELECT feedback.subject, feedback.details, feedback.outcome, feedback.category, feedback.pt_case, feedback.created_at, assignments.task_id FROM tester_feedback AS feedback LEFT JOIN tester_task_assignments AS assignments ON assignments.id = feedback.assignment_id WHERE feedback.tester_id = ? ORDER BY feedback.created_at DESC, feedback.id DESC');
     $feedbackQuery->execute([$testerId]);
     $feedbackItems = '';
     foreach ($feedbackQuery->fetchAll() as $feedback) {
-        $feedbackItems .= '<article class="assignment-existing"><h4>' . e(($feedback['task_id'] ?: 'General') . ' · ' . strtoupper((string) $feedback['outcome'])) . '</h4><p><strong>' . e(FEEDBACK_CATEGORIES[$feedback['category']] ?? FEEDBACK_CATEGORIES['other']) . ' · ' . e($feedback['subject']) . '</strong><br><small>' . e($feedback['created_at']) . '</small></p><p>' . nl2br(e($feedback['details']), false) . '</p></article>';
+        $case = is_string($feedback['pt_case'] ?? null) && $feedback['pt_case'] !== '' ? ' · ' . $feedback['pt_case'] : '';
+        $feedbackItems .= '<article class="assignment-existing"><h4>' . e(($feedback['task_id'] ?: 'General') . $case . ' · ' . strtoupper((string) $feedback['outcome'])) . '</h4><p><strong>' . e(FEEDBACK_CATEGORIES[$feedback['category']] ?? FEEDBACK_CATEGORIES['other']) . ' · ' . e($feedback['subject']) . '</strong><br><small>' . e(humanTimestamp((string) $feedback['created_at'])) . '</small></p><p>' . nl2br(e($feedback['details']), false) . '</p></article>';
     }
     $profile = profileSummary($tester);
     $status = onboardingStatus($tester);
@@ -1777,6 +1897,8 @@ function renderTesterWorkspace(PDO $database, int $testerId, string $notice = ''
         ? 'Accepted by the mail transport'
         : (($tester['orientation_email_status'] ?? 'not_sent') === 'failed' ? 'Mail transport failed' : 'Not sent');
     $guestTester = isGuestTester($tester);
+    $recommendations = testerTaskRecommendations($tasks, $tester);
+    $recommendedTaskId = (string) ($recommendations[0]['task']['id'] ?? '');
     $taskOptions = '<option value="">Choose a current Tester Task</option>';
     foreach ($tasks as $task) {
         $notEligibleForGuest = $guestTester && !taskAllowsGuestTester($task);
@@ -1784,11 +1906,28 @@ function renderTesterWorkspace(PDO $database, int $testerId, string $notice = ''
         $suffix = ($task['state'] ?? '') === 'future'
             ? ' (Future / Blocked)'
             : ($notEligibleForGuest ? ' (Requires station account or controlled setup)' : '');
-        $taskOptions .= '<option value="' . e($task['id']) . '"' . $disabled . '>' . e($task['id'] . ' — ' . $task['title'] . $suffix) . '</option>';
+        $selected = $task['id'] === $recommendedTaskId ? ' selected' : '';
+        $taskOptions .= '<option value="' . e($task['id']) . '"' . $selected . $disabled . '>' . e($task['id'] . ' — ' . $task['title'] . $suffix) . '</option>';
     }
     $stationOptions = '';
+    $stationScopePrefill = assignmentStationScopePrefill($tester);
     foreach (STATION_SCOPES as $station) {
-        $stationOptions .= '<option value="' . e($station) . '">' . e($station) . '</option>';
+        $stationOptions .= '<option value="' . e($station) . '"' . ($station === $stationScopePrefill ? ' selected' : '') . '>' . e($station) . '</option>';
+    }
+    $configurationPrefill = assignmentConfigurationPrefill($tester);
+    if (!$profile['complete']) {
+        $recommendationPanel = '<article class="onboarding-card"><h3>Task recommendations unlock after Profile &amp; Device</h3><p>Complete the required coverage details before matching a focused task.</p></article>';
+    } elseif (!testerReadyForAssignment($tester)) {
+        $recommendationPanel = '<article class="onboarding-card"><h3>Task recommendations are waiting for readiness evidence</h3><p>The tester must self-confirm both Google Play opt-in and the first-use smoke test before a focused task can be recommended.</p></article>';
+    } elseif ($recommendations === []) {
+        $recommendationPanel = '<article class="onboarding-card"><h3>No narrow recommendation yet</h3><p>Use the registered device coverage and task safety boundary to choose a current task manually.</p></article>';
+    } else {
+        $recommendationCards = '';
+        foreach ($recommendations as $recommendation) {
+            $task = $recommendation['task'];
+            $recommendationCards .= '<article class="assignment-existing"><h4>' . e($task['id'] . ' — ' . $task['title']) . '</h4><p><strong>Why it matches:</strong> ' . e(implode(' ', $recommendation['reasons'])) . '</p><p><strong>PT cases:</strong> ' . e(implode(', ', $task['ptIds'])) . ' · <a href="/product-testing/?task=' . rawurlencode($task['id']) . '">Open cases</a></p><button class="secondary" type="button" data-use-recommended-task="' . e($task['id']) . '">Use for assignment</button></article>';
+        }
+        $recommendationPanel = '<section class="onboarding-card"><h3>Recommended Tester Tasks</h3><p class="muted">The top match is preselected below from this tester’s device profile. Review the scope and safety boundary before assigning; this does not create an assignment, authorize controlled work, or send email.</p>' . $recommendationCards . '</section>';
     }
     $assignmentCards = '';
     foreach ($assignments as $assignment) {
@@ -1804,20 +1943,24 @@ function renderTesterWorkspace(PDO $database, int $testerId, string $notice = ''
         foreach (STATION_SCOPES as $station) {
             $currentStationOptions .= '<option value="' . e($station) . '"' . ($assignment['station_scope'] === $station ? ' selected' : '') . '>' . e($station) . '</option>';
         }
-        $assignmentCards .= '<article class="assignment-existing"><h4>' . e($task['id'] . ' — ' . $task['title']) . '</h4><p><strong>PT cases:</strong> ' . e(implode(', ', $task['ptIds'])) . ' · <a href="/product-testing/?task=' . rawurlencode($task['id']) . '">Open cases</a></p><p><strong>Assignment email:</strong> ' . e($assignment['assignment_email_status'] === 'accepted' ? 'Accepted by the mail transport' : ($assignment['assignment_email_status'] === 'failed' ? 'Mail transport failed' : 'Not sent')) . '</p><form method="post"><input type="hidden" name="action" value="update_task"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="assignment_id" value="' . (int) $assignment['id'] . '"><label>Status<select name="task_status">' . $currentStatusOptions . '</select></label><label>Station scope<select name="station_scope">' . $currentStationOptions . '</select></label><label>Device / accessory scope<input name="configuration_scope" maxlength="' . MAX_ASSIGNMENT_CONFIGURATION_LENGTH . '" value="' . e($assignment['configuration_scope']) . '"></label><label>Coordinator note<textarea name="coordinator_note" maxlength="' . MAX_ASSIGNMENT_NOTE_LENGTH . '">' . e($assignment['coordinator_note']) . '</textarea></label><button type="submit">Save assignment</button></form></article>';
+        $progress = assignmentReportProgress($database, (int) $assignment['id'], $task);
+        $reviewState = $assignment['submitted_for_review_at'] === null || $assignment['submitted_for_review_at'] === ''
+            ? '<p><strong>Tester reports:</strong> ' . count($progress['reported']) . ' of ' . count($progress['required']) . ' PT cases received.' . ($progress['missing'] === [] ? ' Ready for the tester to submit for Coordinator review.' : ' Missing: ' . e(implode(', ', $progress['missing'])) . '.') . '</p>'
+            : '<p class="notice"><strong>Submitted for Coordinator review:</strong> ' . e(humanTimestamp((string) $assignment['submitted_for_review_at'])) . '. Review the per-case results below before recording the final status.</p>';
+        $assignmentCards .= '<article class="assignment-existing"><h4>' . e($task['id'] . ' — ' . $task['title']) . '</h4><p><strong>PT cases:</strong> ' . e(implode(', ', $task['ptIds'])) . ' · <a href="/product-testing/?task=' . rawurlencode($task['id']) . '">Open cases</a></p><p><strong>Assignment email:</strong> ' . e($assignment['assignment_email_status'] === 'accepted' ? 'Accepted by the mail transport' : ($assignment['assignment_email_status'] === 'failed' ? 'Mail transport failed' : 'Not sent')) . '</p>' . $reviewState . '<form method="post"><input type="hidden" name="action" value="update_task"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="assignment_id" value="' . (int) $assignment['id'] . '"><label>Status<select name="task_status">' . $currentStatusOptions . '</select></label><label>Station scope<select name="station_scope">' . $currentStationOptions . '</select></label><label>Device / accessory scope<input name="configuration_scope" maxlength="' . MAX_ASSIGNMENT_CONFIGURATION_LENGTH . '" value="' . e($assignment['configuration_scope']) . '"></label><label>Coordinator note<textarea name="coordinator_note" maxlength="' . MAX_ASSIGNMENT_NOTE_LENGTH . '">' . e($assignment['coordinator_note']) . '</textarea></label><button type="submit">Save assignment</button></form></article>';
     }
     $message = $notice === '' ? '' : '<p class="notice">' . e($notice) . '</p>';
     $message .= $error === '' ? '' : '<p class="notice error">' . e($error) . '</p>';
     $guestTaskNotice = $guestTester
         ? '<p class="notice"><strong>Guest tester.</strong> Guest testers can receive only the account-free Guest testing tasks. Do not ask them to create, use, or share a station account.</p>'
         : '';
-    $playOptIn = ($tester['play_opt_in_confirmed_at'] ?? '') !== '' ? (string) $tester['play_opt_in_confirmed_at'] : 'Not self-confirmed';
-    $smokeTest = ($tester['initial_smoke_test_confirmed_at'] ?? '') !== '' ? (string) $tester['initial_smoke_test_confirmed_at'] : 'Not self-confirmed';
-    $withdrawalRequest = ($tester['withdrawal_requested_at'] ?? '') !== '' ? (string) $tester['withdrawal_requested_at'] : 'None';
-    $deletionRequest = ($tester['deletion_requested_at'] ?? '') !== '' ? (string) $tester['deletion_requested_at'] : 'None';
+    $playOptIn = ($tester['play_opt_in_confirmed_at'] ?? '') !== '' ? humanTimestamp((string) $tester['play_opt_in_confirmed_at']) : 'Not self-confirmed';
+    $smokeTest = ($tester['initial_smoke_test_confirmed_at'] ?? '') !== '' ? humanTimestamp((string) $tester['initial_smoke_test_confirmed_at']) : 'Not self-confirmed';
+    $withdrawalRequest = ($tester['withdrawal_requested_at'] ?? '') !== '' ? humanTimestamp((string) $tester['withdrawal_requested_at']) : 'None';
+    $deletionRequest = ($tester['deletion_requested_at'] ?? '') !== '' ? humanTimestamp((string) $tester['deletion_requested_at']) : 'None';
     $content = '<p><a href="/private-tester-queue.php">← Tester operations</a> · <a href="/tester-portal.php?preview_tester=' . $testerId . '">Preview tester view</a></p><div><p class="muted">Tester workspace</p><h1>' . e($tester['display_name']) . '</h1><p class="muted">' . e($tester['device']) . ' · ' . e($tester['android_version']) . ' · ' . e($tester['country'] ?: 'Country not provided') . ' · ' . e(recruitmentSourceLabel($tester['recruitment_source'] ?? null)) . '</p></div>' . $message
         . '<section><h2>Onboarding</h2>' . onboardingBadge($status) . $profileBlock . '<form method="post"><input type="hidden" name="action" value="update_onboarding"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $testerId . '"><label>Onboarding status<select name="onboarding_status">' . $statusOptions . '</select></label><label>Coordinator note<textarea name="onboarding_note" maxlength="' . MAX_ONBOARDING_NOTE_LENGTH . '" placeholder="Private operational note; never add credentials or secrets.">' . e($tester['onboarding_note'] ?? '') . '</textarea></label><button type="submit">Save onboarding progress</button></form><p><strong>Google Play opt-in:</strong> ' . e($playOptIn) . '<br><strong>Initial smoke test:</strong> ' . e($smokeTest) . '<br><small>These are tester self-confirmations, not inferred installation or usage telemetry.</small></p><p><strong>Withdrawal request:</strong> ' . e($withdrawalRequest) . '<br><strong>Record-deletion request:</strong> ' . e($deletionRequest) . '<br><small>Verify the request, stop program access promptly, and delete or anonymize the private tester record within the adopted 90-day policy period. A request is not evidence that deletion is already complete.</small></p>' . ($withdrawalRequest === 'None' ? '' : '<form method="post"><input type="hidden" name="action" value="deactivate_withdrawn_tester"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $testerId . '"><label><input style="width:auto" type="checkbox" name="confirm_deactivate" value="withdraw" required> I verified this withdrawal request and will stop this tester’s program access.</label><button class="danger" type="submit">Deactivate withdrawn tester</button></form>') . '<p><strong>Orientation email:</strong> ' . e($orientation) . ' <small>(' . (int) ($tester['orientation_email_attempts'] ?? 0) . ' handoff attempt' . ((int) ($tester['orientation_email_attempts'] ?? 0) === 1 ? '' : 's') . ')</small></p>' . ($profile['complete'] ? '<form method="post"><input type="hidden" name="action" value="send_onboarding_email"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $testerId . '"><button class="secondary" type="submit">Send orientation email</button></form>' : '') . '</section>'
-        . '<section><h2>Focused Tester Tasks</h2><p class="muted">Assign only a focused bundle that matches this tester’s coverage. Each PT case still receives its own result.</p>' . $guestTaskNotice . ($assignmentCards === '' ? '<p class="muted">No task assigned yet.</p>' : $assignmentCards) . '<article class="onboarding-card"><h3>Assign a focused Tester Task</h3><form method="post" data-task-assignment-form><input type="hidden" name="action" value="assign_task"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $testerId . '"><label>Tester Task<select name="task_id" data-task-select required>' . $taskOptions . '</select></label><div class="task-preview" data-task-preview aria-live="polite">Choose a current task to see its PT cases, prerequisites, and safety boundary.</div><label>Station scope<select name="station_scope">' . $stationOptions . '</select></label><label>Device / accessory / form factor scope<input name="configuration_scope" maxlength="' . MAX_ASSIGNMENT_CONFIGURATION_LENGTH . '" placeholder="For example, Pixel 9, Bluetooth headset, folded"></label><label>Coordinator note<textarea name="coordinator_note" maxlength="' . MAX_ASSIGNMENT_NOTE_LENGTH . '"></textarea></label><label class="mutation-authorization" data-mutation-authorization hidden><input type="checkbox" name="mutation_authorized" value="1"> I explicitly authorize the controlled subcase described above.</label><button type="submit">Assign Tester Task</button></form></article></section><section><h2>Tester task reports</h2><p class="muted">Private reports submitted through the tester portal.</p>' . ($feedbackItems === '' ? '<p class="muted">No task reports submitted yet.</p>' : $feedbackItems) . '</section><script id="tester-task-registry" type="application/json">' . json_encode(array_values($tasks), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES) . '</script><script src="/assets/private-tester-queue.js?v=onboarding-4" defer></script>';
+        . '<section><h2>Focused Tester Tasks</h2><p class="muted">Assign only a focused bundle that matches this tester’s coverage. Each PT case still receives its own result.</p>' . $guestTaskNotice . $recommendationPanel . ($assignmentCards === '' ? '<p class="muted">No task assigned yet.</p>' : $assignmentCards) . '<article id="assign-focused-task" class="onboarding-card"><h3>Assign a focused Tester Task</h3><form method="post" data-task-assignment-form><input type="hidden" name="action" value="assign_task"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="tester_id" value="' . $testerId . '"><label>Tester Task<select name="task_id" data-task-select required>' . $taskOptions . '</select></label><div class="task-preview" data-task-preview aria-live="polite">Choose a current task to see its PT cases, prerequisites, and safety boundary.</div><label>Station scope<select name="station_scope">' . $stationOptions . '</select></label><label>Device / accessory / form factor scope<input name="configuration_scope" maxlength="' . MAX_ASSIGNMENT_CONFIGURATION_LENGTH . '" value="' . e($configurationPrefill) . '" placeholder="For example, Pixel 9, Bluetooth headset, folded"></label><label>Coordinator note<textarea name="coordinator_note" maxlength="' . MAX_ASSIGNMENT_NOTE_LENGTH . '"></textarea></label><label class="mutation-authorization" data-mutation-authorization hidden><input type="checkbox" name="mutation_authorized" value="1"> I explicitly authorize the controlled subcase described above.</label><button type="submit">Assign Tester Task</button></form></article></section><section><h2>Tester task reports</h2><p class="muted">Private reports submitted through the tester portal.</p>' . ($feedbackItems === '' ? '<p class="muted">No task reports submitted yet.</p>' : $feedbackItems) . '</section><script id="tester-task-registry" type="application/json">' . json_encode(array_values($tasks), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES) . '</script><script src="/assets/private-tester-queue.js?v=task-recommendation-2" defer></script>';
     renderPage('Tester workspace', $content);
 }
 
@@ -1857,7 +2000,7 @@ function renderMailArchive(PDO $database): never
     $records = $database->query('SELECT archive.id, archive.message_type, archive.subject, archive.handoff_status, archive.prepared_at, archive.attempted_at, testers.display_name, testers.email FROM tester_mail_archive AS archive JOIN testers ON testers.id = archive.tester_id ORDER BY archive.prepared_at DESC, archive.id DESC LIMIT 250')->fetchAll();
     $rows = '';
     foreach ($records as $record) {
-        $rows .= '<tr><td>' . e((string) ($record['attempted_at'] ?: $record['prepared_at'])) . '</td><td><strong>' . e($record['display_name']) . '</strong><br><small>' . e($record['email']) . '</small></td><td>' . e(mailArchiveTypeLabel((string) $record['message_type'])) . '</td><td>' . e(mailArchiveStatusLabel((string) $record['handoff_status'])) . '</td><td>' . e($record['subject']) . '</td><td><a href="/private-tester-queue.php?mail_record=' . (int) $record['id'] . '">View message</a></td></tr>';
+        $rows .= '<tr><td>' . e(humanTimestamp((string) ($record['attempted_at'] ?: $record['prepared_at']))) . '</td><td><strong>' . e($record['display_name']) . '</strong><br><small>' . e($record['email']) . '</small></td><td>' . e(mailArchiveTypeLabel((string) $record['message_type'])) . '</td><td>' . e(mailArchiveStatusLabel((string) $record['handoff_status'])) . '</td><td>' . e($record['subject']) . '</td><td><a href="/private-tester-queue.php?mail_record=' . (int) $record['id'] . '">View message</a></td></tr>';
     }
     $content = '<p><a href="/private-tester-queue.php">← Tester operations</a></p><h1>Sent mail archive</h1><p class="muted">This protected record preserves the recipient, exact multipart content, and mail-transport handoff outcome for coordinator batches, orientation emails, and Tester Task assignments. “Accepted” means the transport accepted the message; it does not prove inbox delivery or reading.</p>'
         . '<section><table><thead><tr><th>Attempt</th><th>Recipient</th><th>Type</th><th>Handoff</th><th>Subject</th><th><span class="visually-hidden">Open</span></th></tr></thead><tbody>' . ($rows === '' ? '<tr><td colspan="6" class="muted">No coordinator email handoffs are archived yet.</td></tr>' : $rows) . '</tbody></table></section>';
@@ -1872,7 +2015,7 @@ function coordinatorChatPayload(PDO $database, array $tester, int $afterId = 0):
         'sender' => $message['sender_role'] === 'tester' ? (string) $tester['display_name'] : 'Coordinator',
         'role' => $message['sender_role'],
         'body' => (string) $message['body'],
-        'createdAt' => (string) $message['created_at'],
+        'createdAt' => humanTimestamp((string) $message['created_at']),
     ], $messages);
 }
 
@@ -1946,7 +2089,7 @@ function renderMailRecord(PDO $database, int $archiveId): never
     if ($html === '') {
         $html = plainTextToHtml((string) $record['body']);
     }
-    $content = '<p><a href="/private-tester-queue.php?mail_archive=1">← Sent mail archive</a></p><h1>Archived coordinator email</h1><section><dl><dt>Recipient</dt><dd>' . e($record['display_name']) . ' &lt;' . e($record['email']) . '&gt;</dd><dt>Type</dt><dd>' . e(mailArchiveTypeLabel((string) $record['message_type'])) . '</dd><dt>Prepared</dt><dd>' . e($record['prepared_at']) . '</dd><dt>Handoff</dt><dd>' . e(mailArchiveStatusLabel((string) $record['handoff_status'])) . ($record['attempted_at'] ? ' · ' . e($record['attempted_at']) : '') . '</dd><dt>Subject</dt><dd>' . e($record['subject']) . '</dd></dl></section><section><h2>Rendered HTML</h2><div style="background:#fff;color:#182033;padding:1rem;border-radius:.4rem">' . $html . '</div><h2>Plain-text alternative</h2><pre style="white-space:pre-wrap;font:inherit">' . e($record['body']) . '</pre></section>';
+    $content = '<p><a href="/private-tester-queue.php?mail_archive=1">← Sent mail archive</a></p><h1>Archived coordinator email</h1><section><dl><dt>Recipient</dt><dd>' . e($record['display_name']) . ' &lt;' . e($record['email']) . '&gt;</dd><dt>Type</dt><dd>' . e(mailArchiveTypeLabel((string) $record['message_type'])) . '</dd><dt>Prepared</dt><dd>' . e(humanTimestamp((string) $record['prepared_at'])) . '</dd><dt>Handoff</dt><dd>' . e(mailArchiveStatusLabel((string) $record['handoff_status'])) . ($record['attempted_at'] ? ' · ' . e(humanTimestamp((string) $record['attempted_at'])) : '') . '</dd><dt>Subject</dt><dd>' . e($record['subject']) . '</dd></dl></section><section><h2>Rendered HTML</h2><div style="background:#fff;color:#182033;padding:1rem;border-radius:.4rem">' . $html . '</div><h2>Plain-text alternative</h2><pre style="white-space:pre-wrap;font:inherit">' . e($record['body']) . '</pre></section>';
     renderPage('Archived coordinator email', $content);
 }
 
@@ -2101,7 +2244,7 @@ try {
         }
         if ($action === 'update_task') {
             $id = assignmentId();
-            $assignment = $database->prepare('SELECT tester_id, task_id FROM tester_task_assignments WHERE id = ?');
+            $assignment = $database->prepare('SELECT tester_id, task_id, submitted_for_review_at FROM tester_task_assignments WHERE id = ?');
             $assignment->execute([$id]);
             $assignment = $assignment->fetch();
             if ($assignment === false) {
@@ -2111,6 +2254,12 @@ try {
             $status = (string) ($_POST['task_status'] ?? '');
             if (!in_array($status, ASSIGNMENT_STATUSES, true)) {
                 throw new InvalidArgumentException('Choose a valid task status.');
+            }
+            if ($status === 'complete') {
+                $task = taskRegistry()[$assignment['task_id']] ?? null;
+                if (!is_array($task) || ($assignment['submitted_for_review_at'] ?? '') === '' || !assignmentReportProgress($database, $id, $task)['complete']) {
+                    throw new InvalidArgumentException('A tester must submit one result for every assigned PT case and submit the task for Coordinator review before it can be marked complete.');
+                }
             }
             $station = trim((string) ($_POST['station_scope'] ?? ''));
             if (!in_array($station, STATION_SCOPES, true)) {

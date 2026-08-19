@@ -233,9 +233,14 @@ function portalSelect(string $name, array $options, ?string $selected, string $p
 
 function portalAssignments(PDO $database, int $testerId): array
 {
-    $query = $database->prepare('SELECT id, task_id, task_status, station_scope, configuration_scope, created_at, updated_at FROM tester_task_assignments WHERE tester_id = ? ORDER BY created_at DESC, id DESC');
+    $query = $database->prepare('SELECT id, task_id, task_status, station_scope, configuration_scope, submitted_for_review_at, created_at, updated_at FROM tester_task_assignments WHERE tester_id = ? ORDER BY created_at DESC, id DESC');
     $query->execute([$testerId]);
     return $query->fetchAll();
+}
+
+function portalHumanTimestamp(?string $value): string
+{
+    return humanTimestamp($value);
 }
 
 function portalChatPayload(PDO $database, array $tester, string $coordinatorName, int $afterId = 0): array
@@ -246,7 +251,7 @@ function portalChatPayload(PDO $database, array $tester, string $coordinatorName
         'sender' => $message['sender_role'] === 'tester' ? 'You' : $coordinatorName,
         'role' => $message['sender_role'],
         'body' => (string) $message['body'],
-        'createdAt' => (string) $message['created_at'],
+        'createdAt' => portalHumanTimestamp((string) $message['created_at']),
     ], $messages);
 }
 
@@ -437,15 +442,50 @@ function portalSubmitFeedback(PDO $database, array $tester): void
 {
     $assignmentId = filter_var($_POST['assignment_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
     if ($assignmentId === false) throw new InvalidArgumentException('Choose one of your assigned tasks.');
-    $assignment = $database->prepare('SELECT id FROM tester_task_assignments WHERE id = ? AND tester_id = ?');
+    $assignment = $database->prepare('SELECT id, task_id, task_status, submitted_for_review_at FROM tester_task_assignments WHERE id = ? AND tester_id = ?');
     $assignment->execute([$assignmentId, (int) $tester['id']]);
-    if ($assignment->fetch() === false) throw new InvalidArgumentException('That task is no longer available.');
+    $assignment = $assignment->fetch();
+    if ($assignment === false || $assignment['task_status'] === 'complete') throw new InvalidArgumentException('That task is no longer available for a tester report.');
+    if (($assignment['submitted_for_review_at'] ?? '') !== '') throw new InvalidArgumentException('This task is already with the Coordinator for review.');
+    $task = taskRegistry()[$assignment['task_id']] ?? null;
+    if (!is_array($task)) throw new InvalidArgumentException('That assigned task is no longer available.');
+    $ptCase = portalText('pt_case', 20, true);
+    if (!in_array($ptCase, $task['ptIds'], true)) throw new InvalidArgumentException('Choose one of the PT cases assigned with this task.');
     $outcome = (string) ($_POST['outcome'] ?? '');
     if (!in_array($outcome, ['pass', 'issue', 'blocked', 'note'], true)) throw new InvalidArgumentException('Choose a valid report outcome.');
     $category = (string) ($_POST['category'] ?? '');
     if (!array_key_exists($category, FEEDBACK_CATEGORIES)) throw new InvalidArgumentException('Choose a valid feedback category.');
-    $database->prepare('INSERT INTO tester_feedback(tester_id, assignment_id, subject, details, outcome, category, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)')->execute([(int) $tester['id'], $assignmentId, portalText('subject', PORTAL_MAX_FEEDBACK_SUBJECT, true), portalText('details', PORTAL_MAX_FEEDBACK_DETAILS, true), $outcome, $category, gmdate('c')]);
-    portalRedirect('?notice=' . rawurlencode('Your task report has been saved for the coordinator.'));
+    try {
+        $database->prepare('INSERT INTO tester_feedback(tester_id, assignment_id, subject, details, outcome, category, pt_case, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')->execute([(int) $tester['id'], $assignmentId, portalText('subject', PORTAL_MAX_FEEDBACK_SUBJECT, true), portalText('details', PORTAL_MAX_FEEDBACK_DETAILS, true), $outcome, $category, $ptCase, gmdate('c')]);
+    } catch (PDOException $error) {
+        if (str_contains($error->getMessage(), 'tester_feedback.assignment_id, tester_feedback.pt_case')) {
+            throw new InvalidArgumentException('A result for this PT case is already recorded. Ask the Coordinator to return the task for correction if needed.');
+        }
+        throw $error;
+    }
+    $database->prepare("UPDATE tester_task_assignments SET task_status = CASE WHEN task_status = 'assigned' THEN 'in_progress' ELSE task_status END, updated_at = ? WHERE id = ?")
+        ->execute([gmdate('c'), $assignmentId]);
+    portalRedirect('?notice=' . rawurlencode('Your PT-case result has been saved. Submit the task for Coordinator review after every assigned case is reported.'));
+}
+
+function portalSubmitTaskForReview(PDO $database, array $tester): void
+{
+    $assignmentId = filter_var($_POST['assignment_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+    if ($assignmentId === false) throw new InvalidArgumentException('Choose a valid assigned task.');
+    $statement = $database->prepare('SELECT id, task_id, task_status, submitted_for_review_at FROM tester_task_assignments WHERE id = ? AND tester_id = ?');
+    $statement->execute([$assignmentId, (int) $tester['id']]);
+    $assignment = $statement->fetch();
+    if ($assignment === false || $assignment['task_status'] === 'complete') throw new InvalidArgumentException('That task is no longer available for review.');
+    if (($assignment['submitted_for_review_at'] ?? '') !== '') throw new InvalidArgumentException('This task is already with the Coordinator for review.');
+    $task = taskRegistry()[$assignment['task_id']] ?? null;
+    if (!is_array($task)) throw new InvalidArgumentException('That assigned task is no longer available.');
+    $progress = assignmentReportProgress($database, (int) $assignment['id'], $task);
+    if (!$progress['complete']) {
+        throw new InvalidArgumentException('Report every assigned PT case before submitting this task for Coordinator review. Missing: ' . implode(', ', $progress['missing']) . '.');
+    }
+    $database->prepare("UPDATE tester_task_assignments SET task_status = CASE WHEN task_status = 'assigned' THEN 'in_progress' ELSE task_status END, submitted_for_review_at = ?, updated_at = ? WHERE id = ?")
+        ->execute([gmdate('c'), gmdate('c'), $assignmentId]);
+    portalRedirect('?notice=' . rawurlencode('Your task is submitted for Coordinator review. The Coordinator records the final completion or blocked status.'));
 }
 
 function portalAssignmentSteps(array $task, array $assignment): array
@@ -483,7 +523,7 @@ function portalRenderDashboard(PDO $database, array $tester, bool $adminPreview 
     $profile = profileSummary($tester);
     $assignments = portalAssignments($database, (int) $tester['id']);
     $tasks = taskRegistry();
-    $feedback = $database->prepare('SELECT subject, outcome, category, created_at FROM tester_feedback WHERE tester_id = ? ORDER BY created_at DESC LIMIT 5');
+    $feedback = $database->prepare('SELECT assignment_id, pt_case, subject, outcome, category, created_at FROM tester_feedback WHERE tester_id = ? ORDER BY created_at DESC LIMIT 5');
     $feedback->execute([(int) $tester['id']]);
     $reports = $feedback->fetchAll();
     $optedIn = is_string($tester['play_opt_in_confirmed_at'] ?? null) && $tester['play_opt_in_confirmed_at'] !== '';
@@ -501,27 +541,51 @@ function portalRenderDashboard(PDO $database, array $tester, bool $adminPreview 
     $privacyAction = '<section class="card"><p class="eyebrow">Leaving the program</p><h2>Withdrawal and tester-record requests</h2><p class="muted">A withdrawal stops your participation. A deletion request asks the coordinator to remove or anonymize your private tester record under the program retention policy. Neither request affects a separate 24Seven.FM station account.</p>'
         . ($withdrawalRequestedAt === ''
             ? '<form method="post"><input type="hidden" name="action" value="request_privacy_action"><input type="hidden" name="privacy_request" value="withdrawal"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><label><input style="width:auto" type="checkbox" name="confirm_privacy_request" value="yes" required> I want to withdraw from this closed test.</label><button class="button secondary" type="submit">Request withdrawal</button></form>'
-            : '<p class="notice"><strong>Withdrawal requested:</strong> ' . e($withdrawalRequestedAt) . '. The coordinator will stop program access while handling this request.</p>')
+            : '<p class="notice"><strong>Withdrawal requested:</strong> ' . e(portalHumanTimestamp($withdrawalRequestedAt)) . '. The coordinator will stop program access while handling this request.</p>')
         . ($deletionRequestedAt === ''
             ? '<form method="post" style="margin-top:16px"><input type="hidden" name="action" value="request_privacy_action"><input type="hidden" name="privacy_request" value="deletion"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><label><input style="width:auto" type="checkbox" name="confirm_privacy_request" value="yes" required> I request deletion or anonymization of my private tester record.</label><button class="button secondary" type="submit">Request record deletion</button></form>'
-            : '<p class="notice"><strong>Record-deletion request:</strong> ' . e($deletionRequestedAt) . '. The coordinator will verify and process it under the retention policy.</p>')
+            : '<p class="notice"><strong>Record-deletion request:</strong> ' . e(portalHumanTimestamp($deletionRequestedAt)) . '. The coordinator will verify and process it under the retention policy.</p>')
         . '<p class="muted small">Do not include passwords, station credentials, CAPTCHA answers, session data, or authentication secrets in a request.</p></section>';
     $assignmentCards = '';
+    $reportAssignmentOptions = '';
+    $reportCaseOptions = '';
     foreach ($assignments as $assignment) {
         $task = $tasks[$assignment['task_id']] ?? null;
         if (!is_array($task)) continue;
         $state = $assignment['task_status'] === 'blocked' ? 'blocked' : ($assignment['task_status'] === 'complete' ? '' : 'pending');
         $plan = implode('', array_map(static fn (string $step): string => '<li>' . e($step) . '</li>', portalAssignmentSteps($task, $assignment)));
         $caseAnchor = strtolower(str_replace('PT-', 'pt-', $task['ptIds'][0]));
-        $assignmentCards .= '<article class="task"><span class="pill ' . $state . '">' . e(ucwords(str_replace('_', ' ', $assignment['task_status']))) . '</span><h3 style="margin-top:10px">' . e($task['id'] . ' — ' . $task['title']) . '</h3><p class="task-plan-label">Complete and report</p><ol class="task-plan">' . $plan . '</ol><p><strong>PT cases:</strong> ' . e(implode(', ', $task['ptIds'])) . '</p><a class="button secondary" href="https://dev.jamesjennison.net/tester-workspace/?task=' . rawurlencode($task['id']) . '#' . e($caseAnchor) . '">Open the detailed PT checklist</a></article>';
+        $progress = assignmentReportProgress($database, (int) $assignment['id'], $task);
+        $reviewSubmitted = is_string($assignment['submitted_for_review_at'] ?? null) && $assignment['submitted_for_review_at'] !== '';
+        $progressText = count($progress['reported']) . ' of ' . count($progress['required']) . ' PT-case results submitted';
+        $reviewAction = '';
+        if ($reviewSubmitted) {
+            $reviewAction = '<p class="notice"><strong>Submitted for Coordinator review:</strong> ' . e(portalHumanTimestamp((string) $assignment['submitted_for_review_at'])) . '. The Coordinator will record the final status.</p>';
+        } elseif ($progress['complete'] && $assignment['task_status'] !== 'complete') {
+            $reviewAction = '<form method="post"><input type="hidden" name="action" value="submit_task_for_review"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="assignment_id" value="' . (int) $assignment['id'] . '"><button class="button" type="submit">Submit task for Coordinator review</button></form>';
+        } elseif ($assignment['task_status'] !== 'complete') {
+            $reviewAction = '<p class="muted small">Report every assigned PT case before this task can be submitted for Coordinator review. Missing: ' . e(implode(', ', $progress['missing'])) . '.</p>';
+        }
+        if (!$reviewSubmitted && $assignment['task_status'] !== 'complete') {
+            $reportAssignmentOptions .= '<option value="' . (int) $assignment['id'] . '">' . e($task['id'] . ' — ' . $progressText) . '</option>';
+            $reportCaseOptions .= '<optgroup label="' . e($task['id'] . ' — ' . $task['title']) . '">';
+            foreach ($progress['missing'] as $ptCase) {
+                $reportCaseOptions .= '<option value="' . e($ptCase) . '" data-assignment-id="' . (int) $assignment['id'] . '">' . e($ptCase) . '</option>';
+            }
+            $reportCaseOptions .= '</optgroup>';
+        }
+        $assignmentCards .= '<article class="task"><span class="pill ' . $state . '">' . e(ucwords(str_replace('_', ' ', $assignment['task_status']))) . '</span><h3 style="margin-top:10px">' . e($task['id'] . ' — ' . $task['title']) . '</h3><p class="task-plan-label">Complete and report</p><ol class="task-plan">' . $plan . '</ol><p><strong>PT cases:</strong> ' . e(implode(', ', $task['ptIds'])) . '<br><strong>Reporting:</strong> ' . e($progressText) . '.</p><a class="button secondary" href="https://dev.jamesjennison.net/tester-workspace/?task=' . rawurlencode($task['id']) . '#' . e($caseAnchor) . '">Open the detailed PT checklist</a>' . $reviewAction . '</article>';
     }
     if ($assignmentCards === '') $assignmentCards = '<article class="task"><h3>No focused task yet</h3><p>Your coordinator will match an assignment to your coverage and available setup.</p></article>';
+    $reportForm = $reportAssignmentOptions === ''
+        ? '<p class="muted">No PT-case report is waiting. A submitted task stays with the Coordinator until it is reviewed.</p>'
+        : '<form method="post"><input type="hidden" name="action" value="submit_feedback"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><label>Assigned task</label><select name="assignment_id" required><option value="">Choose an assigned task</option>' . $reportAssignmentOptions . '</select><label>PT case</label><select name="pt_case" required><option value="">Choose the case you completed</option>' . $reportCaseOptions . '</select><label>Feedback category</label><select name="category" required>' . implode('', array_map(static fn (string $key, string $label): string => '<option value="' . e($key) . '">' . e($label) . '</option>', array_keys(FEEDBACK_CATEGORIES), FEEDBACK_CATEGORIES)) . '</select><label>Outcome</label><select name="outcome" required><option value="pass">Pass / worked as expected</option><option value="issue">Issue found</option><option value="blocked">Blocked</option><option value="note">Usability note</option></select><label>Short title</label><input name="subject" maxlength="' . PORTAL_MAX_FEEDBACK_SUBJECT . '" required><label>Steps and result</label><textarea name="details" maxlength="' . PORTAL_MAX_FEEDBACK_DETAILS . '" required></textarea><button class="button" type="submit">Submit PT-case report</button></form>';
     $content = '<div class="top"><div class="brand"><img class="brand-icon" src="/assets/project/app-icon.png" alt=""><span>24Seven.FM Player<br><small class="muted">Closed Alpha tester portal</small></span></div><form method="post"><input type="hidden" name="action" value="logout"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><button class="button secondary" type="submit">Sign out</button></form></div>' . portalNotice('notice') . portalNotice('error')
         . '<section class="card hero"><p class="eyebrow">Tester dashboard</p><h1>Welcome, ' . e($tester['display_name']) . '</h1><p class="muted">To start: finish Profile &amp; Device, install the Player through Google Play, then complete the short first-use check. This independently developed, unofficial Player is tested through Google Play Closed Testing. Confirm only actions you completed, and submit focused testing results without exposing your data to other testers. Guest testing does not require a 24Seven.FM station account.</p></section>'
         . '<section class="card"><h2>Onboarding checklist</h2><div>' . implode('', array_map(static fn (array $step): string => '<div class="step ' . ($step[0] ? 'done' : '') . '"><span class="dot">' . ($step[0] ? '✓' : '○') . '</span><span><b>' . e($step[1]) . '</b><small>' . e($step[2]) . '</small></span></div>', $steps)) . '</div></section>'
         . '<div class="two"><section id="intake-profile" class="card"><p class="eyebrow">Profile &amp; Device · Steps 1–2 of 5</p><h2>Finish your tester profile</h2><p class="muted">Complete the guided profile and device coverage screens, then choose <strong>Finish Profile &amp; Continue to Install</strong>. That lets the coordinator match focused work to your setup.</p><form method="post"><input type="hidden" name="action" value="save_profile"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><label>Name</label><input name="display_name" maxlength="100" value="' . e($tester['display_name']) . '" required><label>Country or region</label><input name="country" maxlength="80" value="' . e($tester['country']) . '"><p class="muted small"><strong>Registered email:</strong> ' . e($tester['email']) . '<br>Email changes are reviewed by the coordinator because this address is your sign-in and Google Play eligibility identity.</p><label>Current device</label><input name="device" value="' . e($tester['device']) . '" required><label>Android version</label><input name="android_version" value="' . e($tester['android_version']) . '" required><label>Primary station</label>' . portalSelect('primary_station', PORTAL_PRIMARY_STATIONS, $tester['primary_station'], 'Choose a primary station') . '<label>Other familiar stations</label>' . portalCheckboxes('other_stations', PORTAL_STATIONS, listFromJson($tester['other_stations_json'])) . '<label>Device form factor</label>' . portalSelect('device_form_factor', PORTAL_DEVICE_TYPES, $tester['device_form_factor'], 'Choose a device type') . '<label>Other devices or configuration notes</label><textarea name="other_devices">' . e($tester['other_devices']) . '</textarea><label>Testing interests</label>' . portalCheckboxes('testing_interests', PORTAL_TESTING_INTERESTS, listFromJson($tester['interests_json'])) . '<label>Existing station access (optional; station names only)</label><p class="muted small">Guest testing does not require a 24Seven.FM account. Leave this clear or choose None; never create an account or enter credentials for this program.</p>' . portalCheckboxes('station_accounts', PORTAL_STATIONS + ['none' => 'None'], listFromJson($tester['station_accounts_json'])) . '<label>Network capabilities</label>' . portalCheckboxes('network_capabilities', PORTAL_NETWORK, listFromJson($tester['network_capabilities_json'])) . '<label>Audio/accessory capabilities</label>' . portalCheckboxes('audio_capabilities', PORTAL_AUDIO, listFromJson($tester['audio_capabilities_json'])) . '<label>Accessibility and alternative input</label>' . portalCheckboxes('accessibility_capabilities', PORTAL_ACCESSIBILITY, listFromJson($tester['accessibility_capabilities_json'])) . '<label>Testing comfort</label>' . portalSelect('testing_comfort', PORTAL_TESTING_COMFORT, $tester['testing_comfort'], 'Choose a testing comfort level') . '<label>Controlled-test preferences</label>' . portalCheckboxes('controlled_actions', PORTAL_CONTROLLED_ACTIONS, listFromJson($tester['controlled_actions_json'])) . '<label>Typical two-week availability</label>' . portalSelect('testing_availability', PORTAL_AVAILABILITY, $tester['testing_availability'], 'Choose availability') . '<label>Assignment notes or prior testing experience</label><textarea name="experience" maxlength="1200">' . e($tester['experience']) . '</textarea><button class="button" type="submit">Finish Profile &amp; Continue to Install</button></form>' . $optInAction . $smokeTestAction . '</section>'
         . '<section class="card"><p class="eyebrow">Active assignments</p><h2>Your focused testing work</h2><div class="grid" style="grid-template-columns:1fr">' . $assignmentCards . '</div></section></div>'
-        . '<section class="card"><p class="eyebrow">Task report</p><h2>Submit feedback for a focused task</h2><p class="muted">Include what you tried, expected, and observed. Do not include passwords, credentials, private messages, session information, or private screenshots.</p><form method="post"><input type="hidden" name="action" value="submit_feedback"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><label>Assigned task</label><select name="assignment_id" required><option value="">Choose an assigned task</option>' . implode('', array_map(static fn (array $assignment): string => '<option value="' . (int) $assignment['id'] . '">' . e($assignment['task_id'] . ' — ' . ucwords(str_replace('_', ' ', $assignment['task_status']))) . '</option>', $assignments)) . '</select><label>Feedback category</label><select name="category" required>' . implode('', array_map(static fn (string $key, string $label): string => '<option value="' . e($key) . '">' . e($label) . '</option>', array_keys(FEEDBACK_CATEGORIES), FEEDBACK_CATEGORIES)) . '</select><label>Outcome</label><select name="outcome" required><option value="pass">Pass / worked as expected</option><option value="issue">Issue found</option><option value="blocked">Blocked</option><option value="note">Usability note</option></select><label>Short title</label><input name="subject" maxlength="' . PORTAL_MAX_FEEDBACK_SUBJECT . '" required><label>Steps and result</label><textarea name="details" maxlength="' . PORTAL_MAX_FEEDBACK_DETAILS . '" required></textarea><button class="button" type="submit">Submit task report</button></form>' . ($reports === [] ? '' : '<h3 style="margin-top:24px">Recent reports</h3>' . implode('', array_map(static fn (array $report): string => '<p class="small"><span class="pill">' . e($report['outcome']) . '</span> ' . e(FEEDBACK_CATEGORIES[$report['category']] ?? FEEDBACK_CATEGORIES['other']) . ' · ' . e($report['subject']) . ' <span class="muted">' . e($report['created_at']) . '</span></p>', $reports))) . '</section>' . portalChatPanel($database, $tester, $coordinatorName) . $privacyAction;
+        . '<section class="card"><p class="eyebrow">Task report</p><h2>Submit feedback for a focused task</h2><p class="muted">Submit one structured result for each assigned PT case, including Blocked when you cannot proceed. When every case is reported, submit the task for Coordinator review; only the Coordinator records the final task status. Do not include passwords, credentials, private messages, session information, or private screenshots.</p>' . $reportForm . ($reports === [] ? '' : '<h3 style="margin-top:24px">Recent reports</h3>' . implode('', array_map(static fn (array $report): string => '<p class="small"><span class="pill">' . e($report['outcome']) . '</span> ' . e($report['pt_case'] ?? 'PT case') . ' · ' . e(FEEDBACK_CATEGORIES[$report['category']] ?? FEEDBACK_CATEGORIES['other']) . ' · ' . e($report['subject']) . ' <span class="muted">' . e(portalHumanTimestamp((string) $report['created_at'])) . '</span></p>', $reports))) . '</section>' . portalChatPanel($database, $tester, $coordinatorName) . $privacyAction;
     if ($adminPreview) {
         $content = '<p class="notice admin-preview"><strong>Read-only coordinator preview.</strong> This is what the tester sees. Profile, opt-in, and report controls are disabled here; no tester session or data is changed. <a href="/private-tester-queue.php?tester=' . (int) $tester['id'] . '">Return to the coordinator workspace</a>.</p>' . str_replace(['<form method="post">', '</form>'], ['<form method="post"><fieldset disabled>', '</fieldset></form>'], $content);
     }
@@ -563,6 +627,7 @@ try {
         if ($action === 'confirm_initial_smoke_test') portalConfirmInitialSmokeTest($database, $tester);
         if ($action === 'request_privacy_action') portalRequestPrivacyAction($database, $tester);
         if ($action === 'submit_feedback') portalSubmitFeedback($database, $tester);
+        if ($action === 'submit_task_for_review') portalSubmitTaskForReview($database, $tester);
         if ($action === 'send_chat') {
             chatPostMessage($database, (int) $tester['id'], 'tester', (string) ($_POST['chat_body'] ?? ''));
             portalRedirect('?notice=' . rawurlencode('Your Live Chat message was sent.'));

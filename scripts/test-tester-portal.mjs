@@ -25,6 +25,11 @@ assert(portal.includes("action\" value=\"consume_link"), "Sign-in link consumpti
 assert(portal.includes("($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && isset($_GET['token'])"), "The confirmation screen must only render for a GET so its POST can consume the link.");
 assert(portal.includes("tester_portal_tokens"), "Tester portal token storage is missing.");
 assert(portal.includes("tester_feedback"), "Tester portal feedback persistence is missing.");
+assert(portal.includes('name="pt_case"') && portal.includes('Submit PT-case report'), "Tester reports must identify the exact assigned PT case.");
+assert(portal.includes('data-assignment-id=\"') && wizard.includes('const syncReportCases'), "The portal must limit each PT-case selector to the chosen assignment.");
+assert(portal.includes('function portalSubmitTaskForReview') && portal.includes('submit_task_for_review'), "A tester must explicitly submit a fully reported task for Coordinator review.");
+assert(portal.includes('Report every assigned PT case before submitting this task for Coordinator review.'), "Coordinator review must remain unavailable until every PT case is reported.");
+assert(portal.includes('The Coordinator records the final completion or blocked status.'), "Tester task submission must not self-record final completion.");
 assert(portal.includes("Applied") && portal.includes("Profile & Device") && portal.includes("Play Opt-In") && portal.includes("First-Use Smoke Test") && portal.includes("Active Assignment"), "Tester portal must render the five-stage evidence lifecycle.");
 assert(!portal.includes("Agreement</li>"), "Agreement must remain in the application consent record rather than become a portal stage.");
 assert(portal.includes("portalChatPoll") && portal.includes("chat_stream") && portal.includes("chat_poll"), "Tester Live Chat must offer SSE delivery with a polling fallback.");
@@ -38,6 +43,7 @@ assert(portal.includes("function portalRequestPrivacyAction"), "Tester portal mu
 assert(portal.includes("request_privacy_action"), "Tester portal must route authenticated privacy requests.");
 assert(portal.includes("name=\"confirm_privacy_request\""), "Tester privacy requests must require an explicit confirmation.");
 assert(portal.includes("withdrawal_requested_at") && portal.includes("deletion_requested_at"), "Tester privacy request timestamps must be retained separately.");
+assert(portal.includes("function portalHumanTimestamp(?string $value): string") && portal.includes("portalHumanTimestamp($withdrawalRequestedAt)") && portal.includes("portalHumanTimestamp($deletionRequestedAt)"), "Tester-visible timestamps must be human readable.");
 assert(portal.includes("The coordinator will verify and process it under the retention policy."), "Tester portal must not claim that a recorded request is already completed.");
 assert(portal.includes("FEEDBACK_CATEGORIES"), "Tester portal must use the queue's structured feedback categories.");
 assert(queue.includes("function recordTesterPlayOptIn(PDO $database, int $testerId): bool"), "The lifecycle must persist the Play Opt-In evidence separately.");
@@ -87,6 +93,9 @@ assert(!portal.includes('class="mark">7</span>'), "Tester portal must not use an
 assert(!portal.includes("password_verify("), "Tester portal must not collect or verify tester passwords.");
 assert(queue.includes("CREATE TABLE IF NOT EXISTS tester_portal_tokens"), "Queue database migration must create portal token storage.");
 assert(queue.includes("CREATE TABLE IF NOT EXISTS tester_feedback"), "Queue database migration must create feedback storage.");
+assert(queue.includes('submitted_for_review_at') && queue.includes('tester_feedback_assignment_pt_case'), "Queue persistence must retain review submissions and one result per PT case.");
+assert(queue.includes('function assignmentReportProgress(PDO $database, int $assignmentId, array $task)'), "Coordinator and tester portals must use the same per-case completion calculation.");
+assert(queue.includes('before it can be marked complete.'), "Coordinator completion must require the tester review submission and every PT-case result.");
 assert(queue.includes("CREATE TABLE IF NOT EXISTS chat_threads") && queue.includes("CREATE TABLE IF NOT EXISTS chat_messages"), "Queue database migration must create isolated Live Chat storage.");
 assert(queue.includes("recipient_role TEXT NOT NULL"), "Live Chat messages must persist both sender and recipient roles.");
 assert(queue.includes("chat_submission_limits") && queue.includes("CHAT_RETENTION_DAYS"), "Live Chat must retain rate-limit and purge controls.");

@@ -378,6 +378,19 @@
     updatePreview();
   });
 
+  document.querySelectorAll('[data-use-recommended-task]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      var form = document.querySelector('[data-task-assignment-form]');
+      var select = form && form.querySelector('[data-task-select]');
+      var taskId = button.dataset.useRecommendedTask || '';
+      if (!form || !select || !byId[taskId]) return;
+      select.value = taskId;
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+      form.closest('#assign-focused-task')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      select.focus({ preventScroll: true });
+    });
+  });
+
   document.querySelectorAll('[data-assignment-copy]').forEach(function (button) {
     button.addEventListener('click', function () {
       copyText(button.dataset.assignmentCopy || '')

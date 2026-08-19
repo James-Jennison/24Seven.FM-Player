@@ -49,6 +49,9 @@ assert(endpoint.includes("function prepareMailArchive(PDO $database"), "Queue mu
 assert(endpoint.includes("function completeMailArchive(PDO $database"), "Queue must record the coordinator-mail handoff outcome");
 assert(endpoint.includes("function renderMailArchive(PDO $database)"), "Queue must provide a coordinator mail-archive view");
 assert(endpoint.includes("function renderMailRecord(PDO $database, int $archiveId)"), "Queue must provide an exact archived-message view");
+assert(endpoint.includes("function humanTimestamp(?string $value): string"), "Coordinator timestamps must have a shared human-readable formatter.");
+assert(endpoint.includes("->format('F j, Y") && endpoint.includes("g:i:s A T')"), "Coordinator timestamps must include a full date, 12-hour time, and timezone.");
+assert(endpoint.includes("humanTimestamp((string) $tester['play_opt_in_confirmed_at'])") && endpoint.includes("humanTimestamp((string) $tester['initial_smoke_test_confirmed_at'])"), "Coordinator self-confirmation timestamps must be human readable.");
 assert(endpoint.includes("?mail_archive=1"), "Queue must link coordinators to the sent-mail archive");
 assert(endpoint.includes("function mergeCoordinatorMailHtml"), "The email composer must resolve a bounded set of per-recipient variables.");
 assert(endpoint.includes("Draft preview"), "The email composer must provide a resolved draft preview before sending.");
@@ -78,6 +81,8 @@ assert(endpoint.includes("if (($task['state'] ?? '') !== 'current')"), "Future t
 assert(endpoint.includes("Future / Blocked Tester Tasks cannot be assigned."), "Future task rejection message is missing");
 assert(endpoint.includes("INSERT INTO tester_task_assignments"), "Queue cannot create assignments");
 assert(endpoint.includes("function testerReadyForAssignment(array $tester): bool"), "Task routing must derive readiness from the required tester evidence.");
+assert(endpoint.includes("function testerTaskRecommendations(array $tasks, array $tester): array"), "Coordinator task recommendations must be restored from the tester profile.");
+assert(endpoint.includes("$recommendedTaskId") && endpoint.includes("data-use-recommended-task") && endpoint.includes("assignmentConfigurationPrefill($tester)"), "The top safe recommendation and registered device profile must prefill coordinator assignment review.");
 assert(endpoint.includes("Focused work can be assigned only after the tester completes Profile & Device, Play Opt-In, and the First-Use Smoke Test."), "Task assignment must be blocked until all lifecycle evidence is recorded.");
 assert(endpoint.includes("UPDATE tester_task_assignments SET"), "Queue cannot update assignments");
 assert(endpoint.includes("DELETE FROM tester_task_assignments"), "Queue cannot remove assignments");

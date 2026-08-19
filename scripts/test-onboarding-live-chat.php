@@ -15,6 +15,8 @@ function expectChat(bool $condition, string $message): void
     if (!$condition) throw new RuntimeException($message);
 }
 
+expectChat(humanTimestamp('2026-08-18T20:14:53+00:00') === 'August 18, 2026 at 8:14:53 PM UTC', 'Visible timestamps must use a full human-readable UTC date and time.');
+
 $legacyPath = tempnam(sys_get_temp_dir(), 'onboarding-live-chat-legacy-');
 if ($legacyPath === false) throw new RuntimeException('Unable to create legacy chat storage.');
 try {

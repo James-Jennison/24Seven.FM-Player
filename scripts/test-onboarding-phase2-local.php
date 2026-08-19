@@ -43,6 +43,22 @@ try {
     $assignmentId = (int) $database->lastInsertId();
     expectPhaseTwo($assignmentId > 0, 'A ready local tester must receive a focused task assignment.');
 
+    foreach ($task['ptIds'] as $ptCase) {
+        $database->prepare("INSERT INTO tester_feedback(tester_id, assignment_id, subject, details, outcome, category, pt_case, created_at) VALUES (1, ?, ?, 'Local-only per-case result.', 'pass', 'playback', ?, ?)")
+            ->execute([$assignmentId, $ptCase . ' local result', $ptCase, $now]);
+    }
+    $progress = assignmentReportProgress($database, $assignmentId, $task);
+    expectPhaseTwo($progress['complete'] && $progress['missing'] === [], 'Every assigned PT case must receive its own local report before coordinator review.');
+    try {
+        $database->prepare("INSERT INTO tester_feedback(tester_id, assignment_id, subject, details, outcome, category, pt_case, created_at) VALUES (1, ?, 'Duplicate', 'Must not be accepted.', 'pass', 'playback', ?, ?)")
+            ->execute([$assignmentId, $task['ptIds'][0], $now]);
+        throw new RuntimeException('Duplicate PT-case reports must be rejected.');
+    } catch (PDOException) {
+        // The unique index may be named differently in SQLite's error text.
+    }
+    $database->prepare('UPDATE tester_task_assignments SET submitted_for_review_at = ? WHERE id = ?')->execute([$now, $assignmentId]);
+    expectPhaseTwo((string) $database->query('SELECT submitted_for_review_at FROM tester_task_assignments WHERE id = ' . $assignmentId)->fetchColumn() === $now, 'A complete task must retain the tester submission time for Coordinator review.');
+
     $html = mergeCoordinatorMailHtml('<p>Hello {{tester_name}}, {{onboarding_status}}.</p>', $tester);
     $archiveId = prepareMailArchive($database, 1, 'assignment', assignmentEmailSubject($task), assignmentMessage($task, ['station_scope' => $station, 'configuration_scope' => $configuration, 'coordinator_note' => $note, 'mutation_authorized' => $mutationAuthorized]), $html, null, $assignmentId);
     expectPhaseTwo($archiveId > 0 && (string) $database->query('SELECT handoff_status FROM tester_mail_archive WHERE id = ' . $archiveId)->fetchColumn() === 'prepared', 'The local composer smoke must preserve a reviewed, unsent archive record.');

@@ -26,6 +26,24 @@
   });
 
   if (profileComplete && !optInCard && !smokeCard) {
+    const reportForm = document.querySelector('form input[name="action"][value="submit_feedback"]')?.form;
+    const assignmentSelect = reportForm?.querySelector('select[name="assignment_id"]');
+    const ptCaseSelect = reportForm?.querySelector('select[name="pt_case"]');
+    const syncReportCases = () => {
+      if (!assignmentSelect || !ptCaseSelect) return;
+      const assignmentId = assignmentSelect.value;
+      let selectedIsVisible = false;
+      for (const option of ptCaseSelect.options) {
+        const visible = option.value === '' || option.dataset.assignmentId === assignmentId;
+        option.hidden = !visible;
+        option.disabled = !visible;
+        if (visible && option.selected) selectedIsVisible = true;
+      }
+      if (!selectedIsVisible) ptCaseSelect.value = '';
+    };
+    assignmentSelect?.addEventListener('change', syncReportCases);
+    syncReportCases();
+
     const collapseCard = (card, title, description) => {
       if (!card || card.dataset.portalDisclosure === 'true') return;
       const details = document.createElement('details');
