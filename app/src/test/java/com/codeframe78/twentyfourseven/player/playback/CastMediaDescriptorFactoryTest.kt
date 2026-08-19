@@ -28,7 +28,7 @@ class CastMediaDescriptorFactoryTest {
         val descriptor = CastMediaDescriptorFactory.create(station, stream)
 
         assertEquals("https://example.invalid/live", descriptor.contentId)
-        assertEquals("audio/aacp", descriptor.contentType)
+        assertEquals("audio/aac", descriptor.contentType)
         assertEquals("Test Station", descriptor.title)
         assertEquals("Test Station", descriptor.stationName)
     }
@@ -37,7 +37,7 @@ class CastMediaDescriptorFactoryTest {
     fun contentTypesMatchTheExistingStationFormatContract() {
         assertEquals("audio/mpeg", StreamFormat.Mp3.castContentType())
         assertEquals("application/x-mpegURL", StreamFormat.Hls.castContentType())
-        assertEquals("audio/aacp", StreamFormat.Unknown.castContentType())
+        assertEquals("audio/aac", StreamFormat.Unknown.castContentType())
     }
 
     @Test
