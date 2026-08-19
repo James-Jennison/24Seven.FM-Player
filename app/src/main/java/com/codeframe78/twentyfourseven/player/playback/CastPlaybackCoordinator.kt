@@ -2,6 +2,7 @@ package com.codeframe78.twentyfourseven.player.playback
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import com.codeframe78.twentyfourseven.player.domain.PlaybackRoute
 import com.codeframe78.twentyfourseven.player.domain.PlaybackStatus
 import com.codeframe78.twentyfourseven.player.domain.Station
@@ -35,6 +36,10 @@ internal class CastPlaybackCoordinator(
     private val onSnapshotChanged: (CastPlaybackSnapshot) -> Unit,
     private val onRemotePlaybackAccepted: () -> Unit,
 ) {
+    private companion object {
+        const val LogTag = "CastPlayback"
+    }
+
     private val appContext = context.applicationContext
     private val castContext = CastContext.getSharedInstance(appContext)
     private var selectedStation: Station? = null
@@ -51,6 +56,7 @@ internal class CastPlaybackCoordinator(
         override fun onSendingRemoteMediaRequest() = Unit
         override fun onAdBreakStatusUpdated() = Unit
         override fun onMediaError(error: MediaError) {
+            Log.w(LogTag, "receiver media error code=${error.detailedErrorCode}")
             publish(
                 CastPlaybackSnapshot(
                     route = PlaybackRoute.CastConnected,
@@ -71,6 +77,7 @@ internal class CastPlaybackCoordinator(
         }
 
         override fun onSessionStartFailed(session: CastSession, error: Int) {
+            Log.w(LogTag, "session start failed code=$error")
             detach()
             publish(CastPlaybackSnapshot(errorMessage = "Unable to start Cast session"))
         }
@@ -90,6 +97,7 @@ internal class CastPlaybackCoordinator(
         }
 
         override fun onSessionResumeFailed(session: CastSession, error: Int) {
+            Log.w(LogTag, "session resume failed code=$error")
             detach()
             publish(CastPlaybackSnapshot(errorMessage = "Unable to resume Cast session"))
         }
@@ -165,6 +173,7 @@ internal class CastPlaybackCoordinator(
             .build()
         publish(CastPlaybackSnapshot(PlaybackRoute.CastConnected, PlaybackStatus.Connecting, deviceName()))
         client.load(request).setResultCallback(ResultCallback { result ->
+            Log.i(LogTag, "remote media load result code=${result.status.statusCode}")
             if (result.status.statusCode == CastStatusCodes.SUCCESS) {
                 if (autoplay) onRemotePlaybackAccepted()
                 publishRemoteStatus()
