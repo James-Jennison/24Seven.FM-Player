@@ -4,6 +4,7 @@ import com.codeframe78.twentyfourseven.player.domain.Station
 import com.codeframe78.twentyfourseven.player.domain.StationId
 import com.codeframe78.twentyfourseven.player.domain.StreamFormat
 import com.codeframe78.twentyfourseven.player.domain.StreamVariant
+import com.google.android.gms.cast.MediaStatus
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -37,5 +38,13 @@ class CastMediaDescriptorFactoryTest {
         assertEquals("audio/mpeg", StreamFormat.Mp3.castContentType())
         assertEquals("application/x-mpegURL", StreamFormat.Hls.castContentType())
         assertEquals("audio/aac", StreamFormat.Unknown.castContentType())
+    }
+
+    @Test
+    fun idleReceiverDoesNotEraseTheSenderPlaybackIntent() {
+        assertEquals(null, remotePlaybackIntentFor(MediaStatus.PLAYER_STATE_IDLE))
+        assertEquals(true, remotePlaybackIntentFor(MediaStatus.PLAYER_STATE_PLAYING))
+        assertEquals(true, remotePlaybackIntentFor(MediaStatus.PLAYER_STATE_BUFFERING))
+        assertEquals(false, remotePlaybackIntentFor(MediaStatus.PLAYER_STATE_PAUSED))
     }
 }

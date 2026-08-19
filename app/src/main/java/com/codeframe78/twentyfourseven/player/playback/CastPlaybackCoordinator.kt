@@ -191,9 +191,7 @@ internal class CastPlaybackCoordinator(
             MediaStatus.PLAYER_STATE_BUFFERING -> PlaybackStatus.Buffering
             else -> PlaybackStatus.Idle
         }
-        if (status != null) {
-            shouldPlay = playbackStatus == PlaybackStatus.Playing || playbackStatus == PlaybackStatus.Buffering
-        }
+        remotePlaybackIntentFor(status?.playerState)?.let { shouldPlay = it }
         val route = if (status == null || status.playerState == MediaStatus.PLAYER_STATE_IDLE) {
             PlaybackRoute.CastConnected
         } else {
@@ -208,6 +206,20 @@ internal class CastPlaybackCoordinator(
     }
 
     private fun deviceName(): String? = castSession?.castDevice?.friendlyName
+}
+
+/**
+ * An idle receiver has not expressed a playback preference. In particular, a newly
+ * launched receiver starts idle, and must not erase the sender's local-play intent
+ * before [SessionManagerListener.onSessionStarted] can load the selected station.
+ */
+internal fun remotePlaybackIntentFor(playerState: Int?): Boolean? = when (playerState) {
+    MediaStatus.PLAYER_STATE_PLAYING,
+    MediaStatus.PLAYER_STATE_BUFFERING,
+    -> true
+
+    MediaStatus.PLAYER_STATE_PAUSED -> false
+    else -> null
 }
 
 internal object CastMediaInfoFactory {
