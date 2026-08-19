@@ -56,7 +56,8 @@ apk_version=$(sed -n "s/.*versionCode='\([^']*\)'.*/\1/p" <<<"$badging" | head -
 [[ "$apk_package" == "${source_package}.debug" ]] || fail 'APK is not the debug package for this source tree'
 [[ "$apk_version" == "$source_version" ]] || fail 'APK version code does not match this source tree'
 
-$aapt_bin dump xmltree "$apk" AndroidManifest.xml | grep -Fq "$head_commit" || fail 'APK lacks this HEAD source revision; rebuild with TWENTYFOURSEVEN_SOURCE_REVISION set to HEAD'
+manifest_dump=$($aapt_bin dump xmltree "$apk" AndroidManifest.xml)
+grep -Fq "$head_commit" <<<"$manifest_dump" || fail 'APK lacks this HEAD source revision; rebuild with TWENTYFOURSEVEN_SOURCE_REVISION set to HEAD'
 
 if [[ -n "$device" ]]; then
   installed_version=$(adb -s "$device" shell dumpsys package "$apk_package" 2>/dev/null | sed -n 's/.*versionCode=\([0-9]*\).*/\1/p' | head -n 1 | tr -d '\r')
