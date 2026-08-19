@@ -115,7 +115,7 @@ active execution.
 | M39 | Planned | — | — | 1–2 active d | — | — | — | — | — | — | Unknown |
 | M40 | Planned after M39 | — | — | 3–10 calendar d | — | — | — | — | — | — | Unknown |
 | M41 | Planned after M40 | — | — | 0.5–1 active d | — | — | — | — | — | — | Unknown |
-| M42 | Planned after M41 | — | — | 3–5 calendar wk | — | — | — | — | — | — | Unknown |
+| M42 | Active · owner-confirmed two-week closed test | `August 16, 2026 at 5:51:14 PM PDT (UTC-07:00)` first recorded remediation interval; earlier campaign start not supplied | — | 3–5 calendar wk | 0.44 h recorded Issue #26, v3/v4 preparation, signing recovery, and Razr landscape remediation | 0.11 h recorded | 0.42 h recorded while credentials were unavailable | 0.55 h recorded | ≥0.90 h recorded intervals | Not assessable while active | Confirmed current phase |
 | M43 | Planned after M42 | — | — | 1–2 calendar wk | — | — | — | — | — | — | Unknown |
 | M44 | Planned after M43 | — | — | 1–4 calendar wk | — | — | — | — | — | — | Unknown |
 | M45 | Planned recurring | — | — | Monthly, quarterly, and release-triggered | — | — | — | — | — | — | Unknown |
@@ -712,6 +712,12 @@ independently.
   closed-test bundle had been built from a non-`main` checkout. Landscape remediation for the uploaded version-4 build
   ran from `August 19, 2026 at 10:04:16 AM PDT (UTC-07:00)` through `August 19, 2026 at 10:14:34 AM PDT (UTC-07:00)`
   as a version-code-5 interval. Tester and Play-calendar waits remain excluded.
+- **Earlier measured release records:** Issue #26 remediation and version-3 preparation completed on `August 16, 2026`.
+  On `August 18, 2026`, exact-candidate preparation completed in 0.06 h active plus 0.02 h automated wait; the owner then
+  entered the existing V2 material directly after 0.42 h of measured credential/recovery wait. The V2-signed version-3
+  bundle completed at `11:03:49 PM PDT (UTC-07:00)` after JAR verification and public-certificate comparison. Those
+  earlier records total 0.28 h active, 0.03 h automated wait, 0.42 h user-blocked, and 0.31 h counted; no secret was
+  retained in the repository.
 - **Model, reasoning strength, and original forecast:** GPT-5.6 at the current default reasoning strength; the completed
   version-code-4 corrective candidate forecast was 0.5–1.0 active hours. The version-code-5 landscape remediation
   forecast is 1.0–2.0 active hours for implementation and Android validation from `main`.
@@ -724,9 +730,9 @@ independently.
   explicit short-wide Player layout, a breakpoint unit test, and a physical-Razr `760×400` UI test proving every control
   and station logo is visible without the carousel. Version code 5 / `0.1.0-alpha04` passed focused Kotlin compilation,
   unit tests, release bundle/lint, and that physical-device UI test; its signed AAB's JAR verification passed and its
-  signer matches V2. The measured corrective intervals total 0.16 h active, 0.08 h automated wait, 0.00 h measured
-  user-blocked, and 0.24 h counted. Separate future active remediation, automated validation, and user-blocked signing/
-  Play waits.
+  signer matches V2. Including the earlier preserved records, the measured M42 intervals total 0.44 h active, 0.11 h
+  automated wait, 0.42 h user-blocked, and 0.55 h counted. Separate future active remediation, automated validation,
+  and user-blocked signing/Play waits.
 
 ### M43 — Production Access and Policy Approval
 
