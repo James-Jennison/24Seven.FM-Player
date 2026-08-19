@@ -15,7 +15,6 @@ class CastMediaDescriptorFactoryTest {
             name = "Test Station",
             shortName = "Test",
             description = "Test station",
-            logoUrl = "https://example.invalid/logo.png",
             websiteUrl = "https://example.invalid/",
         )
         val stream = StreamVariant(

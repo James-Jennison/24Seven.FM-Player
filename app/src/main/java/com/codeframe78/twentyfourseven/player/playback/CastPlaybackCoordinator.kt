@@ -241,7 +241,7 @@ internal object CastMediaDescriptorFactory {
         contentType = stream.format.castContentType(),
         title = station.name,
         stationName = station.name,
-        artworkUrl = station.logoUrl,
+        artworkUrl = null,
     )
 }
 
