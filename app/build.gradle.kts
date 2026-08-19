@@ -17,6 +17,11 @@ val uploadKeyPassword = providers.environmentVariable("TWENTYFOURSEVEN_UPLOAD_KE
 val uploadSigningValues = listOf(uploadStoreFile, uploadStorePassword, uploadKeyAlias, uploadKeyPassword)
 val hasAnyUploadSigningValue = uploadSigningValues.any { !it.isNullOrBlank() }
 val hasCompleteUploadSigning = uploadSigningValues.all { !it.isNullOrBlank() }
+val sourceRevision = providers.environmentVariable("TWENTYFOURSEVEN_SOURCE_REVISION")
+    .orNull
+    ?.trim()
+    ?.takeIf { it.matches(Regex("[0-9a-f]{40}")) }
+    ?: "unverified"
 
 require(!hasAnyUploadSigningValue || hasCompleteUploadSigning) {
     "Incomplete Play upload signing environment. Supply all four TWENTYFOURSEVEN_UPLOAD_* values or none."
@@ -29,10 +34,11 @@ android {
         applicationId = "com.codeframe78.twentyfourseven.player"
         minSdk = 26
         targetSdk = 36
-        versionCode = 7
+        versionCode = 8
         versionName = "0.1.0-alpha04"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         manifestPlaceholders["appLabel"] = "24Seven.FM Player"
+        manifestPlaceholders["buildRevision"] = sourceRevision
     }
     buildFeatures { compose = true }
     signingConfigs {

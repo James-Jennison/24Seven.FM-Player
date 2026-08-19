@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <application android:name=".RadioApplication" android:allowBackup="false" android:dataExtractionRules="@xml/data_extraction_rules" android:fullBackupContent="@xml/backup_rules" android:icon="@mipmap/ic_launcher" android:label="${appLabel}" android:networkSecurityConfig="@xml/network_security_config" android:roundIcon="@mipmap/ic_launcher" android:supportsRtl="true" android:theme="@style/Theme.TwentyFourSevenPlayer">
+        <meta-data android:name="com.codeframe78.twentyfourseven.player.BUILD_REVISION" android:value="${buildRevision}" />
         <meta-data android:name="com.google.android.gms.cast.framework.OPTIONS_PROVIDER_CLASS_NAME" android:value="com.codeframe78.twentyfourseven.player.playback.PlayerCastOptionsProvider" />
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>

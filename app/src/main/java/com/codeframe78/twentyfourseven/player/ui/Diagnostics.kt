@@ -13,6 +13,7 @@ internal data class DiagnosticEnvironment(
     val appVersion: String = "Unknown",
     val versionCode: Long = 0L,
     val buildType: String = "Unknown",
+    val sourceRevision: String = "unverified",
     val androidRelease: String = "Unknown",
     val apiLevel: Int = 0,
     val deviceManufacturer: String = "Unknown",
@@ -47,6 +48,7 @@ internal fun buildDiagnosticReport(
     appendLine("24Seven.FM Player diagnostics")
     appendLine("App version: ${safeDiagnosticValue(environment.appVersion)} (${environment.versionCode.coerceAtLeast(0L)})")
     appendLine("Build type: ${safeDiagnosticValue(environment.buildType)}")
+    appendLine("Source revision: ${safeDiagnosticValue(environment.sourceRevision)}")
     appendLine("Android: ${safeDiagnosticValue(environment.androidRelease)} (API ${environment.apiLevel.coerceAtLeast(0)})")
     appendLine(
         "Device: ${safeDiagnosticValue(environment.deviceManufacturer)} ${safeDiagnosticValue(environment.deviceModel)}",

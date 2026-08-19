@@ -263,10 +263,14 @@ class MainActivity : AppCompatActivity() {
     @Suppress("DEPRECATION")
     private fun diagnosticEnvironment(): DiagnosticEnvironment {
         val packageInfo = packageManager.getPackageInfo(packageName, 0)
+        val appInfo = packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA)
         return DiagnosticEnvironment(
             appVersion = packageInfo.versionName ?: "Unknown",
             versionCode = PackageInfoCompat.getLongVersionCode(packageInfo),
-            buildType = if (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0) "debug" else "release",
+            buildType = if (appInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0) "debug" else "release",
+            sourceRevision = appInfo.metaData
+                ?.getString("com.codeframe78.twentyfourseven.player.BUILD_REVISION")
+                ?: "unverified",
             androidRelease = Build.VERSION.RELEASE,
             apiLevel = Build.VERSION.SDK_INT,
             deviceManufacturer = Build.MANUFACTURER,
