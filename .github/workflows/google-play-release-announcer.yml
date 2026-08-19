@@ -1,0 +1,86 @@
+name: Announce Google Play releases
+
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+    inputs:
+      bootstrap:
+        description: "Record currently published releases without posting them to Discord"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  id-token: write
+
+concurrency:
+  group: google-play-release-announcer
+  cancel-in-progress: false
+
+jobs:
+  announce:
+    name: Announce published Player releases
+    if: ${{ vars.GOOGLE_PLAY_RELEASE_ANNOUNCER_ENABLED == 'true' || (github.event_name == 'workflow_dispatch' && inputs.bootstrap) }}
+    runs-on: ubuntu-latest
+    env:
+      GOOGLE_PLAY_PACKAGE_NAME: com.codeframe78.twentyfourseven.player
+      GOOGLE_PLAY_TRACKS: ${{ vars.GOOGLE_PLAY_RELEASE_TRACKS || 'alpha' }}
+      PLAY_RELEASE_STATE_FILE: .github/play-release-announcer-state.json
+      PLAY_RELEASE_BOOTSTRAP: ${{ inputs.bootstrap || 'false' }}
+    steps:
+      - name: Check out source and release ledger
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: main
+
+      - name: Authenticate to Google Play API
+        id: google-auth
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          workload_identity_provider: ${{ vars.GOOGLE_PLAY_WIF_PROVIDER }}
+          service_account: ${{ vars.GOOGLE_PLAY_WIF_SERVICE_ACCOUNT }}
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/androidpublisher
+
+      - name: Find newly published releases
+        id: releases
+        env:
+          GOOGLE_PLAY_ACCESS_TOKEN: ${{ steps.google-auth.outputs.access_token }}
+        run: node scripts/announce-google-play-releases.mjs
+
+      - name: Post release announcement to Discord thread
+        if: ${{ steps.releases.outputs.count != '0' }}
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          DISCORD_THREAD_ID: ${{ vars.DISCORD_THREAD_ID }}
+          DISCORD_MESSAGE: ${{ steps.releases.outputs.message }}
+        run: |
+          if [[ -z "${DISCORD_WEBHOOK_URL}" ]]; then
+            echo "Discord webhook is not available."
+            exit 1
+          fi
+          if [[ -z "${DISCORD_THREAD_ID}" ]]; then
+            echo "Discord thread ID is not available."
+            exit 1
+          fi
+
+          jq --null-input --arg content "${DISCORD_MESSAGE}" \
+            '{content: $content, allowed_mentions: {parse: []}}' \
+            | curl --fail-with-body --silent --show-error --retry 3 --retry-all-errors \
+                --header 'Content-Type: application/json' \
+                --data-binary @- \
+                --url-query 'wait=true' \
+                --url-query "thread_id=${DISCORD_THREAD_ID}" \
+                --output /dev/null \
+                "${DISCORD_WEBHOOK_URL}"
+
+      - name: Record release ledger
+        if: ${{ steps.releases.outputs.state_changed == 'true' && (steps.releases.outputs.count == '0' || success()) }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/play-release-announcer-state.json
+          git commit -m "chore: record announced Google Play releases"
+          git push origin HEAD:main
