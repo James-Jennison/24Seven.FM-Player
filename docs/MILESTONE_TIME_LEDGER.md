@@ -1,6 +1,6 @@
 # Milestone Real-World Time Ledger
 
-Last updated: `August 14, 2026 at 6:23:19 PM PDT (UTC−07:00)`
+Last updated: `August 18, 2026 at 8:38:00 PM PDT (UTC−07:00)`
 
 This is the permanent time-accounting record for the canonical M01–M60 milestones in [ROADMAP.md](ROADMAP.md). It
 preserves historical uncertainty instead of treating commit spans as labor time. Future milestone work must be
@@ -1256,6 +1256,36 @@ This addendum is a three-phase operational gate for the private onboarding porta
 | Phase 3 — Controlled Release | Release preparation complete locally; protected enablement pending | Default-off, per-tester Live Chat cohort flag and local contract coverage are ready for a feature-flagged initial Alpha cohort rollout. | Explicit owner approval, database backup, migration result, protected flag/cohort record, rollback evidence, and aggregate post-enable result. |
 
 Phase 1 was executed locally with `test-onboarding-live-chat.php`, importer/auto-onboarding migration contracts, administrator security, coordinator email rendering, private email encoding, task-routing, and tester-portal contracts. Phase 2 was authorized as local staging: `test-onboarding-phase2-local.php` creates and removes a disposable SQLite database, exercises evidence-driven assignment, prepared-only coordinator-mail archival, per-tester chat, and retention purge; `test-onboarding-phase2-ui.mjs` verifies the separate coordinator workspaces, named tester/coordinator pop-out titles, same-origin chat transport, and SSE/polling fallback. Phase 3 release preparation adds a default-off `live_chat_enabled` flag and an explicit integer `live_chat_tester_ids` allow list; the local contracts cover an enabled single-record cohort and reject other records. No remote staging, deployment, mail handoff, protected-configuration enablement, or production data action occurred. Active-time totals are not reconstructed here because these gates were authorized and recorded after implementation work; preserve any future Phase 3 intervals prospectively under the operating procedure below.
+
+## Onboarding portal repository extraction
+
+| Program milestone | Status | Started | Forecast | Expected completion | Model and reasoning | Active | Automated wait | User-blocked |
+| --- | --- | --- | --- | --- | --- | ---: | ---: | ---: |
+| Onboarding R1 — Private repository extraction | Complete | `August 18, 2026 at 8:22:18 PM PDT (UTC−07:00)` | 3–5 active days | Completed `August 18, 2026 at 8:38:00 PM PDT (UTC−07:00)` | GPT-5.6; default reasoning strength | 0.26 h | 0.00 h | 0.00 h |
+
+### Onboarding R1 — Private repository extraction
+
+- **Objective:** Create a private, independently testable `24Seven.FM-Onboarding` repository from a reproducible filtered history; separate portal runtime, tests, deployment contracts, and protected operations from the Android Player and public project-site code without changing staging or production routing.
+- **Authorization and start:** Authorized by the owner and started `August 18, 2026 at 8:22:18 PM PDT (UTC−07:00)`.
+- **Model, reasoning strength, and original forecast:** GPT-5.6 with default reasoning strength; 3–5 active days; expected completion by `August 25, 2026 at 8:22:18 PM PDT (UTC−07:00)` if uninterrupted.
+- **Completion gates:** Disposable-clone extraction only; source Player repository remains unchanged except for this ledger and later explicit cleanup; private repository contains no secrets or protected data; independent portal validation passes; Player task-catalog handoff is versioned; deployment configuration is target-specific and reversible; no staging or production cutover occurs without separate authorization.
+- **Completion:** Completed `August 18, 2026 at 8:38:00 PM PDT (UTC−07:00)`. The private repository `James-Jennison/24Seven.FM-Onboarding` exists with the extracted `main` branch at `c668ff3`. Its standalone validator passes the PHP syntax, applicant intake, five-stage lifecycle, mail, administrator-security, Live Chat, retention, build-artifact, and target-routing contracts.
+- **Forecast variance:** 23.74 hours (98.9%) below the 24-hour lower bound, treating an active day as eight hours. The work completed quickly because the portal paths were already identifiable, the source worktree was clean, the extraction used a disposable clone, and no staging/production cutover was included.
+- **Forecasting lesson:** Separate repository bootstrap from environment cutover. A filtered-history extraction and local contract baseline can be completed quickly; target configuration, independent staging deployment, and any removal of the legacy portal copy remain separate owner-authorized milestones.
+
+| Started | Ended | Category | Reason or work | Evidence | Hours |
+| --- | --- | --- | --- | --- | ---: |
+| `August 18, 2026 at 8:22:18 PM PDT (UTC−07:00)` | `August 18, 2026 at 8:38:00 PM PDT (UTC−07:00)` | Active | Inspect source boundaries, create the private repository, prepare the reproducible filtered extraction, establish the independent portal baseline, validate it, and push it. | Owner authorization; clean source worktree; extracted commit `c668ff3`; remote `main` verification; standalone validator output | 0.26 h |
+
+```text
+Milestone Onboarding R1 time:
+Forecast: 3–5 active days (24–40 h)
+Counted project time: 0.26 h
+Total elapsed time: 0.26 h
+User-blocked time excluded: 0.00 h
+Forecast variance: 23.74 h below the lower bound (98.9%)
+Cumulative counted project time through Milestone Onboarding R1: 0.26 h (onboarding repository-extraction program only)
+```
 
 ## Historical milestone and legacy-ID crosswalk
 
