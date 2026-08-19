@@ -1,6 +1,6 @@
 # Milestone Real-World Time Ledger
 
-Last updated: `August 18, 2026 at 8:38:00 PM PDT (UTC−07:00)`
+Last updated: `August 18, 2026 at 8:59:45 PM PDT (UTC−07:00)`
 
 This is the permanent time-accounting record for the canonical M01–M60 milestones in [ROADMAP.md](ROADMAP.md). It
 preserves historical uncertainty instead of treating commit spans as labor time. Future milestone work must be
@@ -1285,6 +1285,36 @@ Total elapsed time: 0.26 h
 User-blocked time excluded: 0.00 h
 Forecast variance: 23.74 h below the lower bound (98.9%)
 Cumulative counted project time through Milestone Onboarding R1: 0.26 h (onboarding repository-extraction program only)
+```
+
+## Public website repository extraction
+
+| Program milestone | Status | Started | Forecast | Expected completion | Model and reasoning | Active | Automated wait | User-blocked |
+| --- | --- | --- | --- | --- | --- | ---: | ---: | ---: |
+| Website R1 — Public repository extraction | Complete | `August 18, 2026 at 8:50:52 PM PDT (UTC−07:00)` | 1–2 active days | Completed `August 18, 2026 at 8:59:45 PM PDT (UTC−07:00)` | GPT-5.6; default reasoning strength | 0.15 h | 0.00 h | 0.00 h |
+
+### Website R1 — Public repository extraction
+
+- **Objective:** Create a public, independently testable `24Seven.FM-Website` repository that contains only public Player-site source, build contracts, and public assets; preserve the Android Player and private onboarding portal as separate repositories.
+- **Authorization and start:** Authorized by the owner and started `August 18, 2026 at 8:50:52 PM PDT (UTC−07:00)`.
+- **Model, reasoning strength, and original forecast:** GPT-5.6 with default reasoning strength; 1–2 active days; expected completion by `August 20, 2026 at 8:50:52 PM PDT (UTC−07:00)` if uninterrupted.
+- **Completion gates:** Reproducible filtered-history extraction; no PHP portal runtime, protected task assignments, configuration, or tester data in the public repository; standalone static build/validation passes; source repositories retain their existing content; no staging or production cutover occurs without separate authorization.
+- **Completion:** Completed `August 18, 2026 at 8:59:45 PM PDT (UTC−07:00)`. The public repository `James-Jennison/24Seven.FM-Website` exists with `main` at `979cea8`. The source was filtered into a static-only tree, public-site build scripts and GitHub workflow were made standalone, the public Closed Alpha page was rewritten to describe the protected-portal boundary, and the static artifact validator passed. Current source and every filtered commit were scanned for portal runtime, protected task registry, local workspace, and sensitive route paths.
+- **Forecast variance:** 7.85 hours (98.1%) below the eight-hour lower bound. The work completed quickly because the existing public-site paths and assets were already separable, the private portal had already been extracted, and the milestone deliberately excluded deployment and cutover.
+- **Forecasting lesson:** Public-site repository extraction can be short when public source has a reproducible static build and filtered history is used. Treat public-domain cutover, portal deep-link configuration, and source-copy removal as separate deployment milestones.
+
+| Started | Ended | Category | Reason or work | Evidence | Hours |
+| --- | --- | --- | --- | --- | ---: |
+| `August 18, 2026 at 8:50:52 PM PDT (UTC−07:00)` | `August 18, 2026 at 8:59:45 PM PDT (UTC−07:00)` | Active | Verify boundaries, create the public repository, filter history, establish static-only build and workflow contracts, validate, and push. | Owner authorization; commits `dba993b` and `979cea8`; standalone validator; clean all-history boundary scan; remote `main` verification | 0.15 h |
+
+```text
+Milestone Website R1 time:
+Forecast: 1–2 active days (8–16 h)
+Counted project time: 0.15 h
+Total elapsed time: 0.15 h
+User-blocked time excluded: 0.00 h
+Forecast variance: 7.85 h below the lower bound (98.1%)
+Cumulative counted project time through Milestone Website R1: 0.15 h (public website repository-extraction program only)
 ```
 
 ## Historical milestone and legacy-ID crosswalk
