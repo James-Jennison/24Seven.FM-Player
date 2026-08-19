@@ -166,6 +166,7 @@ internal class CastPlaybackCoordinator(
     private fun loadSelectedStation(autoplay: Boolean) {
         val station = selectedStation ?: return
         val client = remoteClient ?: return
+        val session = castSession ?: return
         val stream = station.streams.minByOrNull(StreamVariant::priority) ?: return
         val request = MediaLoadRequestData.Builder()
             .setMediaInfo(CastMediaInfoFactory.create(station, stream))
@@ -173,6 +174,13 @@ internal class CastPlaybackCoordinator(
             .build()
         publish(CastPlaybackSnapshot(PlaybackRoute.CastConnected, PlaybackStatus.Connecting, deviceName()))
         client.load(request).setResultCallback(ResultCallback { result ->
+            // A remote load can complete after the user has stopped casting.  In that
+            // case its result belongs to the old session and must not stop the local
+            // Media3 player or overwrite the local playback state.
+            if (remoteClient !== client || castSession !== session || !session.isConnected) {
+                Log.i(LogTag, "ignoring stale remote media load result")
+                return@ResultCallback
+            }
             Log.i(LogTag, "remote media load result code=${result.status.statusCode}")
             if (result.status.statusCode == CastStatusCodes.SUCCESS) {
                 if (autoplay) onRemotePlaybackAccepted()
