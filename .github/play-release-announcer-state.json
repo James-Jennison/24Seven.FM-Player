@@ -1,4 +1,13 @@
 {
   "schemaVersion": 1,
-  "announced": {}
+  "announced": {
+    "alpha:5 (0.1.0-alpha04):7": {
+      "announcedAt": "2026-08-19T19:40:33.021Z",
+      "track": "alpha",
+      "releaseName": "5 (0.1.0-alpha04)",
+      "versionCodes": [
+        "7"
+      ]
+    }
+  }
 }
