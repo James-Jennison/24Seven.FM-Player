@@ -35,7 +35,7 @@ jobs:
 
       - name: Validate app
         run: |
-          ./gradlew test lint --no-daemon --console=plain
+          bash ./gradlew test lint --no-daemon --console=plain
           bash scripts/build-debug-candidate.sh
 
   notify-discord:
