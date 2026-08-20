@@ -18,8 +18,12 @@ import androidx.media3.session.SessionToken
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
 import com.codeframe78.twentyfourseven.player.domain.PlaybackController
+import com.codeframe78.twentyfourseven.player.domain.PlaybackRoute
 import com.codeframe78.twentyfourseven.player.domain.PlaybackState
 import com.codeframe78.twentyfourseven.player.domain.PlaybackStatus
+import com.codeframe78.twentyfourseven.player.domain.NowPlayingDetailsRepository
+import com.codeframe78.twentyfourseven.player.domain.NowPlayingPublisher
+import com.codeframe78.twentyfourseven.player.domain.NowPlayingState
 import com.codeframe78.twentyfourseven.player.domain.SleepTimerState
 import com.codeframe78.twentyfourseven.player.domain.Station
 import com.codeframe78.twentyfourseven.player.domain.StationId
@@ -27,8 +31,19 @@ import com.google.common.util.concurrent.Futures
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 
-class Media3PlaybackController(context: Context) : PlaybackController {
+class Media3PlaybackController(
+    context: Context,
+    private val nowPlayingDetails: NowPlayingDetailsRepository,
+    private val nowPlayingPublisher: NowPlayingPublisher,
+) : PlaybackController {
     private val appContext = context.applicationContext
     private val mainExecutor = ContextCompat.getMainExecutor(appContext)
     private val connectivityManager = appContext.getSystemService(ConnectivityManager::class.java)
@@ -36,13 +51,25 @@ class Media3PlaybackController(context: Context) : PlaybackController {
     private val stateFlow = MutableStateFlow(
         PlaybackState(networkAvailable = networkRecovery.isNetworkUsable),
     )
+    private var localAudioOutput = stateFlow.value.audioOutput
     private val audioOutputMonitor = AndroidAudioOutputMonitor(appContext) { output ->
-        stateFlow.value = stateFlow.value.copy(audioOutput = output)
+        localAudioOutput = output
+        if (stateFlow.value.route == PlaybackRoute.Local) {
+            stateFlow.value = stateFlow.value.copy(audioOutput = output)
+        }
     }
 
     private var controller: MediaController? = null
     private var selectedStation: Station? = null
     private var playRequested = false
+    private val castNowPlayingScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private var castNowPlayingRefreshJob: Job? = null
+    private var castNowPlayingRefreshStationId: StationId? = null
+    private val castPlayback = CastPlaybackCoordinator(
+        appContext,
+        onSnapshotChanged = ::updateCastState,
+        onRemotePlaybackAccepted = ::stopLocalPlaybackForCast,
+    )
 
     private val networkCallback = object : ConnectivityManager.NetworkCallback() {
         override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
@@ -109,7 +136,7 @@ class Media3PlaybackController(context: Context) : PlaybackController {
                     .onSuccess { connected ->
                         controller = connected
                         connected.addListener(listener)
-                        selectedStation?.let(::setStationMediaItems)
+                        if (!castPlayback.isCastSessionActive()) selectedStation?.let(::setStationMediaItems)
                         updateSleepTimerState(connected.sessionExtras)
                         updateState()
                     }
@@ -126,8 +153,11 @@ class Media3PlaybackController(context: Context) : PlaybackController {
 
     override fun selectStation(station: Station) {
         if (selectedStation?.id == station.id) return
+        stopCastNowPlayingRefresh()
         networkRecovery.cancel()
         selectedStation = station
+        castPlayback.selectStation(station)
+        if (castPlayback.isCastSessionActive()) return
         stateFlow.value = stateFlow.value.copy(
             stationId = station.id,
             status = PlaybackStatus.Idle,
@@ -136,8 +166,17 @@ class Media3PlaybackController(context: Context) : PlaybackController {
         if (controller != null) setStationMediaItems(station)
     }
 
+    override fun updateNowPlaying(nowPlaying: NowPlayingState) {
+        castPlayback.updateNowPlaying(nowPlaying)
+    }
+
     override fun play() {
         playRequested = true
+        if (castPlayback.play()) {
+            updateState()
+            return
+        }
+        castPlayback.recordLocalPlaybackIntent(true)
         val connected = controller
         if (connected == null) {
             stateFlow.value = stateFlow.value.copy(status = PlaybackStatus.Connecting)
@@ -152,6 +191,8 @@ class Media3PlaybackController(context: Context) : PlaybackController {
     override fun pause() {
         playRequested = false
         networkRecovery.cancel()
+        if (castPlayback.pause()) return
+        castPlayback.recordLocalPlaybackIntent(false)
         controller?.pause()
         updateState()
     }
@@ -160,6 +201,8 @@ class Media3PlaybackController(context: Context) : PlaybackController {
         playRequested = false
         networkRecovery.cancel()
         cancelSleepTimer()
+        if (castPlayback.stop()) return
+        castPlayback.recordLocalPlaybackIntent(false)
         controller?.stop()
         updateState()
     }
@@ -212,6 +255,7 @@ class Media3PlaybackController(context: Context) : PlaybackController {
     }
 
     private fun updateState() {
+        if (castPlayback.isCastSessionActive()) return
         val connected = controller
         val stationId = selectedStation?.id ?: stateFlow.value.stationId
         if (connected == null) {
@@ -219,6 +263,9 @@ class Media3PlaybackController(context: Context) : PlaybackController {
                 stationId = stationId,
                 status = if (playRequested) PlaybackStatus.Connecting else PlaybackStatus.Idle,
                 errorMessage = null,
+                route = PlaybackRoute.Local,
+                castDeviceName = null,
+                audioOutput = localAudioOutput,
             )
             return
         }
@@ -238,7 +285,72 @@ class Media3PlaybackController(context: Context) : PlaybackController {
             status = status,
             errorMessage = connected.playerError?.message,
             networkAvailable = networkRecovery.isNetworkUsable,
+            route = PlaybackRoute.Local,
+            castDeviceName = null,
         )
+    }
+
+    private fun stopLocalPlaybackForCast() {
+        networkRecovery.cancel()
+        controller?.stop()
+    }
+
+    private fun updateCastState(snapshot: CastPlaybackSnapshot) {
+        val leavingCastRoute =
+            stateFlow.value.route != PlaybackRoute.Local && snapshot.route == PlaybackRoute.Local
+        stateFlow.value = stateFlow.value.copy(
+            stationId = selectedStation?.id ?: stateFlow.value.stationId,
+            status = snapshot.status,
+            errorMessage = snapshot.errorMessage,
+            route = snapshot.route,
+            castDeviceName = snapshot.deviceName,
+            audioOutput = if (snapshot.route == PlaybackRoute.Local) {
+                localAudioOutput
+            } else {
+                stateFlow.value.audioOutput.copy(
+                    displayName = snapshot.deviceName ?: "Cast device",
+                    kind = com.codeframe78.twentyfourseven.player.domain.AudioOutputKind.Remote,
+                )
+            },
+        )
+        if (leavingCastRoute && playRequested) {
+            selectedStation?.let { station ->
+                setStationMediaItems(station)
+            }
+        }
+        syncCastNowPlayingRefresh(snapshot)
+    }
+
+    private fun syncCastNowPlayingRefresh(snapshot: CastPlaybackSnapshot) {
+        val station = selectedStation
+        if (snapshot.route != PlaybackRoute.Casting || station == null) {
+            stopCastNowPlayingRefresh()
+            return
+        }
+        if (castNowPlayingRefreshStationId == station.id && castNowPlayingRefreshJob?.isActive == true) return
+
+        stopCastNowPlayingRefresh()
+        castNowPlayingRefreshStationId = station.id
+        castNowPlayingRefreshJob = castNowPlayingScope.launch {
+            while (isActive) {
+                val refreshed = runCatching { nowPlayingDetails.fetchNowPlaying(station.id) }.getOrNull()
+                if (refreshed != null) {
+                    mainExecutor.execute {
+                        if (selectedStation?.id == station.id && stateFlow.value.route == PlaybackRoute.Casting) {
+                            nowPlayingPublisher.publish(refreshed)
+                            castPlayback.updateNowPlaying(refreshed)
+                        }
+                    }
+                }
+                delay(CastNowPlayingRefreshIntervalMillis)
+            }
+        }
+    }
+
+    private fun stopCastNowPlayingRefresh() {
+        castNowPlayingRefreshJob?.cancel()
+        castNowPlayingRefreshJob = null
+        castNowPlayingRefreshStationId = null
     }
 
     private fun updateSleepTimerState(extras: Bundle) {
@@ -281,3 +393,5 @@ private fun ConnectivityManager.hasValidatedDefaultNetwork(): Boolean = activeNe
 private fun NetworkCapabilities.hasValidatedInternet(): Boolean =
     hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
         hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+
+private const val CastNowPlayingRefreshIntervalMillis = 30_000L

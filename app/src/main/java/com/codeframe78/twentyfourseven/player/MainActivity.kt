@@ -13,10 +13,10 @@ import android.os.Bundle
 import android.os.SystemClock
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.content.pm.PackageInfoCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -52,7 +52,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
     private var audioOutputRefreshJob: Job? = null
     private val requestedChatStationId = MutableStateFlow<String?>(null)
     private val notificationPermissionLauncher = registerForActivityResult(
@@ -264,10 +264,14 @@ class MainActivity : ComponentActivity() {
     @Suppress("DEPRECATION")
     private fun diagnosticEnvironment(): DiagnosticEnvironment {
         val packageInfo = packageManager.getPackageInfo(packageName, 0)
+        val appInfo = packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA)
         return DiagnosticEnvironment(
             appVersion = packageInfo.versionName ?: "Unknown",
             versionCode = PackageInfoCompat.getLongVersionCode(packageInfo),
-            buildType = if (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0) "debug" else "release",
+            buildType = if (appInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0) "debug" else "release",
+            sourceRevision = appInfo.metaData
+                ?.getString("com.codeframe78.twentyfourseven.player.BUILD_REVISION")
+                ?: "unverified",
             androidRelease = Build.VERSION.RELEASE,
             apiLevel = Build.VERSION.SDK_INT,
             deviceManufacturer = Build.MANUFACTURER,

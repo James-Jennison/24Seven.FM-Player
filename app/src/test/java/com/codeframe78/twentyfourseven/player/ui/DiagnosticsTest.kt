@@ -16,6 +16,7 @@ class DiagnosticsTest {
                 appVersion = "0.1.0-alpha01-debug",
                 versionCode = 2,
                 buildType = "debug",
+                sourceRevision = "a".repeat(40),
                 androidRelease = "16",
                 apiLevel = 36,
                 deviceManufacturer = "motorola",
@@ -36,6 +37,7 @@ class DiagnosticsTest {
 
         assertTrue(report.contains("Error category: Playback failure"))
         assertTrue(report.contains("Audio output: Bluetooth"))
+        assertTrue(report.contains("Source revision: " + "a".repeat(40)))
         assertTrue(report.contains("StreamingSoundtracks.com"))
         assertFalse(report.contains("private.example"))
         assertFalse(report.contains("secret-value"))

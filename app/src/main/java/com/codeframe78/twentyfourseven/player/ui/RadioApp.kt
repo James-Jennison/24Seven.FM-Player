@@ -382,6 +382,7 @@ private fun StationTopBar(
         },
         title = { Text("24Seven.FM", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) },
         actions = {
+            CastRouteButton()
             IconButton(onClick = { onSelectDestination(MainDestination.More) }) {
                 Icon(Icons.Default.MoreVert, contentDescription = "Account and station options")
             }

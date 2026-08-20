@@ -1,5 +1,6 @@
 package com.codeframe78.twentyfourseven.player.ui
 
+import android.view.ContextThemeWrapper
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.text.KeyboardOptions
@@ -61,6 +62,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
@@ -75,12 +77,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.mediarouter.app.MediaRouteButton
 import coil3.compose.AsyncImage
 import com.codeframe78.twentyfourseven.player.R
 import com.codeframe78.twentyfourseven.player.domain.AudioOutputKind
+import com.codeframe78.twentyfourseven.player.domain.PlaybackRoute
 import com.codeframe78.twentyfourseven.player.domain.PlaybackStatus
 import com.codeframe78.twentyfourseven.player.domain.Station
 import com.codeframe78.twentyfourseven.player.domain.StationId
+import com.codeframe78.twentyfourseven.player.domain.StreamFormat
+import com.codeframe78.twentyfourseven.player.playback.setUpCastRouteButton
 import com.codeframe78.twentyfourseven.player.ui.theme.StationPalette
 import com.codeframe78.twentyfourseven.player.ui.theme.stationPalette
 
@@ -560,7 +567,39 @@ private fun NowPlayingDetails(
             )
         }
         PlaybackStatusPill(state, palette)
+        CastRouteLabel(state)
     }
+}
+
+@Composable
+internal fun CastRouteButton() {
+    val context = LocalContext.current
+    AndroidView(
+        factory = { viewContext ->
+            MediaRouteButton(
+                ContextThemeWrapper(viewContext, R.style.Theme_TwentyFourSevenPlayer_Cast),
+            ).apply {
+                contentDescription = "Cast to a device"
+                setUpCastRouteButton(context, this)
+            }
+        },
+        modifier = Modifier.size(48.dp).testTag("cast_route_button"),
+    )
+}
+
+@Composable
+private fun CastRouteLabel(state: MainUiState) {
+    if (state.playback.route == PlaybackRoute.Local) return
+    Text(
+        text = if (state.playback.route == PlaybackRoute.Casting) {
+            "Casting to ${state.playback.castDeviceName ?: "device"}"
+        } else {
+            "Connected to ${state.playback.castDeviceName ?: "Cast device"}"
+        },
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.testTag("cast_route_status"),
+    )
 }
 
 @Composable

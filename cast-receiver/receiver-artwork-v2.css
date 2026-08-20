@@ -1,0 +1,7 @@
+@import url("receiver-artwork-v1.css");
+
+/* The metadata panel already identifies the station; avoid a competing watermark. */
+#receiver-experience {
+  background:
+    linear-gradient(90deg, rgba(3, 11, 26, 0.94), rgba(3, 11, 26, 0.5));
+}

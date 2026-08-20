@@ -1,0 +1,35 @@
+@import url("receiver-artwork-v2.css");
+
+#receiver-experience {
+  --station-accent: #c9a8ff;
+  --station-secondary: #8b5cf6;
+  --station-glow: #2b1b3f;
+  background:
+    radial-gradient(circle at 78% 18%, var(--station-secondary), transparent 34%),
+    radial-gradient(circle at 12% 90%, var(--station-glow), transparent 42%),
+    linear-gradient(180deg, var(--station-glow) 0%, #0e0b14 57%, #0e0b14 100%);
+  transition: background 700ms ease;
+}
+
+.artwork-frame {
+  border-color: var(--station-accent);
+  box-shadow: 0 22px 70px var(--station-glow);
+  transition: border-color 700ms ease, box-shadow 700ms ease;
+}
+
+.eyebrow,
+.live-indicator {
+  color: var(--station-accent);
+  transition: color 700ms ease;
+}
+
+#now-playing-station {
+  color: var(--station-secondary);
+  transition: color 700ms ease;
+}
+
+.live-indicator i {
+  background: var(--station-accent);
+  box-shadow: 0 0 16px var(--station-accent);
+  transition: background 700ms ease, box-shadow 700ms ease;
+}

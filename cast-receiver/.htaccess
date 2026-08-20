@@ -1,0 +1,9 @@
+<IfModule mod_headers.c>
+  # The parent Player policy intentionally permits only same-origin scripts.
+  # CAF and its temporary diagnostic logger are Google-hosted dependencies for
+  # this isolated Cast receiver, so allow precisely that origin here.
+  # Audio and station artwork are supplied by the sender as HTTPS media URLs.
+  # Without explicit allowances, default-src blocks them before CAF can play
+  # the otherwise-supported AAC+ stream.
+  Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; connect-src 'self' https:; font-src 'self'; form-action 'self'; frame-ancestors 'none'; frame-src https://challenges.cloudflare.com; img-src 'self' data: https:; media-src 'self' https:; object-src 'none'; script-src 'self' https://www.gstatic.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; upgrade-insecure-requests"
+</IfModule>

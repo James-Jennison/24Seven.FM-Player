@@ -34,6 +34,7 @@ import com.codeframe78.twentyfourseven.player.domain.StationId
 import com.codeframe78.twentyfourseven.player.domain.HistoryTrack
 import com.codeframe78.twentyfourseven.player.domain.NowPlayingState
 import com.codeframe78.twentyfourseven.player.domain.PlaybackState
+import com.codeframe78.twentyfourseven.player.domain.PlaybackRoute
 import com.codeframe78.twentyfourseven.player.domain.PlaybackStatus
 import com.codeframe78.twentyfourseven.player.domain.SleepTimerState
 import com.codeframe78.twentyfourseven.player.domain.QueueLoadStatus
@@ -643,6 +644,34 @@ class RadioAppTest {
         composeRule.onNodeWithTag("audio_output_open").assertIsDisplayed().performClick()
         composeRule.onNodeWithText("Using Razr Buds").assertDoesNotExist()
         composeRule.runOnIdle { assertEquals(1, chooserOpenCount) }
+    }
+
+    @Test
+    fun castEntryPointAndActiveRouteAreVisibleInTheNativePlayer() {
+        composeRule.setContent {
+            MaterialTheme {
+                RadioApp(
+                    state = sampleState().copy(
+                        playback = PlaybackState(
+                            stationId = station.id,
+                            status = PlaybackStatus.Playing,
+                            route = PlaybackRoute.Casting,
+                            castDeviceName = "Living room",
+                        ),
+                    ),
+                    onSelectStation = {},
+                    onSelectDestination = {},
+                    onPlay = {},
+                    onPause = {},
+                    onStop = {},
+                    onRefreshQueue = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag("cast_route_button").assertIsDisplayed()
+        composeRule.onNodeWithTag("cast_route_status").assertIsDisplayed()
+        composeRule.onNodeWithText("Casting to Living room").assertIsDisplayed()
     }
 
     @Test

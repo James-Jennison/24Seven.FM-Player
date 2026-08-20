@@ -22,6 +22,7 @@ import com.codeframe78.twentyfourseven.player.data.SharedPreferencesCommunitySaf
 import com.codeframe78.twentyfourseven.player.data.NetworkListenerActivityRepository
 import com.codeframe78.twentyfourseven.player.data.StationListenerActivityRemoteDataSource
 import com.codeframe78.twentyfourseven.player.domain.NowPlayingArtworkRepository
+import com.codeframe78.twentyfourseven.player.domain.NowPlayingDetailsRepository
 import com.codeframe78.twentyfourseven.player.domain.NowPlayingPublisher
 import com.codeframe78.twentyfourseven.player.domain.NowPlayingRepository
 import com.codeframe78.twentyfourseven.player.domain.SongRequestRepository
@@ -42,10 +43,14 @@ class AppContainer(application: Application) {
     val communityNotificationRepository = AndroidCommunityNotificationRepository(application)
 
     val stationRepository = BootstrapStationRepository(stationPreferences)
-    val playbackController by lazy { Media3PlaybackController(application) }
     val nowPlayingRepository: NowPlayingRepository = nowPlayingStore
     val nowPlayingPublisher: NowPlayingPublisher = nowPlayingStore
-    val nowPlayingArtworkRepository: NowPlayingArtworkRepository = StationNowPlayingArtworkRepository()
+    private val stationNowPlayingRepository = StationNowPlayingArtworkRepository()
+    val nowPlayingArtworkRepository: NowPlayingArtworkRepository = stationNowPlayingRepository
+    val nowPlayingDetailsRepository: NowPlayingDetailsRepository = stationNowPlayingRepository
+    val playbackController by lazy {
+        Media3PlaybackController(application, nowPlayingDetailsRepository, nowPlayingPublisher)
+    }
     val queueRepository = PollingQueueRepository()
     val authRepository = NetworkAuthRepository(
         StationAuthRemoteDataSource(sessionStore = authSessionStore, sessions = authSessions),

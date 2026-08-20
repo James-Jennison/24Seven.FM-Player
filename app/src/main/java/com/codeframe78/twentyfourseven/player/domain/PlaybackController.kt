@@ -20,7 +20,15 @@ data class PlaybackState(
     val networkAvailable: Boolean = false,
     val sleepTimer: SleepTimerState = SleepTimerState(),
     val audioOutput: AudioOutputState = AudioOutputState(),
+    val route: PlaybackRoute = PlaybackRoute.Local,
+    val castDeviceName: String? = null,
 )
+
+enum class PlaybackRoute {
+    Local,
+    CastConnected,
+    Casting,
+}
 
 enum class AudioOutputKind {
     Device,
@@ -46,6 +54,7 @@ interface PlaybackController {
     val state: StateFlow<PlaybackState>
 
     fun selectStation(station: Station)
+    fun updateNowPlaying(nowPlaying: NowPlayingState) = Unit
     fun play()
     fun pause()
     fun stop()

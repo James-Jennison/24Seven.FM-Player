@@ -29,6 +29,7 @@ import com.codeframe78.twentyfourseven.player.domain.NowPlayingPublisher
 import com.codeframe78.twentyfourseven.player.domain.NowPlayingArtworkRepository
 import com.codeframe78.twentyfourseven.player.domain.NowPlayingState
 import com.codeframe78.twentyfourseven.player.domain.StationId
+import com.codeframe78.twentyfourseven.player.domain.normalizeTrailingTheArticle
 import com.google.common.util.concurrent.Futures
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -350,6 +351,7 @@ internal fun Metadata.toNowPlayingState(stationId: StationId): NowPlayingState? 
         ?.title
         ?.trim()
         ?.normalizeLegacyIcyPunctuation()
+        ?.normalizeIcyArtistSortArticle()
         ?.takeIf(String::isNotEmpty)
         ?: return null
     return NowPlayingState(stationId = stationId, displayTitle = title)
@@ -401,6 +403,13 @@ internal fun MediaMetadata.withNowPlayingTitle(displayTitle: String): MediaMetad
         .setAlbumTitle(stationName)
         .setSubtitle("24seven.FM")
         .build()
+}
+
+internal fun String.normalizeIcyArtistSortArticle(): String {
+    val separator = indexOf(" - ")
+    if (separator <= 0) return this
+    val artist = substring(0, separator).normalizeTrailingTheArticle()
+    return artist + substring(separator)
 }
 
 internal fun shouldClearNowPlaying(activeMediaId: String?, incomingMediaId: String?): Boolean =

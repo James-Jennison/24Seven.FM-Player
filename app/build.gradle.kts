@@ -17,6 +17,11 @@ val uploadKeyPassword = providers.environmentVariable("TWENTYFOURSEVEN_UPLOAD_KE
 val uploadSigningValues = listOf(uploadStoreFile, uploadStorePassword, uploadKeyAlias, uploadKeyPassword)
 val hasAnyUploadSigningValue = uploadSigningValues.any { !it.isNullOrBlank() }
 val hasCompleteUploadSigning = uploadSigningValues.all { !it.isNullOrBlank() }
+val sourceRevision = providers.environmentVariable("TWENTYFOURSEVEN_SOURCE_REVISION")
+    .orNull
+    ?.trim()
+    ?.takeIf { it.matches(Regex("[0-9a-f]{40}")) }
+    ?: "unverified"
 
 require(!hasAnyUploadSigningValue || hasCompleteUploadSigning) {
     "Incomplete Play upload signing environment. Supply all four TWENTYFOURSEVEN_UPLOAD_* values or none."
@@ -29,10 +34,11 @@ android {
         applicationId = "com.codeframe78.twentyfourseven.player"
         minSdk = 26
         targetSdk = 36
-        versionCode = 5
-        versionName = "0.1.0-alpha04"
+        versionCode = 7
+        versionName = "0.1.0-alpha06"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         manifestPlaceholders["appLabel"] = "24Seven.FM Player"
+        manifestPlaceholders["buildRevision"] = sourceRevision
     }
     buildFeatures { compose = true }
     signingConfigs {
@@ -75,6 +81,7 @@ dependencies {
     implementation(composeBom)
     androidTestImplementation(composeBom)
     implementation("androidx.activity:activity-compose:1.11.0")
+    implementation("androidx.appcompat:appcompat:1.7.1")
     implementation("androidx.browser:browser:1.10.0")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
@@ -86,6 +93,7 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer:1.10.1")
     implementation("androidx.media3:media3-session:1.10.1")
     implementation("androidx.mediarouter:mediarouter:1.8.1")
+    implementation("com.google.android.gms:play-services-cast-framework:22.3.1")
     implementation("org.jsoup:jsoup:1.22.2")
     implementation("io.coil-kt.coil3:coil-compose:3.4.0")
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.4.0")
