@@ -56,7 +56,6 @@ class CastMediaDescriptorFactoryTest {
             name = "Test Station",
             shortName = "Test",
             description = "Test station",
-            logoUrl = "https://example.invalid/station.png",
             websiteUrl = "https://example.invalid/",
         )
         val stream = StreamVariant(
@@ -88,7 +87,6 @@ class CastMediaDescriptorFactoryTest {
             name = "Test Station",
             shortName = "Test",
             description = "Test station",
-            logoUrl = "https://example.invalid/station.png",
             websiteUrl = "https://example.invalid/",
         )
 
@@ -102,6 +100,6 @@ class CastMediaDescriptorFactoryTest {
         )
 
         assertEquals("Test Station", message.title)
-        assertEquals("https://example.invalid/station.png", message.artworkUrl)
+        assertEquals(null, message.artworkUrl)
     }
 }

@@ -89,7 +89,7 @@ remain project-maintenance material rather than public release promises.
 | Community delivery | M36–M38 | 🧊 Deferred | Resume only if JERIC authorizes an official station-app notification program |
 | Alpha delivery | M39–M41 | ✅ Complete | Candidate freeze, Play delivery, and explicitly authorized closed-test publication |
 | Production readiness | M42–M45 | 🟣 M42 active | Closed-test stabilization, production access, staged rollout, and operations |
-| Bounded future scope | M46–M60 | 🧊 Planned/deferred/retired | Architecture sustainability, repaired Private Messages, retired Forum and Google Cast scope, extended station/account capabilities, and authorized native VIP/RIP commerce |
+| Bounded future scope | M46–M60 | 🧊 Planned/deferred/retired | Architecture sustainability, repaired Private Messages, retired Forum scope, extended station/account capabilities, and authorized native VIP/RIP commerce |
 
 ### Current progression
 
@@ -97,8 +97,8 @@ remain project-maintenance material rather than public release promises.
 - **Deferred:** M36–M38 closed-app notifications are out of this Alpha unless JERIC authorizes an official station-app program. If resumed, they still require an approved station-side event source or privacy-compatible relay.
 - **Publication:** M39–M41 deliberately separated candidate freeze, Play delivery, and the final user-authorized Alpha action; the owner confirms the closed test is now live.
 - **Production:** M42 is active for the two-week closed test; M43–M45 remain the later production-access, staged-release, and operational-recertification path.
-- **Deferred/future:** Private Messages remain excluded until M47 repairs and verifies server delivery. M51–M55 are retired by project decision: the Player will not expose, retrieve, or participate in station Forums or Google Cast; historical research and M25 route-boundary evidence remain retained. Native VIP/RIP commerce is authorization-gated across M58–M60.
-- **Testing:** the [Product Testing catalog](https://player.jamesjennison.net/product-testing/) contains 34 stable test cases covering the current product, Alpha gates, release campaigns, and capability-gated future slices. PT-29–PT-32 are retired with the permanent removal of Forum and Google Cast scope. PT-35 is the exact-artifact M29 Play declaration/privacy/reviewer-access case; PT-36–PT-38 define the future authorized VIP/RIP purchase, activation, and lifecycle evidence.
+- **Deferred/future:** Private Messages remain excluded until M47 repairs and verifies server delivery. M51–M54 Forum scope remains retired. M55 is complete: the native Cast sender and custom receiver preserve local Media3 ownership while providing remote audio and live Now Playing presentation. Native VIP/RIP commerce is authorization-gated across M58–M60.
+- **Testing:** the [Product Testing catalog](https://player.jamesjennison.net/product-testing/) contains 34 stable test cases covering the current product, Alpha gates, release campaigns, and capability-gated future slices. PT-29–PT-31 are retired with the permanent removal of Forum scope; Cast has its release-specific physical-device acceptance in the Alpha release notes. PT-35 is the exact-artifact M29 Play declaration/privacy/reviewer-access case; PT-36–PT-38 define the future authorized VIP/RIP purchase, activation, and lifecycle evidence.
 - **Alpha intake:** the tester-interest form collects only assignment-relevant station familiarity, non-secret account availability, device/accessory/network/accessibility coverage, testing comfort, and time preference. A validated submission is stored once in the protected Tester Hub before coordinator-mail handoff; it is still reviewed before any invitation or Tester Task assignment, and each task still produces one PT result per case.
 
 Use these sources as the current planning authority:

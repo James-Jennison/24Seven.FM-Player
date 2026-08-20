@@ -37,11 +37,12 @@ The tester portal’s initial smoke confirmation covers a short version of steps
 5. Leave the app and verify the media notification and background controls. Tap the notification body outside
    play/pause and confirm it returns to the existing player task.
 6. On the Player, confirm **Audio output** reports the current route and opens Android's system output chooser. If an accessory is available, switch to it, disconnect it, and confirm playback returns to an available local route.
-7. Check Queue and recently played content.
-8. If using a test account, verify sign in, session restoration, Chat, and Favorites. On SST, open More and refresh Request activity to verify recent requests, readiness, and the explicit membership indicator. Confirm eligible Favorites show a green `Request Now`; recently played or queued tracks show a red `Track Recently Played` and cannot be selected. Switch Favorites between Library order and Play state, including on a large list when available.
-9. Search the station library by Title, Album, Artist, and Genre. Submit an eligible favorite or catalog track only through the explicit confirmation while respecting station cooldowns.
-10. In More, open **Contact Us** and confirm Android offers an email draft addressed to the monitored Player contact. Cancel without sending. Confirm there is no VIP/RIP membership, payment, registration, recovery, management, or deletion browser card in the Play candidate.
-11. Press Back twice and verify the exit confirmation. Choose **Keep listening** unless intentionally stopping playback.
+7. If a compatible Google Cast receiver is available, cast an actively playing station. Confirm audio transfers to the receiver, the TV presents the live artwork and title, metadata/artwork update on a later track, station changes update the display, and disconnecting returns local playback control to the phone. Allow the TV/receiver time to wake and switch inputs before treating startup as failed.
+8. Check Queue and recently played content.
+9. If using a test account, verify sign in, session restoration, Chat, and Favorites. On SST, open More and refresh Request activity to verify recent requests, readiness, and the explicit membership indicator. Confirm eligible Favorites show a green `Request Now`; recently played or queued tracks show a red `Track Recently Played` and cannot be selected. Switch Favorites between Library order and Play state, including on a large list when available.
+10. Search the station library by Title, Album, Artist, and Genre. Submit an eligible favorite or catalog track only through the explicit confirmation while respecting station cooldowns.
+11. In More, open **Contact Us** and confirm Android offers an email draft addressed to the monitored Player contact. Cancel without sending. Confirm there is no VIP/RIP membership, payment, registration, recovery, management, or deletion browser card in the Play candidate.
+12. Press Back twice and verify the exit confirmation. Choose **Keep listening** unless intentionally stopping playback.
 
 ## Suggested configuration coverage
 
@@ -79,7 +80,7 @@ For a controlled assignment, the Queue shows the task-specific boundary before i
   but New Message selection remains suspect and a profile-originated MorgHubby test was not delivered; the site owner
   has the reproduced result.
 - Representative authenticated certification is complete for all five stations; natural server-side session expiry was not forcibly induced.
-- M24 Sleep Timer, M25's dedicated Android audio-output path, M26's user-reviewed privacy-safe diagnostics, and M27's local actively-observed Chat mentions are included. Google Cast is permanently out of scope; Bluetooth and other standard Android-managed output routes remain supported. M36–M38 closed-app delivery is deferred and nonblocking for this Alpha unless JERIC authorizes an official station-app program.
+- M24 Sleep Timer, M25's dedicated Android audio-output path, M26's user-reviewed privacy-safe diagnostics, M27's local actively-observed Chat mentions, and the M55 Google Cast sender/receiver are included. Bluetooth and other standard Android-managed output routes remain supported. M36–M38 closed-app delivery is deferred and nonblocking for this Alpha unless JERIC authorizes an official station-app program.
 - Station accounts are currently station-specific.
 - M31 removes station VIP/RIP purchase and account-creation browser routes from the global Play candidate. Existing
   membership status may still be shown when the station reports it, but the Player does not sell or upgrade membership.

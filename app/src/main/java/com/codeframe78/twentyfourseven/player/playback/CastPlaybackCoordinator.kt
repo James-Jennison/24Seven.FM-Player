@@ -345,7 +345,7 @@ internal object CastNowPlayingMessageFactory {
         val title = current?.displayTitle?.trim()?.takeIf(String::isNotBlank)
             ?: current?.track?.trim()?.takeIf(String::isNotBlank)
             ?: station.name
-        val artworkUrl = (current?.artworkUrl ?: station.logoUrl).safeHttpsUrl()
+        val artworkUrl = current?.artworkUrl.safeHttpsUrl()
         return CastNowPlayingMessage(
             stationId = station.id.value,
             title = title,
