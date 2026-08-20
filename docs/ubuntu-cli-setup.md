@@ -63,25 +63,17 @@ keys, recovery passphrases, station credentials, cookies, or Codex credentials.
 
 ## Protected Play signing on Ubuntu
 
-Routine Play upload signing can use the existing encrypted recovery package without restoring a permanent plaintext
-keystore to the unencrypted Ubuntu filesystems. Check the non-secret prerequisites with:
+For an authorized release build, use the owner-authorized external JKS file directly. The helper discovers its sole
+private-key alias, prompts once for the password without echoing it, signs in one non-daemon Gradle process, and verifies
+that the resulting AAB is signed by that JKS certificate. It does not store or print passwords, aliases, or key contents.
 
 ```bash
-python3 scripts/validate-protected-play-bundle-linux.py --check-environment
+TWENTYFOURSEVEN_UPLOAD_STORE_FILE=/absolute/path/outside-the-repository/upload-key.jks \
+  bash scripts/sign-play-bundle-jks.sh
 ```
 
-For an authorized release build, keep the `.24seven-recovery` package outside the repository and run:
-
-```bash
-python3 scripts/validate-protected-play-bundle-linux.py \
-  --recovery-package /absolute/path/outside-the-repository/24seven-upload.24seven-recovery \
-  --build-apk
-```
-
-Enter the owner-held passphrase only at the hidden terminal prompt. The helper enforces the registered upload
-certificate, keeps the recovered keystore under memory-backed `/dev/shm` for the duration of a single non-daemon Gradle
-build, and removes it before reporting the AAB hash. It never stores or prints the passphrase, passwords, alias, or
-keystore path. The encrypted off-PC recovery package and Windows DPAPI copy remain independent backups.
+The JKS file must remain outside Git. The legacy encrypted-recovery helper is retained only for historical recovery and is
+not the routine signing path.
 
 Official references:
 
