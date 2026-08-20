@@ -24,7 +24,7 @@ Before replacing `main`:
 
 1. Complete the canonical validation suite and build a provenance-verified debug candidate from its exact `HEAD`.
 2. Create a named archive ref for the current remote `main` tip.
-3. Update `main` from the canonical branch with a lease-protected force update. This is necessary because the stale remote history is unrelated to the accepted Alpha 06 baseline.
+3. If branch protection permits a lease-protected force update, replace `main` from the canonical branch. If it does not, create an `ours` reconciliation merge that makes the stale tip an ancestor while retaining the canonical source tree exactly, then fast-forward `main` to that merge.
 4. Build the successor release from the resulting `main` tip only. The bundle must use R8, a new version code, valid Play signing, and a committed release-note file.
 
 ## Ongoing guardrails
