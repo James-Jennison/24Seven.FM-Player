@@ -15,3 +15,6 @@ signing.properties
 captures/
 *.har
 .codex-remote-attachments/
+_site/
+_dev_site/
+_pages-transition/
