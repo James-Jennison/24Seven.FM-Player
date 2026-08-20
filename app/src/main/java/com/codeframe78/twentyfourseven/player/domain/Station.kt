@@ -75,6 +75,7 @@ data class Station(
     val name: String,
     val shortName: String,
     val description: String,
+    val logoUrl: String? = null,
     val websiteUrl: String,
     val streams: List<StreamVariant> = emptyList(),
     val capabilities: StationCapabilities = StationCapabilities(),

@@ -28,6 +28,7 @@ class BootstrapStationRepository(
             shortName = "SST",
             description = "Movie, game, TV and anime scores",
             domain = "streamingsoundtracks.com",
+            logoUrl = "https://streamingsoundtracks.com/images/logos/logo-sst-v200x200.png",
             websiteDomain = "www.streamingsoundtracks.com",
             capabilities = queueCapabilities.copy(
                 supportsRequestMessages = true,
@@ -41,6 +42,7 @@ class BootstrapStationRepository(
             shortName = "1980s",
             description = "Music from the 1980s",
             domain = "1980s.fm",
+            logoUrl = "https://1980s.fm/images/logos/1980s_logo-200x200.png",
             capabilities = queueCapabilities.copy(supportsSecondaryContent = true),
         ),
         station(
@@ -49,6 +51,7 @@ class BootstrapStationRepository(
             shortName = "Adagio",
             description = "Classical and light music",
             domain = "adagio.fm",
+            logoUrl = "https://adagio.fm/images/logos/logo-afm-200x200.png",
             capabilities = queueCapabilities.copy(supportsSecondaryContent = true),
         ),
         station(
@@ -57,6 +60,7 @@ class BootstrapStationRepository(
             shortName = "Death",
             description = "Extreme metal",
             domain = "death.fm",
+            logoUrl = "https://death.fm/images/logos/logo-dfm-200x200.png",
             capabilities = queueCapabilities.copy(supportsSecondaryContent = true),
         ),
         station(
@@ -65,6 +69,7 @@ class BootstrapStationRepository(
             shortName = "Entranced",
             description = "Trance and electronic music",
             domain = "entranced.fm",
+            logoUrl = "https://entranced.fm/images/logos/logo-efm-g200x200.png",
             capabilities = queueCapabilities.copy(supportsSecondaryContent = true),
         ),
     )
@@ -122,6 +127,7 @@ class BootstrapStationRepository(
             shortName: String,
             description: String,
             domain: String,
+            logoUrl: String,
             websiteDomain: String = domain,
             capabilities: StationCapabilities,
         ) = Station(
@@ -129,6 +135,7 @@ class BootstrapStationRepository(
             name = name,
             shortName = shortName,
             description = description,
+            logoUrl = logoUrl,
             websiteUrl = "https://$websiteDomain/",
             streams = streams(domain),
             capabilities = capabilities,

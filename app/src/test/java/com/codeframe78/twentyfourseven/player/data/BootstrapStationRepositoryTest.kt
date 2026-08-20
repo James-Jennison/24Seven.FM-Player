@@ -9,6 +9,7 @@ import com.codeframe78.twentyfourseven.player.domain.StationPageTrustPolicy
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class BootstrapStationRepositoryTest {
@@ -38,6 +39,13 @@ class BootstrapStationRepositoryTest {
             assertEquals(listOf(0, 1), station.streams.map { it.priority })
             assertEquals(listOf(StreamFormat.Aac, StreamFormat.Aac), station.streams.map { it.format })
             assertEquals(listOf(128, 128), station.streams.map { it.bitrateKbps })
+        }
+    }
+
+    @Test
+    fun `every station exposes an HTTPS logo for the landscape selector`() = runTest {
+        repository.observeStations().first().forEach { station ->
+            assertTrue(station.logoUrl?.startsWith("https://") == true)
         }
     }
 

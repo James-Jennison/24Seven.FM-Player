@@ -73,6 +73,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.mediarouter.app.MediaRouteButton
@@ -92,6 +93,10 @@ private val ExpandedPlayerBreakpoint = 840.dp
 private val CompactPlayerReservedHeight = 420.dp
 private val MinimumCompactArtworkSize = 140.dp
 private val MaximumCompactArtworkSize = 300.dp
+private val LandscapePlayerMinimumHeight = 240.dp
+private val LandscapeArtworkMinimumSize = 120.dp
+private val LandscapeArtworkMaximumSize = 200.dp
+private val LandscapeStationSelectorWidth = 56.dp
 private val SleepTimerPresetsMinutes = listOf(15, 30, 45, 60, 90)
 
 @Immutable
@@ -131,7 +136,20 @@ internal fun AdaptivePlayerScreen(
                 ),
             ),
     ) {
-        if (maxWidth >= ExpandedPlayerBreakpoint) {
+        if (usesLandscapePlayerLayout(maxWidth, maxHeight)) {
+            LandscapePlayerContent(
+                state,
+                palette,
+                maxWidth,
+                maxHeight,
+                onSelectStation,
+                onPlay,
+                onPause,
+                onStop,
+                sleepTimerActions,
+                audioOutputActions,
+            )
+        } else if (maxWidth >= ExpandedPlayerBreakpoint) {
             ExpandedPlayerContent(state, palette, onSelectStation, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions)
         } else {
             val availableArtworkWidth = maxWidth - 40.dp
@@ -143,6 +161,102 @@ internal fun AdaptivePlayerScreen(
                 MaximumCompactArtworkSize,
             )
             CompactPlayerContent(state, palette, artworkSize, onSelectStation, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions)
+        }
+    }
+}
+
+internal fun usesLandscapePlayerLayout(width: Dp, height: Dp): Boolean =
+    width > height && height >= LandscapePlayerMinimumHeight
+
+@Composable
+private fun LandscapePlayerContent(
+    state: MainUiState,
+    palette: StationPalette,
+    maxWidth: Dp,
+    maxHeight: Dp,
+    onSelectStation: (StationId) -> Unit,
+    onPlay: () -> Unit,
+    onPause: () -> Unit,
+    onStop: () -> Unit,
+    sleepTimerActions: SleepTimerActions,
+    audioOutputActions: AudioOutputActions,
+) {
+    val artworkSize = minOf(
+        LandscapeArtworkMaximumSize,
+        (maxWidth - 400.dp).coerceIn(LandscapeArtworkMinimumSize, LandscapeArtworkMaximumSize),
+        (maxHeight - 32.dp).coerceAtLeast(LandscapeArtworkMinimumSize),
+    )
+    Row(
+        Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .testTag("landscape_player"),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        NowPlayingArtwork(state, palette, Modifier.size(artworkSize))
+        Column(
+            Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.Center,
+        ) {
+            NowPlayingDetails(state, palette, Alignment.Start)
+            Spacer(Modifier.height(14.dp))
+            PrimaryPlayerControls(state, onSelectStation, onPlay, onPause)
+            PlaybackDetails(state, onStop, sleepTimerActions, audioOutputActions)
+        }
+        LandscapeStationSelector(state, onSelectStation)
+    }
+}
+
+@Composable
+private fun LandscapeStationSelector(
+    state: MainUiState,
+    onSelectStation: (StationId) -> Unit,
+) {
+    Column(
+        Modifier
+            .width(LandscapeStationSelectorWidth)
+            .fillMaxHeight()
+            .testTag("landscape_station_selector"),
+        verticalArrangement = Arrangement.SpaceEvenly,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        state.stations.forEach { station ->
+            val selected = station.id == state.selectedStation?.id
+            val palette = stationPalette(station.id)
+            Card(
+                onClick = { onSelectStation(station.id) },
+                colors = CardDefaults.cardColors(
+                    containerColor = if (selected) palette.glow else MaterialTheme.colorScheme.surfaceContainer,
+                ),
+                border = BorderStroke(
+                    if (selected) 2.dp else 1.dp,
+                    if (selected) palette.accent else MaterialTheme.colorScheme.outlineVariant,
+                ),
+                modifier = Modifier
+                    .size(48.dp)
+                    .semantics {
+                        this.selected = selected
+                        role = Role.RadioButton
+                        contentDescription = if (selected) "${station.name}, selected" else station.name
+                    }
+                    .testTag("landscape_station_${station.id.value}"),
+            ) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    AsyncImage(
+                        model = station.logoUrl,
+                        contentDescription = null,
+                        contentScale = ContentScale.Fit,
+                        fallback = painterResource(R.drawable.app_logo),
+                        error = painterResource(R.drawable.app_logo),
+                        placeholder = painterResource(R.drawable.app_logo),
+                        modifier = Modifier.size(36.dp),
+                    )
+                }
+            }
         }
     }
 }
