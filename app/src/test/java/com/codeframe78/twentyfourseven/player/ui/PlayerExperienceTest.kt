@@ -43,6 +43,14 @@ class PlayerExperienceTest {
         assertFalse(usesLandscapePlayerLayout(320.dp, 640.dp))
     }
 
+    @Test
+    fun `short wide app windows use the navigation rail to preserve content height`() {
+        assertTrue(usesNavigationRail(640.dp, 320.dp))
+        assertTrue(usesNavigationRail(600.dp, 900.dp))
+        assertFalse(usesNavigationRail(430.dp, 900.dp))
+        assertFalse(usesNavigationRail(500.dp, 239.dp))
+    }
+
     private fun station(id: String) = Station(
         id = StationId(id),
         name = id,

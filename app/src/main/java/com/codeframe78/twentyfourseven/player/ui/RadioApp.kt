@@ -91,6 +91,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import com.codeframe78.twentyfourseven.player.domain.AuthStatus
@@ -185,7 +186,7 @@ internal fun RadioApp(
 ) {
     var showTerms by rememberSaveable { mutableStateOf(false) }
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        if (maxWidth >= 600.dp) {
+        if (usesNavigationRail(maxWidth, maxHeight)) {
             TabletShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions) { showTerms = true }
         } else {
             PhoneShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions) { showTerms = true }
@@ -202,6 +203,14 @@ internal fun RadioApp(
     }
     AbuseReportDialog(state, communitySafetyActions)
 }
+
+/**
+ * A short-wide phone window needs the same navigation treatment as a tablet.
+ * Keeping the bottom bar in that shape leaves too little vertical room for
+ * the Queue, Chat, Favorites, and More screens to show their primary content.
+ */
+internal fun usesNavigationRail(width: Dp, height: Dp): Boolean =
+    width >= 600.dp || usesLandscapePlayerLayout(width, height)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1056,7 +1065,7 @@ private fun QueueLists(
     communitySafetyActions: CommunitySafetyActions,
 ) {
     LazyColumn(
-        Modifier.fillMaxSize().padding(padding),
+        Modifier.fillMaxSize().padding(padding).testTag("queue_list"),
         contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {

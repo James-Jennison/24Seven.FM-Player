@@ -14,6 +14,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -192,6 +193,8 @@ class RadioAppTest {
 
         composeRule.onNodeWithTag("landscape_player").assertIsDisplayed()
         composeRule.onNodeWithTag("landscape_station_selector").assertIsDisplayed()
+        composeRule.onNodeWithTag("tablet_navigation_rail").assertIsDisplayed()
+        composeRule.onNodeWithTag("phone_navigation_bar").assertDoesNotExist()
         listOf(
             "previous_station",
             "sleep_timer_open",
@@ -702,7 +705,9 @@ class RadioAppTest {
         composeRule.onNodeWithText("Requested by Listener").assertIsDisplayed()
         composeRule.onNodeWithText("“Enjoy this one”").assertIsDisplayed()
         composeRule.onNodeWithText("Recently played").assertIsDisplayed()
-        composeRule.onNodeWithText("Played track").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithTag("queue_list")
+            .performScrollToNode(hasText("Played track"))
+        composeRule.onNodeWithText("Played track").assertIsDisplayed()
     }
 
     @Test
