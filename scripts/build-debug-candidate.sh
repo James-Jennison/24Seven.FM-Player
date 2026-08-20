@@ -19,7 +19,7 @@ TWENTYFOURSEVEN_SOURCE_REVISION="$revision" \
   /bin/bash "$project_root/gradlew" :app:assembleDebug
 
 [[ -f "$apk" ]] || fail 'Gradle completed without producing the expected debug APK'
-"$project_root/scripts/verify-android-artifact.sh" \
+/bin/bash "$project_root/scripts/verify-android-artifact.sh" \
   --baseline "$revision" \
   --apk "$apk"
 

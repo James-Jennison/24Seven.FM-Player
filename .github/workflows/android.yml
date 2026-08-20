@@ -35,9 +35,8 @@ jobs:
 
       - name: Validate app
         run: |
-          chmod +x scripts/build-debug-candidate.sh scripts/verify-android-artifact.sh
           ./gradlew test lint --no-daemon --console=plain
-          scripts/build-debug-candidate.sh
+          bash scripts/build-debug-candidate.sh
 
   notify-discord:
     name: Post milestone update to Discord
