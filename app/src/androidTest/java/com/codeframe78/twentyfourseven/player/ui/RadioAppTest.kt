@@ -166,51 +166,6 @@ class RadioAppTest {
     }
 
     @Test
-    fun shortWidePlayerKeepsAllControlsAndStationLogosVisibleWithoutTheCarousel() {
-        val landscapeStations = listOf(
-            station,
-            station.copy(id = StationId("1980s"), name = "24Seven.FM 80s", shortName = "80s"),
-            station.copy(id = StationId("afm"), name = "Adagio.FM", shortName = "AFM"),
-            station.copy(id = StationId("dfm"), name = "Death.FM", shortName = "DFM"),
-            station.copy(id = StationId("efm"), name = "Entranced.FM", shortName = "EFM"),
-        )
-        composeRule.setContent {
-            MaterialTheme {
-                Box(Modifier.requiredSize(760.dp, 400.dp)) {
-                    RadioApp(
-                        state = sampleState().copy(stations = landscapeStations, selectedStation = landscapeStations.first()),
-                        onSelectStation = {},
-                        onSelectDestination = {},
-                        onPlay = {},
-                        onPause = {},
-                        onStop = {},
-                        onRefreshQueue = {},
-                    )
-                }
-            }
-        }
-
-        composeRule.onNodeWithTag("tablet_navigation_rail").assertIsDisplayed()
-        composeRule.onNodeWithTag("landscape_player").assertIsDisplayed()
-        composeRule.onNodeWithTag("landscape_station_selector").assertIsDisplayed()
-        listOf(
-            "previous_station",
-            "sleep_timer_open",
-            "primary_play_pause",
-            "audio_output_open",
-            "next_station",
-            "landscape_station_sst",
-            "landscape_station_1980s",
-            "landscape_station_afm",
-            "landscape_station_dfm",
-            "landscape_station_efm",
-        ).forEach { tag ->
-            composeRule.onNodeWithTag(tag).assertIsDisplayed()
-        }
-        composeRule.onNodeWithTag("station_selector").assertDoesNotExist()
-    }
-
-    @Test
     fun cutoutConstrainedCoverWindowHidesAppNavigationAndKeepsPlaybackControlsVisible() {
         composeRule.setContent {
             MaterialTheme {

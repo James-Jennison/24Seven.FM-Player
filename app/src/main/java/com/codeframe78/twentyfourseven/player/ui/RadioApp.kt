@@ -186,7 +186,7 @@ internal fun RadioApp(
 ) {
     var showTerms by rememberSaveable { mutableStateOf(false) }
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        if (maxWidth >= 600.dp) {
+        if (usesNavigationRail(maxWidth, maxHeight)) {
             TabletShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions) { showTerms = true }
         } else {
             PhoneShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, isCoverDisplay = isCoverDisplayWindow(maxWidth, maxHeight)) { showTerms = true }
@@ -288,6 +288,12 @@ private fun PhoneShell(
  * make its usable app window short and wide, so the window contract accommodates that inset.
  * This remains a window contract rather than a device check.
  */
+internal fun usesNavigationRail(maxWidth: androidx.compose.ui.unit.Dp, maxHeight: androidx.compose.ui.unit.Dp): Boolean =
+    maxWidth >= 600.dp || (
+        usesLandscapePlayerLayout(maxWidth, maxHeight) &&
+            !isCoverDisplayWindow(maxWidth, maxHeight)
+        )
+
 private fun isCoverDisplayWindow(maxWidth: androidx.compose.ui.unit.Dp, maxHeight: androidx.compose.ui.unit.Dp): Boolean {
     if (maxWidth > 480.dp || maxHeight > 480.dp) return false
     val aspectRatio = maxWidth.value / maxHeight.value
