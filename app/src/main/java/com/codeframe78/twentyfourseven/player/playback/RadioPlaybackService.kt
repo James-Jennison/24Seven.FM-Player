@@ -156,7 +156,7 @@ class RadioPlaybackService : MediaLibraryService() {
             mediaId: String,
         ) = automotiveCatalog.item(mediaId)
             ?.let { item -> Futures.immediateFuture(LibraryResult.ofItem(item, null)) }
-            ?: Futures.immediateFuture(LibraryResult.ofError(LibraryResult.RESULT_ERROR_BAD_VALUE))
+            ?: Futures.immediateFuture(LibraryResult.ofError(SessionError.ERROR_BAD_VALUE))
 
         override fun onGetChildren(
             session: MediaLibrarySession,
@@ -167,7 +167,7 @@ class RadioPlaybackService : MediaLibraryService() {
             params: LibraryParams?,
         ) = automotiveCatalog.children(parentId, page, pageSize)
             ?.let { items -> Futures.immediateFuture(LibraryResult.ofItemList(items, params)) }
-            ?: Futures.immediateFuture(LibraryResult.ofError(LibraryResult.RESULT_ERROR_BAD_VALUE))
+            ?: Futures.immediateFuture(LibraryResult.ofError(SessionError.ERROR_BAD_VALUE))
 
         override fun onSearch(
             session: MediaLibrarySession,
@@ -185,7 +185,7 @@ class RadioPlaybackService : MediaLibraryService() {
             params: LibraryParams?,
         ) = automotiveCatalog.search(query, page, pageSize)
             ?.let { items -> Futures.immediateFuture(LibraryResult.ofItemList(items, params)) }
-            ?: Futures.immediateFuture(LibraryResult.ofError(LibraryResult.RESULT_ERROR_BAD_VALUE))
+            ?: Futures.immediateFuture(LibraryResult.ofError(SessionError.ERROR_BAD_VALUE))
 
         override fun onCustomCommand(
             session: MediaSession,
