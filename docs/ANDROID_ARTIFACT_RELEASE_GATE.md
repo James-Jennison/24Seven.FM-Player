@@ -14,17 +14,16 @@ git worktree add -b codex/<feature>-test /tmp/<feature>-test <accepted-test-rele
 
 ## 2. Build a traceable debug APK
 
-Embed the exact source revision at build time. A build without it is intentionally rejected by the verifier.
+Build only from a clean, committed worktree. The candidate builder embeds the exact `HEAD` revision and rejects every other baseline; a build without that provenance is intentionally rejected.
 
 ```bash
-TWENTYFOURSEVEN_SOURCE_REVISION="$(git rev-parse HEAD)" \
 TWENTYFOURSEVEN_ANDROID_BUILD_DIR=/tmp/24seven-android-build \
-bash ./gradlew :app:assembleDebug
+scripts/build-debug-candidate.sh
 ```
 
 ## 3. Verify before installation
 
-The verifier requires a clean source tree, a named baseline that is an ancestor of `HEAD`, the expected debug package, matching version code, and the embedded source revision.
+The verifier requires a clean source tree, a named baseline exactly equal to `HEAD`, the expected debug package, matching version code, and the embedded source revision.
 
 ```bash
 scripts/verify-android-artifact.sh \
@@ -40,4 +39,4 @@ Open the debug package and confirm the visible UI matches the accepted test-rele
 
 ## 5. Reconcile GitHub separately
 
-When the test-release branch and `origin/main` have both advanced, do not force-push and do not treat an older remote snapshot as a substitute baseline. Plan and validate the history reconciliation independently; only then publish the tested feature branch or merge it into GitHub `main`.
+When the test-release branch and `origin/main` have both advanced, do not treat an older remote snapshot as a substitute baseline. Reconcile and validate history independently; only then publish the tested feature branch or merge it into GitHub `main`. If a proven-bad `main` history must be replaced, first preserve it under an explicit archive ref and use a lease-protected force update only with explicit authorization.
