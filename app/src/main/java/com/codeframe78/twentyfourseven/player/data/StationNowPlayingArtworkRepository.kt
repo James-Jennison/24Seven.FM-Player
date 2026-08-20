@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
+import org.jsoup.parser.Parser
 
 class StationNowPlayingArtworkRepository internal constructor(
     private val parser: CurrentTrackArtworkParser = CurrentTrackArtworkParser(),
@@ -101,9 +102,9 @@ internal class CurrentTrackArtworkParser {
         } else {
             coverUri?.toString()
         }
-        val artist = response.optString("Artist", "").trim().takeIf(String::isNotBlank)
-        val album = response.optString("Album", "").trim().takeIf(String::isNotBlank)
-        val track = response.optString("Track", "").trim().takeIf(String::isNotBlank)
+        val artist = response.optString("Artist", "").decodeHtmlEntities()
+        val album = response.optString("Album", "").decodeHtmlEntities()
+        val track = response.optString("Track", "").decodeHtmlEntities()
         val displayTitle = listOfNotNull(artist, track).joinToString(" - ").takeIf(String::isNotBlank)
             ?: track
             ?: artist
@@ -131,3 +132,7 @@ internal class CurrentTrackArtworkParser {
         val ASIN = Regex("[A-Za-z0-9]{10}")
     }
 }
+
+private fun String.decodeHtmlEntities(): String? = Parser.unescapeEntities(this, false)
+    .trim()
+    .takeIf(String::isNotBlank)

@@ -60,4 +60,16 @@ class CurrentTrackArtworkParserTest {
             details?.artworkUrl,
         )
     }
+
+    @Test
+    fun `decodes HTML entities in station metadata before publishing it`() {
+        val response = JSONObject()
+            .put("Artist", "Billy Joel")
+            .put("Track", "She&#039;s Right On Time")
+            .toString()
+
+        val details = parser.parseNowPlaying(response, "https://1980s.fm/", StationId("1980s"))
+
+        assertEquals("Billy Joel - She's Right On Time", details?.displayTitle)
+    }
 }
