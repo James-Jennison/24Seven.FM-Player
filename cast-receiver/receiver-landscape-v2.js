@@ -13,6 +13,8 @@
   };
   const defaultPalette = { accent: "#c9a8ff", secondary: "#8b5cf6", glow: "#2b1b3f" };
   const context = cast.framework.CastReceiverContext.getInstance();
+  // Start CAF player-library loading before receiver startup to reduce launch latency.
+  context.loadPlayerLibraries();
   const experience = document.getElementById("receiver-experience");
   const artwork = document.getElementById("now-playing-artwork");
   const title = document.getElementById("now-playing-title");
