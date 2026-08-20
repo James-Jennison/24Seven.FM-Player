@@ -54,6 +54,7 @@ interface PlaybackController {
     val state: StateFlow<PlaybackState>
 
     fun selectStation(station: Station)
+    fun updateNowPlaying(nowPlaying: NowPlayingState) = Unit
     fun play()
     fun pause()
     fun stop()

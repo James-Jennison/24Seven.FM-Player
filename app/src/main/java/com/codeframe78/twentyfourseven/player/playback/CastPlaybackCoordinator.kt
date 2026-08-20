@@ -5,6 +5,7 @@ import android.net.Uri
 import android.util.Log
 import com.codeframe78.twentyfourseven.player.domain.PlaybackRoute
 import com.codeframe78.twentyfourseven.player.domain.PlaybackStatus
+import com.codeframe78.twentyfourseven.player.domain.NowPlayingState
 import com.codeframe78.twentyfourseven.player.domain.Station
 import com.codeframe78.twentyfourseven.player.domain.StreamFormat
 import com.codeframe78.twentyfourseven.player.domain.StreamVariant
@@ -20,6 +21,8 @@ import com.google.android.gms.cast.framework.CastSession
 import com.google.android.gms.cast.framework.SessionManagerListener
 import com.google.android.gms.cast.framework.media.RemoteMediaClient
 import com.google.android.gms.common.api.ResultCallback
+import org.json.JSONObject
+import java.net.URI
 
 internal data class CastPlaybackSnapshot(
     val route: PlaybackRoute = PlaybackRoute.Local,
@@ -38,11 +41,13 @@ internal class CastPlaybackCoordinator(
 ) {
     private companion object {
         const val LogTag = "CastPlayback"
+        const val NowPlayingNamespace = "urn:x-cast:com.codeframe78.twentyfourseven.player.nowplaying"
     }
 
     private val appContext = context.applicationContext
     private val castContext = CastContext.getSharedInstance(appContext)
     private var selectedStation: Station? = null
+    private var nowPlaying: NowPlayingState? = null
     private var shouldPlay = false
     private var castSession: CastSession? = null
     private var remoteClient: RemoteMediaClient? = null
@@ -95,6 +100,7 @@ internal class CastPlaybackCoordinator(
         override fun onSessionResumed(session: CastSession, wasSuspended: Boolean) {
             attach(session)
             publishRemoteStatus()
+            sendNowPlayingUpdate()
         }
 
         override fun onSessionResumeFailed(session: CastSession, error: Int) {
@@ -114,7 +120,15 @@ internal class CastPlaybackCoordinator(
     fun selectStation(station: Station) {
         val changed = selectedStation?.id != station.id
         selectedStation = station
+        if (changed) nowPlaying = null
         if (changed && snapshot.route == PlaybackRoute.Casting) loadSelectedStation(autoplay = shouldPlay)
+    }
+
+    fun updateNowPlaying(next: NowPlayingState) {
+        val station = selectedStation ?: return
+        if (next.stationId != station.id) return
+        nowPlaying = next
+        if (snapshot.route == PlaybackRoute.Casting) sendNowPlayingUpdate()
     }
 
     fun recordLocalPlaybackIntent(isPlaying: Boolean) {
@@ -171,7 +185,7 @@ internal class CastPlaybackCoordinator(
         val session = castSession ?: return
         val stream = station.streams.minByOrNull(StreamVariant::priority) ?: return
         val request = MediaLoadRequestData.Builder()
-            .setMediaInfo(CastMediaInfoFactory.create(station, stream))
+            .setMediaInfo(CastMediaInfoFactory.create(station, stream, nowPlaying))
             .setAutoplay(autoplay)
             .build()
         publish(CastPlaybackSnapshot(PlaybackRoute.CastConnected, PlaybackStatus.Connecting, deviceName()))
@@ -186,6 +200,7 @@ internal class CastPlaybackCoordinator(
             Log.i(LogTag, "remote media load result code=${result.status.statusCode}")
             if (result.status.statusCode == CastStatusCodes.SUCCESS) {
                 publishRemoteStatus()
+                sendNowPlayingUpdate()
             } else {
                 publish(
                     CastPlaybackSnapshot(
@@ -228,6 +243,17 @@ internal class CastPlaybackCoordinator(
     }
 
     private fun deviceName(): String? = castSession?.castDevice?.friendlyName
+
+    private fun sendNowPlayingUpdate() {
+        val session = castSession ?: return
+        val station = selectedStation ?: return
+        val payload = CastNowPlayingMessageFactory.create(station, nowPlaying).toJson()
+        session.sendMessage(NowPlayingNamespace, payload).setResultCallback { result ->
+            if (result.status.statusCode != CastStatusCodes.SUCCESS) {
+                Log.w(LogTag, "now-playing message failed code=${result.status.statusCode}")
+            }
+        }
+    }
 }
 
 /**
@@ -245,11 +271,15 @@ internal fun remotePlaybackIntentFor(playerState: Int?): Boolean? = when (player
 }
 
 internal object CastMediaInfoFactory {
-    fun create(station: Station, stream: StreamVariant): MediaInfo {
-        val descriptor = CastMediaDescriptorFactory.create(station, stream)
+    fun create(
+        station: Station,
+        stream: StreamVariant,
+        nowPlaying: NowPlayingState? = null,
+    ): MediaInfo {
+        val descriptor = CastMediaDescriptorFactory.create(station, stream, nowPlaying)
         val metadata = MediaMetadata(MediaMetadata.MEDIA_TYPE_MUSIC_TRACK).apply {
             putString(MediaMetadata.KEY_TITLE, descriptor.title)
-            putString(MediaMetadata.KEY_ARTIST, "24Seven.FM")
+            putString(MediaMetadata.KEY_ARTIST, descriptor.stationName)
             putString(MediaMetadata.KEY_ALBUM_TITLE, descriptor.stationName)
             descriptor.artworkUrl.safeHttpsUri()?.let { addImage(com.google.android.gms.common.images.WebImage(it)) }
         }
@@ -270,13 +300,46 @@ internal data class CastMediaDescriptor(
 )
 
 internal object CastMediaDescriptorFactory {
-    fun create(station: Station, stream: StreamVariant) = CastMediaDescriptor(
-        contentId = stream.url,
-        contentType = stream.format.castContentType(),
-        title = station.name,
-        stationName = station.name,
-        artworkUrl = null,
-    )
+    fun create(
+        station: Station,
+        stream: StreamVariant,
+        nowPlaying: NowPlayingState? = null,
+    ): CastMediaDescriptor {
+        val message = CastNowPlayingMessageFactory.create(station, nowPlaying)
+        return CastMediaDescriptor(
+            contentId = stream.url,
+            contentType = stream.format.castContentType(),
+            title = message.title,
+            stationName = station.name,
+            artworkUrl = message.artworkUrl,
+        )
+    }
+}
+
+internal data class CastNowPlayingMessage(
+    val title: String,
+    val stationName: String,
+    val artworkUrl: String?,
+) {
+    fun toJson(): String = JSONObject()
+        .put("type", "now-playing")
+        .put("title", title)
+        .put("stationName", stationName)
+        .put("artworkUrl", artworkUrl)
+        .toString()
+}
+
+internal object CastNowPlayingMessageFactory {
+    fun create(station: Station, nowPlaying: NowPlayingState?): CastNowPlayingMessage {
+        val current = nowPlaying?.takeIf { it.stationId == station.id }
+        val title = current?.displayTitle?.trim()?.takeIf(String::isNotBlank) ?: station.name
+        val artworkUrl = (current?.artworkUrl ?: station.logoUrl).safeHttpsUrl()
+        return CastNowPlayingMessage(
+            title = title,
+            stationName = station.name,
+            artworkUrl = artworkUrl,
+        )
+}
 }
 
 internal fun StreamFormat.castContentType(): String = when (this) {
@@ -291,3 +354,8 @@ internal fun StreamFormat.castContentType(): String = when (this) {
 private fun String?.safeHttpsUri(): Uri? = this
     ?.let(Uri::parse)
     ?.takeIf { it.scheme.equals("https", ignoreCase = true) && !it.host.isNullOrBlank() && it.userInfo == null }
+
+private fun String?.safeHttpsUrl(): String? = this
+    ?.let { runCatching(::URI).getOrNull() }
+    ?.takeIf { it.scheme.equals("https", ignoreCase = true) && !it.host.isNullOrBlank() && it.userInfo == null }
+    ?.toString()

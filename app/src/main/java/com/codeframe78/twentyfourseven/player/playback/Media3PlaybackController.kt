@@ -21,6 +21,7 @@ import com.codeframe78.twentyfourseven.player.domain.PlaybackController
 import com.codeframe78.twentyfourseven.player.domain.PlaybackRoute
 import com.codeframe78.twentyfourseven.player.domain.PlaybackState
 import com.codeframe78.twentyfourseven.player.domain.PlaybackStatus
+import com.codeframe78.twentyfourseven.player.domain.NowPlayingState
 import com.codeframe78.twentyfourseven.player.domain.SleepTimerState
 import com.codeframe78.twentyfourseven.player.domain.Station
 import com.codeframe78.twentyfourseven.player.domain.StationId
@@ -146,6 +147,10 @@ class Media3PlaybackController(context: Context) : PlaybackController {
             errorMessage = null,
         )
         if (controller != null) setStationMediaItems(station)
+    }
+
+    override fun updateNowPlaying(nowPlaying: NowPlayingState) {
+        castPlayback.updateNowPlaying(nowPlaying)
     }
 
     override fun play() {

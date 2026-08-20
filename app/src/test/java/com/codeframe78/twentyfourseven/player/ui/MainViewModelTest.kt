@@ -127,9 +127,10 @@ class MainViewModelTest {
     @Test
     fun `now playing title updates remain scoped to the selected station`() = runTest(dispatcher) {
         val nowPlaying = FakeNowPlayingRepository()
+        val playback = FakePlaybackController()
         val viewModel = MainViewModel(
             BootstrapStationRepository(),
-            FakePlaybackController(),
+            playback,
             nowPlaying,
             FakeQueueRepository(),
             UnavailableAuthRepository(),
@@ -145,6 +146,7 @@ class MainViewModelTest {
         nowPlaying.state.value = NowPlayingState(StationId("sst"), "First raw title")
         advanceUntilIdle()
         assertEquals("First raw title", viewModel.uiState.value.nowPlaying.displayTitle)
+        assertEquals("First raw title", playback.nowPlaying.displayTitle)
 
         nowPlaying.state.value = NowPlayingState(StationId("sst"), "Updated raw title")
         advanceUntilIdle()
@@ -855,10 +857,15 @@ class MainViewModelTest {
         val sleepTimerDurations = mutableListOf<Long>()
         var cancelSleepTimerCalls = 0
         val selectedStations = mutableListOf<StationId>()
+        var nowPlaying = NowPlayingState()
 
         override fun selectStation(station: Station) {
             selectedStation = station
             selectedStations += station.id
+        }
+
+        override fun updateNowPlaying(nowPlaying: NowPlayingState) {
+            this.nowPlaying = nowPlaying
         }
 
         override fun play() {

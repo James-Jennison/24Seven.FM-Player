@@ -316,6 +316,11 @@ class MainViewModel(
 
     init {
         viewModelScope.launch {
+            nowPlaying.observeNowPlaying()
+                .distinctUntilChanged()
+                .collect(playback::updateNowPlaying)
+        }
+        viewModelScope.launch {
             playback.state
                 .map { state ->
                     DiagnosticTransition(
