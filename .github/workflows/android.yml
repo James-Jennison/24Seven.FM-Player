@@ -35,7 +35,6 @@ jobs:
 
       - name: Validate app
         run: |
-          chmod +x gradlew
           chmod +x scripts/build-debug-candidate.sh scripts/verify-android-artifact.sh
           ./gradlew test lint --no-daemon --console=plain
           scripts/build-debug-candidate.sh
