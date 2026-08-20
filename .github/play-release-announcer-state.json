@@ -8,6 +8,14 @@
       "versionCodes": [
         "7"
       ]
+    },
+    "alpha:15 (0.1.0-alpha05):15": {
+      "announcedAt": "2026-08-20T03:58:28.637Z",
+      "track": "alpha",
+      "releaseName": "15 (0.1.0-alpha05)",
+      "versionCodes": [
+        "15"
+      ]
     }
   }
 }
