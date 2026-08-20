@@ -74,6 +74,21 @@ class IcyMetadataMappingTest {
     }
 
     @Test
+    fun `live title preserves station artwork until live artwork is available`() {
+        assertEquals(
+            "https://example.test/station.png",
+            preferredArtworkUrl(liveArtworkUrl = null, stationArtworkUrl = "https://example.test/station.png"),
+        )
+        assertEquals(
+            "https://example.test/live.png",
+            preferredArtworkUrl(
+                liveArtworkUrl = "https://example.test/live.png",
+                stationArtworkUrl = "https://example.test/station.png",
+            ),
+        )
+    }
+
+    @Test
     fun `metadata-only media replacement preserves pending artwork`() {
         assertFalse(shouldClearNowPlaying("death:0", "death:0"))
         assertTrue(shouldClearNowPlaying("death:0", "death:1"))

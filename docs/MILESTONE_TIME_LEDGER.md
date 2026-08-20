@@ -1,6 +1,6 @@
 # Milestone Real-World Time Ledger
 
-Last updated: `August 11, 2026 at 8:00:11 AM PDT (UTC−07:00)`
+Last updated: `August 20, 2026 at 5:17:20 AM PDT (UTC−07:00)`
 
 This is the permanent time-accounting record for the canonical M01–M60 milestones in [ROADMAP.md](ROADMAP.md). It
 preserves historical uncertainty instead of treating commit spans as labor time. Future milestone work must be
@@ -711,7 +711,10 @@ independently.
   (UTC-07:00)` through `August 19, 2026 at 5:30:04 AM PDT (UTC-07:00)` after the owner identified that the version-3
   closed-test bundle had been built from a non-`main` checkout. Landscape remediation for the uploaded version-4 build
   ran from `August 19, 2026 at 10:04:16 AM PDT (UTC-07:00)` through `August 19, 2026 at 10:14:34 AM PDT (UTC-07:00)`
-  as a version-code-5 interval. Tester and Play-calendar waits remain excluded.
+  as a version-code-5 interval. The Android Auto media-catalog sub-slice began no later than `August 20, 2026 at
+  4:00:32 AM PDT (UTC-07:00)` (first source change) and completed `August 20, 2026 at 5:17:20 AM PDT (UTC-07:00)`
+  after physical Android Auto Desktop Head Unit acceptance on the Android 16 Razr. Tester and Play-calendar waits
+  remain excluded.
 - **Earlier measured release records:** Issue #26 remediation and version-3 preparation completed on `August 16, 2026`.
   On `August 18, 2026`, exact-candidate preparation completed in 0.06 h active plus 0.02 h automated wait; the owner then
   entered the existing V2 material directly after 0.42 h of measured credential/recovery wait. The V2-signed version-3
@@ -731,7 +734,11 @@ independently.
   and station logo is visible without the carousel. Version code 5 / `0.1.0-alpha04` passed focused Kotlin compilation,
   unit tests, release bundle/lint, and that physical-device UI test; its signed AAB's JAR verification passed and its
   signer matches V2. Including the earlier preserved records, the measured M42 intervals total 0.44 h active, 0.11 h
-  automated wait, 0.42 h user-blocked, and 0.55 h counted. Separate future active remediation, automated validation,
+  automated wait, 0.42 h user-blocked, and 0.55 h counted. The Android Auto sub-slice is separately evidenced by
+  focused Kotlin and instrumentation compilation, ten selected connected tests, and a physical DHU session that
+  discovered the debug Player, paged through its approved five-station catalog, and selected each approved stream
+  through live playback before returning the session to paused. Its active and automated intervals were not separately
+  measured, so it is not folded into the recorded M42 totals. Separate future active remediation, automated validation,
   and user-blocked signing/Play waits.
 
 ### M43 — Production Access and Policy Approval

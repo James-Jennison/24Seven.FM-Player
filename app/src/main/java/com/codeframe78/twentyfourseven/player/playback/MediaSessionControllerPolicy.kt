@@ -7,6 +7,7 @@ import androidx.media3.session.SessionCommands
 
 internal enum class ControllerAccess {
     LocalApp,
+    Automotive,
     TrustedSystem,
     Foreign,
 }
@@ -16,9 +17,22 @@ internal object MediaSessionControllerPolicy {
     fun access(
         controller: MediaSession.ControllerInfo,
         applicationPackageName: String,
+    ): ControllerAccess = access(
+        controller.packageName,
+        controller.isTrusted,
+        controller.isPackageNameVerified,
+        applicationPackageName,
+    )
+
+    internal fun access(
+        controllerPackageName: String,
+        isTrusted: Boolean,
+        isPackageNameVerified: Boolean,
+        applicationPackageName: String,
     ): ControllerAccess = when {
-        controller.packageName == applicationPackageName -> ControllerAccess.LocalApp
-        controller.isTrusted -> ControllerAccess.TrustedSystem
+        controllerPackageName == applicationPackageName -> ControllerAccess.LocalApp
+        isPackageNameVerified && controllerPackageName in ANDROID_AUTO_HOST_PACKAGES -> ControllerAccess.Automotive
+        isTrusted -> ControllerAccess.TrustedSystem
         else -> ControllerAccess.Foreign
     }
 
@@ -27,6 +41,11 @@ internal object MediaSessionControllerPolicy {
         return Player.Commands.Builder().apply {
             APPROVED_EXTERNAL_PLAYER_COMMANDS.forEach { command ->
                 if (base.contains(command)) add(command)
+            }
+            if (access == ControllerAccess.Automotive) {
+                AUTOMOTIVE_CATALOG_PLAYER_COMMANDS.forEach { command ->
+                    if (base.contains(command)) add(command)
+                }
             }
         }.build()
     }
@@ -39,6 +58,7 @@ internal object MediaSessionControllerPolicy {
                     add(SleepTimerSessionContract.cancelCommand)
                 }
 
+                ControllerAccess.Automotive -> Unit
                 ControllerAccess.TrustedSystem -> add(SleepTimerSessionContract.cancelCommand)
                 ControllerAccess.Foreign -> Unit
             }
@@ -49,7 +69,12 @@ internal object MediaSessionControllerPolicy {
     fun mayCancelSleepTimer(access: ControllerAccess) =
         access == ControllerAccess.LocalApp || access == ControllerAccess.TrustedSystem
 
-    fun mayChangeMedia(access: ControllerAccess) = access == ControllerAccess.LocalApp
+    fun mayChangeMedia(access: ControllerAccess) =
+        access == ControllerAccess.LocalApp || access == ControllerAccess.Automotive
+
+    private val ANDROID_AUTO_HOST_PACKAGES = setOf(
+        "com.google.android.projection.gearhead",
+    )
 
     private val APPROVED_EXTERNAL_PLAYER_COMMANDS = listOf(
         Player.COMMAND_PLAY_PAUSE,
@@ -63,5 +88,10 @@ internal object MediaSessionControllerPolicy {
         Player.COMMAND_GET_DEVICE_VOLUME,
         Player.COMMAND_GET_TEXT,
         Player.COMMAND_GET_TRACKS,
+    )
+
+    private val AUTOMOTIVE_CATALOG_PLAYER_COMMANDS = listOf(
+        Player.COMMAND_SET_MEDIA_ITEM,
+        Player.COMMAND_CHANGE_MEDIA_ITEMS,
     )
 }

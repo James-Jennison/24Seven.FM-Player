@@ -18,8 +18,9 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.extractor.metadata.icy.IcyInfo
 import androidx.media3.session.CommandButton
+import androidx.media3.session.LibraryResult
+import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
-import androidx.media3.session.MediaSessionService
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionError
 import androidx.media3.session.SessionResult
@@ -41,14 +42,20 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 @androidx.annotation.OptIn(markerClass = [UnstableApi::class])
-class RadioPlaybackService : MediaSessionService() {
+class RadioPlaybackService : MediaLibraryService() {
     private lateinit var player: ExoPlayer
-    private lateinit var mediaSession: MediaSession
+    private lateinit var mediaSession: MediaLibrarySession
     private val nowPlayingPublisher: NowPlayingPublisher by lazy {
         (application as RadioApplication).appContainer.nowPlayingPublisher
     }
     private val artworkRepository: NowPlayingArtworkRepository by lazy {
         (application as RadioApplication).appContainer.nowPlayingArtworkRepository
+    }
+    private val stationRepository by lazy {
+        (application as RadioApplication).appContainer.stationRepository
+    }
+    private val automotiveCatalog by lazy {
+        AutomotiveMediaCatalog(stationRepository.availableStations())
     }
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var artworkJob: Job? = null
@@ -115,21 +122,12 @@ class RadioPlaybackService : MediaSessionService() {
             }
         }
     }
-    private val sessionCallback = object : MediaSession.Callback {
+    private val sessionCallback = object : MediaLibrarySession.Callback {
         override fun onConnect(
             session: MediaSession,
             controller: MediaSession.ControllerInfo,
         ): MediaSession.ConnectionResult {
             val access = MediaSessionControllerPolicy.access(controller, packageName)
-            if (access == ControllerAccess.Foreign) {
-                return MediaSession.ConnectionResult.accept(
-                    MediaSessionControllerPolicy.sessionCommands(
-                        MediaSession.ConnectionResult.DEFAULT_SESSION_COMMANDS,
-                        access,
-                    ),
-                    MediaSessionControllerPolicy.playerCommands(session.player.availableCommands, access),
-                )
-            }
             val base = super.onConnect(session, controller)
             if (!base.isAccepted) return base
             return MediaSession.ConnectionResult.accept(
@@ -142,15 +140,52 @@ class RadioPlaybackService : MediaSessionService() {
             mediaSession: MediaSession,
             controller: MediaSession.ControllerInfo,
             mediaItems: List<MediaItem>,
-        ) = if (
-            MediaSessionControllerPolicy.mayChangeMedia(
-                MediaSessionControllerPolicy.access(controller, packageName),
-            )
-        ) {
+        ) = resolveMediaItems(controller, mediaItems) {
             super.onAddMediaItems(mediaSession, controller, mediaItems)
-        } else {
-            Futures.immediateFailedFuture(SecurityException("Controller cannot change station media"))
         }
+
+        override fun onGetLibraryRoot(
+            session: MediaLibrarySession,
+            browser: MediaSession.ControllerInfo,
+            params: LibraryParams?,
+        ) = Futures.immediateFuture(LibraryResult.ofItem(automotiveCatalog.rootItem(), params))
+
+        override fun onGetItem(
+            session: MediaLibrarySession,
+            browser: MediaSession.ControllerInfo,
+            mediaId: String,
+        ) = automotiveCatalog.item(mediaId)
+            ?.let { item -> Futures.immediateFuture(LibraryResult.ofItem(item, null)) }
+            ?: Futures.immediateFuture(LibraryResult.ofError(LibraryResult.RESULT_ERROR_BAD_VALUE))
+
+        override fun onGetChildren(
+            session: MediaLibrarySession,
+            browser: MediaSession.ControllerInfo,
+            parentId: String,
+            page: Int,
+            pageSize: Int,
+            params: LibraryParams?,
+        ) = automotiveCatalog.children(parentId, page, pageSize)
+            ?.let { items -> Futures.immediateFuture(LibraryResult.ofItemList(items, params)) }
+            ?: Futures.immediateFuture(LibraryResult.ofError(LibraryResult.RESULT_ERROR_BAD_VALUE))
+
+        override fun onSearch(
+            session: MediaLibrarySession,
+            browser: MediaSession.ControllerInfo,
+            query: String,
+            params: LibraryParams?,
+        ) = Futures.immediateFuture(LibraryResult.ofVoid(params))
+
+        override fun onGetSearchResult(
+            session: MediaLibrarySession,
+            browser: MediaSession.ControllerInfo,
+            query: String,
+            page: Int,
+            pageSize: Int,
+            params: LibraryParams?,
+        ) = automotiveCatalog.search(query, page, pageSize)
+            ?.let { items -> Futures.immediateFuture(LibraryResult.ofItemList(items, params)) }
+            ?: Futures.immediateFuture(LibraryResult.ofError(LibraryResult.RESULT_ERROR_BAD_VALUE))
 
         override fun onCustomCommand(
             session: MediaSession,
@@ -215,20 +250,43 @@ class RadioPlaybackService : MediaSessionService() {
             },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
-        mediaSession = MediaSession.Builder(this, sessionPlayer)
+        mediaSession = MediaLibrarySession.Builder(this, sessionPlayer, sessionCallback)
             .setSessionActivity(sessionActivity)
-            .setCallback(sessionCallback)
             .build()
         restoreSleepTimer()
     }
 
-    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo) = mediaSession
+    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession = mediaSession
+
+    private fun resolveMediaItems(
+        controller: MediaSession.ControllerInfo,
+        mediaItems: List<MediaItem>,
+        localResult: () -> com.google.common.util.concurrent.ListenableFuture<List<MediaItem>>,
+    ) = when (MediaSessionControllerPolicy.access(controller, packageName)) {
+        ControllerAccess.LocalApp -> localResult()
+        ControllerAccess.Automotive -> automotiveCatalog.playbackItems(mediaItems)
+            ?.also { persistAutomotiveStationSelection(mediaItems) }
+            ?.let(Futures::immediateFuture)
+            ?: Futures.immediateFailedFuture(SecurityException("Unknown Android Auto station"))
+
+        ControllerAccess.TrustedSystem,
+        ControllerAccess.Foreign,
+        -> Futures.immediateFailedFuture(SecurityException("Controller cannot change station media"))
+    }
+
+    private fun persistAutomotiveStationSelection(mediaItems: List<MediaItem>) {
+        val stationId = automotiveCatalog.stationIdFor(mediaItems) ?: return
+        serviceScope.launch { stationRepository.selectStation(stationId) }
+    }
 
     private fun updateSessionMetadata(nowPlaying: NowPlayingState) {
         val index = player.currentMediaItemIndex
         val currentItem = player.currentMediaItem ?: return
         val displayTitle = nowPlaying.displayTitle ?: return
-        val artworkUri = nowPlaying.artworkUrl?.let(Uri::parse)
+        val artworkUri = preferredArtworkUrl(
+            nowPlaying.artworkUrl,
+            currentItem.mediaMetadata.artworkUri?.toString(),
+        )?.let(Uri::parse)
         if (currentItem.mediaMetadata.title == displayTitle && currentItem.mediaMetadata.artworkUri == artworkUri) return
         player.replaceMediaItem(
             index,
@@ -414,3 +472,6 @@ internal fun String.normalizeIcyArtistSortArticle(): String {
 
 internal fun shouldClearNowPlaying(activeMediaId: String?, incomingMediaId: String?): Boolean =
     activeMediaId == null || incomingMediaId == null || activeMediaId != incomingMediaId
+
+internal fun preferredArtworkUrl(liveArtworkUrl: String?, stationArtworkUrl: String?): String? =
+    liveArtworkUrl ?: stationArtworkUrl

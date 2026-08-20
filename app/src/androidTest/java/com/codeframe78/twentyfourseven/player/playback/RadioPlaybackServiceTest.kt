@@ -7,6 +7,7 @@ import android.os.Bundle
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
+import androidx.media3.session.MediaBrowser
 import androidx.media3.session.SessionError
 import androidx.media3.session.SessionResult
 import androidx.media3.session.SessionToken
@@ -46,6 +47,37 @@ class RadioPlaybackServiceTest {
 
         connectController().useOnMainThread { controller ->
             assertTrue(controller.availableCommands.contains(Player.COMMAND_PLAY_PAUSE))
+        }
+    }
+
+    @Test
+    fun mediaBrowserListsThePublicStationCatalog() {
+        val serviceIntent = Intent(context, RadioPlaybackService::class.java)
+        assertNotNull(context.startService(serviceIntent))
+        val token = SessionToken(context, ComponentName(context, RadioPlaybackService::class.java))
+        val browser = MediaBrowser.Builder(context, token).buildAsync()
+            .get(CONNECTION_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+        try {
+            lateinit var rootFuture: ListenableFuture<androidx.media3.session.LibraryResult<androidx.media3.common.MediaItem>>
+            InstrumentationRegistry.getInstrumentation().runOnMainSync {
+                rootFuture = browser.getLibraryRoot(null)
+            }
+            val root = rootFuture.get(CONNECTION_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            assertTrue(root.resultCode == androidx.media3.session.LibraryResult.RESULT_SUCCESS)
+            val rootItem = requireNotNull(root.value)
+            lateinit var childrenFuture: ListenableFuture<androidx.media3.session.LibraryResult<com.google.common.collect.ImmutableList<androidx.media3.common.MediaItem>>>
+            InstrumentationRegistry.getInstrumentation().runOnMainSync {
+                childrenFuture = browser.getChildren(rootItem.mediaId, 0, 10, null)
+            }
+            val children = childrenFuture.get(CONNECTION_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            val stationItems = requireNotNull(children.value)
+
+            assertTrue(children.resultCode == androidx.media3.session.LibraryResult.RESULT_SUCCESS)
+            assertTrue(stationItems.size == 5)
+            assertTrue(stationItems.all { it.mediaMetadata.isPlayable == true })
+        } finally {
+            InstrumentationRegistry.getInstrumentation().runOnMainSync { browser.release() }
+            context.stopService(serviceIntent)
         }
     }
 

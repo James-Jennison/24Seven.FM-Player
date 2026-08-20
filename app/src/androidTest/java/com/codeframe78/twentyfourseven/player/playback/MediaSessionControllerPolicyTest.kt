@@ -4,6 +4,7 @@ import androidx.media3.common.Player
 import androidx.media3.session.MediaSession
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -63,5 +64,36 @@ class MediaSessionControllerPolicyTest {
         assertTrue(commands.contains(Player.COMMAND_CHANGE_MEDIA_ITEMS))
         assertTrue(sessionCommands.contains(SleepTimerSessionContract.setCommand))
         assertTrue(sessionCommands.contains(SleepTimerSessionContract.cancelCommand))
+    }
+
+    @Test
+    fun androidAutoReceivesOnlyCatalogSelectionAuthority() {
+        val access = MediaSessionControllerPolicy.access(
+            controllerPackageName = "com.google.android.projection.gearhead",
+            isTrusted = false,
+            isPackageNameVerified = true,
+            applicationPackageName = "com.codeframe78.twentyfourseven.player",
+        )
+        val commands = MediaSessionControllerPolicy.playerCommands(playerCommands, access)
+
+        assertEquals(ControllerAccess.Automotive, access)
+        assertTrue(commands.contains(Player.COMMAND_SET_MEDIA_ITEM))
+        assertTrue(commands.contains(Player.COMMAND_CHANGE_MEDIA_ITEMS))
+        assertTrue(MediaSessionControllerPolicy.mayChangeMedia(access))
+        assertFalse(MediaSessionControllerPolicy.maySetSleepTimer(access))
+        assertFalse(MediaSessionControllerPolicy.mayCancelSleepTimer(access))
+    }
+
+    @Test
+    fun unverifiedAndroidAutoPackageDoesNotGainCatalogAuthority() {
+        val access = MediaSessionControllerPolicy.access(
+            controllerPackageName = "com.google.android.projection.gearhead",
+            isTrusted = false,
+            isPackageNameVerified = false,
+            applicationPackageName = "com.codeframe78.twentyfourseven.player",
+        )
+
+        assertEquals(ControllerAccess.Foreign, access)
+        assertFalse(MediaSessionControllerPolicy.mayChangeMedia(access))
     }
 }

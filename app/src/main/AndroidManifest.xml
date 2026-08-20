@@ -9,6 +9,8 @@
     <application android:name=".RadioApplication" android:allowBackup="false" android:dataExtractionRules="@xml/data_extraction_rules" android:fullBackupContent="@xml/backup_rules" android:icon="@mipmap/ic_launcher" android:label="${appLabel}" android:networkSecurityConfig="@xml/network_security_config" android:roundIcon="@mipmap/ic_launcher" android:supportsRtl="true" android:theme="@style/Theme.TwentyFourSevenPlayer">
         <meta-data android:name="com.codeframe78.twentyfourseven.player.BUILD_REVISION" android:value="${buildRevision}" />
         <meta-data android:name="com.google.android.gms.cast.framework.OPTIONS_PROVIDER_CLASS_NAME" android:value="com.codeframe78.twentyfourseven.player.playback.PlayerCastOptionsProvider" />
+        <meta-data android:name="com.google.android.gms.car.application" android:resource="@xml/automotive_app_desc" />
+        <meta-data android:name="androidx.car.app.TintableAttributionIcon" android:resource="@drawable/app_icon_monochrome" />
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -17,7 +19,11 @@
         </activity>
         <activity android:name=".playback.CastExpandedControlsActivity" android:exported="false" android:launchMode="singleTask" android:theme="@style/Theme.TwentyFourSevenPlayer.Cast" />
         <service android:name=".playback.RadioPlaybackService" android:exported="true" android:foregroundServiceType="mediaPlayback">
-            <intent-filter><action android:name="androidx.media3.session.MediaSessionService" /></intent-filter>
+            <intent-filter>
+                <action android:name="androidx.media3.session.MediaSessionService" />
+                <action android:name="androidx.media3.session.MediaLibraryService" />
+                <action android:name="android.media.browse.MediaBrowserService" />
+            </intent-filter>
         </service>
         <service android:name=".data.ChatMentionMonitorService" android:exported="false" android:foregroundServiceType="specialUse">
             <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="User-started monitoring of one opted-in station chat for direct name mentions while the app is closed." />

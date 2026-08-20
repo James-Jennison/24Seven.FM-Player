@@ -75,6 +75,7 @@ class BootstrapStationRepository(
     )
     private val selected = MutableStateFlow(resolveStartupStation(preferences.current))
 
+    override fun availableStations(): List<Station> = stations
     override fun observeStations(): Flow<List<Station>> = flowOf(stations)
     override fun observeSelectedStation(): Flow<Station> = selected.asStateFlow()
     override fun observeStationPreferences(): Flow<LocalStationPreferences> = preferences.observePreferences()
