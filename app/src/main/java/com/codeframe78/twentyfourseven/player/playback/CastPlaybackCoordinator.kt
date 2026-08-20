@@ -279,8 +279,8 @@ internal object CastMediaInfoFactory {
         val descriptor = CastMediaDescriptorFactory.create(station, stream, nowPlaying)
         val metadata = MediaMetadata(MediaMetadata.MEDIA_TYPE_MUSIC_TRACK).apply {
             putString(MediaMetadata.KEY_TITLE, descriptor.title)
-            putString(MediaMetadata.KEY_ARTIST, descriptor.stationName)
-            putString(MediaMetadata.KEY_ALBUM_TITLE, descriptor.stationName)
+            putString(MediaMetadata.KEY_ARTIST, descriptor.artist ?: descriptor.stationName)
+            putString(MediaMetadata.KEY_ALBUM_TITLE, descriptor.album ?: descriptor.stationName)
             descriptor.artworkUrl.safeHttpsUri()?.let { addImage(com.google.android.gms.common.images.WebImage(it)) }
         }
         return MediaInfo.Builder(descriptor.contentId)
@@ -297,6 +297,8 @@ internal data class CastMediaDescriptor(
     val title: String,
     val stationName: String,
     val artworkUrl: String?,
+    val artist: String?,
+    val album: String?,
 )
 
 internal object CastMediaDescriptorFactory {
@@ -312,6 +314,8 @@ internal object CastMediaDescriptorFactory {
             title = message.title,
             stationName = station.name,
             artworkUrl = message.artworkUrl,
+            artist = message.artist,
+            album = message.album,
         )
     }
 }
@@ -320,24 +324,32 @@ internal data class CastNowPlayingMessage(
     val title: String,
     val stationName: String,
     val artworkUrl: String?,
+    val artist: String?,
+    val album: String?,
 ) {
     fun toJson(): String = JSONObject()
         .put("type", "now-playing")
         .put("title", title)
         .put("stationName", stationName)
         .put("artworkUrl", artworkUrl)
+        .put("artist", artist)
+        .put("album", album)
         .toString()
 }
 
 internal object CastNowPlayingMessageFactory {
     fun create(station: Station, nowPlaying: NowPlayingState?): CastNowPlayingMessage {
         val current = nowPlaying?.takeIf { it.stationId == station.id }
-        val title = current?.displayTitle?.trim()?.takeIf(String::isNotBlank) ?: station.name
+        val title = current?.displayTitle?.trim()?.takeIf(String::isNotBlank)
+            ?: current?.track?.trim()?.takeIf(String::isNotBlank)
+            ?: station.name
         val artworkUrl = (current?.artworkUrl ?: station.logoUrl).safeHttpsUrl()
         return CastNowPlayingMessage(
             title = title,
             stationName = station.name,
             artworkUrl = artworkUrl,
+            artist = current?.artist?.trim()?.takeIf(String::isNotBlank),
+            album = current?.album?.trim()?.takeIf(String::isNotBlank),
         )
 }
 }

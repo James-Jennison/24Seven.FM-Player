@@ -1,6 +1,8 @@
 package com.codeframe78.twentyfourseven.player.data
 
 import com.codeframe78.twentyfourseven.player.domain.NowPlayingArtworkRepository
+import com.codeframe78.twentyfourseven.player.domain.NowPlayingDetailsRepository
+import com.codeframe78.twentyfourseven.player.domain.NowPlayingState
 import com.codeframe78.twentyfourseven.player.domain.StationId
 import com.codeframe78.twentyfourseven.player.domain.canonicalized
 import java.io.IOException
@@ -16,8 +18,11 @@ class StationNowPlayingArtworkRepository internal constructor(
     private val connectionFactory: (URI) -> HttpURLConnection = {
         it.toURL().openConnection() as HttpURLConnection
     },
-) : NowPlayingArtworkRepository {
-    override suspend fun fetchArtwork(stationId: StationId): String? = withContext(Dispatchers.IO) {
+) : NowPlayingArtworkRepository, NowPlayingDetailsRepository {
+    override suspend fun fetchArtwork(stationId: StationId): String? =
+        fetchNowPlaying(stationId)?.artworkUrl
+
+    override suspend fun fetchNowPlaying(stationId: StationId): NowPlayingState? = withContext(Dispatchers.IO) {
         val domain = domains[stationId.canonicalized()] ?: throw IOException("Unsupported station")
         val origin = "https://$domain/"
         val expectedOrigin = URI(origin)
@@ -46,7 +51,7 @@ class StationNowPlayingArtworkRepository internal constructor(
                 val response = connection.inputStream.bufferedReader(StandardCharsets.UTF_8).use { reader ->
                     reader.readBounded(MAX_RESPONSE_CHARACTERS)
                 }
-                return@withContext parser.parse(response, origin)
+                return@withContext parser.parseNowPlaying(response, origin, stationId)
             } finally {
                 connection.disconnect()
             }
@@ -72,6 +77,10 @@ class StationNowPlayingArtworkRepository internal constructor(
 
 internal class CurrentTrackArtworkParser {
     fun parse(json: String, baseUrl: String): String? {
+        return parseNowPlaying(json, baseUrl, StationId("unknown"))?.artworkUrl
+    }
+
+    fun parseNowPlaying(json: String, baseUrl: String, stationId: StationId): NowPlayingState? {
         val response = JSONObject(json)
         val origin = URI(baseUrl)
         val explicitAsin = response.optString("ASIN", "")
@@ -87,10 +96,28 @@ internal class CurrentTrackArtworkParser {
             ?.substringBeforeLast('.')
             ?.takeIf(ASIN::matches)
         val asin = explicitAsin ?: coverAsin
-        return if (asin != null) {
+        val artworkUrl = if (asin != null) {
             URI(origin.scheme, null, origin.host, origin.port, "/images/cover/500/$asin.jpg", null, null).toString()
         } else {
             coverUri?.toString()
+        }
+        val artist = response.optString("Artist", "").trim().takeIf(String::isNotBlank)
+        val album = response.optString("Album", "").trim().takeIf(String::isNotBlank)
+        val track = response.optString("Track", "").trim().takeIf(String::isNotBlank)
+        val displayTitle = listOfNotNull(artist, track).joinToString(" - ").takeIf(String::isNotBlank)
+            ?: track
+            ?: artist
+        return if (displayTitle == null && artworkUrl == null) {
+            null
+        } else {
+            NowPlayingState(
+                stationId = stationId,
+                displayTitle = displayTitle,
+                artworkUrl = artworkUrl,
+                artist = artist,
+                album = album,
+                track = track,
+            )
         }
     }
 
