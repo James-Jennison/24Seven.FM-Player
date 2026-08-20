@@ -2,6 +2,7 @@ package com.codeframe78.twentyfourseven.player.playback
 
 import android.content.Context
 import android.net.Uri
+import android.os.SystemClock
 import android.util.Log
 import com.codeframe78.twentyfourseven.player.domain.PlaybackRoute
 import com.codeframe78.twentyfourseven.player.domain.PlaybackStatus
@@ -53,6 +54,8 @@ internal class CastPlaybackCoordinator(
     private var remoteClient: RemoteMediaClient? = null
     private var snapshot = CastPlaybackSnapshot()
     private var localPlaybackSuspendedForCast = false
+    private var sessionStartRequestedAtMillis: Long? = null
+    private var remoteLoadRequestedAtMillis: Long? = null
 
     private val remoteMediaCallback = object : RemoteMediaClient.Callback() {
         override fun onStatusUpdated() = publishRemoteStatus()
@@ -75,9 +78,15 @@ internal class CastPlaybackCoordinator(
     }
 
     private val sessionListener = object : SessionManagerListener<CastSession> {
-        override fun onSessionStarting(session: CastSession) = Unit
+        override fun onSessionStarting(session: CastSession) {
+            sessionStartRequestedAtMillis = SystemClock.elapsedRealtime()
+            Log.i(LogTag, "Cast session start requested")
+        }
 
         override fun onSessionStarted(session: CastSession, sessionId: String) {
+            elapsedSince(sessionStartRequestedAtMillis)?.let {
+                Log.i(LogTag, "Cast session connected after ${it}ms")
+            }
             attach(session)
             if (shouldPlay) loadSelectedStation(autoplay = true)
         }
@@ -188,6 +197,8 @@ internal class CastPlaybackCoordinator(
             .setMediaInfo(CastMediaInfoFactory.create(station, stream, nowPlaying))
             .setAutoplay(autoplay)
             .build()
+        remoteLoadRequestedAtMillis = SystemClock.elapsedRealtime()
+        Log.i(LogTag, "Cast media load requested")
         publish(CastPlaybackSnapshot(PlaybackRoute.CastConnected, PlaybackStatus.Connecting, deviceName()))
         client.load(request).setResultCallback(ResultCallback { result ->
             // A remote load can complete after the user has stopped casting.  In that
@@ -197,7 +208,8 @@ internal class CastPlaybackCoordinator(
                 Log.i(LogTag, "ignoring stale remote media load result")
                 return@ResultCallback
             }
-            Log.i(LogTag, "remote media load result code=${result.status.statusCode}")
+            val loadElapsed = elapsedSince(remoteLoadRequestedAtMillis)
+            Log.i(LogTag, "remote media load result code=${result.status.statusCode} after ${loadElapsed ?: -1}ms")
             if (result.status.statusCode == CastStatusCodes.SUCCESS) {
                 publishRemoteStatus()
                 sendNowPlayingUpdate()
@@ -227,6 +239,9 @@ internal class CastPlaybackCoordinator(
         remotePlaybackIntentFor(status?.playerState)?.let { shouldPlay = it }
         if (playbackStatus == PlaybackStatus.Playing && !localPlaybackSuspendedForCast) {
             localPlaybackSuspendedForCast = true
+            elapsedSince(remoteLoadRequestedAtMillis)?.let {
+                Log.i(LogTag, "Cast remote playback started after ${it}ms")
+            }
             onRemotePlaybackAccepted()
         }
         val route = if (status == null || status.playerState == MediaStatus.PLAYER_STATE_IDLE) {
@@ -243,6 +258,10 @@ internal class CastPlaybackCoordinator(
     }
 
     private fun deviceName(): String? = castSession?.castDevice?.friendlyName
+
+    private fun elapsedSince(startMillis: Long?): Long? = startMillis?.let {
+        SystemClock.elapsedRealtime() - it
+    }
 
     private fun sendNowPlayingUpdate() {
         val session = castSession ?: return
