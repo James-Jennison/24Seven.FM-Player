@@ -16,7 +16,7 @@ build_root=${TWENTYFOURSEVEN_ANDROID_BUILD_DIR:-"$project_root/app/build"}
 apk="$build_root/outputs/apk/debug/app-debug.apk"
 
 TWENTYFOURSEVEN_SOURCE_REVISION="$revision" \
-  "$project_root/gradlew" :app:assembleDebug
+  /bin/bash "$project_root/gradlew" :app:assembleDebug
 
 [[ -f "$apk" ]] || fail 'Gradle completed without producing the expected debug APK'
 "$project_root/scripts/verify-android-artifact.sh" \
