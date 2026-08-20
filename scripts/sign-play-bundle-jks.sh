@@ -17,7 +17,7 @@ keystore=${TWENTYFOURSEVEN_UPLOAD_STORE_FILE:-}
 resolved_keystore=$(readlink -f "$keystore")
 [[ "$resolved_keystore" != "$project_root"/* ]] || fail 'the JKS file must remain outside the repository'
 
-for required_command in keytool jarsigner sha256sum; do
+for required_command in keytool jarsigner openssl sha256sum; do
   command -v "$required_command" >/dev/null || fail "required command '$required_command' is unavailable"
 done
 
@@ -57,14 +57,14 @@ TWENTYFOURSEVEN_UPLOAD_KEY_PASSWORD="$signing_password" \
 jarsigner -verify -verbose -certs "$bundle" | grep -q '^jar verified\.$' \
   || fail 'the release bundle does not contain a verified JAR signature'
 
-keystore_certificate=$(keytool -exportcert -rfc \
+keystore_certificate=$(keytool -exportcert \
   -keystore "$resolved_keystore" \
   -alias "$key_alias" \
   -storepass:env KEYTOOL_STORE_PASSWORD \
-  | keytool -printcert -rfc \
   | sha256sum \
   | awk '{ print $1 }')
 bundle_certificate=$(keytool -printcert -rfc -jarfile "$bundle" \
+  | openssl x509 -inform PEM -outform DER \
   | sha256sum \
   | awk '{ print $1 }')
 [[ "$keystore_certificate" == "$bundle_certificate" ]] \
