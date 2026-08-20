@@ -58,6 +58,9 @@ android {
             manifestPlaceholders["appLabel"] = "24Seven.FM Player (Debug)"
         }
         getByName("release") {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
             if (hasCompleteUploadSigning) {
                 signingConfig = signingConfigs.getByName("playUpload")
             }
