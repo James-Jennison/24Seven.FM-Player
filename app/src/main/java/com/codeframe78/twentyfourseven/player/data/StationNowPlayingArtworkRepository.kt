@@ -5,6 +5,7 @@ import com.codeframe78.twentyfourseven.player.domain.NowPlayingDetailsRepository
 import com.codeframe78.twentyfourseven.player.domain.NowPlayingState
 import com.codeframe78.twentyfourseven.player.domain.StationId
 import com.codeframe78.twentyfourseven.player.domain.canonicalized
+import com.codeframe78.twentyfourseven.player.domain.normalizeTrailingTheArticle
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URI
@@ -102,9 +103,9 @@ internal class CurrentTrackArtworkParser {
         } else {
             coverUri?.toString()
         }
-        val artist = response.optString("Artist", "").decodeHtmlEntities()
+        val artist = response.optString("Artist", "").decodeHtmlEntities()?.normalizeTrailingTheArticle()
         val album = response.optString("Album", "").decodeHtmlEntities()
-        val track = response.optString("Track", "").decodeHtmlEntities()
+        val track = response.optString("Track", "").decodeHtmlEntities()?.normalizeTrailingTheArticle()
         val displayTitle = listOfNotNull(artist, track).joinToString(" - ").takeIf(String::isNotBlank)
             ?: track
             ?: artist

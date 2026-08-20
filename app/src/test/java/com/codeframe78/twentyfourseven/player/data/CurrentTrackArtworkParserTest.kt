@@ -72,4 +72,16 @@ class CurrentTrackArtworkParserTest {
 
         assertEquals("Billy Joel - She's Right On Time", details?.displayTitle)
     }
+
+    @Test
+    fun `restores leading the from catalog sort order`() {
+        val response = JSONObject()
+            .put("Artist", "Passions, The")
+            .put("Track", "The Story")
+            .toString()
+
+        val details = parser.parseNowPlaying(response, "https://1980s.fm/", StationId("1980s"))
+
+        assertEquals("The Passions - The Story", details?.displayTitle)
+    }
 }

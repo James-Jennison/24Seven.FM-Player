@@ -47,6 +47,16 @@ class IcyMetadataMappingTest {
     }
 
     @Test
+    fun `trailing the artist sort article is restored in ICY metadata`() {
+        val metadata = Metadata(IcyInfo(byteArrayOf(), "Passions, The - I'm In Love With A German Film Star", null))
+
+        assertEquals(
+            "The Passions - I'm In Love With A German Film Star",
+            metadata.toNowPlayingState(StationId("1980s"))?.displayTitle,
+        )
+    }
+
+    @Test
     fun `live title preserves station identity in session metadata`() {
         val stationMetadata = MediaMetadata.Builder()
             .setTitle("StreamingSoundtracks.com")
