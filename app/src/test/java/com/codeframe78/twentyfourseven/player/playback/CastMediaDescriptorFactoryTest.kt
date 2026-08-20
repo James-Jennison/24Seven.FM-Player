@@ -78,6 +78,7 @@ class CastMediaDescriptorFactoryTest {
         assertEquals("https://example.invalid/current-track.png", descriptor.artworkUrl)
         assertEquals("Artist - Current track", message.title)
         assertEquals("https://example.invalid/current-track.png", message.artworkUrl)
+        assertEquals("test", message.stationId)
     }
 
     @Test

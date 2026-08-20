@@ -321,6 +321,7 @@ internal object CastMediaDescriptorFactory {
 }
 
 internal data class CastNowPlayingMessage(
+    val stationId: String,
     val title: String,
     val stationName: String,
     val artworkUrl: String?,
@@ -329,6 +330,7 @@ internal data class CastNowPlayingMessage(
 ) {
     fun toJson(): String = JSONObject()
         .put("type", "now-playing")
+        .put("stationId", stationId)
         .put("title", title)
         .put("stationName", stationName)
         .put("artworkUrl", artworkUrl)
@@ -345,6 +347,7 @@ internal object CastNowPlayingMessageFactory {
             ?: station.name
         val artworkUrl = (current?.artworkUrl ?: station.logoUrl).safeHttpsUrl()
         return CastNowPlayingMessage(
+            stationId = station.id.value,
             title = title,
             stationName = station.name,
             artworkUrl = artworkUrl,
