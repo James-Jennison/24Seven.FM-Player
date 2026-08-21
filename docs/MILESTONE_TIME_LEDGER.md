@@ -679,10 +679,13 @@ independently.
 
 - **Objective:** Freeze exact signed artifacts, version, signer, dependencies, permissions, listing, release notes,
   roadmap/testing, and all release-critical findings.
-- **Start, completion, and intervals:** Not started; all actual intervals and totals are not applicable.
+- **Start, completion, and intervals:** Alpha08 candidate preparation began August 20, 2026 after Alpha07 / version
+  code 16 was confirmed on the Closed testing — Alpha track. Version code 17 is reserved for the Android Auto
+  candidate. The signed-artifact freeze and upload are not complete; their timing is not yet recorded.
 - **Model, reasoning strength, and original forecast:** Sol High; current forecast 1–2 active days after M29, M30, and M36–M38 complete.
-- **Time, variance, evidence, confidence, and forecasting lessons:** No actual variance. Roadmap `e249071`, forecast `f971a9e`; no candidate-finish
-  commit/PR/release/workflow. **Unknown**. Record the exact freeze authorization as start, not prior planning.
+- **Time, variance, evidence, confidence, and forecasting lessons:** Candidate preparation only; no final freeze variance can be
+  calculated. Evidence: `docs/releases/0.1.0-alpha08.md`, Android Auto commits `a7d5f5a` through `1ed8825`, and
+  the passing Android CI run for that source. Record the exact signing start, signed artifact, and upload separately.
 
 ### M40 — Play Alpha Delivery and Pre-launch Remediation
 

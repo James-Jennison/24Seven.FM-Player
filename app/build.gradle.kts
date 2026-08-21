@@ -34,8 +34,8 @@ android {
         applicationId = "com.codeframe78.twentyfourseven.player"
         minSdk = 26
         targetSdk = 36
-        versionCode = 16
-        versionName = "0.1.0-alpha07"
+        versionCode = 17
+        versionName = "0.1.0-alpha08"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         manifestPlaceholders["appLabel"] = "24Seven.FM Player"
         manifestPlaceholders["buildRevision"] = sourceRevision
