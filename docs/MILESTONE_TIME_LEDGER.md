@@ -112,8 +112,8 @@ active execution.
 | M36 | Waiting externally | — | — | 1–3 active Sol d after trigger | — | — | — | — | — | — | Unknown |
 | M37 | Planned after M36 | — | — | 5–10 active d | — | — | — | — | — | — | Unknown |
 | M38 | Planned after M37 | — | — | 5–10 active d | — | — | — | — | — | — | Unknown |
-| M39 | Planned | — | — | 1–2 active d | — | — | — | — | — | — | Unknown |
-| M40 | Planned after M39 | — | — | 3–10 calendar d | — | — | — | — | — | — | Unknown |
+| M39 | Complete · Alpha08 candidate frozen and submitted | August 20, 2026 | August 20, 2026 | 1–2 active d | Not recorded individually | Not recorded individually | Not recorded individually | Not recorded individually | Not recorded individually | Not assessable | Confirmed by signed bundle, CI, and Play submission |
+| M40 | Active · Alpha08 sent for Google Play review | August 20, 2026 | — | 3–10 calendar d | Not recorded individually | Not recorded individually | — | — | Ongoing external review | Not assessable while active | Confirmed current phase |
 | M41 | Planned after M40 | — | — | 0.5–1 active d | — | — | — | — | — | — | Unknown |
 | M42 | Active · owner-confirmed two-week closed test | `August 16, 2026 at 5:51:14 PM PDT (UTC-07:00)` first recorded remediation interval; earlier campaign start not supplied | — | 3–5 calendar wk | 0.44 h recorded Issue #26, v3/v4 preparation, signing recovery, and Razr landscape remediation | 0.11 h recorded | 0.42 h recorded while credentials were unavailable | 0.55 h recorded | ≥0.90 h recorded intervals | Not assessable while active | Confirmed current phase |
 | M43 | Planned after M42 | — | — | 1–2 calendar wk | — | — | — | — | — | — | Unknown |
@@ -680,22 +680,25 @@ independently.
 - **Objective:** Freeze exact signed artifacts, version, signer, dependencies, permissions, listing, release notes,
   roadmap/testing, and all release-critical findings.
 - **Start, completion, and intervals:** Alpha08 candidate preparation began August 20, 2026 after Alpha07 / version
-  code 16 was confirmed on the Closed testing — Alpha track. Version code 17 is reserved for the Android Auto
-  candidate. The signed-artifact freeze and upload are not complete; their timing is not yet recorded.
+  code 16 was confirmed on the Closed testing — Alpha track. Version code 17 was signed, verified, uploaded, and
+  submitted to Google Play's Closed testing — Alpha review; exact active intervals were not recorded.
 - **Model, reasoning strength, and original forecast:** Sol High; current forecast 1–2 active days after M29, M30, and M36–M38 complete.
-- **Time, variance, evidence, confidence, and forecasting lessons:** Candidate preparation only; no final freeze variance can be
-  calculated. Evidence: `docs/releases/0.1.0-alpha08.md`, Android Auto commits `a7d5f5a` through `1ed8825`, and
-  the passing Android CI run for that source. Record the exact signing start, signed artifact, and upload separately.
+- **Time, variance, evidence, confidence, and forecasting lessons:** The candidate freeze is complete; no final active-time
+  variance can be calculated. Evidence: `docs/releases/0.1.0-alpha08.md`, Android Auto commits `a7d5f5a` through
+  `1ed8825`, the passing Android CI run for the Alpha08 commit, and the Google Play submission for version code 17.
 
 ### M40 — Play Alpha Delivery and Pre-launch Remediation
 
 - **Objective:** Upload the M39 artifact, inspect Play splits, validate Play install/update, complete reviewer access,
   and resolve pre-review/pre-launch findings.
-- **Start, completion, and intervals:** Not started; all actual intervals and totals are not applicable.
+- **Start, completion, and intervals:** Began August 20, 2026 when the verified Alpha08 bundle was uploaded and sent
+  to Google Play review. The release is not yet available to testers; active intervals are not recorded.
 - **Model, reasoning strength, and original forecast:** Terra High, with Sol High release decisions; current forecast 3–10 calendar days
   after M39, with extra time only for actual findings.
-- **Time, variance, evidence, confidence, and forecasting lessons:** No actual variance. Roadmap `e249071`, forecast `f971a9e`; no Play workflow,
-  tag, or release exists. **Unknown**. Separate Play processing as automated/external wait from remediation work.
+- **Time, variance, evidence, confidence, and forecasting lessons:** Google Play accepted version code 17 on the Closed
+  testing — Alpha track and reported one non-blocking warning that native crash symbols were not uploaded. The remaining
+  work is Play quick checks/review, availability confirmation, and the assigned-device smoke test. Keep external wait
+  separate from any remediation work.
 
 ### M41 — Explicit Alpha Publication
 
