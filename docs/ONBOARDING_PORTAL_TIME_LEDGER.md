@@ -1,6 +1,6 @@
 # Onboarding Portal Time Ledger
 
-Last updated: `August 22, 2026 at 12:10:57 PM PDT (UTC-07:00)`
+Last updated: `August 22, 2026 at 12:46:03 PM PDT (UTC-07:00)`
 
 This is the canonical time-accounting record for the protected 24Seven.FM Player onboarding portal: the Tester workspace, Coordinator workspace, onboarding wizard, assignment and reporting flows, and their safe website releases. It is deliberately independent of the Player Android and Play-operation milestones in `MILESTONE_TIME_LEDGER.md`.
 
@@ -10,18 +10,20 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 
 | Measure | Value | Qualification |
 | --- | ---: | --- |
-| Completed measured portal intervals | 12 | Route-based Tester workspace, shared shell/rail refinements, Phase 1 workbench redesign, CI trigger isolation, Phase 2 record-page workbench, Phase 3 assignment lifecycle handoffs, Phase 4 Coordinator queue discovery, Phase 5 in-portal PT checklist delivery, its runtime activation fix, and the shared activity timeline. |
-| Active portal time | 1.71 h | Completed intervals only. |
-| Automated wait | 0.09 h | Measured release-gate/build and workflow waits during portal changes. |
+| Completed measured portal intervals | 13 | Route-based Tester workspace, shared shell/rail refinements, Phase 1 workbench redesign, CI trigger isolation, Phase 2 record-page workbench, Phase 3 assignment lifecycle handoffs, Phase 4 Coordinator queue discovery, Phase 5 in-portal PT checklist delivery, its runtime activation fix, the shared activity timeline, and its cache-resilience fix. |
+| Active portal time | 1.80 h | Completed intervals only. |
+| Automated wait | 0.10 h | Measured release-gate/build and workflow waits during portal changes. |
 | User-blocked time | 0.00 h | Completed intervals only. |
-| Counted portal time | 1.80 h | Active plus automated wait. |
+| Counted portal time | 1.90 h | Active plus automated wait. |
 
 ## Portal work records
 
 ### Phase 7 activity timeline cache-resilience fix
 
-- **Authorization and interval:** Authorized and started `August 22, 2026 at 12:39:50 PM PDT (UTC-07:00)`; in progress.
+- **Authorization and interval:** Authorized and started `August 22, 2026 at 12:39:50 PM PDT (UTC-07:00)`; completed `August 22, 2026 at 12:46:03 PM PDT (UTC-07:00)`.
+- **Measured time:** 0.09 h active, 0.01 h automated wait, 0.00 h user-blocked, 0.10 h counted. The unmeasured remainder of the wall-clock interval is excluded.
 - **Scope:** Keep the existing Activity evidence readable in Tester and Coordinator workspaces when a shared static stylesheet is stale. Preserve all timeline data, privacy boundaries, portal workflows, permissions, deployment safeguards, and cache configuration; no new data collection, schema migration, or Cloudflare change is planned.
+- **Evidence:** Merged commit `e7e583c` through PR #69 adds only the Activity component's structural layout rules to both protected HTML responses, while retaining the shared stylesheet as the normal presentation source. The exact merged commit passed the dedicated activity smoke, full portal release gate, and GitHub portal release gate. The 55-file artifact (manifest SHA-256 `8eec98d899ea81c08b1daaf26056b81e749a15178a05a51568d2f3dae792ebdd`) matched server staging before atomic promotion; the prior release remains at `player.jamesjennison.net.rollback-portal-phase7-cache-e7e583c`. Origin and public HTTPS returned 200 for Tester Activity and a Coordinator tester record. A signed-in Tester browser retaining the earlier stale shared stylesheet state reloaded successfully and computed the Activity event rows as a grid with block title and detail elements. The Coordinator administrator session had expired before its post-release reload, so no signed-in Coordinator visual acceptance is claimed; no sign-in or data action was attempted.
 - **Model and forecast:** Current approved model and original forecast were not supplied; recorded as Unknown.
 
 ### Phase 7 shared activity timeline
