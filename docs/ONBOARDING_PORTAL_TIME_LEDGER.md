@@ -18,6 +18,12 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 
 ## Portal work records
 
+### Phase 4 Coordinator queue discovery — in progress
+
+- **Authorization and start:** Authorized and started `August 22, 2026 at 10:17:53 AM PDT (UTC-07:00)`.
+- **Scope:** Add protected, server-derived Coordinator saved views for operational attention, assignment readiness, smoke-test follow-up, submitted reports, active work, and closed work. Preserve all existing evidence, task, reporting, mail, and permission contracts; no migration is planned.
+- **Model and forecast:** GPT-5.6 Terra High; original forecast Unknown.
+
 ### Phase 3 assignment lifecycle and handoff workbench
 
 - **Authorization and interval:** Authorized and started `August 22, 2026 at 9:57:13 AM PDT (UTC-07:00)`; completed `August 22, 2026 at 10:05:50 AM PDT (UTC-07:00)`.
