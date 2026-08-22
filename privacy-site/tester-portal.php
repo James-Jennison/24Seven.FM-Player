@@ -87,13 +87,16 @@ function portalWorkspaceView(): string
     return is_string($view) && in_array($view, PORTAL_WORKSPACE_VIEWS, true) ? $view : 'dashboard';
 }
 
-function portalWorkspaceUrl(string $view, ?int $previewTesterId = null): string
+function portalWorkspaceUrl(string $view, ?int $previewTesterId = null, array $extraParameters = []): string
 {
     if (!in_array($view, PORTAL_WORKSPACE_VIEWS, true)) {
         throw new InvalidArgumentException('The requested tester workspace is invalid.');
     }
     $parameters = ['view' => $view];
     if ($previewTesterId !== null) $parameters = ['preview_tester' => (string) $previewTesterId] + $parameters;
+    foreach ($extraParameters as $name => $value) {
+        if (is_string($name) && is_scalar($value)) $parameters[$name] = (string) $value;
+    }
     return '/tester-portal.php?' . http_build_query($parameters, '', '&', PHP_QUERY_RFC3986);
 }
 
@@ -594,6 +597,8 @@ function portalRenderDashboard(PDO $database, array $tester, bool $adminPreview 
     $reportAssignmentOptions = '';
     $reportCaseOptions = '';
     $previewTesterId = $adminPreview ? (int) $tester['id'] : null;
+    $focusedAssignmentId = filter_var($_GET['assignment'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+    if ($focusedAssignmentId === false) $focusedAssignmentId = null;
     $activeAssignmentCount = 0;
     $reportedCaseCount = 0;
     $requiredCaseCount = 0;
@@ -621,7 +626,8 @@ function portalRenderDashboard(PDO $database, array $tester, bool $adminPreview 
             $reviewAction = '<p class="muted small">Report every assigned PT case before this task can be submitted for Coordinator review. Missing: ' . e(implode(', ', $progress['missing'])) . '.</p>';
         }
         if (!$reviewSubmitted && $assignment['task_status'] !== 'complete') {
-            $reportAssignmentOptions .= '<option value="' . (int) $assignment['id'] . '">' . e($task['id'] . ' — ' . $progressText) . '</option>';
+            $selected = $focusedAssignmentId === (int) $assignment['id'] ? ' selected' : '';
+            $reportAssignmentOptions .= '<option value="' . (int) $assignment['id'] . '"' . $selected . '>' . e($task['id'] . ' — ' . $progressText) . '</option>';
             $reportCaseOptions .= '<optgroup label="' . e($task['id'] . ' — ' . $task['title']) . '">';
             foreach ($progress['missing'] as $ptCase) {
                 $reportCaseOptions .= '<option value="' . e($ptCase) . '" data-assignment-id="' . (int) $assignment['id'] . '">' . e($ptCase) . '</option>';
@@ -629,9 +635,9 @@ function portalRenderDashboard(PDO $database, array $tester, bool $adminPreview 
             $reportCaseOptions .= '</optgroup>';
         }
         $reportLink = !$reviewSubmitted && $assignment['task_status'] !== 'complete'
-            ? '<a class="button secondary" href="' . e(portalWorkspaceUrl('reports', $previewTesterId)) . '">Report a PT case</a>'
+            ? '<a class="button secondary" href="' . e(portalWorkspaceUrl('reports', $previewTesterId, ['assignment' => (int) $assignment['id']])) . '">Report a PT case</a>'
             : '';
-        $assignmentCards .= '<article class="task work-record"><div class="work-record-heading"><div><p class="eyebrow">Focused task</p><h3>' . e($task['id'] . ' — ' . $task['title']) . '</h3></div><span class="pill ' . $state . '">' . e(ucwords(str_replace('_', ' ', $assignment['task_status']))) . '</span></div><div class="work-record-context"><span><strong>PT cases</strong> ' . e(implode(', ', $task['ptIds'])) . '</span><span><strong>Scope</strong> ' . e((string) ($assignment['station_scope'] ?: $task['stationScope'])) . '</span></div>' . $progressMeter . '<div class="work-record-instructions"><p class="task-plan-label">Complete and report</p><ol class="task-plan">' . $plan . '</ol></div><div class="work-record-actions"><a class="button secondary" href="https://dev.jamesjennison.net/tester-workspace/?task=' . rawurlencode($task['id']) . '#' . e($caseAnchor) . '">Open the detailed PT checklist</a>' . $reportLink . '</div>' . $reviewAction . '</article>';
+        $assignmentCards .= '<article class="task work-record"><div class="work-record-heading"><div><p class="eyebrow">Focused task</p><h3>' . e($task['id'] . ' — ' . $task['title']) . '</h3></div><span class="pill ' . $state . '">' . e(ucwords(str_replace('_', ' ', $assignment['task_status']))) . '</span></div><div class="work-record-context"><span><strong>PT cases</strong> ' . e(implode(', ', $task['ptIds'])) . '</span><span><strong>Scope</strong> ' . e((string) ($assignment['station_scope'] ?: $task['stationScope'])) . '</span></div>' . assignmentLifecycleMarkup($assignment, $progress, 'tester') . $progressMeter . '<div class="work-record-instructions"><p class="task-plan-label">Complete and report</p><ol class="task-plan">' . $plan . '</ol></div><div class="work-record-actions"><a class="button secondary" href="https://dev.jamesjennison.net/tester-workspace/?task=' . rawurlencode($task['id']) . '#' . e($caseAnchor) . '">Open the detailed PT checklist</a>' . $reportLink . '</div>' . $reviewAction . '</article>';
     }
     if ($assignmentCards === '') $assignmentCards = '<article class="task"><h3>No focused task yet</h3><p>Your coordinator will match an assignment to your coverage and available setup.</p></article>';
     $reportForm = $reportAssignmentOptions === ''

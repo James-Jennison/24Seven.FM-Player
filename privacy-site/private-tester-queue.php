@@ -857,6 +857,45 @@ function assignmentReportProgress(PDO $database, int $assignmentId, array $task)
     ];
 }
 
+/**
+ * Builds the shared, evidence-backed assignment lifecycle shown to both roles.
+ * It deliberately derives only from the existing assignment and report facts;
+ * it does not infer an install, test, or review that was never recorded.
+ */
+function assignmentLifecycleMarkup(array $assignment, array $progress, string $viewer): string
+{
+    $status = (string) ($assignment['task_status'] ?? 'assigned');
+    $createdAt = humanTimestamp((string) ($assignment['created_at'] ?? ''));
+    $updatedAt = humanTimestamp((string) ($assignment['updated_at'] ?? ''));
+    $submittedAt = humanTimestamp((string) ($assignment['submitted_for_review_at'] ?? ''));
+    $reportedCount = count($progress['reported'] ?? []);
+    $requiredCount = count($progress['required'] ?? []);
+    $audience = $viewer === 'coordinator' ? 'Tester' : 'You';
+    $events = [
+        ['Assigned', $createdAt === '' ? 'Assignment recorded.' : 'Assigned ' . $createdAt . '.'],
+        ['PT-case evidence', $reportedCount . ' of ' . $requiredCount . ' required PT-case results recorded.'],
+        ['Coordinator review', $submittedAt === ''
+            ? ($viewer === 'coordinator' ? 'Waiting for the Tester to submit the full task for review.' : 'Submit the full task after every assigned PT case is reported.')
+            : $audience . ' submitted this task for Coordinator review ' . $submittedAt . '.'],
+        ['Final status', match ($status) {
+            'complete' => 'Coordinator marked this task complete' . ($updatedAt === '' ? '.' : ' ' . $updatedAt . '.'),
+            'blocked' => 'This task is blocked' . ($updatedAt === '' ? '.' : ' as of ' . $updatedAt . '.'),
+            default => 'No final Coordinator decision is recorded yet.',
+        }],
+    ];
+    $items = '';
+    foreach ($events as [$label, $detail]) {
+        $done = match ($label) {
+            'Assigned' => true,
+            'PT-case evidence' => $requiredCount > 0 && $reportedCount === $requiredCount,
+            'Coordinator review' => $submittedAt !== '',
+            'Final status' => in_array($status, ['complete', 'blocked'], true),
+        };
+        $items .= '<li class="' . ($done ? 'done' : '') . '"><span aria-hidden="true">' . ($done ? '✓' : '○') . '</span><div><strong>' . e($label) . '</strong><small>' . e($detail) . '</small></div></li>';
+    }
+    return '<section class="assignment-lifecycle" aria-label="Assignment lifecycle"><p class="task-plan-label">Assignment lifecycle</p><ol>' . $items . '</ol></section>';
+}
+
 function activeTester(PDO $database, int $testerId): void
 {
     $statement = $database->prepare("SELECT id FROM testers WHERE id = ? AND status = 'active'");
@@ -1980,7 +2019,7 @@ function renderTesterWorkspace(PDO $database, int $testerId, string $notice = ''
         redirect('?error=' . rawurlencode('The tester is no longer active.'));
     }
     $tasks = taskRegistry();
-    $assignmentsQuery = $database->prepare('SELECT id, task_id, task_status, station_scope, configuration_scope, coordinator_note, mutation_authorized, assignment_email_status, assignment_email_attempted_at, assignment_email_attempts, submitted_for_review_at FROM tester_task_assignments WHERE tester_id = ? ORDER BY created_at, id');
+    $assignmentsQuery = $database->prepare('SELECT id, task_id, task_status, station_scope, configuration_scope, coordinator_note, mutation_authorized, assignment_email_status, assignment_email_attempted_at, assignment_email_attempts, submitted_for_review_at, created_at, updated_at FROM tester_task_assignments WHERE tester_id = ? ORDER BY created_at, id');
     $assignmentsQuery->execute([$testerId]);
     $assignments = $assignmentsQuery->fetchAll();
     $feedbackQuery = $database->prepare('SELECT feedback.subject, feedback.details, feedback.outcome, feedback.category, feedback.pt_case, feedback.created_at, assignments.task_id FROM tester_feedback AS feedback LEFT JOIN tester_task_assignments AS assignments ON assignments.id = feedback.assignment_id WHERE feedback.tester_id = ? ORDER BY feedback.created_at DESC, feedback.id DESC');
@@ -2058,7 +2097,7 @@ function renderTesterWorkspace(PDO $database, int $testerId, string $notice = ''
         $reviewState = $assignment['submitted_for_review_at'] === null || $assignment['submitted_for_review_at'] === ''
             ? '<p><strong>Tester reports:</strong> ' . count($progress['reported']) . ' of ' . count($progress['required']) . ' PT cases received.' . ($progress['missing'] === [] ? ' Ready for the tester to submit for Coordinator review.' : ' Missing: ' . e(implode(', ', $progress['missing'])) . '.') . '</p>'
             : '<p class="notice"><strong>Submitted for Coordinator review:</strong> ' . e(humanTimestamp((string) $assignment['submitted_for_review_at'])) . '. Review the per-case results below before recording the final status.</p>';
-        $assignmentCards .= '<article class="assignment-existing"><h4>' . e($task['id'] . ' — ' . $task['title']) . '</h4><p><strong>PT cases:</strong> ' . e(implode(', ', $task['ptIds'])) . ' · <a href="/product-testing/?task=' . rawurlencode($task['id']) . '">Open cases</a></p><p><strong>Assignment email:</strong> ' . e($assignment['assignment_email_status'] === 'accepted' ? 'Accepted by the mail transport' : ($assignment['assignment_email_status'] === 'failed' ? 'Mail transport failed' : 'Not sent')) . '</p>' . $reviewState . '<form method="post"><input type="hidden" name="action" value="update_task"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="assignment_id" value="' . (int) $assignment['id'] . '"><label>Status<select name="task_status">' . $currentStatusOptions . '</select></label><label>Station scope<select name="station_scope">' . $currentStationOptions . '</select></label><label>Device / accessory scope<input name="configuration_scope" maxlength="' . MAX_ASSIGNMENT_CONFIGURATION_LENGTH . '" value="' . e($assignment['configuration_scope']) . '"></label><label>Coordinator note<textarea name="coordinator_note" maxlength="' . MAX_ASSIGNMENT_NOTE_LENGTH . '">' . e($assignment['coordinator_note']) . '</textarea></label><button type="submit">Save assignment</button></form></article>';
+        $assignmentCards .= '<article class="assignment-existing work-record"><div class="work-record-heading"><div><p class="eyebrow">Focused assignment</p><h4>' . e($task['id'] . ' — ' . $task['title']) . '</h4></div><span class="pill ' . ($assignment['task_status'] === 'blocked' ? 'blocked' : ($assignment['task_status'] === 'complete' ? '' : 'pending')) . '">' . e(ucwords(str_replace('_', ' ', (string) $assignment['task_status']))) . '</span></div><p><strong>PT cases:</strong> ' . e(implode(', ', $task['ptIds'])) . ' · <a href="/product-testing/?task=' . rawurlencode($task['id']) . '">Open cases</a></p><p><strong>Assignment email:</strong> ' . e($assignment['assignment_email_status'] === 'accepted' ? 'Accepted by the mail transport' : ($assignment['assignment_email_status'] === 'failed' ? 'Mail transport failed' : 'Not sent')) . '</p>' . assignmentLifecycleMarkup($assignment, $progress, 'coordinator') . $reviewState . '<div class="work-record-actions"><a class="button secondary" href="/tester-portal.php?preview_tester=' . $testerId . '&amp;view=tasks&amp;assignment=' . (int) $assignment['id'] . '">Open Tester handoff</a></div><form method="post"><input type="hidden" name="action" value="update_task"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="assignment_id" value="' . (int) $assignment['id'] . '"><label>Status<select name="task_status">' . $currentStatusOptions . '</select></label><label>Station scope<select name="station_scope">' . $currentStationOptions . '</select></label><label>Device / accessory scope<input name="configuration_scope" maxlength="' . MAX_ASSIGNMENT_CONFIGURATION_LENGTH . '" value="' . e($assignment['configuration_scope']) . '"></label><label>Coordinator note<textarea name="coordinator_note" maxlength="' . MAX_ASSIGNMENT_NOTE_LENGTH . '">' . e($assignment['coordinator_note']) . '</textarea></label><button type="submit">Save assignment</button></form></article>';
     }
     $message = $notice === '' ? '' : '<p class="notice">' . e($notice) . '</p>';
     $message .= $error === '' ? '' : '<p class="notice error">' . e($error) . '</p>';

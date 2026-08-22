@@ -18,6 +18,12 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 
 ## Portal work records
 
+### Phase 3 assignment lifecycle and handoff workbench — in progress
+
+- **Authorization and start:** Authorized and started `August 22, 2026 at 9:57:13 AM PDT (UTC-07:00)`.
+- **Scope:** Connect each protected assignment's Tester task view, PT-case reports, Coordinator review state, and final status through a shared read-only lifecycle presentation. Preserve existing workflow gates, permissions, reporting semantics, and stored data; no migration is planned for this phase.
+- **Model and forecast:** GPT-5.6 Terra High; original forecast Unknown.
+
 ### Route-based Tester workspace
 
 - **Authorization and interval:** Authorized `August 22, 2026 at 7:29:35 AM PDT (UTC-07:00)`; completed `August 22, 2026 at 7:41:56 AM PDT (UTC-07:00)`.
