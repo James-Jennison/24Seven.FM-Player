@@ -10,13 +10,20 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 
 | Measure | Value | Qualification |
 | --- | ---: | --- |
-| Completed measured portal intervals | 7 | Route-based Tester workspace, shared shell/rail refinements, Phase 1 workbench redesign, CI trigger isolation, and Phase 2 record-page workbench. |
-| Active portal time | 0.87 h | Completed intervals only. |
-| Automated wait | 0.02 h | Measured GitHub workflow waits during portal changes. |
+| Completed measured portal intervals | 8 | Route-based Tester workspace, shared shell/rail refinements, Phase 1 workbench redesign, CI trigger isolation, Phase 2 record-page workbench, and Phase 3 assignment lifecycle handoffs. |
+| Active portal time | 1.01 h | Completed intervals only. |
+| Automated wait | 0.03 h | Measured release-gate/build and workflow waits during portal changes. |
 | User-blocked time | 0.00 h | Completed intervals only. |
-| Counted portal time | 0.89 h | Active plus automated wait. |
+| Counted portal time | 1.04 h | Active plus automated wait. |
 
 ## Portal work records
+
+### Phase 3 assignment lifecycle and handoff workbench
+
+- **Authorization and interval:** Authorized and started `August 22, 2026 at 9:57:13 AM PDT (UTC-07:00)`; completed `August 22, 2026 at 10:05:50 AM PDT (UTC-07:00)`.
+- **Measured time:** 0.14 h active, 0.01 h automated wait, 0.00 h user-blocked, 0.15 h counted.
+- **Scope and evidence:** Commit `06b679a` adds the same evidence-backed assignment lifecycle to Tester and Coordinator task records: assigned, PT-case evidence, Coordinator review, and final status. Tester task actions now open the exact report queue with that assignment preselected; the Coordinator record links to the matching read-only Tester handoff. The change derives only from existing assignment/report timestamps and status records—no migration, new data collection, gate change, or permission change. The full portal release gate passed at the exact commit. A hash-verified staged artifact was atomically swapped into the active Player document root with the prior live release retained at `player.jamesjennison.net.rollback-portal-phase3-06b679a`; origin and public HTTPS returned 200 for the changed Tester task/report and Coordinator record routes. Signed-in acceptance confirmed the Tester report queue and Coordinator record load cleanly; the current signed-in tester has no active assignment, so no synthetic assignment was created merely to make lifecycle evidence appear.
+- **Model and forecast:** GPT-5.6 Terra High; original forecast Unknown.
 
 ### Route-based Tester workspace
 
