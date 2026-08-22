@@ -18,6 +18,12 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 
 ## Portal work records
 
+### Phase 7 activity timeline cache-resilience fix
+
+- **Authorization and interval:** Authorized and started `August 22, 2026 at 12:39:50 PM PDT (UTC-07:00)`; in progress.
+- **Scope:** Keep the existing Activity evidence readable in Tester and Coordinator workspaces when a shared static stylesheet is stale. Preserve all timeline data, privacy boundaries, portal workflows, permissions, deployment safeguards, and cache configuration; no new data collection, schema migration, or Cloudflare change is planned.
+- **Model and forecast:** Current approved model and original forecast were not supplied; recorded as Unknown.
+
 ### Phase 7 shared activity timeline
 
 - **Authorization and interval:** Authorized and started `August 22, 2026 at 11:38:50 AM PDT (UTC-07:00)`; completed `August 22, 2026 at 12:10:57 PM PDT (UTC-07:00)`.
