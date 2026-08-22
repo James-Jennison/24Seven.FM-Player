@@ -1,6 +1,6 @@
 # Onboarding Portal Time Ledger
 
-Last updated: `August 22, 2026 at 9:19:28 AM PDT (UTC-07:00)`
+Last updated: `August 22, 2026 at 9:38:00 AM PDT (UTC-07:00)`
 
 This is the canonical time-accounting record for the protected 24Seven.FM Player onboarding portal: the Tester workspace, Coordinator workspace, onboarding wizard, assignment and reporting flows, and their safe website releases. It is deliberately independent of the Player Android and Play-operation milestones in `MILESTONE_TIME_LEDGER.md`.
 
@@ -10,11 +10,11 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 
 | Measure | Value | Qualification |
 | --- | ---: | --- |
-| Completed measured portal intervals | 6 | Route-based Tester workspace, shared shell/rail refinements, Phase 1 workbench redesign, and portal CI trigger isolation. |
-| Active portal time | 0.73 h | Completed intervals only. |
-| Automated wait | 0.01 h | Measured GitHub workflow wait during the Phase 1 redesign. |
+| Completed measured portal intervals | 7 | Route-based Tester workspace, shared shell/rail refinements, Phase 1 workbench redesign, CI trigger isolation, and Phase 2 record-page workbench. |
+| Active portal time | 0.87 h | Completed intervals only. |
+| Automated wait | 0.02 h | Measured GitHub workflow waits during portal changes. |
 | User-blocked time | 0.00 h | Completed intervals only. |
-| Counted portal time | 0.74 h | Active plus automated wait. |
+| Counted portal time | 0.89 h | Active plus automated wait. |
 
 ## Portal work records
 
@@ -62,6 +62,7 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 
 ### Phase 2 record-page workbench
 
-- **Authorization and start:** Authorized and started `August 22, 2026 at 9:29:22 AM PDT (UTC-07:00)`.
-- **Status:** In progress. Scope is limited to clearer Tester task/report records and Coordinator record workflows using the existing protected assignment, evidence, and reporting data. This work is recorded here, not in the Player milestone ledger.
+- **Authorization and interval:** Authorized and started `August 22, 2026 at 9:29:22 AM PDT (UTC-07:00)`; completed `August 22, 2026 at 9:38:00 AM PDT (UTC-07:00)`.
+- **Measured time:** 0.14 h active, 0.01 h automated wait, 0.00 h user-blocked, 0.15 h counted.
+- **Scope and evidence:** Commit `9c9ce17` changes only record-page presentation: Tester task records now show scope, per-case reporting progress, detailed checklist and report actions; Tester reports open with an explicit evidence queue; Coordinator tester records use the shared record header and lifecycle context. The protected task/assignment, onboarding, email, reporting, recommendation, and security contracts passed; the full portal release gate passed. A hash-verified atomic deployment retained the previous live directory for rollback. Origin HTTP/HTTPS and public HTTPS returned 200 for the changed Tester task/report and Coordinator routes. Signed-in Tester acceptance confirmed the task workbench and evidence queue. After the owner confirmed the active Coordinator session, read-only acceptance on a tester record confirmed the Coordinator record header, lifecycle summary, role label, and record-workbench section; no Coordinator data was changed.
 - **Model and forecast:** GPT-5.6 Terra High; original forecast Unknown.
