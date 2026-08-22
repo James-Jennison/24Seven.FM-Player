@@ -67,9 +67,8 @@ assert(endpoint.includes("function taskAllowsGuestTester(array $task): bool"), "
 assert(endpoint.includes("Guest testers can receive only the account-free Guest testing tasks."), "Queue must block account-dependent assignments for guest testers.");
 assert(endpoint.includes("function renderOperationsDashboard"), "Queue must render an operations dashboard instead of every tester form at once");
 assert(endpoint.includes('class="roster-card"') && endpoint.includes('class="roster-list"') && endpoint.includes('class="roster-entry"'), "Tester roster must use compact entries instead of a horizontally scrolling side-panel table.");
-assert(endpoint.includes('data-operations-panels') && endpoint.includes('data-panel-drag-handle') && endpoint.includes('data-panel-resize-handle') && client.includes('player-operations-freeform-layout-v1') && client.includes('setPointerCapture'), "Operations panels must support persistent direct dragging and resizing.");
+assert(endpoint.includes('workspace-primary-card') && endpoint.includes('workspace-attention-grid') && endpoint.includes('workspace-queue-grid') && !endpoint.includes('data-operations-panels'), "Operations must use a stable next-action, attention, and record-queue layout rather than a freeform panel canvas.");
 assert(endpoint.includes('private-tester-queue.js?v=onboarding-4'), "Private queue pages must load the current operations interaction asset version.");
-assert(client.includes('applicationsEmpty') && client.includes("applicationsPanel.classList.add('is-empty')"), "An empty application queue must collapse to a compact operations panel.");
 assert(endpoint.includes('profile-update-action') && endpoint.includes('?email=1&amp;compose_for='), "Incomplete roster profiles must open the preselected profile-update composer without sending mail.");
 assert(endpoint.includes("function renderTesterWorkspace"), "Queue must provide a focused per-tester workspace");
 assert(endpoint.includes("send_onboarding_email"), "Queue must support an individual orientation-email action");

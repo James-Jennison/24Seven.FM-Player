@@ -1066,32 +1066,6 @@ Cumulative counted project time through Milestone M30: Unknown overall; 0.40 h p
 
 - **Objective:** Maintain qualifying tester continuity, collect structured feedback, fix/retest findings, review Play
   health, and satisfy campaign exit criteria.
-- **Tester workspace navigation implementation:** The owner authorized the existing authenticated Tester workspace to
-  become a route-based multi-page experience on `August 22, 2026 at 7:29:35 AM PDT (UTC-07:00)`. The active interval
-  completed at `August 22, 2026 at 7:41:56 AM PDT (UTC-07:00)` (0.21 h active, 0.00 h automated wait, 0.00 h
-  user-blocked). Scope and outcome: retain the existing wizard, protected session, database, access controls, task
-  reporting, and live deployment rollback while separating the completed tester experience into dashboard,
-  onboarding, profile/device, tasks, reports, and support routes. Model: GPT-5; reasoning strength and original
-  forecast were not separately supplied with the authorization and are recorded as Unknown rather than inferred.
-- **Workspace-shell alignment:** The owner authorized the shared Coordinator/Tester application-shell redesign at
-  `August 22, 2026 at 7:57:23 AM PDT (UTC-07:00)`. The active implementation and release-validation interval completed
-  at `August 22, 2026 at 8:07:06 AM PDT (UTC-07:00)` (0.16 h active, 0.00 h automated wait, 0.00 h user-blocked).
-  Commit `f4e8f53` renders the authenticated Tester portal in the same persistent application shell and left rail as
-  Coordinator Operations while retaining the protected route, wizard, task, report, and support behavior. The exact
-  merge passed the local and required GitHub portal gates, then was deployed through a hash-verified atomic document-root
-  swap with the prior directory retained for rollback; authenticated Tester and Coordinator shell acceptance passed.
-- **Workspace-rail legibility:** The owner authorized correction of the shared rail label treatment at
-  `August 22, 2026 at 8:14:41 AM PDT (UTC-07:00)`. The active implementation and release-validation interval completed
-  at `August 22, 2026 at 8:19:40 AM PDT (UTC-07:00)` (0.08 h active, 0.00 h automated wait, 0.00 h user-blocked).
-  Commit `069d20e` changes both workspace rails to readable icon-and-label rows on desktop while retaining the compact
-  icon-only mobile rail. The exact merge passed the local and required GitHub portal gates, was deployed by a
-  hash-verified atomic swap with rollback retained, and passed authenticated Coordinator and Tester rail acceptance.
-- **Workspace chrome parity:** The owner authorized correction of the Coordinator rail divergence at
-  `August 22, 2026 at 8:39:00 AM PDT (UTC-07:00)`. The active implementation and release-validation interval completed
-  at `August 22, 2026 at 8:41:42 AM PDT (UTC-07:00)` (0.05 h active, 0.00 h automated wait, 0.00 h user-blocked).
-  Commit `b830173` makes the Coordinator use both the cache-versioned shared CSS and the same icon-and-label rail markup
-  as the Tester portal. The exact merge passed local and required GitHub portal gates, was deployed with a hash-verified
-  atomic swap and retained rollback, and passed authenticated Coordinator and Tester rail acceptance.
 - **Start, completion, and intervals:** Active. The owner confirms the two-week Google Play closed-test phase is in progress;
   its earlier campaign-start timestamp was not supplied and is not inferred. The measured Issue #26 remediation interval ran
   from `August 16, 2026 at 5:51:14 PM PDT (UTC-07:00)` through `August 16, 2026 at 5:52:53 PM PDT (UTC-07:00)`.
@@ -1102,11 +1076,9 @@ Cumulative counted project time through Milestone M30: Unknown overall; 0.40 h p
   Issue #26 reports a reproducible Android 16 phone failure in PT-12; the focused physical-Android regression is passing.
   The owner authorized the next closed-test update at `August 16, 2026 at 5:58:38 PM PDT (UTC-07:00)`; its version-3
   preparation interval completed at `August 16, 2026 at 6:00:20 PM PDT (UTC-07:00)` (0.03 h active, 0.00 h automated
-  wait, 0.00 h user-blocked, 0.03 h counted). The two measured intervals plus the Tester workspace navigation
-  implementation total 0.27 h; earlier campaign time remains excluded. **Confirmed current phase**. Keep each
-  remediation interval separate from tester and Play calendar waits. The four measured intervals, including the shared
-  workspace-shell releases, rail legibility correction, and Coordinator chrome parity total 0.56 h; earlier campaign time
-  remains excluded.
+  wait, 0.00 h user-blocked, 0.03 h counted). The two measured Android remediation intervals total 0.06 h; earlier
+  campaign time remains excluded. **Confirmed current phase**. Keep each remediation interval separate from tester and
+  Play calendar waits.
 
 ### M43 — Production Access and Policy Approval
 
