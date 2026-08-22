@@ -1,6 +1,6 @@
 # Onboarding Portal Time Ledger
 
-Last updated: `August 22, 2026 at 10:54:21 AM PDT (UTC-07:00)`
+Last updated: `August 22, 2026 at 11:33:35 AM PDT (UTC-07:00)`
 
 This is the canonical time-accounting record for the protected 24Seven.FM Player onboarding portal: the Tester workspace, Coordinator workspace, onboarding wizard, assignment and reporting flows, and their safe website releases. It is deliberately independent of the Player Android and Play-operation milestones in `MILESTONE_TIME_LEDGER.md`.
 
@@ -10,13 +10,21 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 
 | Measure | Value | Qualification |
 | --- | ---: | --- |
-| Completed measured portal intervals | 10 | Route-based Tester workspace, shared shell/rail refinements, Phase 1 workbench redesign, CI trigger isolation, Phase 2 record-page workbench, Phase 3 assignment lifecycle handoffs, Phase 4 Coordinator queue discovery, and Phase 5 in-portal PT checklist delivery. |
-| Active portal time | 1.29 h | Completed intervals only. |
-| Automated wait | 0.07 h | Measured release-gate/build and workflow waits during portal changes. |
+| Completed measured portal intervals | 11 | Route-based Tester workspace, shared shell/rail refinements, Phase 1 workbench redesign, CI trigger isolation, Phase 2 record-page workbench, Phase 3 assignment lifecycle handoffs, Phase 4 Coordinator queue discovery, Phase 5 in-portal PT checklist delivery, and its runtime activation fix. |
+| Active portal time | 1.36 h | Completed intervals only. |
+| Automated wait | 0.08 h | Measured release-gate/build and workflow waits during portal changes. |
 | User-blocked time | 0.00 h | Completed intervals only. |
-| Counted portal time | 1.36 h | Active plus automated wait. |
+| Counted portal time | 1.44 h | Active plus automated wait. |
 
 ## Portal work records
+
+### Phase 6 PT-checklist runtime activation fix
+
+- **Authorization and interval:** Authorized and started `August 22, 2026 at 11:28:19 AM PDT (UTC-07:00)`; completed `August 22, 2026 at 11:33:35 AM PDT (UTC-07:00)`.
+- **Measured time:** 0.07 h active, 0.01 h automated wait, 0.00 h user-blocked, 0.08 h counted. The unmeasured remainder of the wall-clock interval is excluded.
+- **Scope:** Correct the in-portal assigned-checklist control after signed-in acceptance showed its button did not activate the dialog. Preserve the exact assigned-case boundary, existing task and report data, all permissions, and the atomic Player website release process.
+- **Evidence:** Merged commit `fb5ed30` uses delegated click handling for checklist open, explicit close, and dialog-backdrop close behavior; no task, report, database, mail, permission, or routing behavior changed. The exact merged commit passed the local 55-file artifact gate and the GitHub portal release gate. The 55-file staging artifact matched the local SHA-256 manifest before atomic promotion to the verified Player document root; the prior release remains at `player.jamesjennison.net.rollback-portal-phase6-fb5ed30`. Origin and public HTTPS each returned 200 for Tester tasks, Coordinator operations, and both dialog assets. Signed-in Chrome acceptance reloaded the assigned Tester task, opened the dialog, confirmed only PT-09 and PT-10, then closed the dialog without submitting or changing a record.
+- **Model and forecast:** GPT-5.6 Terra High; original forecast Unknown.
 
 ### Phase 5 in-portal PT checklist
 
