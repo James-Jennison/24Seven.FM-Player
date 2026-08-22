@@ -428,7 +428,7 @@ active execution.
 | M39 | Planned | — | — | 1–2 active d | — | — | — | — | — | — | Unknown |
 | M40 | Planned after M39 | — | — | 3–10 calendar d | — | — | — | — | — | — | Unknown |
 | M41 | Planned after M40 | — | — | 0.5–1 active d | — | — | — | — | — | — | Unknown |
-| M42 | Active · owner-confirmed two-week closed test | `August 16, 2026 at 5:51:14 PM PDT (UTC-07:00)` first recorded remediation interval; earlier campaign start not supplied | — | 3–5 calendar wk | 0.27 h recorded Issue #26 fix, v3 preparation, and Tester workspace navigation | 0.00 h | Earlier campaign time unmeasured | 0.27 h recorded | ≥0.27 h recorded intervals | Not assessable while active | Confirmed current phase |
+| M42 | Active · owner-confirmed two-week closed test | `August 16, 2026 at 5:51:14 PM PDT (UTC-07:00)` first recorded remediation interval; earlier campaign start not supplied | — | 3–5 calendar wk | 0.43 h recorded Issue #26 fix, v3 preparation, Tester route navigation, and shared workspace-shell release | 0.00 h | Earlier campaign time unmeasured | 0.43 h recorded | ≥0.43 h recorded intervals | Not assessable while active | Confirmed current phase |
 | M43 | Planned after M42 | — | — | 1–2 calendar wk | — | — | — | — | — | — | Unknown |
 | M44 | Planned after M43 | — | — | 1–4 calendar wk | — | — | — | — | — | — | Unknown |
 | M45 | Planned recurring | — | — | Monthly, quarterly, and release-triggered | — | — | — | — | — | — | Unknown |
@@ -1074,8 +1074,12 @@ Cumulative counted project time through Milestone M30: Unknown overall; 0.40 h p
   onboarding, profile/device, tasks, reports, and support routes. Model: GPT-5; reasoning strength and original
   forecast were not separately supplied with the authorization and are recorded as Unknown rather than inferred.
 - **Workspace-shell alignment:** The owner authorized the shared Coordinator/Tester application-shell redesign at
-  `August 22, 2026 at 7:57:23 AM PDT (UTC-07:00)`. Active implementation and release validation are in progress;
-  this interval will be closed with its deployment evidence and measured duration.
+  `August 22, 2026 at 7:57:23 AM PDT (UTC-07:00)`. The active implementation and release-validation interval completed
+  at `August 22, 2026 at 8:07:06 AM PDT (UTC-07:00)` (0.16 h active, 0.00 h automated wait, 0.00 h user-blocked).
+  Commit `f4e8f53` renders the authenticated Tester portal in the same persistent application shell and left rail as
+  Coordinator Operations while retaining the protected route, wizard, task, report, and support behavior. The exact
+  merge passed the local and required GitHub portal gates, then was deployed through a hash-verified atomic document-root
+  swap with the prior directory retained for rollback; authenticated Tester and Coordinator shell acceptance passed.
 - **Start, completion, and intervals:** Active. The owner confirms the two-week Google Play closed-test phase is in progress;
   its earlier campaign-start timestamp was not supplied and is not inferred. The measured Issue #26 remediation interval ran
   from `August 16, 2026 at 5:51:14 PM PDT (UTC-07:00)` through `August 16, 2026 at 5:52:53 PM PDT (UTC-07:00)`.
@@ -1088,7 +1092,8 @@ Cumulative counted project time through Milestone M30: Unknown overall; 0.40 h p
   preparation interval completed at `August 16, 2026 at 6:00:20 PM PDT (UTC-07:00)` (0.03 h active, 0.00 h automated
   wait, 0.00 h user-blocked, 0.03 h counted). The two measured intervals plus the Tester workspace navigation
   implementation total 0.27 h; earlier campaign time remains excluded. **Confirmed current phase**. Keep each
-  remediation interval separate from tester and Play calendar waits.
+  remediation interval separate from tester and Play calendar waits. The four measured intervals, including the shared
+  workspace-shell release, total 0.43 h; earlier campaign time remains excluded.
 
 ### M43 — Production Access and Policy Approval
 
