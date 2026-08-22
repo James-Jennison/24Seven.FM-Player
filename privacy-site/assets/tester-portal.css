@@ -1,0 +1,76 @@
+.pt-checklist-dialog {
+  width: min(92vw, 52rem);
+  max-height: 88vh;
+  padding: 0;
+  border: 1px solid var(--cyan);
+  border-radius: 1rem;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 2rem 7rem #000b;
+}
+
+.pt-checklist-dialog::backdrop {
+  background: #020409d9;
+  backdrop-filter: blur(6px);
+}
+
+.pt-checklist-dialog-content {
+  max-height: 88vh;
+  overflow: auto;
+  padding: 1.25rem;
+}
+
+.pt-checklist-dialog header {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.pt-checklist-dialog h2 { margin: .25rem 0; }
+.pt-checklist-dialog header .muted { margin: .45rem 0 0; }
+
+.pt-checklist-case {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: .7rem;
+  background: var(--canvas-2);
+}
+
+.pt-checklist-case > span {
+  display: block;
+  color: var(--cyan);
+  font-size: .76rem;
+  font-weight: 800;
+}
+
+.pt-checklist-case h3 { margin: .3rem 0 .7rem; }
+.pt-checklist-case ol { margin: .6rem 0 0; padding-left: 1.3rem; }
+.pt-checklist-case li { margin: .45rem 0; color: var(--muted); }
+
+.pt-checklist-case .test-pass {
+  margin: .9rem 0 0;
+  padding: .75rem;
+  border-left: 3px solid var(--cyan);
+  background: var(--cyan-soft);
+  color: var(--muted);
+}
+
+.pt-checklist-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.pt-checklist-dialog-actions .button { margin: 0; }
+
+@media (max-width: 720px) {
+  .pt-checklist-dialog { width: min(96vw, 52rem); }
+  .pt-checklist-dialog-content { padding: 1rem; }
+}
+
+@media (max-width: 520px) {
+  .pt-checklist-dialog { width: 100vw; max-height: 100vh; border-radius: 0; }
+  .pt-checklist-dialog-content { max-height: 100vh; }
+  .pt-checklist-dialog-actions { justify-content: stretch; }
+  .pt-checklist-dialog-actions .button { width: 100%; text-align: center; }
+}

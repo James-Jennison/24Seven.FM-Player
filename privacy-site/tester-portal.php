@@ -129,6 +129,8 @@ function portalPage(string $title, string $content, string $workspaceRail = ''):
         . ':root{color-scheme:dark;--bg:#0b0e14;--card:#151b26;--line:rgba(255,255,255,.1);--muted:#aab4c7;--text:#f7f8fc;--purple:#ad7cff;--teal:#6de5d1;--amber:#ffd27a;--red:#ff9ca6}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 85% -15%,#5c2c873d,transparent 34%),var(--bg);color:var(--text);font:16px/1.5 Inter,Roboto,system-ui,sans-serif}.shell{max-width:1120px;margin:auto;padding:30px 20px 64px}.top{display:flex;justify-content:space-between;gap:18px;align-items:center;margin-bottom:30px}.brand{display:flex;gap:11px;align-items:center;font-weight:850}.brand-icon{width:34px;height:34px;border-radius:10px;object-fit:cover}.eyebrow{margin:0;color:#c3a6ff;font-size:11px;font-weight:850;letter-spacing:.12em;text-transform:uppercase}h1{margin:2px 0;font-size:32px;letter-spacing:-.04em}h2{margin:0;font-size:20px}h3{margin:0;font-size:15px}.muted{color:var(--muted)}.card{margin:18px 0;padding:23px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(145deg,#171e2b,#111722);box-shadow:0 14px 34px #00000025}.hero{padding:32px}.hero p{max-width:650px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.metric,.task{padding:16px;border:1px solid var(--line);border-radius:13px;background:#0e131d}.metric b{display:block;margin-top:7px;font-size:14px}.dot{display:inline-grid;place-items:center;width:24px;height:24px;border:1px solid #66728a;border-radius:50%;color:#7d8a9f}.done .dot{border-color:var(--teal);background:#174d47;color:var(--teal)}.step{display:flex;gap:11px;align-items:start;padding:11px 0;border-bottom:1px solid var(--line)}.step:last-child{border:0}.step b{display:block}.step small{color:var(--muted)}.two{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr);gap:18px}fieldset{border:0;margin:0;padding:0}label{display:block;margin:14px 0 6px;font-size:12px;font-weight:800;color:#cbd3e2}input,select,textarea{width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:9px;background:#0d121b;color:var(--text);font:inherit}textarea{min-height:120px}input:focus,select:focus,textarea:focus{outline:3px solid #986bff30;border-color:var(--purple)}.choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:4px 0}.choices label{display:flex;gap:8px;align-items:start;margin:0;padding:9px;border:1px solid var(--line);border-radius:9px;background:#0d121b;font-size:12px;font-weight:600}.choices input{width:auto;margin-top:2px}.button{display:inline-block;margin-top:18px;padding:10px 14px;border:0;border-radius:10px;background:linear-gradient(135deg,#b582ff,#8054f8);color:#fff;font:800 13px system-ui;cursor:pointer;text-decoration:none}.secondary{background:#273148}.pill{display:inline-flex;gap:5px;align-items:center;padding:5px 8px;border-radius:999px;background:#193e39;color:#9cf5e4;font-size:11px;font-weight:850}.pill.pending{background:#493b22;color:#ffdb8d}.pill.blocked{background:#472c35;color:#ffb4bc}.notice{padding:11px 13px;border-radius:10px;background:#183d37;color:#bffcf1}.error{background:#4a2730;color:#ffdce1}.admin-preview{border:1px solid #b685ff66;background:#332551;color:#eadfff}.task p{margin:6px 0;color:var(--muted);font-size:13px}.task ul{padding-left:19px;color:#d6deed;font-size:13px}.right{float:right}.login{max-width:530px;margin:9vh auto}.login .card{padding:30px}.small{font-size:12px}@media(max-width:760px){.grid,.two{grid-template-columns:1fr}.choices{grid-template-columns:1fr}.shell{padding:20px 14px}.hero{padding:22px}.top{align-items:start}h1{font-size:27px}}</style></head><body>__PORTAL_SHELL_START__' . $content . '__PORTAL_SHELL_END__</body></html>';
     $portalStyleAsset = __DIR__ . '/assets/onboarding-portal.css';
     $portalStyleVersion = is_file($portalStyleAsset) ? substr((string) hash_file('sha256', $portalStyleAsset), 0, 12) : 'portal';
+    $checklistStyleAsset = __DIR__ . '/assets/tester-portal.css';
+    $checklistStyleVersion = is_file($checklistStyleAsset) ? substr((string) hash_file('sha256', $checklistStyleAsset), 0, 12) : 'checklist-style';
     $wizardStyleAsset = __DIR__ . '/assets/onboarding-wizard.css';
     $wizardStyleVersion = is_file($wizardStyleAsset) ? substr((string) hash_file('sha256', $wizardStyleAsset), 0, 12) : 'wizard-style';
     $shellStart = '<a class="skip-link" href="#tester-portal">Skip to tester portal</a>';
@@ -140,12 +142,14 @@ function portalPage(string $title, string $content, string $workspaceRail = ''):
         $shellStart .= '<div class="app-shell">' . $workspaceRail . '<main id="tester-portal" class="desktop tester-desktop">';
         $shellEnd = '</main></div>';
     }
-    $page = str_replace('</style></head>', '</style><link rel="stylesheet" href="/assets/onboarding-portal.css?v=' . e($portalStyleVersion) . '"><link rel="stylesheet" href="/assets/onboarding-wizard.css?v=' . e($wizardStyleVersion) . '"></head>', $page);
+    $page = str_replace('</style></head>', '</style><link rel="stylesheet" href="/assets/onboarding-portal.css?v=' . e($portalStyleVersion) . '"><link rel="stylesheet" href="/assets/tester-portal.css?v=' . e($checklistStyleVersion) . '"><link rel="stylesheet" href="/assets/onboarding-wizard.css?v=' . e($wizardStyleVersion) . '"></head>', $page);
     $page = str_replace('__PORTAL_SHELL_START__', $shellStart, $page);
     $page = str_replace('__PORTAL_SHELL_END__', '<script>(function(){const form=document.querySelector("form input[name=action][value=save_profile]")?.form;if(!form)return;const required=["display_name","device","android_version","primary_station","device_form_factor","network_capabilities","audio_capabilities","accessibility_capabilities","testing_comfort","controlled_actions","testing_availability"];const missing=new URLSearchParams(location.search).get("profile_missing")?.split(",")||[];for(const name of required){const group=form.querySelector(`[name="${name}[]"]`)?.closest(".choices");const control=group||form.querySelector(`[name="${name}"]`);if(!control)continue;const label=group?group.previousElementSibling:control.previousElementSibling;const id=`profile-${name}`;control.id=id;if(label?.tagName==="LABEL"){label.id=`${id}-label`;if(!label.querySelector(".required-mark")){label.insertAdjacentHTML("beforeend",` <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden"> (required)</span>`);}if(group){group.setAttribute("role","group");group.setAttribute("aria-labelledby",label.id);group.setAttribute("aria-required","true");}}if(missing.includes(name)){control.classList.add("profile-field-missing");}}const first=missing.map(name=>document.getElementById(`profile-${name}`)).find(Boolean);if(first){first.scrollIntoView({block:"center"});first.focus({preventScroll:true});}})();</script><script src="/assets/onboarding-profile-form.js" defer></script>' . $shellEnd, $page);
+    $checklistAsset = __DIR__ . '/assets/tester-portal.js';
+    $checklistVersion = is_file($checklistAsset) ? substr((string) hash_file('sha256', $checklistAsset), 0, 12) : 'checklist';
     $wizardAsset = __DIR__ . '/assets/onboarding-wizard.js';
     $wizardVersion = is_file($wizardAsset) ? substr((string) hash_file('sha256', $wizardAsset), 0, 12) : 'wizard';
-    $page = str_replace('</body></html>', '<script src="/assets/onboarding-wizard.js?v=' . e($wizardVersion) . '" defer></script></body></html>', $page);
+    $page = str_replace('</body></html>', '<script src="/assets/tester-portal.js?v=' . e($checklistVersion) . '" defer></script><script src="/assets/onboarding-wizard.js?v=' . e($wizardVersion) . '" defer></script></body></html>', $page);
     echo $page;
     exit;
 }
@@ -552,6 +556,34 @@ function portalAssignmentSteps(array $task, array $assignment): array
     ];
 }
 
+function portalAssignedChecklistMarkup(array $task): string
+{
+    static $caseMarkup = null;
+    if ($caseMarkup === null) {
+        $caseMarkup = [];
+        $sourcePath = __DIR__ . '/dev/tester-workspace/index.html';
+        $source = is_file($sourcePath) ? (string) file_get_contents($sourcePath) : '';
+        if ($source !== '' && preg_match_all('~<article\\b[^>]*\\bid="(pt-[0-9]+)"[^>]*>(.*?)</article>~is', $source, $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $match) {
+                $caseMarkup[strtolower($match[1])] = trim($match[2]);
+            }
+        }
+    }
+
+    $checklists = '';
+    foreach ($task['ptIds'] as $ptCase) {
+        if (!is_string($ptCase)) continue;
+        $checklist = $caseMarkup[strtolower($ptCase)] ?? '';
+        if ($checklist === '') {
+            $steps = $task['testerSteps'] ?? testerTaskInstructions($task);
+            $stepMarkup = is_array($steps) ? implode('', array_map(static fn (mixed $step): string => is_string($step) ? '<li>' . e($step) . '</li>' : '', $steps)) : '';
+            $checklist = '<span>' . e($ptCase . ' · Assigned checklist') . '</span><h3>' . e((string) $task['title']) . '</h3><ol>' . $stepMarkup . '</ol><p class="test-pass"><strong>Expected result:</strong> ' . e((string) ($task['expectedResult'] ?? 'Complete the assigned checklist within the stated safety boundary.')) . '</p>';
+        }
+        $checklists .= '<section class="pt-checklist-case">' . $checklist . '</section>';
+    }
+    return $checklists;
+}
+
 function portalRenderLogin(): never
 {
     $content = '<div class="login"><div class="top"><div class="brand"><img class="brand-icon" src="/assets/project/app-icon.png" alt=""><span>24Seven.FM Player<br><small class="muted">Closed Alpha tester portal</small></span></div></div>' . portalNotice('notice') . portalNotice('error') . '<section class="card"><p class="eyebrow">Tester self-service</p><h1>Open your tester portal</h1><p class="muted">Enter the address registered for the Closed Alpha. We will send a single-use sign-in link if it matches an active tester.</p><form method="post"><input type="hidden" name="action" value="request_link"><label for="email">Registered email</label><input id="email" name="email" type="email" autocomplete="email" required><div class="cf-turnstile" data-sitekey="' . e(TESTER_PORTAL_TURNSTILE_SITEKEY) . '" data-action="' . e(TESTER_PORTAL_TURNSTILE_ACTION) . '"></div><button class="button" type="submit">Send sign-in link</button></form><p class="muted small">Never enter a password, account credential, or verification code here.</p></section></div><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>';
@@ -607,7 +639,6 @@ function portalRenderDashboard(PDO $database, array $tester, bool $adminPreview 
         if (!is_array($task)) continue;
         $state = $assignment['task_status'] === 'blocked' ? 'blocked' : ($assignment['task_status'] === 'complete' ? '' : 'pending');
         $plan = implode('', array_map(static fn (string $step): string => '<li>' . e($step) . '</li>', portalAssignmentSteps($task, $assignment)));
-        $caseAnchor = strtolower(str_replace('PT-', 'pt-', $task['ptIds'][0]));
         $progress = assignmentReportProgress($database, (int) $assignment['id'], $task);
         $reviewSubmitted = is_string($assignment['submitted_for_review_at'] ?? null) && $assignment['submitted_for_review_at'] !== '';
         $progressText = count($progress['reported']) . ' of ' . count($progress['required']) . ' PT-case results submitted';
@@ -617,6 +648,9 @@ function portalRenderDashboard(PDO $database, array $tester, bool $adminPreview 
             $activeAssignmentCount++;
         }
         $progressMeter = '<div class="work-record-progress"><span><strong>Reporting progress</strong> ' . e($progressText) . '</span><progress value="' . count($progress['reported']) . '" max="' . max(1, count($progress['required'])) . '">' . e($progressText) . '</progress></div>';
+        $dialogId = 'pt-checklist-' . (int) $assignment['id'];
+        $assignedScope = trim((string) ($assignment['station_scope'] ?? '')) ?: (string) $task['stationScope'];
+        $checklistDialog = '<dialog id="' . e($dialogId) . '" class="pt-checklist-dialog" aria-labelledby="' . e($dialogId . '-title') . '"><div class="pt-checklist-dialog-content"><header><p class="eyebrow">Assigned PT checklist</p><h2 id="' . e($dialogId . '-title') . '">' . e($task['id'] . ' — ' . $task['title']) . '</h2><p class="muted">Only the PT case' . (count($task['ptIds']) === 1 ? '' : 's') . ' assigned with this focused task are shown. Scope: ' . e($assignedScope) . '.</p></header>' . portalAssignedChecklistMarkup($task) . '<div class="pt-checklist-dialog-actions"><button type="button" class="button secondary" data-pt-checklist-close>Close checklist</button></div></div></dialog>';
         $reviewAction = '';
         if ($reviewSubmitted) {
             $reviewAction = '<p class="notice"><strong>Submitted for Coordinator review:</strong> ' . e(portalHumanTimestamp((string) $assignment['submitted_for_review_at'])) . '. The Coordinator will record the final status.</p>';
@@ -637,7 +671,7 @@ function portalRenderDashboard(PDO $database, array $tester, bool $adminPreview 
         $reportLink = !$reviewSubmitted && $assignment['task_status'] !== 'complete'
             ? '<a class="button secondary" href="' . e(portalWorkspaceUrl('reports', $previewTesterId, ['assignment' => (int) $assignment['id']])) . '">Report a PT case</a>'
             : '';
-        $assignmentCards .= '<article class="task work-record"><div class="work-record-heading"><div><p class="eyebrow">Focused task</p><h3>' . e($task['id'] . ' — ' . $task['title']) . '</h3></div><span class="pill ' . $state . '">' . e(ucwords(str_replace('_', ' ', $assignment['task_status']))) . '</span></div><div class="work-record-context"><span><strong>PT cases</strong> ' . e(implode(', ', $task['ptIds'])) . '</span><span><strong>Scope</strong> ' . e((string) ($assignment['station_scope'] ?: $task['stationScope'])) . '</span></div>' . assignmentLifecycleMarkup($assignment, $progress, 'tester') . $progressMeter . '<div class="work-record-instructions"><p class="task-plan-label">Complete and report</p><ol class="task-plan">' . $plan . '</ol></div><div class="work-record-actions"><a class="button secondary" href="https://dev.jamesjennison.net/tester-workspace/?task=' . rawurlencode($task['id']) . '#' . e($caseAnchor) . '">Open the detailed PT checklist</a>' . $reportLink . '</div>' . $reviewAction . '</article>';
+        $assignmentCards .= '<article class="task work-record"><div class="work-record-heading"><div><p class="eyebrow">Focused task</p><h3>' . e($task['id'] . ' — ' . $task['title']) . '</h3></div><span class="pill ' . $state . '">' . e(ucwords(str_replace('_', ' ', $assignment['task_status']))) . '</span></div><div class="work-record-context"><span><strong>PT cases</strong> ' . e(implode(', ', $task['ptIds'])) . '</span><span><strong>Scope</strong> ' . e((string) ($assignment['station_scope'] ?: $task['stationScope'])) . '</span></div>' . assignmentLifecycleMarkup($assignment, $progress, 'tester') . $progressMeter . '<div class="work-record-instructions"><p class="task-plan-label">Complete and report</p><ol class="task-plan">' . $plan . '</ol></div><div class="work-record-actions"><button type="button" class="button secondary" data-pt-checklist-open="' . e($dialogId) . '" aria-haspopup="dialog">Open the detailed PT checklist</button>' . $reportLink . '</div>' . $reviewAction . '</article>' . $checklistDialog;
     }
     if ($assignmentCards === '') $assignmentCards = '<article class="task"><h3>No focused task yet</h3><p>Your coordinator will match an assignment to your coverage and available setup.</p></article>';
     $reportForm = $reportAssignmentOptions === ''

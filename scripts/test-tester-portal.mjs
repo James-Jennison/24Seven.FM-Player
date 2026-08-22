@@ -2,11 +2,13 @@
 
 import { readFile } from "node:fs/promises";
 
-const [portal, queue, build, wizard] = await Promise.all([
+const [portal, queue, build, wizard, checklistScript, checklistStyle] = await Promise.all([
   readFile(new URL("../privacy-site/tester-portal.php", import.meta.url), "utf8"),
   readFile(new URL("../privacy-site/private-tester-queue.php", import.meta.url), "utf8"),
   readFile(new URL("validate-project-site.sh", import.meta.url), "utf8"),
   readFile(new URL("../privacy-site/assets/onboarding-wizard.js", import.meta.url), "utf8"),
+  readFile(new URL("../privacy-site/assets/tester-portal.js", import.meta.url), "utf8"),
+  readFile(new URL("../privacy-site/assets/tester-portal.css", import.meta.url), "utf8"),
 ]);
 
 function assert(condition, message) {
@@ -89,7 +91,11 @@ assert(queue.includes('function assignmentLifecycleMarkup') && portal.includes("
 assert(portal.includes("portalWorkspaceUrl('reports', $previewTesterId, ['assignment' =>") && portal.includes('$focusedAssignmentId'), "A Tester task must hand off directly to its selected PT-case reporting queue.");
 assert(queue.includes('Open Tester handoff') && queue.includes('preview_tester='), "A Coordinator assignment must link to the matching read-only Tester handoff record.");
 assert(queue.includes('function testerTaskInstructions(array $task): array') && queue.includes("'TT-08' => ['Browse and search the assigned request library"), "Shared task instructions must populate every tester assignment, not only the adaptive-layout task.");
-assert(portal.includes('https://dev.jamesjennison.net/tester-workspace/?task=') && portal.includes("str_replace('PT-', 'pt-', $task['ptIds'][0])"), "Focused-task links must open the canonical Developer Tester Workspace at the first assigned PT-case anchor, not the public recruitment page.");
+assert(portal.includes('function portalAssignedChecklistMarkup') && portal.includes("__DIR__ . '/dev/tester-workspace/index.html'"), "Assigned PT checklist dialogs must derive their exact case content from the canonical checklist source.");
+assert(portal.includes('data-pt-checklist-open') && portal.includes('class="pt-checklist-dialog"') && portal.includes('Only the PT case'), "Focused tasks must open only their assigned PT cases in an in-portal dialog.");
+assert(!portal.includes('https://dev.jamesjennison.net/tester-workspace/?task='), "Focused-task checklist actions must not navigate a tester away from the protected portal.");
+assert(checklistScript.includes('showModal') && checklistScript.includes('data-pt-checklist-close') && checklistScript.includes('event.target === dialog'), "The in-portal checklist must support modal opening, explicit close, and backdrop close behavior.");
+assert(checklistStyle.includes('.pt-checklist-dialog') && checklistStyle.includes('::backdrop'), "The in-portal checklist must provide a readable, modal-specific presentation.");
 assert(portal.includes("function portalAdminPreviewTesterId"), "The coordinator must have an authenticated tester-view preview path.");
 assert(portal.includes("($_SESSION['authenticated'] ?? false) === true"), "Tester previews must require the coordinator session.");
 assert(portal.includes("Tester previews are read-only."), "Tester previews must reject state-changing requests.");
