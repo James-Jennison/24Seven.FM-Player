@@ -18,6 +18,12 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 
 ## Portal work records
 
+### Phase 7 shared activity timeline
+
+- **Authorization and interval:** Authorized and started `August 22, 2026 at 11:38:50 AM PDT (UTC-07:00)`; in progress.
+- **Scope:** Add a role-safe, read-only activity timeline derived from the existing onboarding, assignment, PT-case report, Coordinator-review, and mail-handoff evidence. Preserve all records, permissions, task/report workflows, and deployment safeguards; no new data collection or schema migration is planned.
+- **Model and forecast:** Current approved model and original forecast were not supplied; recorded as Unknown.
+
 ### Phase 6 PT-checklist runtime activation fix
 
 - **Authorization and interval:** Authorized and started `August 22, 2026 at 11:28:19 AM PDT (UTC-07:00)`; completed `August 22, 2026 at 11:33:35 AM PDT (UTC-07:00)`.

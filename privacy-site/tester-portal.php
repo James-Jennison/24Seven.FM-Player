@@ -50,7 +50,7 @@ const PORTAL_REQUIRED_PROFILE_FIELDS = [
     'controlled_actions' => 'Controlled-test preferences',
     'testing_availability' => 'Typical two-week availability',
 ];
-const PORTAL_WORKSPACE_VIEWS = ['dashboard', 'onboarding', 'profile', 'tasks', 'reports', 'support'];
+const PORTAL_WORKSPACE_VIEWS = ['dashboard', 'onboarding', 'profile', 'tasks', 'reports', 'activity', 'support'];
 
 function portalStartSession(): void
 {
@@ -108,6 +108,7 @@ function portalWorkspaceNavigation(string $activeView, ?int $previewTesterId = n
         'profile' => ['Profile & Device', '◈'],
         'tasks' => ['My Tasks', '☷'],
         'reports' => ['Report results', '≡'],
+        'activity' => ['Activity', '◷'],
         'support' => ['Support', '◌'],
     ];
     $links = '';
@@ -686,18 +687,20 @@ function portalRenderDashboard(PDO $database, array $tester, bool $adminPreview 
     $onboardingPanel = '<div class="two" data-portal-onboarding><section id="intake-profile" class="card"><p class="eyebrow">Profile &amp; Device · Steps 1–2 of 5</p><h2>Finish your tester profile</h2><p class="muted">Complete the guided profile and device coverage screens, then choose <strong>Finish Profile &amp; Continue to Install</strong>. That lets the coordinator match focused work to your setup.</p>' . str_replace('Save Profile &amp; Device details', 'Finish Profile &amp; Continue to Install', $profileForm) . $optInAction . $smokeTestAction . '</section><section class="card"><p class="eyebrow">Guided setup</p><h2>What happens next</h2><p class="muted">The five-step guide keeps your onboarding focused. Confirm only actions you personally completed; it does not infer installation or app activity.</p>' . $progressChecklist . '</section></div>';
     $completedOnboardingPanel = '<section class="card"><p class="eyebrow">Onboarding complete</p><h2>Your self-reported setup is recorded</h2><p class="muted">Your Profile &amp; Device details, Google Play opt-in, and first-use smoke test are each retained as separate self-confirmations. A coordinator can now assign focused work that matches your coverage.</p><p class="notice"><strong>Google Play opt-in:</strong> ' . e(portalHumanTimestamp((string) $tester['play_opt_in_confirmed_at'])) . '<br><strong>Initial smoke test:</strong> ' . e(portalHumanTimestamp((string) $tester['initial_smoke_test_confirmed_at'])) . '</p></section>' . $progressChecklist;
     $tasksPanel = '<section class="workspace-primary-card"><div><p class="eyebrow">My work queue</p><h2>' . e($activeAssignmentCount > 0 ? (string) $activeAssignmentCount . ' focused assignment' . ($activeAssignmentCount === 1 ? '' : 's') . ' in progress' : 'No focused task yet') . '</h2><p class="muted">' . e($activeAssignmentCount > 0 ? (string) $reportedCaseCount . ' of ' . (string) $requiredCaseCount . ' assigned PT-case results are recorded. Open each work record for its exact scope, safety boundary, and reporting path.' : 'Your Coordinator will add focused work when your completed device coverage is needed. Your onboarding record remains available in the meantime.') . '</p></div>' . ($activeAssignmentCount > 0 ? '<a class="button" href="' . e(portalWorkspaceUrl('reports', $previewTesterId)) . '">Report results</a>' : '<a class="button secondary" href="' . e(portalWorkspaceUrl('onboarding', $previewTesterId)) . '">View onboarding status</a>') . '</section><section class="card"><p class="eyebrow">Focused assignments</p><h2>Your task records</h2><div class="grid" style="grid-template-columns:1fr">' . $assignmentCards . '</div></section>';
+    $activityPanel = testerActivityTimeline($database, $tester, $assignments, $tasks, 'tester');
     $reportsPanel = '<section class="workspace-primary-card"><div><p class="eyebrow">Evidence queue</p><h2>Report each PT case separately</h2><p class="muted">A task moves to Coordinator review only after every assigned case has a structured tester report. The Coordinator, not the portal, records its final status.</p></div><a class="button secondary" href="' . e(portalWorkspaceUrl('tasks', $previewTesterId)) . '">Review my task records</a></section><section class="card"><p class="eyebrow">Task report</p><h2>Submit feedback for a focused task</h2><p class="muted">Submit one structured result for each assigned PT case, including Blocked when you cannot proceed. Do not include passwords, credentials, private messages, session information, or private screenshots.</p>' . $reportForm . ($reports === [] ? '' : '<h3 style="margin-top:24px">Recent reports</h3>' . implode('', array_map(static fn (array $report): string => '<p class="small"><span class="pill">' . e($report['outcome']) . '</span> ' . e($report['pt_case'] ?? 'PT case') . ' · ' . e(FEEDBACK_CATEGORIES[$report['category']] ?? FEEDBACK_CATEGORIES['other']) . ' · ' . e($report['subject']) . ' <span class="muted">' . e(portalHumanTimestamp((string) $report['created_at'])) . '</span></p>', $reports))) . '</section>';
     $nextView = $needsOnboarding ? 'onboarding' : (count($assigned) > 0 ? 'tasks' : 'dashboard');
     $nextLabel = $needsOnboarding ? 'Continue onboarding' : (count($assigned) > 0 ? 'Open my tasks' : 'View onboarding status');
     $dashboardPanel = '<section class="workspace-primary-card"><div><p class="eyebrow">Your next action</p><h2>' . e($nextLabel) . '</h2><p class="muted">' . ($needsOnboarding ? 'Finish the evidence only you can provide, then your Coordinator can safely match focused work to your setup.' : (count($assigned) > 0 ? 'Your assignment has an exact PT-case checklist, safety boundary, and reporting path ready for you.' : 'Your onboarding evidence is recorded. Your Coordinator will assign focused work when your coverage is needed.')) . '</p></div><a class="button" href="' . e(portalWorkspaceUrl($nextView, $previewTesterId)) . '">' . e($nextLabel) . '</a></section>'
         . '<section class="workspace-attention-grid" aria-label="Tester workspace overview"><a class="attention-card" href="' . e(portalWorkspaceUrl('onboarding', $previewTesterId)) . '"><span>Onboarding</span><strong>' . e($needsOnboarding ? 'Action needed' : 'Complete') . '</strong><small>' . e($needsOnboarding ? 'Continue the protected setup journey.' : 'Profile, opt-in, and smoke-test evidence are recorded.') . '</small></a><a class="attention-card" href="' . e(portalWorkspaceUrl('tasks', $previewTesterId)) . '"><span>My work</span><strong>' . e(count($assigned) > 0 ? (string) count($assigned) . ' assignment' . (count($assigned) === 1 ? '' : 's') : 'No assignment') . '</strong><small>Open the exact checklist and safety boundary for your focused work.</small></a><a class="attention-card" href="' . e(portalWorkspaceUrl('support', $previewTesterId)) . '"><span>Coordinator</span><strong>Private support</strong><small>Ask a question without placing program information in public channels.</small></a></section>'
         . $progressChecklist
-        . '<section class="card"><p class="eyebrow">Workspace</p><h2>Open a record</h2><div class="workspace-action-grid"><a href="' . e(portalWorkspaceUrl('profile', $previewTesterId)) . '"><strong>Profile &amp; Device</strong><span>Update your coverage and registered setup.</span></a><a href="' . e(portalWorkspaceUrl('tasks', $previewTesterId)) . '"><strong>My Tasks</strong><span>Read your assigned instructions and safety boundary.</span></a><a href="' . e(portalWorkspaceUrl('reports', $previewTesterId)) . '"><strong>Report results</strong><span>Record one outcome for each assigned PT case.</span></a><a href="' . e(portalWorkspaceUrl('support', $previewTesterId)) . '"><strong>Support</strong><span>Open your private Coordinator conversation.</span></a></div></section>';
+        . '<section class="card"><p class="eyebrow">Workspace</p><h2>Open a record</h2><div class="workspace-action-grid"><a href="' . e(portalWorkspaceUrl('profile', $previewTesterId)) . '"><strong>Profile &amp; Device</strong><span>Update your coverage and registered setup.</span></a><a href="' . e(portalWorkspaceUrl('tasks', $previewTesterId)) . '"><strong>My Tasks</strong><span>Read your assigned instructions and safety boundary.</span></a><a href="' . e(portalWorkspaceUrl('reports', $previewTesterId)) . '"><strong>Report results</strong><span>Record one outcome for each assigned PT case.</span></a><a href="' . e(portalWorkspaceUrl('activity', $previewTesterId)) . '"><strong>Activity</strong><span>See the evidence already recorded for your journey.</span></a><a href="' . e(portalWorkspaceUrl('support', $previewTesterId)) . '"><strong>Support</strong><span>Open your private Coordinator conversation.</span></a></div></section>';
     $pageContent = match ($view) {
         'onboarding' => $needsOnboarding ? $onboardingPanel : $completedOnboardingPanel,
         'profile' => $profilePanel . $privacyAction,
         'tasks' => $tasksPanel,
         'reports' => $reportsPanel,
+        'activity' => $activityPanel,
         'support' => portalChatPanel($database, $tester, $coordinatorName),
         default => $dashboardPanel,
     };
@@ -706,6 +709,7 @@ function portalRenderDashboard(PDO $database, array $tester, bool $adminPreview 
         'profile' => 'Profile & Device',
         'tasks' => 'My Tasks',
         'reports' => 'Report results',
+        'activity' => 'Activity',
         'support' => 'Support',
         default => 'My workspace',
     };
@@ -714,6 +718,7 @@ function portalRenderDashboard(PDO $database, array $tester, bool $adminPreview 
         'profile' => 'Maintain the device and coverage record used to match work to your actual setup.',
         'tasks' => 'Follow the exact assigned scope, safety boundary, and PT-case reporting plan.',
         'reports' => 'Submit one structured outcome for each assigned PT case.',
+        'activity' => 'Review the protected onboarding and task evidence already recorded for you.',
         'support' => 'Keep program questions and Coordinator communication in this private workspace.',
         default => 'Your protected place for onboarding evidence, focused work, results, and support. Guest testing does not require a 24Seven.FM station account.',
     };
@@ -726,6 +731,7 @@ function portalRenderDashboard(PDO $database, array $tester, bool $adminPreview 
         'profile' => 'Profile & Device',
         'tasks' => 'My tester tasks',
         'reports' => 'Tester task reports',
+        'activity' => 'Tester activity',
         'support' => 'Tester support',
         default => 'My tester portal',
     };
