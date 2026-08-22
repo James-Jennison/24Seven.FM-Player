@@ -17,6 +17,7 @@ on:
       - scripts/validate-project-site.py
       - scripts/validate-project-site.sh
       - scripts/validate-pages-transition.py
+      - .github/workflows/android.yml
       - .github/workflows/onboarding-portal-release.yml
   pull_request:
     branches:
@@ -34,6 +35,7 @@ on:
       - scripts/validate-project-site.py
       - scripts/validate-project-site.sh
       - scripts/validate-pages-transition.py
+      - .github/workflows/android.yml
       - .github/workflows/onboarding-portal-release.yml
   workflow_dispatch:
 
