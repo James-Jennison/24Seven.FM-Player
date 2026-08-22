@@ -428,7 +428,7 @@ active execution.
 | M39 | Planned | — | — | 1–2 active d | — | — | — | — | — | — | Unknown |
 | M40 | Planned after M39 | — | — | 3–10 calendar d | — | — | — | — | — | — | Unknown |
 | M41 | Planned after M40 | — | — | 0.5–1 active d | — | — | — | — | — | — | Unknown |
-| M42 | Active · owner-confirmed two-week closed test | `August 16, 2026 at 5:51:14 PM PDT (UTC-07:00)` first recorded remediation interval; earlier campaign start not supplied | — | 3–5 calendar wk | 0.43 h recorded Issue #26 fix, v3 preparation, Tester route navigation, and shared workspace-shell release | 0.00 h | Earlier campaign time unmeasured | 0.43 h recorded | ≥0.43 h recorded intervals | Not assessable while active | Confirmed current phase |
+| M42 | Active · owner-confirmed two-week closed test | `August 16, 2026 at 5:51:14 PM PDT (UTC-07:00)` first recorded remediation interval; earlier campaign start not supplied | — | 3–5 calendar wk | 0.51 h recorded Issue #26 fix, v3 preparation, Tester route navigation, shared workspace-shell release, and rail legibility correction | 0.00 h | Earlier campaign time unmeasured | 0.51 h recorded | ≥0.51 h recorded intervals | Not assessable while active | Confirmed current phase |
 | M43 | Planned after M42 | — | — | 1–2 calendar wk | — | — | — | — | — | — | Unknown |
 | M44 | Planned after M43 | — | — | 1–4 calendar wk | — | — | — | — | — | — | Unknown |
 | M45 | Planned recurring | — | — | Monthly, quarterly, and release-triggered | — | — | — | — | — | — | Unknown |
@@ -1081,8 +1081,11 @@ Cumulative counted project time through Milestone M30: Unknown overall; 0.40 h p
   merge passed the local and required GitHub portal gates, then was deployed through a hash-verified atomic document-root
   swap with the prior directory retained for rollback; authenticated Tester and Coordinator shell acceptance passed.
 - **Workspace-rail legibility:** The owner authorized correction of the shared rail label treatment at
-  `August 22, 2026 at 8:14:41 AM PDT (UTC-07:00)`. Active implementation and release validation are in progress;
-  this interval will be closed with its deployment evidence and measured duration.
+  `August 22, 2026 at 8:14:41 AM PDT (UTC-07:00)`. The active implementation and release-validation interval completed
+  at `August 22, 2026 at 8:19:40 AM PDT (UTC-07:00)` (0.08 h active, 0.00 h automated wait, 0.00 h user-blocked).
+  Commit `069d20e` changes both workspace rails to readable icon-and-label rows on desktop while retaining the compact
+  icon-only mobile rail. The exact merge passed the local and required GitHub portal gates, was deployed by a
+  hash-verified atomic swap with rollback retained, and passed authenticated Coordinator and Tester rail acceptance.
 - **Start, completion, and intervals:** Active. The owner confirms the two-week Google Play closed-test phase is in progress;
   its earlier campaign-start timestamp was not supplied and is not inferred. The measured Issue #26 remediation interval ran
   from `August 16, 2026 at 5:51:14 PM PDT (UTC-07:00)` through `August 16, 2026 at 5:52:53 PM PDT (UTC-07:00)`.
@@ -1096,7 +1099,7 @@ Cumulative counted project time through Milestone M30: Unknown overall; 0.40 h p
   wait, 0.00 h user-blocked, 0.03 h counted). The two measured intervals plus the Tester workspace navigation
   implementation total 0.27 h; earlier campaign time remains excluded. **Confirmed current phase**. Keep each
   remediation interval separate from tester and Play calendar waits. The four measured intervals, including the shared
-  workspace-shell release, total 0.43 h; earlier campaign time remains excluded.
+  workspace-shell release, and rail legibility correction total 0.51 h; earlier campaign time remains excluded.
 
 ### M43 — Production Access and Policy Approval
 
