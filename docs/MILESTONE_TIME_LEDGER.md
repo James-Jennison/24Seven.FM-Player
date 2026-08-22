@@ -1086,6 +1086,9 @@ Cumulative counted project time through Milestone M30: Unknown overall; 0.40 h p
   Commit `069d20e` changes both workspace rails to readable icon-and-label rows on desktop while retaining the compact
   icon-only mobile rail. The exact merge passed the local and required GitHub portal gates, was deployed by a
   hash-verified atomic swap with rollback retained, and passed authenticated Coordinator and Tester rail acceptance.
+- **Workspace chrome parity:** The owner authorized correction of the Coordinator rail divergence at
+  `August 22, 2026 at 8:39:00 AM PDT (UTC-07:00)`. Active implementation and release validation are in progress;
+  this interval will be closed with its deployment evidence and measured duration.
 - **Start, completion, and intervals:** Active. The owner confirms the two-week Google Play closed-test phase is in progress;
   its earlier campaign-start timestamp was not supplied and is not inferred. The measured Issue #26 remediation interval ran
   from `August 16, 2026 at 5:51:14 PM PDT (UTC-07:00)` through `August 16, 2026 at 5:52:53 PM PDT (UTC-07:00)`.
