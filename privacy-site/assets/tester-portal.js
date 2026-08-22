@@ -7,26 +7,33 @@
     }
   }
 
-  document.querySelectorAll('[data-pt-checklist-open]').forEach((trigger) => {
+  function openChecklist(trigger) {
     const dialogId = trigger.getAttribute('data-pt-checklist-open');
     const dialog = dialogId ? document.getElementById(dialogId) : null;
-    if (!dialog) return;
+    if (!dialog || dialog.open) return;
 
-    trigger.addEventListener('click', () => {
-      if (dialog.open) return;
-      if (typeof dialog.showModal === 'function') {
-        dialog.showModal();
-      } else {
-        dialog.setAttribute('open', '');
-      }
-    });
+    if (typeof dialog.showModal === 'function') {
+      dialog.showModal();
+    } else {
+      dialog.setAttribute('open', '');
+    }
+  }
 
-    dialog.addEventListener('click', (event) => {
-      if (event.target === dialog) closeChecklist(dialog);
-    });
+  document.addEventListener('click', (event) => {
+    const element = event.target instanceof Element ? event.target : null;
+    const trigger = element?.closest('[data-pt-checklist-open]');
+    if (trigger) {
+      openChecklist(trigger);
+      return;
+    }
 
-    dialog.querySelectorAll('[data-pt-checklist-close]').forEach((closeButton) => {
-      closeButton.addEventListener('click', () => closeChecklist(dialog));
-    });
+    const closeButton = element?.closest('[data-pt-checklist-close]');
+    if (closeButton) {
+      const dialog = closeButton.closest('dialog');
+      if (dialog) closeChecklist(dialog);
+      return;
+    }
+
+    if (element instanceof HTMLDialogElement) closeChecklist(element);
   });
 })();

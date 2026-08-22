@@ -94,7 +94,7 @@ assert(queue.includes('function testerTaskInstructions(array $task): array') && 
 assert(portal.includes('function portalAssignedChecklistMarkup') && portal.includes("__DIR__ . '/dev/tester-workspace/index.html'"), "Assigned PT checklist dialogs must derive their exact case content from the canonical checklist source.");
 assert(portal.includes('data-pt-checklist-open') && portal.includes('class="pt-checklist-dialog"') && portal.includes('Only the PT case'), "Focused tasks must open only their assigned PT cases in an in-portal dialog.");
 assert(!portal.includes('https://dev.jamesjennison.net/tester-workspace/?task='), "Focused-task checklist actions must not navigate a tester away from the protected portal.");
-assert(checklistScript.includes('showModal') && checklistScript.includes('data-pt-checklist-close') && checklistScript.includes('event.target === dialog'), "The in-portal checklist must support modal opening, explicit close, and backdrop close behavior.");
+assert(checklistScript.includes('showModal') && checklistScript.includes('data-pt-checklist-close') && checklistScript.includes("document.addEventListener('click'") && checklistScript.includes('instanceof HTMLDialogElement'), "The in-portal checklist must support delegated modal opening, explicit close, and backdrop close behavior.");
 assert(checklistStyle.includes('.pt-checklist-dialog') && checklistStyle.includes('::backdrop'), "The in-portal checklist must provide a readable, modal-specific presentation.");
 assert(portal.includes("function portalAdminPreviewTesterId"), "The coordinator must have an authenticated tester-view preview path.");
 assert(portal.includes("($_SESSION['authenticated'] ?? false) === true"), "Tester previews must require the coordinator session.");
