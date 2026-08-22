@@ -9,6 +9,7 @@ on:
       - privacy-site/**
       - docs/project-site-migration.md
       - docs/MILESTONE_TIME_LEDGER.md
+      - docs/ONBOARDING_PORTAL_TIME_LEDGER.md
       - scripts/build-project-site.sh
       - scripts/prepare-project-site.sh
       - scripts/prepare-pages-transition.sh
@@ -25,6 +26,7 @@ on:
       - privacy-site/**
       - docs/project-site-migration.md
       - docs/MILESTONE_TIME_LEDGER.md
+      - docs/ONBOARDING_PORTAL_TIME_LEDGER.md
       - scripts/build-project-site.sh
       - scripts/prepare-project-site.sh
       - scripts/prepare-pages-transition.sh

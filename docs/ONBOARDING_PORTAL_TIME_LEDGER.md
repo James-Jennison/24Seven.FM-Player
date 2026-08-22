@@ -1,6 +1,6 @@
 # Onboarding Portal Time Ledger
 
-Last updated: `August 22, 2026 at 8:52:55 AM PDT (UTC-07:00)`
+Last updated: `August 22, 2026 at 8:59:21 AM PDT (UTC-07:00)`
 
 This is the canonical time-accounting record for the protected 24Seven.FM Player onboarding portal: the Tester workspace, Coordinator workspace, onboarding wizard, assignment and reporting flows, and their safe website releases. It is deliberately independent of the Player Android and Play-operation milestones in `MILESTONE_TIME_LEDGER.md`.
 
@@ -10,11 +10,11 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 
 | Measure | Value | Qualification |
 | --- | ---: | --- |
-| Completed measured portal intervals | 4 | Route-based Tester workspace and shared shell/rail refinements. |
-| Active portal time | 0.50 h | Completed intervals only; the active Phase 1 redesign remains open. |
-| Automated wait | 0.00 h | Completed intervals only. |
+| Completed measured portal intervals | 5 | Route-based Tester workspace, shared shell/rail refinements, and Phase 1 workbench redesign. |
+| Active portal time | 0.69 h | Completed intervals only. |
+| Automated wait | 0.01 h | Measured GitHub workflow wait during the Phase 1 redesign. |
 | User-blocked time | 0.00 h | Completed intervals only. |
-| Counted portal time | 0.50 h | Active plus automated wait. |
+| Counted portal time | 0.70 h | Active plus automated wait. |
 
 ## Portal work records
 
@@ -48,7 +48,7 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 
 ### Phase 1 Frappe/Backstage-inspired workspace redesign
 
-- **Authorization and start:** Authorized and started `August 22, 2026 at 8:47:21 AM PDT (UTC-07:00)`.
-- **Status:** In progress. This interval will be closed here after the stable Tester/Coordinator home and queue anatomy has passed portal validation, review, and the approved atomic deployment/acceptance sequence.
-- **Scope:** Shared application-shell design primitives, role-specific Tester dashboard and Coordinator queue anatomy, and removal of the page-within-a-page feeling without changing protected routes, wizard gating, tasks, reporting, Coordinator actions, or deployment safeguards.
+- **Authorization and interval:** Authorized and started `August 22, 2026 at 8:47:21 AM PDT (UTC-07:00)`; completed `August 22, 2026 at 8:59:21 AM PDT (UTC-07:00)`.
+- **Measured time:** 0.19 h active, 0.01 h automated wait, 0.00 h user-blocked, 0.20 h counted.
+- **Scope and evidence:** Commit `40b52b8` creates shared page anatomy, role-specific Tester next-action cards, and Coordinator attention/record queues, replacing the rendered freeform panel canvas. Protected routes, wizard gating, assignment, reporting, mail, Coordinator actions, and deployment safeguards remain unchanged. The exact merged commit passed the full portal release gate, then a hash-verified atomic document-root swap deployed it with the previous live directory retained for rollback. Origin HTTP/HTTPS and public HTTPS returned 200 for both protected portal routes. Signed-in acceptance confirmed the common header, primary workbench, and three attention cards for both roles; Tester retains six routes and Coordinator exposes one stable record-queue grid with no freeform canvas.
 - **Model and forecast:** GPT-5.6 Terra High; original forecast Unknown.
