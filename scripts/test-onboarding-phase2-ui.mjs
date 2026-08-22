@@ -17,10 +17,10 @@ assert(queue.includes('?email=1') && queue.includes('?live_chat=1'), "Coordinato
 assert(queue.includes('/assets/onboarding-portal.css') && queue.includes('global-rail'), "Coordinator routes must use the approved workspace rail and shared visual treatment.");
 assert(queue.includes('operations-workspace') && queue.includes('Five-stage evidence path') && queue.includes('boardCounts'), "Coordinator Operations must preserve the approved compact five-stage workspace hierarchy.");
 assert(queue.includes('?email=1&compose_for='), "Profile-detail requests must land in the dedicated Email workspace with the recipient preserved.");
-assert(portal.includes('/assets/onboarding-portal.css') && portal.includes('portal-preview-shell'), "Tester routes must use the same approved workspace visual treatment.");
+assert(portal.includes('/assets/onboarding-portal.css') && portal.includes('portal-preview-shell') && portal.includes('class="app-shell"') && portal.includes('class="desktop tester-desktop"'), "Tester routes must use the same approved workspace visual treatment.");
 assert(portal.includes('portalWorkspaceNavigation') && portal.includes('data-portal-view') && portal.includes("'support' => portalChatPanel"), "Tester routes must provide separate navigation for dashboard, onboarding, profile, tasks, reports, and support.");
 assert(workspaceStyles.includes('.global-rail') && workspaceStyles.includes('.window') && workspaceStyles.includes('@media(max-width:720px)'), "The promoted workspace styling must preserve its rail, window, and responsive behavior.");
-assert(workspaceStyles.includes('.tester-workspace-nav') && workspaceStyles.includes('.workspace-action-grid'), "Tester workspace navigation must retain responsive route controls.");
+assert(workspaceStyles.includes('.tester-desktop') && workspaceStyles.includes('.workspace-action-grid'), "Tester workspace pages must use the shared desktop shell with responsive route controls.");
 assert(queue.includes('Draft preview') && queue.includes('exact version is preserved in the sent archive'), "Coordinator Email must provide a resolved review step and archived delivery evidence.");
 assert(queue.includes("renderPage('Live Chat — ' . (string) $selected['display_name']"), "Coordinator detached chat must use the selected tester name in its document title.");
 assert(portal.includes("portalPage('Live Chat — ' . $coordinatorName"), "Tester detached chat must use the assigned coordinator name in its document title.");
