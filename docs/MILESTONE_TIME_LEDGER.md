@@ -428,7 +428,7 @@ active execution.
 | M39 | Planned | — | — | 1–2 active d | — | — | — | — | — | — | Unknown |
 | M40 | Planned after M39 | — | — | 3–10 calendar d | — | — | — | — | — | — | Unknown |
 | M41 | Planned after M40 | — | — | 0.5–1 active d | — | — | — | — | — | — | Unknown |
-| M42 | Active · owner-confirmed two-week closed test | `August 16, 2026 at 5:51:14 PM PDT (UTC-07:00)` first recorded remediation interval; earlier campaign start not supplied | — | 3–5 calendar wk | 0.06 h recorded Issue #26 fix and v3 preparation | 0.00 h | Earlier campaign time unmeasured | 0.06 h recorded | ≥0.06 h recorded intervals | Not assessable while active | Confirmed current phase |
+| M42 | Active · owner-confirmed two-week closed test | `August 16, 2026 at 5:51:14 PM PDT (UTC-07:00)` first recorded remediation interval; earlier campaign start not supplied | — | 3–5 calendar wk | 0.27 h recorded Issue #26 fix, v3 preparation, and Tester workspace navigation | 0.00 h | Earlier campaign time unmeasured | 0.27 h recorded | ≥0.27 h recorded intervals | Not assessable while active | Confirmed current phase |
 | M43 | Planned after M42 | — | — | 1–2 calendar wk | — | — | — | — | — | — | Unknown |
 | M44 | Planned after M43 | — | — | 1–4 calendar wk | — | — | — | — | — | — | Unknown |
 | M45 | Planned recurring | — | — | Monthly, quarterly, and release-triggered | — | — | — | — | — | — | Unknown |
@@ -1066,13 +1066,13 @@ Cumulative counted project time through Milestone M30: Unknown overall; 0.40 h p
 
 - **Objective:** Maintain qualifying tester continuity, collect structured feedback, fix/retest findings, review Play
   health, and satisfy campaign exit criteria.
-- **Tester workspace navigation implementation (in progress):** The owner authorized the existing authenticated Tester
-  workspace to become a route-based multi-page experience on `August 22, 2026 at 7:29:35 AM PDT (UTC-07:00)`.
-  The active interval begins at that time. Scope: preserve the existing wizard, protected session, database, access
-  controls, task reporting, and live deployment rollback while separating the completed tester experience into
-  dashboard, onboarding, profile/device, tasks, reports, and support routes. Model: GPT-5; reasoning strength and
-  original forecast were not separately supplied with the authorization and are recorded as Unknown rather than
-  inferred.
+- **Tester workspace navigation implementation:** The owner authorized the existing authenticated Tester workspace to
+  become a route-based multi-page experience on `August 22, 2026 at 7:29:35 AM PDT (UTC-07:00)`. The active interval
+  completed at `August 22, 2026 at 7:41:56 AM PDT (UTC-07:00)` (0.21 h active, 0.00 h automated wait, 0.00 h
+  user-blocked). Scope and outcome: retain the existing wizard, protected session, database, access controls, task
+  reporting, and live deployment rollback while separating the completed tester experience into dashboard,
+  onboarding, profile/device, tasks, reports, and support routes. Model: GPT-5; reasoning strength and original
+  forecast were not separately supplied with the authorization and are recorded as Unknown rather than inferred.
 - **Start, completion, and intervals:** Active. The owner confirms the two-week Google Play closed-test phase is in progress;
   its earlier campaign-start timestamp was not supplied and is not inferred. The measured Issue #26 remediation interval ran
   from `August 16, 2026 at 5:51:14 PM PDT (UTC-07:00)` through `August 16, 2026 at 5:52:53 PM PDT (UTC-07:00)`.
@@ -1083,8 +1083,9 @@ Cumulative counted project time through Milestone M30: Unknown overall; 0.40 h p
   Issue #26 reports a reproducible Android 16 phone failure in PT-12; the focused physical-Android regression is passing.
   The owner authorized the next closed-test update at `August 16, 2026 at 5:58:38 PM PDT (UTC-07:00)`; its version-3
   preparation interval completed at `August 16, 2026 at 6:00:20 PM PDT (UTC-07:00)` (0.03 h active, 0.00 h automated
-  wait, 0.00 h user-blocked, 0.03 h counted). The two measured intervals total 0.06 h; earlier campaign time remains
-  excluded. **Confirmed current phase**. Keep each remediation interval separate from tester and Play calendar waits.
+  wait, 0.00 h user-blocked, 0.03 h counted). The two measured intervals plus the Tester workspace navigation
+  implementation total 0.27 h; earlier campaign time remains excluded. **Confirmed current phase**. Keep each
+  remediation interval separate from tester and Play calendar waits.
 
 ### M43 — Production Access and Policy Approval
 
