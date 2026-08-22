@@ -38,6 +38,7 @@ const CHAT_SUBMISSION_WINDOW_SECONDS = 60;
 const CHAT_SUBMISSION_MAXIMUM = 12;
 const CHAT_RETENTION_DAYS = 90;
 const ASSIGNMENT_STATUSES = ['assigned', 'in_progress', 'complete', 'blocked'];
+const COORDINATOR_QUEUE_VIEWS = ['all', 'needs_attention', 'ready_to_assign', 'smoke_test_outstanding', 'reports_awaiting_review', 'active_assignments', 'closed_work'];
 const ONBOARDING_STATUSES = ['profile_pending', 'profile_complete', 'ready', 'paused'];
 const APPLICATION_STAGES = ['pending_review', 'accepted', 'active'];
 const RECRUITMENT_SOURCE_LABELS = [
@@ -894,6 +895,84 @@ function assignmentLifecycleMarkup(array $assignment, array $progress, string $v
         $items .= '<li class="' . ($done ? 'done' : '') . '"><span aria-hidden="true">' . ($done ? '✓' : '○') . '</span><div><strong>' . e($label) . '</strong><small>' . e($detail) . '</small></div></li>';
     }
     return '<section class="assignment-lifecycle" aria-label="Assignment lifecycle"><p class="task-plan-label">Assignment lifecycle</p><ol>' . $items . '</ol></section>';
+}
+
+function coordinatorQueueView(): string
+{
+    $view = $_GET['queue'] ?? 'all';
+    return is_string($view) && in_array($view, COORDINATOR_QUEUE_VIEWS, true) ? $view : 'all';
+}
+
+function coordinatorQueueViewLabel(string $view): string
+{
+    return match ($view) {
+        'needs_attention' => 'Needs attention',
+        'ready_to_assign' => 'Ready to assign',
+        'smoke_test_outstanding' => 'Smoke test outstanding',
+        'reports_awaiting_review' => 'Reports awaiting review',
+        'active_assignments' => 'Active assignments',
+        'closed_work' => 'Completed / blocked',
+        default => 'All testers',
+    };
+}
+
+function coordinatorQueueUrl(string $view): string
+{
+    if (!in_array($view, COORDINATOR_QUEUE_VIEWS, true)) {
+        throw new InvalidArgumentException('The requested Coordinator queue is invalid.');
+    }
+    return $view === 'all' ? '/private-tester-queue.php#tester-roster' : '/private-tester-queue.php?queue=' . rawurlencode($view) . '#tester-roster';
+}
+
+/** @return array{total:int,active:int,awaiting_review:int,closed:int,blocked:int} */
+function coordinatorAssignmentSummary(array $assignments): array
+{
+    $summary = ['total' => 0, 'active' => 0, 'awaiting_review' => 0, 'closed' => 0, 'blocked' => 0];
+    foreach ($assignments as $assignment) {
+        $summary['total']++;
+        $status = (string) ($assignment['task_status'] ?? 'assigned');
+        $submittedForReview = is_string($assignment['submitted_for_review_at'] ?? null) && $assignment['submitted_for_review_at'] !== '';
+        if (in_array($status, ['assigned', 'in_progress'], true)) $summary['active']++;
+        if ($submittedForReview && in_array($status, ['assigned', 'in_progress'], true)) $summary['awaiting_review']++;
+        if (in_array($status, ['complete', 'blocked'], true)) $summary['closed']++;
+        if ($status === 'blocked') $summary['blocked']++;
+    }
+    return $summary;
+}
+
+/** @return list<string> */
+function coordinatorQueueReasons(array $tester, array $assignmentSummary): array
+{
+    $reasons = [];
+    $profile = profileSummary($tester);
+    $optedIn = is_string($tester['play_opt_in_confirmed_at'] ?? null) && $tester['play_opt_in_confirmed_at'] !== '';
+    $smokeTested = is_string($tester['initial_smoke_test_confirmed_at'] ?? null) && $tester['initial_smoke_test_confirmed_at'] !== '';
+    if (!$profile['complete']) $reasons[] = 'Profile & Device needs an update';
+    elseif (!$optedIn) $reasons[] = 'Play opt-in self-confirmation outstanding';
+    elseif (!$smokeTested) $reasons[] = 'Smoke-test self-report outstanding';
+    if ($assignmentSummary['awaiting_review'] > 0) $reasons[] = $assignmentSummary['awaiting_review'] . ' task report' . ($assignmentSummary['awaiting_review'] === 1 ? '' : 's') . ' awaiting review';
+    if ($assignmentSummary['blocked'] > 0) $reasons[] = $assignmentSummary['blocked'] . ' task' . ($assignmentSummary['blocked'] === 1 ? '' : 's') . ' blocked';
+    if ($reasons === [] && testerReadyForAssignment($tester) && $assignmentSummary['active'] === 0) $reasons[] = 'Ready for focused assignment';
+    if ($reasons === [] && $assignmentSummary['active'] > 0) $reasons[] = $assignmentSummary['active'] . ' active assignment' . ($assignmentSummary['active'] === 1 ? '' : 's');
+    if ($reasons === [] && $assignmentSummary['closed'] > 0) $reasons[] = $assignmentSummary['closed'] . ' closed task' . ($assignmentSummary['closed'] === 1 ? '' : 's');
+    return $reasons;
+}
+
+function coordinatorQueueMatches(array $tester, array $assignmentSummary, string $view): bool
+{
+    if ($view === 'all') return true;
+    $profile = profileSummary($tester);
+    $optedIn = is_string($tester['play_opt_in_confirmed_at'] ?? null) && $tester['play_opt_in_confirmed_at'] !== '';
+    $smokeTested = is_string($tester['initial_smoke_test_confirmed_at'] ?? null) && $tester['initial_smoke_test_confirmed_at'] !== '';
+    return match ($view) {
+        'needs_attention' => !$profile['complete'] || !$optedIn || !$smokeTested || $assignmentSummary['awaiting_review'] > 0 || $assignmentSummary['blocked'] > 0,
+        'ready_to_assign' => testerReadyForAssignment($tester) && $assignmentSummary['active'] === 0 && $assignmentSummary['awaiting_review'] === 0,
+        'smoke_test_outstanding' => $profile['complete'] && $optedIn && !$smokeTested,
+        'reports_awaiting_review' => $assignmentSummary['awaiting_review'] > 0,
+        'active_assignments' => $assignmentSummary['active'] > 0,
+        'closed_work' => $assignmentSummary['closed'] > 0,
+        default => false,
+    };
 }
 
 function activeTester(PDO $database, int $testerId): void
@@ -1897,11 +1976,11 @@ function renderOperationsDashboard(PDO $database, string $notice = '', string $e
 {
     $tasks = taskRegistry();
     $testers = $database->query("SELECT testers.*, onboarding.onboarding_status, onboarding.reviewed_at, onboarding.orientation_email_status, onboarding.orientation_email_attempted_at, onboarding.orientation_email_attempts, onboarding.play_opt_in_confirmed_at, onboarding.initial_smoke_test_confirmed_at FROM testers LEFT JOIN tester_onboarding AS onboarding ON onboarding.tester_id = testers.id WHERE testers.status = 'active' ORDER BY testers.received_at, testers.id")->fetchAll();
-    $assignments = $database->query("SELECT tester_id, task_status FROM tester_task_assignments ORDER BY id")->fetchAll();
-    $assignmentCounts = [];
+    $assignments = $database->query("SELECT tester_id, task_status, submitted_for_review_at FROM tester_task_assignments ORDER BY id")->fetchAll();
+    $assignmentsByTester = [];
     foreach ($assignments as $assignment) {
         $id = (int) $assignment['tester_id'];
-        $assignmentCounts[$id] = ($assignmentCounts[$id] ?? 0) + 1;
+        $assignmentsByTester[$id][] = $assignment;
     }
 
     // A pending application is not a roster tester: it has not been looked at
@@ -1939,6 +2018,19 @@ function renderOperationsDashboard(PDO $database, string $notice = '', string $e
         }
     }
 
+    $queueView = coordinatorQueueView();
+    $assignmentSummaries = [];
+    $queueCounts = array_fill_keys(COORDINATOR_QUEUE_VIEWS, 0);
+    foreach ($rosterTesters as $tester) {
+        $id = (int) $tester['id'];
+        $summary = coordinatorAssignmentSummary($assignmentsByTester[$id] ?? []);
+        $assignmentSummaries[$id] = $summary;
+        foreach (COORDINATOR_QUEUE_VIEWS as $candidate) {
+            if (coordinatorQueueMatches($tester, $summary, $candidate)) $queueCounts[$candidate]++;
+        }
+    }
+    $visibleRosterTesters = array_values(array_filter($rosterTesters, static fn (array $tester): bool => coordinatorQueueMatches($tester, $assignmentSummaries[(int) $tester['id']], $queueView)));
+
     // ?compose_for=<id> pre-selects a just-accepted applicant in the compose
     // form below (see request_profile_details); only honored for a tester who
     // has actually cleared review, so a stale or tampered link cannot reopen
@@ -1961,24 +2053,32 @@ function renderOperationsDashboard(PDO $database, string $notice = '', string $e
     }
 
     $rows = '';
-    foreach ($rosterTesters as $tester) {
+    foreach ($visibleRosterTesters as $tester) {
         $id = (int) $tester['id'];
         $status = onboardingStatus($tester);
         $stage = applicationStage($tester);
         $source = $tester['recruitment_source'] ?? 'direct';
         $profile = profileSummary($tester);
         $profileText = $profile['complete'] ? 'Complete' : count($profile['missing']) . ' update' . (count($profile['missing']) === 1 ? '' : 's') . ' needed';
-        $taskText = ($assignmentCounts[$id] ?? 0) === 0 ? 'No focused task' : ($assignmentCounts[$id] . ' focused task' . ($assignmentCounts[$id] === 1 ? '' : 's'));
+        $assignmentSummary = $assignmentSummaries[$id];
+        $taskText = $assignmentSummary['total'] === 0 ? 'No focused task' : ($assignmentSummary['total'] . ' focused task' . ($assignmentSummary['total'] === 1 ? '' : 's'));
+        $queueReasonText = implode(' · ', coordinatorQueueReasons($tester, $assignmentSummary));
         $profileUpdateAction = $profile['complete']
             ? onboardingBadge($status)
             : '<a class="' . e(onboardingStatusBadgeClass('profile_pending')) . ' profile-update-action" href="/private-tester-queue.php?email=1&amp;compose_for=' . $id . '" aria-label="Compose profile-update email for ' . e($tester['display_name']) . '">Profile update needed</a>';
-        $rows .= '<article class="roster-entry"><strong>' . e($tester['display_name']) . '</strong><small>' . e($tester['device']) . ' · ' . e($tester['android_version']) . '</small><small>' . e(recruitmentSourceLabel(is_string($source) ? $source : null)) . ' · ' . e($taskText) . '</small><div class="roster-status">' . applicationStageBadge($stage) . $profileUpdateAction . '</div><small>' . e($profileText) . '</small><div class="roster-actions"><a class="link-button" href="/private-tester-queue.php?tester=' . $id . '">Open workspace</a><a class="link-button" href="/tester-portal.php?preview_tester=' . $id . '">Preview tester view</a></div></article>';
+        $rows .= '<article class="roster-entry"><strong>' . e($tester['display_name']) . '</strong><small>' . e($tester['device']) . ' · ' . e($tester['android_version']) . '</small><small>' . e(recruitmentSourceLabel(is_string($source) ? $source : null)) . ' · ' . e($taskText) . '</small><div class="roster-status">' . applicationStageBadge($stage) . $profileUpdateAction . '</div><small>' . e($profileText) . '</small><small class="queue-reason">' . e($queueReasonText) . '</small><div class="roster-actions"><a class="link-button" href="/private-tester-queue.php?tester=' . $id . '">Open workspace</a><a class="link-button" href="/tester-portal.php?preview_tester=' . $id . '">Preview tester view</a></div></article>';
     }
 
     $message = $notice === '' ? '' : '<p class="notice">' . e($notice) . '</p>';
     $message .= $error === '' ? '' : '<p class="notice error">' . e($error) . '</p>';
     $editor = '<label for="email-template">Email template</label><select id="email-template"><option value="welcome">Welcome to the 24Seven.FM Player Google Play Closed Test</option><option value="profile-update">Profile update request</option><option value="new-build">New build available</option><option value="feedback">Testing feedback request</option><option value="known-issue">Known issue / workaround</option><option value="test-session">Test session request</option><option value="reminder">Reminder to test</option><option value="tester-status">Tester status update</option><option value="release-signoff">Release candidate sign-off</option><option value="test-complete">Thank you / test complete</option><option value="" selected>Custom email</option></select><p class="muted">Choose a template or write a custom message. The queue always sends one individual, multipart email per selected tester.</p><label for="body-editor">Message</label><div class="toolbar" role="toolbar" aria-label="Email text formatting"><button type="button" data-format="bold"><strong>B</strong><span class="visually-hidden">Bold</span></button><button type="button" data-format="italic"><em>I</em><span class="visually-hidden">Italic</span></button><button type="button" data-format="underline"><u>U</u><span class="visually-hidden">Underline</span></button><button type="button" data-format="insertUnorderedList">Bullets</button><button type="button" data-format="insertOrderedList">Numbered list</button><button type="button" data-format="createLink">Link</button><button type="button" data-format="removeFormat">Clear format</button></div><div class="toolbar" role="toolbar" aria-label="Email variables"><button type="button" data-insert-variable="{{tester_name}}">Tester name</button><button type="button" data-insert-variable="{{onboarding_status}}">Onboarding status</button><button type="button" data-insert-variable="{{tester_portal_url}}">Tester portal URL</button><button type="button" data-insert-variable="{{program_name}}">Program name</button></div><p class="muted small">Variables resolve separately for each recipient and the exact sent version is retained in the protected archive.</p><div id="body-editor" class="editor" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Write a message for the selected testers."></div><input type="hidden" name="body_html" id="body-html"><noscript><label for="body">Message</label><textarea id="body" name="body" maxlength="' . MAX_BODY_LENGTH . '" required></textarea></noscript>';
     $archiveCount = (int) $database->query('SELECT COUNT(*) FROM tester_mail_archive')->fetchColumn();
+
+    $queueViewLinks = '';
+    foreach (COORDINATOR_QUEUE_VIEWS as $candidate) {
+        $active = $candidate === $queueView ? ' active' : '';
+        $queueViewLinks .= '<a class="queue-view' . $active . '" href="' . e(coordinatorQueueUrl($candidate)) . '"' . ($candidate === $queueView ? ' aria-current="page"' : '') . '><span>' . e(coordinatorQueueViewLabel($candidate)) . '</span><strong>' . (int) $queueCounts[$candidate] . '</strong></a>';
+    }
 
     $recipientRows = implode('', array_map(static function (array $tester) use ($composeForId): string {
         $checked = $composeForId !== null && (int) $tester['id'] === $composeForId ? ' checked' : '';
@@ -2000,11 +2100,15 @@ function renderOperationsDashboard(PDO $database, string $notice = '', string $e
     $fiveStageBoard = '<section class="evidence-board"><h2>Five-stage evidence path</h2><div class="board"><article class="board-column"><div class="column-head"><span>1</span><strong>Applied</strong><b>' . $boardCounts['applied'] . '</b></div><p>New applications waiting for a coordinator decision.</p></article><article class="board-column"><div class="column-head"><span>2</span><strong>Profile &amp; Device</strong><b>' . $boardCounts['profile'] . '</b></div><p>Coverage details needed before safe assignment.</p></article><article class="board-column"><div class="column-head"><span>3</span><strong>Play Opt-In</strong><b>' . $boardCounts['play_opt_in'] . '</b></div><p>Tester self-confirms their opt-in.</p></article><article class="board-column"><div class="column-head"><span>4</span><strong>Smoke Test</strong><b>' . $boardCounts['smoke_test'] . '</b></div><p>First-use evidence is recorded by the tester.</p></article><article class="board-column"><div class="column-head"><span>5</span><strong>Active assignment</strong><b>' . $boardCounts['active'] . '</b></div><p>Focused work may now be assigned.</p></article></div></section>';
     $message .= '<div class="operations-workspace">' . $fiveStageBoard;
 
+    $queueViewHeading = coordinatorQueueViewLabel($queueView);
+    $queueViewDescription = $queueView === 'all'
+        ? 'Open a tester record to review coverage, onboarding evidence, focused tasks, and private reports.'
+        : 'Showing the server-derived ' . strtolower($queueViewHeading) . ' view. Each reason is calculated from protected onboarding evidence and assignment records.';
     $content = '<header class="workspace-page-header"><div class="workspace-page-heading"><p class="eyebrow">24Seven.FM Player · Closed Alpha</p><h1>Tester operations</h1><p class="muted">A private operations workspace for moving applications through review, onboarding evidence, and focused assignment.</p></div><div class="workspace-page-actions"><span class="workspace-role">Coordinator workspace</span><a class="button secondary" href="/private-tester-queue.php?live_chat=1">Open Live Chat</a><form method="post"><input type="hidden" name="action" value="logout"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><button class="secondary" type="submit">Sign out</button></form></div></header>' . $message
-        . '<section class="workspace-primary-card"><div><p class="eyebrow">Attention queue</p><h2>' . ($stageCounts['pending_review'] > 0 ? 'Review new applications' : 'Keep onboarding moving') . '</h2><p class="muted">' . ($stageCounts['pending_review'] > 0 ? 'Applications are waiting for a Coordinator decision before they can enter the protected tester lifecycle.' : 'No application is waiting for review. Use the lifecycle and tester queues below to identify the next safe handoff.') . '</p></div><a class="button" href="#applications-awaiting-review">' . ($stageCounts['pending_review'] > 0 ? 'Open review queue' : 'View tester queue') . '</a></section>'
-        . '<section class="workspace-attention-section"><div class="workspace-attention-grid" aria-label="Coordinator attention overview"><a class="attention-card" href="#applications-awaiting-review"><span>Needs review</span><strong>' . $stageCounts['pending_review'] . '</strong><small>New applications awaiting a Coordinator decision.</small></a><a class="attention-card" href="#tester-roster"><span>Evidence in progress</span><strong>' . $stageCounts['accepted'] . '</strong><small>Accepted testers completing profile, opt-in, or smoke evidence.</small></a><a class="attention-card" href="#tester-roster"><span>Active work</span><strong>' . $stageCounts['active'] . '</strong><small>Testers eligible for or holding focused assignments.</small></a></div><p class="muted workspace-summary">Workflow: review application → confirm Profile &amp; Device → tester self-confirms Play opt-in and first-use smoke test → assign focused work. Mail events are retained for communication only; they never prove lifecycle evidence.</p></section>'
-        . '<section class="workspace-queue-section"><div class="workspace-section-heading"><div><p class="eyebrow">Operations queues</p><h2>Review and assign</h2></div><div class="workspace-section-actions"><a class="link-button" href="/private-tester-queue.php?email=1">Email (' . $archiveCount . ')</a><a class="link-button" href="/private-tester-queue.php?mail_archive=1">Sent archive</a></div></div><div class="workspace-queue-grid"><section id="applications-awaiting-review" class="applications-card"><h3>Applications awaiting review <span class="pill pending">' . count($pendingApplications) . '</span></h3>' . ($applicationRows === '' ? '<p class="muted">No new applications right now.</p>' : '<p class="muted">Review each application before accepting it into the protected tester roster.</p><div class="application-rows">' . $applicationRows . '</div>') . '</section>'
-        . '<section id="tester-roster" class="roster-card"><h3>Tester roster</h3><p class="muted">Open a tester record to review coverage, onboarding evidence, focused tasks, and private reports.</p><div class="roster-list">' . ($rows === '' ? '<p class="muted">No accepted testers yet.</p>' : $rows) . '</div></section></div></section>'
+        . '<section class="workspace-primary-card"><div><p class="eyebrow">Attention queue</p><h2>' . ($stageCounts['pending_review'] > 0 ? 'Review new applications' : ($queueView === 'all' ? 'Keep onboarding moving' : $queueViewHeading)) . '</h2><p class="muted">' . ($stageCounts['pending_review'] > 0 ? 'Applications are waiting for a Coordinator decision before they can enter the protected tester lifecycle.' : $queueViewDescription) . '</p></div><a class="button" href="' . e($stageCounts['pending_review'] > 0 ? '#applications-awaiting-review' : coordinatorQueueUrl($queueView === 'all' ? 'needs_attention' : $queueView)) . '">' . ($stageCounts['pending_review'] > 0 ? 'Open review queue' : ($queueView === 'all' ? 'Open attention queue' : 'View queue')) . '</a></section>'
+        . '<section class="workspace-attention-section"><div class="workspace-attention-grid" aria-label="Coordinator attention overview"><a class="attention-card" href="#applications-awaiting-review"><span>Needs review</span><strong>' . $stageCounts['pending_review'] . '</strong><small>New applications awaiting a Coordinator decision.</small></a><a class="attention-card" href="' . e(coordinatorQueueUrl('needs_attention')) . '"><span>Needs attention</span><strong>' . $queueCounts['needs_attention'] . '</strong><small>Onboarding follow-up, submitted reports, or blocked work.</small></a><a class="attention-card" href="' . e(coordinatorQueueUrl('reports_awaiting_review')) . '"><span>Awaiting review</span><strong>' . $queueCounts['reports_awaiting_review'] . '</strong><small>Submitted Tester work ready for a Coordinator decision.</small></a></div><p class="muted workspace-summary">Workflow: review application → confirm Profile &amp; Device → tester self-confirms Play opt-in and first-use smoke test → assign focused work. Mail events are retained for communication only; they never prove lifecycle evidence.</p></section>'
+        . '<section class="workspace-queue-section"><div class="workspace-section-heading"><div><p class="eyebrow">Operations queues</p><h2>Review and assign</h2></div><div class="workspace-section-actions"><a class="link-button" href="/private-tester-queue.php?email=1">Email (' . $archiveCount . ')</a><a class="link-button" href="/private-tester-queue.php?mail_archive=1">Sent archive</a></div></div><nav class="queue-view-bar" aria-label="Saved Coordinator views">' . $queueViewLinks . '</nav><div class="workspace-queue-grid"><section id="applications-awaiting-review" class="applications-card"><h3>Applications awaiting review <span class="pill pending">' . count($pendingApplications) . '</span></h3>' . ($applicationRows === '' ? '<p class="muted">No new applications right now.</p>' : '<p class="muted">Review each application before accepting it into the protected tester roster.</p><div class="application-rows">' . $applicationRows . '</div>') . '</section>'
+        . '<section id="tester-roster" class="roster-card"><h3>' . e($queueViewHeading) . ' <span class="pill">' . count($visibleRosterTesters) . '</span></h3><p class="muted">' . e($queueViewDescription) . '</p><div class="roster-list">' . ($rows === '' ? '<p class="muted">No active tester matches this view.</p>' : $rows) . '</div></section></div></section>'
         . '</div>'
         . '<script src="/assets/private-tester-queue.js?v=onboarding-4" defer></script>';
     renderPage('Tester operations', $content);

@@ -1,6 +1,6 @@
 # Onboarding Portal Time Ledger
 
-Last updated: `August 22, 2026 at 9:38:00 AM PDT (UTC-07:00)`
+Last updated: `August 22, 2026 at 10:25:19 AM PDT (UTC-07:00)`
 
 This is the canonical time-accounting record for the protected 24Seven.FM Player onboarding portal: the Tester workspace, Coordinator workspace, onboarding wizard, assignment and reporting flows, and their safe website releases. It is deliberately independent of the Player Android and Play-operation milestones in `MILESTONE_TIME_LEDGER.md`.
 
@@ -10,13 +10,21 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 
 | Measure | Value | Qualification |
 | --- | ---: | --- |
-| Completed measured portal intervals | 8 | Route-based Tester workspace, shared shell/rail refinements, Phase 1 workbench redesign, CI trigger isolation, Phase 2 record-page workbench, and Phase 3 assignment lifecycle handoffs. |
-| Active portal time | 1.01 h | Completed intervals only. |
-| Automated wait | 0.03 h | Measured release-gate/build and workflow waits during portal changes. |
+| Completed measured portal intervals | 9 | Route-based Tester workspace, shared shell/rail refinements, Phase 1 workbench redesign, CI trigger isolation, Phase 2 record-page workbench, Phase 3 assignment lifecycle handoffs, and Phase 4 Coordinator queue discovery. |
+| Active portal time | 1.12 h | Completed intervals only. |
+| Automated wait | 0.04 h | Measured release-gate/build and workflow waits during portal changes. |
 | User-blocked time | 0.00 h | Completed intervals only. |
-| Counted portal time | 1.04 h | Active plus automated wait. |
+| Counted portal time | 1.16 h | Active plus automated wait. |
 
 ## Portal work records
+
+### Phase 4 Coordinator queue discovery
+
+- **Authorization and interval:** Authorized and started `August 22, 2026 at 10:17:53 AM PDT (UTC-07:00)`; completed `August 22, 2026 at 10:25:19 AM PDT (UTC-07:00)`.
+- **Measured time:** 0.11 h active, 0.01 h automated wait, 0.00 h user-blocked, 0.12 h counted.
+- **Scope:** Add protected, server-derived Coordinator saved views for operational attention, assignment readiness, smoke-test follow-up, submitted reports, active work, and closed work. Preserve all existing evidence, task, reporting, mail, and permission contracts; no migration is planned.
+- **Evidence:** Commit `6f43211` adds the seven Coordinator saved views (All testers, Needs attention, Ready to assign, Smoke test outstanding, Reports awaiting review, Active assignments, and Completed / blocked), derives every count and roster reason from existing protected onboarding and assignment records, and leaves Tester permissions, task gates, reporting, mail, and database schema unchanged. The complete portal release gate passed at the exact commit. The staged artifact matched every release file hash before an atomic swap into the verified Player document root; the prior live release remains at `player.jamesjennison.net.rollback-portal-phase4-6f43211`. Origin and public HTTPS both returned 200 for the Coordinator default, attention, and report-review routes plus the Tester portal.
+- **Model and forecast:** GPT-5.6 Terra High; original forecast Unknown.
 
 ### Phase 3 assignment lifecycle and handoff workbench
 
