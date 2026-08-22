@@ -18,6 +18,12 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 
 ## Portal work records
 
+### Phase 5 in-portal PT checklist — in progress
+
+- **Authorization and start:** Authorized and started `August 22, 2026 at 10:42:20 AM PDT (UTC-07:00)`.
+- **Scope:** Keep the Tester in the protected portal by opening the assigned PT checklist in an accessible in-portal dialog rather than navigating to the separate Developer checklist catalog. Preserve the exact assigned-case boundary and all task, report, onboarding, and permission contracts; no migration is planned.
+- **Model and forecast:** GPT-5.6 Terra High; original forecast Unknown.
+
 ### Phase 4 Coordinator queue discovery
 
 - **Authorization and interval:** Authorized and started `August 22, 2026 at 10:17:53 AM PDT (UTC-07:00)`; completed `August 22, 2026 at 10:25:19 AM PDT (UTC-07:00)`.
