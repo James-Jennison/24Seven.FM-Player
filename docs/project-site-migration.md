@@ -117,6 +117,17 @@ place. Retain the former live directory as the rollback point and verify the
 public HTTPS routes after promotion. Do not reuse a document root discovered
 for another site or treat `webuzo-production-admin` as a fallback.
 
+### Closed Alpha portal release gate
+
+The protected onboarding portal has one release branch:
+`codex/onboarding-portal-production`. Before a portal commit can be promoted,
+the exact commit must have a successful **Onboarding Portal Release Gate** run.
+That workflow executes `./scripts/validate-onboarding-portal-release.sh`, which
+performs `git diff --check` and the complete reviewed-artifact validation. The
+gate has no deploy, Webuzo, Cloudflare, mail, or account permissions. A passing
+run proves only that the candidate artifact is eligible for the separately
+approved atomic Webuzo promotion; it never authorizes that promotion itself.
+
 Use Webuzo as the authority for the subdomain, user, document root, web server,
 certificate, ownership, permissions, logs, and backups.
 

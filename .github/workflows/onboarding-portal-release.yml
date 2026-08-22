@@ -1,0 +1,57 @@
+name: Onboarding Portal Release Gate
+
+on:
+  push:
+    branches:
+      - codex/onboarding-portal-production
+    paths:
+      - PRIVACY.md
+      - privacy-site/**
+      - docs/project-site-migration.md
+      - scripts/build-project-site.sh
+      - scripts/prepare-project-site.sh
+      - scripts/prepare-pages-transition.sh
+      - scripts/validate-onboarding-portal-release.sh
+      - scripts/validate-project-site.py
+      - scripts/validate-project-site.sh
+      - scripts/validate-pages-transition.py
+      - .github/workflows/onboarding-portal-release.yml
+  pull_request:
+    branches:
+      - codex/onboarding-portal-production
+    paths:
+      - PRIVACY.md
+      - privacy-site/**
+      - docs/project-site-migration.md
+      - scripts/build-project-site.sh
+      - scripts/prepare-project-site.sh
+      - scripts/prepare-pages-transition.sh
+      - scripts/validate-onboarding-portal-release.sh
+      - scripts/validate-project-site.py
+      - scripts/validate-project-site.sh
+      - scripts/validate-pages-transition.py
+      - .github/workflows/onboarding-portal-release.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: onboarding-portal-release-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Validate reviewed portal artifact
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out reviewed source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+
+      - name: Record release candidate identity
+        run: |
+          printf 'Portal branch: %s\n' "${GITHUB_REF_NAME}"
+          printf 'Portal commit: %s\n' "${GITHUB_SHA}"
+
+      - name: Build and validate the deployment artifact
+        run: ./scripts/validate-onboarding-portal-release.sh

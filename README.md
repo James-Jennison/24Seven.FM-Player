@@ -57,6 +57,18 @@ The organizational GitHub Pages site remains unchanged unless the separately app
 `PLAYER_PAGES_TRANSITION_APPROVED` repository variable is set to `true` and the Project Site workflow is dispatched or
 runs on an approved `main` push. See [the migration and deployment plan](docs/project-site-migration.md).
 
+### Closed Alpha portal release gate
+
+Portal changes are made only on `codex/onboarding-portal-production`. The
+**Onboarding Portal Release Gate** workflow must pass for the exact commit
+before its reviewed `_site/` artifact is eligible for an approved Webuzo
+promotion. It runs the complete project-site validator and never deploys,
+changes Webuzo, or sends tester email. The required release command is:
+
+```bash
+./scripts/validate-onboarding-portal-release.sh
+```
+
 ## Alpha status
 
 The canonical roadmap now runs from **M01 through M60**. **M01–M35 and the current closed-test release sequence M39–M41 are complete**. Closed-app notification delivery **M36–M38 is deferred** unless JERIC authorizes an official station-app program; **M42 is the active two-week Google Play closed-test phase**.
