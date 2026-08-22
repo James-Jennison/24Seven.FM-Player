@@ -1,6 +1,6 @@
 # Onboarding Portal Time Ledger
 
-Last updated: `August 22, 2026 at 11:33:35 AM PDT (UTC-07:00)`
+Last updated: `August 22, 2026 at 12:10:57 PM PDT (UTC-07:00)`
 
 This is the canonical time-accounting record for the protected 24Seven.FM Player onboarding portal: the Tester workspace, Coordinator workspace, onboarding wizard, assignment and reporting flows, and their safe website releases. It is deliberately independent of the Player Android and Play-operation milestones in `MILESTONE_TIME_LEDGER.md`.
 
@@ -10,18 +10,20 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 
 | Measure | Value | Qualification |
 | --- | ---: | --- |
-| Completed measured portal intervals | 11 | Route-based Tester workspace, shared shell/rail refinements, Phase 1 workbench redesign, CI trigger isolation, Phase 2 record-page workbench, Phase 3 assignment lifecycle handoffs, Phase 4 Coordinator queue discovery, Phase 5 in-portal PT checklist delivery, and its runtime activation fix. |
-| Active portal time | 1.36 h | Completed intervals only. |
-| Automated wait | 0.08 h | Measured release-gate/build and workflow waits during portal changes. |
+| Completed measured portal intervals | 12 | Route-based Tester workspace, shared shell/rail refinements, Phase 1 workbench redesign, CI trigger isolation, Phase 2 record-page workbench, Phase 3 assignment lifecycle handoffs, Phase 4 Coordinator queue discovery, Phase 5 in-portal PT checklist delivery, its runtime activation fix, and the shared activity timeline. |
+| Active portal time | 1.71 h | Completed intervals only. |
+| Automated wait | 0.09 h | Measured release-gate/build and workflow waits during portal changes. |
 | User-blocked time | 0.00 h | Completed intervals only. |
-| Counted portal time | 1.44 h | Active plus automated wait. |
+| Counted portal time | 1.80 h | Active plus automated wait. |
 
 ## Portal work records
 
 ### Phase 7 shared activity timeline
 
-- **Authorization and interval:** Authorized and started `August 22, 2026 at 11:38:50 AM PDT (UTC-07:00)`; in progress.
+- **Authorization and interval:** Authorized and started `August 22, 2026 at 11:38:50 AM PDT (UTC-07:00)`; completed `August 22, 2026 at 12:10:57 PM PDT (UTC-07:00)`.
+- **Measured time:** 0.35 h active, 0.01 h automated wait, 0.00 h user-blocked, 0.36 h counted. The unmeasured remainder of the wall-clock interval is excluded.
 - **Scope:** Add a role-safe, read-only activity timeline derived from the existing onboarding, assignment, PT-case report, Coordinator-review, and mail-handoff evidence. Preserve all records, permissions, task/report workflows, and deployment safeguards; no new data collection or schema migration is planned.
+- **Evidence:** Merged commit `1f864bd` through PR #67 adds the Tester Activity route and matching Coordinator record timeline. Entries come only from existing protected records and explicitly omit Coordinator notes, report and mail contents, and inferred delivery; accepted mail transport is labeled as not proving inbox delivery or reading. The dedicated isolated-SQLite privacy smoke and complete portal release gate passed at the merged commit. The reviewed 55-file artifact (manifest SHA-256 `0ed7d539b5e8c84b13588523dd23e629d922224e8000a1d1f58550521e2a0af4`) matched the server-side staging manifest before an atomic Player document-root promotion. The prior release remains at `player.jamesjennison.net.rollback-portal-phase7-1f864bd`. Origin HTTP/HTTPS and public HTTPS returned 200 for Tester Activity, Coordinator operations, and the shared stylesheet. Signed-in Chrome acceptance confirmed the Activity rail item and timeline in both Tester and Coordinator workspaces, using read-only navigation only.
 - **Model and forecast:** Current approved model and original forecast were not supplied; recorded as Unknown.
 
 ### Phase 6 PT-checklist runtime activation fix
