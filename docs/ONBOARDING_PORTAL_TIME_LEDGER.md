@@ -52,3 +52,9 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 - **Measured time:** 0.19 h active, 0.01 h automated wait, 0.00 h user-blocked, 0.20 h counted.
 - **Scope and evidence:** Commit `40b52b8` creates shared page anatomy, role-specific Tester next-action cards, and Coordinator attention/record queues, replacing the rendered freeform panel canvas. Protected routes, wizard gating, assignment, reporting, mail, Coordinator actions, and deployment safeguards remain unchanged. The exact merged commit passed the full portal release gate, then a hash-verified atomic document-root swap deployed it with the previous live directory retained for rollback. Origin HTTP/HTTPS and public HTTPS returned 200 for both protected portal routes. Signed-in acceptance confirmed the common header, primary workbench, and three attention cards for both roles; Tester retains six routes and Coordinator exposes one stable record-queue grid with no freeform canvas.
 - **Model and forecast:** GPT-5.6 Terra High; original forecast Unknown.
+
+### Portal CI trigger isolation
+
+- **Authorization and start:** Authorized and started `August 22, 2026 at 9:17:07 AM PDT (UTC-07:00)`.
+- **Status:** In progress. Scope is limited to making Android CI skip portal-only pull requests while retaining Android validation for Android modules, Gradle configuration/wrapper changes, and its own workflow edits. This work is recorded here, not in the Player milestone ledger.
+- **Model and forecast:** GPT-5.6 Terra High; original forecast Unknown.
