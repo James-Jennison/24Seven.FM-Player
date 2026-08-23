@@ -106,6 +106,14 @@ try {
     expectPhaseTwo((int) ($retestHandoff['source_assignment_id'] ?? 0) === $assignmentId && (string) ($retestHandoff['pt_case'] ?? '') === $task['ptIds'][0], 'The re-test handoff must preserve the original assignment and exact reported PT case.');
     expectPhaseTwo(assignmentRequiredPtCases($database, $retestAssignmentId, $task) === [$task['ptIds'][0]], 'The re-test assignment must require only the exact reported PT case.');
     expectPhaseTwo((string) $database->query('SELECT assignment_email_status FROM tester_task_assignments WHERE id = ' . $retestAssignmentId)->fetchColumn() === 'not_sent', 'Creating a re-test handoff must not send assignment email or notify the Tester.');
+    expectPhaseTwo(retestNotificationEligible($database, $retestAssignmentId), 'Only a newly created separate re-test assignment may enter the explicit one-time notification review.');
+    expectPhaseTwo(!retestNotificationEligible($database, $assignmentId), 'A normal focused assignment must never use the re-test notification action.');
+    $retestNotification = retestNotificationAssignment($database, $retestAssignmentId);
+    expectPhaseTwo(is_array($retestNotification), 'A re-test notification preview must resolve the separate assignment only.');
+    $retestMessage = assignmentMessage($task, $retestNotification, [$task['ptIds'][0]], true);
+    expectPhaseTwo(str_contains($retestMessage, 'Complete only the exact PT case listed above') && str_contains($retestMessage, 'tester-portal.php?view=tasks'), 'The re-test notification must direct the Tester to the exact focused case in the protected portal.');
+    $retestArchiveId = prepareMailArchive($database, 1, 'retest_notification', assignmentEmailSubject($task, true), $retestMessage, plainTextToHtml($retestMessage), null, $retestAssignmentId);
+    expectPhaseTwo($retestArchiveId > 0 && (string) $database->query('SELECT message_type FROM tester_mail_archive WHERE id = ' . $retestArchiveId)->fetchColumn() === 'retest_notification', 'A prepared re-test notification must retain its own archived message type without sending mail.');
     try {
         createRetestHandoff($database, $issueFeedbackId, 'Duplicate handoff must not be accepted.', false);
         throw new RuntimeException('A report must not receive a duplicate re-test assignment.');
