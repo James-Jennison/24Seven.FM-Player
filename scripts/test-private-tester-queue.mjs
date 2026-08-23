@@ -75,6 +75,11 @@ assert(endpoint.includes("const ISSUE_TRIAGE_STATES = ['needs_reproduction', 'kn
 assert(endpoint.includes('CREATE TABLE IF NOT EXISTS tester_issue_triage_events') && endpoint.includes('function recordIssueTriage(PDO $database'), "Issue triage must retain additive immutable Coordinator events.");
 assert(endpoint.includes('function renderIssueTriageQueue(PDO $database') && endpoint.includes('?issue_triage=1') && endpoint.includes('Ready for re-test records a follow-up state only.'), "Coordinator navigation must expose a dedicated non-automatic re-test queue.");
 assert(!endpoint.includes('testerActivityTimeline($database, $tester, $assignments, $tasks, $viewer, $issueTriage'), "Private triage events must not be added to the shared Tester Activity timeline.");
+assert(endpoint.includes('CREATE TABLE IF NOT EXISTS tester_retest_handoffs') && endpoint.includes('function createRetestHandoff(PDO $database'), "Explicit re-test assignments must retain a separate linked handoff record.");
+assert(endpoint.includes('function renderRetestHandoffReview(PDO $database') && endpoint.includes('?retest_handoff='), "Ready-for-re-test work must require a dedicated Coordinator review screen before assignment creation.");
+assert(endpoint.includes("assignment_email_status, created_at, updated_at) VALUES (?, ?, 'assigned'") && endpoint.includes("'not_sent'"), "A re-test handoff must create a separate portal assignment without automatic email.");
+assert(endpoint.includes('function assignmentRequiredPtCases(PDO $database') && endpoint.includes('retest_assignment_id'), "Re-test reporting must be constrained to the exact original PT case.");
+assert(endpoint.includes('This controlled re-test requires explicit Coordinator authorization.') && endpoint.includes('retest_mutation_authorized'), "A controlled re-test must receive its own explicit Coordinator authorization.");
 assert(endpoint.includes('const COORDINATOR_QUEUE_VIEWS') && endpoint.includes('function coordinatorQueueMatches') && endpoint.includes('function coordinatorAssignmentSummary'), "Coordinator operations must derive protected saved queue views from existing onboarding and assignment evidence.");
 assert(endpoint.includes("'needs_attention'") && endpoint.includes("'ready_to_assign'") && endpoint.includes("'smoke_test_outstanding'") && endpoint.includes("'reports_awaiting_review'") && endpoint.includes("'active_assignments'") && endpoint.includes("'closed_work'"), "Coordinator saved views must cover attention, readiness, smoke-test follow-up, submitted reports, active assignments, and closed work.");
 assert(endpoint.includes('class="queue-view-bar"') && endpoint.includes('Saved Coordinator views') && endpoint.includes('queue-reason'), "Operations must expose the active saved view and each tester's server-derived operational reason.");
@@ -111,7 +116,7 @@ assert(endpoint.includes("$accepted = sendAssignmentEmail($database, $config, $a
 assert(endpoint.includes("resend_assignment_email"), "Explicit assignment-email resend is missing");
 assert(endpoint.includes("MAIL_SUBMISSION_HOST"), "Assignment email must use the existing private SMTP transport");
 assert(endpoint.includes("STATION_SCOPES"), "Queue station scope persistence is missing");
-assert(endpoint.includes("assignmentMessage(array $task, array $assignment)"), "Copy assignment server packet is missing");
+assert(endpoint.includes("assignmentMessage(array $task, array $assignment"), "Copy assignment server packet is missing");
 const assignmentMessageSource = endpoint.split("function assignmentMessage")[1].split("function assignmentEmailSubject")[0];
 assert(!assignmentMessageSource.includes("$assignment['email']"), "Copy assignment must not include tester email");
 assert(!assignmentMessageSource.includes("$assignment['display_name']"), "Copy assignment must not include tester name");

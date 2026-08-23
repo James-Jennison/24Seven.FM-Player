@@ -287,7 +287,7 @@ function portalSelect(string $name, array $options, ?string $selected, string $p
 
 function portalAssignments(PDO $database, int $testerId): array
 {
-    $query = $database->prepare('SELECT id, task_id, task_status, station_scope, configuration_scope, submitted_for_review_at, created_at, updated_at FROM tester_task_assignments WHERE tester_id = ? ORDER BY created_at DESC, id DESC');
+    $query = $database->prepare('SELECT assignments.id, assignments.task_id, assignments.task_status, assignments.station_scope, assignments.configuration_scope, assignments.coordinator_note, assignments.submitted_for_review_at, assignments.created_at, assignments.updated_at, handoffs.pt_case AS retest_pt_case, handoffs.source_assignment_id AS retest_source_assignment_id, handoffs.tester_instruction AS retest_instruction FROM tester_task_assignments AS assignments LEFT JOIN tester_retest_handoffs AS handoffs ON handoffs.retest_assignment_id = assignments.id WHERE assignments.tester_id = ? ORDER BY assignments.created_at DESC, assignments.id DESC');
     $query->execute([$testerId]);
     return $query->fetchAll();
 }
@@ -506,7 +506,7 @@ function portalSubmitFeedback(PDO $database, array $tester): void
     $task = taskRegistry()[$assignment['task_id']] ?? null;
     if (!is_array($task)) throw new InvalidArgumentException('That assigned task is no longer available.');
     $ptCase = portalText('pt_case', 20, true);
-    if (!in_array($ptCase, $task['ptIds'], true)) throw new InvalidArgumentException('Choose one of the PT cases assigned with this task.');
+    if (!in_array($ptCase, assignmentRequiredPtCases($database, $assignmentId, $task), true)) throw new InvalidArgumentException('Choose one of the PT cases assigned with this task.');
     $outcome = (string) ($_POST['outcome'] ?? '');
     if (!in_array($outcome, ['pass', 'issue', 'blocked', 'note'], true)) throw new InvalidArgumentException('Choose a valid report outcome.');
     $category = (string) ($_POST['category'] ?? '');
@@ -572,16 +572,18 @@ function portalSubmitReviewClarification(PDO $database, array $tester): void
     portalRedirect('?notice=' . rawurlencode('Your clarification was submitted for Coordinator review.'));
 }
 
-function portalAssignmentSteps(array $task, array $assignment): array
+function portalAssignmentSteps(PDO $database, array $task, array $assignment): array
 {
     $scope = trim((string) ($assignment['station_scope'] ?? '')) ?: (string) $task['stationScope'];
     $configuration = trim((string) ($assignment['configuration_scope'] ?? '')) ?: 'your registered device configuration';
     $taskSteps = $task['testerSteps'] ?? [];
     if (!is_array($taskSteps) || $taskSteps === []) {
-        $taskSteps = ['Open ' . implode(', ', $task['ptIds']) . ' and complete each listed check in order. ' . $task['purpose']];
+        $taskSteps = ['Open ' . implode(', ', assignmentRequiredPtCases($database, (int) $assignment['id'], $task)) . ' and complete each listed check in order. ' . $task['purpose']];
     }
+    $retest = trim((string) ($assignment['retest_pt_case'] ?? ''));
     return [
         'Set up the assigned Player build for ' . $scope . ' on ' . $configuration . '.',
+        ...($retest === '' ? [] : ['This is a separate re-test for ' . $retest . ' only. ' . trim((string) ($assignment['retest_instruction'] ?? '')) . ' Do not re-test or report other PT cases with this assignment.']),
         ...array_values(array_filter($taskSteps, 'is_string')),
         'Expected result: ' . (is_string($task['expectedResult'] ?? null) ? $task['expectedResult'] : 'the behavior remains usable and matches the detailed PT-case acceptance criteria.'),
         'Stop at this boundary: ' . $task['safetyWarning'],
@@ -589,7 +591,7 @@ function portalAssignmentSteps(array $task, array $assignment): array
     ];
 }
 
-function portalAssignedChecklistMarkup(array $task): string
+function portalAssignedChecklistMarkup(array $task, array $requiredPtCases): string
 {
     static $caseMarkup = null;
     if ($caseMarkup === null) {
@@ -604,7 +606,7 @@ function portalAssignedChecklistMarkup(array $task): string
     }
 
     $checklists = '';
-    foreach ($task['ptIds'] as $ptCase) {
+    foreach ($requiredPtCases as $ptCase) {
         if (!is_string($ptCase)) continue;
         $checklist = $caseMarkup[strtolower($ptCase)] ?? '';
         if ($checklist === '') {
@@ -671,8 +673,8 @@ function portalRenderDashboard(PDO $database, array $tester, bool $adminPreview 
         $task = $tasks[$assignment['task_id']] ?? null;
         if (!is_array($task)) continue;
         $state = $assignment['task_status'] === 'blocked' ? 'blocked' : ($assignment['task_status'] === 'complete' ? '' : 'pending');
-        $plan = implode('', array_map(static fn (string $step): string => '<li>' . e($step) . '</li>', portalAssignmentSteps($task, $assignment)));
         $progress = assignmentReportProgress($database, (int) $assignment['id'], $task);
+        $plan = implode('', array_map(static fn (string $step): string => '<li>' . e($step) . '</li>', portalAssignmentSteps($database, $task, $assignment)));
         $latestReview = latestAssignmentReviewEvent($database, (int) $assignment['id']);
         $reviewSubmitted = is_string($assignment['submitted_for_review_at'] ?? null) && $assignment['submitted_for_review_at'] !== '';
         $reviewReturned = ($latestReview['decision'] ?? '') === 'returned' && !$reviewSubmitted;
@@ -685,7 +687,8 @@ function portalRenderDashboard(PDO $database, array $tester, bool $adminPreview 
         $progressMeter = '<div class="work-record-progress"><span><strong>Reporting progress</strong> ' . e($progressText) . '</span><progress value="' . count($progress['reported']) . '" max="' . max(1, count($progress['required'])) . '">' . e($progressText) . '</progress></div>';
         $dialogId = 'pt-checklist-' . (int) $assignment['id'];
         $assignedScope = trim((string) ($assignment['station_scope'] ?? '')) ?: (string) $task['stationScope'];
-        $checklistDialog = '<dialog id="' . e($dialogId) . '" class="pt-checklist-dialog" aria-labelledby="' . e($dialogId . '-title') . '"><div class="pt-checklist-dialog-content"><header><p class="eyebrow">Assigned PT checklist</p><h2 id="' . e($dialogId . '-title') . '">' . e($task['id'] . ' — ' . $task['title']) . '</h2><p class="muted">Only the PT case' . (count($task['ptIds']) === 1 ? '' : 's') . ' assigned with this focused task are shown. Scope: ' . e($assignedScope) . '.</p></header>' . portalAssignedChecklistMarkup($task) . '<div class="pt-checklist-dialog-actions"><button type="button" class="button secondary" data-pt-checklist-close>Close checklist</button></div></div></dialog>';
+        $retestLabel = trim((string) ($assignment['retest_pt_case'] ?? '')) === '' ? '' : 'Separate re-test · ';
+        $checklistDialog = '<dialog id="' . e($dialogId) . '" class="pt-checklist-dialog" aria-labelledby="' . e($dialogId . '-title') . '"><div class="pt-checklist-dialog-content"><header><p class="eyebrow">' . e($retestLabel) . 'Assigned PT checklist</p><h2 id="' . e($dialogId . '-title') . '">' . e($task['id'] . ' — ' . $task['title']) . '</h2><p class="muted">Only the PT case' . (count($progress['required']) === 1 ? '' : 's') . ' assigned with this focused task are shown. Scope: ' . e($assignedScope) . '.</p></header>' . portalAssignedChecklistMarkup($task, $progress['required']) . '<div class="pt-checklist-dialog-actions"><button type="button" class="button secondary" data-pt-checklist-close>Close checklist</button></div></div></dialog>';
         $reviewAction = '';
         if ($reviewReturned) {
             $reviewAction = '<section class="notice"><strong>Coordinator clarification requested:</strong> ' . nl2br(e((string) ($latestReview['tester_note'] ?? '')), false) . '<form method="post"><input type="hidden" name="action" value="submit_review_clarification"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="assignment_id" value="' . (int) $assignment['id'] . '"><label>Clarification for the Coordinator <textarea name="clarification_response" maxlength="' . PORTAL_MAX_FEEDBACK_DETAILS . '" required placeholder="Respond to the Coordinator’s requested clarification. Do not include credentials, session information, or private screenshots."></textarea></label><button class="button" type="submit">Submit clarification for review</button></form></section>';
@@ -708,7 +711,7 @@ function portalRenderDashboard(PDO $database, array $tester, bool $adminPreview 
         $reportLink = !$reviewSubmitted && !$reviewReturned && $assignment['task_status'] !== 'complete'
             ? '<a class="button secondary" href="' . e(portalWorkspaceUrl('reports', $previewTesterId, ['assignment' => (int) $assignment['id']])) . '">Report a PT case</a>'
             : '';
-        $assignmentCards .= '<article class="task work-record"><div class="work-record-heading"><div><p class="eyebrow">Focused task</p><h3>' . e($task['id'] . ' — ' . $task['title']) . '</h3></div><span class="pill ' . $state . '">' . e(ucwords(str_replace('_', ' ', $assignment['task_status']))) . '</span></div><div class="work-record-context"><span><strong>PT cases</strong> ' . e(implode(', ', $task['ptIds'])) . '</span><span><strong>Scope</strong> ' . e((string) ($assignment['station_scope'] ?: $task['stationScope'])) . '</span></div>' . assignmentLifecycleMarkup($assignment, $progress, 'tester', $latestReview) . $progressMeter . '<div class="work-record-instructions"><p class="task-plan-label">Complete and report</p><ol class="task-plan">' . $plan . '</ol></div><div class="work-record-actions"><button type="button" class="button secondary" data-pt-checklist-open="' . e($dialogId) . '" aria-haspopup="dialog">Open the detailed PT checklist</button>' . $reportLink . '</div>' . $reviewAction . '</article>' . $checklistDialog;
+        $assignmentCards .= '<article class="task work-record"><div class="work-record-heading"><div><p class="eyebrow">' . ($retestLabel === '' ? 'Focused task' : 'Focused re-test') . '</p><h3>' . e($task['id'] . ' — ' . $task['title']) . '</h3></div><span class="pill ' . $state . '">' . e(ucwords(str_replace('_', ' ', $assignment['task_status']))) . '</span></div><div class="work-record-context"><span><strong>PT cases</strong> ' . e(implode(', ', $progress['required'])) . '</span><span><strong>Scope</strong> ' . e((string) ($assignment['station_scope'] ?: $task['stationScope'])) . '</span></div>' . assignmentLifecycleMarkup($assignment, $progress, 'tester', $latestReview) . $progressMeter . '<div class="work-record-instructions"><p class="task-plan-label">Complete and report</p><ol class="task-plan">' . $plan . '</ol></div><div class="work-record-actions"><button type="button" class="button secondary" data-pt-checklist-open="' . e($dialogId) . '" aria-haspopup="dialog">Open the detailed PT checklist</button>' . $reportLink . '</div>' . $reviewAction . '</article>' . $checklistDialog;
     }
     if ($assignmentCards === '') $assignmentCards = '<article class="task"><h3>No focused task yet</h3><p>Your coordinator will match an assignment to your coverage and available setup.</p></article>';
     $reportForm = $reportAssignmentOptions === ''
