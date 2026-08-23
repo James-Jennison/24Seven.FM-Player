@@ -28,7 +28,7 @@ class AutomotiveMediaCatalogTest {
 
         val playbackItems = requireNotNull(catalog.playbackItems(listOf(stations.first())))
         assertEquals(1, playbackItems.size)
-        assertTrue(playbackItems.first().mediaId.startsWith("sst:"))
+        assertTrue(playbackItems.first().mediaId.startsWith("1980s:"))
         assertTrue(playbackItems.first().localConfiguration?.uri.toString().startsWith("https://"))
     }
 

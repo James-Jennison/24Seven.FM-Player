@@ -73,10 +73,11 @@ class BootstrapStationRepository(
             capabilities = queueCapabilities.copy(supportsSecondaryContent = true),
         ),
     )
+    private val alphabeticallyOrderedStations = stations.sortedBy { it.name }
     private val selected = MutableStateFlow(resolveStartupStation(preferences.current))
 
-    override fun availableStations(): List<Station> = stations
-    override fun observeStations(): Flow<List<Station>> = flowOf(stations)
+    override fun availableStations(): List<Station> = alphabeticallyOrderedStations
+    override fun observeStations(): Flow<List<Station>> = flowOf(alphabeticallyOrderedStations)
     override fun observeSelectedStation(): Flow<Station> = selected.asStateFlow()
     override fun observeStationPreferences(): Flow<LocalStationPreferences> = preferences.observePreferences()
 

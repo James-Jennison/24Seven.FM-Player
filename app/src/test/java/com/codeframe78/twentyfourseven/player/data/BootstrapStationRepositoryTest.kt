@@ -19,7 +19,7 @@ class BootstrapStationRepositoryTest {
         val stations = repository.observeStations().first()
 
         assertEquals(
-            listOf("sst", "1980s", "afm", "dfm", "efm"),
+            listOf("1980s", "afm", "dfm", "efm", "sst"),
             stations.map { it.id.value },
         )
     }
@@ -37,11 +37,11 @@ class BootstrapStationRepositoryTest {
 
         assertEquals(
             listOf(
-                "https://streamingsoundtracks.com/live",
                 "https://1980s.fm/live",
                 "https://adagio.fm/live",
                 "https://death.fm/live",
                 "https://entranced.fm/live",
+                "https://streamingsoundtracks.com/live",
             ),
             stations.map { station -> station.streams.single().url },
         )
@@ -59,11 +59,11 @@ class BootstrapStationRepositoryTest {
 
         assertEquals(
             listOf(
-                "https://streamingsoundtracks.com/images/logos/logo-sst-v200x200.png",
                 "https://1980s.fm/images/logos/1980s_logo-200x200.png",
                 "https://adagio.fm/images/logos/logo-afm-200x200.png",
                 "https://death.fm/images/logos/logo-dfm-200x200.png",
                 "https://entranced.fm/images/logos/logo-efm-g200x200.png",
+                "https://streamingsoundtracks.com/images/logos/logo-sst-v200x200.png",
             ),
             stations.map { station -> station.logoUrl },
         )
@@ -136,7 +136,7 @@ class BootstrapStationRepositoryTest {
         val stations = repository.observeStations().first()
 
         assertEquals(
-            listOf("sst", "1980s", "afm", "dfm", "efm"),
+            listOf("1980s", "afm", "dfm", "efm", "sst"),
             stations.filter { it.capabilities.supportsSecondaryContent }.map { it.id.value },
         )
         stations.filter { it.capabilities.supportsSecondaryContent }.forEach { station ->

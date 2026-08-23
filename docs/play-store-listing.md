@@ -16,11 +16,11 @@ Native live radio for five 24Seven.FM stations, with queues, chat and requests.
 
 Listen to all five 24Seven.FM radio stations in one fully native Android player:
 
-- StreamingSoundtracks.com
 - 1980s.FM
 - Adagio.FM
 - Death.FM
 - Entranced.FM
+- StreamingSoundtracks.com
 
 Move between stations without losing the player, continue listening in the background, and control playback from Android media controls, notifications, headsets, and Bluetooth devices. The player shows available live metadata and artwork, clearly communicates buffering or reconnection states, and preserves the selected station across restarts.
 

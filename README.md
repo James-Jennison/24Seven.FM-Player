@@ -25,7 +25,7 @@
 | :---: | :---: | :---: | :---: |
 | Native Android | **5 certified** | Android 8.0+ | Android 16 / API 36 |
 
-| StreamingSoundtracks.com | 1980s.FM | Adagio.FM | Death.FM | Entranced.FM |
+| 1980s.FM | Adagio.FM | Death.FM | Entranced.FM | StreamingSoundtracks.com |
 | :---: | :---: | :---: | :---: | :---: |
 | Soundtracks | 1980s | Classical | Extreme metal | Trance |
 

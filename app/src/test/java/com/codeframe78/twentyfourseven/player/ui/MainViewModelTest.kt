@@ -264,7 +264,7 @@ class MainViewModelTest {
         advanceUntilIdle()
 
         assertEquals(
-            listOf("sst", "1980s", "afm", "dfm", "efm"),
+            listOf("1980s", "afm", "dfm", "efm", "sst"),
             viewModel.uiState.value.accounts.map { it.station.id.value },
         )
         assertEquals(
