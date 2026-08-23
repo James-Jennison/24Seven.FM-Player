@@ -1,6 +1,6 @@
 # Onboarding Portal Time Ledger
 
-Last updated: `August 23, 2026 at 5:47:22 AM PDT (UTC-07:00)`
+Last updated: `August 23, 2026 at 5:56:39 AM PDT (UTC-07:00)`
 
 This is the canonical time-accounting record for the protected 24Seven.FM Player onboarding portal: the Tester workspace, Coordinator workspace, onboarding wizard, assignment and reporting flows, and their safe website releases. It is deliberately independent of the Player Android and Play-operation milestones in `MILESTONE_TIME_LEDGER.md`.
 
@@ -10,18 +10,20 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 
 | Measure | Value | Qualification |
 | --- | ---: | --- |
-| Completed measured portal intervals | 19 | Route-based Tester workspace, shared shell/rail refinements, Phase 1 workbench redesign, CI trigger isolation, Phase 2 record-page workbench, Phase 3 assignment lifecycle handoffs, Phase 4 Coordinator queue discovery, Phase 5 in-portal PT checklist delivery, its runtime activation fix, the shared activity timeline, its cache-resilience fix, the Activity clarity refinement, the Coordinator Work Review inbox, the Coordinator Coverage Catalog, the Issue Triage and Re-test Queue, the Explicit Re-test Handoff, and the Explicit Re-test Notification. |
-| Active portal time | 2.76 h | Completed intervals only. |
-| Automated wait | 0.25 h | Measured release-gate/build and workflow waits during portal changes. |
+| Completed measured portal intervals | 20 | Includes the completed explicit re-test closeout phase. |
+| Active portal time | 2.89 h | Completed intervals only. |
+| Automated wait | 0.28 h | Measured release-gate/build and workflow waits during portal changes. |
 | User-blocked time | 0.00 h | Completed intervals only. |
-| Counted portal time | 3.01 h | Active plus automated wait. |
+| Counted portal time | 3.17 h | Active plus automated wait. |
 
 ## Portal work records
 
 ### Phase 14 Explicit Re-test Closeout
 
-- **Authorization and interval:** Authorized and started `August 23, 2026 at 5:51:57 AM PDT (UTC-07:00)`; in progress.
+- **Authorization and interval:** Authorized and started `August 23, 2026 at 5:51:57 AM PDT (UTC-07:00)`; completed `August 23, 2026 at 5:56:39 AM PDT (UTC-07:00)`.
+- **Measured time:** 0.13 h active, 0.03 h automated wait, 0.00 h user-blocked, 0.16 h counted. The unmeasured remainder of the wall-clock interval is excluded.
 - **Scope:** Add a dedicated Coordinator-only closeout decision after a separate re-test assignment has been fully submitted and reviewed. Link the exact original Issue/Blocked PT report to its re-test result, require a checked confirmation and bounded auditable note before recording either Closed, Needs reproduction, or Known issue as a new immutable triage event, and preserve every original report, assignment, re-test assignment, review event, scope, and Tester-visible evidence. Do not auto-close, infer a passing re-test, create or modify any task, send mail, retry a notification, create external work, or expose private Coordinator notes in the Tester workspace.
+- **Evidence:** Merged commit `2895dd1` through PR #83 adds one unique linked closeout record plus a dedicated Coordinator review route. It only permits Closed, Needs reproduction, or Known issue after the separate re-test is fully reported and explicitly completed by the Coordinator; it writes a new immutable original-report triage event with a bounded note. The complete 56-file portal gate and GitHub’s required portal check passed, and the staged artifact matched the merged local manifest (SHA-256 `b9215dc1b1bfdc09e4a8a15083291cc37b01227008cfcac4dbc3ad751babee51`) before atomic promotion. Rollback: `player.jamesjennison.net.rollback-portal-phase14-2895dd1`. Origin HTTPS returned 200 for Issue triage, Re-test handoff, Re-test closeout, Work Review, and Tester Tasks. No browser tab was touched and no signed-in visual acceptance is claimed.
 - **Model and forecast:** Current approved model and original forecast were not supplied; recorded as Unknown.
 
 ### Phase 13 Explicit Re-test Notification
