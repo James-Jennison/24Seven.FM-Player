@@ -1,6 +1,6 @@
 # Onboarding Portal Time Ledger
 
-Last updated: `August 23, 2026 at 4:57:05 AM PDT (UTC-07:00)`
+Last updated: `August 23, 2026 at 5:06:23 AM PDT (UTC-07:00)`
 
 This is the canonical time-accounting record for the protected 24Seven.FM Player onboarding portal: the Tester workspace, Coordinator workspace, onboarding wizard, assignment and reporting flows, and their safe website releases. It is deliberately independent of the Player Android and Play-operation milestones in `MILESTONE_TIME_LEDGER.md`.
 
@@ -10,18 +10,20 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 
 | Measure | Value | Qualification |
 | --- | ---: | --- |
-| Completed measured portal intervals | 16 | Route-based Tester workspace, shared shell/rail refinements, Phase 1 workbench redesign, CI trigger isolation, Phase 2 record-page workbench, Phase 3 assignment lifecycle handoffs, Phase 4 Coordinator queue discovery, Phase 5 in-portal PT checklist delivery, its runtime activation fix, the shared activity timeline, its cache-resilience fix, the Activity clarity refinement, the Coordinator Work Review inbox, and the Coordinator Coverage Catalog. |
-| Active portal time | 2.31 h | Completed intervals only. |
-| Automated wait | 0.17 h | Measured release-gate/build and workflow waits during portal changes. |
+| Completed measured portal intervals | 17 | Route-based Tester workspace, shared shell/rail refinements, Phase 1 workbench redesign, CI trigger isolation, Phase 2 record-page workbench, Phase 3 assignment lifecycle handoffs, Phase 4 Coordinator queue discovery, Phase 5 in-portal PT checklist delivery, its runtime activation fix, the shared activity timeline, its cache-resilience fix, the Activity clarity refinement, the Coordinator Work Review inbox, the Coordinator Coverage Catalog, and the Issue Triage and Re-test Queue. |
+| Active portal time | 2.43 h | Completed intervals only. |
+| Automated wait | 0.19 h | Measured release-gate/build and workflow waits during portal changes. |
 | User-blocked time | 0.00 h | Completed intervals only. |
-| Counted portal time | 2.48 h | Active plus automated wait. |
+| Counted portal time | 2.62 h | Active plus automated wait. |
 
 ## Portal work records
 
 ### Phase 11 Issue Triage and Re-test Queue
 
-- **Authorization and interval:** Authorized and started `August 23, 2026 at 4:57:05 AM PDT (UTC-07:00)`; in progress.
+- **Authorization and interval:** Authorized and started `August 23, 2026 at 4:57:05 AM PDT (UTC-07:00)`; completed `August 23, 2026 at 5:06:23 AM PDT (UTC-07:00)`.
+- **Measured time:** 0.12 h active, 0.02 h automated wait, 0.00 h user-blocked, 0.14 h counted. The unmeasured remainder of the wall-clock interval is excluded.
 - **Scope:** Add a Coordinator-only issue triage queue derived from existing PT-case reports whose outcome is Issue or Blocked. Record a bounded Coordinator triage state—needs reproduction, known issue, ready for re-test, or closed—with an auditable note. Link each entry to its existing Tester, assignment, exact PT case, and report. Preserve report evidence, task/review behavior, role boundaries, privacy, mail behavior, and atomic release process. Never create a task assignment, send mail, notify a Tester, create an external ticket, or infer a retest; any future retest remains a separately explicit assignment.
+- **Evidence:** Merged commit `bc961832` through PR #77 adds the Coordinator-only Issue triage rail route and additive immutable `tester_issue_triage_events` record. Its bounded states are Needs reproduction, Known issue, Ready for re-test, and Closed; every event requires a Coordinator note and retains the originating Tester, assignment, exact PT case, and report. The isolated SQLite contract proves a triage event cannot change the assignment count, rejects an empty note, preserves immutable history, and does not expose the private Coordinator note in the shared Activity timeline. The exact merged commit passed the complete 56-file portal release gate and GitHub's required `Validate reviewed portal artifact` check; the local and staged-server manifests matched all 56 files (SHA-256 `7a81daa2b9f7bb57fbd5b68df00763e3f7cc337603f2fd3bcef8b4e541fe0ea6`) before atomic promotion. The prior live artifact remains at `player.jamesjennison.net.rollback-portal-phase11-bc961832`. Origin and public HTTPS each returned 200 for Issue triage, Coverage Catalog, Work Review, Tester Tasks, and the shared stylesheet. No browser tab was touched and no signed-in visual acceptance is claimed for this release.
 - **Model and forecast:** Current approved model and original forecast were not supplied; recorded as Unknown.
 
 ### Phase 10 Coordinator Coverage Catalog
