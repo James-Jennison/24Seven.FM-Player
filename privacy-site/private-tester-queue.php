@@ -164,7 +164,7 @@ function database(array $config): PDO
             tester_id INTEGER NOT NULL REFERENCES testers(id) ON DELETE CASCADE,
             batch_id INTEGER REFERENCES email_batches(id) ON DELETE CASCADE,
             assignment_id INTEGER REFERENCES tester_task_assignments(id) ON DELETE SET NULL,
-            message_type TEXT NOT NULL CHECK(message_type IN (\'batch\', \'orientation\', \'assignment\')),
+            message_type TEXT NOT NULL CHECK(message_type IN (\'batch\', \'orientation\', \'assignment\', \'retest_notification\')),
             subject TEXT NOT NULL,
             body TEXT NOT NULL,
             body_html TEXT NOT NULL,
@@ -327,6 +327,35 @@ function database(array $config): PDO
     $emailBatchColumns = array_column($database->query('PRAGMA table_info(email_batches)')->fetchAll(), 'name');
     if (!in_array('body_html', $emailBatchColumns, true)) {
         $database->exec('ALTER TABLE email_batches ADD COLUMN body_html TEXT');
+    }
+    $mailArchiveSchema = (string) $database->query("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'tester_mail_archive'")->fetchColumn();
+    if (!str_contains($mailArchiveSchema, 'retest_notification')) {
+        $database->beginTransaction();
+        try {
+            $database->exec("CREATE TABLE tester_mail_archive_phase13 (
+                id INTEGER PRIMARY KEY,
+                tester_id INTEGER NOT NULL REFERENCES testers(id) ON DELETE CASCADE,
+                batch_id INTEGER REFERENCES email_batches(id) ON DELETE CASCADE,
+                assignment_id INTEGER REFERENCES tester_task_assignments(id) ON DELETE SET NULL,
+                message_type TEXT NOT NULL CHECK(message_type IN ('batch', 'orientation', 'assignment', 'retest_notification')),
+                subject TEXT NOT NULL,
+                body TEXT NOT NULL,
+                body_html TEXT NOT NULL,
+                handoff_status TEXT NOT NULL CHECK(handoff_status IN ('prepared', 'accepted', 'failed')),
+                prepared_at TEXT NOT NULL,
+                attempted_at TEXT,
+                UNIQUE(batch_id, tester_id)
+            )");
+            $database->exec('INSERT INTO tester_mail_archive_phase13 (id, tester_id, batch_id, assignment_id, message_type, subject, body, body_html, handoff_status, prepared_at, attempted_at) SELECT id, tester_id, batch_id, assignment_id, message_type, subject, body, body_html, handoff_status, prepared_at, attempted_at FROM tester_mail_archive');
+            $database->exec('DROP TABLE tester_mail_archive');
+            $database->exec('ALTER TABLE tester_mail_archive_phase13 RENAME TO tester_mail_archive');
+            $database->exec('CREATE INDEX IF NOT EXISTS tester_mail_archive_recent ON tester_mail_archive(prepared_at DESC, id DESC)');
+            $database->exec('CREATE INDEX IF NOT EXISTS tester_mail_archive_tester ON tester_mail_archive(tester_id, prepared_at DESC)');
+            $database->commit();
+        } catch (Throwable $error) {
+            if ($database->inTransaction()) $database->rollBack();
+            throw $error;
+        }
     }
     $assignmentColumns = array_column($database->query('PRAGMA table_info(tester_task_assignments)')->fetchAll(), 'name');
     if (!in_array('assignment_email_status', $assignmentColumns, true)) {
@@ -941,6 +970,22 @@ function retestHandoffForAssignment(PDO $database, int $assignmentId): ?array
     $statement->execute([$assignmentId]);
     $handoff = $statement->fetch();
     return $handoff === false ? null : $handoff;
+}
+
+/** @return array{id:int,tester_id:int,station_scope:string,configuration_scope:string,coordinator_note:string,mutation_authorized:int,assignment_email_status:string,assignment_email_attempts:int}|null */
+function retestNotificationAssignment(PDO $database, int $assignmentId): ?array
+{
+    $statement = $database->prepare('SELECT id, tester_id, station_scope, configuration_scope, coordinator_note, mutation_authorized, assignment_email_status, assignment_email_attempts FROM tester_task_assignments WHERE id = ?');
+    $statement->execute([$assignmentId]);
+    $assignment = $statement->fetch();
+    return $assignment === false ? null : $assignment;
+}
+
+function retestNotificationEligible(PDO $database, int $assignmentId): bool
+{
+    $handoff = retestHandoffForAssignment($database, $assignmentId);
+    $assignment = retestNotificationAssignment($database, $assignmentId);
+    return $handoff !== null && $assignment !== null && (string) $assignment['assignment_email_status'] === 'not_sent' && (int) $assignment['assignment_email_attempts'] === 0;
 }
 
 /**
@@ -1986,11 +2031,11 @@ function assignmentInput(array $tasks, array $tester): array
     return [$task, $station, $configuration, $note, $mutationAuthorized ? 1 : 0];
 }
 
-function assignmentMessage(array $task, array $assignment, ?array $requiredPtCases = null): string
+function assignmentMessage(array $task, array $assignment, ?array $requiredPtCases = null, bool $retest = false): string
 {
     $requiredPtCases ??= array_values(array_filter($task['ptIds'] ?? [], 'is_string'));
     $lines = [
-        '24Seven.FM Player testing assignment',
+        $retest ? '24Seven.FM Player focused re-test assignment' : '24Seven.FM Player testing assignment',
         $task['id'] . ' — ' . $task['title'],
         'PT cases: ' . implode(', ', $requiredPtCases),
         'Scope: ' . ($assignment['station_scope'] !== '' ? $assignment['station_scope'] : 'Network-wide / not station-specific'),
@@ -2007,6 +2052,10 @@ function assignmentMessage(array $task, array $assignment, ?array $requiredPtCas
     if ($assignment['coordinator_note'] !== '') {
         $lines[] = 'Coordinator note: ' . $assignment['coordinator_note'];
     }
+    if ($retest) {
+        $lines[] = 'This is a separate re-test. Complete only the exact PT case listed above; do not repeat unrelated task cases.';
+        $lines[] = 'Tester portal: https://player.jamesjennison.net/tester-portal.php?view=tasks';
+    }
     $lines[] = 'Task cases: https://player.jamesjennison.net/product-testing/?task=' . rawurlencode($task['id']);
     $lines[] = 'Submit one result for each PT case.';
     return implode("\n", $lines);
@@ -2018,6 +2067,11 @@ function assignmentEmailSubject(array $task, bool $retest = false): string
 }
 
 function sendAssignmentEmail(PDO $database, array $config, int $assignmentId): bool
+{
+    return sendAssignmentEmailWithContext($database, $config, $assignmentId, false);
+}
+
+function sendAssignmentEmailWithContext(PDO $database, array $config, int $assignmentId, bool $confirmedRetestNotification, bool $claimRetestNotification = false): bool
 {
     $statement = $database->prepare('SELECT assignments.id, assignments.tester_id, assignments.task_id, assignments.station_scope, assignments.configuration_scope, assignments.coordinator_note, assignments.mutation_authorized, testers.display_name, testers.email FROM tester_task_assignments AS assignments JOIN testers ON testers.id = assignments.tester_id WHERE assignments.id = ? AND testers.status = \'active\'');
     $statement->execute([$assignmentId]);
@@ -2031,15 +2085,47 @@ function sendAssignmentEmail(PDO $database, array $config, int $assignmentId): b
         throw new RuntimeException('The assigned Tester Task is unavailable.');
     }
     $retestHandoff = retestHandoffForAssignment($database, $assignmentId);
-    $message = 'Hi ' . $assignment['display_name'] . ",\n\n" . assignmentMessage($task, $assignment, assignmentRequiredPtCases($database, $assignmentId, $task));
+    if ($retestHandoff !== null) {
+        if (!$confirmedRetestNotification) {
+            throw new InvalidArgumentException('A re-test notification must be explicitly confirmed once from its dedicated Coordinator review screen.');
+        }
+        if ($claimRetestNotification) {
+            $claim = $database->prepare("UPDATE tester_task_assignments SET assignment_email_attempts = assignment_email_attempts + 1, assignment_email_attempted_at = ?, updated_at = ? WHERE id = ? AND assignment_email_status = 'not_sent' AND assignment_email_attempts = 0");
+            $claim->execute([gmdate('c'), gmdate('c'), $assignmentId]);
+            if ($claim->rowCount() !== 1) {
+                throw new InvalidArgumentException('This re-test notification was already attempted or is no longer available.');
+            }
+        } elseif (!retestNotificationEligible($database, $assignmentId)) {
+            throw new InvalidArgumentException('A re-test notification must be explicitly confirmed once from its dedicated Coordinator review screen.');
+        }
+    }
+    $message = 'Hi ' . $assignment['display_name'] . ",\n\n" . assignmentMessage($task, $assignment, assignmentRequiredPtCases($database, $assignmentId, $task), $retestHandoff !== null);
     $subject = assignmentEmailSubject($task, $retestHandoff !== null);
     $html = plainTextToHtml($message);
-    $archiveId = prepareMailArchive($database, (int) $assignment['tester_id'], 'assignment', $subject, $message, $html, null, $assignmentId);
-    $accepted = sendIndividualMail($config, $assignment['email'], $subject, $message, $html);
-    completeMailArchive($database, $archiveId, $accepted);
-    $database->prepare('UPDATE tester_task_assignments SET assignment_email_status = ?, assignment_email_attempted_at = ?, assignment_email_attempts = assignment_email_attempts + 1, updated_at = ? WHERE id = ?')
-        ->execute([$accepted ? 'accepted' : 'failed', gmdate('c'), gmdate('c'), $assignmentId]);
+    try {
+        $archiveId = prepareMailArchive($database, (int) $assignment['tester_id'], $retestHandoff === null ? 'assignment' : 'retest_notification', $subject, $message, $html, null, $assignmentId);
+        $accepted = sendIndividualMail($config, $assignment['email'], $subject, $message, $html);
+        completeMailArchive($database, $archiveId, $accepted);
+    } catch (Throwable $error) {
+        if ($retestHandoff !== null && $claimRetestNotification) {
+            $database->prepare('UPDATE tester_task_assignments SET assignment_email_status = ?, assignment_email_attempted_at = ?, updated_at = ? WHERE id = ?')
+                ->execute(['failed', gmdate('c'), gmdate('c'), $assignmentId]);
+        }
+        throw $error;
+    }
+    if ($retestHandoff !== null && $claimRetestNotification) {
+        $database->prepare('UPDATE tester_task_assignments SET assignment_email_status = ?, assignment_email_attempted_at = ?, updated_at = ? WHERE id = ?')
+            ->execute([$accepted ? 'accepted' : 'failed', gmdate('c'), gmdate('c'), $assignmentId]);
+    } else {
+        $database->prepare('UPDATE tester_task_assignments SET assignment_email_status = ?, assignment_email_attempted_at = ?, assignment_email_attempts = assignment_email_attempts + 1, updated_at = ? WHERE id = ?')
+            ->execute([$accepted ? 'accepted' : 'failed', gmdate('c'), gmdate('c'), $assignmentId]);
+    }
     return $accepted;
+}
+
+function sendRetestNotification(PDO $database, array $config, int $assignmentId): bool
+{
+    return sendAssignmentEmailWithContext($database, $config, $assignmentId, true, true);
 }
 
 function appendSanitizedNodes(DOMDocument $output, DOMNode $source, DOMNode $destination): void
@@ -2375,7 +2461,7 @@ function sendProfileCompletionNotification(PDO $database, array $config, array $
 
 function prepareMailArchive(PDO $database, int $testerId, string $messageType, string $subject, string $body, string $html, ?int $batchId = null, ?int $assignmentId = null): int
 {
-    if (!in_array($messageType, ['batch', 'orientation', 'assignment'], true)) {
+    if (!in_array($messageType, ['batch', 'orientation', 'assignment', 'retest_notification'], true)) {
         throw new InvalidArgumentException('The mail archive type is invalid.');
     }
     $statement = $database->prepare('INSERT INTO tester_mail_archive(tester_id, batch_id, assignment_id, message_type, subject, body, body_html, handoff_status, prepared_at) VALUES (?, ?, ?, ?, ?, ?, ?, \'prepared\', ?)');
@@ -2403,6 +2489,7 @@ function mailArchiveTypeLabel(string $type): string
     return match ($type) {
         'orientation' => 'Orientation',
         'assignment' => 'Tester Task assignment',
+        'retest_notification' => 'Re-test notification',
         'smoke_test_reminder' => 'Smoke-test reminder',
         default => 'Coordinator batch',
     };
@@ -2431,14 +2518,29 @@ function renderRetestHandoffReview(PDO $database, int $feedbackId, string $notic
     $configuration = trim((string) $source['configuration_scope']) === '' ? 'No additional device scope recorded' : (string) $source['configuration_scope'];
     $record = '<section class="review-evidence"><p class="task-plan-label">Original evidence</p><h2>' . e((string) $feedback['display_name'] . ' · ' . $task['id'] . ' · ' . $feedback['pt_case']) . '</h2><p><strong>Reported outcome:</strong> ' . e(strtoupper((string) $feedback['outcome'])) . ' · ' . e(humanTimestamp((string) $feedback['created_at'])) . '<br><strong>Original assignment:</strong> ' . e(ucwords(str_replace('_', ' ', (string) $source['task_status']))) . '<br><strong>Station scope:</strong> ' . e($scope) . '<br><strong>Device scope:</strong> ' . e($configuration) . '</p><h3>' . e((string) $feedback['subject']) . '</h3><p>' . nl2br(e((string) $feedback['details']), false) . '</p></section>';
     if ($handoff !== null) {
-        $action = '<section class="notice"><strong>Separate re-test already created:</strong> ' . e(humanTimestamp((string) $handoff['created_at'])) . '. It is assignment #' . (int) $handoff['retest_assignment_id'] . ', limited to ' . e((string) $handoff['pt_case']) . '. No duplicate can be created from this report.</section><div class="work-record-actions"><a class="button secondary" href="/private-tester-queue.php?tester=' . (int) $handoff['tester_id'] . '">Open Coordinator record</a><a class="button secondary" href="/tester-portal.php?preview_tester=' . (int) $handoff['tester_id'] . '&amp;view=tasks&amp;assignment=' . (int) $handoff['retest_assignment_id'] . '">Preview re-test handoff</a></div>';
+        $notification = retestNotificationAssignment($database, (int) $handoff['retest_assignment_id']);
+        if ($notification === null) {
+            throw new RuntimeException('The separate re-test assignment is unavailable for notification review.');
+        }
+        $subject = assignmentEmailSubject($task, true);
+        $preview = 'Hi ' . (string) $feedback['display_name'] . ",\n\n" . assignmentMessage($task, $notification, [(string) $handoff['pt_case']], true);
+        $notificationState = (string) $notification['assignment_email_status'];
+        $notificationStatus = $notificationState === 'accepted'
+            ? 'Accepted by the mail transport. This does not prove inbox delivery or reading.'
+            : ($notificationState === 'failed'
+                ? 'Mail transport failed. No automatic retry will occur.'
+                : 'Not sent. It can be sent once after explicit Coordinator confirmation.');
+        $notificationAction = $notificationState === 'not_sent'
+            ? '<form method="post" class="review-decision-form"><input type="hidden" name="action" value="send_retest_notification"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="assignment_id" value="' . (int) $notification['id'] . '"><label><input style="width:auto" type="checkbox" name="confirm_retest_notification" value="yes" required> I reviewed this exact message and confirm one re-test notification should be sent for only ' . e((string) $handoff['pt_case']) . '.</label><button type="submit">Send re-test notification</button></form>'
+            : '<p class="notice"><strong>Notification outcome:</strong> ' . e($notificationStatus) . '</p>';
+        $action = '<section class="notice"><strong>Separate re-test already created:</strong> ' . e(humanTimestamp((string) $handoff['created_at'])) . '. It is assignment #' . (int) $handoff['retest_assignment_id'] . ', limited to ' . e((string) $handoff['pt_case']) . '. No duplicate can be created from this report.</section><section class="workspace-primary-card"><div><p class="eyebrow">Re-test notification</p><h2>Review the exact Tester message</h2><p class="muted">This is a separate, one-time notification for the focused re-test only. Sending it uses the existing mail transport, archives the prepared message and transport outcome, and does not create or change any task, evidence, or triage decision. A transport acceptance does not prove inbox delivery or reading; no automatic retry occurs.</p><p><strong>Subject:</strong> ' . e($subject) . '<br><strong>Current state:</strong> ' . e($notificationStatus) . '</p><pre style="white-space:pre-wrap;font:inherit">' . e($preview) . '</pre></div></section>' . $notificationAction . '<div class="work-record-actions"><a class="button secondary" href="/private-tester-queue.php?tester=' . (int) $handoff['tester_id'] . '">Open Coordinator record</a><a class="button secondary" href="/tester-portal.php?preview_tester=' . (int) $handoff['tester_id'] . '&amp;view=tasks&amp;assignment=' . (int) $handoff['retest_assignment_id'] . '">Preview re-test handoff</a></div>';
     } else {
         $mutationConfirmation = (($task['mutation']['mode'] ?? 'none') === 'required')
             ? '<label><input style="width:auto" type="checkbox" name="retest_mutation_authorized" value="yes" required> I explicitly authorize the controlled re-test subcase: ' . e((string) ($task['mutation']['label'] ?? 'Coordinator authorization required')) . '.</label>'
             : '';
         $action = '<section class="workspace-primary-card"><div><p class="eyebrow">Coordinator confirmation</p><h2>Create one separate, exact-case re-test</h2><p class="muted">This creates a new focused assignment for only ' . e((string) $feedback['pt_case']) . ', retains the original assignment and report unchanged, and carries forward the approved scope. It does not send mail or notify the Tester. The Tester will still submit a new result and the Coordinator will review it normally.</p></div></section><form method="post" class="review-decision-form"><input type="hidden" name="action" value="create_retest_handoff"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="feedback_id" value="' . $feedbackId . '"><label>Tester-visible re-test instruction <textarea name="retest_instruction" maxlength="' . (MAX_ASSIGNMENT_NOTE_LENGTH - 64) . '" required placeholder="State what to verify after the fix. This becomes part of the new Tester assignment; do not include private triage notes, credentials, session data, or screenshots."></textarea></label><label><input style="width:auto" type="checkbox" name="confirm_retest_handoff" value="yes" required> I reviewed the original report and confirm this is a new, separate re-test assignment for only ' . e((string) $feedback['pt_case']) . '.</label>' . $mutationConfirmation . '<button type="submit">Create separate re-test assignment</button></form>';
     }
-    $content = '<header class="workspace-page-header"><div class="workspace-page-heading"><p class="eyebrow">24Seven.FM Player · Closed Alpha</p><h1>Re-test handoff</h1><p class="muted">Review the original evidence before deliberately creating a separate focused re-test assignment.</p></div><div class="workspace-page-actions"><span class="workspace-role">Coordinator workspace</span><a class="link-button" href="/private-tester-queue.php?issue_triage=1">Back to issue triage</a><form method="post"><input type="hidden" name="action" value="logout"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><button class="secondary" type="submit">Sign out</button></form></div></header>' . $message . $record . $action;
+    $content = '<header class="workspace-page-header"><div class="workspace-page-heading"><p class="eyebrow">24Seven.FM Player · Closed Alpha</p><h1>Re-test handoff</h1><p class="muted">Review the original evidence before deliberately creating a separate focused re-test assignment or its one-time Tester notification.</p></div><div class="workspace-page-actions"><span class="workspace-role">Coordinator workspace</span><a class="link-button" href="/private-tester-queue.php?issue_triage=1">Back to issue triage</a><form method="post"><input type="hidden" name="action" value="logout"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><button class="secondary" type="submit">Sign out</button></form></div></header>' . $message . $record . $action;
     renderPage('Re-test handoff', $content);
 }
 
@@ -2779,7 +2881,7 @@ function renderTesterWorkspace(PDO $database, int $testerId, string $notice = ''
         $progress = assignmentReportProgress($database, (int) $assignment['id'], $task);
         $latestReview = latestAssignmentReviewEvent($database, (int) $assignment['id']);
         $retestHandoff = retestHandoffForAssignment($database, (int) $assignment['id']);
-        $retestContext = $retestHandoff === null ? '' : '<p class="notice"><strong>Separate re-test assignment:</strong> limited to ' . e((string) $retestHandoff['pt_case']) . ' from the original Issue / Blocked report. <a href="/private-tester-queue.php?issue_triage=1">Open issue triage</a></p>';
+        $retestContext = $retestHandoff === null ? '' : '<p class="notice"><strong>Separate re-test assignment:</strong> limited to ' . e((string) $retestHandoff['pt_case']) . ' from the original Issue / Blocked report. <a href="/private-tester-queue.php?retest_handoff=' . (int) $retestHandoff['feedback_id'] . '">Review re-test notification</a></p>';
         $reviewState = $assignment['submitted_for_review_at'] === null || $assignment['submitted_for_review_at'] === ''
             ? '<p><strong>Tester reports:</strong> ' . count($progress['reported']) . ' of ' . count($progress['required']) . ' PT cases received.' . ($progress['missing'] === [] ? ' Ready for the tester to submit for Coordinator review.' : ' Missing: ' . e(implode(', ', $progress['missing'])) . '.') . '</p>'
             : '<p class="notice"><strong>Submitted for Coordinator review:</strong> ' . e(humanTimestamp((string) $assignment['submitted_for_review_at'])) . '. Review the per-case results below before recording the final status.</p>';
@@ -3041,6 +3143,18 @@ try {
             $assignmentId = createRetestHandoff($database, $feedbackId, (string) ($_POST['retest_instruction'] ?? ''), ($_POST['retest_mutation_authorized'] ?? '') === 'yes');
             $handoff = retestHandoffForFeedback($database, $feedbackId);
             redirect('?tester=' . (int) ($handoff['tester_id'] ?? 0) . '&notice=' . rawurlencode('Separate re-test assignment #' . $assignmentId . ' was created in the portal for the exact reported PT case. No assignment email was sent.'));
+        }
+        if ($action === 'send_retest_notification') {
+            $assignmentId = assignmentId();
+            if (($_POST['confirm_retest_notification'] ?? '') !== 'yes') {
+                throw new InvalidArgumentException('Confirm the exact re-test notification before sending it.');
+            }
+            $handoff = retestHandoffForAssignment($database, $assignmentId);
+            if ($handoff === null) {
+                throw new InvalidArgumentException('Only a separate re-test assignment can receive this notification.');
+            }
+            $accepted = sendRetestNotification($database, $config, $assignmentId);
+            redirect('?retest_handoff=' . (int) $handoff['feedback_id'] . '&notice=' . rawurlencode('Re-test notification handoff ' . ($accepted ? 'was accepted by the mail transport. This does not prove inbox delivery or reading.' : 'failed. No automatic retry will occur.')));
         }
         if ($action === 'accept_application') {
             $testerId = testerId();

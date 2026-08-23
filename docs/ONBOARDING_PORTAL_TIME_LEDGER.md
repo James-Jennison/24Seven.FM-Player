@@ -1,6 +1,6 @@
 # Onboarding Portal Time Ledger
 
-Last updated: `August 23, 2026 at 5:27:58 AM PDT (UTC-07:00)`
+Last updated: `August 23, 2026 at 5:36:39 AM PDT (UTC-07:00)`
 
 This is the canonical time-accounting record for the protected 24Seven.FM Player onboarding portal: the Tester workspace, Coordinator workspace, onboarding wizard, assignment and reporting flows, and their safe website releases. It is deliberately independent of the Player Android and Play-operation milestones in `MILESTONE_TIME_LEDGER.md`.
 
@@ -17,6 +17,12 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 | Counted portal time | 2.83 h | Active plus automated wait. |
 
 ## Portal work records
+
+### Phase 13 Explicit Re-test Notification
+
+- **Authorization and interval:** Authorized and started `August 23, 2026 at 5:36:39 AM PDT (UTC-07:00)`; in progress.
+- **Scope:** Add one explicit Coordinator-only re-test notification action for a previously created separate re-test assignment whose notification state is Not sent. Preview the exact PT case, preserved scope, Tester-visible re-test instruction, and protected Tester-portal destination before a checked confirmation submits the existing mail transport. Archive only the prepared message and transport result, clearly label transport acceptance as not proving inbox delivery or reading, and never auto-send, auto-retry, change an assignment, create a task, alter original evidence, or notify a non-re-test assignment through this action.
+- **Model and forecast:** Current approved model and original forecast were not supplied; recorded as Unknown.
 
 ### Phase 12 Explicit Re-test Handoff
 
