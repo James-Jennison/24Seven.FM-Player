@@ -10,6 +10,7 @@ node --check "${repository_root}/privacy-site/assets/project.js"
 node --check "${repository_root}/privacy-site/assets/theme-init.js"
 node --check "${repository_root}/privacy-site/assets/private-tester-queue.js"
 node --check "${repository_root}/privacy-site/assets/onboarding-live-chat.js"
+node --check "${repository_root}/privacy-site/assets/activity-timeline.js"
 if command -v php >/dev/null 2>&1; then
   php -l "${repository_root}/privacy-site/alpha-tester-interest.php"
   php -l "${repository_root}/privacy-site/tester-onboarding-storage.php"

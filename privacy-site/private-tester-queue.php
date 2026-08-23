@@ -625,7 +625,7 @@ function requireAuthentication(array $config): void
  */
 function activityTimelineResilientStyle(): string
 {
-    return '.activity-timeline ol{display:grid;gap:.7rem;margin:0;padding:0;list-style:none}.activity-timeline li{display:grid;grid-template-columns:minmax(10.5rem,.55fr) minmax(0,1.45fr);gap:.75rem;padding:.75rem 0;border-top:1px solid var(--line)}.activity-timeline li:first-child{border-top:0;padding-top:0}.activity-timeline time{color:var(--cyan);font-size:.76rem;font-weight:750}.activity-timeline strong,.activity-timeline small{display:block}.activity-timeline small{margin-top:.18rem;line-height:1.4}@media(max-width:620px){.activity-timeline li{grid-template-columns:1fr;gap:.25rem}}';
+    return '.activity-timeline ol{display:grid;gap:.7rem;margin:0;padding:0;list-style:none}.activity-timeline li{display:grid;grid-template-columns:minmax(10.5rem,.55fr) minmax(0,1.45fr);gap:.75rem;padding:.75rem 0;border-top:1px solid var(--line)}.activity-timeline li:first-child{border-top:0;padding-top:0}.activity-timeline time{color:var(--cyan);font-size:.76rem;font-weight:750}.activity-timeline strong,.activity-timeline small{display:block}.activity-timeline small{margin-top:.18rem;line-height:1.4}.activity-filter-bar{display:flex;flex-wrap:wrap;gap:.45rem;margin:0 0 .85rem}.activity-filter{margin:0;border:1px solid var(--line);border-radius:99px;padding:.42rem .65rem;background:var(--surface);color:var(--muted);font-size:.76rem;font-weight:800}.activity-filter[aria-pressed="true"]{border-color:var(--cyan);background:var(--cyan-soft);color:var(--ink)}.activity-empty{margin:.25rem 0}.activity-empty[hidden]{display:none}@media(max-width:620px){.activity-timeline li{grid-template-columns:1fr;gap:.25rem}}';
 }
 
 function renderPage(string $title, string $content, bool $showCoordinatorNavigation = true): never
@@ -645,7 +645,9 @@ function renderPage(string $title, string $content, bool $showCoordinatorNavigat
     $loginLayout = $showCoordinatorNavigation ? '' : '<style>.global-rail{display:none!important}.app-shell{display:block}.desktop{padding:1.5rem}section.login{width:min(calc(100% - 3rem),31rem);margin:9vh auto!important}</style>';
     $workspaceRestoration = '<style>.operations-workspace{display:grid;gap:1rem;align-items:start}.operations-workspace>section,.operations-workspace>details{margin:0}.operations-workspace>.evidence-board{grid-column:1/-1}.operations-workspace>section:nth-of-type(2){grid-column:1/-1}.operations-workspace>.compose-card{grid-column:1/-1}.operations-panel-toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:.45rem;padding:.55rem .75rem;border:1px solid var(--line);border-radius:.65rem;background:var(--canvas-2)}.operations-panel-toolbar span{color:var(--muted);font-size:.76rem;font-weight:700}.operations-panel-toolbar button{margin:0;padding:.38rem .58rem;font-size:.74rem}.operations-panel-row{position:relative;min-height:35rem}.operations-panel-row>section{box-sizing:border-box;position:absolute;top:0;min-width:15rem;min-height:18rem;overflow:hidden;display:flex;flex-direction:column;margin:0}.operations-panel-row>.applications-card{left:0;width:59%;height:34rem}.operations-panel-row>.roster-card{left:62%;width:38%;height:34rem}.operations-panel-title{display:flex;align-items:center;gap:.45rem;cursor:move;touch-action:none;user-select:none}.operations-panel-title:focus-visible{outline:2px solid var(--cyan);outline-offset:.2rem;border-radius:.3rem}.operations-panel-title .panel-grip{color:var(--cyan);letter-spacing:-.12em;font-weight:900}.operations-corner-resize{position:absolute;right:.35rem;bottom:.35rem;width:1.1rem;height:1.1rem;cursor:nwse-resize;touch-action:none}.operations-corner-resize:before{content:"";position:absolute;right:0;bottom:0;width:.7rem;height:.7rem;border-right:2px solid var(--cyan);border-bottom:2px solid var(--cyan)}.evidence-board .board{display:grid;grid-template-columns:repeat(5,minmax(9rem,1fr));gap:.65rem;overflow:auto}.evidence-board .board-column{min-height:9.5rem;padding:.75rem;border:1px solid var(--line);border-radius:.65rem;background:var(--canvas-2)}.evidence-board .column-head{display:flex;align-items:start;justify-content:space-between;gap:.5rem}.evidence-board .column-head span{display:grid;width:1.35rem;height:1.35rem;place-items:center;border-radius:50%;background:#493b22;color:var(--amber);font-size:.68rem;font-weight:850}.evidence-board .column-head strong{font-size:.78rem}.evidence-board .column-head b{color:var(--cyan);font-size:1rem}.evidence-board .board-column p{margin:.85rem 0 0;color:var(--muted);font-size:.72rem}.operations-workspace .applications-card{border-color:#d29cff66}.operations-workspace .application-rows,.operations-workspace .roster-list{flex:1;max-height:none;overflow:auto;padding-right:.2rem}.operations-workspace .application-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start}.operations-workspace .application-actions{justify-content:flex-end}.operations-workspace .roster-entry{padding:.75rem 0;border-bottom:1px solid var(--line)}.operations-workspace .roster-entry:first-child{padding-top:.1rem}.operations-workspace .roster-entry:last-child{border-bottom:0}.operations-workspace .roster-status{display:flex;flex-wrap:wrap;gap:.3rem;margin:.45rem 0}.operations-workspace .roster-entry small{display:block}.operations-workspace .roster-actions{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.55rem}.operations-workspace .roster-actions .link-button{margin:0;padding:.36rem .48rem;font-size:.7rem}.operations-workspace .compose-card{padding:0;overflow:hidden}.operations-workspace .compose-card>summary{padding:.85rem 1rem;border-bottom:1px solid var(--line);background:linear-gradient(145deg,var(--surface-2),var(--surface))}.operations-workspace .compose-card>form>section{margin:0;border:0;border-radius:0;box-shadow:none}.operations-workspace h2{font-size:1.05rem}@media(max-width:1040px){.operations-panel-row{height:auto!important;min-height:0}.operations-panel-row>section{position:relative!important;left:auto!important;top:auto!important;width:auto!important;height:auto!important;min-height:0;margin:1rem 0 0}.operations-panel-row>section:first-child{margin-top:0}.operations-panel-title{cursor:default}.operations-corner-resize{display:none}.operations-workspace .application-rows,.operations-workspace .roster-list{max-height:none}}@media(max-width:720px){.operations-workspace .application-row{grid-template-columns:1fr}.operations-workspace .application-actions{justify-content:flex-start;margin-top:.65rem}.operations-panel-toolbar{align-items:flex-start;flex-direction:column}}</style>';
     $workspaceRestoration .= '<style>.operations-panel-row>.applications-card.is-empty{min-height:5.25rem}.operations-panel-row>.applications-card.is-empty>p,.operations-panel-row>.applications-card.is-empty .operations-corner-resize{display:none}</style>';
-    $activityTimelineStyle = '<style>' . activityTimelineResilientStyle() . '</style>';
+    $activityTimelineAsset = __DIR__ . '/assets/activity-timeline.js';
+    $activityTimelineVersion = is_file($activityTimelineAsset) ? substr((string) hash_file('sha256', $activityTimelineAsset), 0, 12) : 'activity';
+    $activityTimelineStyle = '<style>' . activityTimelineResilientStyle() . '</style><script src="/assets/activity-timeline.js?v=' . e($activityTimelineVersion) . '" defer></script>';
     echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'
         . e($title) . '</title>' . $loginLayout . $workspaceRestoration . $activityTimelineStyle . '<style>'
         . 'body{margin:0;background:#090c15;color:#f7f4ec;font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
@@ -916,25 +918,25 @@ function assignmentLifecycleMarkup(array $assignment, array $progress, string $v
 function testerActivityTimeline(PDO $database, array $tester, array $assignments, array $tasks, string $viewer): string
 {
     $events = [];
-    $add = static function (?string $at, string $label, string $detail) use (&$events): void {
+    $add = static function (?string $at, string $label, string $detail, string $kind) use (&$events): void {
         if (!is_string($at) || trim($at) === '') return;
-        $events[] = ['at' => $at, 'label' => $label, 'detail' => $detail];
+        $events[] = ['at' => $at, 'label' => $label, 'detail' => $detail, 'kind' => $kind];
     };
     $actor = $viewer === 'coordinator' ? 'Tester' : 'You';
 
-    $add($tester['received_at'] ?? null, 'Application received', 'The protected application record was received.');
-    $add($tester['play_opt_in_confirmed_at'] ?? null, 'Google Play opt-in self-confirmed', $actor . ' recorded this self-confirmation.');
-    $add($tester['initial_smoke_test_confirmed_at'] ?? null, 'Initial smoke test self-confirmed', $actor . ' recorded the short first-use check.');
+    $add($tester['received_at'] ?? null, 'Application received', 'The protected application record was received.', 'onboarding');
+    $add($tester['play_opt_in_confirmed_at'] ?? null, 'Google Play opt-in self-confirmed', $actor . ' recorded this self-confirmation.', 'onboarding');
+    $add($tester['initial_smoke_test_confirmed_at'] ?? null, 'Initial smoke test self-confirmed', $actor . ' recorded the short first-use check.', 'onboarding');
 
     foreach ($assignments as $assignment) {
         $task = $tasks[(string) ($assignment['task_id'] ?? '')] ?? null;
         if (!is_array($task)) continue;
         $taskLabel = (string) $task['id'] . ' — ' . (string) $task['title'];
-        $add($assignment['created_at'] ?? null, 'Focused task assigned', $taskLabel . ' was assigned.');
-        $add($assignment['submitted_for_review_at'] ?? null, 'Task submitted for Coordinator review', $actor . ' submitted ' . (string) $task['id'] . ' after reporting every assigned PT case.');
+        $add($assignment['created_at'] ?? null, 'Focused task assigned', $taskLabel . ' was assigned.', 'work');
+        $add($assignment['submitted_for_review_at'] ?? null, 'Task submitted for Coordinator review', $actor . ' submitted ' . (string) $task['id'] . ' after reporting every assigned PT case.', 'work');
         $status = (string) ($assignment['task_status'] ?? '');
         if (in_array($status, ['complete', 'blocked'], true)) {
-            $add($assignment['updated_at'] ?? null, 'Coordinator recorded final task status', (string) $task['id'] . ' is marked ' . $status . '.');
+            $add($assignment['updated_at'] ?? null, 'Coordinator recorded final task status', (string) $task['id'] . ' is marked ' . $status . '.', 'work');
         }
     }
 
@@ -944,24 +946,43 @@ function testerActivityTimeline(PDO $database, array $tester, array $assignments
         $case = trim((string) ($report['pt_case'] ?? ''));
         $label = $case === '' ? 'Task result recorded' : $case . ' result recorded';
         $category = FEEDBACK_CATEGORIES[(string) ($report['category'] ?? '')] ?? FEEDBACK_CATEGORIES['other'];
-        $add($report['created_at'] ?? null, $label, $actor . ' recorded a ' . strtoupper((string) ($report['outcome'] ?? '')) . ' result for ' . $category . '.');
+        $add($report['created_at'] ?? null, $label, $actor . ' recorded a ' . strtoupper((string) ($report['outcome'] ?? '')) . ' result for ' . $category . '.', 'work');
     }
 
     $mail = $database->prepare("SELECT id, 'mail' AS source, message_type, handoff_status, prepared_at, attempted_at FROM tester_mail_archive WHERE tester_id = ? UNION ALL SELECT id, 'smoke' AS source, 'smoke_test_reminder' AS message_type, handoff_status, prepared_at, attempted_at FROM tester_smoke_test_reminder_archive WHERE tester_id = ? ORDER BY prepared_at DESC, id DESC LIMIT 12");
     $mail->execute([(int) $tester['id'], (int) $tester['id']]);
+    $genericMail = [];
     foreach ($mail->fetchAll() as $record) {
         $type = (string) ($record['message_type'] ?? 'batch');
+        if (!in_array($type, ['orientation', 'assignment', 'smoke_test_reminder'], true)) {
+            $genericMail[] = $record;
+            continue;
+        }
         $label = match ($type) {
             'orientation' => 'Orientation email handoff',
             'assignment' => 'Task-assignment email handoff',
             'smoke_test_reminder' => 'Smoke-test reminder handoff',
-            default => 'Coordinator email handoff',
         };
         $status = (string) ($record['handoff_status'] ?? 'prepared');
         $detail = $status === 'accepted'
             ? 'The mail transport accepted this message. This does not prove inbox delivery or reading.'
             : ($status === 'failed' ? 'The mail transport did not accept this message.' : 'This message was prepared for transport.');
-        $add($record['attempted_at'] ?? $record['prepared_at'] ?? null, $label, $detail);
+        $add($record['attempted_at'] ?? $record['prepared_at'] ?? null, $label, $detail, 'communication');
+    }
+    if ($genericMail !== []) {
+        $statusCounts = ['accepted' => 0, 'failed' => 0, 'prepared' => 0];
+        foreach ($genericMail as $record) {
+            $status = (string) ($record['handoff_status'] ?? 'prepared');
+            $statusCounts[array_key_exists($status, $statusCounts) ? $status : 'prepared']++;
+        }
+        $summary = [];
+        foreach ($statusCounts as $status => $count) {
+            if ($count > 0) $summary[] = $count . ' ' . $status;
+        }
+        $count = count($genericMail);
+        $latest = $genericMail[0];
+        $detail = $count . ' generic messages were recorded (' . implode(', ', $summary) . '). Mail transport acceptance does not prove inbox delivery or reading.';
+        $add($latest['attempted_at'] ?? $latest['prepared_at'] ?? null, $count . ' Coordinator email handoff' . ($count === 1 ? '' : 's'), $detail, 'communication');
     }
 
     usort($events, static fn (array $left, array $right): int => strcmp((string) $right['at'], (string) $left['at']));
@@ -971,9 +992,9 @@ function testerActivityTimeline(PDO $database, array $tester, array $assignments
     }
     $items = '';
     foreach ($events as $event) {
-        $items .= '<li><time datetime="' . e((string) $event['at']) . '">' . e(humanTimestamp((string) $event['at'])) . '</time><div><strong>' . e($event['label']) . '</strong><small>' . e($event['detail']) . '</small></div></li>';
+        $items .= '<li data-activity-kind="' . e((string) $event['kind']) . '"><time datetime="' . e((string) $event['at']) . '">' . e(humanTimestamp((string) $event['at'])) . '</time><div><strong>' . e($event['label']) . '</strong><small>' . e($event['detail']) . '</small></div></li>';
     }
-    return '<section class="activity-timeline" aria-label="Activity timeline"><div class="workspace-section-heading"><div><p class="eyebrow">Activity</p><h2>What happened</h2></div><p class="workspace-summary">A read-only record of the protected evidence already on file.</p></div><ol>' . $items . '</ol></section>';
+    return '<section class="activity-timeline" aria-label="Activity timeline"><div class="workspace-section-heading"><div><p class="eyebrow">Activity</p><h2>What happened</h2></div><p class="workspace-summary">A read-only record of the protected evidence already on file.</p></div><nav class="activity-filter-bar" aria-label="Filter activity"><button class="activity-filter" type="button" data-activity-filter="all" aria-pressed="true">All</button><button class="activity-filter" type="button" data-activity-filter="onboarding" aria-pressed="false">Onboarding</button><button class="activity-filter" type="button" data-activity-filter="work" aria-pressed="false">Work</button><button class="activity-filter" type="button" data-activity-filter="communication" aria-pressed="false">Communication</button></nav><p class="muted activity-empty" data-activity-empty hidden>No activity matches this filter.</p><ol>' . $items . '</ol></section>';
 }
 
 function coordinatorQueueView(): string
