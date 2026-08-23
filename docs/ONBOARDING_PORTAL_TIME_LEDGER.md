@@ -18,6 +18,12 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 
 ## Portal work records
 
+### Phase 14 Explicit Re-test Closeout
+
+- **Authorization and interval:** Authorized and started `August 23, 2026 at 5:51:57 AM PDT (UTC-07:00)`; in progress.
+- **Scope:** Add a dedicated Coordinator-only closeout decision after a separate re-test assignment has been fully submitted and reviewed. Link the exact original Issue/Blocked PT report to its re-test result, require a checked confirmation and bounded auditable note before recording either Closed, Needs reproduction, or Known issue as a new immutable triage event, and preserve every original report, assignment, re-test assignment, review event, scope, and Tester-visible evidence. Do not auto-close, infer a passing re-test, create or modify any task, send mail, retry a notification, create external work, or expose private Coordinator notes in the Tester workspace.
+- **Model and forecast:** Current approved model and original forecast were not supplied; recorded as Unknown.
+
 ### Phase 13 Explicit Re-test Notification
 
 - **Authorization and interval:** Authorized and started `August 23, 2026 at 5:36:39 AM PDT (UTC-07:00)`; completed `August 23, 2026 at 5:47:22 AM PDT (UTC-07:00)`.
