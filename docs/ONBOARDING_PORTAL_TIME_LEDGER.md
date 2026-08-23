@@ -1,6 +1,6 @@
 # Onboarding Portal Time Ledger
 
-Last updated: `August 22, 2026 at 9:59:03 PM PDT (UTC-07:00)`
+Last updated: `August 22, 2026 at 10:16:08 PM PDT (UTC-07:00)`
 
 This is the canonical time-accounting record for the protected 24Seven.FM Player onboarding portal: the Tester workspace, Coordinator workspace, onboarding wizard, assignment and reporting flows, and their safe website releases. It is deliberately independent of the Player Android and Play-operation milestones in `MILESTONE_TIME_LEDGER.md`.
 
@@ -10,18 +10,20 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 
 | Measure | Value | Qualification |
 | --- | ---: | --- |
-| Completed measured portal intervals | 14 | Route-based Tester workspace, shared shell/rail refinements, Phase 1 workbench redesign, CI trigger isolation, Phase 2 record-page workbench, Phase 3 assignment lifecycle handoffs, Phase 4 Coordinator queue discovery, Phase 5 in-portal PT checklist delivery, its runtime activation fix, the shared activity timeline, its cache-resilience fix, and the Activity clarity refinement. |
-| Active portal time | 1.98 h | Completed intervals only. |
-| Automated wait | 0.12 h | Measured release-gate/build and workflow waits during portal changes. |
+| Completed measured portal intervals | 15 | Route-based Tester workspace, shared shell/rail refinements, Phase 1 workbench redesign, CI trigger isolation, Phase 2 record-page workbench, Phase 3 assignment lifecycle handoffs, Phase 4 Coordinator queue discovery, Phase 5 in-portal PT checklist delivery, its runtime activation fix, the shared activity timeline, its cache-resilience fix, the Activity clarity refinement, and the Coordinator Work Review inbox. |
+| Active portal time | 2.20 h | Completed intervals only. |
+| Automated wait | 0.15 h | Measured release-gate/build and workflow waits during portal changes. |
 | User-blocked time | 0.00 h | Completed intervals only. |
-| Counted portal time | 2.10 h | Active plus automated wait. |
+| Counted portal time | 2.35 h | Active plus automated wait. |
 
 ## Portal work records
 
 ### Phase 9 Coordinator Work Review inbox
 
-- **Authorization and interval:** Authorized and started `August 22, 2026 at 9:59:03 PM PDT (UTC-07:00)`; in progress.
-- **Scope:** Create a dedicated Coordinator review inbox for tester-submitted assignments. Show the exact assignment, PT-case evidence, scope, and report outcomes, then make final completion, return-for-clarification, and blocked-work decisions explicit. Reflect the decision and its next action in the Tester workspace and activity evidence. Preserve the existing per-case reporting gate, role boundaries, protected data, mail behavior, and atomic release process. No bulk action, delivery inference, or schema migration is planned unless validation establishes a narrow requirement.
+- **Authorization and interval:** Authorized and started `August 22, 2026 at 9:59:03 PM PDT (UTC-07:00)`; completed `August 22, 2026 at 10:16:08 PM PDT (UTC-07:00)`.
+- **Measured time:** 0.22 h active, 0.03 h automated wait, 0.00 h user-blocked, 0.25 h counted. The unmeasured remainder of the wall-clock interval is excluded.
+- **Scope:** Create a dedicated Coordinator review inbox for tester-submitted assignments. Show the exact assignment, PT-case evidence, scope, and report outcomes, then make final completion, return-for-clarification, and blocked-work decisions explicit. Reflect the decision and its next action in the Tester workspace and activity evidence. Preserve the existing per-case reporting gate, role boundaries, protected data, mail behavior, and atomic release process. No bulk action or delivery inference was added. The narrow backward-compatible requirement is met with protected, idempotently created review-decision and clarification-response storage; it neither broadens existing data collection nor changes mail behavior.
+- **Evidence:** Merged commit `13e56c6` through PR #73 adds the Coordinator Work Review inbox, immutable Coordinator decision history (complete, return for clarification, or blocked), and dedicated Tester clarification/resubmission handling. It keeps incomplete PT-case reporting from being approved, requires a Tester-visible note for return/block actions, and keeps decision notes, report contents, and clarification bodies out of shared Activity. GitHub's required `Validate reviewed portal artifact` check and the independent build passed; the exact merged commit then passed the full 56-file local portal release gate. The normalized local/server staging manifests matched all 56 files (SHA-256 `d5ae873d0ab4dd5151ed427d49f64d5565f8a6cb5b82d122ba406ca8f0fa01ab`) before an atomic document-root promotion. The prior live directory remains at `player.jamesjennison.net.rollback-portal-phase9-13e56c6`. Origin and public HTTPS each returned 200 for Coordinator Work Review, Tester tasks, and the changed Coordinator/Activity assets. No browser tab was touched and no signed-in visual acceptance is claimed for this release.
 - **Model and forecast:** Current approved model and original forecast were not supplied; recorded as Unknown.
 
 ### Phase 8 activity clarity refinement
