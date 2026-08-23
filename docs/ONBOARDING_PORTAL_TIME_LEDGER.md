@@ -18,6 +18,12 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 
 ## Portal work records
 
+### Phase 8 activity clarity refinement
+
+- **Authorization and interval:** Authorized and started `August 22, 2026 at 5:22:29 PM PDT (UTC-07:00)`; in progress.
+- **Scope:** Improve existing Activity records with browser-local time presentation plus UTC context, client-side filters, and concise grouping of generic Coordinator mail handoffs. Preserve every underlying record, privacy boundary, permissions, cache configuration, and workflow; no timezone is persisted or collected and no schema migration is planned.
+- **Model and forecast:** Current approved model and original forecast were not supplied; recorded as Unknown.
+
 ### Phase 7 activity timeline cache-resilience fix
 
 - **Authorization and interval:** Authorized and started `August 22, 2026 at 12:39:50 PM PDT (UTC-07:00)`; completed `August 22, 2026 at 12:46:03 PM PDT (UTC-07:00)`.

@@ -150,7 +150,9 @@ function portalPage(string $title, string $content, string $workspaceRail = ''):
     $checklistVersion = is_file($checklistAsset) ? substr((string) hash_file('sha256', $checklistAsset), 0, 12) : 'checklist';
     $wizardAsset = __DIR__ . '/assets/onboarding-wizard.js';
     $wizardVersion = is_file($wizardAsset) ? substr((string) hash_file('sha256', $wizardAsset), 0, 12) : 'wizard';
-    $page = str_replace('</body></html>', '<script src="/assets/tester-portal.js?v=' . e($checklistVersion) . '" defer></script><script src="/assets/onboarding-wizard.js?v=' . e($wizardVersion) . '" defer></script></body></html>', $page);
+    $activityAsset = __DIR__ . '/assets/activity-timeline.js';
+    $activityVersion = is_file($activityAsset) ? substr((string) hash_file('sha256', $activityAsset), 0, 12) : 'activity';
+    $page = str_replace('</body></html>', '<script src="/assets/tester-portal.js?v=' . e($checklistVersion) . '" defer></script><script src="/assets/onboarding-wizard.js?v=' . e($wizardVersion) . '" defer></script><script src="/assets/activity-timeline.js?v=' . e($activityVersion) . '" defer></script></body></html>', $page);
     echo $page;
     exit;
 }
