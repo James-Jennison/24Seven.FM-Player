@@ -22,6 +22,8 @@ try {
     $database = database(['database_path' => $path]);
     expectPhaseTwo((int) $database->query("SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'tester_profile_completion_notifications'")->fetchColumn() === 1, 'Profile-completion notification handoffs must have dedicated local audit storage.');
     expectPhaseTwo((int) $database->query("SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'tester_smoke_test_reminder_archive'")->fetchColumn() === 1, 'Smoke-test reminder handoffs must have dedicated local audit storage.');
+    expectPhaseTwo((int) $database->query("SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'tester_task_review_events'")->fetchColumn() === 1, 'Coordinator decisions must retain dedicated task-review evidence.');
+    expectPhaseTwo((int) $database->query("SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'tester_task_review_responses'")->fetchColumn() === 1, 'Returned work must retain a separate tester clarification response.');
     $database->prepare("INSERT INTO testers(source_message_uid, received_at, display_name, email, device, android_version, interests_json, status, imported_at, primary_station, device_form_factor, network_capabilities_json, audio_capabilities_json, accessibility_capabilities_json, testing_comfort, controlled_actions_json, testing_availability) VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, ?, ?, ?, ?, ?, ?)")
         ->execute(['phase-two-local', '2026-08-15T00:00:00Z', 'Local Stage Tester', 'local-stage@example.test', 'Local stage device', 'Android 16', '["playback"]', '2026-08-15T00:00:00Z', 'sst', 'phone', '["wifi"]', '["device_speaker"]', '["general_accessibility"]', 'readonly', '["none"]', '1_2h']);
 
@@ -67,6 +69,14 @@ try {
     }
     $database->prepare('UPDATE tester_task_assignments SET submitted_for_review_at = ? WHERE id = ?')->execute([$now, $assignmentId]);
     expectPhaseTwo((string) $database->query('SELECT submitted_for_review_at FROM tester_task_assignments WHERE id = ' . $assignmentId)->fetchColumn() === $now, 'A complete task must retain the tester submission time for Coordinator review.');
+    $database->prepare("INSERT INTO tester_task_review_events(assignment_id, tester_id, decision, tester_note, created_at) VALUES (?, 1, 'returned', 'Please clarify the observed recovery behavior.', ?)")
+        ->execute([$assignmentId, $now]);
+    $reviewEventId = (int) $database->lastInsertId();
+    $database->prepare("UPDATE tester_task_assignments SET task_status = 'in_progress', submitted_for_review_at = NULL WHERE id = ?")->execute([$assignmentId]);
+    $database->prepare('INSERT INTO tester_task_review_responses(assignment_id, tester_id, review_event_id, response, created_at) VALUES (?, 1, ?, ?, ?)')
+        ->execute([$assignmentId, $reviewEventId, 'The observed recovery completed after reconnecting.', $now]);
+    $database->prepare('UPDATE tester_task_assignments SET submitted_for_review_at = ? WHERE id = ?')->execute([$now, $assignmentId]);
+    expectPhaseTwo((latestAssignmentReviewEvent($database, $assignmentId)['decision'] ?? '') === 'returned' && count(assignmentReviewResponses($database, $assignmentId)) === 1, 'A return decision and tester clarification must remain separate, auditable evidence before work re-enters review.');
 
     $html = mergeCoordinatorMailHtml('<p>Hello {{tester_name}}, {{onboarding_status}}.</p>', $tester);
     $archiveId = prepareMailArchive($database, 1, 'assignment', assignmentEmailSubject($task), assignmentMessage($task, ['station_scope' => $station, 'configuration_scope' => $configuration, 'coordinator_note' => $note, 'mutation_authorized' => $mutationAuthorized]), $html, null, $assignmentId);
