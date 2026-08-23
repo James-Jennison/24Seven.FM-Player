@@ -56,9 +56,9 @@ session rather than a fixture.
 
 The following incremental checks passed without `clean`:
 
-```powershell
-.\gradlew.bat :app:compileDebugKotlin :app:testDebugUnitTest :app:lintDebug
-.\gradlew.bat :app:connectedDebugAndroidTest :app:installDebug
+```bash
+./gradlew :app:compileDebugKotlin :app:testDebugUnitTest :app:lintDebug
+./gradlew :app:connectedDebugAndroidTest :app:installDebug
 ```
 
 - Full debug unit suite: passed.

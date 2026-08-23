@@ -12,12 +12,10 @@ Implemented and build-verified:
 - station metadata supplied to the media session notification;
 - UI states for idle, connecting, buffering, playing, paused, retrying, and error.
 
-The following command completed successfully:
+The current Linux validation command is:
 
-```powershell
-$env:ANDROID_HOME="$env:LOCALAPPDATA\Android\Sdk"
-$env:TWENTYFOURSEVEN_ANDROID_BUILD_DIR="$env:TEMP\24seven-android-build"
-.\gradlew.bat test lint assembleDebug --console=plain --no-daemon --max-workers=2 --no-problems-report '-Pkotlin.compiler.execution.strategy=in-process'
+```bash
+./gradlew test lint :app:assembleDebug --console=plain --no-daemon --max-workers=2 --no-problems-report -Pkotlin.compiler.execution.strategy=in-process
 ```
 
 Results:
@@ -48,7 +46,7 @@ No playback exceptions were recorded during these checks.
 
 ## M02 completion follow-up
 
-On July 13, 2026, the validated debug APK was installed on the Motorola Razr 2023 from the second Windows development machine. The previous debug installation first had to be removed because Android debug keys are machine-specific and its signature did not match the new build.
+On July 13, 2026, the validated debug APK was installed on the Motorola Razr 2023 from the secondary development host. The previous debug installation first had to be removed because Android debug keys are machine-specific and its signature did not match the new build.
 
 The remaining live stations were then validated on the Razr:
 

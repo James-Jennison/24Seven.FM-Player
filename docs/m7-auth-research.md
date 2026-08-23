@@ -43,7 +43,7 @@ Each form uses `username`, `user_password`, `gfx_check`, a transient six-digit `
 that image and require the user to enter its code. Challenge values must remain memory-only and must never be
 logged or committed. A fresh anonymous page load did not set a cookie on any of the five origins.
 
-The `www.streamingsoundtracks.com` HTTPS host presented a certificate-name mismatch to the Windows client. The
+The `www.streamingsoundtracks.com` HTTPS host presented a certificate-name mismatch during the HTTPS probe. The
 certificate-valid canonical origin is `https://streamingsoundtracks.com/`, which served the matching form. The
 app must not disable certificate validation or send credentials to the mismatched `www` origin.
 

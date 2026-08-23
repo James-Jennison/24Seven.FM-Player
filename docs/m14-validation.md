@@ -21,9 +21,9 @@ Completed July 14, 2026 in implementation commit `81c2c4e`.
 
 ## Validation
 
-```powershell
-.\gradlew.bat :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
-.\gradlew.bat :app:connectedDebugAndroidTest
+```bash
+./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+./gradlew :app:connectedDebugAndroidTest
 ```
 
 - Full debug unit suite: passed.

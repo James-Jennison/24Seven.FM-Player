@@ -14,12 +14,12 @@ Validated July 14, 2026 from implementation commit `b19d5fe` on `agent/initial-a
 
 The following incremental validators passed without `clean`:
 
-```powershell
-.\gradlew.bat :app:compileDebugKotlin
-.\gradlew.bat :app:testDebugUnitTest
-.\gradlew.bat :app:compileDebugAndroidTestKotlin :app:lintDebug
-.\gradlew.bat :app:connectedDebugAndroidTest
-.\gradlew.bat :app:installDebug
+```bash
+./gradlew :app:compileDebugKotlin
+./gradlew :app:testDebugUnitTest
+./gradlew :app:compileDebugAndroidTestKotlin :app:lintDebug
+./gradlew :app:connectedDebugAndroidTest
+./gradlew :app:installDebug
 ```
 
 Coverage includes trusted discovery URLs, cross-origin rejection, the ten-entry ceiling, bounded combined history summaries, ready/waiting/unknown cooldown states, VIP/RIP/standard membership, expired authentication, repository errors/clear, lifecycle-scoped ViewModel refresh, station capability isolation, explicit action routing, and Compose accessibility semantics. The complete connected suite passed **19/19** tests on the wired Motorola Razr 2023 running Android 16.

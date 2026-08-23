@@ -17,7 +17,7 @@ The worktree was clean at audit time. This milestone evolves the existing native
 
 | Existing feature | Current implementation | Current behavior and UI | Existing coverage | M11 preservation |
 | --- | --- | --- | --- | --- |
-| Buildable native baseline | Gradle wrapper, `:app`, CI and Windows validation scripts | API 35 target, API 36 compile platform, Java 17 | Build and workflow validation documented in M01 | Keep toolchain, module, caches, and validators unchanged |
+| Buildable native baseline | Gradle wrapper, `:app`, CI, and Linux validation scripts | API 35 target, API 36 compile platform, Java 17 | Build and workflow validation documented in M01 | Keep toolchain, module, caches, and validators unchanged |
 | Five-station catalog | `BootstrapStationRepository`, station domain models | SST, 1980s.FM, Adagio.FM, Death.FM, and Entranced.FM selectable from every destination | Catalog and capability unit tests | Present all five in an accessible station carousel/list and retain the global selector path |
 | Station capabilities | `StationCapabilities` and repository contracts | Authentication, chat, requests, queue, and history vary behind capability flags; request messages are SST-only | Catalog, ViewModel, and UI tests | Render only controls supported by the selected station; do not hard-code station behavior in screens |
 | Primary and fallback streams | Bundled PLS resources and Media3 playback preparation | Each station uses its verified primary stream, then its verified fallback | Playback mapping/service tests and M02/M03 device validation | Do not alter URLs or fallback ordering; describe fallback attempts without exposing URLs |

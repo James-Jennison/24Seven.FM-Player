@@ -18,8 +18,8 @@ catalog is empty. Together, those facts confirm the app's registration and that 
 eligible. No Console screenshot, identity, credential, or private account metadata is retained in Git.
 
 Play-generated delivery, update, split inspection, and pre-launch evidence belong exclusively to M40 after M39 freezes
-the exact candidate; they are not M35 completion gates. The established Windows DPAPI copy remains intact. Routine
-signing can use the existing authenticated recovery package through the Linux helper without persisting a plaintext
+the exact candidate; they are not M35 completion gates. Routine signing uses the existing authenticated recovery
+package through the Linux helper without persisting a plaintext
 keystore or credential file.
 
 ## Sol acceptance — July 19
@@ -180,13 +180,6 @@ removes the temporary material, and verifies the signed AAB certificate. It prin
 certificate fingerprint. Eight focused tests cover success, wrong passphrase, wrong registered certificate,
 mismatched keystore hash, repository-local package rejection, SDK discovery, temporary mode `600`/cleanup, and
 self-signed upload-certificate verification.
-
-The owner-controlled Windows DPAPI path remains a backup:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass `
-  -File .\scripts\validate-protected-play-bundle.ps1 -BuildApk
-```
 
 The current AAB/APK hashes are recorded above and the AAB signer remains upload-certificate SHA-256
 `F6E8E81271964FFC3F8A0D548B49B4DB93AEFC48CCB74B8744512670F4279E3F`. Supply no key path, alias, or password to Git,

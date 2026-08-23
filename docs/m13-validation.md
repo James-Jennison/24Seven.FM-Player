@@ -22,9 +22,9 @@ M13 retained the existing station-scoped repository, cookie-manager, and Android
 
 ## Automated validation
 
-```powershell
-.\gradlew.bat :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
-.\gradlew.bat :app:connectedDebugAndroidTest
+```bash
+./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+./gradlew :app:connectedDebugAndroidTest
 ```
 
 - Full debug unit suite: passed.

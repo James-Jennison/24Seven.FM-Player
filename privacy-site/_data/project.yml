@@ -47,7 +47,7 @@ milestones:
     date: "2026-07-12"
     commit: "9184afd"
     evidence: "docs/m1-validation.md"
-    outcome: "Native Gradle and Compose baseline with verified Windows and Ubuntu paths."
+    outcome: "Native Gradle and Compose baseline with a verified Linux workflow."
 
   - order: 2
     id: "M02"

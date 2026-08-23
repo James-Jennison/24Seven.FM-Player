@@ -25,19 +25,16 @@ The Google Play developer account was approved on July 14, 2026. Use this during
   explicitly unknown, station owner/network administrators are the stated access roles, and PayPal is the sole
   payment processor. Reconcile those facts with the exact candidate before M29 closes.
 - Gradle accepts Play upload signing only from four `TWENTYFOURSEVEN_UPLOAD_*` environment variables. Supplying a partial set fails configuration.
-- `scripts/validate-play-bundle.ps1` builds the release AAB, requires a real signature, and prints its SHA-256 without revealing signing inputs.
-- `scripts/initialize-play-upload-key.ps1` creates the separate upload key outside Git and stores its credentials in a Windows-current-user DPAPI envelope. It refuses to overwrite either artifact.
-- `scripts/validate-protected-play-bundle.ps1` decrypts that envelope only in memory, supplies process-scoped Gradle inputs, restores the previous process environment, verifies the JAR signature and exact signer certificate, and can optionally build the signed release APK with `-BuildApk`.
-- `scripts/sign-play-bundle-jks.sh` is the routine Ubuntu release path: it uses the authorized external JKS directly, discovers its single private-key alias, accepts one hidden password prompt, builds the signed AAB, and verifies the bundle signer against that JKS certificate without persisting signing values.
-- `scripts/manage-play-upload-recovery.ps1` uses PowerShell 7, PBKDF2-HMAC-SHA256, and AES-256-GCM to export, authenticate, and restore a passphrase-protected recovery package. It refuses repository-local and overwrite targets, verifies the embedded keystore/certificate, and recreates a new current-user DPAPI envelope after restore.
+- `scripts/sign-play-bundle-jks.sh` is the routine Linux release path: it uses the authorized external JKS directly, discovers its single private-key alias, accepts one hidden password prompt, builds the signed AAB, and verifies the bundle signer against that JKS certificate without persisting signing values.
+- `scripts/validate-protected-play-bundle-linux.py` authenticates an encrypted recovery package only in memory, supplies process-scoped Gradle inputs, verifies the JAR signature and exact signer certificate, and can optionally build the signed release APK with `--build-apk`.
 
 ## Play Console setup
 
 1. **Complete:** Play app created as `24Seven.FM Player`, package `com.codeframe78.twentyfourseven.player`, default language English (United States), classification App, and Free pricing.
 2. **Complete:** Automatic installer protection disabled so approved local/open-source builds are not redirected to Google Play.
 3. **Complete:** Initial Play App Signing Terms accepted. Prefer the default Google-generated app-signing key at first release; retain only the separate upload key under project-controlled secure backup.
-4. **Complete locally:** A separate 4096-bit RSA upload key was created outside the repository. Its generated password and metadata are stored only in a current-user DPAPI envelope; no plaintext signing environment is persisted.
-5. **Complete locally:** `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate-protected-play-bundle.ps1 -BuildApk` built the signed APK/AAB, verified the AAB signature, and confirmed that the bundle signer matches the configured upload certificate.
+4. **Complete locally:** A separate 4096-bit RSA upload key was created outside the repository. Its material remains external; no plaintext signing environment is persisted.
+5. **Complete locally:** the protected Linux helper built the signed APK/AAB, verified the AAB signature, and confirmed that the bundle signer matches the configured upload certificate.
 6. **Complete:** the encrypted recovery package was exported to an owner-controlled off-PC volume and independently verified with the owner-held passphrase. Its encrypted-package SHA-256 is `361E6A85452DBF9ACDC816F554569E3B7DBA0F98B60C30DB255E54C2644C4D1C`; the passphrase is stored separately and is not in Git.
 7. **Complete locally:** the Linux helper built the current protected AAB/APK from commit `2e43a2b` without persisting plaintext signing material; subsequent AAB/APK verification and local physical-Razr clean-install/update checks matched the registered upload identity.
 8. **Complete:** Google's July 16 notice says the account's Play apps were automatically registered for Android
@@ -52,19 +49,7 @@ The current protected July 18 AAB from commit `2e43a2b` has SHA-256 `FA923DB3C7C
 
 ### Off-PC recovery handoff
 
-Run these commands from the repository with PowerShell 7. The script prompts for the passphrase without echoing it; do not place the passphrase on the command line, in Git, or beside the package.
-
-```powershell
-pwsh.exe -NoProfile -File .\scripts\manage-play-upload-recovery.ps1 `
-  -Action Export `
-  -PackagePath E:\Backups\24seven-upload.24seven-recovery
-
-pwsh.exe -NoProfile -File .\scripts\manage-play-upload-recovery.ps1 `
-  -Action Verify `
-  -PackagePath E:\Backups\24seven-upload.24seven-recovery
-```
-
-Replace `E:\Backups` with the selected external drive or encrypted synced folder. Store the passphrase separately in the owner's password manager. On a replacement Windows profile, `-Action Restore` verifies the package, restores the keystore outside Git, and creates a new DPAPI envelope without printing credentials.
+Keep the encrypted recovery package outside the repository and its passphrase separately in the owner's password manager. The protected Linux procedure in `docs/m23-release-candidate-audit.md` authenticates it only for the signed build and does not persist plaintext signing material.
 
 ### App-content declarations completed July 15, 2026
 

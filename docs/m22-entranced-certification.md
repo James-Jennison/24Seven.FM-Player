@@ -67,7 +67,7 @@ Focused tests prove:
 - All 110 debug unit tests passed with zero failures or skips.
 - `:app:lintDebug` passed.
 - All 21 connected instrumentation tests passed on the wireless Android 16 Razr (131 tests total).
-- The Windows validator passed JDK 17/SDK checks, debug and release unit tests, lint, and `assembleDebug`.
+- The validator passed JDK 17/SDK checks, debug and release unit tests, lint, and `assembleDebug`.
 - The standalone debug APK reinstalled and launched successfully.
 - Live MediaSession evidence reached `PLAYING`, then paused cleanly. Media volume returned to its exact original speaker index and auto-rotate was restored.
 

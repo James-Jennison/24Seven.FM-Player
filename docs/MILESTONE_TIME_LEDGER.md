@@ -196,8 +196,8 @@ independently.
 
 ### M01 — Buildable baseline
 
-- **Objective:** Establish a buildable native Kotlin/Compose Android baseline with pinned tooling and verified Windows
-  and Ubuntu development paths.
+- **Objective:** Establish a buildable native Kotlin/Compose Android baseline with pinned tooling and a verified Linux
+  development workflow.
 - **Start, completion, and intervals:** Earliest repository evidence `July 12, 2026 at 9:29:06 PM PDT (UTC−07:00)`; completed
   `July 13, 2026 at 2:17:48 PM PDT (UTC−07:00)`. Active, automated-wait, and user-blocked intervals are Unknown.
 - **Model, reasoning strength, and original forecast:** Not recorded.

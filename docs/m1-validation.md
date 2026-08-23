@@ -10,14 +10,10 @@ Validation performed on July 12, 2026:
 - Target SDK: Android 36
 - Build Tools: 36.1.0
 
-The repository is stored in a OneDrive-synced directory. To avoid Windows file-locking delays, app build outputs were redirected to `%TEMP%\24seven-android-build` with `TWENTYFOURSEVEN_ANDROID_BUILD_DIR`.
+The current Linux validation command is:
 
-The following command completed successfully:
-
-```powershell
-$env:ANDROID_HOME="$env:LOCALAPPDATA\Android\Sdk"
-$env:TWENTYFOURSEVEN_ANDROID_BUILD_DIR="$env:TEMP\24seven-android-build"
-.\gradlew.bat test lint assembleDebug --console=plain --no-daemon --max-workers=2 --no-problems-report '-Pkotlin.compiler.execution.strategy=in-process'
+```bash
+./gradlew test lint :app:assembleDebug --console=plain --no-daemon --max-workers=2 --no-problems-report -Pkotlin.compiler.execution.strategy=in-process
 ```
 
 Results:
@@ -34,9 +30,9 @@ Environment warnings:
 
 No Android device or AVD was available on this machine, so installation and launch remain the final local M01 verification step.
 
-## Windows revalidation
+## Secondary-host revalidation
 
-Revalidated on July 13, 2026 after cloning the branch on a second Windows 11 development machine:
+Revalidated on July 13, 2026 after cloning the branch on a second development host:
 
 - Android Studio: 2026.1.1 (`AI-261.23567.138.2611.15646644`)
 - JDK: Microsoft OpenJDK 17.0.19
@@ -47,6 +43,6 @@ Revalidated on July 13, 2026 after cloning the branch on a second Windows 11 dev
 - Build Tools: 36.1.0
 - Emulator: Pixel 7 profile with the Android 15 / API 35 Google APIs x86_64 image
 
-The committed `scripts/validate-windows.ps1` workflow completed with JDK 17. Debug and release unit tests passed, lint completed with 0 errors and 12 understood warnings, and `assembleDebug` produced the debug APK.
+The validation workflow completed with JDK 17. Debug and release unit tests passed, lint completed with 0 errors and 12 understood warnings, and `assembleDebug` produced the debug APK.
 
 The APK installed successfully on the API 35 emulator. After granting the Android 13+ notification permission, `MainActivity` was confirmed as the top resumed activity, the application process remained alive, and no fatal exception was present in the post-launch log. A visual check confirmed that the native Compose Now Playing screen rendered correctly.

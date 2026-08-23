@@ -207,10 +207,10 @@ Alpha testers and distributors should read [the privacy notice](PRIVACY.md), [Al
 
 Open the repository in a current Android Studio release with JDK 17. The project targets and compiles against Android 16 (API 36), and is currently validated on the primary Motorola Razr 2023 running Android 16. It supports Android 8.0 (API 26) and newer.
 
-From PowerShell, validate the project with:
+From the Linux workstation, validate the project with:
 
-```powershell
-.\gradlew.bat testDebugUnitTest lintDebug assembleRelease
+```bash
+./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleRelease
 ```
 
 For an Ubuntu Codex CLI and Android Studio workstation, install the pinned
@@ -226,15 +226,4 @@ The script also installs the ChatGPT Codex CLI. Authenticate afterward with
 [Ubuntu development setup](docs/ubuntu-cli-setup.md) for installed components,
 options, security boundaries, and verification commands.
 
-If the repository is inside a OneDrive-synced directory and Gradle stalls on file operations, direct app build outputs to a local directory before running Gradle:
-
-```powershell
-$env:TWENTYFOURSEVEN_ANDROID_BUILD_DIR="$env:TEMP\24seven-android-build"
-```
-
 See [CONTRIBUTING.md](CONTRIBUTING.md) before contributing.
-
-For migration to another Windows development machine, clone the repository, install JDK 17 plus Android SDK Platform
-36 and Build Tools 36.1.0, then run
-`powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate-windows.ps1`. The current Ubuntu workflow
-is documented in the [Ubuntu development setup](docs/ubuntu-cli-setup.md).

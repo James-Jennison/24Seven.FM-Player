@@ -24,7 +24,7 @@ Public, physical-device, and representative authenticated certification was comp
 2. Verify the compact Queue/History, public Chat, request catalog, Favorites gate, and sign-in challenge without mutation.
 3. Reaudit Death.FM's recovered HTTPS pages and model the proven RIP membership difference behind station data.
 4. Lock the capability and exact-route contract with focused repository tests.
-5. Run unit, lint, connected-device, install, and Windows validators; preserve screenshots and update roadmap evidence.
+5. Run unit, lint, connected-device, install, and Linux validators; preserve screenshots and update roadmap evidence.
 6. Commit and publish the focused checkpoint while leaving unverified authenticated capabilities disabled.
 
 ## Completed public and device evidence

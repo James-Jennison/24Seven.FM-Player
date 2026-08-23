@@ -15,6 +15,6 @@ Validated July 14, 2026 against a physical Android 15 (API 35) Motorola Razr 202
 - Station success pages are treated as reported, not independently verified. A complete optional-message form without an explicit request-success phrase is rejected, and the UI directs the listener to confirm Queue before requesting again.
 - Final native verification used the VIP account's explicit least-played suggestion flow. `Clipped Ears` by Nicholas Pike from *For the Love of Spock* entered the public Queue with `Requested by MorG` and the exact message `M10-VIP-least-2-20260714`. The same requester and message rendered independently in the native Queue on the Razr.
 - Unit tests, Android lint, and release assembly pass.
-- All 10 instrumentation tests pass on the Razr. AGP 8.13's Windows UTP profile writer cannot create a filename containing a wireless ADB serial's colon, so the already-built debug and test APKs were installed and the same AndroidJUnitRunner suite was invoked directly on the device.
+- All 10 instrumentation tests pass on the Razr. AGP 8.13's UTP profile writer could not create a filename containing a wireless ADB serial's colon, so the already-built debug and test APKs were installed and the same AndroidJUnitRunner suite was invoked directly on the device.
 
 M10 is complete. Previously confirmed requests were not retried and must not be resubmitted for validation.

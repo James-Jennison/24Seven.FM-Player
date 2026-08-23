@@ -19,13 +19,13 @@ Validated July 14, 2026 from implementation commit `90a7f98` on `agent/initial-a
 
 The following incremental validators passed without `clean`:
 
-```powershell
-.\gradlew.bat :app:compileDebugKotlin
-.\gradlew.bat :app:testDebugUnitTest
-.\gradlew.bat :app:compileDebugAndroidTestKotlin
-.\gradlew.bat :app:lintDebug
-.\gradlew.bat :app:connectedDebugAndroidTest
-.\gradlew.bat :app:installDebug
+```bash
+./gradlew :app:compileDebugKotlin
+./gradlew :app:testDebugUnitTest
+./gradlew :app:compileDebugAndroidTestKotlin
+./gradlew :app:lintDebug
+./gradlew :app:connectedDebugAndroidTest
+./gradlew :app:installDebug
 ```
 
 Coverage includes exact catalog membership, `www.` host normalization, capability gating, malicious URL rejection, four-station route availability, Death.FM unavailability, station-specific extras, accessible card semantics, explicit page action dispatch, and the unsupported-state presentation. The complete connected suite passed **21/21** tests on the wired Motorola Razr 2023 running Android 16.

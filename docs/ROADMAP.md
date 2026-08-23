@@ -40,7 +40,7 @@ owner or provider supplies the required input. The next-step model is recorded i
 
 | ID | Milestone | State | Completion signal |
 | --- | --- | --- | --- |
-| M01 | Buildable baseline | Complete | Native Kotlin/Compose project, pinned Android toolchain, and verified Windows/Ubuntu paths |
+| M01 | Buildable baseline | Complete | Native Kotlin/Compose project, pinned Android toolchain, and verified Linux workflow |
 | M02 | Five-station playback | Complete | Verified station streams, atomic switching, and bounded fallback |
 | M03 | Background and system media | Complete | Service-owned Media3 player, MediaSession, audio focus, and system controls |
 | M04 | Now Playing | Complete | Live ICY metadata and same-station artwork enrichment |
