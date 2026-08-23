@@ -1,6 +1,6 @@
 # Onboarding Portal Time Ledger
 
-Last updated: `August 22, 2026 at 12:46:03 PM PDT (UTC-07:00)`
+Last updated: `August 22, 2026 at 5:35:35 PM PDT (UTC-07:00)`
 
 This is the canonical time-accounting record for the protected 24Seven.FM Player onboarding portal: the Tester workspace, Coordinator workspace, onboarding wizard, assignment and reporting flows, and their safe website releases. It is deliberately independent of the Player Android and Play-operation milestones in `MILESTONE_TIME_LEDGER.md`.
 
@@ -10,18 +10,20 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 
 | Measure | Value | Qualification |
 | --- | ---: | --- |
-| Completed measured portal intervals | 13 | Route-based Tester workspace, shared shell/rail refinements, Phase 1 workbench redesign, CI trigger isolation, Phase 2 record-page workbench, Phase 3 assignment lifecycle handoffs, Phase 4 Coordinator queue discovery, Phase 5 in-portal PT checklist delivery, its runtime activation fix, the shared activity timeline, and its cache-resilience fix. |
-| Active portal time | 1.80 h | Completed intervals only. |
-| Automated wait | 0.10 h | Measured release-gate/build and workflow waits during portal changes. |
+| Completed measured portal intervals | 14 | Route-based Tester workspace, shared shell/rail refinements, Phase 1 workbench redesign, CI trigger isolation, Phase 2 record-page workbench, Phase 3 assignment lifecycle handoffs, Phase 4 Coordinator queue discovery, Phase 5 in-portal PT checklist delivery, its runtime activation fix, the shared activity timeline, its cache-resilience fix, and the Activity clarity refinement. |
+| Active portal time | 1.98 h | Completed intervals only. |
+| Automated wait | 0.12 h | Measured release-gate/build and workflow waits during portal changes. |
 | User-blocked time | 0.00 h | Completed intervals only. |
-| Counted portal time | 1.90 h | Active plus automated wait. |
+| Counted portal time | 2.10 h | Active plus automated wait. |
 
 ## Portal work records
 
 ### Phase 8 activity clarity refinement
 
-- **Authorization and interval:** Authorized and started `August 22, 2026 at 5:22:29 PM PDT (UTC-07:00)`; in progress.
+- **Authorization and interval:** Authorized and started `August 22, 2026 at 5:22:29 PM PDT (UTC-07:00)`; completed `August 22, 2026 at 5:35:35 PM PDT (UTC-07:00)`.
+- **Measured time:** 0.18 h active, 0.02 h automated wait, 0.00 h user-blocked, 0.20 h counted. The unmeasured remainder of the wall-clock interval is excluded.
 - **Scope:** Improve existing Activity records with browser-local time presentation plus UTC context, client-side filters, and concise grouping of generic Coordinator mail handoffs. Preserve every underlying record, privacy boundary, permissions, cache configuration, and workflow; no timezone is persisted or collected and no schema migration is planned.
+- **Evidence:** Merged commit `4dbbb33` through PR #71 adds browser-local formatting with explicit UTC context, client-side All/Onboarding/Work/Communication filters, and concise summaries for repeated generic Coordinator mail handoffs while retaining individual orientation, assignment, and smoke-test evidence. The exact commit passed the complete 56-file portal release gate. The local and server staging manifests matched exactly (SHA-256 `763a3a01b9235d5d4a81a6f2f02980b65ff2f9e0202b453b2733f0802a999094`) before atomic promotion; the prior release remains at `player.jamesjennison.net.rollback-portal-phase8-4dbbb33`. Origin and public HTTPS each returned 200 for Tester Activity, a Coordinator tester-record route, and the new Activity script. No existing Tester Activity tab was claimed or navigated during final verification, so no post-release signed-in visual acceptance is claimed.
 - **Model and forecast:** Current approved model and original forecast were not supplied; recorded as Unknown.
 
 ### Phase 7 activity timeline cache-resilience fix
