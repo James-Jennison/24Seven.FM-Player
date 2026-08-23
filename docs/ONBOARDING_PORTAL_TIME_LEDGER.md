@@ -1,6 +1,6 @@
 # Onboarding Portal Time Ledger
 
-Last updated: `August 23, 2026 at 5:36:39 AM PDT (UTC-07:00)`
+Last updated: `August 23, 2026 at 5:47:22 AM PDT (UTC-07:00)`
 
 This is the canonical time-accounting record for the protected 24Seven.FM Player onboarding portal: the Tester workspace, Coordinator workspace, onboarding wizard, assignment and reporting flows, and their safe website releases. It is deliberately independent of the Player Android and Play-operation milestones in `MILESTONE_TIME_LEDGER.md`.
 
@@ -10,18 +10,20 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 
 | Measure | Value | Qualification |
 | --- | ---: | --- |
-| Completed measured portal intervals | 18 | Route-based Tester workspace, shared shell/rail refinements, Phase 1 workbench redesign, CI trigger isolation, Phase 2 record-page workbench, Phase 3 assignment lifecycle handoffs, Phase 4 Coordinator queue discovery, Phase 5 in-portal PT checklist delivery, its runtime activation fix, the shared activity timeline, its cache-resilience fix, the Activity clarity refinement, the Coordinator Work Review inbox, the Coordinator Coverage Catalog, the Issue Triage and Re-test Queue, and the Explicit Re-test Handoff. |
-| Active portal time | 2.61 h | Completed intervals only. |
-| Automated wait | 0.22 h | Measured release-gate/build and workflow waits during portal changes. |
+| Completed measured portal intervals | 19 | Route-based Tester workspace, shared shell/rail refinements, Phase 1 workbench redesign, CI trigger isolation, Phase 2 record-page workbench, Phase 3 assignment lifecycle handoffs, Phase 4 Coordinator queue discovery, Phase 5 in-portal PT checklist delivery, its runtime activation fix, the shared activity timeline, its cache-resilience fix, the Activity clarity refinement, the Coordinator Work Review inbox, the Coordinator Coverage Catalog, the Issue Triage and Re-test Queue, the Explicit Re-test Handoff, and the Explicit Re-test Notification. |
+| Active portal time | 2.76 h | Completed intervals only. |
+| Automated wait | 0.25 h | Measured release-gate/build and workflow waits during portal changes. |
 | User-blocked time | 0.00 h | Completed intervals only. |
-| Counted portal time | 2.83 h | Active plus automated wait. |
+| Counted portal time | 3.01 h | Active plus automated wait. |
 
 ## Portal work records
 
 ### Phase 13 Explicit Re-test Notification
 
-- **Authorization and interval:** Authorized and started `August 23, 2026 at 5:36:39 AM PDT (UTC-07:00)`; in progress.
+- **Authorization and interval:** Authorized and started `August 23, 2026 at 5:36:39 AM PDT (UTC-07:00)`; completed `August 23, 2026 at 5:47:22 AM PDT (UTC-07:00)`.
+- **Measured time:** 0.15 h active, 0.03 h automated wait, 0.00 h user-blocked, 0.18 h counted. The unmeasured remainder of the wall-clock interval is excluded.
 - **Scope:** Add one explicit Coordinator-only re-test notification action for a previously created separate re-test assignment whose notification state is Not sent. Preview the exact PT case, preserved scope, Tester-visible re-test instruction, and protected Tester-portal destination before a checked confirmation submits the existing mail transport. Archive only the prepared message and transport result, clearly label transport acceptance as not proving inbox delivery or reading, and never auto-send, auto-retry, change an assignment, create a task, alter original evidence, or notify a non-re-test assignment through this action.
+- **Evidence:** Merged commit `53264d5` through PR #81 adds the dedicated Coordinator preview and checked one-time notification action for an existing separate re-test assignment. It retains the exact original PT case, preserved scope, Tester-visible instruction, protected Tester-portal destination, and a distinct `retest_notification` archive type. The action is unavailable for ordinary assignments, its generic assignment-email path rejects re-tests, and an atomic zero-attempt claim prevents duplicate concurrent notifications; the resulting transport outcome is explicitly not inbox-delivery or reading proof and no automatic retry is offered. A data-preserving SQLite migration rebuilds the existing mail archive with its rows and indexes intact so the new constrained message type is valid. The isolated local contract and complete 56-file portal release gate passed; GitHub's required `Validate reviewed portal artifact` and build checks passed. The exact local/staged-server manifests matched all 56 files (SHA-256 `5d1fc4532fab9982eaba9127352d8191257734ceac33a7d54acbc0812649d6c5`) before atomic promotion. The prior live artifact remains at `player.jamesjennison.net.rollback-portal-phase13-53264d5`. Origin and public HTTPS each returned 200 for Issue triage, Re-test handoff, Coverage Catalog, Work Review, Tester Tasks, and the shared stylesheet. No browser tab was touched and no signed-in visual acceptance is claimed for this release.
 - **Model and forecast:** Current approved model and original forecast were not supplied; recorded as Unknown.
 
 ### Phase 12 Explicit Re-test Handoff
