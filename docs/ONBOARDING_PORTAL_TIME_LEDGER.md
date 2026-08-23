@@ -1,6 +1,6 @@
 # Onboarding Portal Time Ledger
 
-Last updated: `August 23, 2026 at 4:53:13 AM PDT (UTC-07:00)`
+Last updated: `August 23, 2026 at 4:57:05 AM PDT (UTC-07:00)`
 
 This is the canonical time-accounting record for the protected 24Seven.FM Player onboarding portal: the Tester workspace, Coordinator workspace, onboarding wizard, assignment and reporting flows, and their safe website releases. It is deliberately independent of the Player Android and Play-operation milestones in `MILESTONE_TIME_LEDGER.md`.
 
@@ -17,6 +17,12 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 | Counted portal time | 2.48 h | Active plus automated wait. |
 
 ## Portal work records
+
+### Phase 11 Issue Triage and Re-test Queue
+
+- **Authorization and interval:** Authorized and started `August 23, 2026 at 4:57:05 AM PDT (UTC-07:00)`; in progress.
+- **Scope:** Add a Coordinator-only issue triage queue derived from existing PT-case reports whose outcome is Issue or Blocked. Record a bounded Coordinator triage state—needs reproduction, known issue, ready for re-test, or closed—with an auditable note. Link each entry to its existing Tester, assignment, exact PT case, and report. Preserve report evidence, task/review behavior, role boundaries, privacy, mail behavior, and atomic release process. Never create a task assignment, send mail, notify a Tester, create an external ticket, or infer a retest; any future retest remains a separately explicit assignment.
+- **Model and forecast:** Current approved model and original forecast were not supplied; recorded as Unknown.
 
 ### Phase 10 Coordinator Coverage Catalog
 

@@ -38,6 +38,7 @@ const CHAT_SUBMISSION_WINDOW_SECONDS = 60;
 const CHAT_SUBMISSION_MAXIMUM = 12;
 const CHAT_RETENTION_DAYS = 90;
 const ASSIGNMENT_STATUSES = ['assigned', 'in_progress', 'complete', 'blocked'];
+const ISSUE_TRIAGE_STATES = ['needs_reproduction', 'known_issue', 'ready_for_retest', 'closed'];
 const COORDINATOR_QUEUE_VIEWS = ['all', 'needs_attention', 'ready_to_assign', 'smoke_test_outstanding', 'reports_awaiting_review', 'active_assignments', 'closed_work'];
 const ONBOARDING_STATUSES = ['profile_pending', 'profile_complete', 'ready', 'paused'];
 const APPLICATION_STAGES = ['pending_review', 'accepted', 'active'];
@@ -262,6 +263,17 @@ function database(array $config): PDO
             created_at TEXT NOT NULL
         );
         CREATE INDEX IF NOT EXISTS tester_task_review_responses_assignment_recent ON tester_task_review_responses(assignment_id, id DESC);
+        CREATE TABLE IF NOT EXISTS tester_issue_triage_events (
+            id INTEGER PRIMARY KEY,
+            feedback_id INTEGER NOT NULL REFERENCES tester_feedback(id) ON DELETE CASCADE,
+            tester_id INTEGER NOT NULL REFERENCES testers(id) ON DELETE CASCADE,
+            assignment_id INTEGER NOT NULL REFERENCES tester_task_assignments(id) ON DELETE CASCADE,
+            state TEXT NOT NULL CHECK(state IN (\'needs_reproduction\', \'known_issue\', \'ready_for_retest\', \'closed\')),
+            coordinator_note TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS tester_issue_triage_events_feedback_recent ON tester_issue_triage_events(feedback_id, id DESC);
+        CREATE INDEX IF NOT EXISTS tester_issue_triage_events_state_recent ON tester_issue_triage_events(state, id DESC);
         CREATE TABLE IF NOT EXISTS chat_threads (
             id INTEGER PRIMARY KEY,
             tester_id INTEGER NOT NULL UNIQUE REFERENCES testers(id) ON DELETE CASCADE,
@@ -655,12 +667,13 @@ function renderPage(string $title, string $content, bool $showCoordinatorNavigat
     header('Pragma: no-cache');
     header('X-Robots-Tag: noindex, nofollow, noarchive');
     header('X-Frame-Options: DENY');
-    $activeWorkspace = str_starts_with($title, 'Live Chat') ? 'chat' : ($title === 'Work review' ? 'review' : ($title === 'Coverage catalog' ? 'coverage' : (str_contains($title, 'email') ? 'email' : 'operations')));
+    $activeWorkspace = str_starts_with($title, 'Live Chat') ? 'chat' : ($title === 'Work review' ? 'review' : ($title === 'Issue triage' ? 'triage' : ($title === 'Coverage catalog' ? 'coverage' : (str_contains($title, 'email') ? 'email' : 'operations'))));
     $operationsClass = $activeWorkspace === 'operations' ? ' active' : '';
     $chatClass = $activeWorkspace === 'chat' ? ' active' : '';
     $emailClass = $activeWorkspace === 'email' ? ' active' : '';
     $reviewClass = $activeWorkspace === 'review' ? ' active' : '';
     $coverageClass = $activeWorkspace === 'coverage' ? ' active' : '';
+    $triageClass = $activeWorkspace === 'triage' ? ' active' : '';
     $portalStyleAsset = __DIR__ . '/assets/onboarding-portal.css';
     $portalStyleVersion = is_file($portalStyleAsset) ? substr((string) hash_file('sha256', $portalStyleAsset), 0, 12) : 'portal';
     $loginLayout = $showCoordinatorNavigation ? '' : '<style>.global-rail{display:none!important}.app-shell{display:block}.desktop{padding:1.5rem}section.login{width:min(calc(100% - 3rem),31rem);margin:9vh auto!important}</style>';
@@ -773,7 +786,7 @@ small{color:#b7bdca}
 .task-preview-instructions{margin:.45rem 0 .65rem;padding-left:1.3rem}
 .copy-assignment{margin-left:.5rem}
 @media(max-width:44rem){table{font-size:.86rem}.optional{display:none}.onboarding-overview,.tester-task-panels{grid-template-columns:1fr}.shell{margin:1rem auto}.copy-assignment{margin-left:0}.dashboard-header{flex-direction:column}.application-row{flex-direction:column}.application-actions{width:100%}}
-</style><link rel="stylesheet" href="/assets/onboarding-portal.css?v=' . e($portalStyleVersion) . '"></head><body><a class="skip-link" href="#workspace">Skip to workspace</a><div class="app-shell"><aside class="global-rail" aria-label="Coordinator workspace navigation"><a class="brand-mark" href="/" aria-label="24Seven.FM Player home"><img src="/assets/project/app-icon.png" alt=""></a><nav><a class="rail-button' . $operationsClass . '" href="/private-tester-queue.php" aria-label="Operations workspace"><b aria-hidden="true">▦</b><span>Operations</span></a><a class="rail-button' . $coverageClass . '" href="/private-tester-queue.php?coverage=1" aria-label="Coverage catalog workspace"><b aria-hidden="true">◫</b><span>Coverage catalog</span></a><a class="rail-button' . $reviewClass . '" href="/private-tester-queue.php?work_review=1" aria-label="Work review workspace"><b aria-hidden="true">✓</b><span>Work review</span></a><a class="rail-button' . $chatClass . '" href="/private-tester-queue.php?live_chat=1" aria-label="Live Chat workspace"><b aria-hidden="true">◌</b><span>Live Chat</span></a><a class="rail-button' . $emailClass . '" href="/private-tester-queue.php?email=1" aria-label="Email workspace"><b aria-hidden="true">✉</b><span>Email</span></a></nav></aside><main id="workspace" class="desktop">'
+</style><link rel="stylesheet" href="/assets/onboarding-portal.css?v=' . e($portalStyleVersion) . '"></head><body><a class="skip-link" href="#workspace">Skip to workspace</a><div class="app-shell"><aside class="global-rail" aria-label="Coordinator workspace navigation"><a class="brand-mark" href="/" aria-label="24Seven.FM Player home"><img src="/assets/project/app-icon.png" alt=""></a><nav><a class="rail-button' . $operationsClass . '" href="/private-tester-queue.php" aria-label="Operations workspace"><b aria-hidden="true">▦</b><span>Operations</span></a><a class="rail-button' . $coverageClass . '" href="/private-tester-queue.php?coverage=1" aria-label="Coverage catalog workspace"><b aria-hidden="true">◫</b><span>Coverage catalog</span></a><a class="rail-button' . $reviewClass . '" href="/private-tester-queue.php?work_review=1" aria-label="Work review workspace"><b aria-hidden="true">✓</b><span>Work review</span></a><a class="rail-button' . $triageClass . '" href="/private-tester-queue.php?issue_triage=1" aria-label="Issue triage workspace"><b aria-hidden="true">!</b><span>Issue triage</span></a><a class="rail-button' . $chatClass . '" href="/private-tester-queue.php?live_chat=1" aria-label="Live Chat workspace"><b aria-hidden="true">◌</b><span>Live Chat</span></a><a class="rail-button' . $emailClass . '" href="/private-tester-queue.php?email=1" aria-label="Email workspace"><b aria-hidden="true">✉</b><span>Email</span></a></nav></aside><main id="workspace" class="desktop">'
         . $content . '</main></div></body></html>';
     exit;
 }
@@ -928,6 +941,58 @@ function assignmentReviewDecisionLabel(string $decision): string
         'blocked' => 'Blocked by Coordinator',
         default => 'No Coordinator decision yet',
     };
+}
+
+function issueTriageStateLabel(string $state): string
+{
+    return match ($state) {
+        'needs_reproduction' => 'Needs reproduction',
+        'known_issue' => 'Known issue',
+        'ready_for_retest' => 'Ready for re-test',
+        'closed' => 'Closed',
+        default => 'Not triaged',
+    };
+}
+
+/** @return list<array{id:int,feedback_id:int,tester_id:int,assignment_id:int,state:string,coordinator_note:string,created_at:string}> */
+function issueTriageEvents(PDO $database, int $feedbackId): array
+{
+    $statement = $database->prepare('SELECT id, feedback_id, tester_id, assignment_id, state, coordinator_note, created_at FROM tester_issue_triage_events WHERE feedback_id = ? ORDER BY created_at DESC, id DESC');
+    $statement->execute([$feedbackId]);
+    return $statement->fetchAll();
+}
+
+/** @return array{id:int,feedback_id:int,tester_id:int,assignment_id:int,state:string,coordinator_note:string,created_at:string}|null */
+function latestIssueTriageEvent(PDO $database, int $feedbackId): ?array
+{
+    $events = issueTriageEvents($database, $feedbackId);
+    return $events[0] ?? null;
+}
+
+/** @return array{id:int,tester_id:int,assignment_id:int,subject:string,details:string,outcome:string,category:string,pt_case:string,created_at:string,display_name:string,task_id:string,station_scope:string,configuration_scope:string} */
+function issueTriageFeedback(PDO $database, int $feedbackId): array
+{
+    $statement = $database->prepare("SELECT feedback.id, feedback.tester_id, feedback.assignment_id, feedback.subject, feedback.details, feedback.outcome, feedback.category, feedback.pt_case, feedback.created_at, testers.display_name, assignments.task_id, assignments.station_scope, assignments.configuration_scope FROM tester_feedback AS feedback JOIN testers ON testers.id = feedback.tester_id JOIN tester_task_assignments AS assignments ON assignments.id = feedback.assignment_id WHERE feedback.id = ? AND feedback.outcome IN ('issue', 'blocked') AND testers.status = 'active'");
+    $statement->execute([$feedbackId]);
+    $feedback = $statement->fetch();
+    if ($feedback === false) {
+        throw new InvalidArgumentException('The requested issue report is unavailable for triage.');
+    }
+    return $feedback;
+}
+
+function recordIssueTriage(PDO $database, int $feedbackId, string $state, string $note): void
+{
+    if (!in_array($state, ISSUE_TRIAGE_STATES, true)) {
+        throw new InvalidArgumentException('Choose a valid issue triage state.');
+    }
+    $note = trim($note);
+    if ($note === '' || textLength($note) > MAX_ASSIGNMENT_NOTE_LENGTH || str_contains($note, "\0")) {
+        throw new InvalidArgumentException('An auditable triage note is required.');
+    }
+    $feedback = issueTriageFeedback($database, $feedbackId);
+    $database->prepare('INSERT INTO tester_issue_triage_events(feedback_id, tester_id, assignment_id, state, coordinator_note, created_at) VALUES (?, ?, ?, ?, ?, ?)')
+        ->execute([$feedbackId, (int) $feedback['tester_id'], (int) $feedback['assignment_id'], $state, $note, gmdate('c')]);
 }
 
 /**
@@ -2243,6 +2308,41 @@ function applicationStageBadge(string $stage): string
     return '<span class="' . e(applicationStageBadgeClass($stage)) . '">' . e(applicationStageLabel($stage)) . '</span>';
 }
 
+function renderIssueTriageQueue(PDO $database, string $notice = '', string $error = ''): never
+{
+    $showClosed = isset($_GET['issue_triage_closed']);
+    $query = $database->query("SELECT feedback.id, feedback.tester_id, feedback.assignment_id, feedback.subject, feedback.details, feedback.outcome, feedback.category, feedback.pt_case, feedback.created_at, testers.display_name, assignments.task_id, assignments.station_scope, assignments.configuration_scope FROM tester_feedback AS feedback JOIN testers ON testers.id = feedback.tester_id JOIN tester_task_assignments AS assignments ON assignments.id = feedback.assignment_id WHERE testers.status = 'active' AND feedback.outcome IN ('issue', 'blocked') ORDER BY feedback.created_at ASC, feedback.id ASC");
+    $cards = '';
+    $openCount = 0;
+    foreach ($query->fetchAll() as $feedback) {
+        $feedbackId = (int) $feedback['id'];
+        $latest = latestIssueTriageEvent($database, $feedbackId);
+        $state = (string) ($latest['state'] ?? '');
+        if ($state === 'closed' && !$showClosed) continue;
+        if ($state !== 'closed') $openCount++;
+        $history = '';
+        foreach (array_reverse(issueTriageEvents($database, $feedbackId)) as $event) {
+            $history .= '<li><strong>' . e(issueTriageStateLabel((string) $event['state'])) . '</strong><small>' . e(humanTimestamp((string) $event['created_at'])) . '</small><p>' . nl2br(e((string) $event['coordinator_note']), false) . '</p></li>';
+        }
+        $stateOptions = '';
+        foreach (ISSUE_TRIAGE_STATES as $candidate) {
+            $selected = $candidate === ($state === '' ? 'needs_reproduction' : $state) ? ' selected' : '';
+            $stateOptions .= '<option value="' . e($candidate) . '"' . $selected . '>' . e(issueTriageStateLabel($candidate)) . '</option>';
+        }
+        $scope = trim((string) $feedback['station_scope']) === '' ? 'No station scope recorded' : (string) $feedback['station_scope'];
+        $configuration = trim((string) $feedback['configuration_scope']) === '' ? 'No additional device scope recorded' : (string) $feedback['configuration_scope'];
+        $currentState = $state === '' ? 'Not triaged' : issueTriageStateLabel($state);
+        $cards .= '<article class="work-record review-inbox-card"><div class="work-record-heading"><div><p class="eyebrow">' . e(strtoupper((string) $feedback['outcome'])) . ' PT report</p><h2>' . e((string) $feedback['display_name'] . ' · ' . (string) $feedback['task_id'] . ' · ' . ((string) $feedback['pt_case'] === '' ? 'PT case' : (string) $feedback['pt_case'])) . '</h2></div><span class="pill ' . ($state === 'closed' ? '' : 'pending') . '">' . e($currentState) . '</span></div><div class="work-record-context"><span><strong>Reported</strong> ' . e(humanTimestamp((string) $feedback['created_at'])) . '</span><span><strong>Category</strong> ' . e(FEEDBACK_CATEGORIES[(string) $feedback['category']] ?? FEEDBACK_CATEGORIES['other']) . '</span><span><strong>Station scope</strong> ' . e($scope) . '</span><span><strong>Device scope</strong> ' . e($configuration) . '</span></div><section class="review-evidence"><p class="task-plan-label">Tester report</p><h3>' . e((string) $feedback['subject']) . '</h3><p>' . nl2br(e((string) $feedback['details']), false) . '</p></section><section class="issue-triage-history"><p class="task-plan-label">Coordinator triage history</p>' . ($history === '' ? '<p class="muted">No triage decision is recorded yet.</p>' : '<ol>' . $history . '</ol>') . '</section><form method="post" class="review-decision-form"><input type="hidden" name="action" value="triage_issue"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="feedback_id" value="' . $feedbackId . '"><label>Triage state <select name="triage_state" required>' . $stateOptions . '</select></label><label>Auditable Coordinator note <textarea name="triage_note" maxlength="' . MAX_ASSIGNMENT_NOTE_LENGTH . '" required placeholder="Record the evidence-based next step. Do not include credentials, session data, or private screenshots."></textarea></label><p class="muted small">Ready for re-test records a follow-up state only. It does not create an assignment, send mail, notify the Tester, or create an external ticket.</p><button type="submit">Record triage decision</button></form><div class="work-record-actions"><a class="button secondary" href="/private-tester-queue.php?tester=' . (int) $feedback['tester_id'] . '">Open Coordinator record</a><a class="button secondary" href="/tester-portal.php?preview_tester=' . (int) $feedback['tester_id'] . '&amp;view=tasks&amp;assignment=' . (int) $feedback['assignment_id'] . '">Preview Tester handoff</a></div></article>';
+    }
+    $closedLink = $showClosed ? '/private-tester-queue.php?issue_triage=1' : '/private-tester-queue.php?issue_triage=1&amp;issue_triage_closed=1';
+    $closedLabel = $showClosed ? 'Hide closed triage' : 'Show closed triage';
+    $message = $notice === '' ? '' : '<p class="notice">' . e($notice) . '</p>';
+    $message .= $error === '' ? '' : '<p class="notice error">' . e($error) . '</p>';
+    $content = '<header class="workspace-page-header"><div class="workspace-page-heading"><p class="eyebrow">24Seven.FM Player · Closed Alpha</p><h1>Issue triage</h1><p class="muted">Turn an existing Issue or Blocked PT report into an explicit Coordinator follow-up without changing the Tester task or creating external work.</p></div><div class="workspace-page-actions"><span class="workspace-role">Coordinator workspace</span><a class="link-button" href="/private-tester-queue.php?work_review=1">Work review</a><a class="link-button" href="/private-tester-queue.php?coverage=1">Coverage catalog</a><form method="post"><input type="hidden" name="action" value="logout"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><button class="secondary" type="submit">Sign out</button></form></div></header>' . $message
+        . '<section class="workspace-primary-card"><div><p class="eyebrow">Follow-up queue</p><h2>' . ($openCount === 0 ? 'No unresolved issue reports' : $openCount . ' issue report' . ($openCount === 1 ? '' : 's') . ' needs a Coordinator follow-up') . '</h2><p class="muted">Each decision is immutable, remains private to the Coordinator workspace, and is linked to the exact reported PT case. A re-test remains a separately explicit focused assignment.</p></div><a class="button secondary" href="' . $closedLink . '">' . e($closedLabel) . '</a></section><section class="review-inbox-list" aria-label="Issue triage queue">' . ($cards === '' ? '<p class="muted">No matching Issue or Blocked PT reports are waiting for triage.</p>' : $cards) . '</section>';
+    renderPage('Issue triage', $content);
+}
+
 function renderCoverageCatalog(PDO $database): never
 {
     $catalog = coordinatorCoverageCatalog($database);
@@ -2774,6 +2874,14 @@ try {
             chatSoftDeleteMessage($database, $testerId, 'coordinator', $messageId);
             redirect('?live_chat=1&chat_tester=' . $testerId . '&notice=' . rawurlencode('Chat message removed from your view.'));
         }
+        if ($action === 'triage_issue') {
+            $feedbackId = filter_var($_POST['feedback_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+            if ($feedbackId === false) {
+                throw new InvalidArgumentException('The requested issue report is invalid.');
+            }
+            recordIssueTriage($database, $feedbackId, (string) ($_POST['triage_state'] ?? ''), (string) ($_POST['triage_note'] ?? ''));
+            redirect('?issue_triage=1&notice=' . rawurlencode('Issue triage decision recorded.'));
+        }
         if ($action === 'accept_application') {
             $testerId = testerId();
             activeTester($database, $testerId);
@@ -3022,6 +3130,9 @@ try {
     }
     if (isset($_GET['live_chat'])) {
         renderLiveChatWorkspace($database, $chatTesterId === false ? 0 : (int) $chatTesterId);
+    }
+    if (isset($_GET['issue_triage'])) {
+        renderIssueTriageQueue($database, (string) ($_GET['notice'] ?? ''), (string) ($_GET['error'] ?? ''));
     }
     if (isset($_GET['coverage'])) {
         renderCoverageCatalog($database);
