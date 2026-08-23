@@ -243,6 +243,25 @@ function database(array $config): PDO
             pt_case TEXT,
             created_at TEXT NOT NULL
         );
+        CREATE TABLE IF NOT EXISTS tester_task_review_events (
+            id INTEGER PRIMARY KEY,
+            assignment_id INTEGER NOT NULL REFERENCES tester_task_assignments(id) ON DELETE CASCADE,
+            tester_id INTEGER NOT NULL REFERENCES testers(id) ON DELETE CASCADE,
+            decision TEXT NOT NULL CHECK(decision IN (\'complete\', \'returned\', \'blocked\')),
+            tester_note TEXT NOT NULL DEFAULT \'\',
+            created_at TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS tester_task_review_events_assignment_recent ON tester_task_review_events(assignment_id, id DESC);
+        CREATE INDEX IF NOT EXISTS tester_task_review_events_tester_recent ON tester_task_review_events(tester_id, id DESC);
+        CREATE TABLE IF NOT EXISTS tester_task_review_responses (
+            id INTEGER PRIMARY KEY,
+            assignment_id INTEGER NOT NULL REFERENCES tester_task_assignments(id) ON DELETE CASCADE,
+            tester_id INTEGER NOT NULL REFERENCES testers(id) ON DELETE CASCADE,
+            review_event_id INTEGER NOT NULL REFERENCES tester_task_review_events(id) ON DELETE CASCADE,
+            response TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS tester_task_review_responses_assignment_recent ON tester_task_review_responses(assignment_id, id DESC);
         CREATE TABLE IF NOT EXISTS chat_threads (
             id INTEGER PRIMARY KEY,
             tester_id INTEGER NOT NULL UNIQUE REFERENCES testers(id) ON DELETE CASCADE,
@@ -636,10 +655,11 @@ function renderPage(string $title, string $content, bool $showCoordinatorNavigat
     header('Pragma: no-cache');
     header('X-Robots-Tag: noindex, nofollow, noarchive');
     header('X-Frame-Options: DENY');
-    $activeWorkspace = str_starts_with($title, 'Live Chat') ? 'chat' : (str_contains($title, 'email') ? 'email' : 'operations');
+    $activeWorkspace = str_starts_with($title, 'Live Chat') ? 'chat' : ($title === 'Work review' ? 'review' : (str_contains($title, 'email') ? 'email' : 'operations'));
     $operationsClass = $activeWorkspace === 'operations' ? ' active' : '';
     $chatClass = $activeWorkspace === 'chat' ? ' active' : '';
     $emailClass = $activeWorkspace === 'email' ? ' active' : '';
+    $reviewClass = $activeWorkspace === 'review' ? ' active' : '';
     $portalStyleAsset = __DIR__ . '/assets/onboarding-portal.css';
     $portalStyleVersion = is_file($portalStyleAsset) ? substr((string) hash_file('sha256', $portalStyleAsset), 0, 12) : 'portal';
     $loginLayout = $showCoordinatorNavigation ? '' : '<style>.global-rail{display:none!important}.app-shell{display:block}.desktop{padding:1.5rem}section.login{width:min(calc(100% - 3rem),31rem);margin:9vh auto!important}</style>';
@@ -752,7 +772,7 @@ small{color:#b7bdca}
 .task-preview-instructions{margin:.45rem 0 .65rem;padding-left:1.3rem}
 .copy-assignment{margin-left:.5rem}
 @media(max-width:44rem){table{font-size:.86rem}.optional{display:none}.onboarding-overview,.tester-task-panels{grid-template-columns:1fr}.shell{margin:1rem auto}.copy-assignment{margin-left:0}.dashboard-header{flex-direction:column}.application-row{flex-direction:column}.application-actions{width:100%}}
-</style><link rel="stylesheet" href="/assets/onboarding-portal.css?v=' . e($portalStyleVersion) . '"></head><body><a class="skip-link" href="#workspace">Skip to workspace</a><div class="app-shell"><aside class="global-rail" aria-label="Coordinator workspace navigation"><a class="brand-mark" href="/" aria-label="24Seven.FM Player home"><img src="/assets/project/app-icon.png" alt=""></a><nav><a class="rail-button' . $operationsClass . '" href="/private-tester-queue.php" aria-label="Operations workspace"><b aria-hidden="true">▦</b><span>Operations</span></a><a class="rail-button' . $chatClass . '" href="/private-tester-queue.php?live_chat=1" aria-label="Live Chat workspace"><b aria-hidden="true">◌</b><span>Live Chat</span></a><a class="rail-button' . $emailClass . '" href="/private-tester-queue.php?email=1" aria-label="Email workspace"><b aria-hidden="true">✉</b><span>Email</span></a></nav></aside><main id="workspace" class="desktop">'
+</style><link rel="stylesheet" href="/assets/onboarding-portal.css?v=' . e($portalStyleVersion) . '"></head><body><a class="skip-link" href="#workspace">Skip to workspace</a><div class="app-shell"><aside class="global-rail" aria-label="Coordinator workspace navigation"><a class="brand-mark" href="/" aria-label="24Seven.FM Player home"><img src="/assets/project/app-icon.png" alt=""></a><nav><a class="rail-button' . $operationsClass . '" href="/private-tester-queue.php" aria-label="Operations workspace"><b aria-hidden="true">▦</b><span>Operations</span></a><a class="rail-button' . $reviewClass . '" href="/private-tester-queue.php?work_review=1" aria-label="Work review workspace"><b aria-hidden="true">✓</b><span>Work review</span></a><a class="rail-button' . $chatClass . '" href="/private-tester-queue.php?live_chat=1" aria-label="Live Chat workspace"><b aria-hidden="true">◌</b><span>Live Chat</span></a><a class="rail-button' . $emailClass . '" href="/private-tester-queue.php?email=1" aria-label="Email workspace"><b aria-hidden="true">✉</b><span>Email</span></a></nav></aside><main id="workspace" class="desktop">'
         . $content . '</main></div></body></html>';
     exit;
 }
@@ -871,11 +891,50 @@ function assignmentReportProgress(PDO $database, int $assignmentId, array $task)
 }
 
 /**
+ * Coordinator review decisions are immutable evidence. A returned assignment
+ * may later be resubmitted, so the event history must not be inferred from the
+ * assignment's mutable status or overwritten submission timestamp.
+ *
+ * @return list<array{id:int,assignment_id:int,tester_id:int,decision:string,tester_note:string,created_at:string}>
+ */
+function assignmentReviewEvents(PDO $database, int $assignmentId): array
+{
+    $statement = $database->prepare('SELECT id, assignment_id, tester_id, decision, tester_note, created_at FROM tester_task_review_events WHERE assignment_id = ? ORDER BY created_at DESC, id DESC');
+    $statement->execute([$assignmentId]);
+    return $statement->fetchAll();
+}
+
+/** @return array{id:int,assignment_id:int,tester_id:int,decision:string,tester_note:string,created_at:string}|null */
+function latestAssignmentReviewEvent(PDO $database, int $assignmentId): ?array
+{
+    $events = assignmentReviewEvents($database, $assignmentId);
+    return $events[0] ?? null;
+}
+
+/** @return list<array{id:int,assignment_id:int,tester_id:int,review_event_id:int,response:string,created_at:string}> */
+function assignmentReviewResponses(PDO $database, int $assignmentId): array
+{
+    $statement = $database->prepare('SELECT id, assignment_id, tester_id, review_event_id, response, created_at FROM tester_task_review_responses WHERE assignment_id = ? ORDER BY created_at ASC, id ASC');
+    $statement->execute([$assignmentId]);
+    return $statement->fetchAll();
+}
+
+function assignmentReviewDecisionLabel(string $decision): string
+{
+    return match ($decision) {
+        'complete' => 'Completed by Coordinator',
+        'returned' => 'Returned for clarification',
+        'blocked' => 'Blocked by Coordinator',
+        default => 'No Coordinator decision yet',
+    };
+}
+
+/**
  * Builds the shared, evidence-backed assignment lifecycle shown to both roles.
  * It deliberately derives only from the existing assignment and report facts;
  * it does not infer an install, test, or review that was never recorded.
  */
-function assignmentLifecycleMarkup(array $assignment, array $progress, string $viewer): string
+function assignmentLifecycleMarkup(array $assignment, array $progress, string $viewer, ?array $latestReview = null): string
 {
     $status = (string) ($assignment['task_status'] ?? 'assigned');
     $createdAt = humanTimestamp((string) ($assignment['created_at'] ?? ''));
@@ -890,10 +949,15 @@ function assignmentLifecycleMarkup(array $assignment, array $progress, string $v
         ['Coordinator review', $submittedAt === ''
             ? ($viewer === 'coordinator' ? 'Waiting for the Tester to submit the full task for review.' : 'Submit the full task after every assigned PT case is reported.')
             : $audience . ' submitted this task for Coordinator review ' . $submittedAt . '.'],
+        ['Coordinator decision', $latestReview === null
+            ? 'No Coordinator decision is recorded yet.'
+            : assignmentReviewDecisionLabel((string) $latestReview['decision']) . ' ' . humanTimestamp((string) $latestReview['created_at']) . '.'],
         ['Final status', match ($status) {
             'complete' => 'Coordinator marked this task complete' . ($updatedAt === '' ? '.' : ' ' . $updatedAt . '.'),
             'blocked' => 'This task is blocked' . ($updatedAt === '' ? '.' : ' as of ' . $updatedAt . '.'),
-            default => 'No final Coordinator decision is recorded yet.',
+            default => ($latestReview !== null && ($latestReview['decision'] ?? '') === 'returned'
+                ? 'Tester clarification is needed before this task can return for review.'
+                : 'No final Coordinator decision is recorded yet.'),
         }],
     ];
     $items = '';
@@ -902,6 +966,7 @@ function assignmentLifecycleMarkup(array $assignment, array $progress, string $v
             'Assigned' => true,
             'PT-case evidence' => $requiredCount > 0 && $reportedCount === $requiredCount,
             'Coordinator review' => $submittedAt !== '',
+            'Coordinator decision' => $latestReview !== null,
             'Final status' => in_array($status, ['complete', 'blocked'], true),
         };
         $items .= '<li class="' . ($done ? 'done' : '') . '"><span aria-hidden="true">' . ($done ? '✓' : '○') . '</span><div><strong>' . e($label) . '</strong><small>' . e($detail) . '</small></div></li>';
@@ -934,6 +999,19 @@ function testerActivityTimeline(PDO $database, array $tester, array $assignments
         $taskLabel = (string) $task['id'] . ' — ' . (string) $task['title'];
         $add($assignment['created_at'] ?? null, 'Focused task assigned', $taskLabel . ' was assigned.', 'work');
         $add($assignment['submitted_for_review_at'] ?? null, 'Task submitted for Coordinator review', $actor . ' submitted ' . (string) $task['id'] . ' after reporting every assigned PT case.', 'work');
+        foreach (assignmentReviewEvents($database, (int) $assignment['id']) as $review) {
+            $decision = (string) ($review['decision'] ?? '');
+            $detail = match ($decision) {
+                'complete' => (string) $task['id'] . ' was accepted as complete. Review the assignment record for its final status.',
+                'returned' => (string) $task['id'] . ' needs clarification. Review the assignment record for the Coordinator\'s next action.',
+                'blocked' => (string) $task['id'] . ' was marked blocked. Review the assignment record for the Coordinator\'s next action.',
+                default => 'A Coordinator decision was recorded for ' . (string) $task['id'] . '.',
+            };
+            $add($review['created_at'] ?? null, 'Coordinator review decision', $detail, 'work');
+        }
+        foreach (assignmentReviewResponses($database, (int) $assignment['id']) as $response) {
+            $add($response['created_at'] ?? null, 'Tester clarification submitted', $actor . ' submitted a clarification for ' . (string) $task['id'] . ' to the Coordinator.', 'work');
+        }
         $status = (string) ($assignment['task_status'] ?? '');
         if (in_array($status, ['complete', 'blocked'], true)) {
             $add($assignment['updated_at'] ?? null, 'Coordinator recorded final task status', (string) $task['id'] . ' is marked ' . $status . '.', 'work');
@@ -2072,6 +2150,37 @@ function applicationStageBadge(string $stage): string
     return '<span class="' . e(applicationStageBadgeClass($stage)) . '">' . e(applicationStageLabel($stage)) . '</span>';
 }
 
+function renderWorkReviewInbox(PDO $database, string $notice = '', string $error = ''): never
+{
+    $tasks = taskRegistry();
+    $query = $database->query("SELECT assignments.id, assignments.tester_id, assignments.task_id, assignments.task_status, assignments.station_scope, assignments.configuration_scope, assignments.submitted_for_review_at, assignments.created_at, testers.display_name FROM tester_task_assignments AS assignments JOIN testers ON testers.id = assignments.tester_id WHERE testers.status = 'active' AND assignments.submitted_for_review_at IS NOT NULL AND assignments.submitted_for_review_at <> '' AND assignments.task_status IN ('assigned', 'in_progress') ORDER BY assignments.submitted_for_review_at ASC, assignments.id ASC");
+    $cards = '';
+    foreach ($query->fetchAll() as $assignment) {
+        $task = $tasks[(string) $assignment['task_id']] ?? null;
+        if (!is_array($task)) continue;
+        $assignmentId = (int) $assignment['id'];
+        $progress = assignmentReportProgress($database, $assignmentId, $task);
+        $reports = $database->prepare('SELECT pt_case, outcome, category, subject, details, created_at FROM tester_feedback WHERE assignment_id = ? ORDER BY created_at ASC, id ASC');
+        $reports->execute([$assignmentId]);
+        $reportItems = '';
+        foreach ($reports->fetchAll() as $report) {
+            $reportItems .= '<article class="assignment-existing"><h4>' . e((string) $report['pt_case'] . ' · ' . strtoupper((string) $report['outcome'])) . '</h4><p><strong>' . e(FEEDBACK_CATEGORIES[(string) $report['category']] ?? FEEDBACK_CATEGORIES['other']) . ' · ' . e((string) $report['subject']) . '</strong><br><small>' . e(humanTimestamp((string) $report['created_at'])) . '</small></p><p>' . nl2br(e((string) $report['details']), false) . '</p></article>';
+        }
+        $clarificationItems = '';
+        foreach (assignmentReviewResponses($database, $assignmentId) as $response) {
+            $clarificationItems .= '<article class="assignment-existing"><h4>Tester clarification</h4><p><small>' . e(humanTimestamp((string) $response['created_at'])) . '</small></p><p>' . nl2br(e((string) $response['response']), false) . '</p></article>';
+        }
+        $scope = trim((string) $assignment['station_scope']) === '' ? (string) $task['stationScope'] : (string) $assignment['station_scope'];
+        $configuration = trim((string) $assignment['configuration_scope']) === '' ? 'No additional device scope supplied' : (string) $assignment['configuration_scope'];
+        $coverage = count($progress['reported']) . ' of ' . count($progress['required']) . ' required PT-case reports';
+        $cards .= '<article class="work-record review-inbox-card"><div class="work-record-heading"><div><p class="eyebrow">Submitted Tester work</p><h2>' . e((string) $assignment['display_name']) . ' · ' . e((string) $task['id'] . ' — ' . (string) $task['title']) . '</h2></div><span class="pill pending">Awaiting decision</span></div><div class="work-record-context"><span><strong>Submitted</strong> ' . e(humanTimestamp((string) $assignment['submitted_for_review_at'])) . '</span><span><strong>PT-case evidence</strong> ' . e($coverage) . '</span><span><strong>Station scope</strong> ' . e($scope) . '</span><span><strong>Device scope</strong> ' . e($configuration) . '</span></div>' . assignmentLifecycleMarkup($assignment, $progress, 'coordinator', latestAssignmentReviewEvent($database, $assignmentId)) . '<section class="review-evidence"><p class="task-plan-label">Tester evidence</p>' . ($reportItems === '' ? '<p class="muted">No structured PT-case reports are available. This assignment cannot be completed.</p>' : $reportItems) . ($clarificationItems === '' ? '' : '<p class="task-plan-label">Clarification history</p>' . $clarificationItems) . '</section><form method="post" class="review-decision-form"><input type="hidden" name="action" value="review_assignment"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="assignment_id" value="' . $assignmentId . '"><label>Tester-visible review note <textarea name="review_note" maxlength="' . MAX_ASSIGNMENT_NOTE_LENGTH . '" placeholder="Required when returning or blocking work. Do not include credentials, session information, or private data."></textarea></label><p class="muted small">Complete accepts the evidence. Return requests an auditable tester clarification before the task returns here. Block records that the task cannot proceed.</p><div class="actions"><button type="submit" name="review_decision" value="complete">Mark complete</button><button class="secondary" type="submit" name="review_decision" value="returned">Return for clarification</button><button class="danger" type="submit" name="review_decision" value="blocked">Mark blocked</button></div></form><div class="work-record-actions"><a class="button secondary" href="/private-tester-queue.php?tester=' . (int) $assignment['tester_id'] . '">Open Coordinator record</a><a class="button secondary" href="/tester-portal.php?preview_tester=' . (int) $assignment['tester_id'] . '&amp;view=tasks&amp;assignment=' . $assignmentId . '">Preview Tester handoff</a></div></article>';
+    }
+    $message = $notice === '' ? '' : '<p class="notice">' . e($notice) . '</p>';
+    $message .= $error === '' ? '' : '<p class="notice error">' . e($error) . '</p>';
+    $content = '<header class="workspace-page-header"><div class="workspace-page-heading"><p class="eyebrow">24Seven.FM Player · Closed Alpha</p><h1>Work review</h1><p class="muted">Make a deliberate Coordinator decision only after reviewing every required PT-case result and its exact tester evidence.</p></div><div class="workspace-page-actions"><span class="workspace-role">Coordinator workspace</span><a class="link-button" href="/private-tester-queue.php">Back to operations</a><form method="post"><input type="hidden" name="action" value="logout"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><button class="secondary" type="submit">Sign out</button></form></div></header>' . $message . '<section class="workspace-primary-card"><div><p class="eyebrow">Decision inbox</p><h2>' . ($cards === '' ? 'No submitted work is waiting' : 'Submitted work awaiting a decision') . '</h2><p class="muted">This inbox contains only assignments the Tester explicitly submitted after recording every required PT case. Email handoffs and ordinary in-progress work are not treated as review evidence.</p></div><a class="button secondary" href="/private-tester-queue.php?queue=reports_awaiting_review">Open matching roster view</a></section><section class="review-inbox-list" aria-label="Submitted Tester work">' . ($cards === '' ? '<p class="muted">When a Tester submits a fully reported task, it will appear here for review.</p>' : $cards) . '</section>';
+    renderPage('Work review', $content);
+}
+
 function renderOperationsDashboard(PDO $database, string $notice = '', string $error = '', bool $emailOnly = false): never
 {
     $tasks = taskRegistry();
@@ -2206,7 +2315,7 @@ function renderOperationsDashboard(PDO $database, string $notice = '', string $e
         : 'Showing the server-derived ' . strtolower($queueViewHeading) . ' view. Each reason is calculated from protected onboarding evidence and assignment records.';
     $content = '<header class="workspace-page-header"><div class="workspace-page-heading"><p class="eyebrow">24Seven.FM Player · Closed Alpha</p><h1>Tester operations</h1><p class="muted">A private operations workspace for moving applications through review, onboarding evidence, and focused assignment.</p></div><div class="workspace-page-actions"><span class="workspace-role">Coordinator workspace</span><a class="button secondary" href="/private-tester-queue.php?live_chat=1">Open Live Chat</a><form method="post"><input type="hidden" name="action" value="logout"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><button class="secondary" type="submit">Sign out</button></form></div></header>' . $message
         . '<section class="workspace-primary-card"><div><p class="eyebrow">Attention queue</p><h2>' . ($stageCounts['pending_review'] > 0 ? 'Review new applications' : ($queueView === 'all' ? 'Keep onboarding moving' : $queueViewHeading)) . '</h2><p class="muted">' . ($stageCounts['pending_review'] > 0 ? 'Applications are waiting for a Coordinator decision before they can enter the protected tester lifecycle.' : $queueViewDescription) . '</p></div><a class="button" href="' . e($stageCounts['pending_review'] > 0 ? '#applications-awaiting-review' : coordinatorQueueUrl($queueView === 'all' ? 'needs_attention' : $queueView)) . '">' . ($stageCounts['pending_review'] > 0 ? 'Open review queue' : ($queueView === 'all' ? 'Open attention queue' : 'View queue')) . '</a></section>'
-        . '<section class="workspace-attention-section"><div class="workspace-attention-grid" aria-label="Coordinator attention overview"><a class="attention-card" href="#applications-awaiting-review"><span>Needs review</span><strong>' . $stageCounts['pending_review'] . '</strong><small>New applications awaiting a Coordinator decision.</small></a><a class="attention-card" href="' . e(coordinatorQueueUrl('needs_attention')) . '"><span>Needs attention</span><strong>' . $queueCounts['needs_attention'] . '</strong><small>Onboarding follow-up, submitted reports, or blocked work.</small></a><a class="attention-card" href="' . e(coordinatorQueueUrl('reports_awaiting_review')) . '"><span>Awaiting review</span><strong>' . $queueCounts['reports_awaiting_review'] . '</strong><small>Submitted Tester work ready for a Coordinator decision.</small></a></div><p class="muted workspace-summary">Workflow: review application → confirm Profile &amp; Device → tester self-confirms Play opt-in and first-use smoke test → assign focused work. Mail events are retained for communication only; they never prove lifecycle evidence.</p></section>'
+        . '<section class="workspace-attention-section"><div class="workspace-attention-grid" aria-label="Coordinator attention overview"><a class="attention-card" href="#applications-awaiting-review"><span>Needs review</span><strong>' . $stageCounts['pending_review'] . '</strong><small>New applications awaiting a Coordinator decision.</small></a><a class="attention-card" href="' . e(coordinatorQueueUrl('needs_attention')) . '"><span>Needs attention</span><strong>' . $queueCounts['needs_attention'] . '</strong><small>Onboarding follow-up, submitted reports, or blocked work.</small></a><a class="attention-card" href="/private-tester-queue.php?work_review=1"><span>Awaiting review</span><strong>' . $queueCounts['reports_awaiting_review'] . '</strong><small>Open the dedicated evidence and decision inbox.</small></a></div><p class="muted workspace-summary">Workflow: review application → confirm Profile &amp; Device → tester self-confirms Play opt-in and first-use smoke test → assign focused work. Mail events are retained for communication only; they never prove lifecycle evidence.</p></section>'
         . '<section class="workspace-queue-section"><div class="workspace-section-heading"><div><p class="eyebrow">Operations queues</p><h2>Review and assign</h2></div><div class="workspace-section-actions"><a class="link-button" href="/private-tester-queue.php?email=1">Email (' . $archiveCount . ')</a><a class="link-button" href="/private-tester-queue.php?mail_archive=1">Sent archive</a></div></div><nav class="queue-view-bar" aria-label="Saved Coordinator views">' . $queueViewLinks . '</nav><div class="workspace-queue-grid"><section id="applications-awaiting-review" class="applications-card"><h3>Applications awaiting review <span class="pill pending">' . count($pendingApplications) . '</span></h3>' . ($applicationRows === '' ? '<p class="muted">No new applications right now.</p>' : '<p class="muted">Review each application before accepting it into the protected tester roster.</p><div class="application-rows">' . $applicationRows . '</div>') . '</section>'
         . '<section id="tester-roster" class="roster-card"><h3>' . e($queueViewHeading) . ' <span class="pill">' . count($visibleRosterTesters) . '</span></h3><p class="muted">' . e($queueViewDescription) . '</p><div class="roster-list">' . ($rows === '' ? '<p class="muted">No active tester matches this view.</p>' : $rows) . '</div></section></div></section>'
         . '</div>'
@@ -2298,10 +2407,11 @@ function renderTesterWorkspace(PDO $database, int $testerId, string $notice = ''
             $currentStationOptions .= '<option value="' . e($station) . '"' . ($assignment['station_scope'] === $station ? ' selected' : '') . '>' . e($station) . '</option>';
         }
         $progress = assignmentReportProgress($database, (int) $assignment['id'], $task);
+        $latestReview = latestAssignmentReviewEvent($database, (int) $assignment['id']);
         $reviewState = $assignment['submitted_for_review_at'] === null || $assignment['submitted_for_review_at'] === ''
             ? '<p><strong>Tester reports:</strong> ' . count($progress['reported']) . ' of ' . count($progress['required']) . ' PT cases received.' . ($progress['missing'] === [] ? ' Ready for the tester to submit for Coordinator review.' : ' Missing: ' . e(implode(', ', $progress['missing'])) . '.') . '</p>'
             : '<p class="notice"><strong>Submitted for Coordinator review:</strong> ' . e(humanTimestamp((string) $assignment['submitted_for_review_at'])) . '. Review the per-case results below before recording the final status.</p>';
-        $assignmentCards .= '<article class="assignment-existing work-record"><div class="work-record-heading"><div><p class="eyebrow">Focused assignment</p><h4>' . e($task['id'] . ' — ' . $task['title']) . '</h4></div><span class="pill ' . ($assignment['task_status'] === 'blocked' ? 'blocked' : ($assignment['task_status'] === 'complete' ? '' : 'pending')) . '">' . e(ucwords(str_replace('_', ' ', (string) $assignment['task_status']))) . '</span></div><p><strong>PT cases:</strong> ' . e(implode(', ', $task['ptIds'])) . ' · <a href="/product-testing/?task=' . rawurlencode($task['id']) . '">Open cases</a></p><p><strong>Assignment email:</strong> ' . e($assignment['assignment_email_status'] === 'accepted' ? 'Accepted by the mail transport' : ($assignment['assignment_email_status'] === 'failed' ? 'Mail transport failed' : 'Not sent')) . '</p>' . assignmentLifecycleMarkup($assignment, $progress, 'coordinator') . $reviewState . '<div class="work-record-actions"><a class="button secondary" href="/tester-portal.php?preview_tester=' . $testerId . '&amp;view=tasks&amp;assignment=' . (int) $assignment['id'] . '">Open Tester handoff</a></div><form method="post"><input type="hidden" name="action" value="update_task"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="assignment_id" value="' . (int) $assignment['id'] . '"><label>Status<select name="task_status">' . $currentStatusOptions . '</select></label><label>Station scope<select name="station_scope">' . $currentStationOptions . '</select></label><label>Device / accessory scope<input name="configuration_scope" maxlength="' . MAX_ASSIGNMENT_CONFIGURATION_LENGTH . '" value="' . e($assignment['configuration_scope']) . '"></label><label>Coordinator note<textarea name="coordinator_note" maxlength="' . MAX_ASSIGNMENT_NOTE_LENGTH . '">' . e($assignment['coordinator_note']) . '</textarea></label><button type="submit">Save assignment</button></form></article>';
+        $assignmentCards .= '<article class="assignment-existing work-record"><div class="work-record-heading"><div><p class="eyebrow">Focused assignment</p><h4>' . e($task['id'] . ' — ' . $task['title']) . '</h4></div><span class="pill ' . ($assignment['task_status'] === 'blocked' ? 'blocked' : ($assignment['task_status'] === 'complete' ? '' : 'pending')) . '">' . e(ucwords(str_replace('_', ' ', (string) $assignment['task_status']))) . '</span></div><p><strong>PT cases:</strong> ' . e(implode(', ', $task['ptIds'])) . ' · <a href="/product-testing/?task=' . rawurlencode($task['id']) . '">Open cases</a></p><p><strong>Assignment email:</strong> ' . e($assignment['assignment_email_status'] === 'accepted' ? 'Accepted by the mail transport' : ($assignment['assignment_email_status'] === 'failed' ? 'Mail transport failed' : 'Not sent')) . '</p>' . assignmentLifecycleMarkup($assignment, $progress, 'coordinator', $latestReview) . $reviewState . '<div class="work-record-actions"><a class="button secondary" href="/tester-portal.php?preview_tester=' . $testerId . '&amp;view=tasks&amp;assignment=' . (int) $assignment['id'] . '">Open Tester handoff</a></div><form method="post"><input type="hidden" name="action" value="update_task"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="assignment_id" value="' . (int) $assignment['id'] . '"><label>Status<select name="task_status">' . $currentStatusOptions . '</select></label><label>Station scope<select name="station_scope">' . $currentStationOptions . '</select></label><label>Device / accessory scope<input name="configuration_scope" maxlength="' . MAX_ASSIGNMENT_CONFIGURATION_LENGTH . '" value="' . e($assignment['configuration_scope']) . '"></label><label>Coordinator note<textarea name="coordinator_note" maxlength="' . MAX_ASSIGNMENT_NOTE_LENGTH . '">' . e($assignment['coordinator_note']) . '</textarea></label><button type="submit">Save assignment</button></form></article>';
     }
     $message = $notice === '' ? '' : '<p class="notice">' . e($notice) . '</p>';
     $message .= $error === '' ? '' : '<p class="notice error">' . e($error) . '</p>';
@@ -2620,6 +2730,55 @@ try {
             $accepted = sendAssignmentEmail($database, $config, $assignmentId);
             redirect('?tester=' . $testerId . '&notice=' . rawurlencode($task['id'] . ' was assigned; assignment email handoff ' . ($accepted ? 'was accepted by the mail transport.' : 'failed.')));
         }
+        if ($action === 'review_assignment') {
+            $id = assignmentId();
+            $assignmentQuery = $database->prepare('SELECT id, tester_id, task_id, task_status, submitted_for_review_at FROM tester_task_assignments WHERE id = ?');
+            $assignmentQuery->execute([$id]);
+            $assignment = $assignmentQuery->fetch();
+            if ($assignment === false) {
+                throw new InvalidArgumentException('The Tester Task assignment is no longer available.');
+            }
+            activeTester($database, (int) $assignment['tester_id']);
+            if (!in_array((string) $assignment['task_status'], ['assigned', 'in_progress'], true) || !is_string($assignment['submitted_for_review_at'] ?? null) || $assignment['submitted_for_review_at'] === '') {
+                throw new InvalidArgumentException('Only a Tester-submitted, unfinished assignment can receive a Coordinator review decision.');
+            }
+            $task = taskRegistry()[(string) $assignment['task_id']] ?? null;
+            if (!is_array($task) || !assignmentReportProgress($database, $id, $task)['complete']) {
+                throw new InvalidArgumentException('Every required PT-case result must be present before recording a Coordinator decision.');
+            }
+            $decision = (string) ($_POST['review_decision'] ?? '');
+            if (!in_array($decision, ['complete', 'returned', 'blocked'], true)) {
+                throw new InvalidArgumentException('Choose a valid Coordinator review decision.');
+            }
+            $note = field('review_note', MAX_ASSIGNMENT_NOTE_LENGTH, false);
+            if (in_array($decision, ['returned', 'blocked'], true) && $note === '') {
+                throw new InvalidArgumentException('A tester-visible explanation is required when returning or blocking work.');
+            }
+            $now = gmdate('c');
+            $database->beginTransaction();
+            try {
+                $database->prepare('INSERT INTO tester_task_review_events(assignment_id, tester_id, decision, tester_note, created_at) VALUES (?, ?, ?, ?, ?)')
+                    ->execute([$id, (int) $assignment['tester_id'], $decision, $note, $now]);
+                $status = match ($decision) {
+                    'complete' => 'complete',
+                    'blocked' => 'blocked',
+                    default => 'in_progress',
+                };
+                $submittedAt = $decision === 'returned' ? null : (string) $assignment['submitted_for_review_at'];
+                $database->prepare('UPDATE tester_task_assignments SET task_status = ?, submitted_for_review_at = ?, updated_at = ? WHERE id = ?')
+                    ->execute([$status, $submittedAt, $now, $id]);
+                $database->commit();
+            } catch (Throwable $error) {
+                if ($database->inTransaction()) $database->rollBack();
+                throw $error;
+            }
+            $notice = match ($decision) {
+                'complete' => 'Tester work was marked complete.',
+                'returned' => 'Task returned to the Tester for clarification.',
+                'blocked' => 'Tester work was marked blocked.',
+            };
+            redirect('?work_review=1&notice=' . rawurlencode($notice));
+        }
         if ($action === 'update_task') {
             $id = assignmentId();
             $assignment = $database->prepare('SELECT tester_id, task_id, submitted_for_review_at FROM tester_task_assignments WHERE id = ?');
@@ -2739,6 +2898,9 @@ try {
     }
     if (isset($_GET['live_chat'])) {
         renderLiveChatWorkspace($database, $chatTesterId === false ? 0 : (int) $chatTesterId);
+    }
+    if (isset($_GET['work_review'])) {
+        renderWorkReviewInbox($database, (string) ($_GET['notice'] ?? ''), (string) ($_GET['error'] ?? ''));
     }
     if (isset($_GET['tester']) && ctype_digit((string) $_GET['tester'])) {
         renderTesterWorkspace($database, (int) $_GET['tester'], (string) ($_GET['notice'] ?? ''), (string) ($_GET['error'] ?? ''));

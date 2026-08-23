@@ -1,6 +1,6 @@
 # Onboarding Portal Time Ledger
 
-Last updated: `August 22, 2026 at 5:35:35 PM PDT (UTC-07:00)`
+Last updated: `August 22, 2026 at 9:59:03 PM PDT (UTC-07:00)`
 
 This is the canonical time-accounting record for the protected 24Seven.FM Player onboarding portal: the Tester workspace, Coordinator workspace, onboarding wizard, assignment and reporting flows, and their safe website releases. It is deliberately independent of the Player Android and Play-operation milestones in `MILESTONE_TIME_LEDGER.md`.
 
@@ -17,6 +17,12 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 | Counted portal time | 2.10 h | Active plus automated wait. |
 
 ## Portal work records
+
+### Phase 9 Coordinator Work Review inbox
+
+- **Authorization and interval:** Authorized and started `August 22, 2026 at 9:59:03 PM PDT (UTC-07:00)`; in progress.
+- **Scope:** Create a dedicated Coordinator review inbox for tester-submitted assignments. Show the exact assignment, PT-case evidence, scope, and report outcomes, then make final completion, return-for-clarification, and blocked-work decisions explicit. Reflect the decision and its next action in the Tester workspace and activity evidence. Preserve the existing per-case reporting gate, role boundaries, protected data, mail behavior, and atomic release process. No bulk action, delivery inference, or schema migration is planned unless validation establishes a narrow requirement.
+- **Model and forecast:** Current approved model and original forecast were not supplied; recorded as Unknown.
 
 ### Phase 8 activity clarity refinement
 

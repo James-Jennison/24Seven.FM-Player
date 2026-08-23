@@ -40,6 +40,11 @@ try {
     $case = (string) ($task['ptIds'][0] ?? 'PT-01');
     $database->prepare("INSERT INTO tester_feedback(tester_id, assignment_id, subject, details, outcome, category, pt_case, created_at) VALUES (1, ?, 'Private report subject', 'Private report details', 'pass', 'playback', ?, ?)")
         ->execute([$assignmentId, $case, $now]);
+    $database->prepare("INSERT INTO tester_task_review_events(assignment_id, tester_id, decision, tester_note, created_at) VALUES (?, 1, 'complete', 'Private reviewer note', ?)")
+        ->execute([$assignmentId, $now]);
+    $reviewEventId = (int) $database->lastInsertId();
+    $database->prepare("INSERT INTO tester_task_review_responses(assignment_id, tester_id, review_event_id, response, created_at) VALUES (?, 1, ?, 'Private clarification response', ?)")
+        ->execute([$assignmentId, $reviewEventId, $now]);
     $database->prepare("INSERT INTO tester_mail_archive(tester_id, message_type, subject, body, body_html, handoff_status, prepared_at, attempted_at) VALUES (1, 'assignment', 'Private assignment subject', 'Private message body', '<p>Private message body</p>', 'accepted', ?, ?)")
         ->execute([$now, $now]);
     $database->prepare("INSERT INTO tester_mail_archive(tester_id, message_type, subject, body, body_html, handoff_status, prepared_at, attempted_at) VALUES (1, 'batch', 'Private batch subject one', 'Private message body one', '<p>Private message body one</p>', 'accepted', ?, ?)")
@@ -50,11 +55,11 @@ try {
     $assignments = $database->query('SELECT * FROM tester_task_assignments WHERE tester_id = 1')->fetchAll();
     $html = testerActivityTimeline($database, $tester, $assignments, $tasks, 'tester');
     expectActivityTimeline(str_contains($html, 'Application received') && str_contains($html, 'Google Play opt-in self-confirmed') && str_contains($html, 'Initial smoke test self-confirmed'), 'The timeline must include the recorded onboarding evidence.');
-    expectActivityTimeline(str_contains($html, e($case) . ' result recorded') && str_contains($html, 'Task submitted for Coordinator review') && str_contains($html, 'Coordinator recorded final task status'), 'The timeline must include assignment, report, and Coordinator decision evidence.');
+    expectActivityTimeline(str_contains($html, e($case) . ' result recorded') && str_contains($html, 'Task submitted for Coordinator review') && str_contains($html, 'Coordinator review decision') && str_contains($html, 'Tester clarification submitted') && str_contains($html, 'Coordinator recorded final task status'), 'The timeline must include assignment, report, clarification, and Coordinator decision evidence.');
     expectActivityTimeline(str_contains($html, 'Task-assignment email handoff') && str_contains($html, 'does not prove inbox delivery or reading'), 'The timeline must distinguish transport acceptance from inbox delivery.');
     expectActivityTimeline(str_contains($html, '2 Coordinator email handoffs') && str_contains($html, '1 accepted, 1 failed') && substr_count($html, 'Coordinator email handoff') === 1, 'Generic Coordinator mail handoffs must be grouped into one concise activity event.');
     expectActivityTimeline(str_contains($html, 'data-activity-kind="onboarding"') && str_contains($html, 'data-activity-kind="work"') && str_contains($html, 'data-activity-kind="communication"') && str_contains($html, 'data-activity-filter="communication"'), 'The timeline must expose only client-side filters over the existing protected event categories.');
-    expectActivityTimeline(!str_contains($html, 'Private coordinator note') && !str_contains($html, 'Private report subject') && !str_contains($html, 'Private report details') && !str_contains($html, 'Private assignment subject') && !str_contains($html, 'Private message body') && !str_contains($html, 'Private batch subject') && !str_contains($html, 'Private message body one'), 'The timeline must not expose private notes, report contents, or email contents.');
+    expectActivityTimeline(!str_contains($html, 'Private coordinator note') && !str_contains($html, 'Private reviewer note') && !str_contains($html, 'Private clarification response') && !str_contains($html, 'Private report subject') && !str_contains($html, 'Private report details') && !str_contains($html, 'Private assignment subject') && !str_contains($html, 'Private message body') && !str_contains($html, 'Private batch subject') && !str_contains($html, 'Private message body one'), 'The timeline must not expose private notes, report contents, or email contents.');
 
     fwrite(STDOUT, "Portal activity timeline smoke: valid.\n");
 } finally {

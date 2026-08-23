@@ -500,6 +500,8 @@ function portalSubmitFeedback(PDO $database, array $tester): void
     $assignment->execute([$assignmentId, (int) $tester['id']]);
     $assignment = $assignment->fetch();
     if ($assignment === false || $assignment['task_status'] === 'complete') throw new InvalidArgumentException('That task is no longer available for a tester report.');
+    $latestReview = latestAssignmentReviewEvent($database, $assignmentId);
+    if (($latestReview['decision'] ?? '') === 'returned') throw new InvalidArgumentException('Submit the requested clarification before adding another PT-case report.');
     if (($assignment['submitted_for_review_at'] ?? '') !== '') throw new InvalidArgumentException('This task is already with the Coordinator for review.');
     $task = taskRegistry()[$assignment['task_id']] ?? null;
     if (!is_array($task)) throw new InvalidArgumentException('That assigned task is no longer available.');
@@ -530,6 +532,8 @@ function portalSubmitTaskForReview(PDO $database, array $tester): void
     $statement->execute([$assignmentId, (int) $tester['id']]);
     $assignment = $statement->fetch();
     if ($assignment === false || $assignment['task_status'] === 'complete') throw new InvalidArgumentException('That task is no longer available for review.');
+    $latestReview = latestAssignmentReviewEvent($database, $assignmentId);
+    if (($latestReview['decision'] ?? '') === 'returned') throw new InvalidArgumentException('Submit the requested clarification before returning this task to Coordinator review.');
     if (($assignment['submitted_for_review_at'] ?? '') !== '') throw new InvalidArgumentException('This task is already with the Coordinator for review.');
     $task = taskRegistry()[$assignment['task_id']] ?? null;
     if (!is_array($task)) throw new InvalidArgumentException('That assigned task is no longer available.');
@@ -540,6 +544,32 @@ function portalSubmitTaskForReview(PDO $database, array $tester): void
     $database->prepare("UPDATE tester_task_assignments SET task_status = CASE WHEN task_status = 'assigned' THEN 'in_progress' ELSE task_status END, submitted_for_review_at = ?, updated_at = ? WHERE id = ?")
         ->execute([gmdate('c'), gmdate('c'), $assignmentId]);
     portalRedirect('?notice=' . rawurlencode('Your task is submitted for Coordinator review. The Coordinator records the final completion or blocked status.'));
+}
+
+function portalSubmitReviewClarification(PDO $database, array $tester): void
+{
+    $assignmentId = filter_var($_POST['assignment_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+    if ($assignmentId === false) throw new InvalidArgumentException('Choose a valid returned task.');
+    $assignmentQuery = $database->prepare('SELECT id, task_status FROM tester_task_assignments WHERE id = ? AND tester_id = ?');
+    $assignmentQuery->execute([$assignmentId, (int) $tester['id']]);
+    $assignment = $assignmentQuery->fetch();
+    if ($assignment === false || in_array((string) $assignment['task_status'], ['complete', 'blocked'], true)) throw new InvalidArgumentException('That task is no longer available for clarification.');
+    $review = latestAssignmentReviewEvent($database, $assignmentId);
+    if ($review === null || ($review['decision'] ?? '') !== 'returned') throw new InvalidArgumentException('This task has not been returned for clarification.');
+    $response = portalText('clarification_response', PORTAL_MAX_FEEDBACK_DETAILS, true);
+    $now = gmdate('c');
+    $database->beginTransaction();
+    try {
+        $database->prepare('INSERT INTO tester_task_review_responses(assignment_id, tester_id, review_event_id, response, created_at) VALUES (?, ?, ?, ?, ?)')
+            ->execute([$assignmentId, (int) $tester['id'], (int) $review['id'], $response, $now]);
+        $database->prepare("UPDATE tester_task_assignments SET task_status = 'in_progress', submitted_for_review_at = ?, updated_at = ? WHERE id = ?")
+            ->execute([$now, $now, $assignmentId]);
+        $database->commit();
+    } catch (Throwable $error) {
+        if ($database->inTransaction()) $database->rollBack();
+        throw $error;
+    }
+    portalRedirect('?notice=' . rawurlencode('Your clarification was submitted for Coordinator review.'));
 }
 
 function portalAssignmentSteps(array $task, array $assignment): array
@@ -643,7 +673,9 @@ function portalRenderDashboard(PDO $database, array $tester, bool $adminPreview 
         $state = $assignment['task_status'] === 'blocked' ? 'blocked' : ($assignment['task_status'] === 'complete' ? '' : 'pending');
         $plan = implode('', array_map(static fn (string $step): string => '<li>' . e($step) . '</li>', portalAssignmentSteps($task, $assignment)));
         $progress = assignmentReportProgress($database, (int) $assignment['id'], $task);
+        $latestReview = latestAssignmentReviewEvent($database, (int) $assignment['id']);
         $reviewSubmitted = is_string($assignment['submitted_for_review_at'] ?? null) && $assignment['submitted_for_review_at'] !== '';
+        $reviewReturned = ($latestReview['decision'] ?? '') === 'returned' && !$reviewSubmitted;
         $progressText = count($progress['reported']) . ' of ' . count($progress['required']) . ' PT-case results submitted';
         $reportedCaseCount += count($progress['reported']);
         $requiredCaseCount += count($progress['required']);
@@ -655,14 +687,16 @@ function portalRenderDashboard(PDO $database, array $tester, bool $adminPreview 
         $assignedScope = trim((string) ($assignment['station_scope'] ?? '')) ?: (string) $task['stationScope'];
         $checklistDialog = '<dialog id="' . e($dialogId) . '" class="pt-checklist-dialog" aria-labelledby="' . e($dialogId . '-title') . '"><div class="pt-checklist-dialog-content"><header><p class="eyebrow">Assigned PT checklist</p><h2 id="' . e($dialogId . '-title') . '">' . e($task['id'] . ' — ' . $task['title']) . '</h2><p class="muted">Only the PT case' . (count($task['ptIds']) === 1 ? '' : 's') . ' assigned with this focused task are shown. Scope: ' . e($assignedScope) . '.</p></header>' . portalAssignedChecklistMarkup($task) . '<div class="pt-checklist-dialog-actions"><button type="button" class="button secondary" data-pt-checklist-close>Close checklist</button></div></div></dialog>';
         $reviewAction = '';
-        if ($reviewSubmitted) {
+        if ($reviewReturned) {
+            $reviewAction = '<section class="notice"><strong>Coordinator clarification requested:</strong> ' . nl2br(e((string) ($latestReview['tester_note'] ?? '')), false) . '<form method="post"><input type="hidden" name="action" value="submit_review_clarification"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="assignment_id" value="' . (int) $assignment['id'] . '"><label>Clarification for the Coordinator <textarea name="clarification_response" maxlength="' . PORTAL_MAX_FEEDBACK_DETAILS . '" required placeholder="Respond to the Coordinator’s requested clarification. Do not include credentials, session information, or private screenshots."></textarea></label><button class="button" type="submit">Submit clarification for review</button></form></section>';
+        } elseif ($reviewSubmitted) {
             $reviewAction = '<p class="notice"><strong>Submitted for Coordinator review:</strong> ' . e(portalHumanTimestamp((string) $assignment['submitted_for_review_at'])) . '. The Coordinator will record the final status.</p>';
         } elseif ($progress['complete'] && $assignment['task_status'] !== 'complete') {
             $reviewAction = '<form method="post"><input type="hidden" name="action" value="submit_task_for_review"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="assignment_id" value="' . (int) $assignment['id'] . '"><button class="button" type="submit">Submit task for Coordinator review</button></form>';
         } elseif ($assignment['task_status'] !== 'complete') {
             $reviewAction = '<p class="muted small">Report every assigned PT case before this task can be submitted for Coordinator review. Missing: ' . e(implode(', ', $progress['missing'])) . '.</p>';
         }
-        if (!$reviewSubmitted && $assignment['task_status'] !== 'complete') {
+        if (!$reviewSubmitted && !$reviewReturned && $assignment['task_status'] !== 'complete') {
             $selected = $focusedAssignmentId === (int) $assignment['id'] ? ' selected' : '';
             $reportAssignmentOptions .= '<option value="' . (int) $assignment['id'] . '"' . $selected . '>' . e($task['id'] . ' — ' . $progressText) . '</option>';
             $reportCaseOptions .= '<optgroup label="' . e($task['id'] . ' — ' . $task['title']) . '">';
@@ -671,10 +705,10 @@ function portalRenderDashboard(PDO $database, array $tester, bool $adminPreview 
             }
             $reportCaseOptions .= '</optgroup>';
         }
-        $reportLink = !$reviewSubmitted && $assignment['task_status'] !== 'complete'
+        $reportLink = !$reviewSubmitted && !$reviewReturned && $assignment['task_status'] !== 'complete'
             ? '<a class="button secondary" href="' . e(portalWorkspaceUrl('reports', $previewTesterId, ['assignment' => (int) $assignment['id']])) . '">Report a PT case</a>'
             : '';
-        $assignmentCards .= '<article class="task work-record"><div class="work-record-heading"><div><p class="eyebrow">Focused task</p><h3>' . e($task['id'] . ' — ' . $task['title']) . '</h3></div><span class="pill ' . $state . '">' . e(ucwords(str_replace('_', ' ', $assignment['task_status']))) . '</span></div><div class="work-record-context"><span><strong>PT cases</strong> ' . e(implode(', ', $task['ptIds'])) . '</span><span><strong>Scope</strong> ' . e((string) ($assignment['station_scope'] ?: $task['stationScope'])) . '</span></div>' . assignmentLifecycleMarkup($assignment, $progress, 'tester') . $progressMeter . '<div class="work-record-instructions"><p class="task-plan-label">Complete and report</p><ol class="task-plan">' . $plan . '</ol></div><div class="work-record-actions"><button type="button" class="button secondary" data-pt-checklist-open="' . e($dialogId) . '" aria-haspopup="dialog">Open the detailed PT checklist</button>' . $reportLink . '</div>' . $reviewAction . '</article>' . $checklistDialog;
+        $assignmentCards .= '<article class="task work-record"><div class="work-record-heading"><div><p class="eyebrow">Focused task</p><h3>' . e($task['id'] . ' — ' . $task['title']) . '</h3></div><span class="pill ' . $state . '">' . e(ucwords(str_replace('_', ' ', $assignment['task_status']))) . '</span></div><div class="work-record-context"><span><strong>PT cases</strong> ' . e(implode(', ', $task['ptIds'])) . '</span><span><strong>Scope</strong> ' . e((string) ($assignment['station_scope'] ?: $task['stationScope'])) . '</span></div>' . assignmentLifecycleMarkup($assignment, $progress, 'tester', $latestReview) . $progressMeter . '<div class="work-record-instructions"><p class="task-plan-label">Complete and report</p><ol class="task-plan">' . $plan . '</ol></div><div class="work-record-actions"><button type="button" class="button secondary" data-pt-checklist-open="' . e($dialogId) . '" aria-haspopup="dialog">Open the detailed PT checklist</button>' . $reportLink . '</div>' . $reviewAction . '</article>' . $checklistDialog;
     }
     if ($assignmentCards === '') $assignmentCards = '<article class="task"><h3>No focused task yet</h3><p>Your coordinator will match an assignment to your coverage and available setup.</p></article>';
     $reportForm = $reportAssignmentOptions === ''
@@ -776,6 +810,7 @@ try {
         if ($action === 'request_privacy_action') portalRequestPrivacyAction($database, $tester);
         if ($action === 'submit_feedback') portalSubmitFeedback($database, $tester);
         if ($action === 'submit_task_for_review') portalSubmitTaskForReview($database, $tester);
+        if ($action === 'submit_review_clarification') portalSubmitReviewClarification($database, $tester);
         if ($action === 'send_chat') {
             chatPostMessage($database, (int) $tester['id'], 'tester', (string) ($_POST['chat_body'] ?? ''));
             portalRedirect('?notice=' . rawurlencode('Your Live Chat message was sent.'));
