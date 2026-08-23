@@ -1,6 +1,6 @@
 # Onboarding Portal Time Ledger
 
-Last updated: `August 23, 2026 at 5:14:49 AM PDT (UTC-07:00)`
+Last updated: `August 23, 2026 at 5:27:58 AM PDT (UTC-07:00)`
 
 This is the canonical time-accounting record for the protected 24Seven.FM Player onboarding portal: the Tester workspace, Coordinator workspace, onboarding wizard, assignment and reporting flows, and their safe website releases. It is deliberately independent of the Player Android and Play-operation milestones in `MILESTONE_TIME_LEDGER.md`.
 
@@ -10,18 +10,20 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 
 | Measure | Value | Qualification |
 | --- | ---: | --- |
-| Completed measured portal intervals | 17 | Route-based Tester workspace, shared shell/rail refinements, Phase 1 workbench redesign, CI trigger isolation, Phase 2 record-page workbench, Phase 3 assignment lifecycle handoffs, Phase 4 Coordinator queue discovery, Phase 5 in-portal PT checklist delivery, its runtime activation fix, the shared activity timeline, its cache-resilience fix, the Activity clarity refinement, the Coordinator Work Review inbox, the Coordinator Coverage Catalog, and the Issue Triage and Re-test Queue. |
-| Active portal time | 2.43 h | Completed intervals only. |
-| Automated wait | 0.19 h | Measured release-gate/build and workflow waits during portal changes. |
+| Completed measured portal intervals | 18 | Route-based Tester workspace, shared shell/rail refinements, Phase 1 workbench redesign, CI trigger isolation, Phase 2 record-page workbench, Phase 3 assignment lifecycle handoffs, Phase 4 Coordinator queue discovery, Phase 5 in-portal PT checklist delivery, its runtime activation fix, the shared activity timeline, its cache-resilience fix, the Activity clarity refinement, the Coordinator Work Review inbox, the Coordinator Coverage Catalog, the Issue Triage and Re-test Queue, and the Explicit Re-test Handoff. |
+| Active portal time | 2.61 h | Completed intervals only. |
+| Automated wait | 0.22 h | Measured release-gate/build and workflow waits during portal changes. |
 | User-blocked time | 0.00 h | Completed intervals only. |
-| Counted portal time | 2.62 h | Active plus automated wait. |
+| Counted portal time | 2.83 h | Active plus automated wait. |
 
 ## Portal work records
 
 ### Phase 12 Explicit Re-test Handoff
 
-- **Authorization and interval:** Authorized and started `August 23, 2026 at 5:14:49 AM PDT (UTC-07:00)`; in progress.
+- **Authorization and interval:** Authorized and started `August 23, 2026 at 5:14:49 AM PDT (UTC-07:00)`; completed `August 23, 2026 at 5:27:58 AM PDT (UTC-07:00)`.
+- **Measured time:** 0.18 h active, 0.03 h automated wait, 0.00 h user-blocked, 0.21 h counted. The unmeasured remainder of the wall-clock interval is excluded.
 - **Scope:** Add a deliberate Coordinator re-test handoff only for an Issue or Blocked PT report whose latest immutable triage event is Ready for re-test. Preserve the original assignment and report as history, require a dedicated Coordinator review screen and a bounded Tester-visible re-test instruction before creating a new focused assignment, and constrain the new assignment to the exact originally reported PT case and original approved scope. Do not automatically assign, email, notify a Tester, create an external ticket, change the original task/report/triage event, or infer a completed re-test. The new assignment remains subject to the existing Tester report and Coordinator-review gates.
+- **Evidence:** Merged commit `e87c265f` through PR #79 adds an additive, one-per-report `tester_retest_handoffs` record and a dedicated Coordinator Re-test handoff review screen. It accepts only a current Issue/Blocked report whose latest immutable triage event is Ready for re-test and whose original assignment is resolved; it preserves that original assignment and report, carries its approved station/device scope, requires a bounded Tester-visible instruction, and creates one new assignment limited to the original exact PT case. The isolated SQLite contract proves the linked assignment is new, exact-case-only, starts with assignment-email status `not_sent`, rejects duplicate handoffs, and keeps its instruction out of shared Activity. Controlled re-tests additionally require new explicit Coordinator authorization. The exact merged commit passed the complete 56-file portal release gate and GitHub's required `Validate reviewed portal artifact` check; local and staged-server manifests matched all 56 files (SHA-256 `20c2527fcb3a83c42ad611aaf734ad01c39a51a77f7a8e857e63599496a2e5f9`) before atomic promotion. The prior live artifact remains at `player.jamesjennison.net.rollback-portal-phase12-e87c265f`. Origin and public HTTPS each returned 200 for Issue triage, Re-test handoff, Coverage Catalog, Work Review, Tester Tasks, and the shared stylesheet. No browser tab was touched and no signed-in visual acceptance is claimed for this release.
 - **Model and forecast:** Current approved model and original forecast were not supplied; recorded as Unknown.
 
 ### Phase 11 Issue Triage and Re-test Queue
