@@ -1,6 +1,6 @@
 # Onboarding Portal Time Ledger
 
-Last updated: `August 23, 2026 at 4:45:16 AM PDT (UTC-07:00)`
+Last updated: `August 23, 2026 at 4:53:13 AM PDT (UTC-07:00)`
 
 This is the canonical time-accounting record for the protected 24Seven.FM Player onboarding portal: the Tester workspace, Coordinator workspace, onboarding wizard, assignment and reporting flows, and their safe website releases. It is deliberately independent of the Player Android and Play-operation milestones in `MILESTONE_TIME_LEDGER.md`.
 
@@ -10,18 +10,20 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 
 | Measure | Value | Qualification |
 | --- | ---: | --- |
-| Completed measured portal intervals | 15 | Route-based Tester workspace, shared shell/rail refinements, Phase 1 workbench redesign, CI trigger isolation, Phase 2 record-page workbench, Phase 3 assignment lifecycle handoffs, Phase 4 Coordinator queue discovery, Phase 5 in-portal PT checklist delivery, its runtime activation fix, the shared activity timeline, its cache-resilience fix, the Activity clarity refinement, and the Coordinator Work Review inbox. |
-| Active portal time | 2.20 h | Completed intervals only. |
-| Automated wait | 0.15 h | Measured release-gate/build and workflow waits during portal changes. |
+| Completed measured portal intervals | 16 | Route-based Tester workspace, shared shell/rail refinements, Phase 1 workbench redesign, CI trigger isolation, Phase 2 record-page workbench, Phase 3 assignment lifecycle handoffs, Phase 4 Coordinator queue discovery, Phase 5 in-portal PT checklist delivery, its runtime activation fix, the shared activity timeline, its cache-resilience fix, the Activity clarity refinement, the Coordinator Work Review inbox, and the Coordinator Coverage Catalog. |
+| Active portal time | 2.31 h | Completed intervals only. |
+| Automated wait | 0.17 h | Measured release-gate/build and workflow waits during portal changes. |
 | User-blocked time | 0.00 h | Completed intervals only. |
-| Counted portal time | 2.35 h | Active plus automated wait. |
+| Counted portal time | 2.48 h | Active plus automated wait. |
 
 ## Portal work records
 
 ### Phase 10 Coordinator Coverage Catalog
 
-- **Authorization and interval:** Authorized and started `August 23, 2026 at 4:45:16 AM PDT (UTC-07:00)`; in progress.
-- **Scope:** Add a read-only Coordinator Coverage Catalog derived only from existing protected Tester profiles and assignment records. Surface aggregate coverage by Android version, device form factor, station, network, audio/accessory, and accessibility capability, plus assignment readiness and active-work capacity. Each aggregate may link only to the existing protected Coordinator records. Preserve role boundaries, privacy, onboarding, recommendations, task/review behavior, mail behavior, database contents, and the atomic release process. Do not create assignments, send mail, collect new Tester data, or add external integrations.
+- **Authorization and interval:** Authorized and started `August 23, 2026 at 4:45:16 AM PDT (UTC-07:00)`; completed `August 23, 2026 at 4:53:13 AM PDT (UTC-07:00)`.
+- **Measured time:** 0.11 h active, 0.02 h automated wait, 0.00 h user-blocked, 0.13 h counted. The unmeasured remainder of the wall-clock interval is excluded.
+- **Scope:** Added a read-only Coordinator Coverage Catalog derived only from existing protected Tester profiles and assignment records. It surfaces aggregate coverage by Android version, device form factor, station, network, audio/accessory, and accessibility capability, plus assignment readiness and active-work capacity. Each aggregate links only to existing protected Coordinator records. Role boundaries, privacy, onboarding, recommendations, task/review behavior, mail behavior, database contents, and the atomic release process remain unchanged. No assignment, mail, Tester-data collection, database table, or external integration was added.
+- **Evidence:** Merged commit `f8cb898` through PR #75 adds the separate Coordinator Coverage Catalog route and rail item, using only existing active Tester profile fields and assignment status. The isolated SQLite contract proves it preserves the recorded coverage dimensions and readiness/capacity calculations without creating assignments; the complete portal release gate and GitHub required `Validate reviewed portal artifact` check passed at the exact merged commit. The normalized local/server staging manifests matched all 56 files (SHA-256 `8d8c287f8962ce2bc412e7d9529d2e2b06a46a4efd398b3163ab2515cffa3a47`) before atomic promotion. The prior live artifact remains at `player.jamesjennison.net.rollback-portal-phase10-f8cb898`. Origin and public HTTPS each returned 200 for Coverage Catalog, Work Review, Tester Tasks, and the shared stylesheet. No browser tab was touched and no signed-in visual acceptance is claimed for this release.
 - **Model and forecast:** Current approved model and original forecast were not supplied; recorded as Unknown.
 
 ### Phase 9 Coordinator Work Review inbox
