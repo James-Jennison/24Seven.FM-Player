@@ -274,6 +274,17 @@ function database(array $config): PDO
         );
         CREATE INDEX IF NOT EXISTS tester_issue_triage_events_feedback_recent ON tester_issue_triage_events(feedback_id, id DESC);
         CREATE INDEX IF NOT EXISTS tester_issue_triage_events_state_recent ON tester_issue_triage_events(state, id DESC);
+        CREATE TABLE IF NOT EXISTS tester_retest_handoffs (
+            id INTEGER PRIMARY KEY,
+            feedback_id INTEGER NOT NULL UNIQUE REFERENCES tester_feedback(id) ON DELETE CASCADE,
+            tester_id INTEGER NOT NULL REFERENCES testers(id) ON DELETE CASCADE,
+            source_assignment_id INTEGER NOT NULL REFERENCES tester_task_assignments(id) ON DELETE CASCADE,
+            retest_assignment_id INTEGER NOT NULL UNIQUE REFERENCES tester_task_assignments(id) ON DELETE CASCADE,
+            pt_case TEXT NOT NULL,
+            tester_instruction TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS tester_retest_handoffs_source_assignment ON tester_retest_handoffs(source_assignment_id, id DESC);
         CREATE TABLE IF NOT EXISTS chat_threads (
             id INTEGER PRIMARY KEY,
             tester_id INTEGER NOT NULL UNIQUE REFERENCES testers(id) ON DELETE CASCADE,
@@ -667,7 +678,7 @@ function renderPage(string $title, string $content, bool $showCoordinatorNavigat
     header('Pragma: no-cache');
     header('X-Robots-Tag: noindex, nofollow, noarchive');
     header('X-Frame-Options: DENY');
-    $activeWorkspace = str_starts_with($title, 'Live Chat') ? 'chat' : ($title === 'Work review' ? 'review' : ($title === 'Issue triage' ? 'triage' : ($title === 'Coverage catalog' ? 'coverage' : (str_contains($title, 'email') ? 'email' : 'operations'))));
+    $activeWorkspace = str_starts_with($title, 'Live Chat') ? 'chat' : ($title === 'Work review' ? 'review' : (in_array($title, ['Issue triage', 'Re-test handoff'], true) ? 'triage' : ($title === 'Coverage catalog' ? 'coverage' : (str_contains($title, 'email') ? 'email' : 'operations'))));
     $operationsClass = $activeWorkspace === 'operations' ? ' active' : '';
     $chatClass = $activeWorkspace === 'chat' ? ' active' : '';
     $emailClass = $activeWorkspace === 'email' ? ' active' : '';
@@ -886,7 +897,7 @@ function testerTaskInstructions(array $task): array
  */
 function assignmentReportProgress(PDO $database, int $assignmentId, array $task): array
 {
-    $required = array_values(array_filter($task['ptIds'] ?? [], 'is_string'));
+    $required = assignmentRequiredPtCases($database, $assignmentId, $task);
     $statement = $database->prepare('SELECT pt_case FROM tester_feedback WHERE assignment_id = ? AND pt_case IS NOT NULL');
     $statement->execute([$assignmentId]);
     $reported = [];
@@ -902,6 +913,34 @@ function assignmentReportProgress(PDO $database, int $assignmentId, array $task)
         'missing' => array_values(array_diff($required, $reportedCases)),
         'complete' => $required !== [] && count($reportedCases) === count($required),
     ];
+}
+
+/** @return list<string> */
+function assignmentRequiredPtCases(PDO $database, int $assignmentId, array $task): array
+{
+    $allCases = array_values(array_filter($task['ptIds'] ?? [], 'is_string'));
+    $statement = $database->prepare('SELECT pt_case FROM tester_retest_handoffs WHERE retest_assignment_id = ?');
+    $statement->execute([$assignmentId]);
+    $retestCase = $statement->fetchColumn();
+    return is_string($retestCase) && in_array($retestCase, $allCases, true) ? [$retestCase] : $allCases;
+}
+
+/** @return array{id:int,feedback_id:int,tester_id:int,source_assignment_id:int,retest_assignment_id:int,pt_case:string,tester_instruction:string,created_at:string}|null */
+function retestHandoffForFeedback(PDO $database, int $feedbackId): ?array
+{
+    $statement = $database->prepare('SELECT id, feedback_id, tester_id, source_assignment_id, retest_assignment_id, pt_case, tester_instruction, created_at FROM tester_retest_handoffs WHERE feedback_id = ?');
+    $statement->execute([$feedbackId]);
+    $handoff = $statement->fetch();
+    return $handoff === false ? null : $handoff;
+}
+
+/** @return array{id:int,feedback_id:int,tester_id:int,source_assignment_id:int,retest_assignment_id:int,pt_case:string,tester_instruction:string,created_at:string}|null */
+function retestHandoffForAssignment(PDO $database, int $assignmentId): ?array
+{
+    $statement = $database->prepare('SELECT id, feedback_id, tester_id, source_assignment_id, retest_assignment_id, pt_case, tester_instruction, created_at FROM tester_retest_handoffs WHERE retest_assignment_id = ?');
+    $statement->execute([$assignmentId]);
+    $handoff = $statement->fetch();
+    return $handoff === false ? null : $handoff;
 }
 
 /**
@@ -993,6 +1032,75 @@ function recordIssueTriage(PDO $database, int $feedbackId, string $state, string
     $feedback = issueTriageFeedback($database, $feedbackId);
     $database->prepare('INSERT INTO tester_issue_triage_events(feedback_id, tester_id, assignment_id, state, coordinator_note, created_at) VALUES (?, ?, ?, ?, ?, ?)')
         ->execute([$feedbackId, (int) $feedback['tester_id'], (int) $feedback['assignment_id'], $state, $note, gmdate('c')]);
+}
+
+/** @return array{feedback:array,source_assignment:array,task:array,existing_handoff:array|null} */
+function retestHandoffContext(PDO $database, int $feedbackId): array
+{
+    $feedback = issueTriageFeedback($database, $feedbackId);
+    $latestTriage = latestIssueTriageEvent($database, $feedbackId);
+    if (($latestTriage['state'] ?? '') !== 'ready_for_retest') {
+        throw new InvalidArgumentException('Only an Issue or Blocked report whose latest triage state is Ready for re-test can receive a re-test handoff.');
+    }
+    $sourceQuery = $database->prepare("SELECT assignments.id AS source_assignment_id, assignments.tester_id, assignments.task_id, assignments.task_status, assignments.station_scope, assignments.configuration_scope, assignments.mutation_authorized, testers.*, onboarding.onboarding_status, onboarding.play_opt_in_confirmed_at, onboarding.initial_smoke_test_confirmed_at FROM tester_task_assignments AS assignments JOIN testers ON testers.id = assignments.tester_id LEFT JOIN tester_onboarding AS onboarding ON onboarding.tester_id = testers.id WHERE assignments.id = ? AND testers.status = 'active'");
+    $sourceQuery->execute([(int) $feedback['assignment_id']]);
+    $sourceAssignment = $sourceQuery->fetch();
+    if ($sourceAssignment === false || (int) $sourceAssignment['tester_id'] !== (int) $feedback['tester_id']) {
+        throw new InvalidArgumentException('The original Tester assignment is unavailable for a re-test handoff.');
+    }
+    if (!in_array((string) $sourceAssignment['task_status'], ['complete', 'blocked'], true)) {
+        throw new InvalidArgumentException('Resolve the original focused assignment before creating a separate re-test handoff.');
+    }
+    if (!testerReadyForAssignment($sourceAssignment)) {
+        throw new InvalidArgumentException('The Tester no longer has the required onboarding evidence for a focused re-test assignment.');
+    }
+    $task = taskRegistry()[(string) $sourceAssignment['task_id']] ?? null;
+    if (!is_array($task) || ($task['state'] ?? '') !== 'current' || !in_array((string) $feedback['pt_case'], $task['ptIds'] ?? [], true)) {
+        throw new InvalidArgumentException('The reported PT case is unavailable for an exact re-test assignment.');
+    }
+    return [
+        'feedback' => $feedback,
+        'source_assignment' => $sourceAssignment,
+        'task' => $task,
+        'existing_handoff' => retestHandoffForFeedback($database, $feedbackId),
+    ];
+}
+
+function createRetestHandoff(PDO $database, int $feedbackId, string $testerInstruction, bool $mutationAuthorized): int
+{
+    $testerInstruction = trim($testerInstruction);
+    if ($testerInstruction === '' || textLength($testerInstruction) > MAX_ASSIGNMENT_NOTE_LENGTH - 64 || str_contains($testerInstruction, "\0")) {
+        throw new InvalidArgumentException('A bounded Tester-visible re-test instruction is required.');
+    }
+    $context = retestHandoffContext($database, $feedbackId);
+    if ($context['existing_handoff'] !== null) {
+        throw new InvalidArgumentException('A separate re-test assignment is already recorded for this report.');
+    }
+    $feedback = $context['feedback'];
+    $source = $context['source_assignment'];
+    $task = $context['task'];
+    $mutationMode = (string) ($task['mutation']['mode'] ?? 'none');
+    if ($mutationMode === 'required' && !$mutationAuthorized) {
+        throw new InvalidArgumentException('This controlled re-test requires explicit Coordinator authorization.');
+    }
+    if (!in_array($mutationMode, ['required', 'optional'], true)) {
+        $mutationAuthorized = false;
+    }
+    $now = gmdate('c');
+    $assignmentNote = 'Re-test focus: ' . $feedback['pt_case'] . '. ' . $testerInstruction;
+    $database->beginTransaction();
+    try {
+        $insertAssignment = $database->prepare("INSERT INTO tester_task_assignments(tester_id, task_id, task_status, station_scope, configuration_scope, coordinator_note, mutation_authorized, assignment_email_status, created_at, updated_at) VALUES (?, ?, 'assigned', ?, ?, ?, ?, 'not_sent', ?, ?)");
+        $insertAssignment->execute([(int) $feedback['tester_id'], (string) $task['id'], (string) $source['station_scope'], (string) $source['configuration_scope'], $assignmentNote, $mutationAuthorized ? 1 : 0, $now, $now]);
+        $retestAssignmentId = (int) $database->lastInsertId();
+        $database->prepare('INSERT INTO tester_retest_handoffs(feedback_id, tester_id, source_assignment_id, retest_assignment_id, pt_case, tester_instruction, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
+            ->execute([$feedbackId, (int) $feedback['tester_id'], (int) $source['source_assignment_id'], $retestAssignmentId, (string) $feedback['pt_case'], $testerInstruction, $now]);
+        $database->commit();
+    } catch (Throwable $error) {
+        if ($database->inTransaction()) $database->rollBack();
+        throw $error;
+    }
+    return $retestAssignmentId;
 }
 
 /**
@@ -1878,12 +1986,13 @@ function assignmentInput(array $tasks, array $tester): array
     return [$task, $station, $configuration, $note, $mutationAuthorized ? 1 : 0];
 }
 
-function assignmentMessage(array $task, array $assignment): string
+function assignmentMessage(array $task, array $assignment, ?array $requiredPtCases = null): string
 {
+    $requiredPtCases ??= array_values(array_filter($task['ptIds'] ?? [], 'is_string'));
     $lines = [
         '24Seven.FM Player testing assignment',
         $task['id'] . ' — ' . $task['title'],
-        'PT cases: ' . implode(', ', $task['ptIds']),
+        'PT cases: ' . implode(', ', $requiredPtCases),
         'Scope: ' . ($assignment['station_scope'] !== '' ? $assignment['station_scope'] : 'Network-wide / not station-specific'),
     ];
     if ($assignment['configuration_scope'] !== '') {
@@ -1903,9 +2012,9 @@ function assignmentMessage(array $task, array $assignment): string
     return implode("\n", $lines);
 }
 
-function assignmentEmailSubject(array $task): string
+function assignmentEmailSubject(array $task, bool $retest = false): string
 {
-    return '24Seven.FM Player: ' . $task['id'] . ' assignment';
+    return '24Seven.FM Player: ' . $task['id'] . ($retest ? ' re-test assignment' : ' assignment');
 }
 
 function sendAssignmentEmail(PDO $database, array $config, int $assignmentId): bool
@@ -1921,8 +2030,9 @@ function sendAssignmentEmail(PDO $database, array $config, int $assignmentId): b
     if (!is_array($task)) {
         throw new RuntimeException('The assigned Tester Task is unavailable.');
     }
-    $message = 'Hi ' . $assignment['display_name'] . ",\n\n" . assignmentMessage($task, $assignment);
-    $subject = assignmentEmailSubject($task);
+    $retestHandoff = retestHandoffForAssignment($database, $assignmentId);
+    $message = 'Hi ' . $assignment['display_name'] . ",\n\n" . assignmentMessage($task, $assignment, assignmentRequiredPtCases($database, $assignmentId, $task));
+    $subject = assignmentEmailSubject($task, $retestHandoff !== null);
     $html = plainTextToHtml($message);
     $archiveId = prepareMailArchive($database, (int) $assignment['tester_id'], 'assignment', $subject, $message, $html, null, $assignmentId);
     $accepted = sendIndividualMail($config, $assignment['email'], $subject, $message, $html);
@@ -2308,6 +2418,30 @@ function applicationStageBadge(string $stage): string
     return '<span class="' . e(applicationStageBadgeClass($stage)) . '">' . e(applicationStageLabel($stage)) . '</span>';
 }
 
+function renderRetestHandoffReview(PDO $database, int $feedbackId, string $notice = '', string $error = ''): never
+{
+    $context = retestHandoffContext($database, $feedbackId);
+    $feedback = $context['feedback'];
+    $source = $context['source_assignment'];
+    $task = $context['task'];
+    $handoff = $context['existing_handoff'];
+    $message = $notice === '' ? '' : '<p class="notice">' . e($notice) . '</p>';
+    $message .= $error === '' ? '' : '<p class="notice error">' . e($error) . '</p>';
+    $scope = trim((string) $source['station_scope']) === '' ? 'No station scope recorded' : (string) $source['station_scope'];
+    $configuration = trim((string) $source['configuration_scope']) === '' ? 'No additional device scope recorded' : (string) $source['configuration_scope'];
+    $record = '<section class="review-evidence"><p class="task-plan-label">Original evidence</p><h2>' . e((string) $feedback['display_name'] . ' · ' . $task['id'] . ' · ' . $feedback['pt_case']) . '</h2><p><strong>Reported outcome:</strong> ' . e(strtoupper((string) $feedback['outcome'])) . ' · ' . e(humanTimestamp((string) $feedback['created_at'])) . '<br><strong>Original assignment:</strong> ' . e(ucwords(str_replace('_', ' ', (string) $source['task_status']))) . '<br><strong>Station scope:</strong> ' . e($scope) . '<br><strong>Device scope:</strong> ' . e($configuration) . '</p><h3>' . e((string) $feedback['subject']) . '</h3><p>' . nl2br(e((string) $feedback['details']), false) . '</p></section>';
+    if ($handoff !== null) {
+        $action = '<section class="notice"><strong>Separate re-test already created:</strong> ' . e(humanTimestamp((string) $handoff['created_at'])) . '. It is assignment #' . (int) $handoff['retest_assignment_id'] . ', limited to ' . e((string) $handoff['pt_case']) . '. No duplicate can be created from this report.</section><div class="work-record-actions"><a class="button secondary" href="/private-tester-queue.php?tester=' . (int) $handoff['tester_id'] . '">Open Coordinator record</a><a class="button secondary" href="/tester-portal.php?preview_tester=' . (int) $handoff['tester_id'] . '&amp;view=tasks&amp;assignment=' . (int) $handoff['retest_assignment_id'] . '">Preview re-test handoff</a></div>';
+    } else {
+        $mutationConfirmation = (($task['mutation']['mode'] ?? 'none') === 'required')
+            ? '<label><input style="width:auto" type="checkbox" name="retest_mutation_authorized" value="yes" required> I explicitly authorize the controlled re-test subcase: ' . e((string) ($task['mutation']['label'] ?? 'Coordinator authorization required')) . '.</label>'
+            : '';
+        $action = '<section class="workspace-primary-card"><div><p class="eyebrow">Coordinator confirmation</p><h2>Create one separate, exact-case re-test</h2><p class="muted">This creates a new focused assignment for only ' . e((string) $feedback['pt_case']) . ', retains the original assignment and report unchanged, and carries forward the approved scope. It does not send mail or notify the Tester. The Tester will still submit a new result and the Coordinator will review it normally.</p></div></section><form method="post" class="review-decision-form"><input type="hidden" name="action" value="create_retest_handoff"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="feedback_id" value="' . $feedbackId . '"><label>Tester-visible re-test instruction <textarea name="retest_instruction" maxlength="' . (MAX_ASSIGNMENT_NOTE_LENGTH - 64) . '" required placeholder="State what to verify after the fix. This becomes part of the new Tester assignment; do not include private triage notes, credentials, session data, or screenshots."></textarea></label><label><input style="width:auto" type="checkbox" name="confirm_retest_handoff" value="yes" required> I reviewed the original report and confirm this is a new, separate re-test assignment for only ' . e((string) $feedback['pt_case']) . '.</label>' . $mutationConfirmation . '<button type="submit">Create separate re-test assignment</button></form>';
+    }
+    $content = '<header class="workspace-page-header"><div class="workspace-page-heading"><p class="eyebrow">24Seven.FM Player · Closed Alpha</p><h1>Re-test handoff</h1><p class="muted">Review the original evidence before deliberately creating a separate focused re-test assignment.</p></div><div class="workspace-page-actions"><span class="workspace-role">Coordinator workspace</span><a class="link-button" href="/private-tester-queue.php?issue_triage=1">Back to issue triage</a><form method="post"><input type="hidden" name="action" value="logout"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><button class="secondary" type="submit">Sign out</button></form></div></header>' . $message . $record . $action;
+    renderPage('Re-test handoff', $content);
+}
+
 function renderIssueTriageQueue(PDO $database, string $notice = '', string $error = ''): never
 {
     $showClosed = isset($_GET['issue_triage_closed']);
@@ -2332,7 +2466,19 @@ function renderIssueTriageQueue(PDO $database, string $notice = '', string $erro
         $scope = trim((string) $feedback['station_scope']) === '' ? 'No station scope recorded' : (string) $feedback['station_scope'];
         $configuration = trim((string) $feedback['configuration_scope']) === '' ? 'No additional device scope recorded' : (string) $feedback['configuration_scope'];
         $currentState = $state === '' ? 'Not triaged' : issueTriageStateLabel($state);
-        $cards .= '<article class="work-record review-inbox-card"><div class="work-record-heading"><div><p class="eyebrow">' . e(strtoupper((string) $feedback['outcome'])) . ' PT report</p><h2>' . e((string) $feedback['display_name'] . ' · ' . (string) $feedback['task_id'] . ' · ' . ((string) $feedback['pt_case'] === '' ? 'PT case' : (string) $feedback['pt_case'])) . '</h2></div><span class="pill ' . ($state === 'closed' ? '' : 'pending') . '">' . e($currentState) . '</span></div><div class="work-record-context"><span><strong>Reported</strong> ' . e(humanTimestamp((string) $feedback['created_at'])) . '</span><span><strong>Category</strong> ' . e(FEEDBACK_CATEGORIES[(string) $feedback['category']] ?? FEEDBACK_CATEGORIES['other']) . '</span><span><strong>Station scope</strong> ' . e($scope) . '</span><span><strong>Device scope</strong> ' . e($configuration) . '</span></div><section class="review-evidence"><p class="task-plan-label">Tester report</p><h3>' . e((string) $feedback['subject']) . '</h3><p>' . nl2br(e((string) $feedback['details']), false) . '</p></section><section class="issue-triage-history"><p class="task-plan-label">Coordinator triage history</p>' . ($history === '' ? '<p class="muted">No triage decision is recorded yet.</p>' : '<ol>' . $history . '</ol>') . '</section><form method="post" class="review-decision-form"><input type="hidden" name="action" value="triage_issue"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="feedback_id" value="' . $feedbackId . '"><label>Triage state <select name="triage_state" required>' . $stateOptions . '</select></label><label>Auditable Coordinator note <textarea name="triage_note" maxlength="' . MAX_ASSIGNMENT_NOTE_LENGTH . '" required placeholder="Record the evidence-based next step. Do not include credentials, session data, or private screenshots."></textarea></label><p class="muted small">Ready for re-test records a follow-up state only. It does not create an assignment, send mail, notify the Tester, or create an external ticket.</p><button type="submit">Record triage decision</button></form><div class="work-record-actions"><a class="button secondary" href="/private-tester-queue.php?tester=' . (int) $feedback['tester_id'] . '">Open Coordinator record</a><a class="button secondary" href="/tester-portal.php?preview_tester=' . (int) $feedback['tester_id'] . '&amp;view=tasks&amp;assignment=' . (int) $feedback['assignment_id'] . '">Preview Tester handoff</a></div></article>';
+        $retestAction = '';
+        if ($state === 'ready_for_retest') {
+            try {
+                $retest = retestHandoffContext($database, $feedbackId);
+                $handoff = $retest['existing_handoff'];
+                $retestAction = $handoff === null
+                    ? '<a class="button" href="/private-tester-queue.php?retest_handoff=' . $feedbackId . '">Review re-test handoff</a>'
+                    : '<a class="button secondary" href="/tester-portal.php?preview_tester=' . (int) $handoff['tester_id'] . '&amp;view=tasks&amp;assignment=' . (int) $handoff['retest_assignment_id'] . '">Preview created re-test</a>';
+            } catch (InvalidArgumentException $exception) {
+                $retestAction = '<span class="warning">Re-test handoff unavailable: ' . e($exception->getMessage()) . '</span>';
+            }
+        }
+        $cards .= '<article class="work-record review-inbox-card"><div class="work-record-heading"><div><p class="eyebrow">' . e(strtoupper((string) $feedback['outcome'])) . ' PT report</p><h2>' . e((string) $feedback['display_name'] . ' · ' . (string) $feedback['task_id'] . ' · ' . ((string) $feedback['pt_case'] === '' ? 'PT case' : (string) $feedback['pt_case'])) . '</h2></div><span class="pill ' . ($state === 'closed' ? '' : 'pending') . '">' . e($currentState) . '</span></div><div class="work-record-context"><span><strong>Reported</strong> ' . e(humanTimestamp((string) $feedback['created_at'])) . '</span><span><strong>Category</strong> ' . e(FEEDBACK_CATEGORIES[(string) $feedback['category']] ?? FEEDBACK_CATEGORIES['other']) . '</span><span><strong>Station scope</strong> ' . e($scope) . '</span><span><strong>Device scope</strong> ' . e($configuration) . '</span></div><section class="review-evidence"><p class="task-plan-label">Tester report</p><h3>' . e((string) $feedback['subject']) . '</h3><p>' . nl2br(e((string) $feedback['details']), false) . '</p></section><section class="issue-triage-history"><p class="task-plan-label">Coordinator triage history</p>' . ($history === '' ? '<p class="muted">No triage decision is recorded yet.</p>' : '<ol>' . $history . '</ol>') . '</section><form method="post" class="review-decision-form"><input type="hidden" name="action" value="triage_issue"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="feedback_id" value="' . $feedbackId . '"><label>Triage state <select name="triage_state" required>' . $stateOptions . '</select></label><label>Auditable Coordinator note <textarea name="triage_note" maxlength="' . MAX_ASSIGNMENT_NOTE_LENGTH . '" required placeholder="Record the evidence-based next step. Do not include credentials, session data, or private screenshots."></textarea></label><p class="muted small">Ready for re-test records a follow-up state only. It does not create an assignment, send mail, notify the Tester, or create an external ticket.</p><button type="submit">Record triage decision</button></form><div class="work-record-actions">' . $retestAction . '<a class="button secondary" href="/private-tester-queue.php?tester=' . (int) $feedback['tester_id'] . '">Open Coordinator record</a><a class="button secondary" href="/tester-portal.php?preview_tester=' . (int) $feedback['tester_id'] . '&amp;view=tasks&amp;assignment=' . (int) $feedback['assignment_id'] . '">Preview Tester handoff</a></div></article>';
     }
     $closedLink = $showClosed ? '/private-tester-queue.php?issue_triage=1' : '/private-tester-queue.php?issue_triage=1&amp;issue_triage_closed=1';
     $closedLabel = $showClosed ? 'Hide closed triage' : 'Show closed triage';
@@ -2632,10 +2778,12 @@ function renderTesterWorkspace(PDO $database, int $testerId, string $notice = ''
         }
         $progress = assignmentReportProgress($database, (int) $assignment['id'], $task);
         $latestReview = latestAssignmentReviewEvent($database, (int) $assignment['id']);
+        $retestHandoff = retestHandoffForAssignment($database, (int) $assignment['id']);
+        $retestContext = $retestHandoff === null ? '' : '<p class="notice"><strong>Separate re-test assignment:</strong> limited to ' . e((string) $retestHandoff['pt_case']) . ' from the original Issue / Blocked report. <a href="/private-tester-queue.php?issue_triage=1">Open issue triage</a></p>';
         $reviewState = $assignment['submitted_for_review_at'] === null || $assignment['submitted_for_review_at'] === ''
             ? '<p><strong>Tester reports:</strong> ' . count($progress['reported']) . ' of ' . count($progress['required']) . ' PT cases received.' . ($progress['missing'] === [] ? ' Ready for the tester to submit for Coordinator review.' : ' Missing: ' . e(implode(', ', $progress['missing'])) . '.') . '</p>'
             : '<p class="notice"><strong>Submitted for Coordinator review:</strong> ' . e(humanTimestamp((string) $assignment['submitted_for_review_at'])) . '. Review the per-case results below before recording the final status.</p>';
-        $assignmentCards .= '<article class="assignment-existing work-record"><div class="work-record-heading"><div><p class="eyebrow">Focused assignment</p><h4>' . e($task['id'] . ' — ' . $task['title']) . '</h4></div><span class="pill ' . ($assignment['task_status'] === 'blocked' ? 'blocked' : ($assignment['task_status'] === 'complete' ? '' : 'pending')) . '">' . e(ucwords(str_replace('_', ' ', (string) $assignment['task_status']))) . '</span></div><p><strong>PT cases:</strong> ' . e(implode(', ', $task['ptIds'])) . ' · <a href="/product-testing/?task=' . rawurlencode($task['id']) . '">Open cases</a></p><p><strong>Assignment email:</strong> ' . e($assignment['assignment_email_status'] === 'accepted' ? 'Accepted by the mail transport' : ($assignment['assignment_email_status'] === 'failed' ? 'Mail transport failed' : 'Not sent')) . '</p>' . assignmentLifecycleMarkup($assignment, $progress, 'coordinator', $latestReview) . $reviewState . '<div class="work-record-actions"><a class="button secondary" href="/tester-portal.php?preview_tester=' . $testerId . '&amp;view=tasks&amp;assignment=' . (int) $assignment['id'] . '">Open Tester handoff</a></div><form method="post"><input type="hidden" name="action" value="update_task"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="assignment_id" value="' . (int) $assignment['id'] . '"><label>Status<select name="task_status">' . $currentStatusOptions . '</select></label><label>Station scope<select name="station_scope">' . $currentStationOptions . '</select></label><label>Device / accessory scope<input name="configuration_scope" maxlength="' . MAX_ASSIGNMENT_CONFIGURATION_LENGTH . '" value="' . e($assignment['configuration_scope']) . '"></label><label>Coordinator note<textarea name="coordinator_note" maxlength="' . MAX_ASSIGNMENT_NOTE_LENGTH . '">' . e($assignment['coordinator_note']) . '</textarea></label><button type="submit">Save assignment</button></form></article>';
+        $assignmentCards .= '<article class="assignment-existing work-record"><div class="work-record-heading"><div><p class="eyebrow">' . ($retestHandoff === null ? 'Focused assignment' : 'Focused re-test assignment') . '</p><h4>' . e($task['id'] . ' — ' . $task['title']) . '</h4></div><span class="pill ' . ($assignment['task_status'] === 'blocked' ? 'blocked' : ($assignment['task_status'] === 'complete' ? '' : 'pending')) . '">' . e(ucwords(str_replace('_', ' ', (string) $assignment['task_status']))) . '</span></div><p><strong>PT cases:</strong> ' . e(implode(', ', $progress['required'])) . ' · <a href="/product-testing/?task=' . rawurlencode($task['id']) . '">Open cases</a></p><p><strong>Assignment email:</strong> ' . e($assignment['assignment_email_status'] === 'accepted' ? 'Accepted by the mail transport' : ($assignment['assignment_email_status'] === 'failed' ? 'Mail transport failed' : 'Not sent')) . '</p>' . $retestContext . assignmentLifecycleMarkup($assignment, $progress, 'coordinator', $latestReview) . $reviewState . '<div class="work-record-actions"><a class="button secondary" href="/tester-portal.php?preview_tester=' . $testerId . '&amp;view=tasks&amp;assignment=' . (int) $assignment['id'] . '">Open Tester handoff</a></div><form method="post"><input type="hidden" name="action" value="update_task"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="assignment_id" value="' . (int) $assignment['id'] . '"><label>Status<select name="task_status">' . $currentStatusOptions . '</select></label><label>Station scope<select name="station_scope">' . $currentStationOptions . '</select></label><label>Device / accessory scope<input name="configuration_scope" maxlength="' . MAX_ASSIGNMENT_CONFIGURATION_LENGTH . '" value="' . e($assignment['configuration_scope']) . '"></label><label>Coordinator note<textarea name="coordinator_note" maxlength="' . MAX_ASSIGNMENT_NOTE_LENGTH . '">' . e($assignment['coordinator_note']) . '</textarea></label><button type="submit">Save assignment</button></form></article>';
     }
     $message = $notice === '' ? '' : '<p class="notice">' . e($notice) . '</p>';
     $message .= $error === '' ? '' : '<p class="notice error">' . e($error) . '</p>';
@@ -2881,6 +3029,18 @@ try {
             }
             recordIssueTriage($database, $feedbackId, (string) ($_POST['triage_state'] ?? ''), (string) ($_POST['triage_note'] ?? ''));
             redirect('?issue_triage=1&notice=' . rawurlencode('Issue triage decision recorded.'));
+        }
+        if ($action === 'create_retest_handoff') {
+            $feedbackId = filter_var($_POST['feedback_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+            if ($feedbackId === false) {
+                throw new InvalidArgumentException('The requested issue report is invalid.');
+            }
+            if (($_POST['confirm_retest_handoff'] ?? '') !== 'yes') {
+                throw new InvalidArgumentException('Confirm the exact PT-case re-test handoff before creating a separate assignment.');
+            }
+            $assignmentId = createRetestHandoff($database, $feedbackId, (string) ($_POST['retest_instruction'] ?? ''), ($_POST['retest_mutation_authorized'] ?? '') === 'yes');
+            $handoff = retestHandoffForFeedback($database, $feedbackId);
+            redirect('?tester=' . (int) ($handoff['tester_id'] ?? 0) . '&notice=' . rawurlencode('Separate re-test assignment #' . $assignmentId . ' was created in the portal for the exact reported PT case. No assignment email was sent.'));
         }
         if ($action === 'accept_application') {
             $testerId = testerId();
@@ -3130,6 +3290,9 @@ try {
     }
     if (isset($_GET['live_chat'])) {
         renderLiveChatWorkspace($database, $chatTesterId === false ? 0 : (int) $chatTesterId);
+    }
+    if (isset($_GET['retest_handoff']) && ctype_digit((string) $_GET['retest_handoff'])) {
+        renderRetestHandoffReview($database, (int) $_GET['retest_handoff'], (string) ($_GET['notice'] ?? ''), (string) ($_GET['error'] ?? ''));
     }
     if (isset($_GET['issue_triage'])) {
         renderIssueTriageQueue($database, (string) ($_GET['notice'] ?? ''), (string) ($_GET['error'] ?? ''));

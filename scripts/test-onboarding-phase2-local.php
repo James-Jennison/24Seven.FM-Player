@@ -25,6 +25,7 @@ try {
     expectPhaseTwo((int) $database->query("SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'tester_task_review_events'")->fetchColumn() === 1, 'Coordinator decisions must retain dedicated task-review evidence.');
     expectPhaseTwo((int) $database->query("SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'tester_task_review_responses'")->fetchColumn() === 1, 'Returned work must retain a separate tester clarification response.');
     expectPhaseTwo((int) $database->query("SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'tester_issue_triage_events'")->fetchColumn() === 1, 'Issue triage must retain separate immutable Coordinator evidence.');
+    expectPhaseTwo((int) $database->query("SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'tester_retest_handoffs'")->fetchColumn() === 1, 'Explicit re-tests must retain a separate handoff record.');
     $database->prepare("INSERT INTO testers(source_message_uid, received_at, display_name, email, device, android_version, interests_json, status, imported_at, primary_station, device_form_factor, network_capabilities_json, audio_capabilities_json, accessibility_capabilities_json, testing_comfort, controlled_actions_json, testing_availability) VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, ?, ?, ?, ?, ?, ?)")
         ->execute(['phase-two-local', '2026-08-15T00:00:00Z', 'Local Stage Tester', 'local-stage@example.test', 'Local stage device', 'Android 16', '["playback"]', '2026-08-15T00:00:00Z', 'sst', 'phone', '["wifi"]', '["device_speaker"]', '["general_accessibility"]', 'readonly', '["none"]', '1_2h']);
 
@@ -94,6 +95,26 @@ try {
     $timelineAssignments = $database->query('SELECT id, task_id, task_status, submitted_for_review_at, created_at, updated_at FROM tester_task_assignments WHERE tester_id = 1')->fetchAll();
     $timeline = testerActivityTimeline($database, $tester, $timelineAssignments, taskRegistry(), 'coordinator');
     expectPhaseTwo(!str_contains($timeline, 'Private Coordinator triage note.'), 'Private Coordinator triage notes must not enter shared Activity evidence.');
+
+    $database->prepare("UPDATE tester_task_assignments SET task_status = 'blocked', submitted_for_review_at = NULL, updated_at = ? WHERE id = ?")->execute([$now, $assignmentId]);
+    recordIssueTriage($database, $issueFeedbackId, 'ready_for_retest', 'Fix is ready for a deliberate exact-case re-test.');
+    $assignmentCountBeforeRetest = (int) $database->query('SELECT COUNT(*) FROM tester_task_assignments')->fetchColumn();
+    $retestAssignmentId = createRetestHandoff($database, $issueFeedbackId, 'Verify the reported behavior after the fix, then report the actual result.', false);
+    $assignmentCountAfterRetest = (int) $database->query('SELECT COUNT(*) FROM tester_task_assignments')->fetchColumn();
+    $retestHandoff = retestHandoffForFeedback($database, $issueFeedbackId);
+    expectPhaseTwo($assignmentCountAfterRetest === $assignmentCountBeforeRetest + 1 && (int) ($retestHandoff['retest_assignment_id'] ?? 0) === $retestAssignmentId, 'A Ready for re-test decision must create one separate, linked focused assignment only after explicit Coordinator action.');
+    expectPhaseTwo((int) ($retestHandoff['source_assignment_id'] ?? 0) === $assignmentId && (string) ($retestHandoff['pt_case'] ?? '') === $task['ptIds'][0], 'The re-test handoff must preserve the original assignment and exact reported PT case.');
+    expectPhaseTwo(assignmentRequiredPtCases($database, $retestAssignmentId, $task) === [$task['ptIds'][0]], 'The re-test assignment must require only the exact reported PT case.');
+    expectPhaseTwo((string) $database->query('SELECT assignment_email_status FROM tester_task_assignments WHERE id = ' . $retestAssignmentId)->fetchColumn() === 'not_sent', 'Creating a re-test handoff must not send assignment email or notify the Tester.');
+    try {
+        createRetestHandoff($database, $issueFeedbackId, 'Duplicate handoff must not be accepted.', false);
+        throw new RuntimeException('A report must not receive a duplicate re-test assignment.');
+    } catch (InvalidArgumentException) {
+        // Expected: each report can create at most one explicit re-test handoff.
+    }
+    $timelineAssignments = $database->query('SELECT id, task_id, task_status, submitted_for_review_at, created_at, updated_at FROM tester_task_assignments WHERE tester_id = 1')->fetchAll();
+    $timeline = testerActivityTimeline($database, $tester, $timelineAssignments, taskRegistry(), 'coordinator');
+    expectPhaseTwo(!str_contains($timeline, 'Verify the reported behavior after the fix'), 'Tester-visible re-test instruction must remain on the assignment, not in shared Activity evidence.');
 
     $html = mergeCoordinatorMailHtml('<p>Hello {{tester_name}}, {{onboarding_status}}.</p>', $tester);
     $archiveId = prepareMailArchive($database, 1, 'assignment', assignmentEmailSubject($task), assignmentMessage($task, ['station_scope' => $station, 'configuration_scope' => $configuration, 'coordinator_note' => $note, 'mutation_authorized' => $mutationAuthorized]), $html, null, $assignmentId);
