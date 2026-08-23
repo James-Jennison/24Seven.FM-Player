@@ -285,6 +285,17 @@ function database(array $config): PDO
             created_at TEXT NOT NULL
         );
         CREATE INDEX IF NOT EXISTS tester_retest_handoffs_source_assignment ON tester_retest_handoffs(source_assignment_id, id DESC);
+        CREATE TABLE IF NOT EXISTS tester_retest_closeouts (
+            id INTEGER PRIMARY KEY,
+            feedback_id INTEGER NOT NULL UNIQUE REFERENCES tester_feedback(id) ON DELETE CASCADE,
+            tester_id INTEGER NOT NULL REFERENCES testers(id) ON DELETE CASCADE,
+            retest_assignment_id INTEGER NOT NULL UNIQUE REFERENCES tester_task_assignments(id) ON DELETE CASCADE,
+            triage_event_id INTEGER NOT NULL UNIQUE REFERENCES tester_issue_triage_events(id) ON DELETE CASCADE,
+            state TEXT NOT NULL CHECK(state IN (\'needs_reproduction\', \'known_issue\', \'closed\')),
+            coordinator_note TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS tester_retest_closeouts_assignment_recent ON tester_retest_closeouts(retest_assignment_id, id DESC);
         CREATE TABLE IF NOT EXISTS chat_threads (
             id INTEGER PRIMARY KEY,
             tester_id INTEGER NOT NULL UNIQUE REFERENCES testers(id) ON DELETE CASCADE,
@@ -986,6 +997,46 @@ function retestNotificationEligible(PDO $database, int $assignmentId): bool
     $handoff = retestHandoffForAssignment($database, $assignmentId);
     $assignment = retestNotificationAssignment($database, $assignmentId);
     return $handoff !== null && $assignment !== null && (string) $assignment['assignment_email_status'] === 'not_sent' && (int) $assignment['assignment_email_attempts'] === 0;
+}
+
+/** @return array{id:int,feedback_id:int,tester_id:int,retest_assignment_id:int,triage_event_id:int,state:string,coordinator_note:string,created_at:string}|null */
+function retestCloseoutForAssignment(PDO $database, int $assignmentId): ?array
+{
+    $statement = $database->prepare('SELECT id, feedback_id, tester_id, retest_assignment_id, triage_event_id, state, coordinator_note, created_at FROM tester_retest_closeouts WHERE retest_assignment_id = ?');
+    $statement->execute([$assignmentId]);
+    $closeout = $statement->fetch();
+    return $closeout === false ? null : $closeout;
+}
+
+/** @return array{handoff:array,feedback:array,assignment:array,task:array} */
+function retestCloseoutContext(PDO $database, int $assignmentId): array
+{
+    $handoff = retestHandoffForAssignment($database, $assignmentId);
+    if ($handoff === null || retestCloseoutForAssignment($database, $assignmentId) !== null) throw new InvalidArgumentException('This separate re-test is unavailable for closeout.');
+    $feedback = issueTriageFeedback($database, (int) $handoff['feedback_id']);
+    if ((latestIssueTriageEvent($database, (int) $handoff['feedback_id'])['state'] ?? '') !== 'ready_for_retest') throw new InvalidArgumentException('The original report is no longer awaiting an explicit re-test closeout.');
+    $query = $database->prepare('SELECT id, tester_id, task_id, task_status, station_scope, configuration_scope, coordinator_note, mutation_authorized, submitted_for_review_at, created_at, updated_at FROM tester_task_assignments WHERE id = ?');
+    $query->execute([$assignmentId]);
+    $assignment = $query->fetch();
+    $task = is_array($assignment) ? (taskRegistry()[(string) $assignment['task_id']] ?? null) : null;
+    if (!is_array($assignment) || !is_array($task) || (string) $assignment['task_status'] !== 'complete' || (latestAssignmentReviewEvent($database, $assignmentId)['decision'] ?? '') !== 'complete' || !assignmentReportProgress($database, $assignmentId, $task)['complete']) throw new InvalidArgumentException('Only a fully reported, Coordinator-completed separate re-test can close the original report.');
+    return ['handoff' => $handoff, 'feedback' => $feedback, 'assignment' => $assignment, 'task' => $task];
+}
+
+function recordRetestCloseout(PDO $database, int $assignmentId, string $state, string $note): void
+{
+    if (!in_array($state, ['closed', 'needs_reproduction', 'known_issue'], true)) throw new InvalidArgumentException('Choose a valid explicit re-test closeout state.');
+    $note = trim($note);
+    if ($note === '' || textLength($note) > MAX_ASSIGNMENT_NOTE_LENGTH || str_contains($note, "\0")) throw new InvalidArgumentException('An auditable closeout note is required.');
+    $context = retestCloseoutContext($database, $assignmentId);
+    $now = gmdate('c');
+    $database->beginTransaction();
+    try {
+        $event = $database->prepare('INSERT INTO tester_issue_triage_events(feedback_id, tester_id, assignment_id, state, coordinator_note, created_at) VALUES (?, ?, ?, ?, ?, ?)');
+        $event->execute([(int) $context['feedback']['id'], (int) $context['feedback']['tester_id'], (int) $context['feedback']['assignment_id'], $state, $note, $now]);
+        $database->prepare('INSERT INTO tester_retest_closeouts(feedback_id, tester_id, retest_assignment_id, triage_event_id, state, coordinator_note, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)')->execute([(int) $context['handoff']['feedback_id'], (int) $context['handoff']['tester_id'], $assignmentId, (int) $database->lastInsertId(), $state, $note, $now]);
+        $database->commit();
+    } catch (Throwable $error) { if ($database->inTransaction()) $database->rollBack(); throw $error; }
 }
 
 /**
@@ -2544,6 +2595,20 @@ function renderRetestHandoffReview(PDO $database, int $feedbackId, string $notic
     renderPage('Re-test handoff', $content);
 }
 
+function renderRetestCloseoutReview(PDO $database, int $assignmentId, string $notice = '', string $error = ''): never
+{
+    $context = retestCloseoutContext($database, $assignmentId);
+    $handoff = $context['handoff']; $feedback = $context['feedback']; $assignment = $context['assignment']; $task = $context['task'];
+    $reports = $database->prepare('SELECT pt_case, outcome, category, subject, details, created_at FROM tester_feedback WHERE assignment_id = ? ORDER BY created_at, id');
+    $reports->execute([$assignmentId]); $items = '';
+    foreach ($reports->fetchAll() as $report) $items .= '<article class="assignment-existing"><h3>' . e((string) $report['pt_case'] . ' · ' . strtoupper((string) $report['outcome'])) . '</h3><p><strong>' . e((string) $report['subject']) . '</strong><br><small>' . e(humanTimestamp((string) $report['created_at'])) . '</small></p><p>' . nl2br(e((string) $report['details']), false) . '</p></article>';
+    $message = $notice === '' ? '' : '<p class="notice">' . e($notice) . '</p>'; $message .= $error === '' ? '' : '<p class="notice error">' . e($error) . '</p>';
+    $stateOptions = ''; foreach (['closed' => 'Closed after reviewed re-test', 'needs_reproduction' => 'Needs reproduction', 'known_issue' => 'Known issue'] as $state => $label) $stateOptions .= '<option value="' . e($state) . '">' . e($label) . '</option>';
+    $content = '<header class="workspace-page-header"><div class="workspace-page-heading"><p class="eyebrow">24Seven.FM Player · Closed Alpha</p><h1>Re-test closeout</h1><p class="muted">Record the original report’s next state only after reviewing the separate re-test evidence.</p></div><div class="workspace-page-actions"><span class="workspace-role">Coordinator workspace</span><a class="link-button" href="/private-tester-queue.php?issue_triage=1">Back to issue triage</a><form method="post"><input type="hidden" name="action" value="logout"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><button class="secondary" type="submit">Sign out</button></form></div></header>' . $message
+        . '<section class="review-evidence"><p class="task-plan-label">Original Issue / Blocked report</p><h2>' . e((string) $feedback['display_name'] . ' · ' . $task['id'] . ' · ' . $handoff['pt_case']) . '</h2><p><strong>' . e((string) $feedback['subject']) . '</strong><br>' . nl2br(e((string) $feedback['details']), false) . '</p></section><section class="review-evidence"><p class="task-plan-label">Reviewed separate re-test</p><h2>Assignment #' . $assignmentId . ' · completed</h2><p class="muted">Only ' . e((string) $handoff['pt_case']) . ' was assigned. The original report, re-test task, and review evidence remain unchanged.</p>' . ($items === '' ? '<p class="muted">No re-test report is available.</p>' : $items) . '</section><form method="post" class="review-decision-form"><input type="hidden" name="action" value="record_retest_closeout"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><input type="hidden" name="assignment_id" value="' . $assignmentId . '"><label>Original report next state <select name="retest_closeout_state" required>' . $stateOptions . '</select></label><label>Auditable Coordinator closeout note <textarea name="retest_closeout_note" maxlength="' . MAX_ASSIGNMENT_NOTE_LENGTH . '" required placeholder="State the evidence-based outcome. Do not include credentials, session data, or private screenshots."></textarea></label><p class="muted small">This records one immutable triage event for the original report. It does not send mail, retry notification, create or change a task, or expose this note to the Tester.</p><label><input style="width:auto" type="checkbox" name="confirm_retest_closeout" value="yes" required> I reviewed this completed re-test and confirm the original report should move to the selected state.</label><button type="submit">Record re-test closeout</button></form>';
+    renderPage('Re-test closeout', $content);
+}
+
 function renderIssueTriageQueue(PDO $database, string $notice = '', string $error = ''): never
 {
     $showClosed = isset($_GET['issue_triage_closed']);
@@ -2881,7 +2946,9 @@ function renderTesterWorkspace(PDO $database, int $testerId, string $notice = ''
         $progress = assignmentReportProgress($database, (int) $assignment['id'], $task);
         $latestReview = latestAssignmentReviewEvent($database, (int) $assignment['id']);
         $retestHandoff = retestHandoffForAssignment($database, (int) $assignment['id']);
-        $retestContext = $retestHandoff === null ? '' : '<p class="notice"><strong>Separate re-test assignment:</strong> limited to ' . e((string) $retestHandoff['pt_case']) . ' from the original Issue / Blocked report. <a href="/private-tester-queue.php?retest_handoff=' . (int) $retestHandoff['feedback_id'] . '">Review re-test notification</a></p>';
+        $retestCloseout = $retestHandoff === null ? null : retestCloseoutForAssignment($database, (int) $assignment['id']);
+        $closeoutLink = $retestHandoff !== null && $retestCloseout === null && (string) $assignment['task_status'] === 'complete' ? ' <a href="/private-tester-queue.php?retest_closeout=' . (int) $assignment['id'] . '">Review re-test closeout</a>' : '';
+        $retestContext = $retestHandoff === null ? '' : '<p class="notice"><strong>Separate re-test assignment:</strong> limited to ' . e((string) $retestHandoff['pt_case']) . ' from the original Issue / Blocked report. <a href="/private-tester-queue.php?retest_handoff=' . (int) $retestHandoff['feedback_id'] . '">Review re-test notification</a>' . $closeoutLink . '</p>';
         $reviewState = $assignment['submitted_for_review_at'] === null || $assignment['submitted_for_review_at'] === ''
             ? '<p><strong>Tester reports:</strong> ' . count($progress['reported']) . ' of ' . count($progress['required']) . ' PT cases received.' . ($progress['missing'] === [] ? ' Ready for the tester to submit for Coordinator review.' : ' Missing: ' . e(implode(', ', $progress['missing'])) . '.') . '</p>'
             : '<p class="notice"><strong>Submitted for Coordinator review:</strong> ' . e(humanTimestamp((string) $assignment['submitted_for_review_at'])) . '. Review the per-case results below before recording the final status.</p>';
@@ -3156,6 +3223,12 @@ try {
             $accepted = sendRetestNotification($database, $config, $assignmentId);
             redirect('?retest_handoff=' . (int) $handoff['feedback_id'] . '&notice=' . rawurlencode('Re-test notification handoff ' . ($accepted ? 'was accepted by the mail transport. This does not prove inbox delivery or reading.' : 'failed. No automatic retry will occur.')));
         }
+        if ($action === 'record_retest_closeout') {
+            $assignmentId = assignmentId();
+            if (($_POST['confirm_retest_closeout'] ?? '') !== 'yes') throw new InvalidArgumentException('Confirm the reviewed re-test closeout before recording it.');
+            recordRetestCloseout($database, $assignmentId, (string) ($_POST['retest_closeout_state'] ?? ''), (string) ($_POST['retest_closeout_note'] ?? ''));
+            redirect('?issue_triage=1&notice=' . rawurlencode('Re-test closeout was recorded as immutable Coordinator triage evidence.'));
+        }
         if ($action === 'accept_application') {
             $testerId = testerId();
             activeTester($database, $testerId);
@@ -3283,6 +3356,9 @@ try {
                 'returned' => 'Task returned to the Tester for clarification.',
                 'blocked' => 'Tester work was marked blocked.',
             };
+            if ($decision === 'complete' && retestHandoffForAssignment($database, $id) !== null) {
+                redirect('?retest_closeout=' . $id . '&notice=' . rawurlencode('The separate re-test was completed. Review its evidence before recording the original report closeout.'));
+            }
             redirect('?work_review=1&notice=' . rawurlencode($notice));
         }
         if ($action === 'update_task') {
@@ -3407,6 +3483,9 @@ try {
     }
     if (isset($_GET['retest_handoff']) && ctype_digit((string) $_GET['retest_handoff'])) {
         renderRetestHandoffReview($database, (int) $_GET['retest_handoff'], (string) ($_GET['notice'] ?? ''), (string) ($_GET['error'] ?? ''));
+    }
+    if (isset($_GET['retest_closeout']) && ctype_digit((string) $_GET['retest_closeout'])) {
+        renderRetestCloseoutReview($database, (int) $_GET['retest_closeout'], (string) ($_GET['notice'] ?? ''), (string) ($_GET['error'] ?? ''));
     }
     if (isset($_GET['issue_triage'])) {
         renderIssueTriageQueue($database, (string) ($_GET['notice'] ?? ''), (string) ($_GET['error'] ?? ''));
