@@ -655,11 +655,12 @@ function renderPage(string $title, string $content, bool $showCoordinatorNavigat
     header('Pragma: no-cache');
     header('X-Robots-Tag: noindex, nofollow, noarchive');
     header('X-Frame-Options: DENY');
-    $activeWorkspace = str_starts_with($title, 'Live Chat') ? 'chat' : ($title === 'Work review' ? 'review' : (str_contains($title, 'email') ? 'email' : 'operations'));
+    $activeWorkspace = str_starts_with($title, 'Live Chat') ? 'chat' : ($title === 'Work review' ? 'review' : ($title === 'Coverage catalog' ? 'coverage' : (str_contains($title, 'email') ? 'email' : 'operations')));
     $operationsClass = $activeWorkspace === 'operations' ? ' active' : '';
     $chatClass = $activeWorkspace === 'chat' ? ' active' : '';
     $emailClass = $activeWorkspace === 'email' ? ' active' : '';
     $reviewClass = $activeWorkspace === 'review' ? ' active' : '';
+    $coverageClass = $activeWorkspace === 'coverage' ? ' active' : '';
     $portalStyleAsset = __DIR__ . '/assets/onboarding-portal.css';
     $portalStyleVersion = is_file($portalStyleAsset) ? substr((string) hash_file('sha256', $portalStyleAsset), 0, 12) : 'portal';
     $loginLayout = $showCoordinatorNavigation ? '' : '<style>.global-rail{display:none!important}.app-shell{display:block}.desktop{padding:1.5rem}section.login{width:min(calc(100% - 3rem),31rem);margin:9vh auto!important}</style>';
@@ -772,7 +773,7 @@ small{color:#b7bdca}
 .task-preview-instructions{margin:.45rem 0 .65rem;padding-left:1.3rem}
 .copy-assignment{margin-left:.5rem}
 @media(max-width:44rem){table{font-size:.86rem}.optional{display:none}.onboarding-overview,.tester-task-panels{grid-template-columns:1fr}.shell{margin:1rem auto}.copy-assignment{margin-left:0}.dashboard-header{flex-direction:column}.application-row{flex-direction:column}.application-actions{width:100%}}
-</style><link rel="stylesheet" href="/assets/onboarding-portal.css?v=' . e($portalStyleVersion) . '"></head><body><a class="skip-link" href="#workspace">Skip to workspace</a><div class="app-shell"><aside class="global-rail" aria-label="Coordinator workspace navigation"><a class="brand-mark" href="/" aria-label="24Seven.FM Player home"><img src="/assets/project/app-icon.png" alt=""></a><nav><a class="rail-button' . $operationsClass . '" href="/private-tester-queue.php" aria-label="Operations workspace"><b aria-hidden="true">▦</b><span>Operations</span></a><a class="rail-button' . $reviewClass . '" href="/private-tester-queue.php?work_review=1" aria-label="Work review workspace"><b aria-hidden="true">✓</b><span>Work review</span></a><a class="rail-button' . $chatClass . '" href="/private-tester-queue.php?live_chat=1" aria-label="Live Chat workspace"><b aria-hidden="true">◌</b><span>Live Chat</span></a><a class="rail-button' . $emailClass . '" href="/private-tester-queue.php?email=1" aria-label="Email workspace"><b aria-hidden="true">✉</b><span>Email</span></a></nav></aside><main id="workspace" class="desktop">'
+</style><link rel="stylesheet" href="/assets/onboarding-portal.css?v=' . e($portalStyleVersion) . '"></head><body><a class="skip-link" href="#workspace">Skip to workspace</a><div class="app-shell"><aside class="global-rail" aria-label="Coordinator workspace navigation"><a class="brand-mark" href="/" aria-label="24Seven.FM Player home"><img src="/assets/project/app-icon.png" alt=""></a><nav><a class="rail-button' . $operationsClass . '" href="/private-tester-queue.php" aria-label="Operations workspace"><b aria-hidden="true">▦</b><span>Operations</span></a><a class="rail-button' . $coverageClass . '" href="/private-tester-queue.php?coverage=1" aria-label="Coverage catalog workspace"><b aria-hidden="true">◫</b><span>Coverage catalog</span></a><a class="rail-button' . $reviewClass . '" href="/private-tester-queue.php?work_review=1" aria-label="Work review workspace"><b aria-hidden="true">✓</b><span>Work review</span></a><a class="rail-button' . $chatClass . '" href="/private-tester-queue.php?live_chat=1" aria-label="Live Chat workspace"><b aria-hidden="true">◌</b><span>Live Chat</span></a><a class="rail-button' . $emailClass . '" href="/private-tester-queue.php?email=1" aria-label="Email workspace"><b aria-hidden="true">✉</b><span>Email</span></a></nav></aside><main id="workspace" class="desktop">'
         . $content . '</main></div></body></html>';
     exit;
 }
@@ -1116,6 +1117,98 @@ function coordinatorAssignmentSummary(array $assignments): array
         if ($status === 'blocked') $summary['blocked']++;
     }
     return $summary;
+}
+
+function coverageCatalogLabel(string $dimension, string $value): string
+{
+    $labels = [
+        'android_version' => [],
+        'device_form_factor' => [
+            'phone' => 'Standard phone', 'foldable' => 'Foldable / flip phone', 'tablet' => 'Android tablet',
+            'chromebook' => 'Chromebook with Android app support', 'other' => 'Other Android device',
+        ],
+        'primary_station' => [
+            'sst' => 'StreamingSoundtracks.com', '1980s' => '1980s.FM', 'afm' => 'Adagio.FM',
+            'dfm' => 'Death.FM', 'efm' => 'Entranced.FM',
+        ],
+        'network_capabilities_json' => [
+            'wifi' => 'Wi-Fi', 'mobile_data' => 'Mobile / cellular data', 'network_handoff' => 'Wi-Fi / mobile handoff',
+            'network_disconnect' => 'Network recovery testing',
+        ],
+        'audio_capabilities_json' => [
+            'device_speaker' => 'Device speaker', 'bluetooth_headphones' => 'Bluetooth headphones or earbuds',
+            'bluetooth_speaker' => 'Bluetooth speaker', 'wired_headphones' => 'Wired headphones / headset',
+            'usb_audio' => 'USB audio device', 'android_auto' => 'Android Auto', 'hearing_aid' => 'Hearing aid / assistive audio',
+            'hdmi_audio' => 'HDMI / external display audio', 'external_input' => 'External keyboard or mouse / trackpad',
+        ],
+        'accessibility_capabilities_json' => [
+            'general_accessibility' => 'General accessibility testing', 'talkback' => 'TalkBack', 'large_text' => 'Large text / enlarged display',
+            'voice_access' => 'Voice Access', 'switch_access' => 'Switch Access', 'accessibility_scanner' => 'Accessibility Scanner / touch-target review',
+            'external_keyboard' => 'External keyboard', 'mouse_trackpad' => 'Mouse / trackpad',
+        ],
+    ];
+    if (isset($labels[$dimension][$value])) return $labels[$dimension][$value];
+    return trim(str_replace('_', ' ', $value)) === '' ? 'Not provided' : ucwords(str_replace('_', ' ', $value));
+}
+
+/**
+ * Builds a Coordinator-only, read-only coverage view from fields the Tester
+ * already supplied. It intentionally has no persistence or mutation path.
+ *
+ * @return array{metrics: array{active:int,profile_complete:int,ready:int,available:int,active_assignments:int}, dimensions: array<string, array<string, array{label:string,count:int,testers:list<array{id:int,name:string,ready:bool,available:bool,active_assignments:int}>}>>}
+ */
+function coordinatorCoverageCatalog(PDO $database): array
+{
+    $testers = $database->query("SELECT testers.*, onboarding.onboarding_status, onboarding.play_opt_in_confirmed_at, onboarding.initial_smoke_test_confirmed_at FROM testers LEFT JOIN tester_onboarding AS onboarding ON onboarding.tester_id = testers.id WHERE testers.status = 'active' ORDER BY testers.received_at, testers.id")->fetchAll();
+    $assignments = $database->query('SELECT tester_id, task_status, submitted_for_review_at FROM tester_task_assignments ORDER BY id')->fetchAll();
+    $assignmentsByTester = [];
+    foreach ($assignments as $assignment) {
+        $assignmentsByTester[(int) $assignment['tester_id']][] = $assignment;
+    }
+
+    $catalog = [
+        'metrics' => ['active' => 0, 'profile_complete' => 0, 'ready' => 0, 'available' => 0, 'active_assignments' => 0],
+        'dimensions' => [
+            'android_version' => [], 'device_form_factor' => [], 'primary_station' => [],
+            'network_capabilities_json' => [], 'audio_capabilities_json' => [], 'accessibility_capabilities_json' => [],
+        ],
+    ];
+    foreach ($testers as $tester) {
+        $testerId = (int) $tester['id'];
+        $summary = coordinatorAssignmentSummary($assignmentsByTester[$testerId] ?? []);
+        $profileComplete = profileSummary($tester)['complete'];
+        $ready = testerReadyForAssignment($tester);
+        $available = $ready && $summary['active'] === 0 && $summary['awaiting_review'] === 0;
+        $catalog['metrics']['active']++;
+        if ($profileComplete) $catalog['metrics']['profile_complete']++;
+        if ($ready) $catalog['metrics']['ready']++;
+        if ($available) $catalog['metrics']['available']++;
+        $catalog['metrics']['active_assignments'] += $summary['active'];
+        $catalogTester = ['id' => $testerId, 'name' => (string) $tester['display_name'], 'ready' => $ready, 'available' => $available, 'active_assignments' => $summary['active']];
+        $valuesByDimension = [
+            'android_version' => [trim((string) ($tester['android_version'] ?? ''))],
+            'device_form_factor' => [trim((string) ($tester['device_form_factor'] ?? ''))],
+            'primary_station' => [trim((string) ($tester['primary_station'] ?? ''))],
+            'network_capabilities_json' => listFromJson($tester['network_capabilities_json'] ?? null),
+            'audio_capabilities_json' => listFromJson($tester['audio_capabilities_json'] ?? null),
+            'accessibility_capabilities_json' => listFromJson($tester['accessibility_capabilities_json'] ?? null),
+        ];
+        foreach ($valuesByDimension as $dimension => $values) {
+            foreach (array_unique($values) as $value) {
+                if ($value === '' || $value === 'none') continue;
+                if (!isset($catalog['dimensions'][$dimension][$value])) {
+                    $catalog['dimensions'][$dimension][$value] = ['label' => coverageCatalogLabel($dimension, $value), 'count' => 0, 'testers' => []];
+                }
+                $catalog['dimensions'][$dimension][$value]['count']++;
+                $catalog['dimensions'][$dimension][$value]['testers'][] = $catalogTester;
+            }
+        }
+    }
+    foreach ($catalog['dimensions'] as &$dimension) {
+        uasort($dimension, static fn (array $left, array $right): int => $right['count'] <=> $left['count'] ?: strcmp($left['label'], $right['label']));
+    }
+    unset($dimension);
+    return $catalog;
 }
 
 /** @return list<string> */
@@ -2150,6 +2243,37 @@ function applicationStageBadge(string $stage): string
     return '<span class="' . e(applicationStageBadgeClass($stage)) . '">' . e(applicationStageLabel($stage)) . '</span>';
 }
 
+function renderCoverageCatalog(PDO $database): never
+{
+    $catalog = coordinatorCoverageCatalog($database);
+    $metrics = $catalog['metrics'];
+    $dimensionLabels = [
+        'android_version' => 'Android versions', 'device_form_factor' => 'Device form factors',
+        'primary_station' => 'Primary stations', 'network_capabilities_json' => 'Network coverage',
+        'audio_capabilities_json' => 'Audio and accessory coverage', 'accessibility_capabilities_json' => 'Accessibility coverage',
+    ];
+    $dimensionCards = '';
+    foreach ($dimensionLabels as $dimension => $heading) {
+        $items = '';
+        foreach ($catalog['dimensions'][$dimension] as $entry) {
+            $testerLinks = '';
+            foreach ($entry['testers'] as $tester) {
+                $state = $tester['available']
+                    ? 'Available for assignment'
+                    : ($tester['ready'] ? $tester['active_assignments'] . ' active assignment' . ($tester['active_assignments'] === 1 ? '' : 's') : 'Onboarding evidence still needed');
+                $testerLinks .= '<li><a href="/private-tester-queue.php?tester=' . (int) $tester['id'] . '">' . e($tester['name']) . '</a><small>' . e($state) . '</small></li>';
+            }
+            $items .= '<details class="coverage-catalog-item"><summary><span>' . e($entry['label']) . '</span><strong>' . (int) $entry['count'] . '</strong></summary><p class="muted small">These protected links open the existing Coordinator record; the catalog does not create or update a Tester record.</p><ul>' . $testerLinks . '</ul></details>';
+        }
+        $dimensionCards .= '<section class="coverage-dimension"><p class="eyebrow">Coverage dimension</p><h2>' . e($heading) . '</h2><p class="muted">Counts are derived from currently active Testers who already supplied this coverage.</p>' . ($items === '' ? '<p class="muted">No active Tester has supplied this coverage yet.</p>' : $items) . '</section>';
+    }
+    $content = '<header class="workspace-page-header"><div class="workspace-page-heading"><p class="eyebrow">24Seven.FM Player · Closed Alpha</p><h1>Coverage catalog</h1><p class="muted">A read-only Coordinator view of the device and testing coverage already recorded in protected Tester profiles.</p></div><div class="workspace-page-actions"><span class="workspace-role">Coordinator workspace</span><a class="link-button" href="/private-tester-queue.php">Back to operations</a><a class="link-button" href="/private-tester-queue.php?work_review=1">Work review</a><form method="post"><input type="hidden" name="action" value="logout"><input type="hidden" name="csrf" value="' . e(csrf()) . '"><button class="secondary" type="submit">Sign out</button></form></div></header>'
+        . '<section class="workspace-primary-card"><div><p class="eyebrow">Coverage intelligence</p><h2>Match work to real, self-reported setup</h2><p class="muted">Use this catalog to locate existing coverage and open the right Coordinator record. It is advisory only: it neither confirms app use nor sends mail, assigns work, or changes profile data.</p></div><a class="button secondary" href="/private-tester-queue.php?queue=ready_to_assign">Open ready-to-assign queue</a></section>'
+        . '<section class="workspace-attention-section"><div class="workspace-attention-grid" aria-label="Coverage capacity overview"><article class="attention-card"><span>Active Testers</span><strong>' . (int) $metrics['active'] . '</strong><small>Current protected roster only.</small></article><article class="attention-card"><span>Ready to assign</span><strong>' . (int) $metrics['ready'] . '</strong><small>Completed profile, Play opt-in, and first-use self-report.</small></article><article class="attention-card"><span>Available capacity</span><strong>' . (int) $metrics['available'] . '</strong><small>Ready Testers with no active focused assignment.</small></article></div><p class="muted workspace-summary">Profile coverage complete: ' . (int) $metrics['profile_complete'] . ' of ' . (int) $metrics['active'] . ' active Testers · Active focused assignments: ' . (int) $metrics['active_assignments'] . '.</p></section>'
+        . '<section class="coverage-catalog-grid" aria-label="Coordinator coverage catalog">' . $dimensionCards . '</section>';
+    renderPage('Coverage catalog', $content);
+}
+
 function renderWorkReviewInbox(PDO $database, string $notice = '', string $error = ''): never
 {
     $tasks = taskRegistry();
@@ -2898,6 +3022,9 @@ try {
     }
     if (isset($_GET['live_chat'])) {
         renderLiveChatWorkspace($database, $chatTesterId === false ? 0 : (int) $chatTesterId);
+    }
+    if (isset($_GET['coverage'])) {
+        renderCoverageCatalog($database);
     }
     if (isset($_GET['work_review'])) {
         renderWorkReviewInbox($database, (string) ($_GET['notice'] ?? ''), (string) ($_GET['error'] ?? ''));
