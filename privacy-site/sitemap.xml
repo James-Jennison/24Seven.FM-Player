@@ -14,4 +14,8 @@ permalink: /sitemap.xml
     <loc>{{ '/product-testing/' | absolute_url }}</loc>
     <lastmod>{{ site.data.project.site_meta.verified }}</lastmod>
   </url>
+  <url>
+    <loc>{{ '/privacy/tv/' | absolute_url }}</loc>
+    <lastmod>{{ site.data.project.site_meta.verified }}</lastmod>
+  </url>
 </urlset>

@@ -109,6 +109,7 @@ try {
     "/dev/roadmap/",
     "/dev/resources/",
     "/privacy/",
+    "/privacy/tv/",
     "/404.html",
   ];
   const results = [];
@@ -124,7 +125,7 @@ try {
       method: "POST",
       body: JSON.stringify({ width, height, x: 0, y: 0 }),
     });
-    const testedRoutes = width === 500 ? routes : ["/", "/product-testing/", "/privacy/", "/dev/", "/dev/tester-workspace/"];
+    const testedRoutes = width === 500 ? routes : ["/", "/product-testing/", "/privacy/", "/privacy/tv/", "/dev/", "/dev/tester-workspace/"];
     for (const route of testedRoutes) {
       await request(`/session/${sessionId}/url`, {
         method: "POST",

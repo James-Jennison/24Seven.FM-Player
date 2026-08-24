@@ -145,6 +145,7 @@ try {
     "/dev/roadmap/",
     "/dev/resources/",
     "/privacy/",
+    "/privacy/tv/",
     "/404.html",
   ];
 
@@ -161,7 +162,7 @@ try {
       deviceScaleFactor: 1,
       mobile: viewport.width < 600,
     });
-    const testedRoutes = viewport.width <= 390 ? routes : ["/", "/product-testing/", "/privacy/", "/dev/", "/dev/tester-workspace/"];
+    const testedRoutes = viewport.width <= 390 ? routes : ["/", "/product-testing/", "/privacy/", "/privacy/tv/", "/dev/", "/dev/tester-workspace/"];
     for (const route of testedRoutes) {
       await navigate(route);
       await evaluate("window.scrollTo(0, document.documentElement.scrollHeight)");
