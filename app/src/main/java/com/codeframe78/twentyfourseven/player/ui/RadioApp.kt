@@ -282,7 +282,9 @@ private fun PhoneShell(
     ) { padding ->
         DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, onReviewTerms, isCoverDisplay)
     }
-    RequestResultDialog(state, onCancelRequest)
+    if (state.destination != MainDestination.Favorites) {
+        RequestResultDialog(state, onCancelRequest)
+    }
 }
 
 /**
@@ -372,7 +374,9 @@ private fun TabletShell(
         ) { padding ->
             DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, onReviewTerms)
         }
-        RequestResultDialog(state, onCancelRequest)
+        if (state.destination != MainDestination.Favorites) {
+            RequestResultDialog(state, onCancelRequest)
+        }
     }
 }
 
