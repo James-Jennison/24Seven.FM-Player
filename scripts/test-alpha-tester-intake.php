@@ -143,6 +143,8 @@ $source = file_get_contents(dirname(__DIR__) . '/privacy-site/alpha-tester-inter
 expectIntake(is_string($source), 'Unable to inspect the tester-interest handler.');
 expectIntake(strpos($source, 'verifyTurnstile($turnstileToken, $turnstileConfig[\'secret\'])') < strpos($source, '$application = applicationFromRequest();'), 'Turnstile must be verified before application processing.');
 expectIntake(strpos($source, 'storeAcceptedApplication($config, $application);') < strpos($source, '$message = coordinatorIntakeMessage($application);'), 'A validated application must enter the private Tester Hub before mail handoff.');
+expectIntake(str_contains($source, 'The protected Tester Hub record is the acceptance boundary') && str_contains($source, 'please do not submit it again'), 'A coordinator mail-handoff failure must not make an already stored application appear to fail.');
+expectIntake(is_string($projectScript) && str_contains($projectScript, "const draftKey = '24seven-player-alpha-application-draft-v1'") && str_contains($projectScript, 'We kept your entries in this browser session'), 'A failed fallback submission must restore the browser-session application draft without preserving the Turnstile response.');
 expectIntake(str_contains($source, "TESTER_ONBOARDING_STORAGE_FILE = 'tester-onboarding-storage.php'"), 'The public endpoint must use the narrow onboarding storage boundary.');
 
 expectIntake(!is_file(dirname(__DIR__) . '/workers/alpha-tester-interest/worker.mjs') && !is_file(dirname(__DIR__) . '/workers/alpha-tester-interest/wrangler.toml'), 'The unused Cloudflare Worker must not remain in the repository workflow.');
