@@ -127,7 +127,7 @@ These results confirm the guide's skip, forward, back, completion, in-flow More 
 
 The focused TalkBack check was initiated after the device owner completed Android's first-use TalkBack training. With TalkBack active, accessibility focus entered the guide window and the speech service acquired accessibility audio focus. The guide exposed its title, textual progress, and visible Back, Next, and Start listening controls; physical traversal verified Back from step 3 to step 2, forward navigation to the final Start listening control, and completion dismissal.
 
-The remaining human check is auditory/gesture confirmation only: this remote procedure uses injected input, which cannot independently establish that TalkBack's touch-gesture detector and spoken output behaved as perceived by the device user. It must not be represented as a new Player defect. TalkBack remains enabled on the Razr at the device owner's request.
+The remaining human check is auditory/gesture confirmation only: this remote procedure uses injected input, which cannot independently establish that TalkBack's touch-gesture detector and spoken output behaved as perceived by the device user. It must not be represented as a new Player defect. TalkBack was disabled again after validation at the device owner's request.
 
 This is a focused Release A follow-up, not a rerun of all historical M34 physical-device evidence.
 
