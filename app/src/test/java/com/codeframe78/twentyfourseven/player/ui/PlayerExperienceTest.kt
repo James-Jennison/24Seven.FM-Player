@@ -51,6 +51,19 @@ class PlayerExperienceTest {
         assertFalse(usesNavigationRail(440.dp, 360.dp))
     }
 
+    @Test
+    fun `station official logo is used until track artwork arrives`() {
+        val station = station("sst").copy(logoUrl = "https://streamingsoundtracks.com/current-logo.png")
+
+        assertEquals(station.logoUrl, preferredPlayerArtworkUrl(null, station))
+        assertEquals(station.logoUrl, preferredPlayerArtworkUrl("  ", station))
+        assertEquals(
+            "https://streamingsoundtracks.com/current-track.jpg",
+            preferredPlayerArtworkUrl(" https://streamingsoundtracks.com/current-track.jpg ", station),
+        )
+        assertEquals(null, preferredPlayerArtworkUrl(null, null))
+    }
+
     private fun station(id: String) = Station(
         id = StationId(id),
         name = id,

@@ -178,7 +178,9 @@ class RadioAppTest {
         )
         composeRule.setContent {
             MaterialTheme {
-                Box(Modifier.requiredSize(469.dp, 342.dp)) {
+                // Keep the synthetic cover window within the Razr's available test host
+                // width so the parent constraints reach RadioApp unchanged.
+                Box(Modifier.requiredSize(430.dp, 342.dp)) {
                     RadioApp(
                         state = sampleState().copy(stations = coverStations),
                         onSelectStation = {},
@@ -571,9 +573,9 @@ class RadioAppTest {
             }
         }
 
-        composeRule.onNodeWithTag("sleep_timer_open").performScrollTo().performClick()
+        composeRule.onNodeWithTag("sleep_timer_open").performClick()
         composeRule.onNodeWithTag("sleep_timer_preset_30").performClick()
-        composeRule.onNodeWithTag("sleep_timer_open").performScrollTo().performClick()
+        composeRule.onNodeWithTag("sleep_timer_open").performClick()
         composeRule.onNodeWithTag("sleep_timer_cancel").performClick()
 
         composeRule.runOnIdle {
@@ -663,9 +665,7 @@ class RadioAppTest {
             }
         }
 
-        composeRule.onNodeWithText("No network · playback will resume automatically")
-            .performScrollTo()
-            .assertIsDisplayed()
+        composeRule.onNodeWithText("No network · playback will resume automatically").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Stop radio").assertIsDisplayed().assertHasClickAction()
     }
 
