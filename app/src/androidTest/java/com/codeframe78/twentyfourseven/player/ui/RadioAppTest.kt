@@ -69,6 +69,8 @@ import com.codeframe78.twentyfourseven.player.domain.PreparedSongRequest
 import com.codeframe78.twentyfourseven.player.domain.SongRequestLoadStatus
 import com.codeframe78.twentyfourseven.player.domain.SongRequestState
 import com.codeframe78.twentyfourseven.player.domain.FavoriteTrack
+import com.codeframe78.twentyfourseven.player.domain.FeedbackCategory
+import com.codeframe78.twentyfourseven.player.domain.FeedbackSubmission
 import com.codeframe78.twentyfourseven.player.domain.FavoriteTracksLoadStatus
 import com.codeframe78.twentyfourseven.player.domain.FavoriteTracksState
 import com.codeframe78.twentyfourseven.player.domain.TrackRequestAvailability
@@ -1099,6 +1101,69 @@ class RadioAppTest {
             assertTrue(copied?.contains("private.example") == false)
             assertTrue(copied?.contains("do-not-share") == false)
             assertTrue(copied?.contains("James") == false)
+        }
+    }
+
+    @Test
+    fun feedbackDraftUsesSelectedCategoryAndOnlyIncludesDiagnosticsAfterConsent() {
+        val reviewedDrafts = mutableListOf<Pair<FeedbackSubmission, String?>>()
+        composeRule.setContent {
+            MaterialTheme {
+                RadioApp(
+                    state = sampleState().copy(
+                        destination = MainDestination.More,
+                        playback = PlaybackState(
+                            status = PlaybackStatus.Error,
+                            errorMessage = "https://private.example/?token=do-not-share",
+                            networkAvailable = true,
+                            audioOutput = AudioOutputState("James's private JBL", AudioOutputKind.Bluetooth),
+                        ),
+                    ),
+                    onSelectStation = {},
+                    onSelectDestination = {},
+                    onPlay = {},
+                    onPause = {},
+                    onStop = {},
+                    onRefreshQueue = {},
+                    diagnosticUi = DiagnosticUi(
+                        environment = DiagnosticEnvironment(
+                            appVersion = "0.1.0-alpha08-debug",
+                            versionCode = 17,
+                            androidRelease = "16",
+                            apiLevel = 36,
+                            deviceManufacturer = "motorola",
+                            deviceModel = "razr plus 2024",
+                        ),
+                    ),
+                    feedbackUi = FeedbackUi(
+                        actions = FeedbackActions { submission, diagnostics ->
+                            reviewedDrafts += submission to diagnostics
+                        },
+                    ),
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag("more_feedback").performScrollTo().performClick()
+        composeRule.onNodeWithTag("feedback_category").performScrollTo().performClick()
+        composeRule.onNodeWithTag("feedback_category_StationSwitching").performClick()
+        composeRule.onNodeWithTag("feedback_description")
+            .performScrollTo()
+            .performTextInput("Station picker did not return after rotation")
+        composeRule.onNodeWithTag("feedback_review_email").performScrollTo().performClick()
+        composeRule.onNodeWithTag("feedback_include_diagnostics").performScrollTo().performClick()
+        composeRule.onNodeWithTag("feedback_review_email").performScrollTo().performClick()
+
+        composeRule.runOnIdle {
+            assertEquals(2, reviewedDrafts.size)
+            assertEquals(FeedbackCategory.StationSwitching, reviewedDrafts[0].first.category)
+            assertEquals("Station picker did not return after rotation", reviewedDrafts[0].first.optionalDescription)
+            assertEquals(null, reviewedDrafts[0].second)
+            assertTrue(reviewedDrafts[1].second?.contains("App version: 0.1.0-alpha08-debug (17)") == true)
+            assertTrue(reviewedDrafts[1].second?.contains("StreamingSoundtracks.com") == true)
+            assertTrue(reviewedDrafts[1].second?.contains("private.example") == false)
+            assertTrue(reviewedDrafts[1].second?.contains("do-not-share") == false)
+            assertTrue(reviewedDrafts[1].second?.contains("James") == false)
         }
     }
 
