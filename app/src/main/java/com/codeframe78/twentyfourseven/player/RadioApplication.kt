@@ -8,6 +8,7 @@ import com.codeframe78.twentyfourseven.player.data.NetworkAuthRepository
 import com.codeframe78.twentyfourseven.player.data.AndroidKeystoreAuthSessionStore
 import com.codeframe78.twentyfourseven.player.data.AndroidCommunityNotificationRepository
 import com.codeframe78.twentyfourseven.player.data.PollingChatRepository
+import com.codeframe78.twentyfourseven.player.data.SharedPreferencesAppGuideRepository
 import com.codeframe78.twentyfourseven.player.data.StationAuthRemoteDataSource
 import com.codeframe78.twentyfourseven.player.data.StationAuthSessionCoordinator
 import com.codeframe78.twentyfourseven.player.data.StationChatRemoteDataSource
@@ -39,6 +40,10 @@ class AppContainer(application: Application) {
     private val authSessionStore = AndroidKeystoreAuthSessionStore(application)
     private val authSessions = StationAuthSessionCoordinator(authSessionStore)
     private val stationPreferences = SharedPreferencesStationPreferencesRepository(application)
+    val appGuideRepository = SharedPreferencesAppGuideRepository(
+        application,
+        application.packageManager.getPackageInfo(application.packageName, 0),
+    )
     val communitySafetyRepository = SharedPreferencesCommunitySafetyRepository(application)
     val communityNotificationRepository = AndroidCommunityNotificationRepository(application)
 
