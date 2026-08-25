@@ -30,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import com.codeframe78.twentyfourseven.player.domain.StationPageTrustPolicy
 import com.codeframe78.twentyfourseven.player.domain.StationId
@@ -38,11 +39,13 @@ import com.codeframe78.twentyfourseven.player.domain.PlayerEmailDraft
 import com.codeframe78.twentyfourseven.player.domain.StationPageKind
 import com.codeframe78.twentyfourseven.player.domain.stationContactEmailDraft
 import com.codeframe78.twentyfourseven.player.data.AndroidCommunityNotificationRepository
+import com.codeframe78.twentyfourseven.player.ui.AppGuideDialog
 import com.codeframe78.twentyfourseven.player.ui.DoubleBackExitGate
 import com.codeframe78.twentyfourseven.player.ui.AudioOutputActions
 import com.codeframe78.twentyfourseven.player.ui.DiagnosticActions
 import com.codeframe78.twentyfourseven.player.ui.DiagnosticEnvironment
 import com.codeframe78.twentyfourseven.player.ui.DiagnosticUi
+import com.codeframe78.twentyfourseven.player.ui.MainDestination
 import com.codeframe78.twentyfourseven.player.ui.MainViewModel
 import com.codeframe78.twentyfourseven.player.ui.RadioApp
 import com.codeframe78.twentyfourseven.player.ui.SleepTimerActions
@@ -88,10 +91,13 @@ class MainActivity : AppCompatActivity() {
             )
             val state = viewModel.uiState.collectAsStateWithLifecycle().value
             val chatStationId = requestedChatStationId.collectAsStateWithLifecycle().value
+            val appGuideState = container.appGuideRepository.state.collectAsStateWithLifecycle().value
+            var manualGuideOpen by rememberSaveable { mutableStateOf(false) }
+            val showAppGuide = manualGuideOpen || appGuideState.shouldShowAutomatically
             LaunchedEffect(chatStationId) {
                 val stationId = chatStationId?.toSupportedStationIdOrNull() ?: return@LaunchedEffect
                 viewModel.selectStation(stationId)
-                viewModel.selectDestination(com.codeframe78.twentyfourseven.player.ui.MainDestination.Chat)
+                viewModel.selectDestination(MainDestination.Chat)
                 requestedChatStationId.value = null
             }
             val reportEmailDraft = state.abuseReport.emailDraft
@@ -105,7 +111,7 @@ class MainActivity : AppCompatActivity() {
             TwentyFourSevenTheme {
                 var showExitConfirmation by remember { mutableStateOf(false) }
                 val exitGate = remember { DoubleBackExitGate() }
-                BackHandler(enabled = !showExitConfirmation) {
+                BackHandler(enabled = !showExitConfirmation && !showAppGuide) {
                     if (exitGate.registerPress(SystemClock.elapsedRealtime())) {
                         showExitConfirmation = true
                     } else {
@@ -117,87 +123,106 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 RadioApp(
-                    state = state,
-                    onSelectStation = viewModel::selectStation,
-                    onSelectDestination = viewModel::selectDestination,
-                    onPlay = viewModel::play,
-                    onPause = viewModel::pause,
-                    onStop = viewModel::stop,
-                    sleepTimerActions = SleepTimerActions(
-                        onSet = viewModel::setSleepTimer,
-                        onCancel = viewModel::cancelSleepTimer,
-                    ),
-                    audioOutputActions = AudioOutputActions(
-                        onOpenChooser = { showAudioOutputSwitcher(viewModel::refreshAudioOutput) },
-                    ),
-                    diagnosticUi = DiagnosticUi(
-                        environment = diagnosticEnvironment(),
-                        actions = DiagnosticActions(
-                            onCopy = ::copyDiagnostics,
-                            onShare = ::shareDiagnostics,
+                        state = state,
+                        onSelectStation = viewModel::selectStation,
+                        onSelectDestination = viewModel::selectDestination,
+                        onPlay = viewModel::play,
+                        onPause = viewModel::pause,
+                        onStop = viewModel::stop,
+                        sleepTimerActions = SleepTimerActions(
+                            onSet = viewModel::setSleepTimer,
+                            onCancel = viewModel::cancelSleepTimer,
                         ),
-                    ),
-                    onRefreshQueue = viewModel::refreshQueue,
-                    onRefreshChat = viewModel::refreshChat,
-                    onRefreshFavorites = viewModel::refreshFavorites,
-                    onRefreshListenerActivity = viewModel::refreshListenerActivity,
-                    onSendChatMessage = viewModel::sendChatMessage,
-                    communitySafetyActions = com.codeframe78.twentyfourseven.player.ui.CommunitySafetyActions(
-                        onSubmitAgeScreen = viewModel::submitCommunityAgeScreen,
-                        onAcceptTerms = viewModel::acceptCommunityTerms,
-                        onSetCommunityContentVisible = viewModel::setCommunityContentVisible,
-                        onBlockUser = viewModel::blockCommunityUser,
-                        onUnblockUser = viewModel::unblockCommunityUser,
-                        onBeginReport = viewModel::beginAbuseReport,
-                        onRetryReport = viewModel::retryAbuseReport,
-                        onSubmitReport = viewModel::submitAbuseReport,
-                        onDismissReport = viewModel::dismissAbuseReport,
-                        onSetChatMentionsEnabled = viewModel::setChatMentionNotificationsEnabled,
-                        onSetForegroundChatMentionMonitorEnabled = viewModel::setForegroundChatMentionMonitorEnabled,
-                    ),
-                    onRefreshAuth = viewModel::refreshAuth,
-                    onSignIn = viewModel::signIn,
-                    onSignOut = viewModel::signOut,
-                    onSearchRequests = viewModel::searchRequests,
-                    onSuggestRequest = viewModel::suggestRequest,
-                    onOpenRequestAlbum = viewModel::openRequestSearchResult,
-                    onPrepareRequest = viewModel::prepareSongRequest,
-                    onPrepareFavoriteRequest = viewModel::prepareFavoriteRequest,
-                    onCancelRequest = viewModel::cancelSongRequest,
-                    onConfirmRequest = viewModel::confirmSongRequest,
-                    onUseLastStationAtStartup = viewModel::useLastStationAtStartup,
-                    onSetStartupStation = viewModel::setStartupStation,
-                    onOpenStationPage = { page ->
-                        val station = state.selectedStation
-                        val trustedRecipient = StationPageTrustPolicy.trustedEmailRecipient(station, page)
-                        val trustedUrl = StationPageTrustPolicy.trustedUrl(station, page)
-                        if (trustedRecipient != null && station != null && page.kind == StationPageKind.Contact) {
-                            val opened = openEmailComposer(
-                                stationContactEmailDraft(station),
-                            )
-                            if (!opened) {
-                                Toast.makeText(
-                                    this@MainActivity,
-                                    "No email app is available on this device.",
-                                    Toast.LENGTH_SHORT,
-                                ).show()
+                        audioOutputActions = AudioOutputActions(
+                            onOpenChooser = { showAudioOutputSwitcher(viewModel::refreshAudioOutput) },
+                        ),
+                        diagnosticUi = DiagnosticUi(
+                            environment = diagnosticEnvironment(),
+                            actions = DiagnosticActions(
+                                onCopy = ::copyDiagnostics,
+                                onShare = ::shareDiagnostics,
+                            ),
+                        ),
+                        onRefreshQueue = viewModel::refreshQueue,
+                        onRefreshChat = viewModel::refreshChat,
+                        onRefreshFavorites = viewModel::refreshFavorites,
+                        onRefreshListenerActivity = viewModel::refreshListenerActivity,
+                        onSendChatMessage = viewModel::sendChatMessage,
+                        communitySafetyActions = com.codeframe78.twentyfourseven.player.ui.CommunitySafetyActions(
+                            onSubmitAgeScreen = viewModel::submitCommunityAgeScreen,
+                            onAcceptTerms = viewModel::acceptCommunityTerms,
+                            onSetCommunityContentVisible = viewModel::setCommunityContentVisible,
+                            onBlockUser = viewModel::blockCommunityUser,
+                            onUnblockUser = viewModel::unblockCommunityUser,
+                            onBeginReport = viewModel::beginAbuseReport,
+                            onRetryReport = viewModel::retryAbuseReport,
+                            onSubmitReport = viewModel::submitAbuseReport,
+                            onDismissReport = viewModel::dismissAbuseReport,
+                            onSetChatMentionsEnabled = viewModel::setChatMentionNotificationsEnabled,
+                            onSetForegroundChatMentionMonitorEnabled = viewModel::setForegroundChatMentionMonitorEnabled,
+                        ),
+                        onRefreshAuth = viewModel::refreshAuth,
+                        onSignIn = viewModel::signIn,
+                        onSignOut = viewModel::signOut,
+                        onSearchRequests = viewModel::searchRequests,
+                        onSuggestRequest = viewModel::suggestRequest,
+                        onOpenRequestAlbum = viewModel::openRequestSearchResult,
+                        onPrepareRequest = viewModel::prepareSongRequest,
+                        onPrepareFavoriteRequest = viewModel::prepareFavoriteRequest,
+                        onCancelRequest = viewModel::cancelSongRequest,
+                        onConfirmRequest = viewModel::confirmSongRequest,
+                        onUseLastStationAtStartup = viewModel::useLastStationAtStartup,
+                        onSetStartupStation = viewModel::setStartupStation,
+                        onOpenStationPage = { page ->
+                            val station = state.selectedStation
+                            val trustedRecipient = StationPageTrustPolicy.trustedEmailRecipient(station, page)
+                            val trustedUrl = StationPageTrustPolicy.trustedUrl(station, page)
+                            if (trustedRecipient != null && station != null && page.kind == StationPageKind.Contact) {
+                                val opened = openEmailComposer(
+                                    stationContactEmailDraft(station),
+                                )
+                                if (!opened) {
+                                    Toast.makeText(
+                                        this@MainActivity,
+                                        "No email app is available on this device.",
+                                        Toast.LENGTH_SHORT,
+                                    ).show()
+                                }
+                            } else if (trustedUrl == null) {
+                                Toast.makeText(this@MainActivity, "This station page is not available.", Toast.LENGTH_SHORT).show()
+                            } else {
+                                try {
+                                    CustomTabsIntent.Builder()
+                                        .setShowTitle(true)
+                                        .build()
+                                        .launchUrl(this@MainActivity, android.net.Uri.parse(trustedUrl))
+                                } catch (_: ActivityNotFoundException) {
+                                    Toast.makeText(this@MainActivity, "No browser is available on this device.", Toast.LENGTH_SHORT).show()
+                                } catch (_: SecurityException) {
+                                    Toast.makeText(this@MainActivity, "The browser could not open this station page.", Toast.LENGTH_SHORT).show()
+                                }
                             }
-                        } else if (trustedUrl == null) {
-                            Toast.makeText(this@MainActivity, "This station page is not available.", Toast.LENGTH_SHORT).show()
-                        } else {
-                            try {
-                                CustomTabsIntent.Builder()
-                                    .setShowTitle(true)
-                                    .build()
-                                    .launchUrl(this@MainActivity, android.net.Uri.parse(trustedUrl))
-                            } catch (_: ActivityNotFoundException) {
-                                Toast.makeText(this@MainActivity, "No browser is available on this device.", Toast.LENGTH_SHORT).show()
-                            } catch (_: SecurityException) {
-                                Toast.makeText(this@MainActivity, "The browser could not open this station page.", Toast.LENGTH_SHORT).show()
+                        },
+                        onOpenAppGuide = { manualGuideOpen = true },
+                    )
+                if (showAppGuide) {
+                    val automatic = appGuideState.shouldShowAutomatically && !manualGuideOpen
+                    AppGuideDialog(
+                        station = state.selectedStation,
+                        onDismiss = {
+                            if (automatic) {
+                                lifecycleScope.launch { container.appGuideRepository.markCurrentVersionComplete() }
                             }
-                        }
-                    },
-                )
+                            manualGuideOpen = false
+                        },
+                        onComplete = {
+                            if (automatic) {
+                                lifecycleScope.launch { container.appGuideRepository.markCurrentVersionComplete() }
+                            }
+                            manualGuideOpen = false
+                        },
+                    )
+                }
                 if (showExitConfirmation) {
                     AlertDialog(
                         onDismissRequest = {
