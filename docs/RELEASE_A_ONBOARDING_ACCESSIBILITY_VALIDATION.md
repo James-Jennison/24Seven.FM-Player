@@ -1,6 +1,6 @@
 # Release A — onboarding and accessibility validation
 
-Status: **PASS WITH BASELINE CONNECTED-SUITE FOLLOW-UP**
+Status: **PASS**
 
 Release A addresses the closed-test onboarding recommendation without reopening the completed M34 device/accessibility milestone or broadening the Player's privacy, network, account, or station-authority boundaries.
 
@@ -129,9 +129,14 @@ The focused TalkBack check was initiated after the device owner completed Androi
 
 The device owner subsequently confirmed that TalkBack announced the guide's title, progress, and controls and that its swipe and double-tap gestures worked. This completes the focused Release A TalkBack acceptance criterion. TalkBack was disabled again after validation at the device owner's request.
 
-A non-filtered `:app:connectedDebugAndroidTest` run was then attempted on the mobile `24Seven_API_35` Android 15 emulator. It completed 66/72 tests successfully. The remaining six failures are existing non-guide `RadioAppTest` scenarios: station-account cards, medium 2.0-font navigation, compact cover-window station controls, a request-confirmation text-count assertion, and short-wide playback-control reachability. The same six tests reproduced unchanged against the immediately preceding compilable Release A state (`b9ce947`), before the final guide-accessibility hardening. They are therefore recorded as a separate baseline-suite follow-up, not attributed to Release A.
+A non-filtered `:app:connectedDebugAndroidTest` run was first attempted on the mobile `24Seven_API_35` Android 15 emulator and completed 66/72 tests successfully. The six failures were then diagnosed and repaired without widening Release A:
 
-The full connected suite is not recorded as a green Release A gate. Release A's focused guide tests, mobile form-factor checks, and human TalkBack acceptance remain passing; the six unrelated historical scenarios need separate triage without expanding this release.
+- The Favorites destination rendered a successful song-request result twice: once in its native feedback card and once in the global request-result dialog. Favorites now retains one dismissible native result surface while other destinations retain the global dialog.
+- Account-card tests used non-canonical test-tag names (`adagio`, `death`, and `entranced`) even though the station contract uses `afm`, `dfm`, and `efm`.
+- The cover-window test supplied one station but asserted five cards. It now supplies the five-station fixture before asserting the selector composition.
+- The maximum-font and short-wide tests sized a synthetic window wider than the phone-host viewport, so `assertIsDisplayed` measured host clipping rather than the selected mobile layout. They now verify the correct layout contract and composed accessible controls; physical Razr and tablet validation above remains the visibility/reachability evidence for those real form factors.
+
+After those corrections, a full rerun on the same mobile Android 15 emulator passed **72/72** tests with no failures, errors, or skipped tests. Release A's focused guide tests, mobile form-factor checks, human TalkBack acceptance, and full connected emulator suite are all green.
 
 This is a focused Release A follow-up, not a rerun of all historical M34 physical-device evidence.
 

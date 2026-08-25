@@ -188,6 +188,7 @@ internal fun FavoriteTracksScreen(
         FavoriteRequestFeedback(
             notice = state.requests?.notice,
             errorMessage = state.requests?.errorMessage,
+            onDismiss = onCancelRequest,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(padding)
@@ -206,6 +207,7 @@ private fun FavoriteTrack.matchesFilter(query: String): Boolean =
 private fun FavoriteRequestFeedback(
     notice: String?,
     errorMessage: String?,
+    onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val message = errorMessage ?: notice ?: return
@@ -220,6 +222,10 @@ private fun FavoriteRequestFeedback(
                 fontWeight = FontWeight.Bold,
             )
             Text(message)
+            TextButton(
+                onClick = onDismiss,
+                modifier = Modifier.testTag("dismiss_favorite_request_result"),
+            ) { Text("Dismiss") }
         }
     }
 }
