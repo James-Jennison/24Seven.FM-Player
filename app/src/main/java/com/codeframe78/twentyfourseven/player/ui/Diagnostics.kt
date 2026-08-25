@@ -7,6 +7,7 @@ import com.codeframe78.twentyfourseven.player.domain.PlaybackStatus
 
 private const val MaximumDiagnosticValueLength = 80
 private const val MaximumDiagnosticTransitions = 5
+private const val MaximumDiagnosticStartupDurationMillis = 600_000L
 
 @Immutable
 internal data class DiagnosticEnvironment(
@@ -56,6 +57,7 @@ internal fun buildDiagnosticReport(
     appendLine("Station: ${safeDiagnosticValue(stationName ?: "None selected")}")
     appendLine("Playback: ${playback.status.diagnosticLabel()}")
     appendLine("Error category: ${playback.errorCategoryLabel()}")
+    appendLine("Last stream start or switch: ${playback.startupDurationLabel()}")
     appendLine("Network: ${if (playback.networkAvailable) "Available" else "Unavailable"}")
     appendLine("Audio output: ${playback.audioOutput.kind.diagnosticLabel()}")
     appendLine("Recent playback transitions (oldest to newest):")
@@ -83,6 +85,11 @@ private fun PlaybackState.errorCategoryLabel(): String = when (status) {
     PlaybackStatus.Error -> "Playback failure"
     else -> "None"
 }
+
+private fun PlaybackState.startupDurationLabel(): String = lastStreamStartDurationMillis
+    ?.coerceIn(0L, MaximumDiagnosticStartupDurationMillis)
+    ?.let { "$it ms" }
+    ?: "Not recorded"
 
 private fun PlaybackStatus.diagnosticLabel(): String = when (this) {
     PlaybackStatus.Idle -> "Idle"

@@ -18,6 +18,8 @@ data class PlaybackState(
     val status: PlaybackStatus = PlaybackStatus.Idle,
     val errorMessage: String? = null,
     val networkAvailable: Boolean = false,
+    /** Most recent successful local stream start or station switch, retained only in memory. */
+    val lastStreamStartDurationMillis: Long? = null,
     val sleepTimer: SleepTimerState = SleepTimerState(),
     val audioOutput: AudioOutputState = AudioOutputState(),
     val route: PlaybackRoute = PlaybackRoute.Local,

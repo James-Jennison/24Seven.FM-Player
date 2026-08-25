@@ -106,6 +106,8 @@ import com.codeframe78.twentyfourseven.player.domain.ChatMessage
 import com.codeframe78.twentyfourseven.player.domain.ChatMessagePart
 import com.codeframe78.twentyfourseven.player.domain.HistoryTrack
 import com.codeframe78.twentyfourseven.player.domain.FavoriteTrack
+import com.codeframe78.twentyfourseven.player.domain.FeedbackCategory
+import com.codeframe78.twentyfourseven.player.domain.FeedbackSubmission
 import com.codeframe78.twentyfourseven.player.domain.ListenerActivityLoadStatus
 import com.codeframe78.twentyfourseven.player.domain.MembershipTier
 import com.codeframe78.twentyfourseven.player.domain.QueueLoadStatus
@@ -183,14 +185,15 @@ internal fun RadioApp(
     sleepTimerActions: SleepTimerActions = SleepTimerActions(),
     audioOutputActions: AudioOutputActions = AudioOutputActions(),
     diagnosticUi: DiagnosticUi = DiagnosticUi(),
+    feedbackUi: FeedbackUi = FeedbackUi(),
     onOpenAppGuide: () -> Unit = {},
 ) {
     var showTerms by rememberSaveable { mutableStateOf(false) }
     BoxWithConstraints(Modifier.fillMaxSize()) {
         if (usesNavigationRail(maxWidth, maxHeight)) {
-            TabletShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide) { showTerms = true }
+            TabletShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide) { showTerms = true }
         } else {
-            PhoneShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, isCoverDisplay = isCoverDisplayWindow(maxWidth, maxHeight), onOpenAppGuide = onOpenAppGuide) { showTerms = true }
+            PhoneShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, isCoverDisplay = isCoverDisplayWindow(maxWidth, maxHeight), onOpenAppGuide = onOpenAppGuide) { showTerms = true }
         }
     }
     if (showTerms) {
@@ -217,6 +220,7 @@ private fun PhoneShell(
     sleepTimerActions: SleepTimerActions,
     audioOutputActions: AudioOutputActions,
     diagnosticUi: DiagnosticUi,
+    feedbackUi: FeedbackUi,
     onRefreshQueue: () -> Unit,
     onRefreshFavorites: () -> Unit,
     onRefreshListenerActivity: () -> Unit,
@@ -280,7 +284,7 @@ private fun PhoneShell(
             }
         },
     ) { padding ->
-        DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, onReviewTerms, isCoverDisplay)
+        DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, onReviewTerms, isCoverDisplay)
     }
     if (state.destination != MainDestination.Favorites) {
         RequestResultDialog(state, onCancelRequest)
@@ -316,6 +320,7 @@ private fun TabletShell(
     sleepTimerActions: SleepTimerActions,
     audioOutputActions: AudioOutputActions,
     diagnosticUi: DiagnosticUi,
+    feedbackUi: FeedbackUi,
     onRefreshQueue: () -> Unit,
     onRefreshFavorites: () -> Unit,
     onRefreshListenerActivity: () -> Unit,
@@ -372,7 +377,7 @@ private fun TabletShell(
                 }
             },
         ) { padding ->
-            DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, onReviewTerms)
+            DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, onReviewTerms)
         }
         if (state.destination != MainDestination.Favorites) {
             RequestResultDialog(state, onCancelRequest)
@@ -415,6 +420,7 @@ private fun DestinationContent(
     sleepTimerActions: SleepTimerActions,
     audioOutputActions: AudioOutputActions,
     diagnosticUi: DiagnosticUi,
+    feedbackUi: FeedbackUi,
     onRefreshQueue: () -> Unit,
     onRefreshFavorites: () -> Unit,
     onRefreshListenerActivity: () -> Unit,
@@ -461,7 +467,7 @@ private fun DestinationContent(
         )
         MainDestination.Chat -> ChatScreen(state, padding, onRefreshChat, onSendChatMessage, communitySafetyActions, onReviewTerms)
         MainDestination.Queue -> QueueScreen(state, padding, onRefreshQueue, communitySafetyActions)
-        MainDestination.More -> MoreScreen(state, padding, onRefreshAuth, onSignIn, onSignOut, onRefreshListenerActivity, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, diagnosticUi, onOpenAppGuide, onReviewTerms)
+        MainDestination.More -> MoreScreen(state, padding, onRefreshAuth, onSignIn, onSignOut, onRefreshListenerActivity, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, diagnosticUi, feedbackUi, onOpenAppGuide, onReviewTerms)
     }
 }
 
@@ -1304,6 +1310,7 @@ private fun MoreScreen(
     onOpenStationPage: (StationPage) -> Unit,
     communitySafetyActions: CommunitySafetyActions,
     diagnosticUi: DiagnosticUi,
+    feedbackUi: FeedbackUi,
     onOpenAppGuide: () -> Unit,
     onReviewTerms: () -> Unit,
 ) {
@@ -1345,6 +1352,7 @@ private fun MoreScreen(
             onClick = onOpenAppGuide,
             modifier = Modifier.fillMaxWidth().testTag("open_app_guide"),
         ) { Text("App guide") }
+        FeedbackSection(state, diagnosticUi, feedbackUi)
         DiagnosticsSection(state, diagnosticUi)
         SecondaryContentSection(state, onOpenStationPage)
         PrivacySection()
@@ -1512,6 +1520,122 @@ private fun DiagnosticsSection(
                         modifier = Modifier.weight(1f).testTag("diagnostics_share"),
                     ) { Text("Share") }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FeedbackSection(
+    state: MainUiState,
+    diagnosticUi: DiagnosticUi,
+    feedbackUi: FeedbackUi,
+) {
+    var categoryName by rememberSaveable { mutableStateOf(FeedbackCategory.Playback.name) }
+    var description by rememberSaveable { mutableStateOf("") }
+    var includeDiagnostics by rememberSaveable { mutableStateOf(false) }
+    var categoryMenuOpen by remember { mutableStateOf(false) }
+    val category = FeedbackCategory.entries.firstOrNull { it.name == categoryName }
+        ?: FeedbackCategory.Other
+    val diagnosticReport = remember(
+        diagnosticUi.environment,
+        state.selectedStation?.name,
+        state.playback,
+        state.diagnosticTransitions,
+    ) {
+        buildDiagnosticReport(
+            environment = diagnosticUi.environment,
+            stationName = state.selectedStation?.name,
+            playback = state.playback,
+            transitions = state.diagnosticTransitions,
+        )
+    }
+
+    MoreDisclosure(
+        title = "Report a problem",
+        summary = "Prepare a reviewable feedback draft for the Player team.",
+        testTag = "more_feedback",
+    ) {
+        Card(Modifier.fillMaxWidth().testTag("feedback_card")) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    "Report a problem",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Text(
+                    "Choose a category and add any details you want to share. Do not include passwords, security codes, private messages, or session information.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Box {
+                    Button(
+                        onClick = { categoryMenuOpen = true },
+                        modifier = Modifier.fillMaxWidth().testTag("feedback_category"),
+                    ) { Text("Category: ${category.label}") }
+                    DropdownMenu(
+                        expanded = categoryMenuOpen,
+                        onDismissRequest = { categoryMenuOpen = false },
+                    ) {
+                        FeedbackCategory.entries.forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option.label) },
+                                onClick = {
+                                    categoryName = option.name
+                                    categoryMenuOpen = false
+                                },
+                                modifier = Modifier.testTag("feedback_category_${option.name}"),
+                            )
+                        }
+                    }
+                }
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it.take(1_000) },
+                    modifier = Modifier.fillMaxWidth().testTag("feedback_description"),
+                    label = { Text("What happened? (optional)") },
+                    supportingText = { Text("Up to 1,000 characters") },
+                    minLines = 3,
+                    maxLines = 6,
+                )
+                Row(
+                    Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Checkbox(
+                        checked = includeDiagnostics,
+                        onCheckedChange = { includeDiagnostics = it },
+                        modifier = Modifier
+                            .testTag("feedback_include_diagnostics")
+                            .semantics { contentDescription = "Include privacy-safe diagnostics" },
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text("Include privacy-safe diagnostics", fontWeight = FontWeight.SemiBold)
+                        Text(
+                            "Includes app and Android version, coarse device model, selected station, playback state, and recent non-sensitive transitions. It never includes account data, messages, URLs, identifiers, raw errors, or logs.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+                Button(
+                    onClick = {
+                        feedbackUi.actions.onReviewEmail(
+                            FeedbackSubmission(
+                                category = category,
+                                optionalDescription = description,
+                            ),
+                            diagnosticReport.takeIf { includeDiagnostics },
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth().testTag("feedback_review_email"),
+                ) { Text("Review email draft") }
+                Text(
+                    "The Player opens a local email draft addressed to its monitored contact. You can review, edit, cancel, or send it there; the Player cannot send it or confirm delivery.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
     }

@@ -36,6 +36,7 @@ import com.codeframe78.twentyfourseven.player.domain.StationPageTrustPolicy
 import com.codeframe78.twentyfourseven.player.domain.StationId
 import com.codeframe78.twentyfourseven.player.domain.toSupportedStationIdOrNull
 import com.codeframe78.twentyfourseven.player.domain.PlayerEmailDraft
+import com.codeframe78.twentyfourseven.player.domain.feedbackEmailDraft
 import com.codeframe78.twentyfourseven.player.domain.StationPageKind
 import com.codeframe78.twentyfourseven.player.domain.stationContactEmailDraft
 import com.codeframe78.twentyfourseven.player.data.AndroidCommunityNotificationRepository
@@ -45,6 +46,8 @@ import com.codeframe78.twentyfourseven.player.ui.AudioOutputActions
 import com.codeframe78.twentyfourseven.player.ui.DiagnosticActions
 import com.codeframe78.twentyfourseven.player.ui.DiagnosticEnvironment
 import com.codeframe78.twentyfourseven.player.ui.DiagnosticUi
+import com.codeframe78.twentyfourseven.player.ui.FeedbackActions
+import com.codeframe78.twentyfourseven.player.ui.FeedbackUi
 import com.codeframe78.twentyfourseven.player.ui.MainDestination
 import com.codeframe78.twentyfourseven.player.ui.MainViewModel
 import com.codeframe78.twentyfourseven.player.ui.RadioApp
@@ -54,6 +57,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
+import java.time.Instant
 
 class MainActivity : AppCompatActivity() {
     private var audioOutputRefreshJob: Job? = null
@@ -141,6 +145,27 @@ class MainActivity : AppCompatActivity() {
                             actions = DiagnosticActions(
                                 onCopy = ::copyDiagnostics,
                                 onShare = ::shareDiagnostics,
+                            ),
+                        ),
+                        feedbackUi = FeedbackUi(
+                            actions = FeedbackActions(
+                                onReviewEmail = { submission, diagnosticSnapshot ->
+                                    val opened = openEmailComposer(
+                                        feedbackEmailDraft(
+                                            stationName = state.selectedStation?.name,
+                                            submittedAt = Instant.now(),
+                                            submission = submission,
+                                            diagnosticSnapshot = diagnosticSnapshot,
+                                        ),
+                                    )
+                                    if (!opened) {
+                                        Toast.makeText(
+                                            this@MainActivity,
+                                            "No email app is available on this device.",
+                                            Toast.LENGTH_SHORT,
+                                        ).show()
+                                    }
+                                },
                             ),
                         ),
                         onRefreshQueue = viewModel::refreshQueue,

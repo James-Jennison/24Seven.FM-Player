@@ -1,5 +1,6 @@
 package com.codeframe78.twentyfourseven.player.domain
 
+import java.time.Instant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -89,5 +90,36 @@ class PlayerContactTest {
                 optionalDetails = "",
             ),
         )
+    }
+
+    @Test
+    fun `feedback draft is locally reviewable and includes diagnostics only when explicitly supplied`() {
+        val withoutDiagnostics = feedbackEmailDraft(
+            stationName = "Adagio.FM",
+            submittedAt = Instant.parse("2026-08-25T12:34:56Z"),
+            submission = FeedbackSubmission(
+                category = FeedbackCategory.UiOrDisplay,
+                optionalDescription = " Large type\nclips the station picker ",
+            ),
+            diagnosticSnapshot = null,
+        )
+
+        assertEquals(PLAYER_CONTACT_EMAIL, withoutDiagnostics.recipient)
+        assertTrue(withoutDiagnostics.subject.contains("UI or display"))
+        assertTrue(withoutDiagnostics.body.contains("Station: Adagio.FM"))
+        assertTrue(withoutDiagnostics.body.contains("Prepared: 2026-08-25T12:34:56Z"))
+        assertTrue(withoutDiagnostics.body.contains("Description: Large type clips the station picker"))
+        assertTrue(withoutDiagnostics.body.contains("Privacy-safe diagnostics: Not included"))
+        assertTrue(withoutDiagnostics.body.contains("Review, edit, cancel, or send"))
+
+        val withDiagnostics = feedbackEmailDraft(
+            stationName = "Adagio.FM",
+            submittedAt = Instant.parse("2026-08-25T12:34:56Z"),
+            submission = FeedbackSubmission(FeedbackCategory.Playback, ""),
+            diagnosticSnapshot = "24Seven.FM Player diagnostics\nApp version: 0.1.0-alpha08-debug",
+        )
+
+        assertTrue(withDiagnostics.body.contains("Privacy-safe diagnostics: Included at the sender's request"))
+        assertTrue(withDiagnostics.body.contains("App version: 0.1.0-alpha08-debug"))
     }
 }

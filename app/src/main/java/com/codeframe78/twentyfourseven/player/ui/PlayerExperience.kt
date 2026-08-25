@@ -186,12 +186,22 @@ private fun CoverPlayerContent(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            NowPlayingArtwork(state, palette, Modifier.size(152.dp))
+            // The folded cover window is height-constrained by the camera cutout. Keep the
+            // station controls in the visible window instead of allowing the selector to clip.
+            NowPlayingArtwork(state, palette, Modifier.size(112.dp))
             Column(Modifier.weight(1f)) {
                 CoverNowPlayingDetails(state, palette)
             }
         }
-        PrimaryPlayerControls(state, onSelectStation, onPlay, onStop, sleepTimerActions, audioOutputActions)
+        PrimaryPlayerControls(
+            state,
+            onSelectStation,
+            onPlay,
+            onStop,
+            sleepTimerActions,
+            audioOutputActions,
+            isCompact = true,
+        )
         Spacer(Modifier.weight(1f))
         CoverStationSelector(state, onSelectStation)
     }
@@ -505,6 +515,11 @@ private fun NowPlayingArtwork(
     palette: StationPalette,
     modifier: Modifier = Modifier,
 ) {
+    val artworkUrl = preferredPlayerArtworkUrl(
+        nowPlayingArtworkUrl = state.nowPlaying.artworkUrl,
+        station = state.selectedStation,
+    )
+    val hasAlbumArtwork = !state.nowPlaying.artworkUrl.isNullOrBlank()
     Box(
         modifier
             .clip(RoundedCornerShape(28.dp))
@@ -516,13 +531,13 @@ private fun NowPlayingArtwork(
             .padding(8.dp),
     ) {
         AsyncImage(
-            model = state.nowPlaying.artworkUrl,
-            contentDescription = if (state.nowPlaying.artworkUrl == null) {
-                "24Seven.FM station artwork"
-            } else {
+            model = artworkUrl,
+            contentDescription = if (hasAlbumArtwork) {
                 "Album artwork"
+            } else {
+                "Selected station artwork"
             },
-            contentScale = ContentScale.Crop,
+            contentScale = if (hasAlbumArtwork) ContentScale.Crop else ContentScale.Fit,
             fallback = painterResource(R.drawable.app_logo),
             error = painterResource(R.drawable.app_logo),
             placeholder = painterResource(R.drawable.app_logo),
@@ -530,6 +545,17 @@ private fun NowPlayingArtwork(
         )
     }
 }
+
+/** Uses a station's verified identity when no track artwork has arrived yet. */
+internal fun preferredPlayerArtworkUrl(
+    nowPlayingArtworkUrl: String?,
+    station: Station?,
+): String? = nowPlayingArtworkUrl
+    ?.trim()
+    ?.takeIf(String::isNotEmpty)
+    ?: station?.logoUrl
+        ?.trim()
+        ?.takeIf(String::isNotEmpty)
 
 @Composable
 private fun NowPlayingDetails(
@@ -929,6 +955,11 @@ internal fun PersistentMiniPlayer(
     onPause: () -> Unit,
 ) {
     val palette = stationPalette(state.selectedStation?.id)
+    val artworkUrl = preferredPlayerArtworkUrl(
+        nowPlayingArtworkUrl = state.nowPlaying.artworkUrl,
+        station = state.selectedStation,
+    )
+    val hasAlbumArtwork = !state.nowPlaying.artworkUrl.isNullOrBlank()
     Surface(
         onClick = { onSelectDestination(MainDestination.Player) },
         modifier = Modifier.fillMaxWidth().testTag("persistent_mini_player"),
@@ -940,9 +971,9 @@ internal fun PersistentMiniPlayer(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             AsyncImage(
-                model = state.nowPlaying.artworkUrl,
-                contentDescription = "Now playing album artwork",
-                contentScale = ContentScale.Crop,
+                model = artworkUrl,
+                contentDescription = if (hasAlbumArtwork) "Now playing album artwork" else "Selected station artwork",
+                contentScale = if (hasAlbumArtwork) ContentScale.Crop else ContentScale.Fit,
                 fallback = painterResource(R.drawable.app_logo),
                 error = painterResource(R.drawable.app_logo),
                 placeholder = painterResource(R.drawable.app_logo),
