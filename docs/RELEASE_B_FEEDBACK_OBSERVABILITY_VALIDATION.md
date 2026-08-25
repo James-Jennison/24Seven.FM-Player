@@ -19,8 +19,11 @@ Status: In progress — feedback-reporting slice validated on an Android emulato
 | Full `:app:testDebugUnitTest` suite | Pass |
 | `:app:lintDebug` | Pass, 0 errors |
 | Focused `RadioAppTest#feedbackDraftUsesSelectedCategoryAndOnlyIncludesDiagnosticsAfterConsent` on `24Seven_API_35` (Android 15) | Pass, 1/1 |
+| Full `:app:connectedDebugAndroidTest` on `24Seven_API_35` (Android 15) | 67/73 pass; six pre-existing Release A baseline failures, no new failure from this branch |
 
 The focused connected test selects **Station switching**, enters an optional description, verifies the first review action receives no diagnostic text, then explicitly selects the diagnostics checkbox and verifies the second review action receives the redacted snapshot. It injects a private-looking URL/token and a personal Bluetooth route label into playback state and verifies neither reaches the included snapshot.
+
+The full connected run retained the following already-recorded Release A failures: `stationAccountsExposeFiveIndependentStatusesAndTargetActions`, `maximumFontAndDisplayScaleKeepMediumNavigationAndPlayerReachable`, `compactMorePrioritizesSelectedAccountAndTogglesDisclosures`, `cutoutConstrainedCoverWindowHidesAppNavigationAndKeepsPlaybackControlsVisible`, `favoritesShowAccessibleStoplightsAndReuseRequestConfirmation`, and `artworkPlayerControlsRemainReachableInShortWideLayout`. The Release B feedback test passed in that same run. These baseline failures are not changed in this branch.
 
 ## Open Release B gates
 
