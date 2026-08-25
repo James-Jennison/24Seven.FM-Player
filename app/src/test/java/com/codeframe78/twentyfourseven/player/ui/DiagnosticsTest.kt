@@ -27,6 +27,7 @@ class DiagnosticsTest {
                 status = PlaybackStatus.Error,
                 errorMessage = "https://private.example/?token=secret-value",
                 networkAvailable = true,
+                lastStreamStartDurationMillis = 1_234L,
                 audioOutput = AudioOutputState("James's private JBL", AudioOutputKind.Bluetooth),
             ),
             transitions = listOf(
@@ -36,6 +37,7 @@ class DiagnosticsTest {
         )
 
         assertTrue(report.contains("Error category: Playback failure"))
+        assertTrue(report.contains("Last stream start or switch: 1234 ms"))
         assertTrue(report.contains("Audio output: Bluetooth"))
         assertTrue(report.contains("Source revision: " + "a".repeat(40)))
         assertTrue(report.contains("StreamingSoundtracks.com"))
@@ -62,5 +64,24 @@ class DiagnosticsTest {
         assertFalse(report.contains("\nInjected"))
         assertFalse(report.contains("6. "))
         assertTrue(report.contains("5. Idle"))
+    }
+
+    @Test
+    fun `report bounds stream start duration and marks missing measurements`() {
+        val bounded = buildDiagnosticReport(
+            environment = DiagnosticEnvironment(),
+            stationName = null,
+            playback = PlaybackState(lastStreamStartDurationMillis = Long.MAX_VALUE),
+            transitions = emptyList(),
+        )
+        val missing = buildDiagnosticReport(
+            environment = DiagnosticEnvironment(),
+            stationName = null,
+            playback = PlaybackState(),
+            transitions = emptyList(),
+        )
+
+        assertTrue(bounded.contains("Last stream start or switch: 600000 ms"))
+        assertTrue(missing.contains("Last stream start or switch: Not recorded"))
     }
 }

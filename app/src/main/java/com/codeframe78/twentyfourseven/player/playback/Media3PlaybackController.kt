@@ -6,6 +6,7 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.os.Bundle
+import android.os.SystemClock
 import androidx.core.content.ContextCompat
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
@@ -62,6 +63,7 @@ class Media3PlaybackController(
     private var controller: MediaController? = null
     private var selectedStation: Station? = null
     private var playRequested = false
+    private var playbackStartRequestedAtElapsedRealtimeMillis: Long? = null
     private val castNowPlayingScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var castNowPlayingRefreshJob: Job? = null
     private var castNowPlayingRefreshStationId: StationId? = null
@@ -162,6 +164,7 @@ class Media3PlaybackController(
             stationId = station.id,
             status = PlaybackStatus.Idle,
             errorMessage = null,
+            lastStreamStartDurationMillis = null,
         )
         if (controller != null) setStationMediaItems(station)
     }
@@ -176,6 +179,7 @@ class Media3PlaybackController(
             updateState()
             return
         }
+        beginPlaybackStartTiming()
         castPlayback.recordLocalPlaybackIntent(true)
         val connected = controller
         if (connected == null) {
@@ -190,6 +194,7 @@ class Media3PlaybackController(
 
     override fun pause() {
         playRequested = false
+        playbackStartRequestedAtElapsedRealtimeMillis = null
         networkRecovery.cancel()
         if (castPlayback.pause()) return
         castPlayback.recordLocalPlaybackIntent(false)
@@ -199,6 +204,7 @@ class Media3PlaybackController(
 
     override fun stop() {
         playRequested = false
+        playbackStartRequestedAtElapsedRealtimeMillis = null
         networkRecovery.cancel()
         cancelSleepTimer()
         if (castPlayback.stop()) return
@@ -248,6 +254,7 @@ class Media3PlaybackController(
 
         connected.setMediaItems(mediaItems, 0, 0L)
         if (resumePlayback) {
+            beginPlaybackStartTiming()
             connected.prepare()
             connected.play()
         }
@@ -280,11 +287,19 @@ class Media3PlaybackController(
             playRequested -> PlaybackStatus.Connecting
             else -> PlaybackStatus.Idle
         }
+        val streamStartDurationMillis = when {
+            status != PlaybackStatus.Playing -> stateFlow.value.lastStreamStartDurationMillis
+            playbackStartRequestedAtElapsedRealtimeMillis == null -> stateFlow.value.lastStreamStartDurationMillis
+            else -> (SystemClock.elapsedRealtime() - playbackStartRequestedAtElapsedRealtimeMillis!!)
+                .coerceAtLeast(0L)
+                .also { playbackStartRequestedAtElapsedRealtimeMillis = null }
+        }
         stateFlow.value = stateFlow.value.copy(
             stationId = stationId,
             status = status,
             errorMessage = connected.playerError?.message,
             networkAvailable = networkRecovery.isNetworkUsable,
+            lastStreamStartDurationMillis = streamStartDurationMillis,
             route = PlaybackRoute.Local,
             castDeviceName = null,
         )
@@ -382,6 +397,12 @@ class Media3PlaybackController(
         )
         connected.prepare()
         connected.play()
+    }
+
+    private fun beginPlaybackStartTiming() {
+        if (playbackStartRequestedAtElapsedRealtimeMillis == null) {
+            playbackStartRequestedAtElapsedRealtimeMillis = SystemClock.elapsedRealtime()
+        }
     }
 }
 

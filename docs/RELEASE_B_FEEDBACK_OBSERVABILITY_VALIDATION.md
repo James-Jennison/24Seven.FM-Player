@@ -7,8 +7,9 @@ Status: In progress — feedback-reporting slice validated on an Android emulato
 - **More → Report a problem** is a separate native form, not the community-abuse-report flow. It offers Playback, Station switching, Song request, Chat, Account or profile, UI or display, and Other categories with an optional bounded description.
 - **Review email draft** is the only export action. It prepares a local Android email draft addressed to the existing monitored Player contact; the user can review, edit, cancel, or explicitly send it in their chosen email app. The Player never sends the feedback itself or confirms delivery.
 - The draft includes selected category, selected station, and its preparation timestamp, so a tester does not need to manually determine that context.
-- **Include privacy-safe diagnostics** is unchecked by default and requires a separate user action. When chosen, it adds the existing allowlisted snapshot: app/build version, Android/API, coarse device model, selected station, playback/error category, validated-network availability, broad audio-output category, and at most five recent non-sensitive playback transitions.
+- **Include privacy-safe diagnostics** is unchecked by default and requires a separate user action. When chosen, it adds the existing allowlisted snapshot: app/build version, Android/API, coarse device model, selected station, playback/error category, bounded last stream-start or station-switch duration, validated-network availability, broad audio-output category, and at most five recent non-sensitive playback transitions.
 - The feedback path does not add analytics, crash reporting, a developer-operated backend, background upload, persistent feedback storage, account data, messages, request/report content, URLs, stable device identifiers, raw errors, or logs.
+- The stream-start/switch duration is held only in the in-memory playback state. It is reset when a new station is selected and is clipped to ten minutes when rendered in a diagnostic snapshot.
 
 ## Emulator validation
 
