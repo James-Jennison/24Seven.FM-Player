@@ -1,6 +1,6 @@
 # Release A — onboarding and accessibility validation
 
-Status: **PASS**
+Status: **PASS WITH BASELINE CONNECTED-SUITE FOLLOW-UP**
 
 Release A addresses the closed-test onboarding recommendation without reopening the completed M34 device/accessibility milestone or broadening the Player's privacy, network, account, or station-authority boundaries.
 
@@ -128,6 +128,10 @@ These results confirm the guide's skip, forward, back, completion, in-flow More 
 The focused TalkBack check was initiated after the device owner completed Android's first-use TalkBack training. With TalkBack active, accessibility focus entered the guide window and the speech service acquired accessibility audio focus. The guide exposed its title, textual progress, and visible Back, Next, and Start listening controls; physical traversal verified Back from step 3 to step 2, forward navigation to the final Start listening control, and completion dismissal.
 
 The device owner subsequently confirmed that TalkBack announced the guide's title, progress, and controls and that its swipe and double-tap gestures worked. This completes the focused Release A TalkBack acceptance criterion. TalkBack was disabled again after validation at the device owner's request.
+
+A non-filtered `:app:connectedDebugAndroidTest` run was then attempted on the mobile `24Seven_API_35` Android 15 emulator. It completed 66/72 tests successfully. The remaining six failures are existing non-guide `RadioAppTest` scenarios: station-account cards, medium 2.0-font navigation, compact cover-window station controls, a request-confirmation text-count assertion, and short-wide playback-control reachability. The same six tests reproduced unchanged against the immediately preceding compilable Release A state (`b9ce947`), before the final guide-accessibility hardening. They are therefore recorded as a separate baseline-suite follow-up, not attributed to Release A.
+
+The full connected suite is not recorded as a green Release A gate. Release A's focused guide tests, mobile form-factor checks, and human TalkBack acceptance remain passing; the six unrelated historical scenarios need separate triage without expanding this release.
 
 This is a focused Release A follow-up, not a rerun of all historical M34 physical-device evidence.
 
