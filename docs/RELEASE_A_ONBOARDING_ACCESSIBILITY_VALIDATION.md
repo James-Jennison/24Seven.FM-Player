@@ -1,6 +1,6 @@
 # Release A — onboarding and accessibility validation
 
-Status: **PASS WITH MANUAL TALKBACK FOLLOW-UP**
+Status: **PASS WITH HUMAN TALKBACK FOLLOW-UP**
 
 Release A addresses the closed-test onboarding recommendation without reopening the completed M34 device/accessibility milestone or broadening the Player's privacy, network, account, or station-authority boundaries.
 
@@ -111,7 +111,7 @@ The workflow reported 109 actionable tasks for the test/lint build and 38 action
 
 ## Mobile connected accessibility follow-up
 
-On August 25, 2026, the focused Release A Compose instrumentation set passed 3/3 on the physical Motorola Razr 2026 running Android 16 / API 36. The same three tests were run again at font scale 2.0 and passed 3/3; the device's original font scale of 1.0 was restored immediately after the run.
+On August 25, 2026, the focused Release A Compose instrumentation set passed 3/3 on the physical Motorola Razr 2026 running Android 16 / API 36. The same three tests were run again at font scale 2.0 and passed 3/3; the device's original font scale of 1.0 was restored immediately after each run.
 
 ```text
 :app:connectedDebugAndroidTest
@@ -119,14 +119,13 @@ On August 25, 2026, the focused Release A Compose instrumentation set passed 3/3
   RadioAppTest#appGuideEntryIsReachableFromMoreAndInvokesHandler: 1/1 passed
 ```
 
-This confirms the guide's skip, forward, back, completion, and in-flow More reopen interactions on a physical mobile device, including the focused 2.0 font-scale state. It does not substitute for human TalkBack speech/focus traversal, so Release A is not recorded as an unconditional accessibility PASS yet.
+The same set subsequently passed 3/3 while the Razr was verified in actual landscape rotation. A temporary debug installation also exercised the real first-run guide: Tab moved focus from Skip to Next, and Enter on Next advanced from step 1 to step 2. The temporary application, notification denial, display rotation, font scale, and accessibility settings were removed or restored after validation.
 
-Before treating the Release A accessibility extension as fully closed, perform a focused connected-device/emulator pass covering only the new surface:
+The focused set additionally passed 3/3 on the `24Seven_API_35_Tablet` Android 15 emulator, covering the new guide in an expanded mobile form factor. Connected TV devices were not used for Release A validation.
 
-- TalkBack traversal through title, progress, and navigation controls with no unlabeled actionable node;
-- compact portrait and constrained-height/landscape layout;
-- one medium/expanded layout; and
-- keyboard/D-pad navigation where the existing test environment supports it.
+These results confirm the guide's skip, forward, back, completion, in-flow More reopen, enlarged-text, landscape, expanded-layout, and keyboard-control interactions on the Release A surface. They do not substitute for human TalkBack speech/focus traversal, so Release A is not recorded as an unconditional accessibility PASS yet.
+
+The only remaining focused follow-up is human TalkBack traversal through the title, progress, and navigation controls with no unlabeled actionable node. TalkBack was disabled before the test; enabling it presents its own mandatory first-use training overlay, and completing that system training would alter the device's prior accessibility setup. The service was returned to its original disabled state rather than treating the overlay as Player evidence.
 
 This is a focused Release A follow-up, not a rerun of all historical M34 physical-device evidence.
 
