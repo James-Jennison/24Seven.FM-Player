@@ -29,12 +29,22 @@ class SharedPreferencesAppGuideRepository(
     }
 
     private fun readState(packageInfo: PackageInfo): AppGuideState {
-        val completed = preferences.getInt(KEY_COMPLETED_VERSION, 0)
+        val hasStoredCompletion = preferences.contains(KEY_COMPLETED_VERSION)
+        val completed = if (hasStoredCompletion) {
+            preferences.getInt(KEY_COMPLETED_VERSION, 0)
+        } else if (isExistingInstallation(packageInfo)) {
+            currentVersion.also {
+                preferences.edit().putInt(KEY_COMPLETED_VERSION, it).apply()
+            }
+        } else {
+            0
+        }
         return AppGuideState(
             completedVersion = completed,
             shouldShowAutomatically = shouldAutoShowAppGuide(
                 completedVersion = completed,
                 currentVersion = currentVersion,
+                hasStoredCompletion = hasStoredCompletion,
                 firstInstallTime = packageInfo.firstInstallTime,
                 lastUpdateTime = packageInfo.lastUpdateTime,
             ),
@@ -50,9 +60,16 @@ class SharedPreferencesAppGuideRepository(
 internal fun shouldAutoShowAppGuide(
     completedVersion: Int,
     currentVersion: Int,
+    hasStoredCompletion: Boolean,
     firstInstallTime: Long,
     lastUpdateTime: Long,
 ): Boolean {
     if (completedVersion >= currentVersion) return false
-    return abs(lastUpdateTime - firstInstallTime) <= 5_000L
+    return hasStoredCompletion || !isExistingInstallation(firstInstallTime, lastUpdateTime)
 }
+
+private fun isExistingInstallation(packageInfo: PackageInfo): Boolean =
+    isExistingInstallation(packageInfo.firstInstallTime, packageInfo.lastUpdateTime)
+
+private fun isExistingInstallation(firstInstallTime: Long, lastUpdateTime: Long): Boolean =
+    abs(lastUpdateTime - firstInstallTime) > 5_000L

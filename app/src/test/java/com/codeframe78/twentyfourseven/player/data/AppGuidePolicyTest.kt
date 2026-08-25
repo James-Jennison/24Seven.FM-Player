@@ -11,6 +11,7 @@ class AppGuidePolicyTest {
             shouldAutoShowAppGuide(
                 completedVersion = 0,
                 currentVersion = 1,
+                hasStoredCompletion = false,
                 firstInstallTime = 10_000L,
                 lastUpdateTime = 10_000L,
             ),
@@ -23,6 +24,7 @@ class AppGuidePolicyTest {
             shouldAutoShowAppGuide(
                 completedVersion = 0,
                 currentVersion = 1,
+                hasStoredCompletion = false,
                 firstInstallTime = 10_000L,
                 lastUpdateTime = 20_000L,
             ),
@@ -35,6 +37,7 @@ class AppGuidePolicyTest {
             shouldAutoShowAppGuide(
                 completedVersion = 1,
                 currentVersion = 1,
+                hasStoredCompletion = true,
                 firstInstallTime = 10_000L,
                 lastUpdateTime = 10_000L,
             ),
@@ -42,13 +45,14 @@ class AppGuidePolicyTest {
     }
 
     @Test
-    fun olderCompletionCanShowOnFreshInstallState() {
+    fun deliberateNewGuideVersionCanShowForExistingInstall() {
         assertTrue(
             shouldAutoShowAppGuide(
                 completedVersion = 1,
                 currentVersion = 2,
+                hasStoredCompletion = true,
                 firstInstallTime = 10_000L,
-                lastUpdateTime = 10_000L,
+                lastUpdateTime = 20_000L,
             ),
         )
     }

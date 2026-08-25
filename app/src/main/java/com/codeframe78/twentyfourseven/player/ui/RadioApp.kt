@@ -183,13 +183,14 @@ internal fun RadioApp(
     sleepTimerActions: SleepTimerActions = SleepTimerActions(),
     audioOutputActions: AudioOutputActions = AudioOutputActions(),
     diagnosticUi: DiagnosticUi = DiagnosticUi(),
+    onOpenAppGuide: () -> Unit = {},
 ) {
     var showTerms by rememberSaveable { mutableStateOf(false) }
     BoxWithConstraints(Modifier.fillMaxSize()) {
         if (usesNavigationRail(maxWidth, maxHeight)) {
-            TabletShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions) { showTerms = true }
+            TabletShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide) { showTerms = true }
         } else {
-            PhoneShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, isCoverDisplay = isCoverDisplayWindow(maxWidth, maxHeight)) { showTerms = true }
+            PhoneShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, isCoverDisplay = isCoverDisplayWindow(maxWidth, maxHeight), onOpenAppGuide = onOpenAppGuide) { showTerms = true }
         }
     }
     if (showTerms) {
@@ -236,6 +237,7 @@ private fun PhoneShell(
     onOpenStationPage: (StationPage) -> Unit,
     communitySafetyActions: CommunitySafetyActions,
     isCoverDisplay: Boolean,
+    onOpenAppGuide: () -> Unit,
     onReviewTerms: () -> Unit,
 ) {
     val showNavigationLabels = LocalDensity.current.fontScale <= 1.5f
@@ -278,7 +280,7 @@ private fun PhoneShell(
             }
         },
     ) { padding ->
-        DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onReviewTerms, isCoverDisplay)
+        DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, onReviewTerms, isCoverDisplay)
     }
     RequestResultDialog(state, onCancelRequest)
 }
@@ -331,6 +333,7 @@ private fun TabletShell(
     onSetStartupStation: (StationId) -> Unit,
     onOpenStationPage: (StationPage) -> Unit,
     communitySafetyActions: CommunitySafetyActions,
+    onOpenAppGuide: () -> Unit,
     onReviewTerms: () -> Unit,
 ) {
     val showNavigationLabels = LocalDensity.current.fontScale <= 1.5f
@@ -367,7 +370,7 @@ private fun TabletShell(
                 }
             },
         ) { padding ->
-            DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onReviewTerms)
+            DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, onReviewTerms)
         }
         RequestResultDialog(state, onCancelRequest)
     }
@@ -427,6 +430,7 @@ private fun DestinationContent(
     onSetStartupStation: (StationId) -> Unit,
     onOpenStationPage: (StationPage) -> Unit,
     communitySafetyActions: CommunitySafetyActions,
+    onOpenAppGuide: () -> Unit,
     onReviewTerms: () -> Unit,
     isCoverDisplay: Boolean = false,
 ) {
@@ -453,7 +457,7 @@ private fun DestinationContent(
         )
         MainDestination.Chat -> ChatScreen(state, padding, onRefreshChat, onSendChatMessage, communitySafetyActions, onReviewTerms)
         MainDestination.Queue -> QueueScreen(state, padding, onRefreshQueue, communitySafetyActions)
-        MainDestination.More -> MoreScreen(state, padding, onRefreshAuth, onSignIn, onSignOut, onRefreshListenerActivity, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, diagnosticUi, onReviewTerms)
+        MainDestination.More -> MoreScreen(state, padding, onRefreshAuth, onSignIn, onSignOut, onRefreshListenerActivity, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, diagnosticUi, onOpenAppGuide, onReviewTerms)
     }
 }
 
@@ -1296,6 +1300,7 @@ private fun MoreScreen(
     onOpenStationPage: (StationPage) -> Unit,
     communitySafetyActions: CommunitySafetyActions,
     diagnosticUi: DiagnosticUi,
+    onOpenAppGuide: () -> Unit,
     onReviewTerms: () -> Unit,
 ) {
     Column(
@@ -1332,6 +1337,10 @@ private fun MoreScreen(
         ) {
             DevicePreferencesSection(state, onUseLastStationAtStartup, onSetStartupStation, showTitle = false)
         }
+        Button(
+            onClick = onOpenAppGuide,
+            modifier = Modifier.fillMaxWidth().testTag("open_app_guide"),
+        ) { Text("App guide") }
         DiagnosticsSection(state, diagnosticUi)
         SecondaryContentSection(state, onOpenStationPage)
         PrivacySection()

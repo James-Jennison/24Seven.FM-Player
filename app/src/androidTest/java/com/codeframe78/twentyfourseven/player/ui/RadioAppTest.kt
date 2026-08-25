@@ -1003,6 +1003,28 @@ class RadioAppTest {
     }
 
     @Test
+    fun appGuideEntryIsReachableFromMoreAndInvokesHandler() {
+        var opened = false
+        composeRule.setContent {
+            MaterialTheme {
+                RadioApp(
+                    state = sampleState().copy(destination = MainDestination.More),
+                    onSelectStation = {},
+                    onSelectDestination = {},
+                    onPlay = {},
+                    onPause = {},
+                    onStop = {},
+                    onRefreshQueue = {},
+                    onOpenAppGuide = { opened = true },
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag("open_app_guide").performScrollTo().assertIsDisplayed().assertHasClickAction().performClick()
+        composeRule.runOnIdle { assertTrue(opened) }
+    }
+
+    @Test
     fun diagnosticsPreviewUsesRedactedStateAndEmitsExplicitCopyAndShareActions() {
         var copied: String? = null
         var shared: String? = null

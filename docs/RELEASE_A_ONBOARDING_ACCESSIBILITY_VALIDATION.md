@@ -1,6 +1,6 @@
 # Release A — onboarding and accessibility validation
 
-Status: **PASS WITH CONNECTED ACCESSIBILITY FOLLOW-UP**
+Status: **PASS WITH MANUAL ACCESSIBILITY FOLLOW-UP**
 
 Release A addresses the closed-test onboarding recommendation without reopening the completed M34 device/accessibility milestone or broadening the Player's privacy, network, account, or station-authority boundaries.
 
@@ -62,11 +62,12 @@ The manual `App guide` control is a standard Material button with visible text a
 
 ### Local-state tests
 
-`AppGuideRepositoryTest` covers:
+`AppGuidePolicyTest` covers:
 
-- automatic presentation on a fresh preference state;
-- safe migration for an existing installation with no prior guide preference; and
-- current-version completion in the in-memory test repository.
+- automatic presentation on a fresh installation;
+- no forced guide for an existing installation that predates Release A;
+- suppression after current-version completion; and
+- deliberate re-presentation after a future guide-version advance.
 
 ### Compose instrumentation tests
 
@@ -77,7 +78,9 @@ The manual `App guide` control is a standard Material button with visible text a
 - backward navigation; and
 - final completion.
 
-These tests are committed under `app/src/androidTest`, but the repository's current pull-request workflow does not start an emulator or execute `connectedDebugAndroidTest`. Their presence must therefore not be represented as an executed connected-device result.
+`RadioAppTest` also verifies that the labeled More-screen `App guide` control is reachable, exposes a click action, and invokes the reopen handler.
+
+The repository pull-request workflow does not start an emulator or execute `connectedDebugAndroidTest`; the focused connected result is recorded separately below.
 
 ## CI validation
 
@@ -108,11 +111,18 @@ The workflow reported 109 actionable tasks for the test/lint build and 38 action
 
 ## Connected accessibility follow-up
 
-Release A is not recorded as an unconditional accessibility PASS yet because the PR workflow does not execute the newly added connected Compose tests or a real TalkBack traversal of the new guide.
+On August 25, 2026, the focused Release A Compose instrumentation set passed 3/3 on an attached Google TV Streamer running Android 14 / API 34:
+
+```text
+:app:connectedDebugAndroidTest
+  AppGuideTest: 2/2 passed
+  RadioAppTest#appGuideEntryIsReachableFromMoreAndInvokesHandler: 1/1 passed
+```
+
+This confirms the guide's skip, forward, back, completion, and in-flow More reopen interactions on a connected Android device. It does not substitute for TalkBack speech/focus traversal or large-text/reflow evidence for the new guide, so Release A is not recorded as an unconditional accessibility PASS yet.
 
 Before treating the Release A accessibility extension as fully closed, perform a focused connected-device/emulator pass covering only the new surface:
 
-- open/skip/complete/reopen the guide;
 - font scale 2.0 with all instructional text and actions reachable;
 - TalkBack traversal through title, progress, and navigation controls with no unlabeled actionable node;
 - compact portrait and constrained-height/landscape layout;
