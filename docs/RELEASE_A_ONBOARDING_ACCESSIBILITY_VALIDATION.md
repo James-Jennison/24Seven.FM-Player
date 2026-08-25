@@ -1,6 +1,6 @@
 # Release A — onboarding and accessibility validation
 
-Status: **PASS WITH HUMAN AUDITORY TALKBACK FOLLOW-UP**
+Status: **PASS**
 
 Release A addresses the closed-test onboarding recommendation without reopening the completed M34 device/accessibility milestone or broadening the Player's privacy, network, account, or station-authority boundaries.
 
@@ -123,11 +123,11 @@ The same set subsequently passed 3/3 while the Razr was verified in actual lands
 
 The focused set additionally passed 3/3 on the `24Seven_API_35_Tablet` Android 15 emulator, covering the new guide in an expanded mobile form factor. Connected TV devices were not used for Release A validation.
 
-These results confirm the guide's skip, forward, back, completion, in-flow More reopen, enlarged-text, landscape, expanded-layout, and keyboard-control interactions on the Release A surface. They do not substitute for human TalkBack speech/focus traversal, so Release A is not recorded as an unconditional accessibility PASS yet.
+These results confirm the guide's skip, forward, back, completion, in-flow More reopen, enlarged-text, landscape, expanded-layout, and keyboard-control interactions on the Release A surface.
 
 The focused TalkBack check was initiated after the device owner completed Android's first-use TalkBack training. With TalkBack active, accessibility focus entered the guide window and the speech service acquired accessibility audio focus. The guide exposed its title, textual progress, and visible Back, Next, and Start listening controls; physical traversal verified Back from step 3 to step 2, forward navigation to the final Start listening control, and completion dismissal.
 
-The remaining human check is auditory/gesture confirmation only: this remote procedure uses injected input, which cannot independently establish that TalkBack's touch-gesture detector and spoken output behaved as perceived by the device user. It must not be represented as a new Player defect. TalkBack was disabled again after validation at the device owner's request.
+The device owner subsequently confirmed that TalkBack announced the guide's title, progress, and controls and that its swipe and double-tap gestures worked. This completes the focused Release A TalkBack acceptance criterion. TalkBack was disabled again after validation at the device owner's request.
 
 This is a focused Release A follow-up, not a rerun of all historical M34 physical-device evidence.
 
