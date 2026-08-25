@@ -1,6 +1,6 @@
 # Release A — onboarding and accessibility validation
 
-Status: **PASS WITH HUMAN TALKBACK FOLLOW-UP**
+Status: **PASS WITH HUMAN AUDITORY TALKBACK FOLLOW-UP**
 
 Release A addresses the closed-test onboarding recommendation without reopening the completed M34 device/accessibility milestone or broadening the Player's privacy, network, account, or station-authority boundaries.
 
@@ -125,7 +125,9 @@ The focused set additionally passed 3/3 on the `24Seven_API_35_Tablet` Android 1
 
 These results confirm the guide's skip, forward, back, completion, in-flow More reopen, enlarged-text, landscape, expanded-layout, and keyboard-control interactions on the Release A surface. They do not substitute for human TalkBack speech/focus traversal, so Release A is not recorded as an unconditional accessibility PASS yet.
 
-The only remaining focused follow-up is human TalkBack traversal through the title, progress, and navigation controls with no unlabeled actionable node. TalkBack was disabled before the test; enabling it presents its own mandatory first-use training overlay, and completing that system training would alter the device's prior accessibility setup. The service was returned to its original disabled state rather than treating the overlay as Player evidence.
+The focused TalkBack check was initiated after the device owner completed Android's first-use TalkBack training. With TalkBack active, accessibility focus entered the guide window and the speech service acquired accessibility audio focus. The guide exposed its title, textual progress, and visible Back, Next, and Start listening controls; physical traversal verified Back from step 3 to step 2, forward navigation to the final Start listening control, and completion dismissal.
+
+The remaining human check is auditory/gesture confirmation only: this remote procedure uses injected input, which cannot independently establish that TalkBack's touch-gesture detector and spoken output behaved as perceived by the device user. It must not be represented as a new Player defect. TalkBack was disabled again after validation at the device owner's request.
 
 This is a focused Release A follow-up, not a rerun of all historical M34 physical-device evidence.
 
