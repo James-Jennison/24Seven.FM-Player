@@ -1,6 +1,6 @@
 # Release A — onboarding and accessibility validation
 
-Status: **PASS WITH MANUAL ACCESSIBILITY FOLLOW-UP**
+Status: **PASS WITH MANUAL TALKBACK FOLLOW-UP**
 
 Release A addresses the closed-test onboarding recommendation without reopening the completed M34 device/accessibility milestone or broadening the Player's privacy, network, account, or station-authority boundaries.
 
@@ -80,7 +80,7 @@ The manual `App guide` control is a standard Material button with visible text a
 
 `RadioAppTest` also verifies that the labeled More-screen `App guide` control is reachable, exposes a click action, and invokes the reopen handler.
 
-The repository pull-request workflow does not start an emulator or execute `connectedDebugAndroidTest`; the focused connected result is recorded separately below.
+The repository pull-request workflow does not start an emulator or execute `connectedDebugAndroidTest`.
 
 ## CI validation
 
@@ -109,9 +109,9 @@ Observed successful gates from that run:
 
 The workflow reported 109 actionable tasks for the test/lint build and 38 actionable tasks for the debug assembly build.
 
-## Connected accessibility follow-up
+## Mobile connected accessibility follow-up
 
-On August 25, 2026, the focused Release A Compose instrumentation set passed 3/3 on an attached Google TV Streamer running Android 14 / API 34:
+On August 25, 2026, the focused Release A Compose instrumentation set passed 3/3 on the physical Motorola Razr 2026 running Android 16 / API 36. The same three tests were run again at font scale 2.0 and passed 3/3; the device's original font scale of 1.0 was restored immediately after the run.
 
 ```text
 :app:connectedDebugAndroidTest
@@ -119,11 +119,10 @@ On August 25, 2026, the focused Release A Compose instrumentation set passed 3/3
   RadioAppTest#appGuideEntryIsReachableFromMoreAndInvokesHandler: 1/1 passed
 ```
 
-This confirms the guide's skip, forward, back, completion, and in-flow More reopen interactions on a connected Android device. It does not substitute for TalkBack speech/focus traversal or large-text/reflow evidence for the new guide, so Release A is not recorded as an unconditional accessibility PASS yet.
+This confirms the guide's skip, forward, back, completion, and in-flow More reopen interactions on a physical mobile device, including the focused 2.0 font-scale state. It does not substitute for human TalkBack speech/focus traversal, so Release A is not recorded as an unconditional accessibility PASS yet.
 
 Before treating the Release A accessibility extension as fully closed, perform a focused connected-device/emulator pass covering only the new surface:
 
-- font scale 2.0 with all instructional text and actions reachable;
 - TalkBack traversal through title, progress, and navigation controls with no unlabeled actionable node;
 - compact portrait and constrained-height/landscape layout;
 - one medium/expanded layout; and
