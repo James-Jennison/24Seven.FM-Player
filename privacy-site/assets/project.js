@@ -623,8 +623,33 @@
     }
 
     const applicationResult = new URLSearchParams(window.location.search).get('application');
+    const draftKey = '24seven-player-alpha-application-draft-v1';
+    const saveDraft = function () {
+      const fields = {};
+      form.querySelectorAll('input, select, textarea').forEach(function (control) {
+        if (!control.name || control.name === 'cf-turnstile-response' || control.name === 'company') return;
+        if ((control.type === 'checkbox' || control.type === 'radio') && !control.checked) return;
+        (fields[control.name] ||= []).push(control.value);
+      });
+      try { sessionStorage.setItem(draftKey, JSON.stringify(fields)); } catch (_) {}
+    };
+    const restoreDraft = function () {
+      if (applicationResult !== 'error') return false;
+      try {
+        const fields = JSON.parse(sessionStorage.getItem(draftKey) || '{}');
+        Object.keys(fields).forEach(function (name) {
+          const values = new Set(fields[name]);
+          form.querySelectorAll('[name="' + CSS.escape(name) + '"]').forEach(function (control) {
+            if (control.type === 'checkbox' || control.type === 'radio') control.checked = values.has(control.value);
+            else if (values.size) control.value = Array.from(values)[0];
+          });
+        });
+        return Object.keys(fields).length > 0;
+      } catch (_) { return false; }
+    };
+    const restoredDraft = restoreDraft();
     if (applicationResult === 'sent') setStatus(requestedSource === 'testers-community' ? 'Your Testers Community profile was sent.' : 'Your tester profile was sent.', 'success');
-    if (applicationResult === 'error') setStatus('The application could not be delivered. Please try again later.', 'error');
+    if (applicationResult === 'error') setStatus(restoredDraft ? 'We kept your entries in this browser session. Verify them and try again.' : 'The application could not be delivered. Please try again later.', 'error');
 
     const applicationSteps = Array.from(form.querySelectorAll(':scope > [data-application-step]'));
     if (applicationSteps.length === 0) return;
@@ -644,7 +669,7 @@
     form.prepend(wizard);
     form.append(actions);
 
-    let currentStep = applicationResult === 'sent' ? applicationSteps.length - 1 : 0;
+    let currentStep = applicationResult === 'sent' || restoredDraft ? applicationSteps.length - 1 : 0;
 
     const firstInvalidControl = function (step) {
       return Array.from(step.querySelectorAll('input, select, textarea')).find(function (control) {
@@ -703,10 +728,13 @@
     };
 
     showStep(currentStep);
+    form.addEventListener('input', saveDraft);
+    form.addEventListener('change', saveDraft);
 
     form.addEventListener('submit', async function (event) {
       event.preventDefault();
       if (!form.reportValidity()) return;
+      saveDraft();
       submit.disabled = true;
       setStatus('Sending your application…', 'pending');
       try {
@@ -717,6 +745,7 @@
         });
         const result = await response.json();
         if (!response.ok || result.ok !== true) throw new Error(result.message || 'The application could not be sent.');
+        try { sessionStorage.removeItem(draftKey); } catch (_) {}
         form.reset();
         setStatus(result.message, 'success');
         showStep(applicationSteps.length - 1);
