@@ -646,10 +646,14 @@ try {
     }
 
     try {
-        storeAcceptedApplication($config, $application);
+        $stored = storeAcceptedApplication($config, $application);
     } catch (Throwable $exception) {
         onboardingStorageDiagnostic();
         throw $exception;
+    }
+
+    if (!$stored['created']) {
+        respond(200, 'This tester-interest application was already received. Please do not submit it again.', 'sent', $wantsJson);
     }
 
     $message = coordinatorIntakeMessage($application);
@@ -661,7 +665,11 @@ try {
         $message,
     );
     if (!$sent) {
-        throw new RuntimeException('Mail transport rejected the submission.');
+        // The protected Tester Hub record is the acceptance boundary. Do not
+        // tell the applicant to retry or risk a duplicate application merely
+        // because the separate coordinator handoff is delayed.
+        smtpDiagnostic('coordinator_intake');
+        respond(200, 'Your tester-interest application was received and saved. The coordinator handoff is delayed; please do not submit it again.', 'sent', $wantsJson);
     }
 
     $confirmation = signupConfirmationEmail($application['recruitment_source']);
