@@ -15,10 +15,10 @@ navigation:
     primary: true
     description: The dedicated Android TV and Google TV Player experience.
   - section: features
-    label: Features
+    label: Compare
     path: /features/
     primary: true
-    description: Playback, favorites, chat, requests, and five station experiences.
+    description: Compare the 24Seven.FM Player Mobile and TV experiences.
   - section: privacy
     label: Privacy
     path: /privacy/
