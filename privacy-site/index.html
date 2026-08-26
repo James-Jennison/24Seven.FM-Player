@@ -1,7 +1,7 @@
 ---
 layout: project
-title: 24Seven.FM Player · Mobile and TV radio, your way
-description: Native 24Seven.FM radio players for Android mobile and Android TV / Google TV, built around StreamingSoundtracks.com, 1980s.FM, Adagio.FM, Death.FM, and Entranced.FM.
+title: 24Seven.FM Player · Five stations, your screen
+description: 24Seven.FM Player brings StreamingSoundtracks.com, 1980s.FM, Adagio.FM, Death.FM, and Entranced.FM to Android mobile and Android TV / Google TV.
 permalink: /
 section: overview
 ---
@@ -9,14 +9,14 @@ section: overview
   <div class="listener-hero-copy">
     <p class="eyebrow">24Seven.FM Player</p>
     <h1 id="hero-title">Five worlds<br>of <span>sound.</span></h1>
-    <p class="hero-lede">Five distinct stations, with a focused Player for your mobile screen and your TV.</p>
-    <div class="actions"><a class="button primary" href="#live-moment">See it playing</a><a class="button secondary" href="{{ '/product-testing/' | relative_url }}">Get the app</a></div>
+    <p class="hero-lede">Five distinct stations, with a Player designed for the screen in front of you.</p>
+    <div class="actions"><a class="button primary" href="#platforms">Choose your Player</a><a class="button secondary" href="#stations">Meet the stations</a></div>
     <p class="release-note" id="release-status"><span class="live-dot" aria-hidden="true"></span><span><strong>{{ site.data.project.play_status.label }}</strong> · Listening is being shaped with real listeners.</span></p>
   </div>
   <figure class="listener-phone hero-phone hero-phone-bleed"><img src="{{ '/assets/project/marketing/now-playing-live.png' | relative_url }}" alt="24Seven.FM Player now playing screen with album artwork, playback controls, and five station choices" width="648" height="1422" fetchpriority="high"></figure>
 </section>
 
-<section class="platform-split" aria-labelledby="platforms-title">
+<section class="platform-split" id="platforms" aria-labelledby="platforms-title">
   <div class="platform-split__copy">
     <p class="eyebrow">Choose your screen</p>
     <h2 id="platforms-title">One station lineup.<br>Two native Players.</h2>
@@ -28,27 +28,26 @@ section: overview
       <p class="platform-card__eyebrow">Mobile</p>
       <h3>Android Mobile</h3>
       <p>For phones, foldables, and tablets—built for listening on the move with the Player’s full mobile experience.</p>
-      <a class="platform-card__link" href="{{ '/product-testing/' | relative_url }}">Mobile testing and access <span aria-hidden="true">→</span></a>
+      <a class="platform-card__link" href="{{ '/mobile/' | relative_url }}">Explore Mobile <span aria-hidden="true">→</span></a>
     </article>
     <article class="platform-card platform-card--tv">
       <span class="platform-card__icon" aria-hidden="true">▰</span>
       <p class="platform-card__eyebrow">Big screen</p>
       <h3>Android TV &amp; Google TV</h3>
       <p>A dedicated landscape Player with D-pad navigation and system media controls for Android TV and Google TV devices.</p>
-      <a class="platform-card__link" href="https://play.google.com/apps/testing/com.codeframe78.twentyfourseven.tv">Open TV testing on Google Play <span aria-hidden="true">↗</span></a>
-      <a class="platform-card__sub-link" href="{{ '/privacy/tv/' | relative_url }}">TV privacy notice</a>
+      <a class="platform-card__link" href="{{ '/tv/' | relative_url }}">Explore TV <span aria-hidden="true">→</span></a>
     </article>
   </div>
 </section>
 
-<section class="station-bento-section" aria-labelledby="stations-title">
+<section class="station-bento-section" id="stations" aria-labelledby="stations-title">
   <div class="section-heading station-bento-heading"><p class="eyebrow">Choose the temperature</p><h2 id="stations-title">A station for every version of now.</h2></div>
   <div class="station-bento">
-    <article class="station-panel station-sst"><span>01</span><h3>Streaming<br>Soundtracks</h3><p>Score the scene.</p></article>
-    <article class="station-panel station-80s"><span>02</span><h3>1980s.FM</h3><p>Neon, turned up.</p></article>
-    <article class="station-panel station-adagio"><span>03</span><h3>Adagio.FM</h3><p>Give the room a breath.</p></article>
-    <article class="station-panel station-death"><span>04</span><h3>Death.FM</h3><p>Heavy, on purpose.</p></article>
-    <article class="station-panel station-entranced"><span>05</span><h3>Entranced.FM</h3><p>Follow the pulse.</p></article>
+    <article class="station-panel station-sst"><img class="station-panel__logo" src="{{ '/assets/project/marketing/stations/sst.png' | relative_url }}" alt="StreamingSoundtracks.com logo" width="256" height="256" loading="lazy" decoding="async"><span>01</span><h3>Streaming<br>Soundtracks</h3><p>Score the scene.</p></article>
+    <article class="station-panel station-80s"><img class="station-panel__logo" src="{{ '/assets/project/marketing/stations/1980s.png' | relative_url }}" alt="1980s.FM logo" width="256" height="256" loading="lazy" decoding="async"><span>02</span><h3>1980s.FM</h3><p>Neon, turned up.</p></article>
+    <article class="station-panel station-adagio"><img class="station-panel__logo" src="{{ '/assets/project/marketing/stations/adagio.png' | relative_url }}" alt="Adagio.FM logo" width="256" height="256" loading="lazy" decoding="async"><span>03</span><h3>Adagio.FM</h3><p>Give the room a breath.</p></article>
+    <article class="station-panel station-death"><img class="station-panel__logo" src="{{ '/assets/project/marketing/stations/death.png' | relative_url }}" alt="Death.FM logo" width="256" height="256" loading="lazy" decoding="async"><span>04</span><h3>Death.FM</h3><p>Heavy, on purpose.</p></article>
+    <article class="station-panel station-entranced"><img class="station-panel__logo" src="{{ '/assets/project/marketing/stations/entranced.png' | relative_url }}" alt="Entranced.FM logo" width="256" height="256" loading="lazy" decoding="async"><span>05</span><h3>Entranced.FM</h3><p>Follow the pulse.</p></article>
   </div>
 </section>
 
@@ -62,6 +61,6 @@ section: overview
 
 <section class="listener-closing" aria-labelledby="closing-title">
   <span class="closing-watermark" aria-hidden="true">24Seven.FM</span>
-  <div><p class="eyebrow">Your next listen starts here</p><h2 id="closing-title">Find your frequency.</h2><p>Take a closer look, or join the Closed Alpha and help shape what comes next.</p></div>
-  <div class="actions"><a class="button primary" href="{{ '/features/' | relative_url }}">Explore the Player</a><a class="button secondary" href="{{ '/product-testing/' | relative_url }}">Get the app</a></div>
+  <div><p class="eyebrow">Your next listen starts here</p><h2 id="closing-title">Find your frequency.</h2><p>Choose the Player made for your screen, then settle into the station that fits the moment.</p></div>
+  <div class="actions"><a class="button primary" href="{{ '/mobile/' | relative_url }}">Explore Mobile</a><a class="button secondary" href="{{ '/tv/' | relative_url }}">Explore TV</a></div>
 </section>

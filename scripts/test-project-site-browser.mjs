@@ -132,6 +132,8 @@ try {
 
   const routes = [
     "/",
+    "/mobile/",
+    "/tv/",
     "/features/",
     "/development/",
     "/testing/",
@@ -162,7 +164,7 @@ try {
       deviceScaleFactor: 1,
       mobile: viewport.width < 600,
     });
-    const testedRoutes = viewport.width <= 390 ? routes : ["/", "/product-testing/", "/privacy/", "/privacy/tv/", "/dev/", "/dev/tester-workspace/"];
+    const testedRoutes = viewport.width <= 390 ? routes : ["/", "/mobile/", "/tv/", "/product-testing/", "/privacy/", "/privacy/tv/", "/dev/", "/dev/tester-workspace/"];
     for (const route of testedRoutes) {
       await navigate(route);
       await evaluate("window.scrollTo(0, document.documentElement.scrollHeight)");
@@ -174,7 +176,7 @@ try {
         missingImages: [...document.images].filter((image) => image.getAttribute('src') && (!image.complete || image.naturalWidth === 0)).map((image) => image.src),
         canonical: document.querySelector('link[rel="canonical"]')?.href ?? '',
         navigation: document.querySelectorAll('#project-navigation a').length,
-        expectedNavigation: document.body.classList.contains('developer-workspace') ? 5 : 3
+        expectedNavigation: document.body.classList.contains('developer-workspace') ? 5 : 5
       }))()`);
       assert(state.title, `${viewport.label} ${route} has no title`);
       assert(state.h1 === 1, `${viewport.label} ${route} has ${state.h1} h1 elements`);
@@ -233,14 +235,17 @@ try {
     document.querySelector('.site-explorer-toggle').click();
     const explorerOpen = document.querySelector('#site-explorer').open;
     document.querySelector('.site-explorer-close').click();
-    document.querySelector('[data-lightbox]').click();
-    const lightboxOpen = document.querySelector('.media-dialog').open;
-    return { before, after, menuOpen, explorerOpen, lightboxOpen };
+    return { before, after, menuOpen, explorerOpen };
   })()`);
   assert(homeInteractions.before !== homeInteractions.after, "Theme control did not change theme");
   assert(homeInteractions.menuOpen === "true", "Mobile navigation did not open");
   assert(homeInteractions.explorerOpen, "Site explorer did not open");
-  assert(homeInteractions.lightboxOpen, "Screenshot dialog did not open");
+  await navigate("/features/");
+  const lightboxOpen = await evaluate(`(() => {
+    document.querySelector('[data-lightbox]').click();
+    return document.querySelector('.media-dialog').open;
+  })()`);
+  assert(lightboxOpen, "Screenshot dialog did not open");
   await send("Input.dispatchKeyEvent", { type: "keyDown", key: "Escape", code: "Escape" });
   await send("Input.dispatchKeyEvent", { type: "keyUp", key: "Escape", code: "Escape" });
   await delay(50);
@@ -322,11 +327,11 @@ try {
     field.dispatchEvent(new Event('input', { bubbles: true }));
     return {
       visible: [...document.querySelectorAll('[data-privacy-document] > section')].filter((item) => !item.hidden).length,
-      stationDeletionContact: document.body.textContent.includes('morg@24seven.fm')
+      stationDeletionGuidance: document.body.textContent.includes('To request access, correction, or deletion')
     };
   })()`);
   assert(privacyState.visible > 0, "Privacy search returned no session results");
-  assert(privacyState.stationDeletionContact, "The approved station deletion contact is missing");
+  assert(privacyState.stationDeletionGuidance, "The privacy notice is missing station data-deletion guidance");
 
   await send("Emulation.setEmulatedMedia", {
     media: "screen",
@@ -360,7 +365,7 @@ try {
     stationPanels: document.querySelectorAll('.station-panel').length,
     momentScreens: document.querySelectorAll('.moment-screen').length
   }))()`);
-  assert(noScript.h1 === 1 && noScript.navigation === 3 && noScript.stationPanels === 5 && noScript.momentScreens === 2, "No-JavaScript fallback lost essential content");
+  assert(noScript.h1 === 1 && noScript.navigation === 5 && noScript.stationPanels === 5 && noScript.momentScreens === 2, "No-JavaScript fallback lost essential content");
 
   assert(browserErrors.length === 0, `Browser errors: ${browserErrors.join(" | ")}`);
   console.log("Validated five responsive viewports, consumer and developer routes, keyboard and pointer interactions, local-only state, reduced motion, forced colors, and no-JavaScript fallback.");

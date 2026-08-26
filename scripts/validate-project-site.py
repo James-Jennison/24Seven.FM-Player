@@ -13,6 +13,8 @@ from urllib.parse import unquote, urlparse
 PRODUCTION_ORIGIN = "https://player.jamesjennison.net"
 EXPECTED_PAGES = {
     "/": "index.html",
+    "/mobile/": "mobile/index.html",
+    "/tv/": "tv/index.html",
     "/features/": "features/index.html",
     "/development/": "development/index.html",
     "/testing/": "testing/index.html",

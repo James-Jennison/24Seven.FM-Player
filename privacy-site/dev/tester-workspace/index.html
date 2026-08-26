@@ -9,7 +9,7 @@ robots: noindex, nofollow
 {% assign task_registry = site.data.tester_tasks %}
 {% assign task_summary = task_registry.summary %}
 <section class="page-hero">
-  <div><p class="eyebrow">Assigned tester reference</p><h1>Focused work. Clear boundaries.</h1><p class="page-lede">Use this workspace only with an assigned task. It keeps the testing catalog, safety guidance, and reporting rules together without placing them in the listener-facing site.</p><div class="actions"><a class="button primary" href="https://player.jamesjennison.net/tester-portal.php">Developer / Tester Sign In <span aria-hidden="true">↗</span></a><a class="button secondary" href="{{ '/product-testing/' | relative_url }}">Apply for Closed Alpha access</a></div></div>
+  <div><p class="eyebrow">Assigned tester reference</p><h1>Focused work. Clear boundaries.</h1><p class="page-lede">Use this workspace only with an assigned task. It keeps the testing catalog, safety guidance, and reporting rules together without placing them in the listener-facing site.</p><p class="release-note"><span class="live-dot" aria-hidden="true"></span><span><strong>Private tester access</strong> · Use the sign-in link supplied with your acceptance message.</span></p></div>
   <aside class="page-summary" aria-label="Testing workspace summary"><span>Manual acceptance catalog</span><strong>{{ task_summary.ptCaseCount }} PT cases</strong><dl><div><dt>Stations</dt><dd>5</dd></div><div><dt>Tester tasks</dt><dd>{{ task_summary.taskCount }}</dd></div><div><dt>Outcomes</dt><dd>4</dd></div></dl></aside>
 </section>
 <nav class="section-jump" aria-label="On this page"><a href="#testing-tasks">Task library</a><a href="#catalog-controls">Testing reference</a><a href="#report">Report a result</a></nav>
