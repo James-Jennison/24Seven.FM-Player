@@ -4,6 +4,16 @@ navigation:
     path: /
     primary: true
     description: A native listening experience for five independent stations.
+  - section: mobile
+    label: Mobile
+    path: /mobile/
+    primary: true
+    description: The 24Seven.FM Player experience for Android phones, foldables, and tablets.
+  - section: tv
+    label: TV
+    path: /tv/
+    primary: true
+    description: The dedicated Android TV and Google TV Player experience.
   - section: features
     label: Features
     path: /features/

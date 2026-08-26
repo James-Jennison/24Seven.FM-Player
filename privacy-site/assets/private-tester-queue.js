@@ -159,6 +159,19 @@
   var subject = document.getElementById('subject');
   if (!all || !editor || !hidden || !form || !template || !subject) return;
 
+  var privateEmailContext = document.getElementById('private-tester-email-context');
+  var mobileOptInUrl = '';
+  if (privateEmailContext) {
+    try {
+      mobileOptInUrl = JSON.parse(privateEmailContext.textContent || '{}').mobileOptInUrl || '';
+    } catch (error) {
+      mobileOptInUrl = '';
+    }
+  }
+  var mobileOptInMarkup = mobileOptInUrl
+    ? '<p><strong>Join on the web:</strong><br><a href="' + mobileOptInUrl + '">' + mobileOptInUrl + '</a></p>'
+    : '';
+
   var templates = {
     'profile-update': {
       subject: 'Apology: please complete your 24Seven.FM Player Alpha tester profile',
@@ -169,7 +182,7 @@
       html: '<p>Hi {{tester_name}},</p>' +
         '<p>Welcome to the Google Play Closed Test for 24Seven.FM Player, an independently developed, unofficial player for the 24Seven.FM network of internet radio stations. Thank you for helping validate the app before wider release.</p>' +
         '<p><strong>Join on Android:</strong><br><a href="https://play.google.com/store/apps/details?id=com.codeframe78.twentyfourseven.player">https://play.google.com/store/apps/details?id=com.codeframe78.twentyfourseven.player</a></p>' +
-        '<p><strong>Join on the web:</strong><br><a href="https://play.google.com/apps/testing/com.codeframe78.twentyfourseven.player">https://play.google.com/apps/testing/com.codeframe78.twentyfourseven.player</a></p>' +
+        mobileOptInMarkup +
         '<p>Open the link while signed in to Google Play with the Google account added to the tester list. Updates will arrive through Google Play during the test.</p>' +
         '<h3>Quick start</h3><ol><li>Open 24Seven.FM Player and allow notifications if prompted.</li><li>On the Player screen, swipe across the station cards to select a station.</li><li>Tap the central Play button to begin live radio.</li><li>Confirm the station name, artwork, and current track appear.</li><li>Background the app briefly; playback should continue with Android media controls.</li><li>Tap the media notification to return to the Player, then try Pause/Play and another station.</li></ol>' +
         '<h3>Signing in to a station</h3><ol><li>Select the station you want to use.</li><li>Tap the account and station options button in the upper-right corner of the app.</li><li>Choose the station’s sign-in option. This opens that station’s own login page.</li><li>Sign in there with your existing account for that specific station, then return to the app.</li><li>Confirm the app shows that station as signed in.</li></ol>' +
