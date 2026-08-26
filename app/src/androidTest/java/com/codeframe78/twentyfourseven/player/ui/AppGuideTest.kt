@@ -20,7 +20,6 @@ class AppGuideTest {
         composeRule.setContent {
             TwentyFourSevenTheme {
                 AppGuideDialog(
-                    station = null,
                     onDismiss = { dismissed = true },
                     onComplete = {},
                 )
@@ -39,7 +38,6 @@ class AppGuideTest {
         composeRule.setContent {
             TwentyFourSevenTheme {
                 AppGuideDialog(
-                    station = null,
                     onDismiss = {},
                     onComplete = { completed = true },
                 )

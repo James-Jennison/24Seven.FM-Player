@@ -31,7 +31,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.codeframe78.twentyfourseven.player.domain.Station
 
 private data class AppGuideStep(
     val title: String,
@@ -40,33 +39,9 @@ private data class AppGuideStep(
 
 @Composable
 internal fun AppGuideDialog(
-    station: Station?,
     onDismiss: () -> Unit,
     onComplete: () -> Unit,
 ) {
-    val capabilities = station?.capabilities
-    val stationName = station?.shortName ?: "the selected station"
-    val queueText = if (capabilities?.supportsQueue == true || capabilities?.supportsHistory == true) {
-        "$stationName provides Queue or recently-played information in the Queue tab."
-    } else {
-        "Queue and history availability can differ by station; the app only shows sources that have been verified."
-    }
-    val requestText = if (capabilities?.supportsRequests == true) {
-        " Song requests are available for $stationName when the current account and station rules allow them."
-    } else {
-        " Song request availability also differs by station and is never assumed."
-    }
-    val communityFeatures = buildList {
-        if (capabilities?.supportsChat == true) add("Chat")
-        if (capabilities?.supportsFavorites == true) add("Favorites")
-        if (capabilities?.supportsAuthentication == true) add("station accounts")
-        if (capabilities?.supportsListenerActivity == true) add("request activity")
-    }
-    val communityText = if (communityFeatures.isNotEmpty()) {
-        "$stationName currently supports ${communityFeatures.joinToString()}. Community features remain subject to the app's age and participation controls."
-    } else {
-        "Some stations offer additional Chat, Favorites, account, or request-activity features. The Player only exposes features verified for each station."
-    }
     val steps = listOf(
         AppGuideStep(
             "Pick a station and press Play",
@@ -78,7 +53,7 @@ internal fun AppGuideDialog(
         ),
         AppGuideStep(
             "Explore when you want",
-            "$queueText$requestText $communityText You can reopen this guide later from More whenever you need it.",
+            "24Seven.FM brings the network together in one Player. Browse Player, Favorites, Chat, Queue, and More; each screen only shows network features that are supported. You can reopen this guide later from More whenever you need it.",
         ),
     )
     var stepIndex by rememberSaveable { mutableIntStateOf(0) }
