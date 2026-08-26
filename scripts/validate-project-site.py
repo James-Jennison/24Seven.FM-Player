@@ -14,7 +14,9 @@ PRODUCTION_ORIGIN = "https://player.jamesjennison.net"
 EXPECTED_PAGES = {
     "/": "index.html",
     "/mobile/": "mobile/index.html",
+    "/mobile/features/": "mobile/features/index.html",
     "/tv/": "tv/index.html",
+    "/tv/features/": "tv/features/index.html",
     "/features/": "features/index.html",
     "/development/": "development/index.html",
     "/testing/": "testing/index.html",

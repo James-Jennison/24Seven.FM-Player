@@ -133,7 +133,9 @@ try {
   const routes = [
     "/",
     "/mobile/",
+    "/mobile/features/",
     "/tv/",
+    "/tv/features/",
     "/features/",
     "/development/",
     "/testing/",
@@ -164,7 +166,7 @@ try {
       deviceScaleFactor: 1,
       mobile: viewport.width < 600,
     });
-    const testedRoutes = viewport.width <= 390 ? routes : ["/", "/mobile/", "/tv/", "/product-testing/", "/privacy/", "/privacy/tv/", "/dev/", "/dev/tester-workspace/"];
+    const testedRoutes = viewport.width <= 390 ? routes : ["/", "/mobile/", "/mobile/features/", "/tv/", "/tv/features/", "/features/", "/product-testing/", "/privacy/", "/privacy/tv/", "/dev/", "/dev/tester-workspace/"];
     for (const route of testedRoutes) {
       await navigate(route);
       await evaluate("window.scrollTo(0, document.documentElement.scrollHeight)");
@@ -240,7 +242,7 @@ try {
   assert(homeInteractions.before !== homeInteractions.after, "Theme control did not change theme");
   assert(homeInteractions.menuOpen === "true", "Mobile navigation did not open");
   assert(homeInteractions.explorerOpen, "Site explorer did not open");
-  await navigate("/features/");
+  await navigate("/mobile/features/");
   const lightboxOpen = await evaluate(`(() => {
     document.querySelector('[data-lightbox]').click();
     return document.querySelector('.media-dialog').open;

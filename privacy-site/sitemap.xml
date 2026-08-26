@@ -11,6 +11,14 @@ permalink: /sitemap.xml
   </url>
 {% endfor %}
   <url>
+    <loc>{{ '/mobile/features/' | absolute_url }}</loc>
+    <lastmod>{{ site.data.project.site_meta.verified }}</lastmod>
+  </url>
+  <url>
+    <loc>{{ '/tv/features/' | absolute_url }}</loc>
+    <lastmod>{{ site.data.project.site_meta.verified }}</lastmod>
+  </url>
+  <url>
     <loc>{{ '/product-testing/' | absolute_url }}</loc>
     <lastmod>{{ site.data.project.site_meta.verified }}</lastmod>
   </url>
