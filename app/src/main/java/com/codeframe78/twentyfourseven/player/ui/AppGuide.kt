@@ -91,7 +91,9 @@ internal fun AppGuideDialog(
         Box(
             Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.42f))
+                // Dialog already applies a platform dim behind this window. Keep the in-app
+                // scrim subtle so the Player remains readable through the coach overlay.
+                .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.12f))
                 .padding(20.dp)
                 .testTag("app_guide"),
             contentAlignment = Alignment.BottomCenter,
