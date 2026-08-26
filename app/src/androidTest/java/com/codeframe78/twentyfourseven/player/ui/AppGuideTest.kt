@@ -27,6 +27,7 @@ class AppGuideTest {
             }
         }
 
+        composeRule.onNodeWithTag("app_guide_overlay").assertIsDisplayed()
         composeRule.onNodeWithTag("app_guide_title").assertIsDisplayed()
         composeRule.onNodeWithTag("app_guide_skip").performClick()
         assertTrue(dismissed)
@@ -50,7 +51,7 @@ class AppGuideTest {
         composeRule.onNodeWithTag("app_guide_skip").assertIsDisplayed()
         assertFalse(completed)
 
-        repeat(5) {
+        repeat(2) {
             composeRule.onNodeWithTag("app_guide_next").performClick()
         }
         composeRule.onNodeWithTag("app_guide_complete").assertIsDisplayed().performClick()
