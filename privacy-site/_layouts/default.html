@@ -19,9 +19,9 @@
     <div class="ambient-stage" aria-hidden="true"><span></span><span></span></div>
     <div class="scroll-progress" aria-hidden="true"><span></span></div>
     <header class="project-header" data-site-header>
-      <a class="project-brand" href="{{ '/' | relative_url }}" aria-label="24Seven.FM Player project home">
+      <a class="project-brand" href="{{ '/' | relative_url }}" aria-label="{{ page.product_name | default: '24Seven.FM Player' | escape }} project home">
         <img src="{{ '/assets/project/app-icon.png' | relative_url }}" alt="" width="44" height="44">
-        <span><strong>24Seven.FM Player</strong><small>Privacy center</small></span>
+        <span><strong>{{ page.product_name | default: '24Seven.FM Player' }}</strong><small>{{ page.product_context | default: 'Privacy center' }}</small></span>
       </a>
       <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="project-navigation">
         <span class="nav-toggle-icon" aria-hidden="true"><i></i><i></i><i></i></span>
@@ -41,15 +41,15 @@
           <span class="theme-toggle-icon" aria-hidden="true">◐</span>
           <span class="theme-toggle-label">Theme</span>
         </button>
-        <a class="header-github" href="{{ site.github_url }}">GitHub <span aria-hidden="true">↗</span></a>
+        <a class="header-github" href="{{ page.github_url | default: site.github_url }}">GitHub <span aria-hidden="true">↗</span></a>
       </div>
     </header>
     <main id="main-content" class="privacy-main">
       <section class="page-hero privacy-hero">
         <div>
-          <p class="eyebrow">User trust · Canonical notice</p>
-          <h1>Privacy without guesswork</h1>
-          <p class="page-lede">See what the native app handles, what stays on your device, what reaches a station, and which common tracking technologies are not present.</p>
+          <p class="eyebrow">{{ page.privacy_eyebrow | default: 'User trust · Canonical notice' }}</p>
+          <h1>{{ page.privacy_heading | default: 'Privacy without guesswork' }}</h1>
+          <p class="page-lede">{{ page.privacy_lede | default: 'See what the native app handles, what stays on your device, what reaches a station, and which common tracking technologies are not present.' }}</p>
         </div>
         <aside class="page-summary" aria-label="Privacy summary">
           <span>Developer-operated collection</span>
@@ -76,7 +76,7 @@
     </main>
     <footer class="project-footer">
       <div>
-        <strong>24Seven.FM Player</strong>
+        <strong>{{ page.product_name | default: '24Seven.FM Player' }}</strong>
         <p>An unofficial, non-commercial community project. Not affiliated with or endorsed by 24seven.FM or its stations.</p>
         <p class="site-verification">{{ site.data.project.site_meta.verification_label }}.</p>
       </div>
@@ -86,7 +86,7 @@
         <a href="{{ '/product-testing/' | relative_url }}">Closed Alpha access</a>
         <a href="https://dev.jamesjennison.net/">Developer workspace <span aria-hidden="true">↗</span></a>
         <a href="https://player.jamesjennison.net/tester-portal.php">Developer / Tester Sign In <span aria-hidden="true">↗</span></a>
-        <a href="{{ site.github_url }}/issues">Report an app issue</a>
+        <a href="{{ page.github_url | default: site.github_url }}/issues">Report an app issue</a>
         <a href="{{ site.master_url }}">JamesJennison.net</a>
         <a href="{{ site.status_url }}">Service status</a>
       </nav>

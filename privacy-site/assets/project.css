@@ -2007,6 +2007,23 @@ figcaption span { color: var(--muted); font-size: 0.88rem; }
 .listener-hero-visual .hero-lede { max-width: 27rem; font-size: clamp(1.05rem, 1.8vw, 1.35rem); }
 .hero-phone.hero-phone-bleed { z-index: 1; align-self: end; justify-self: center; width: min(100%, 22rem); margin: -1rem -3rem -12rem 0; transform: rotate(5deg); }
 
+.platform-split { display: grid; grid-template-columns: minmax(15rem, 0.72fr) minmax(0, 1.28fr); gap: clamp(2rem, 7vw, 7rem); align-items: center; padding-block: clamp(5rem, 10vw, 9rem); }
+.platform-split__copy h2 { max-width: 10ch; margin: 0.35rem 0 1rem; font-size: clamp(2.7rem, 5.5vw, 5.8rem); line-height: 0.9; }
+.platform-split__copy > p:last-child { max-width: 28rem; color: var(--muted); font-size: 1.05rem; }
+.platform-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.platform-card { display: flex; min-height: 22rem; flex-direction: column; padding: clamp(1.4rem, 3vw, 2.2rem); border: 1px solid var(--border); border-radius: 1.5rem; background: linear-gradient(145deg, color-mix(in srgb, var(--surface) 90%, transparent), color-mix(in srgb, var(--accent) 8%, var(--surface))); }
+.platform-card--tv { border-color: color-mix(in srgb, var(--cyan) 42%, var(--border)); background: linear-gradient(145deg, color-mix(in srgb, var(--cyan) 12%, var(--surface)), color-mix(in srgb, var(--accent) 8%, var(--surface))); }
+.platform-card__icon { display: grid; place-items: center; width: 3.2rem; aspect-ratio: 1; border: 1px solid color-mix(in srgb, var(--accent) 50%, var(--border)); border-radius: 1rem; color: var(--accent); font-size: 1.8rem; line-height: 1; }
+.platform-card--tv .platform-card__icon { border-color: color-mix(in srgb, var(--cyan) 50%, var(--border)); color: var(--cyan); }
+.platform-card__eyebrow { margin: 2.5rem 0 0; color: var(--muted); font-size: 0.72rem; font-weight: 850; letter-spacing: 0.14em; text-transform: uppercase; }
+.platform-card h3 { margin: 0.45rem 0 0.75rem; font-size: clamp(1.55rem, 2.4vw, 2.15rem); line-height: 1; }
+.platform-card > p:not(.platform-card__eyebrow) { margin: 0; color: var(--muted); }
+.platform-card__link { margin-top: auto; padding-top: 2rem; color: var(--text); font-size: 0.9rem; font-weight: 820; text-decoration: none; }
+.platform-card__link span { color: var(--cyan); }
+.platform-card__link:hover { color: var(--cyan); }
+.platform-card__sub-link { width: fit-content; margin-top: 0.7rem; color: var(--muted); font-size: 0.8rem; font-weight: 700; }
+.platform-card__sub-link:hover { color: var(--text); }
+
 .station-bento-section { padding-block: 0 clamp(5rem, 10vw, 9rem); }
 .station-bento-heading { display: grid; grid-template-columns: minmax(20rem, 0.6fr) minmax(18rem, 1fr); max-width: none; gap: 2rem; align-items: end; margin-bottom: 2rem; }
 .station-bento-heading .eyebrow { grid-row: 1; margin: 0; }
@@ -2037,9 +2054,10 @@ figcaption span { color: var(--muted); font-size: 0.88rem; }
 .closing-watermark { position: absolute; right: -0.06em; bottom: -0.26em; color: rgba(255, 255, 255, 0.1); font-size: clamp(5rem, 15vw, 14rem); font-weight: 900; letter-spacing: -0.09em; line-height: 1; white-space: nowrap; }
 
 @media (max-width: 800px) {
-  .listener-hero.listener-hero-visual, .listener-moment { grid-template-columns: 1fr; }
+  .listener-hero.listener-hero-visual, .platform-split, .listener-moment { grid-template-columns: 1fr; }
   .listener-hero.listener-hero-visual { min-height: 0; }
   .station-bento { grid-template-columns: repeat(2, 1fr); grid-template-rows: auto; }
+  .platform-grid { max-width: 42rem; }
   .station-panel { min-height: 13rem; }
   .station-panel:nth-child(1), .station-panel:nth-child(4) { grid-column: span 2; grid-row: auto; }
   .listener-closing { align-items: flex-start; flex-direction: column; }
@@ -2050,6 +2068,8 @@ figcaption span { color: var(--muted); font-size: 0.88rem; }
   .hero-phone.hero-phone-bleed { width: min(72vw, 18rem); margin: 2rem -0.75rem -6rem auto; transform: rotate(4deg); }
   .station-bento-heading { grid-template-columns: 1fr; }
   .station-bento { grid-template-columns: 1fr; }
+  .platform-grid { grid-template-columns: 1fr; }
+  .platform-card { min-height: 0; }
   .station-panel, .station-panel:nth-child(1), .station-panel:nth-child(4) { grid-column: auto; min-height: 11rem; }
   .moment-screens { gap: 0.75rem; }
   .chat-screen { transform: translateY(1rem); }

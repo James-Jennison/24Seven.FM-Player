@@ -26,6 +26,7 @@ EXPECTED_PAGES = {
     "/dev/roadmap/": "dev/roadmap/index.html",
     "/dev/resources/": "dev/resources/index.html",
     "/privacy/": "privacy/index.html",
+    "/privacy/tv/": "privacy/tv/index.html",
     "/turnstile-test/": "turnstile-test/index.html",
     "/404.html": "404.html",
 }
