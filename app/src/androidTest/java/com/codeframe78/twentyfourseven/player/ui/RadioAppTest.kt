@@ -744,6 +744,8 @@ class RadioAppTest {
         composeRule.onNodeWithText("Password").assertExists()
         composeRule.onNodeWithText("Security code").assertExists()
         composeRule.onNodeWithText("Sign in to SST").assertExists()
+        composeRule.onNodeWithContentDescription("Show password for SST").performClick()
+        composeRule.onNodeWithContentDescription("Hide password for SST").assertExists()
     }
 
     @Test
