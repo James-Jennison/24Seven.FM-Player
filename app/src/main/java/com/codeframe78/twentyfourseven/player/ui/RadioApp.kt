@@ -35,6 +35,8 @@ import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Radio
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Card
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -87,6 +89,7 @@ import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.style.TextAlign
@@ -2052,6 +2055,7 @@ private fun AccountCard(
     val palette = stationPalette(station.id)
     var username by remember(station.id) { mutableStateOf("") }
     var password by remember(station.id) { mutableStateOf("") }
+    var passwordVisible by remember(station.id) { mutableStateOf(false) }
     var securityCode by remember(station.id) { mutableStateOf("") }
     val useStackedHeader = LocalDensity.current.fontScale > 1.5f
     Card(modifier.fillMaxWidth().testTag("account_card_${station.id.value}")) {
@@ -2126,7 +2130,26 @@ private fun AccountCard(
                             { password = it },
                             label = { Text("Password") },
                             singleLine = true,
-                            visualTransformation = PasswordVisualTransformation(),
+                            visualTransformation = if (passwordVisible) {
+                                VisualTransformation.None
+                            } else {
+                                PasswordVisualTransformation()
+                            },
+                            trailingIcon = {
+                                IconButton(
+                                    onClick = { passwordVisible = !passwordVisible },
+                                    modifier = Modifier.testTag("account_toggle_password_${station.id.value}"),
+                                ) {
+                                    Icon(
+                                        imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                        contentDescription = if (passwordVisible) {
+                                            "Hide password for ${station.shortName}"
+                                        } else {
+                                            "Show password for ${station.shortName}"
+                                        },
+                                    )
+                                }
+                            },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .testTag("account_password_${station.id.value}")
