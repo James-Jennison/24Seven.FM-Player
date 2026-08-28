@@ -7,11 +7,14 @@ on:
       - PRIVACY.md
       - privacy-site/**
       - docs/play-store-assets/**
+      - docs/WEBSITE_FACTS_CONTRACT.json
+      - docs/WEBSITE_SOURCE_OF_TRUTH.md
       - scripts/prepare-project-site.sh
       - scripts/build-project-site.sh
       - scripts/prepare-pages-transition.sh
       - scripts/validate-project-site.py
       - scripts/validate-project-site.sh
+      - scripts/validate-website-facts-contract.py
       - scripts/validate-pages-transition.py
       - .github/workflows/privacy-pages.yml
   pull_request:
@@ -19,11 +22,14 @@ on:
       - PRIVACY.md
       - privacy-site/**
       - docs/play-store-assets/**
+      - docs/WEBSITE_FACTS_CONTRACT.json
+      - docs/WEBSITE_SOURCE_OF_TRUTH.md
       - scripts/prepare-project-site.sh
       - scripts/build-project-site.sh
       - scripts/prepare-pages-transition.sh
       - scripts/validate-project-site.py
       - scripts/validate-project-site.sh
+      - scripts/validate-website-facts-contract.py
       - scripts/validate-pages-transition.py
       - .github/workflows/privacy-pages.yml
   workflow_dispatch:
@@ -65,6 +71,7 @@ jobs:
           node --check privacy-site/assets/project.js
           node --check privacy-site/assets/theme-init.js
           node --check privacy-site/assets/private-tester-queue.js
+          python3 scripts/validate-website-facts-contract.py
           python3 scripts/validate-tester-tasks.py
           node scripts/test-private-tester-queue.mjs
           node scripts/test-tester-portal.mjs

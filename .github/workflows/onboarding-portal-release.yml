@@ -10,12 +10,15 @@ on:
       - docs/project-site-migration.md
       - docs/MILESTONE_TIME_LEDGER.md
       - docs/ONBOARDING_PORTAL_TIME_LEDGER.md
+      - docs/WEBSITE_FACTS_CONTRACT.json
+      - docs/WEBSITE_SOURCE_OF_TRUTH.md
       - scripts/build-project-site.sh
       - scripts/prepare-project-site.sh
       - scripts/prepare-pages-transition.sh
       - scripts/validate-onboarding-portal-release.sh
       - scripts/validate-project-site.py
       - scripts/validate-project-site.sh
+      - scripts/validate-website-facts-contract.py
       - scripts/validate-pages-transition.py
       - .github/workflows/android.yml
       - .github/workflows/onboarding-portal-release.yml
@@ -28,12 +31,15 @@ on:
       - docs/project-site-migration.md
       - docs/MILESTONE_TIME_LEDGER.md
       - docs/ONBOARDING_PORTAL_TIME_LEDGER.md
+      - docs/WEBSITE_FACTS_CONTRACT.json
+      - docs/WEBSITE_SOURCE_OF_TRUTH.md
       - scripts/build-project-site.sh
       - scripts/prepare-project-site.sh
       - scripts/prepare-pages-transition.sh
       - scripts/validate-onboarding-portal-release.sh
       - scripts/validate-project-site.py
       - scripts/validate-project-site.sh
+      - scripts/validate-website-facts-contract.py
       - scripts/validate-pages-transition.py
       - .github/workflows/android.yml
       - .github/workflows/onboarding-portal-release.yml

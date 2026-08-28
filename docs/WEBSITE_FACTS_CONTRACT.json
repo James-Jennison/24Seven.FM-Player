@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "repository": "James-Jennison/24Seven.FM-Player",
+  "app_behavior": {
+    "authority_branch": "main",
+    "pinned_commit": "56dc94694d158132befc22f7e97113aefc28af93",
+    "canonical_files": [
+      "app/build.gradle.kts",
+      "app/src/main/"
+    ],
+    "rule": "This pin is the authority for native behavior only. A branch name is never sufficient evidence for a public claim."
+  },
+  "privacy_claims": {
+    "canonical_file": "PRIVACY.md",
+    "pinned_commit": "56dc94694d158132befc22f7e97113aefc28af93",
+    "content_review_status": "pending",
+    "content_sha256": null,
+    "publication_rule": "A privacy change may be published only after the pinned notice has completed the required content review and its digest is recorded here."
+  },
+  "release_claims": {
+    "candidate_record": {
+      "canonical_file": "docs/releases/0.1.0-alpha08.md",
+      "pinned_commit": "56dc94694d158132befc22f7e97113aefc28af93",
+      "version_code": 17,
+      "version_name": "0.1.0-alpha08",
+      "recorded_state": "submitted_to_google_play_closed_testing_review"
+    },
+    "public_claim_status": "blocked_pending_release_manifest",
+    "required_manifest_fields": [
+      "artifact_sha256",
+      "artifact_source_commit",
+      "play_track",
+      "availability_verified_at",
+      "evidence_reference"
+    ],
+    "publication_rule": "The candidate record establishes a submitted build, not tester availability or a current public version claim. Publish or change a release claim only from a complete release manifest that matches this candidate record."
+  },
+  "portal_surface": {
+    "authority_branch": "codex/onboarding-portal-production",
+    "pinned_commit": "c00c2f4982232e7c197aa0e35d174d7c3478436e",
+    "last_synced_app_facts_commit": null,
+    "rule": "This pin owns protected portal implementation only. It does not define native behavior, privacy text, or app release facts."
+  },
+  "deployment": {
+    "live_source_confirmed": false,
+    "manifest_exists": false,
+    "rule": "A live artifact must be identified by a deployment manifest containing its source commit, artifact digest, verification record, and rollback reference; it is never inferred from branch names or similar markup."
+  }
+}

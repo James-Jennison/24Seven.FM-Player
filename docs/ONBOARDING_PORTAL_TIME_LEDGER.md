@@ -1,6 +1,6 @@
 # Onboarding Portal Time Ledger
 
-Last updated: `August 23, 2026 at 5:56:39 AM PDT (UTC-07:00)`
+Last updated: `August 28, 2026 at 10:54:04 AM PDT (UTC-07:00)`
 
 This is the canonical time-accounting record for the protected 24Seven.FM Player onboarding portal: the Tester workspace, Coordinator workspace, onboarding wizard, assignment and reporting flows, and their safe website releases. It is deliberately independent of the Player Android and Play-operation milestones in `MILESTONE_TIME_LEDGER.md`.
 
@@ -10,13 +10,21 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 
 | Measure | Value | Qualification |
 | --- | ---: | --- |
-| Completed measured portal intervals | 20 | Includes the completed explicit re-test closeout phase. |
-| Active portal time | 2.89 h | Completed intervals only. |
+| Completed measured portal intervals | 21 | Includes the completed authority-contract remediation phase. |
+| Active portal time | 2.93 h | Completed intervals only. |
 | Automated wait | 0.28 h | Measured release-gate/build and workflow waits during portal changes. |
 | User-blocked time | 0.00 h | Completed intervals only. |
-| Counted portal time | 3.17 h | Active plus automated wait. |
+| Counted portal time | 3.21 h | Active plus automated wait. |
 
 ## Portal work records
+
+### Phase 15 Website authority-contract remediation
+
+- **Authorization and interval:** Authorized and started `August 28, 2026 at 10:51:48 AM PDT (UTC-07:00)`; completed `August 28, 2026 at 10:54:04 AM PDT (UTC-07:00)`.
+- **Measured time:** 0.04 h active, 0.00 h automated wait, 0.00 h user-blocked, 0.04 h counted.
+- **Scope:** Establish a non-public, exact-commit authority record for the native behavior, privacy, release-candidate, protected portal, and live-artifact provenance boundaries before changing any user-facing privacy or version claim. Preserve the existing portal, tester data, mail, release behavior, production artifact, and unrelated local work. No user-facing copy, release version, deployment, push, branch rewrite, service, database, DNS, or Cloudflare change is in scope.
+- **Evidence so far:** Read-only comparison recorded the current default native `main` pin, the portal pin, the Alpha 08 release record, and the fact that the release record still requires Play review and tester-availability confirmation. The independent Claude review agreed that portal code cannot define native privacy/release facts and that live provenance remains unconfirmed without a deployment manifest. The checked-in contract and its validator make each unresolved authority field explicit.
+- **Model and forecast:** Current approved model and original forecast were not supplied; recorded as Unknown.
 
 ### Phase 14 Explicit Re-test Closeout
 
