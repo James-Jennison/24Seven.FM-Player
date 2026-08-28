@@ -37,6 +37,11 @@ def main() -> int:
         require(privacy.get("canonical_file") == "PRIVACY.md", "privacy canonical_file must be PRIVACY.md")
         require_sha(privacy.get("pinned_commit"), "privacy_claims.pinned_commit")
         require(privacy.get("content_review_status") in {"pending", "reviewed"}, "privacy content_review_status must be pending or reviewed")
+        reconciliation_record = privacy.get("reconciliation_record")
+        require(isinstance(reconciliation_record, str) and reconciliation_record.startswith("docs/") and (ROOT / reconciliation_record).is_file(), "privacy reconciliation_record is required")
+        portal_addendum = privacy.get("portal_program_addendum")
+        require(isinstance(portal_addendum, dict) and portal_addendum.get("extraction_status") in {"pending_extraction_and_review", "reviewed"}, "portal privacy addendum extraction status is invalid")
+        require(portal_addendum.get("content_review_status") in {"pending", "reviewed"}, "portal privacy addendum review status is invalid")
         if privacy.get("content_review_status") == "reviewed":
             digest = privacy.get("content_sha256")
             require(isinstance(digest, str) and re.fullmatch(r"[0-9a-f]{64}", digest) is not None, "reviewed privacy text requires content_sha256")

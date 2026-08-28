@@ -1,6 +1,6 @@
 # Onboarding Portal Time Ledger
 
-Last updated: `August 28, 2026 at 11:12:19 AM PDT (UTC-07:00)`
+Last updated: `August 28, 2026 at 11:14:06 AM PDT (UTC-07:00)`
 
 This is the canonical time-accounting record for the protected 24Seven.FM Player onboarding portal: the Tester workspace, Coordinator workspace, onboarding wizard, assignment and reporting flows, and their safe website releases. It is deliberately independent of the Player Android and Play-operation milestones in `MILESTONE_TIME_LEDGER.md`.
 
@@ -10,13 +10,21 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 
 | Measure | Value | Qualification |
 | --- | ---: | --- |
-| Completed measured portal intervals | 24 | Includes the completed Play Console availability-evidence phase. |
-| Active portal time | 2.98 h | Completed intervals only. |
+| Completed measured portal intervals | 25 | Includes the completed privacy-source reconciliation phase. |
+| Active portal time | 2.99 h | Completed intervals only. |
 | Automated wait | 0.28 h | Measured release-gate/build and workflow waits during portal changes. |
 | User-blocked time | 0.00 h | Completed intervals only. |
-| Counted portal time | 3.26 h | Active plus automated wait. |
+| Counted portal time | 3.27 h | Active plus automated wait. |
 
 ## Portal work records
+
+### Phase 19 Privacy-source reconciliation
+
+- **Authorization and interval:** Authorized and started `August 28, 2026 at 11:13:23 AM PDT (UTC-07:00)`; completed `August 28, 2026 at 11:14:06 AM PDT (UTC-07:00)`.
+- **Measured time:** 0.01 h active, 0.00 h automated wait, 0.00 h user-blocked, 0.01 h counted.
+- **Scope:** Separate the pinned native privacy source from the portal's distinct tester-program policy, document app-behavior drift and operational-policy conflicts, and require explicit review before a public privacy update. Preserve every current public claim, portal workflow, tester record, mail path, production artifact, and unrelated working change; no privacy-page generation, deployment, external policy change, or data mutation is in scope.
+- **Evidence so far:** The pinned native notice documents the optional foreground Chat monitor and unknown station retention; the portal-branch notice says no background polling and makes specific station retention promises while embedding the tester-program policy. The native monitor service exists in the pinned application tree.
+- **Model and forecast:** Current approved model and original forecast were not supplied; recorded as Unknown.
 
 ### Phase 18 Play Console availability evidence
 

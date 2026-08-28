@@ -15,6 +15,12 @@
     "pinned_commit": "56dc94694d158132befc22f7e97113aefc28af93",
     "content_review_status": "pending",
     "content_sha256": null,
+    "reconciliation_record": "docs/PRIVACY_RECONCILIATION.md",
+    "portal_program_addendum": {
+      "current_candidate_source": "PRIVACY.md#Closed-test-tester-interest-form",
+      "extraction_status": "pending_extraction_and_review",
+      "content_review_status": "pending"
+    },
     "publication_rule": "A privacy change may be published only after the pinned notice has completed the required content review and its digest is recorded here."
   },
   "release_claims": {
