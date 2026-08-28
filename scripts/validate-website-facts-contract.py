@@ -47,6 +47,12 @@ def main() -> int:
         require_sha(candidate.get("pinned_commit"), "release_claims.candidate_record.pinned_commit")
         require(isinstance(candidate.get("version_code"), int) and candidate["version_code"] > 0, "release candidate version_code must be positive")
         require(isinstance(candidate.get("version_name"), str) and candidate["version_name"], "release candidate version_name is required")
+        require(candidate.get("signed_artifact_ref") is None or isinstance(candidate.get("signed_artifact_ref"), str), "release candidate signed_artifact_ref must be null or a reference")
+        require(candidate.get("artifact_evidence_status") in {"submitted_pending_review", "artifact_verified"}, "release candidate artifact_evidence_status is invalid")
+        status_records = release.get("non_authoritative_status_records")
+        require(isinstance(status_records, list) and status_records, "release non_authoritative_status_records must document unversioned status claims")
+        for record in status_records:
+            require(isinstance(record, dict) and all(isinstance(record.get(key), str) and record[key] for key in ("file", "claim", "reason")), "each non-authoritative release status record needs file, claim, and reason")
         require(release.get("public_claim_status") in {"blocked_pending_release_manifest", "ready_for_public_claim"}, "release public_claim_status is invalid")
         required_manifest_fields = release.get("required_manifest_fields")
         require(isinstance(required_manifest_fields, list) and {"artifact_sha256", "artifact_source_commit", "play_track", "availability_verified_at", "evidence_reference"}.issubset(required_manifest_fields), "release manifest field requirements are incomplete")

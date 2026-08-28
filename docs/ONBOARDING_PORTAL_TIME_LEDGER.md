@@ -1,6 +1,6 @@
 # Onboarding Portal Time Ledger
 
-Last updated: `August 28, 2026 at 10:54:04 AM PDT (UTC-07:00)`
+Last updated: `August 28, 2026 at 11:03:03 AM PDT (UTC-07:00)`
 
 This is the canonical time-accounting record for the protected 24Seven.FM Player onboarding portal: the Tester workspace, Coordinator workspace, onboarding wizard, assignment and reporting flows, and their safe website releases. It is deliberately independent of the Player Android and Play-operation milestones in `MILESTONE_TIME_LEDGER.md`.
 
@@ -10,13 +10,21 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 
 | Measure | Value | Qualification |
 | --- | ---: | --- |
-| Completed measured portal intervals | 21 | Includes the completed authority-contract remediation phase. |
-| Active portal time | 2.93 h | Completed intervals only. |
+| Completed measured portal intervals | 22 | Includes the completed release-status evidence-ranking phase. |
+| Active portal time | 2.94 h | Completed intervals only. |
 | Automated wait | 0.28 h | Measured release-gate/build and workflow waits during portal changes. |
 | User-blocked time | 0.00 h | Completed intervals only. |
-| Counted portal time | 3.21 h | Active plus automated wait. |
+| Counted portal time | 3.22 h | Active plus automated wait. |
 
 ## Portal work records
+
+### Phase 16 Release-status evidence ranking
+
+- **Authorization and interval:** Authorized and started `August 28, 2026 at 11:02:19 AM PDT (UTC-07:00)`; completed `August 28, 2026 at 11:03:03 AM PDT (UTC-07:00)`.
+- **Measured time:** 0.01 h active, 0.00 h automated wait, 0.00 h user-blocked, 0.01 h counted.
+- **Scope:** Record the version-exact Alpha 08 release record as the release-status authority, classify the unversioned project-status statements as non-authoritative context, and preserve all public wording, prior documentation, release behavior, tester data, and deployment state. No privacy-copy synchronization, version/availability claim, deployment, push, branch rewrite, external Console action, or historical-document rewrite is in scope.
+- **Evidence so far:** The pinned Alpha 08 release record identifies version code 17 and states submission to Closed testing review with tester availability still pending. GitHub Releases has no published assets. The competing plan, forecast, and ledger statements name no version or artifact and include conflicting status language. Claude independently agreed that they cannot govern a public claim.
+- **Model and forecast:** Current approved model and original forecast were not supplied; recorded as Unknown.
 
 ### Phase 15 Website authority-contract remediation
 

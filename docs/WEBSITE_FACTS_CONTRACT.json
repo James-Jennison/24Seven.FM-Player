@@ -23,8 +23,27 @@
       "pinned_commit": "56dc94694d158132befc22f7e97113aefc28af93",
       "version_code": 17,
       "version_name": "0.1.0-alpha08",
-      "recorded_state": "submitted_to_google_play_closed_testing_review"
+      "recorded_state": "submitted_to_google_play_closed_testing_review",
+      "signed_artifact_ref": null,
+      "artifact_evidence_status": "submitted_pending_review"
     },
+    "non_authoritative_status_records": [
+      {
+        "file": "docs/IMPLEMENTATION_PLAN.md",
+        "claim": "current closed test live",
+        "reason": "The statement names neither an exact version nor a signed artifact. It cannot govern a public release claim."
+      },
+      {
+        "file": "docs/MILESTONE_FORECAST.md",
+        "claim": "current Google Play closed test is live",
+        "reason": "The statement names neither an exact version nor a signed artifact. It cannot govern a public release claim."
+      },
+      {
+        "file": "docs/MILESTONE_TIME_LEDGER.md",
+        "claim": "M41 not started",
+        "reason": "The statement is unversioned and conflicts with other unversioned status narrative. It cannot govern a public release claim."
+      }
+    ],
     "public_claim_status": "blocked_pending_release_manifest",
     "required_manifest_fields": [
       "artifact_sha256",
@@ -33,7 +52,7 @@
       "availability_verified_at",
       "evidence_reference"
     ],
-    "publication_rule": "The candidate record establishes a submitted build, not tester availability or a current public version claim. Publish or change a release claim only from a complete release manifest that matches this candidate record."
+    "publication_rule": "The candidate record establishes a submitted build, not tester availability or a current public version claim. Publish or change a release claim only from a complete release manifest that matches this candidate record. Unversioned project-status narrative is context only and cannot override this record."
   },
   "portal_surface": {
     "authority_branch": "codex/onboarding-portal-production",

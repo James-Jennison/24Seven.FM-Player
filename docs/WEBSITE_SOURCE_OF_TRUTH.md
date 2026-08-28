@@ -38,3 +38,12 @@ the website from adopting a privacy-text update until that review is complete.
 
 This order prevents a portal branch, a development `versionName`, or an
 unverified live page from becoming an accidental authority.
+
+## Conflict rule
+
+When a named release record and an unversioned project-status statement
+conflict, the pinned release record governs public wording. The unversioned
+statement remains historical context, but cannot establish an available build
+or override the recorded release state. The contract lists the currently known
+non-authoritative status records so that this is an explicit evidence ranking,
+not a silent edit of historical documentation.
