@@ -1,6 +1,6 @@
 # Onboarding Portal Time Ledger
 
-Last updated: `August 28, 2026 at 11:35:07 AM PDT (UTC-07:00)`
+Last updated: `August 28, 2026 at 11:47:44 AM PDT (UTC-07:00)`
 
 This is the canonical time-accounting record for the protected 24Seven.FM Player onboarding portal: the Tester workspace, Coordinator workspace, onboarding wizard, assignment and reporting flows, and their safe website releases. It is deliberately independent of the Player Android and Play-operation milestones in `MILESTONE_TIME_LEDGER.md`.
 
@@ -10,13 +10,21 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 
 | Measure | Value | Qualification |
 | --- | ---: | --- |
-| Completed measured portal intervals | 27 | Includes the completed legacy-privacy surface inventory phase. |
-| Active portal time | 3.17 h | Completed intervals only. |
-| Automated wait | 0.32 h | Measured release-gate/build and workflow waits during portal changes. |
+| Completed measured portal intervals | 28 | Includes the owner-attestation deadline and public-privacy release gate phase. |
+| Active portal time | 3.24 h | Completed intervals only. |
+| Automated wait | 0.34 h | Measured release-gate/build and workflow waits during portal changes. |
 | User-blocked time | 0.00 h | Completed intervals only. |
-| Counted portal time | 3.49 h | Active plus automated wait. |
+| Counted portal time | 3.58 h | Active plus automated wait. |
 
 ## Portal work records
+
+### Phase 22 Owner-attestation deadline and public-privacy gate
+
+- **Authorization and interval:** Authorized and started `August 28, 2026 at 11:41:53 AM PDT (UTC-07:00)`; completed `August 28, 2026 at 11:47:44 AM PDT (UTC-07:00)`.
+- **Measured time:** 0.07 h active, 0.02 h automated wait, 0.00 h user-blocked, 0.09 h counted. The unmeasured remainder of the wall-clock interval is excluded.
+- **Scope:** Record the owner-approved two-business-day deadline for evidence-backed station and tester-program operational attestation, and add an explicit validator mode for a future public privacy release. Preserve every public claim, live artifact, portal record, mail path, deployment process, and unrelated working change; no deployment, public policy change, data mutation, push, or Play/Cloudflare action is in scope.
+- **Evidence:** The authority contract records September 1, 2026 at 5:00 PM PDT (UTC-07:00) as a deadline—not an attestation. `scripts/validate-website-facts-contract.py --require-public-privacy-ready` fails closed until both source reviews, legacy-surface disposition, approved replacement source, and a named owner’s evidence-backed attestation are complete. A separate `--require-interim-privacy-correction-ready` path prevents a specifically owner-disproven served claim from being held behind unrelated full-notice work, but requires exact served route and wording, checked-in replacement wording, separate production approval, validation, and rollback. Every interim correction route-and-claim pair must exactly match the owner attestation's `attested_inaccurate_claims` list. Normal contract validation and Python compilation passed; both specialized modes correctly failed in the current pending state. Claude reviewed the final exact-match implementation and returned PASS. No public text, deployment, push, data, or unrelated working change was altered.
+- **Model and forecast:** Current approved model and original forecast were not supplied; recorded as Unknown.
 
 ### Phase 21 Legacy privacy surface inventory
 

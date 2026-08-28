@@ -22,7 +22,30 @@
       "extraction_status": "pending_extraction_and_review",
       "content_review_status": "pending"
     },
+    "legacy_surface_disposition_status": "pending",
+    "public_replacement_source_status": "pending",
     "publication_rule": "A privacy change may be published only after the pinned notice has completed the required content review and its digest is recorded here."
+  },
+  "privacy_publication_gate": {
+    "status": "blocked_pending_owner_attestation",
+    "operational_attestation": {
+      "status": "deadline_set_pending_attestation",
+      "designated_owner": "James Jennison",
+      "deadline": "2026-09-01T17:00:00-07:00",
+      "deadline_display": "September 1, 2026 at 5:00 PM PDT (UTC-07:00)",
+      "attestation_record": null,
+      "required_scopes": [
+        "station retention, deletion, and supported privacy-request contact",
+        "tester-program retention, deletion or anonymization, and mailbox handling"
+      ],
+      "rule": "Setting this deadline is not an operational attestation. Before a public privacy release, the designated owner must record evidence for every required scope; if any served numerical claim is inaccurate, the attestation must list that exact served route and wording before an interim correction and its separately approved release evidence are allowed."
+    },
+    "interim_correction": {
+      "status": "not_required",
+      "claims": [],
+      "rule": "Use only after a named owner attests that a specific currently served claim is inaccurate. Every affected claim must exactly match an entry in the attestation's attested_inaccurate_claims list and retain exact wording, separate production approval, validation, and rollback evidence; this path is intentionally independent of the full replacement gate."
+    },
+    "rule": "A public privacy release must use --require-public-privacy-ready and remains blocked until the native notice and tester-program addendum are reviewed, legacy surfaces have a recorded disposition, an approved replacement source exists, and the owner attestation is recorded."
   },
   "release_claims": {
     "candidate_record": {

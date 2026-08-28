@@ -7,6 +7,8 @@ import json
 import re
 import subprocess
 import sys
+from argparse import ArgumentParser
+from datetime import datetime
 from pathlib import Path
 
 
@@ -55,7 +57,74 @@ def require_git_file(commit: object, path: object, label: str) -> None:
     require(result.returncode == 0, f"{label} is not present at its pinned commit")
 
 
-def main() -> int:
+def require_iso8601_offset(value: object, label: str) -> None:
+    require(isinstance(value, str), f"{label} must be an ISO 8601 timestamp")
+    try:
+        parsed = datetime.fromisoformat(value)
+    except ValueError as error:
+        raise ValueError(f"{label} must be an ISO 8601 timestamp") from error
+    require(parsed.tzinfo is not None, f"{label} must include a UTC offset")
+
+
+def validate_public_privacy_readiness(privacy: dict[str, object], gate: dict[str, object]) -> None:
+    """Fail closed when a command is explicitly validating a public privacy release."""
+
+    require(privacy.get("content_review_status") == "reviewed", "public privacy release requires a reviewed native privacy notice")
+    portal_addendum = privacy["portal_program_addendum"]
+    require(isinstance(portal_addendum, dict) and portal_addendum.get("extraction_status") == "reviewed", "public privacy release requires a reviewed tester-program addendum extraction")
+    require(isinstance(portal_addendum, dict) and portal_addendum.get("content_review_status") == "reviewed", "public privacy release requires a reviewed tester-program addendum")
+    require(privacy.get("legacy_surface_disposition_status") == "complete", "public privacy release requires the legacy-surface disposition to be complete")
+    require(privacy.get("public_replacement_source_status") == "approved", "public privacy release requires an approved replacement source")
+
+    require(gate.get("status") == "ready", "public privacy release requires a ready privacy publication gate")
+    attestation = gate["operational_attestation"]
+    require(isinstance(attestation, dict) and attestation.get("status") == "attested", "public privacy release requires a recorded owner attestation")
+    record = attestation.get("attestation_record") if isinstance(attestation, dict) else None
+    require(isinstance(record, dict), "recorded owner attestation requires an attestation_record")
+    require_iso8601_offset(record.get("attested_at"), "operational attestation attested_at")
+    require(isinstance(record.get("station_policy_evidence"), str) and record["station_policy_evidence"], "recorded owner attestation requires station_policy_evidence")
+    require(isinstance(record.get("tester_program_evidence"), str) and record["tester_program_evidence"], "recorded owner attestation requires tester_program_evidence")
+    require(record.get("publication_disposition") == "verified_current", "public privacy release requires an owner attestation that verifies the approved replacement wording")
+
+
+def validate_interim_privacy_correction_readiness(gate: dict[str, object]) -> None:
+    """Fail closed for a narrow correction after an owner disproves a live claim.
+
+    This deliberately does not require the full replacement's unrelated source
+    reviews. It does require the exact claim, correction wording, approval,
+    validation, and rollback records needed for a real production release.
+    """
+
+    attestation = gate["operational_attestation"]
+    require(isinstance(attestation, dict) and attestation.get("status") == "attested", "interim privacy correction requires a recorded owner attestation")
+    record = attestation.get("attestation_record") if isinstance(attestation, dict) else None
+    require(isinstance(record, dict), "interim privacy correction requires an attestation_record")
+    require(record.get("publication_disposition") == "interim_correction_required", "interim privacy correction requires an owner finding that a served claim is inaccurate")
+    attested_claims = record.get("attested_inaccurate_claims")
+    require(isinstance(attested_claims, list) and attested_claims, "interim privacy correction requires each inaccurate served claim to be recorded in the owner attestation")
+    attested_claim_keys = {
+        (claim.get("served_route"), claim.get("served_claim"))
+        for claim in attested_claims
+        if isinstance(claim, dict)
+    }
+
+    correction = gate["interim_correction"]
+    require(isinstance(correction, dict) and correction.get("status") == "ready", "interim privacy correction requires a ready correction record")
+    claims = correction.get("claims") if isinstance(correction, dict) else None
+    require(isinstance(claims, list) and claims, "interim privacy correction requires at least one exact affected claim")
+    for claim in claims:
+        require(isinstance(claim, dict), "each interim privacy correction claim must be an object")
+        require(isinstance(claim.get("served_route"), str) and claim["served_route"].startswith("https://"), "each interim privacy correction claim requires an HTTPS served_route")
+        require(isinstance(claim.get("served_claim"), str) and claim["served_claim"], "each interim privacy correction claim requires the exact served_claim")
+        require((claim["served_route"], claim["served_claim"]) in attested_claim_keys, "each interim privacy correction claim must match a specific claim in the owner attestation")
+        wording_source = claim.get("replacement_wording_source")
+        require(isinstance(wording_source, str) and wording_source.startswith("docs/") and (ROOT / wording_source).is_file(), "each interim privacy correction claim requires a checked-in replacement_wording_source")
+        require(isinstance(claim.get("production_approval_reference"), str) and claim["production_approval_reference"], "each interim privacy correction claim requires a separate production_approval_reference")
+        require(isinstance(claim.get("validation_plan"), str) and claim["validation_plan"], "each interim privacy correction claim requires a validation_plan")
+        require(isinstance(claim.get("rollback_plan"), str) and claim["rollback_plan"], "each interim privacy correction claim requires a rollback_plan")
+
+
+def main(require_public_privacy_ready: bool = False, require_interim_privacy_correction_ready: bool = False) -> int:
     try:
         contract = json.loads(CONTRACT_PATH.read_text(encoding="utf-8"))
         require(contract.get("schema_version") == 1, "schema_version must be 1")
@@ -77,9 +146,52 @@ def main() -> int:
         portal_addendum = privacy.get("portal_program_addendum")
         require(isinstance(portal_addendum, dict) and portal_addendum.get("extraction_status") in {"pending_extraction_and_review", "reviewed"}, "portal privacy addendum extraction status is invalid")
         require(portal_addendum.get("content_review_status") in {"pending", "reviewed"}, "portal privacy addendum review status is invalid")
+        require(privacy.get("legacy_surface_disposition_status") in {"pending", "complete"}, "privacy legacy_surface_disposition_status is invalid")
+        require(privacy.get("public_replacement_source_status") in {"pending", "approved"}, "privacy public_replacement_source_status is invalid")
         if privacy.get("content_review_status") == "reviewed":
             digest = privacy.get("content_sha256")
             require(isinstance(digest, str) and re.fullmatch(r"[0-9a-f]{64}", digest) is not None, "reviewed privacy text requires content_sha256")
+
+        privacy_gate = contract.get("privacy_publication_gate")
+        require(isinstance(privacy_gate, dict) and privacy_gate.get("status") in {"blocked_pending_owner_attestation", "ready"}, "privacy publication gate status is invalid")
+        attestation = privacy_gate.get("operational_attestation") if isinstance(privacy_gate, dict) else None
+        require(isinstance(attestation, dict) and attestation.get("status") in {"deadline_set_pending_attestation", "attested"}, "operational attestation status is invalid")
+        require(isinstance(attestation.get("designated_owner"), str) and attestation["designated_owner"], "operational attestation designated_owner is required")
+        require_iso8601_offset(attestation.get("deadline"), "operational attestation deadline")
+        require(isinstance(attestation.get("deadline_display"), str) and attestation["deadline_display"], "operational attestation deadline_display is required")
+        scopes = attestation.get("required_scopes")
+        require(isinstance(scopes, list) and len(scopes) >= 2 and all(isinstance(scope, str) and scope for scope in scopes), "operational attestation required_scopes are incomplete")
+        require(isinstance(attestation.get("rule"), str) and attestation["rule"], "operational attestation rule is required")
+        if attestation.get("status") == "deadline_set_pending_attestation":
+            require(attestation.get("attestation_record") is None, "pending owner attestation must not contain an attestation_record")
+        if attestation.get("status") == "attested":
+            record = attestation.get("attestation_record")
+            require(isinstance(record, dict), "attested owner status requires an attestation_record")
+            require_iso8601_offset(record.get("attested_at"), "operational attestation attested_at")
+            require(isinstance(record.get("station_policy_evidence"), str) and record["station_policy_evidence"], "attested owner status requires station_policy_evidence")
+            require(isinstance(record.get("tester_program_evidence"), str) and record["tester_program_evidence"], "attested owner status requires tester_program_evidence")
+            require(record.get("publication_disposition") in {"verified_current", "interim_correction_required"}, "attested owner status has an invalid publication_disposition")
+            attested_claims = record.get("attested_inaccurate_claims")
+            require(isinstance(attested_claims, list), "attested owner status requires attested_inaccurate_claims to be a list")
+            for claim in attested_claims:
+                require(isinstance(claim, dict), "each attested inaccurate claim must be an object")
+                require(isinstance(claim.get("served_route"), str) and claim["served_route"].startswith("https://"), "each attested inaccurate claim requires an HTTPS served_route")
+                require(isinstance(claim.get("served_claim"), str) and claim["served_claim"], "each attested inaccurate claim requires the exact served_claim")
+            if record.get("publication_disposition") == "verified_current":
+                require(not attested_claims, "verified-current owner attestation cannot contain inaccurate claims")
+            if record.get("publication_disposition") == "interim_correction_required":
+                require(bool(attested_claims), "interim-correction owner attestation requires at least one inaccurate claim")
+        interim_correction = privacy_gate.get("interim_correction") if isinstance(privacy_gate, dict) else None
+        require(isinstance(interim_correction, dict) and interim_correction.get("status") in {"not_required", "pending", "ready"}, "interim privacy correction status is invalid")
+        claims = interim_correction.get("claims") if isinstance(interim_correction, dict) else None
+        require(isinstance(claims, list), "interim privacy correction claims must be a list")
+        require(isinstance(interim_correction.get("rule"), str) and interim_correction["rule"], "interim privacy correction rule is required")
+        if attestation.get("status") == "deadline_set_pending_attestation":
+            require(interim_correction.get("status") == "not_required" and not claims, "pending owner attestation cannot open an interim correction")
+        if require_public_privacy_ready:
+            validate_public_privacy_readiness(privacy, privacy_gate)
+        if require_interim_privacy_correction_ready:
+            validate_interim_privacy_correction_readiness(privacy_gate)
 
         release = contract["release_claims"]
         candidate = release["candidate_record"]
@@ -141,4 +253,19 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    parser = ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--require-public-privacy-ready",
+        action="store_true",
+        help="fail unless all owner-attestation and source-review gates for a public privacy release are complete",
+    )
+    parser.add_argument(
+        "--require-interim-privacy-correction-ready",
+        action="store_true",
+        help="fail unless a specifically disproven served claim has its own correction wording, approval, validation, and rollback records",
+    )
+    args = parser.parse_args()
+    raise SystemExit(main(
+        require_public_privacy_ready=args.require_public_privacy_ready,
+        require_interim_privacy_correction_ready=args.require_interim_privacy_correction_ready,
+    ))

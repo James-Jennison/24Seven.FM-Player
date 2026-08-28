@@ -71,3 +71,14 @@ The owner must set and record an expedited response deadline for the live
 30-day and 90-day claims. No deadline is inferred from source history or this
 inventory; a deadline expresses an operational commitment rather than a fact
 that can be derived from code.
+
+The owner approved **September 1, 2026 at 5:00 PM PDT (UTC-07:00)** as that
+deadline. The deadline is recorded in `WEBSITE_FACTS_CONTRACT.json` and is not
+an attestation of the numerical claims. The served notice stays unchanged until
+the evidence-backed review and separately approved public release occur.
+
+If that attestation identifies a specific served claim as inaccurate, the
+repository's narrow interim-correction validator may prepare only that claim's
+correction. It still requires the exact wording, separate production approval,
+validation, and rollback plan, but it does not wait for unrelated full-notice
+review work.

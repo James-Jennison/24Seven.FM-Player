@@ -75,6 +75,39 @@ therefore governs until a named owner records a newer attestation. The owner
 must also set an expedited response deadline for the live numerical claims;
 that deadline is an operational decision and cannot be invented from history.
 
+## Approved attestation deadline
+
+The designated operational owner, James Jennison, approved an expedited
+deadline of **September 1, 2026 at 5:00 PM PDT (UTC-07:00)** to record the
+operational attestation. This records a deadline only; it does not assert that
+the existing 30-day, 90-day, or one-year claims are accurate, and it does not
+change any public page.
+
+The attestation must identify evidence for both of these scopes:
+
+1. Station retention, deletion, and the supported privacy-request contact.
+2. Tester-program retention, deletion or anonymization, and mailbox handling.
+
+The authority contract provides a dedicated
+`--require-public-privacy-ready` gate. A public privacy release cannot pass it
+until the native notice and tester-program addendum are reviewed, the legacy
+surface disposition is complete, an approved replacement source exists, and
+the named owner’s evidence-backed attestation marks the wording as verified.
+If an attestation finds a served numerical claim inaccurate, that command
+remains blocked: the exact interim correction must first be separately
+reviewed and approved for production.
+
+An urgent correction after a negative attestation uses the distinct
+`--require-interim-privacy-correction-ready` validator instead. It is not held
+behind the complete replacement review, but it fails closed unless each exact
+affected claim has its served route and wording identified plus a checked-in
+replacement-wording source, separate production-approval reference,
+validation plan, and rollback plan. This narrow path never authorizes a broad
+policy rewrite or deployment by itself. Each correction claim must exactly
+match a route-and-wording entry in the owner attestation’s
+`attested_inaccurate_claims` list; a negative attestation for one claim cannot
+be reused to alter another.
+
 ## Publication sequence
 
 1. Record a reviewed digest of the pinned native notice, including the
