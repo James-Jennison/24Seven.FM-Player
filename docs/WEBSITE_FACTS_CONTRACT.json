@@ -28,25 +28,62 @@
       "extraction_record": "docs/privacy-reviews/tester-program-addendum-c00c2f.md",
       "extraction_status": "reviewed",
       "content_review_status": "reviewed",
-      "operational_retention_status": "pending_owner_attestation"
+      "operational_retention_status": "attested"
     },
     "legacy_surface_disposition_status": "pending",
     "public_replacement_source_status": "pending",
     "publication_rule": "A privacy change may be published only after the pinned notice has completed the required content review and its digest is recorded here."
   },
   "privacy_publication_gate": {
-    "status": "blocked_pending_owner_attestation",
+    "status": "blocked_pending_request_contact_and_legacy_disposition",
     "operational_attestation": {
-      "status": "deadline_set_pending_attestation",
+      "status": "retention_attested_contact_pending",
       "designated_owner": "James Jennison",
       "deadline": "2026-09-01T17:00:00-07:00",
       "deadline_display": "September 1, 2026 at 5:00 PM PDT (UTC-07:00)",
-      "attestation_record": null,
+      "attestation_record": {
+        "attested_at": "2026-08-28T13:17:49-07:00",
+        "station_policy_evidence": "Owner attestation in the current Codex task: the live 30-day and 90-day station retention claims are accurate.",
+        "tester_program_evidence": "Owner attestation in the current Codex task: the live 90-day tester-program retention claim is accurate.",
+        "supported_request_contact_status": "pending_confirmation",
+        "attestation_record": "docs/privacy-reviews/operational-retention-attestation-2026-08-28.md",
+        "publication_disposition": "retention_verified_contact_pending",
+        "attested_accurate_claims": [
+          {
+            "served_route": "https://player.jamesjennison.net/privacy/",
+            "served_claim": "For verified deletion requests, 24seven.FM deletes or anonymizes personally identifiable account and profile data from active systems within 30 days."
+          },
+          {
+            "served_route": "https://player.jamesjennison.net/privacy/",
+            "served_claim": "Favorites and account preferences are deleted with the account within the same period."
+          },
+          {
+            "served_route": "https://player.jamesjennison.net/privacy/",
+            "served_claim": "Ordinary song-request records, operational logs, Chat and forum data, and normal diagnostics/server/IP logs are kept for no more than 90 days."
+          },
+          {
+            "served_route": "https://player.jamesjennison.net/privacy/",
+            "served_claim": "Encrypted backups are retained for no more than 90 days."
+          },
+          {
+            "served_route": "https://player.jamesjennison.net/privacy/",
+            "served_claim": "The coordinator stops program access promptly after a verified withdrawal request and deletes or anonymizes private tester intake, assignments, feedback, and invitation correspondence within 90 days of a verified withdrawal, deletion request, rejection, or program-close decision."
+          }
+        ],
+        "unattested_served_claims": [
+          {
+            "served_route": "https://player.jamesjennison.net/privacy/",
+            "served_claim": "A record may be retained only while an active security, abuse, fraud, or rule-enforcement investigation requires it; investigation records are deleted when no longer required and are kept for no more than one year.",
+            "status": "pending_owner_attestation"
+          }
+        ],
+        "attested_inaccurate_claims": []
+      },
       "required_scopes": [
         "station retention, deletion, and supported privacy-request contact",
         "tester-program retention, deletion or anonymization, and mailbox handling"
       ],
-      "rule": "Setting this deadline is not an operational attestation. Before a public privacy release, the designated owner must record evidence for every required scope; if any served numerical claim is inaccurate, the attestation must list that exact served route and wording before an interim correction and its separately approved release evidence are allowed."
+      "rule": "The retention attestation is recorded separately from confirmation of the supported privacy-request contact. Before a public privacy release, the designated owner must confirm every required scope; if any served numerical claim is inaccurate, the attestation must list that exact served route and wording before an interim correction and its separately approved release evidence are allowed."
     },
     "interim_correction": {
       "status": "not_required",

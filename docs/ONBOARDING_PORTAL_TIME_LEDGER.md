@@ -1,6 +1,6 @@
 # Onboarding Portal Time Ledger
 
-Last updated: `August 28, 2026 at 1:06:46 PM PDT (UTC-07:00)`
+Last updated: `August 28, 2026 at 1:23:48 PM PDT (UTC-07:00)`
 
 This is the canonical time-accounting record for the protected 24Seven.FM Player onboarding portal: the Tester workspace, Coordinator workspace, onboarding wizard, assignment and reporting flows, and their safe website releases. It is deliberately independent of the Player Android and Play-operation milestones in `MILESTONE_TIME_LEDGER.md`.
 
@@ -10,13 +10,21 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 
 | Measure | Value | Qualification |
 | --- | ---: | --- |
-| Completed measured portal intervals | 29 | Includes the completed pinned privacy-source review phase. |
-| Active portal time | 3.29 h | Completed intervals only. |
+| Completed measured portal intervals | 30 | Includes the completed retention-attestation tracking phase. |
+| Active portal time | 3.39 h | Completed intervals only. |
 | Automated wait | 0.35 h | Measured release-gate/build and workflow waits during portal changes. |
 | User-blocked time | 0.00 h | Completed intervals only. |
-| Counted portal time | 3.64 h | Active plus automated wait. |
+| Counted portal time | 3.74 h | Active plus automated wait. |
 
 ## Portal work records
+
+### Phase 24 Owner retention attestation and claim tracking
+
+- **Authorization and interval:** Authorized and started `August 28, 2026 at 1:17:49 PM PDT (UTC-07:00)`; completed `August 28, 2026 at 1:23:48 PM PDT (UTC-07:00)`.
+- **Measured time:** 0.10 h active, 0.00 h automated wait, 0.00 h user-blocked, 0.10 h counted. The unmeasured remainder of the wall-clock interval is excluded.
+- **Scope:** Record the designated owner’s confirmation of the currently served 30-day and 90-day station and tester-program retention claims as exact route-and-wording evidence. Preserve the unconfirmed one-year investigation term and the supported privacy-request contact/process as explicit pending items. Preserve every public privacy page, portal workflow, deployment, release, tester record, and unrelated working change; no push, deployment, public copy, service, data, or external-account action is in scope.
+- **Evidence:** The non-public attestation record maps five exact `/privacy/` claims to the owner’s confirmation. The one-year investigation-retention claim is separately tracked as `pending_owner_attestation`, and the request contact/process as `pending_confirmation`; neither is inferred. The validator rejects duplicate or conflicting exact claim keys across confirmed, inaccurate, and pending lists. Normal contract validation, Python compilation, JSON parsing, and whitespace validation passed. The public-release validator remains correctly blocked by incomplete legacy-surface disposition, while the interim-correction validator remains correctly unavailable because no claim was identified as inaccurate. Claude independently returned PASS after reviewing the exact positive-claim binding and explicit one-year pending state. No public text, deployment, push, data, or unrelated working change was altered.
+- **Model and forecast:** Current approved model and original forecast were not supplied; recorded as Unknown.
 
 ### Phase 23 Pinned privacy-source review
 

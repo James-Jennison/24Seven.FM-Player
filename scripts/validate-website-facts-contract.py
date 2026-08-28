@@ -187,9 +187,9 @@ def main(require_public_privacy_ready: bool = False, require_interim_privacy_cor
             require(isinstance(extraction_record, str) and extraction_record.startswith("docs/") and (ROOT / extraction_record).is_file(), "reviewed tester-program addendum requires an extraction_record")
 
         privacy_gate = contract.get("privacy_publication_gate")
-        require(isinstance(privacy_gate, dict) and privacy_gate.get("status") in {"blocked_pending_owner_attestation", "ready"}, "privacy publication gate status is invalid")
+        require(isinstance(privacy_gate, dict) and privacy_gate.get("status") in {"blocked_pending_owner_attestation", "blocked_pending_request_contact_and_legacy_disposition", "ready"}, "privacy publication gate status is invalid")
         attestation = privacy_gate.get("operational_attestation") if isinstance(privacy_gate, dict) else None
-        require(isinstance(attestation, dict) and attestation.get("status") in {"deadline_set_pending_attestation", "attested"}, "operational attestation status is invalid")
+        require(isinstance(attestation, dict) and attestation.get("status") in {"deadline_set_pending_attestation", "retention_attested_contact_pending", "attested"}, "operational attestation status is invalid")
         require(isinstance(attestation.get("designated_owner"), str) and attestation["designated_owner"], "operational attestation designated_owner is required")
         require_iso8601_offset(attestation.get("deadline"), "operational attestation deadline")
         require(isinstance(attestation.get("deadline_display"), str) and attestation["deadline_display"], "operational attestation deadline_display is required")
@@ -198,23 +198,55 @@ def main(require_public_privacy_ready: bool = False, require_interim_privacy_cor
         require(isinstance(attestation.get("rule"), str) and attestation["rule"], "operational attestation rule is required")
         if attestation.get("status") == "deadline_set_pending_attestation":
             require(attestation.get("attestation_record") is None, "pending owner attestation must not contain an attestation_record")
-        if attestation.get("status") == "attested":
+        if attestation.get("status") in {"retention_attested_contact_pending", "attested"}:
             record = attestation.get("attestation_record")
             require(isinstance(record, dict), "attested owner status requires an attestation_record")
             require_iso8601_offset(record.get("attested_at"), "operational attestation attested_at")
             require(isinstance(record.get("station_policy_evidence"), str) and record["station_policy_evidence"], "attested owner status requires station_policy_evidence")
             require(isinstance(record.get("tester_program_evidence"), str) and record["tester_program_evidence"], "attested owner status requires tester_program_evidence")
-            require(record.get("publication_disposition") in {"verified_current", "interim_correction_required"}, "attested owner status has an invalid publication_disposition")
+            require(record.get("supported_request_contact_status") in {"pending_confirmation", "attested"}, "attested owner status has an invalid supported_request_contact_status")
+            record_path = record.get("attestation_record")
+            require(isinstance(record_path, str) and record_path.startswith("docs/") and (ROOT / record_path).is_file(), "attested owner status requires an attestation_record file")
+            require(record.get("publication_disposition") in {"retention_verified_contact_pending", "verified_current", "interim_correction_required"}, "attested owner status has an invalid publication_disposition")
+            accurate_claims = record.get("attested_accurate_claims")
+            require(isinstance(accurate_claims, list), "attested owner status requires attested_accurate_claims to be a list")
+            accurate_claim_keys: set[tuple[str, str]] = set()
+            for claim in accurate_claims:
+                require(isinstance(claim, dict), "each attested accurate claim must be an object")
+                require(isinstance(claim.get("served_route"), str) and claim["served_route"].startswith("https://"), "each attested accurate claim requires an HTTPS served_route")
+                require(isinstance(claim.get("served_claim"), str) and claim["served_claim"], "each attested accurate claim requires the exact served_claim")
+                claim_key = (claim["served_route"], claim["served_claim"])
+                require(claim_key not in accurate_claim_keys, "attested accurate claims must not contain duplicates")
+                accurate_claim_keys.add(claim_key)
+            unattested_claims = record.get("unattested_served_claims")
+            require(isinstance(unattested_claims, list), "attested owner status requires unattested_served_claims to be a list")
+            unattested_claim_keys: set[tuple[str, str]] = set()
+            for claim in unattested_claims:
+                require(isinstance(claim, dict), "each unattested served claim must be an object")
+                require(isinstance(claim.get("served_route"), str) and claim["served_route"].startswith("https://"), "each unattested served claim requires an HTTPS served_route")
+                require(isinstance(claim.get("served_claim"), str) and claim["served_claim"], "each unattested served claim requires the exact served_claim")
+                require(claim.get("status") == "pending_owner_attestation", "each unattested served claim must be pending_owner_attestation")
+                claim_key = (claim["served_route"], claim["served_claim"])
+                require(claim_key not in accurate_claim_keys and claim_key not in unattested_claim_keys, "a served claim cannot be both attested and unattested")
+                unattested_claim_keys.add(claim_key)
             attested_claims = record.get("attested_inaccurate_claims")
             require(isinstance(attested_claims, list), "attested owner status requires attested_inaccurate_claims to be a list")
             for claim in attested_claims:
                 require(isinstance(claim, dict), "each attested inaccurate claim must be an object")
                 require(isinstance(claim.get("served_route"), str) and claim["served_route"].startswith("https://"), "each attested inaccurate claim requires an HTTPS served_route")
                 require(isinstance(claim.get("served_claim"), str) and claim["served_claim"], "each attested inaccurate claim requires the exact served_claim")
+                require((claim["served_route"], claim["served_claim"]) not in accurate_claim_keys and (claim["served_route"], claim["served_claim"]) not in unattested_claim_keys, "a served claim cannot have conflicting attestation states")
             if record.get("publication_disposition") == "verified_current":
                 require(not attested_claims, "verified-current owner attestation cannot contain inaccurate claims")
             if record.get("publication_disposition") == "interim_correction_required":
                 require(bool(attested_claims), "interim-correction owner attestation requires at least one inaccurate claim")
+            if attestation.get("status") == "retention_attested_contact_pending":
+                require(record.get("supported_request_contact_status") == "pending_confirmation", "partial owner attestation requires a pending supported request contact")
+                require(record.get("publication_disposition") == "retention_verified_contact_pending", "partial owner attestation must remain pending request-contact confirmation")
+                require(bool(accurate_claims), "partial owner attestation requires at least one exact accurate claim")
+                require(not attested_claims, "partial owner attestation cannot contain inaccurate claims")
+            if attestation.get("status") == "attested":
+                require(record.get("supported_request_contact_status") == "attested", "complete owner attestation requires a confirmed supported request contact")
         interim_correction = privacy_gate.get("interim_correction") if isinstance(privacy_gate, dict) else None
         require(isinstance(interim_correction, dict) and interim_correction.get("status") in {"not_required", "pending", "ready"}, "interim privacy correction status is invalid")
         claims = interim_correction.get("claims") if isinstance(interim_correction, dict) else None

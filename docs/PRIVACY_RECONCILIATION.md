@@ -88,6 +88,12 @@ The attestation must identify evidence for both of these scopes:
 1. Station retention, deletion, and the supported privacy-request contact.
 2. Tester-program retention, deletion or anonymization, and mailbox handling.
 
+On August 28, 2026, the designated owner confirmed that the currently served
+30-day and 90-day station and tester-program retention claims are accurate.
+The separate supported privacy-request contact/process was not independently
+confirmed in that statement, so it remains pending rather than being inferred
+from the notice text.
+
 The authority contract provides a dedicated
 `--require-public-privacy-ready` gate. A public privacy release cannot pass it
 until the native notice and tester-program addendum are reviewed, the legacy
