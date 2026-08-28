@@ -39,9 +39,11 @@ the website from adopting a privacy-text update until that review is complete.
 This order prevents a portal branch, a development `versionName`, or an
 unverified live page from becoming an accidental authority.
 
-The release-manifest template is intentionally incomplete until it contains
-the signed-artifact digest, source commit, Play track, observed availability,
-and the evidence reference. Its presence is not approval to publish a claim.
+Each release manifest has two independent gates. A recorded read-only Play
+Console observation supports a matching availability statement only. A
+cross-checked artifact hash and source commit support a matching code-content
+statement only. A statement that combines availability with code contents
+requires both gates; neither gate silently substitutes for the other.
 
 ## Conflict rule
 

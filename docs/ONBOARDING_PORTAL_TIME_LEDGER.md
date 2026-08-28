@@ -1,6 +1,6 @@
 # Onboarding Portal Time Ledger
 
-Last updated: `August 28, 2026 at 11:04:50 AM PDT (UTC-07:00)`
+Last updated: `August 28, 2026 at 11:12:19 AM PDT (UTC-07:00)`
 
 This is the canonical time-accounting record for the protected 24Seven.FM Player onboarding portal: the Tester workspace, Coordinator workspace, onboarding wizard, assignment and reporting flows, and their safe website releases. It is deliberately independent of the Player Android and Play-operation milestones in `MILESTONE_TIME_LEDGER.md`.
 
@@ -10,13 +10,21 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 
 | Measure | Value | Qualification |
 | --- | ---: | --- |
-| Completed measured portal intervals | 23 | Includes the completed release-manifest gate phase. |
-| Active portal time | 2.95 h | Completed intervals only. |
+| Completed measured portal intervals | 24 | Includes the completed Play Console availability-evidence phase. |
+| Active portal time | 2.98 h | Completed intervals only. |
 | Automated wait | 0.28 h | Measured release-gate/build and workflow waits during portal changes. |
 | User-blocked time | 0.00 h | Completed intervals only. |
-| Counted portal time | 3.23 h | Active plus automated wait. |
+| Counted portal time | 3.26 h | Active plus automated wait. |
 
 ## Portal work records
+
+### Phase 18 Play Console availability evidence
+
+- **Authorization and interval:** Authorized and started `August 28, 2026 at 11:10:29 AM PDT (UTC-07:00)`; completed `August 28, 2026 at 11:12:19 AM PDT (UTC-07:00)`.
+- **Measured time:** 0.03 h active, 0.00 h automated wait, 0.00 h user-blocked, 0.03 h counted.
+- **Scope:** Record a read-only Google Play Console observation as availability evidence only, distinguish Alpha 07 available-to-testers from Alpha 08 in-review, and retain the separate artifact-provenance gate for code-content claims. Preserve every public page, release artifact, Console setting, tester/portal record, and unrelated working change; no publish, release, rollout, upload, track edit, or deployment is in scope.
+- **Evidence so far:** Read-only Console release overview shows Alpha 07/version code 16 available to Closed Testing — Alpha testers and Alpha 08/version code 17 in review. Claude independently confirmed availability and byte-level provenance are separate evidence gates.
+- **Model and forecast:** Current approved model and original forecast were not supplied; recorded as Unknown.
 
 ### Phase 17 Release-manifest gate
 

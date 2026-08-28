@@ -23,10 +23,26 @@
       "pinned_commit": "56dc94694d158132befc22f7e97113aefc28af93",
       "version_code": 17,
       "version_name": "0.1.0-alpha08",
-      "recorded_state": "submitted_to_google_play_closed_testing_review",
-      "signed_artifact_ref": null,
-      "artifact_evidence_status": "submitted_pending_review"
+      "recorded_state": "submitted_to_google_play_closed_testing_review"
     },
+    "availability_records": [
+      {
+        "version_name": "0.1.0-alpha07",
+        "version_code": 16,
+        "release_record": "docs/releases/0.1.0-alpha07.md",
+        "release_record_commit": "56dc94694d158132befc22f7e97113aefc28af93",
+        "manifest": "docs/release-manifests/0.1.0-alpha07.json"
+      },
+      {
+        "version_name": "0.1.0-alpha08",
+        "version_code": 17,
+        "release_record": "docs/releases/0.1.0-alpha08.md",
+        "release_record_commit": "56dc94694d158132befc22f7e97113aefc28af93",
+        "manifest": "docs/release-manifests/0.1.0-alpha08.json"
+      }
+    ],
+    "availability_claim_status": "ready_from_console_observation",
+    "artifact_provenance_status": "incomplete",
     "non_authoritative_status_records": [
       {
         "file": "docs/IMPLEMENTATION_PLAN.md",
@@ -44,16 +60,12 @@
         "reason": "The statement is unversioned and conflicts with other unversioned status narrative. It cannot govern a public release claim."
       }
     ],
-    "public_claim_status": "blocked_pending_release_manifest",
-    "release_manifest": "docs/release-manifests/0.1.0-alpha08.json",
-    "required_manifest_fields": [
+    "required_artifact_provenance_fields": [
       "artifact_sha256",
       "artifact_source_commit",
-      "play_track",
-      "availability_verified_at",
       "evidence_reference"
     ],
-    "publication_rule": "The candidate record establishes a submitted build, not tester availability or a current public version claim. Publish or change a release claim only from a complete release manifest that matches this candidate record. Unversioned project-status narrative is context only and cannot override this record."
+    "publication_rule": "A recorded read-only Play Console observation is sufficient only for an availability claim about its exact version and track. Artifact provenance is sufficient only for a code-content claim about its exact version. A compound availability-and-content claim requires both gates. Unversioned project-status narrative is context only and cannot override these records."
   },
   "portal_surface": {
     "authority_branch": "codex/onboarding-portal-production",

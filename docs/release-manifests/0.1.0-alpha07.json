@@ -2,13 +2,13 @@
   "schema_version": 1,
   "manifest_status": "availability_observed",
   "candidate": {
-    "version_name": "0.1.0-alpha08",
-    "version_code": 17,
-    "release_record": "docs/releases/0.1.0-alpha08.md",
+    "version_name": "0.1.0-alpha07",
+    "version_code": 16,
+    "release_record": "docs/releases/0.1.0-alpha07.md",
     "release_record_commit": "56dc94694d158132befc22f7e97113aefc28af93"
   },
   "console_observation": {
-    "status": "in_review",
+    "status": "available_to_testers",
     "track": "closed_testing_alpha",
     "recorded_at": "2026-08-28T11:10:29-07:00",
     "source": "read_only_play_console"
