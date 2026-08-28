@@ -1,6 +1,6 @@
 # Onboarding Portal Time Ledger
 
-Last updated: `August 28, 2026 at 11:14:06 AM PDT (UTC-07:00)`
+Last updated: `August 28, 2026 at 11:25:27 AM PDT (UTC-07:00)`
 
 This is the canonical time-accounting record for the protected 24Seven.FM Player onboarding portal: the Tester workspace, Coordinator workspace, onboarding wizard, assignment and reporting flows, and their safe website releases. It is deliberately independent of the Player Android and Play-operation milestones in `MILESTONE_TIME_LEDGER.md`.
 
@@ -10,13 +10,21 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 
 | Measure | Value | Qualification |
 | --- | ---: | --- |
-| Completed measured portal intervals | 25 | Includes the completed privacy-source reconciliation phase. |
-| Active portal time | 2.99 h | Completed intervals only. |
-| Automated wait | 0.28 h | Measured release-gate/build and workflow waits during portal changes. |
+| Completed measured portal intervals | 26 | Includes the completed peer-reviewed privacy source-integrity phase. |
+| Active portal time | 3.04 h | Completed intervals only. |
+| Automated wait | 0.30 h | Measured release-gate/build and workflow waits during portal changes. |
 | User-blocked time | 0.00 h | Completed intervals only. |
-| Counted portal time | 3.27 h | Active plus automated wait. |
+| Counted portal time | 3.34 h | Active plus automated wait. |
 
 ## Portal work records
+
+### Phase 20 Privacy-source peer review and source-integrity gate
+
+- **Authorization and interval:** Authorized and started `August 28, 2026 at 11:21:35 AM PDT (UTC-07:00)`; completed `August 28, 2026 at 11:25:27 AM PDT (UTC-07:00)`.
+- **Measured time:** 0.05 h active, 0.02 h automated wait, 0.00 h user-blocked, 0.07 h counted. The unmeasured remainder of the wall-clock interval is excluded.
+- **Scope:** Obtain an independent Claude critique of the non-public privacy reconciliation, validate the exact native and portal source pins, classify the portal 90-day retention mechanism, and strengthen the release gate so an unavailable pinned source cannot be mistaken for evidence. Preserve all public privacy text, live artifacts, portal data, mail, release state, and unrelated working changes; no deployment, policy publication, or data mutation is in scope.
+- **Evidence:** Claude returned PASS after the reconciliation added the legacy-notice retirement gate, named operational attestations, and the chat-only retention classification. The native `main` pin was fetched without merge/rebase and resolves `PRIVACY.md`; the reconciled one-minute foreground-monitor wording was independently re-read from that exact file. The validator now resolves every authority commit and cited file with `git cat-file`, and the portal workflow explicitly fetches `main` before its gate runs. Local contract validation, Python compilation, workflow YAML parsing, and whitespace validation passed.
+- **Model and forecast:** Current approved model and original forecast were not supplied; recorded as Unknown.
 
 ### Phase 19 Privacy-source reconciliation
 

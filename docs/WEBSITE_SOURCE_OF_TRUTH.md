@@ -14,6 +14,12 @@ public-site input and is deliberately separate from generated website data.
 | Protected portal implementation | The exact portal commit in the facts contract | Portal code owns portal behavior only; it must not independently define app/privacy/release facts. |
 | Live website artifact | A deployment manifest | Similar markup and a branch name are insufficient provenance. The manifest must name the source commit, artifact digest, verification record, and rollback reference. |
 
+Every exact source pin is also a resolvability requirement. Before a reviewed
+artifact can pass its release gate, `validate-website-facts-contract.py` uses
+`git cat-file` to verify both the cited commit and the cited file at that
+commit. A SHA-shaped string, a moving branch name, or a file only present in
+the portal checkout is not source evidence.
+
 ## Current conservative state
 
 The contract records the native `main` pin and the portal pin observed during
@@ -38,6 +44,11 @@ the website from adopting a privacy-text update until that review is complete.
 
 This order prevents a portal branch, a development `versionName`, or an
 unverified live page from becoming an accidental authority.
+
+The legacy portal privacy notice remains a distinct, pending-reconciliation
+source. It must be explicitly retired or marked superseded at every public
+location before a reviewed privacy page replaces it; merely recording a newer
+source does not make a contradictory legacy statement disappear.
 
 Each release manifest has two independent gates. A recorded read-only Play
 Console observation supports a matching availability statement only. A

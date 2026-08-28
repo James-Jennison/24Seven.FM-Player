@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -23,6 +24,37 @@ def require_sha(value: object, label: str) -> None:
     require(isinstance(value, str) and SHA.fullmatch(value) is not None, f"{label} must be a 40-character lowercase commit SHA")
 
 
+def require_git_commit(value: object, label: str) -> None:
+    """Require that an authority pin is resolvable in this checkout.
+
+    A syntactically valid SHA is not authority evidence when its object and
+    cited source file are absent.  This intentionally fails closed in release
+    validation until the exact source reference has been fetched.
+    """
+
+    require_sha(value, label)
+    result = subprocess.run(
+        ["git", "cat-file", "-e", f"{value}^{{commit}}"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    require(result.returncode == 0, f"{label} is not available as a commit in this checkout")
+
+
+def require_git_file(commit: object, path: object, label: str) -> None:
+    require(isinstance(path, str) and path and not Path(path).is_absolute(), f"{label} must be a repository-relative file path")
+    result = subprocess.run(
+        ["git", "cat-file", "-e", f"{commit}:{path}"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    require(result.returncode == 0, f"{label} is not present at its pinned commit")
+
+
 def main() -> int:
     try:
         contract = json.loads(CONTRACT_PATH.read_text(encoding="utf-8"))
@@ -31,11 +63,12 @@ def main() -> int:
 
         app = contract["app_behavior"]
         require(app.get("authority_branch") == "main", "app behavior must be pinned from main")
-        require_sha(app.get("pinned_commit"), "app_behavior.pinned_commit")
+        require_git_commit(app.get("pinned_commit"), "app_behavior.pinned_commit")
 
         privacy = contract["privacy_claims"]
         require(privacy.get("canonical_file") == "PRIVACY.md", "privacy canonical_file must be PRIVACY.md")
-        require_sha(privacy.get("pinned_commit"), "privacy_claims.pinned_commit")
+        require_git_commit(privacy.get("pinned_commit"), "privacy_claims.pinned_commit")
+        require_git_file(privacy.get("pinned_commit"), privacy.get("canonical_file"), "privacy canonical_file")
         require(privacy.get("content_review_status") in {"pending", "reviewed"}, "privacy content_review_status must be pending or reviewed")
         reconciliation_record = privacy.get("reconciliation_record")
         require(isinstance(reconciliation_record, str) and reconciliation_record.startswith("docs/") and (ROOT / reconciliation_record).is_file(), "privacy reconciliation_record is required")
@@ -49,7 +82,8 @@ def main() -> int:
         release = contract["release_claims"]
         candidate = release["candidate_record"]
         require(candidate.get("canonical_file", "").startswith("docs/releases/"), "release candidate must use a release record")
-        require_sha(candidate.get("pinned_commit"), "release_claims.candidate_record.pinned_commit")
+        require_git_commit(candidate.get("pinned_commit"), "release_claims.candidate_record.pinned_commit")
+        require_git_file(candidate.get("pinned_commit"), candidate.get("canonical_file"), "release candidate canonical_file")
         require(isinstance(candidate.get("version_code"), int) and candidate["version_code"] > 0, "release candidate version_code must be positive")
         require(isinstance(candidate.get("version_name"), str) and candidate["version_name"], "release candidate version_name is required")
         status_records = release.get("non_authoritative_status_records")
@@ -67,7 +101,8 @@ def main() -> int:
             require(isinstance(record.get("version_name"), str) and record["version_name"], "availability record version_name is required")
             require(isinstance(record.get("version_code"), int) and record["version_code"] > 0, "availability record version_code must be positive")
             require(isinstance(record.get("release_record"), str) and record["release_record"].startswith("docs/releases/"), "availability record release_record is invalid")
-            require_sha(record.get("release_record_commit"), "availability record release_record_commit")
+            require_git_commit(record.get("release_record_commit"), "availability record release_record_commit")
+            require_git_file(record.get("release_record_commit"), record.get("release_record"), "availability record release_record")
             manifest_path = record.get("manifest")
             require(isinstance(manifest_path, str) and manifest_path.startswith("docs/release-manifests/") and not Path(manifest_path).is_absolute(), "availability record manifest path is invalid")
             manifest = json.loads((ROOT / manifest_path).read_text(encoding="utf-8"))
@@ -88,7 +123,8 @@ def main() -> int:
 
         portal = contract["portal_surface"]
         require(portal.get("authority_branch") == "codex/onboarding-portal-production", "portal authority branch is invalid")
-        require_sha(portal.get("pinned_commit"), "portal_surface.pinned_commit")
+        require_git_commit(portal.get("pinned_commit"), "portal_surface.pinned_commit")
+        require_git_file(portal.get("pinned_commit"), "PRIVACY.md", "portal legacy privacy notice")
         require(portal.get("last_synced_app_facts_commit") is None or SHA.fullmatch(portal["last_synced_app_facts_commit"]) is not None, "portal sync pin must be null or a commit SHA")
 
         deployment = contract["deployment"]
