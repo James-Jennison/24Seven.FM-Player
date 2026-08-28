@@ -45,6 +45,7 @@
       }
     ],
     "public_claim_status": "blocked_pending_release_manifest",
+    "release_manifest": "docs/release-manifests/0.1.0-alpha08.json",
     "required_manifest_fields": [
       "artifact_sha256",
       "artifact_source_commit",

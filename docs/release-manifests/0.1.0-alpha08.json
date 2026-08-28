@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "manifest_status": "incomplete",
+  "candidate": {
+    "version_name": "0.1.0-alpha08",
+    "version_code": 17,
+    "release_record": "docs/releases/0.1.0-alpha08.md",
+    "release_record_commit": "56dc94694d158132befc22f7e97113aefc28af93"
+  },
+  "artifact_sha256": null,
+  "artifact_source_commit": null,
+  "play_track": null,
+  "availability_verified_at": null,
+  "evidence_reference": null,
+  "completion_rule": "Set manifest_status to complete only after every required field identifies the exact signed artifact and an observed Google Play track-availability result. This record must never be completed from build.gradle, a roadmap statement, or an inferred live page."
+}

@@ -1,6 +1,6 @@
 # Onboarding Portal Time Ledger
 
-Last updated: `August 28, 2026 at 11:03:03 AM PDT (UTC-07:00)`
+Last updated: `August 28, 2026 at 11:04:50 AM PDT (UTC-07:00)`
 
 This is the canonical time-accounting record for the protected 24Seven.FM Player onboarding portal: the Tester workspace, Coordinator workspace, onboarding wizard, assignment and reporting flows, and their safe website releases. It is deliberately independent of the Player Android and Play-operation milestones in `MILESTONE_TIME_LEDGER.md`.
 
@@ -10,13 +10,20 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 
 | Measure | Value | Qualification |
 | --- | ---: | --- |
-| Completed measured portal intervals | 22 | Includes the completed release-status evidence-ranking phase. |
-| Active portal time | 2.94 h | Completed intervals only. |
+| Completed measured portal intervals | 23 | Includes the completed release-manifest gate phase. |
+| Active portal time | 2.95 h | Completed intervals only. |
 | Automated wait | 0.28 h | Measured release-gate/build and workflow waits during portal changes. |
 | User-blocked time | 0.00 h | Completed intervals only. |
-| Counted portal time | 3.22 h | Active plus automated wait. |
+| Counted portal time | 3.23 h | Active plus automated wait. |
 
 ## Portal work records
+
+### Phase 17 Release-manifest gate
+
+- **Authorization and interval:** Authorized and started `August 28, 2026 at 11:04:01 AM PDT (UTC-07:00)`; completed `August 28, 2026 at 11:04:50 AM PDT (UTC-07:00)`.
+- **Measured time:** 0.01 h active, 0.00 h automated wait, 0.00 h user-blocked, 0.01 h counted.
+- **Scope:** Add a checked-in, non-public Alpha 08 release-manifest template that makes the exact artifact, source commit, Play track, availability observation, and evidence reference mandatory before a public release claim can become ready. Preserve the existing public site, privacy text, user-facing version/status, portal behavior, Play Console, production artifact, and unrelated working changes.
+- **Model and forecast:** Current approved model and original forecast were not supplied; recorded as Unknown.
 
 ### Phase 16 Release-status evidence ranking
 

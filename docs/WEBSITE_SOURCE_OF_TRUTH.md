@@ -39,6 +39,10 @@ the website from adopting a privacy-text update until that review is complete.
 This order prevents a portal branch, a development `versionName`, or an
 unverified live page from becoming an accidental authority.
 
+The release-manifest template is intentionally incomplete until it contains
+the signed-artifact digest, source commit, Play track, observed availability,
+and the evidence reference. Its presence is not approval to publish a claim.
+
 ## Conflict rule
 
 When a named release record and an unversioned project-status statement

@@ -56,6 +56,24 @@ def main() -> int:
         require(release.get("public_claim_status") in {"blocked_pending_release_manifest", "ready_for_public_claim"}, "release public_claim_status is invalid")
         required_manifest_fields = release.get("required_manifest_fields")
         require(isinstance(required_manifest_fields, list) and {"artifact_sha256", "artifact_source_commit", "play_track", "availability_verified_at", "evidence_reference"}.issubset(required_manifest_fields), "release manifest field requirements are incomplete")
+        manifest_path = release.get("release_manifest")
+        require(isinstance(manifest_path, str) and manifest_path.startswith("docs/release-manifests/") and not Path(manifest_path).is_absolute(), "release_manifest must be a repository-relative release-manifests path")
+        manifest = json.loads((ROOT / manifest_path).read_text(encoding="utf-8"))
+        require(manifest.get("schema_version") == 1, "release manifest schema_version must be 1")
+        require(manifest.get("manifest_status") in {"incomplete", "complete"}, "release manifest status is invalid")
+        manifest_candidate = manifest.get("candidate")
+        require(isinstance(manifest_candidate, dict), "release manifest candidate is required")
+        require(manifest_candidate.get("version_name") == candidate["version_name"] and manifest_candidate.get("version_code") == candidate["version_code"], "release manifest candidate must match the facts contract")
+        require(manifest_candidate.get("release_record") == candidate["canonical_file"], "release manifest release_record must match the facts contract")
+        require(manifest_candidate.get("release_record_commit") == candidate["pinned_commit"], "release manifest release_record_commit must match the facts contract")
+        if manifest["manifest_status"] == "incomplete":
+            require(release["public_claim_status"] == "blocked_pending_release_manifest", "an incomplete release manifest must block public claims")
+            require(all(manifest.get(field) is None for field in required_manifest_fields), "an incomplete release manifest must leave evidence fields null")
+        else:
+            require(release["public_claim_status"] == "ready_for_public_claim", "a complete release manifest requires ready_for_public_claim")
+            require(isinstance(manifest.get("artifact_sha256"), str) and re.fullmatch(r"[0-9a-f]{64}", manifest["artifact_sha256"]) is not None, "a complete release manifest requires artifact_sha256")
+            require_sha(manifest.get("artifact_source_commit"), "release manifest artifact_source_commit")
+            require(all(isinstance(manifest.get(field), str) and manifest[field] for field in ("play_track", "availability_verified_at", "evidence_reference")), "a complete release manifest has missing availability evidence")
 
         portal = contract["portal_surface"]
         require(portal.get("authority_branch") == "codex/onboarding-portal-production", "portal authority branch is invalid")
