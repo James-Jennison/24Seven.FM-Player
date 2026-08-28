@@ -1,6 +1,6 @@
 # Onboarding Portal Time Ledger
 
-Last updated: `August 28, 2026 at 11:25:27 AM PDT (UTC-07:00)`
+Last updated: `August 28, 2026 at 11:35:07 AM PDT (UTC-07:00)`
 
 This is the canonical time-accounting record for the protected 24Seven.FM Player onboarding portal: the Tester workspace, Coordinator workspace, onboarding wizard, assignment and reporting flows, and their safe website releases. It is deliberately independent of the Player Android and Play-operation milestones in `MILESTONE_TIME_LEDGER.md`.
 
@@ -10,13 +10,21 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 
 | Measure | Value | Qualification |
 | --- | ---: | --- |
-| Completed measured portal intervals | 26 | Includes the completed peer-reviewed privacy source-integrity phase. |
-| Active portal time | 3.04 h | Completed intervals only. |
-| Automated wait | 0.30 h | Measured release-gate/build and workflow waits during portal changes. |
+| Completed measured portal intervals | 27 | Includes the completed legacy-privacy surface inventory phase. |
+| Active portal time | 3.17 h | Completed intervals only. |
+| Automated wait | 0.32 h | Measured release-gate/build and workflow waits during portal changes. |
 | User-blocked time | 0.00 h | Completed intervals only. |
-| Counted portal time | 3.34 h | Active plus automated wait. |
+| Counted portal time | 3.49 h | Active plus automated wait. |
 
 ## Portal work records
+
+### Phase 21 Legacy privacy surface inventory
+
+- **Authorization and interval:** Authorized and started `August 28, 2026 at 11:29:12 AM PDT (UTC-07:00)`; completed `August 28, 2026 at 11:35:07 AM PDT (UTC-07:00)`.
+- **Measured time:** 0.08 h active, 0.01 h automated wait, 0.00 h user-blocked, 0.09 h counted. The unmeasured remainder of the wall-clock interval is excluded.
+- **Scope:** Inventory the pinned portal legacy privacy source, its generated `/privacy/` route, and a read-only public observation so retirement/supersession can be verified before a public change. Preserve the public page, hosting, cache, portal records, mail, and unrelated working changes; no deployment, purge, Cloudflare action, or policy change is in scope.
+- **Evidence:** The pinned portal source carries the combined notice only in root `PRIVACY.md`; the generator creates the `/privacy/` source page from it. Public HTTPS returned 200 and contained the 30-day and 90-day legacy promises. There is no deployment manifest tying the response to a commit. Historical `618f159` adopted numerical policy, but the later current-native source `11e2ee0` replaced it with unknown retention; the inventory records that source supersession and requires an owner-set expedited attestation deadline rather than inventing one.
+- **Model and forecast:** Current approved model and original forecast were not supplied; recorded as Unknown.
 
 ### Phase 20 Privacy-source peer review and source-integrity gate
 

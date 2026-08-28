@@ -29,6 +29,11 @@ inventory every public route or generated artifact carrying the legacy notice
 and record its removal, redirect, or explicit supersession. Until then, it
 remains a publication blocker.
 
+The current confirmed source and public route are recorded in
+`PRIVACY_LEGACY_SURFACE_INVENTORY.md`. That inventory is a bounded observation,
+not proof that every cache, historical artifact, or external copy has already
+been retired.
+
 ## Tester-program retention classification
 
 The portal code sets `CHAT_RETENTION_DAYS` to 90 and calls
@@ -55,6 +60,20 @@ actual retention/deletion policy and the supported request contact. The named
 tester-program owner must separately confirm the tester-program retention,
 deletion, and mailbox-handling process. The reviewer must not infer either
 attestation from a source file or a foreign-key cascade.
+
+The absence of that attestation means the legacy numerical claims are
+unverified; it does not establish that they are false. If an owner confirms a
+served claim is inaccurate, an interim user-facing correction may be proposed
+for that exact claim, but it still requires its own approved production release
+and rollback plan. The complete replacement notice remains subject to the full
+publication sequence below.
+
+An earlier numerical-policy record does not resolve this review: its
+station-side day counts were later replaced in the current native privacy
+authority with “retention periods are currently unknown.” The current pin
+therefore governs until a named owner records a newer attestation. The owner
+must also set an expedited response deadline for the live numerical claims;
+that deadline is an operational decision and cannot be invented from history.
 
 ## Publication sequence
 

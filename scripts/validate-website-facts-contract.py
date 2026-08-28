@@ -72,6 +72,8 @@ def main() -> int:
         require(privacy.get("content_review_status") in {"pending", "reviewed"}, "privacy content_review_status must be pending or reviewed")
         reconciliation_record = privacy.get("reconciliation_record")
         require(isinstance(reconciliation_record, str) and reconciliation_record.startswith("docs/") and (ROOT / reconciliation_record).is_file(), "privacy reconciliation_record is required")
+        legacy_surface_inventory = privacy.get("legacy_surface_inventory")
+        require(isinstance(legacy_surface_inventory, str) and legacy_surface_inventory.startswith("docs/") and (ROOT / legacy_surface_inventory).is_file(), "privacy legacy_surface_inventory is required")
         portal_addendum = privacy.get("portal_program_addendum")
         require(isinstance(portal_addendum, dict) and portal_addendum.get("extraction_status") in {"pending_extraction_and_review", "reviewed"}, "portal privacy addendum extraction status is invalid")
         require(portal_addendum.get("content_review_status") in {"pending", "reviewed"}, "portal privacy addendum review status is invalid")

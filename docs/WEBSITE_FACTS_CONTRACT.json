@@ -16,6 +16,7 @@
     "content_review_status": "pending",
     "content_sha256": null,
     "reconciliation_record": "docs/PRIVACY_RECONCILIATION.md",
+    "legacy_surface_inventory": "docs/PRIVACY_LEGACY_SURFACE_INVENTORY.md",
     "portal_program_addendum": {
       "current_candidate_source": "PRIVACY.md#Closed-test-tester-interest-form",
       "extraction_status": "pending_extraction_and_review",
