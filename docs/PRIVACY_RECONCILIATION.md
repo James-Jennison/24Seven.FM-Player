@@ -7,9 +7,9 @@ tester-program policy before the public privacy notice is changed.
 
 | Scope | Candidate authority | State |
 | --- | --- | --- |
-| Native Player behavior and app privacy | `PRIVACY.md` at `main` commit `56dc94694d158132befc22f7e97113aefc28af93` | Pinned and locally resolved; content review pending. |
+| Native Player behavior and app privacy | `PRIVACY.md` at `main` commit `56dc94694d158132befc22f7e97113aefc28af93` | Pinned, digest-verified, and content-reviewed; it does not establish an operational station-retention term. |
 | Legacy portal combined notice | `PRIVACY.md` at portal commit `c00c2f4982232e7c197aa0e35d174d7c3478436e` | Current legacy candidate; it cannot govern native facts and needs an explicit public disposition. |
-| Tester-program privacy addendum | Existing `Closed-test tester-interest form` section in the portal legacy notice | Must be extracted into a separately reviewed addendum; its 90-day promise is policy-attested unless every covered record has an enforcing mechanism. |
+| Tester-program privacy addendum | Existing `Closed-test tester-interest form` section in the portal legacy notice | Exact source extract and content review complete; its 90-day broader-program promise remains pending named-owner attestation because every covered record lacks an enforcing mechanism. |
 | Public privacy page | Generated site output | Must not choose between, omit, or merge the two sources without the reviews below. |
 
 ## Verified app-behavior drift

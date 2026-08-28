@@ -9,6 +9,7 @@ import subprocess
 import sys
 from argparse import ArgumentParser
 from datetime import datetime
+from hashlib import sha256
 from pathlib import Path
 
 
@@ -55,6 +56,18 @@ def require_git_file(commit: object, path: object, label: str) -> None:
         check=False,
     )
     require(result.returncode == 0, f"{label} is not present at its pinned commit")
+
+
+def git_file_bytes(commit: object, path: object, label: str) -> bytes:
+    require_git_file(commit, path, label)
+    result = subprocess.run(
+        ["git", "show", f"{commit}:{path}"],
+        cwd=ROOT,
+        capture_output=True,
+        check=False,
+    )
+    require(result.returncode == 0, f"{label} could not be read at its pinned commit")
+    return result.stdout
 
 
 def require_iso8601_offset(value: object, label: str) -> None:
@@ -146,11 +159,32 @@ def main(require_public_privacy_ready: bool = False, require_interim_privacy_cor
         portal_addendum = privacy.get("portal_program_addendum")
         require(isinstance(portal_addendum, dict) and portal_addendum.get("extraction_status") in {"pending_extraction_and_review", "reviewed"}, "portal privacy addendum extraction status is invalid")
         require(portal_addendum.get("content_review_status") in {"pending", "reviewed"}, "portal privacy addendum review status is invalid")
+        require(portal_addendum.get("operational_retention_status") in {"pending_owner_attestation", "attested"}, "portal privacy addendum operational retention status is invalid")
         require(privacy.get("legacy_surface_disposition_status") in {"pending", "complete"}, "privacy legacy_surface_disposition_status is invalid")
         require(privacy.get("public_replacement_source_status") in {"pending", "approved"}, "privacy public_replacement_source_status is invalid")
         if privacy.get("content_review_status") == "reviewed":
             digest = privacy.get("content_sha256")
             require(isinstance(digest, str) and re.fullmatch(r"[0-9a-f]{64}", digest) is not None, "reviewed privacy text requires content_sha256")
+            review_record = privacy.get("content_review_record")
+            require(isinstance(review_record, str) and review_record.startswith("docs/") and (ROOT / review_record).is_file(), "reviewed privacy text requires a content_review_record")
+            pinned_notice = git_file_bytes(privacy.get("pinned_commit"), privacy.get("canonical_file"), "reviewed privacy canonical_file")
+            require(sha256(pinned_notice).hexdigest() == digest, "reviewed privacy content_sha256 does not match the pinned notice")
+
+        if portal_addendum.get("extraction_status") == "reviewed":
+            source_commit = portal_addendum.get("source_commit")
+            source_file = portal_addendum.get("source_file")
+            require_git_commit(source_commit, "reviewed tester-program addendum source_commit")
+            source_bytes = git_file_bytes(source_commit, source_file, "reviewed tester-program addendum source_file")
+            start_line = portal_addendum.get("source_start_line")
+            end_line = portal_addendum.get("source_end_line")
+            require(isinstance(start_line, int) and isinstance(end_line, int) and start_line >= 1 and end_line >= start_line, "reviewed tester-program addendum source line range is invalid")
+            lines = source_bytes.splitlines(keepends=True)
+            require(end_line <= len(lines), "reviewed tester-program addendum source line range exceeds its source file")
+            extracted_digest = portal_addendum.get("content_sha256")
+            require(isinstance(extracted_digest, str) and re.fullmatch(r"[0-9a-f]{64}", extracted_digest) is not None, "reviewed tester-program addendum requires content_sha256")
+            require(sha256(b"".join(lines[start_line - 1:end_line])).hexdigest() == extracted_digest, "reviewed tester-program addendum content_sha256 does not match the pinned source lines")
+            extraction_record = portal_addendum.get("extraction_record")
+            require(isinstance(extraction_record, str) and extraction_record.startswith("docs/") and (ROOT / extraction_record).is_file(), "reviewed tester-program addendum requires an extraction_record")
 
         privacy_gate = contract.get("privacy_publication_gate")
         require(isinstance(privacy_gate, dict) and privacy_gate.get("status") in {"blocked_pending_owner_attestation", "ready"}, "privacy publication gate status is invalid")

@@ -1,6 +1,6 @@
 # Onboarding Portal Time Ledger
 
-Last updated: `August 28, 2026 at 11:47:44 AM PDT (UTC-07:00)`
+Last updated: `August 28, 2026 at 1:06:46 PM PDT (UTC-07:00)`
 
 This is the canonical time-accounting record for the protected 24Seven.FM Player onboarding portal: the Tester workspace, Coordinator workspace, onboarding wizard, assignment and reporting flows, and their safe website releases. It is deliberately independent of the Player Android and Play-operation milestones in `MILESTONE_TIME_LEDGER.md`.
 
@@ -10,13 +10,21 @@ Do not record portal-design, portal-maintenance, portal-validation, or portal-re
 
 | Measure | Value | Qualification |
 | --- | ---: | --- |
-| Completed measured portal intervals | 28 | Includes the owner-attestation deadline and public-privacy release gate phase. |
-| Active portal time | 3.24 h | Completed intervals only. |
-| Automated wait | 0.34 h | Measured release-gate/build and workflow waits during portal changes. |
+| Completed measured portal intervals | 29 | Includes the completed pinned privacy-source review phase. |
+| Active portal time | 3.29 h | Completed intervals only. |
+| Automated wait | 0.35 h | Measured release-gate/build and workflow waits during portal changes. |
 | User-blocked time | 0.00 h | Completed intervals only. |
-| Counted portal time | 3.58 h | Active plus automated wait. |
+| Counted portal time | 3.64 h | Active plus automated wait. |
 
 ## Portal work records
+
+### Phase 23 Pinned privacy-source review
+
+- **Authorization and interval:** Authorized and started `August 28, 2026 at 1:03:39 PM PDT (UTC-07:00)`; completed `August 28, 2026 at 1:06:46 PM PDT (UTC-07:00)`.
+- **Measured time:** 0.05 h active, 0.01 h automated wait, 0.00 h user-blocked, 0.06 h counted. The unmeasured remainder of the wall-clock interval is excluded.
+- **Scope:** Review the exact pinned native privacy notice and separately extract the legacy tester-program addendum into non-public source records, without changing any served policy, portal behavior, deployment configuration, data, or unrelated working changes.
+- **Evidence:** `56dc946...:PRIVACY.md` now has a validator-verified exact-file digest and a native behavior review which retains station retention as unknown. `c00c2f...:PRIVACY.md` lines 52–62 now have a validator-verified extraction digest and reviewed tester-program boundary; broader 90-day retention remains explicitly `pending_owner_attestation`. The full privacy-release validator correctly advances to, and remains blocked by, legacy-surface disposition. Claude first caught and then approved correction of a false-readiness phrase; normal validation, Python compilation, JSON parsing, and whitespace validation passed. No public text, deployment, push, data, or unrelated working change was altered.
+- **Model and forecast:** Current approved model and original forecast were not supplied; recorded as Unknown.
 
 ### Phase 22 Owner-attestation deadline and public-privacy gate
 
