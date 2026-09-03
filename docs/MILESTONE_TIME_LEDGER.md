@@ -792,10 +792,10 @@ independently.
   upload-key reset is needed. The owner then authorized the first Play upload and Production draft: Play accepted code
   18 / `1.0.0`, attached the ReTrace mapping file, and saved the English release notes. The owner approved United States
   as the sole initial region; it is saved with the draft and the country-selection error is cleared. Only the known
-  non-blocking upstream native-symbol warning remains. Publishing overview shows the Alpha08 release and default store
-  listing still in review, so the two new Production changes cannot yet be submitted. Managed publishing is
-  unavailable for a first production release, making eventual review submission a potential automatic-publication
-  action upon approval. Count validation, external review, owner interaction, and provider waits in their actual
+  non-blocking upstream native-symbol warning remains. Publishing overview shows managed publishing on and the two new
+  Production changes ready to submit while Play runs quick checks; the submission control is enabled even though the
+  Alpha08 release and default store listing remain in review. This preserves separate owner gates for review submission
+  and later publication. Count validation, external review, owner interaction, and provider waits in their actual
   categories; no review submission, production rollout, publication, tag, PR, or workflow has occurred.
 
 ### M45 — Operational Reliability and Recertification
