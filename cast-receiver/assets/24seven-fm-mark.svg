@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" role="img" aria-labelledby="title description">
+  <title id="title">24Seven.FM</title>
+  <desc id="description">24Seven.FM radio wordmark and equalizer mark</desc>
+  <defs>
+    <linearGradient id="blue" x1="0" x2="1" y1="0" y2="1">
+      <stop stop-color="#73ddff" />
+      <stop offset="1" stop-color="#1594e8" />
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke="url(#blue)" stroke-linecap="round" stroke-width="20">
+    <path d="M130 435V255" />
+    <path d="M190 505V185" />
+    <path d="M250 395V295" />
+    <path d="M310 545V145" />
+    <path d="M370 435V255" />
+  </g>
+  <g fill="#f5fbff" font-family="Avenir Next, Avenir, Segoe UI, sans-serif" font-weight="700">
+    <text x="455" y="355" font-size="208" letter-spacing="-12">24</text>
+    <text x="448" y="510" font-size="112" letter-spacing="5">SEVEN.FM</text>
+  </g>
+  <rect x="455" y="550" width="590" height="10" fill="url(#blue)" rx="5" />
+</svg>

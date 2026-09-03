@@ -34,6 +34,7 @@ install -m 0644 "${repository_root}/privacy-site/tester-onboarding-storage.php" 
 install -m 0644 "${repository_root}/privacy-site/private-tester-queue.php" "${destination}/private-tester-queue.php"
 install -m 0644 "${repository_root}/privacy-site/tester-portal.php" "${destination}/tester-portal.php"
 install -m 0644 "${repository_root}/privacy-site/turnstile-test.php" "${destination}/turnstile-test.php"
+"${script_dir}/stage-cast-receiver.sh"
 # The public task metadata is rendered into the workspace by Jekyll and read by
 # the protected PHP queue from this derived artifact. It contains no tester data.
 install -m 0644 "${repository_root}/privacy-site/_data/tester_tasks.json" "${destination}/assets/tester-tasks.json"
