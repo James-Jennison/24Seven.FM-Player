@@ -1,6 +1,6 @@
 # M29 Google Play declaration packet
 
-Date: July 19, 2026; updated August 11, 2026
+Date: July 19, 2026; updated September 2, 2026
 
 Status: exact-artifact and current-policy audit complete; authorized administrator facts received; final-candidate and
 Play Console gates remain
@@ -9,17 +9,18 @@ This packet is the non-secret working record for M29. Reconcile every answer wit
 Console wording immediately before saving or submitting it. Never commit reviewer credentials, Console captures containing
 private data, private correspondence, or an unlisted reviewer-video URL that exposes account information.
 
-## Exact artifact audit — July 18, 2026
+## Exact artifact audit — September 2, 2026
 
-The audit used the current `main` source and release variant. `:app:processReleaseMainManifest` and the
-`releaseRuntimeClasspath` dependency report both passed.
+The audit used the committed `1.0.0` / code-18 production-readiness source and release variant.
+`:app:bundleRelease`, `:app:assembleRelease`, merged-manifest inspection, and the `releaseRuntimeClasspath`
+dependency report passed. Signing remained intentionally absent for this non-secret readiness build.
 
 | Surface | Audited fact | Declaration consequence |
 | --- | --- | --- |
-| Identity | Package `com.codeframe78.twentyfourseven.player`; version `0.1.0-alpha01` (2); min SDK 26; target/compile SDK 36 | Re-run against the exact protected pre-M39 candidate because later source or version changes supersede this checkpoint |
-| Permissions | Internet, network state, media foreground service, media-playback foreground-service permission, notifications, Media3 wake lock, and Android's signature-protected dynamic-receiver permission | No location, contacts, microphone, camera, photos, phone, SMS, advertising ID, or broad-storage declaration is supported by the artifact |
-| Foreground service | One Media3 `MediaSessionService`, declared `mediaPlayback`, owns user-started live radio | Declare only the Media playback use case and supply its final-candidate demonstration video |
-| Dependencies | AndroidX, Compose, Media3, Jsoup, Coil, OkHttp, Kotlin/coroutines, and test libraries | No ads, analytics, crash-reporting, tracking, billing, social-login, or developer-backend SDK is present |
+| Identity | Package `com.codeframe78.twentyfourseven.player`; version `1.0.0` (18); min SDK 26; target/compile SDK 36; exact source revision embedded in the manifest | Rebuild from the final committed source and repeat after the protected signing step |
+| Permissions | Internet, network state, base/media/special-use foreground service, notifications, Media3 wake lock, and Android's signature-protected dynamic-receiver permission | No location, contacts, microphone, camera, photos, phone, SMS, advertising ID, or broad-storage declaration is supported by the artifact |
+| Foreground services | One Media3 `MediaSessionService` declared `mediaPlayback` owns user-started live radio; one non-exported `specialUse` service polls exactly one signed-in station only after explicit opt-in and remains visible through a persistent notification with Stop | Declare and demonstrate both Media playback and Special use; do not submit the stale media-only declaration |
+| Dependencies | AndroidX, Compose, Media3, Google Cast 22.3.1, Google Data Transport, Jsoup, Coil, OkHttp, Kotlin/coroutines, and test libraries | No ads, crash-reporting, tracking, billing, social-login, or developer-backend SDK is present. Cast automatically sends Google encrypted, anonymous interaction diagnostics for aggregate analytics/product improvement and must be disclosed |
 | Storage | Station sessions/display identities use Android Keystore protection; preferences are local; app-private data is excluded from Android backup and device transfer | Describe local retention accurately and do not imply that Sign out deletes station-side accounts or content |
 | Network | Credentials, sessions, Chat, search, Favorites, request, Queue, History, artwork, and other app data use approved same-station HTTPS paths with same-origin enforcement | Final probes must confirm that every user-data path and redirect remains HTTPS before answering that all collected data is encrypted in transit |
 | Live audio | Only the five verified public live-radio hosts are permitted cleartext; those requests carry no Player-added credentials, cookies, Chat/request text, or report content | Do not describe all network traffic as HTTPS; distinguish unauthenticated public live audio from user-data transmission |
@@ -36,10 +37,10 @@ The audit used the current `main` source and release variant. `:app:processRelea
 | Content rating | Music & Audio app with public text Chat, requester identity/message, possible mature themes/profanity, and no user image/video upload | Owner must answer actual content frequency/intensity and submit the generated IARC ratings |
 | UGC | M28 provides Terms acceptance, objectionable-content rules, content/user reporting, blocking, ongoing monitored moderation, and a separate mature-content reveal | Reconcile the exact UGC and incidental-content answers with the candidate and active questionnaire |
 | Child Safety Standards | Current category is Music & Audio; radio is the core function, and authenticated station Chat is neither anonymous nor random | Current scope covers anonymous/random-chat apps and apps in Social/Dating categories. If active Console classification or functionality puts the Player in scope, do not self-certify until public CSAE standards, an operational CSAM response/reporting process, and a designated point of contact are verified |
-| Data Safety | Field inventory and a 36-entry five-station public/read-only TLS probe are complete in `m23-data-safety.md`; there is no developer backend or telemetry SDK | Station retention/deletion/IP-use facts, final authenticated candidate probes, and owner review remain |
+| Data Safety | Field inventory and a 36-entry five-station public/read-only TLS probe are complete in `m23-data-safety.md`; there is no developer backend, while the Cast SDK automatically sends Google anonymous encrypted interaction diagnostics | Reconcile Cast App Activity analytics, station retention/deletion/IP-use facts, final authenticated candidate probes, and owner review |
 | Account deletion | No account creation in the native app or current external catalog; Sign out removes only the local protected session | M31 audit complete for the current candidate; any later account-creation route requires approved in-app and web deletion paths before release |
 | Privacy policy | Public HTTPS policy and native notice exist and disclose the station/operator boundary | Align the exact Play developer identity/contact and station retention/deletion path; keep native and public wording consistent |
-| Foreground service | Manifest, service ownership, copy, and rehearsal sequence are ready | Record and host the final protected-candidate video, then save the declaration in Console |
+| Foreground service | Manifest and service ownership are audited; media-playback copy/rehearsal exists and special-use copy is prepared below | Record and host final protected-candidate videos for both service types, then reconcile and save both declarations in Console |
 
 ## Foreground service permission
 
@@ -96,6 +97,40 @@ It is not the final reviewer video because its notification identifies the debug
 can change. Repeat the same sequence using an exact protected candidate after the M30 rights gate closes and the
 intended artifact is selected, inspect the final frames, and host only that final copy. That M29 declaration artifact precedes M39; M39 later
 freezes the fully accepted candidate and must not be made a dependency of M29.
+
+### Special-use Chat-mention monitor
+
+**Declared permission/type**
+
+- `android.permission.FOREGROUND_SERVICE`
+- `android.permission.FOREGROUND_SERVICE_SPECIAL_USE`
+- Service type: `specialUse`
+- Manifest subtype: `User-started monitoring of one opted-in station chat for direct name mentions while the app is closed.`
+
+**Functionality description**
+
+> A signed-in adult user may explicitly enable a foreground monitor for one selected station. While active, the app
+> polls that station's public Chat about once a minute and performs exact display-name mention matching on the device.
+> A persistent notification names the station, explains that mention monitoring is active, and includes a Stop action.
+> The monitor stops if the user disables it, signs out, revokes the applicable community consent, taps Stop, or Android
+> stops the service. It does not forward station sessions or Chat content to a developer-operated service.
+
+**Impact if start is deferred or interrupted**
+
+> If startup is deferred, the user will not receive locally generated mention notifications while the app is closed.
+> If interrupted, monitoring stops and no further Chat polling or mention matching occurs until the user returns to the
+> app and enables it again. Public radio playback and ordinary in-app Chat remain available independently.
+
+**Why the use is perceptible and user controlled**
+
+- The service starts only after the signed-in user explicitly enables monitoring for one station.
+- A persistent, accurate notification remains visible throughout operation and provides a direct Stop action.
+- Only one station can be monitored, polling is approximately once per minute, and loss of sign-in or consent stops it.
+- Matching and bounded duplicate suppression remain on-device; notification text omits the Chat message body.
+
+Record a separate continuous video that shows the opt-in control, the persistent station-specific notification, its
+Stop action, and the stopped state without exposing credentials or Chat content. The active Console may require one
+video per declared service type or may accept one video demonstrating both; follow its exact wording.
 
 ## App access and reviewer instructions
 
@@ -192,6 +227,7 @@ M29 is **in progress**. It completes only when all of the following are true:
 - [Target audience and app content](https://support.google.com/googleplay/android-developer/answer/9867159)
 - [Content rating requirements](https://support.google.com/googleplay/android-developer/answer/9859655)
 - [Data Safety requirements](https://support.google.com/googleplay/android-developer/answer/10787469)
+- [Cast SDK Data Safety disclosure](https://developers.google.com/cast/docs/android_sender/data_disclosure)
 - [User Data and UGC policies](https://support.google.com/googleplay/android-developer/answer/17190352)
 - [Account deletion requirements](https://support.google.com/googleplay/android-developer/answer/13327111)
 - [Child Safety Standards guidance](https://support.google.com/googleplay/android-developer/answer/14747720)

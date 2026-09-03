@@ -86,7 +86,8 @@ one into the Alpha contract.
 - M46 — Architecture Sustainability.
 - M47–M50 — repaired and certified Private Messages.
 - M51–M54 — retired Forum scope; retained only as historical roadmap IDs and research evidence.
-- M55 — deferred optional Google Cast feasibility and certification.
+- M55 — deferred expanded Google Cast feasibility/certification beyond M44's repaired existing sender/public receiver;
+  no separate Google TV app work is authorized.
 - M56 — extended station capability certification.
 - M57 — account registration, recovery, and management access.
 - M58 — membership commerce authorization and billing architecture (**Sol Extra High**).
