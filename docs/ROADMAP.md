@@ -118,9 +118,9 @@ near-immediate push delivery.
 
 | ID | Milestone | State | Required gate | Forecast after trigger |
 | --- | --- | --- | --- | --- |
-| M42 | Closed-Test Operations and Stabilization | Planned after M41 | Qualifying tester continuity, structured feedback, fixes/retests, Play vitals/pre-launch review, update delivery, and exit criteria | Medium · 3–5 calendar weeks |
-| M43 | Production Access and Policy Approval | Planned after M42 | Production-access questionnaire, testing/feedback/change evidence, final policy review, and resolved Play response | Medium · 1–2 calendar weeks |
-| M44 | Production Release and Staged Rollout | Planned after M43 | Explicit authorization, production candidate, staged percentages, health thresholds, pause/rollback, release notes, and update validation | Medium · 1–4 calendar weeks |
+| M42 | Closed-Test Operations and Stabilization | Evidence reconciliation in progress | Qualifying tester continuity, structured feedback, fixes/retests, Play vitals/pre-launch review, update delivery, and exit criteria | Reconcile retained campaign evidence |
+| M43 | Production Access and Policy Approval | Complete — access granted | Owner-supplied Google Play notice confirms production access for the Player package; exact provider timestamp remains outside the repository | Complete · notice supplied September 2, 2026 |
+| M44 | Production Release and Controlled First Launch | In progress — readiness only | Exact production candidate, explicit authorization, owner-selected initial countries/regions, health thresholds, recovery plan, release notes, and Play-delivered update validation; first production releases do not support percentage staging | Medium · 1–4 calendar weeks |
 | M45 | Operational Reliability and Recertification | Planned | Play vitals/support/privacy handling, station outage and contract-drift procedures, rights/moderation recertification, target/API/dependency cadence, and key recovery | High · recurring monthly, quarterly, and release-triggered review |
 
 ## Phase 8 — Deferred and future programs
