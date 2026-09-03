@@ -1,7 +1,7 @@
 # Production release readiness
 
-Status: In progress for M44. Production access is granted; the registered V2 upload identity has been recovered and
-validated locally, but no production bundle has been uploaded or published by this work.
+Status: In progress for M44. Production access is granted; the registered V2 upload identity is validated and the
+exact code-18 bundle is saved in a Play Production draft. It has not been sent for review or published.
 
 ## Candidate lineage
 
@@ -95,8 +95,18 @@ certificate. That bundle was not uploaded and was replaced locally.
 
 The recovery folder's V2 JKS certificate exactly matches Play's registered upload-key certificate. The protected
 one-password flow then produced a locally verified V2-signed release bundle whose embedded source revision matches the
-release commit and whose signer matches that JKS. Passwords and certificate fingerprints were not retained or printed
-in the task record. No upload-key reset is needed.
+release record commit `1e1d75f` and whose signer matches that JKS. Passwords and certificate fingerprints were not
+retained or printed in the task record. No upload-key reset is needed.
+
+## Play Production draft
+
+On September 2, 2026, the owner authorized the first Play upload and Production draft. Play accepted the exact signed
+bundle as version code 18 / `1.0.0`, attached its ReTrace mapping file, and reported a 4.96 MB estimated new-install
+size. The draft is saved with English release notes derived from this release record.
+
+The preview reports one blocking error: no countries or regions are selected for the Production track. It also reports
+the known non-blocking native debug-symbol warning; the packaged upstream native library does not supply symbols, so
+there is no truthful symbol archive to upload. The release was not sent for review, started, or published.
 
 ## Gates before a production rollout can be authorized
 
@@ -108,9 +118,9 @@ in the task record. No upload-key reset is needed.
 | Physical mobile acceptance | Exact committed debug candidate on the connected Razr; five-station playback; navigation, onboarding, feedback, account, notification, and background-media smoke tests | Passed locally; exact-candidate artifact identity and bundled-selector visual repeat confirmed. Play-delivered clean/update evidence remains below |
 | Android Auto acceptance | Exact candidate browses and plays the five approved stations through the existing Media3 service | Passed on physical Android 16 Razr through DHU 2.0; returned to paused |
 | Signing | Owner enters the existing external JKS password in the approved one-prompt Linux flow; the resulting signer must match Play's registered upload certificate | Passed locally with the recovered V2 JKS; exact-source bundle signature and signer identity verified |
-| Play candidate | Code 18 accepted on a test track; Play-generated splits, update from Alpha08, clean install, pre-launch report, app-content declarations, and reviewer access reconciled | External action not authorized yet |
+| Play candidate | Code 18 accepted by Play; Play-generated delivery, update from Alpha08, clean install, pre-launch report, app-content declarations, and reviewer access reconciled | Partially passed: bundle accepted into a saved Production draft; account-side delivery and review evidence remain |
 | Review control | Claude, Gemini, and DeepSeek findings dispositioned with no accepted unresolved BLOCKER/HIGH risk | Cast-site and production-candidate control-plane closures are `READY` |
-| First-launch geography | Owner names the initial production countries/regions | Owner decision required |
+| First-launch geography | Owner names the initial production countries/regions | Blocking Play validation error; owner decision required |
 | Publication | Owner explicitly authorizes the exact artifact, initial geography, and launch action | Not authorized |
 
 ## Controlled first-launch plan
@@ -119,7 +129,7 @@ Google Play does not offer a rollout percentage for an app's first production re
 available to all eligible users in the selected countries/regions. The first-launch control is therefore geography,
 not a nominal percentage.
 
-1. Promote only the exact Play-tested code-18 bundle into a production draft with managed publishing retained.
+1. Keep the accepted exact code-18 bundle in its saved Production draft with managed publishing retained.
 2. Select only the owner-approved initial countries/regions and recheck device availability, store listing, pricing,
    declarations, reviewer access, and the release summary.
 3. Start production only under separate explicit authorization.
@@ -142,5 +152,5 @@ required, a separately tested and authorized higher-version replacement. Never r
 
 ## Current owner-controlled decisions
 
-1. Authorize the first Play upload/draft when the locally signed candidate is ready for account-side validation.
-2. Name the initial production countries/regions. A first production release cannot be percentage-staged.
+1. Name the initial production countries/regions. A first production release cannot be percentage-staged.
+2. After Play validation is clear, explicitly authorize sending the release for review and the later production action.
