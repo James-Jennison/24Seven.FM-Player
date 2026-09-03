@@ -73,9 +73,9 @@ Publication is never an automatic consequence of a passing local build or CI run
 
 | ID | Size | State | Implementation focus |
 | --- | --- | --- | --- |
-| M42 Closed-Test Operations and Stabilization | Campaign | Planned after M41 | Maintain qualifying tester continuity, collect structured feedback, fix/retest findings, review Play vitals, and meet exit criteria |
-| M43 Production Access and Policy Approval | External gate | Planned after M42 | Submit testing, feedback, change, value, and readiness evidence; reconcile any additional testing request |
-| M44 Production Release and Staged Rollout | Campaign | Planned after M43 | Final production candidate, explicit authorization, staged percentages, health thresholds, pause/rollback, release notes, and update validation |
+| M42 Closed-Test Operations and Stabilization | Campaign | Evidence reconciliation in progress | Reconcile retained campaign, tester, Play delivery, vitals, and remediation evidence without treating production access alone as every project-specific exit gate |
+| M43 Production Access and Policy Approval | External gate | Complete — access granted | Preserve the owner-supplied grant as non-secret evidence; do not treat access as publication |
+| M44 Production Release and Controlled First Launch | Campaign | In progress — readiness only | Prepare the exact candidate, owner-selected initial countries/regions, health thresholds, recovery plan, release notes, and update validation; no percentage control exists for the first production release |
 | M45 Operational Reliability and Recertification | Recurring | Planned | Monitor Play quality/support without invasive tracking, recertify station contracts/rights/moderation, maintain policies/toolchain/dependencies, and exercise key recovery |
 
 ## Deferred and future programs

@@ -116,8 +116,8 @@ active execution.
 | M40 | Active · Alpha08 sent for Google Play review | August 20, 2026 | — | 3–10 calendar d | Not recorded individually | Not recorded individually | — | — | Ongoing external review | Not assessable while active | Confirmed current phase |
 | M41 | Planned after M40 | — | — | 0.5–1 active d | — | — | — | — | — | — | Unknown |
 | M42 | Active · owner-confirmed two-week closed test | `August 16, 2026 at 5:51:14 PM PDT (UTC-07:00)` first recorded remediation interval; earlier campaign start not supplied | — | 3–5 calendar wk | 0.44 h recorded Issue #26, v3/v4 preparation, signing recovery, and Razr landscape remediation | 0.11 h recorded | 0.42 h recorded while credentials were unavailable | 0.55 h recorded | ≥0.90 h recorded intervals | Not assessable while active | Confirmed current phase |
-| M43 | Planned after M42 | — | — | 1–2 calendar wk | — | — | — | — | — | — | Unknown |
-| M44 | Planned after M43 | — | — | 1–4 calendar wk | — | — | — | — | — | — | Unknown |
+| M43 | Complete · production access granted | Unknown | Grant notice supplied September 2, 2026; exact provider timestamp unknown | 1–2 calendar wk | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown | Grant confirmed; timing unknown |
+| M44 | Active · readiness only | September 2, 2026 | — | 1–4 calendar wk | Ongoing | Ongoing | — | Ongoing | Ongoing | Not assessable while active | Confirmed current phase |
 | M45 | Planned recurring | — | — | Monthly, quarterly, and release-triggered | — | — | — | — | — | — | Unknown |
 | M46 | Planned post-Alpha | — | — | 1–3 active wk per approved slice | — | — | — | — | — | — | Unknown |
 | M47 | Deferred | — | — | External repair; then 1–3 active wk | — | — | — | — | — | — | Unknown |
@@ -751,20 +751,29 @@ independently.
 
 - **Objective:** Submit the production-access questionnaire with testing, feedback, change, value, policy, and readiness
   evidence and resolve the Play response.
-- **Start, completion, and intervals:** Not started; all actual intervals and totals are not applicable.
-- **Model, reasoning strength, and original forecast:** Sol Extra High; current forecast 1–2 calendar weeks after M42 evidence is complete.
-- **Time, variance, evidence, confidence, and forecasting lessons:** No actual variance. Roadmap `e249071`, forecast `f971a9e`; no application or
-  workflow record. **Unknown**. Track Play review separately from active response work.
+- **Start, completion, and intervals:** Complete. On September 2, 2026, the owner supplied a Google Play notice that
+  production access had been granted for `com.codeframe78.twentyfourseven.player`. The application date, provider-side
+  grant timestamp, active work, automated wait, and external-review interval were not retained and remain **Unknown**.
+- **Model, reasoning strength, and original forecast:** Sol Extra High; original current forecast was 1–2 calendar
+  weeks after M42 evidence was complete.
+- **Time, variance, evidence, confidence, and forecasting lessons:** Access is confirmed by the owner-supplied notice,
+  but timing variance cannot be calculated. Do not retain the private screenshot in Git and do not treat access as a
+  production publication.
 
-### M44 — Production Release and Staged Rollout
+### M44 — Production Release and Controlled First Launch
 
-- **Objective:** Run an explicitly authorized staged production rollout with health thresholds, pause/rollback,
-  release notes, and update validation.
-- **Start, completion, and intervals:** Not started; all actual intervals and totals are not applicable.
+- **Objective:** Prepare and, only after explicit authorization, run a controlled first production launch with an exact
+  candidate, owner-selected initial countries/regions, health thresholds, recovery, release notes, and update
+  validation. Google Play does not offer percentage staging for a first production release.
+- **Start, completion, and intervals:** Readiness work began September 2, 2026 after the owner elected to begin. No
+  production artifact has been signed, uploaded, drafted, or published by this work. Active and automated intervals
+  remain open; signing and publication remain separately gated.
 - **Model, reasoning strength, and original forecast:** Sol Extra High; current forecast 1–4 calendar weeks after production access and
   rollout approval.
-- **Time, variance, evidence, confidence, and forecasting lessons:** No actual variance. Roadmap `e249071`, forecast `f971a9e`; no production release,
-  tag, PR, or workflow. **Unknown**. Count monitoring work and waits in their actual categories.
+- **Time, variance, evidence, confidence, and forecasting lessons:** Current evidence and gates are recorded in
+  `docs/PRODUCTION_RELEASE_READINESS.md`. Use selected-country scope, not a fictional percentage, to control the first
+  production launch. Count validation, external review, owner interaction, and provider waits in their actual
+  categories; no production release, tag, PR, or workflow has occurred.
 
 ### M45 — Operational Reliability and Recertification
 
