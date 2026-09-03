@@ -32,12 +32,12 @@ The clean `9b60beb` baseline passed:
 The resulting local AAB was intentionally unsigned because no signing secret was requested or supplied. These checks
 establish a buildable baseline, not a releasable artifact.
 
-The first committed code-18 candidate at `8d76d13` subsequently passed the same debug compile, 202-unit-test, lint,
-Android-test compilation, and release bundle/R8 path. Its complete connected suite passed 73/73 on the Android 16
-Razr. Release inspection confirmed package/version/SDK identity, the embedded source revision, the expected permission
-set, four-ABI `libandroidx.graphics.path.so` packaging, 16 KB ZIP alignment, and `0x4000` ELF `LOAD` alignment. Those
-results preceded the disclosure corrections below and therefore remain component evidence rather than final-tip
-artifact evidence; the final committed source must repeat the affected and packaging checks.
+The final code-18 implementation at `7aa5e74` passed debug compilation, 203/203 unit tests, lint with no errors,
+Android-test compilation, 73/73 connected tests on the Android 16 Razr, and the release bundle/APK path including
+lint-vital and R8. Release inspection confirmed package/version/SDK identity, exact embedded source revision, the
+expected permission set, four-ABI `libandroidx.graphics.path.so` packaging, 16 KB ZIP alignment, and `0x4000` ELF
+`LOAD` alignment. Post-shrinking `aapt2` inspection also confirmed that all five station-selector drawables plus the
+app-logo fallback remain in the release APK.
 
 Exact-candidate dependency inspection also found that Google Cast Android Sender SDK 22.3.1 automatically sends
 Google encrypted, anonymous interaction diagnostics. Google's current disclosure describes generic discovery/session
@@ -74,18 +74,31 @@ on network loading. All five verified 200×200 station logos are now packaged in
 cover-display, and landscape selectors resolve those bundled resources by canonical station ID. Dynamic now-playing
 album artwork and metadata remain network-provided and are unchanged.
 
+## Exact-candidate Android Auto acceptance
+
+On September 2, 2026, the exact code-18 debug artifact at `7aa5e74` was verified against its embedded source revision
+and installed identity on the USB-connected Android 16 Motorola Razr 2026. Android Auto DHU 2.0 discovered the native
+`24Seven.FM Player (Debug)` MediaLibraryService and displayed its five approved stations with their bundled station
+logos. Selecting 1980s.FM, Adagio.FM, Death.FM, Entranced.FM, and StreamingSoundtracks.com each opened Now Playing and
+reached live playback with station-qualified metadata and current artwork. The final StreamingSoundtracks.com session
+was returned to paused. The temporary ADB forward and head-unit server were removed after acceptance, and Android Auto
+was returned out of developer mode.
+
+This closes the local Android Auto candidate gate. It does not replace Play's car-app review, Play-generated delivery,
+or the final signed-artifact checks.
+
 ## Gates before a production rollout can be authorized
 
 | Gate | Acceptance evidence | State |
 | --- | --- | --- |
 | Candidate scope | Owner-authorized repair of the existing Cast path; no separate Google TV work or broader M55 scope | Functional Cast audio passed; expanded M55 remains deferred |
-| Candidate identity | Clean committed `1.0.0` / code 18 source with release notes and exact revision provenance | In progress |
-| Local validation | Compile, unit tests, lint, Android-test compilation, R8 bundle, release manifest, dependency, permission, and 16 KB checks | Passed through `8173947`; final-tip repeat pending after bundled-selector correction |
-| Physical mobile acceptance | Exact committed debug candidate on the connected Razr; clean install and update; five-station playback; navigation, onboarding, feedback, account, notification, and background-media smoke tests | 73/73 connected tests, five-station playback, background service, onboarding, and functional Cast audio passed before the bundled-selector correction; final-tip visual/runtime repeat remains open |
-| Android Auto acceptance | Exact candidate browses and plays the five approved stations through the existing Media3 service | Open |
+| Candidate identity | Clean committed `1.0.0` / code 18 source with release notes and exact revision provenance | Passed at implementation commit `7aa5e74` |
+| Local validation | Compile, unit tests, lint, Android-test compilation, R8 bundle, release manifest, dependency, permission, bundled-resource, and 16 KB checks | Passed at `7aa5e74`; 203/203 unit and 73/73 connected tests |
+| Physical mobile acceptance | Exact committed debug candidate on the connected Razr; five-station playback; navigation, onboarding, feedback, account, notification, and background-media smoke tests | Passed locally; exact-candidate artifact identity and bundled-selector visual repeat confirmed. Play-delivered clean/update evidence remains below |
+| Android Auto acceptance | Exact candidate browses and plays the five approved stations through the existing Media3 service | Passed on physical Android 16 Razr through DHU 2.0; returned to paused |
 | Signing | Owner enters the existing external JKS password in the approved one-prompt Linux flow; signer and artifact hashes are verified without retaining a secret | Owner interaction required |
 | Play candidate | Code 18 accepted on a test track; Play-generated splits, update from Alpha08, clean install, pre-launch report, app-content declarations, and reviewer access reconciled | External action not authorized yet |
-| Review control | Claude, Gemini, and DeepSeek findings dispositioned with no accepted unresolved BLOCKER/HIGH risk | Cast-site review complete; convergence and production-candidate review in progress |
+| Review control | Claude, Gemini, and DeepSeek findings dispositioned with no accepted unresolved BLOCKER/HIGH risk | Cast-site and production-candidate control-plane closures are `READY` |
 | First-launch geography | Owner names the initial production countries/regions | Owner decision required |
 | Publication | Owner explicitly authorizes the exact artifact, initial geography, and launch action | Not authorized |
 
