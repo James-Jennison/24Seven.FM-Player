@@ -776,9 +776,10 @@ independently.
 - **Time, variance, evidence, confidence, and forecasting lessons:** Current evidence and gates are recorded in
   `docs/PRODUCTION_RELEASE_READINESS.md`. Use selected-country scope, not a fictional percentage, to control the first
   production launch. Exact-candidate audit also corrected stale privacy/Data Safety and foreground-service declaration
-  wording for the Cast SDK's anonymous diagnostics and the optional special-use Chat monitor. Count validation,
-  external review, owner interaction, and provider waits in their actual categories; no production release, tag, PR,
-  or workflow has occurred.
+  wording for the Cast SDK's anonymous diagnostics and the optional special-use Chat monitor. Physical Razr inspection
+  then found a remote Death.FM selector-logo fallback; the selector was corrected to use five bundled station resources
+  in every layout. Count validation, external review, owner interaction, and provider waits in their actual categories;
+  no production release, tag, PR, or workflow has occurred.
 
 ### M45 — Operational Reliability and Recertification
 
