@@ -784,8 +784,13 @@ independently.
   media catalog and reached live Now Playing for 1980s.FM, Adagio.FM, Death.FM, Entranced.FM, and
   StreamingSoundtracks.com before returning the final session to paused. The temporary head-unit server, ADB forward,
   and Android Auto developer mode were removed after acceptance. Cast-site and production-candidate reviewer/evidence
-  cycles both closed `READY`. Count validation, external review, owner interaction, and provider waits in their actual
-  categories; no signed production artifact, Play upload/draft, production release, tag, PR, or workflow has occurred.
+  cycles both closed `READY`. The owner-directed V3 JKS then produced an internally valid exact-source bundle, but a
+  read-only comparison against the active Play Console proved that its signer matches neither the registered upload
+  certificate nor the Play app-signing certificate. It was not uploaded and is not an eligible production artifact;
+  the local output is replaced with an unsigned bundle. Signing now requires the currently registered upload JKS or an
+  explicit owner decision to request an upload-key reset to V3. Count validation, external review, owner interaction,
+  and provider waits in their actual categories; no Play upload/draft, production release, tag, PR, or workflow has
+  occurred.
 
 ### M45 — Operational Reliability and Recertification
 

@@ -1,6 +1,6 @@
 # Production release readiness
 
-Status: In progress for M44. Production access is granted; no production bundle has been signed, uploaded, or
+Status: In progress for M44. Production access is granted; no Play-eligible production bundle has been uploaded or
 published by this work.
 
 ## Candidate lineage
@@ -87,6 +87,18 @@ was returned out of developer mode.
 This closes the local Android Auto candidate gate. It does not replace Play's car-app review, Play-generated delivery,
 or the final signed-artifact checks.
 
+## Signing-identity blocker
+
+The owner-directed V3 JKS flow produced an internally valid, exact-source signed bundle. A subsequent read-only check
+against the active Play Console App signing page proved that its certificate matches neither the registered upload-key
+certificate nor the Play app-signing certificate. The bundle was not uploaded. It is not an eligible release artifact
+and must not be used for a Play release.
+
+The next signing attempt requires either the JKS whose certificate matches the currently registered Play upload key or
+an explicit owner decision to request an upload-key reset to V3. An upload-key reset is an external account change and
+is not authorized by readiness continuation alone. The mismatched local output is replaced with an unsigned build so
+it cannot be confused with an uploadable candidate.
+
 ## Gates before a production rollout can be authorized
 
 | Gate | Acceptance evidence | State |
@@ -96,7 +108,7 @@ or the final signed-artifact checks.
 | Local validation | Compile, unit tests, lint, Android-test compilation, R8 bundle, release manifest, dependency, permission, bundled-resource, and 16 KB checks | Passed at `7aa5e74`; 203/203 unit and 73/73 connected tests |
 | Physical mobile acceptance | Exact committed debug candidate on the connected Razr; five-station playback; navigation, onboarding, feedback, account, notification, and background-media smoke tests | Passed locally; exact-candidate artifact identity and bundled-selector visual repeat confirmed. Play-delivered clean/update evidence remains below |
 | Android Auto acceptance | Exact candidate browses and plays the five approved stations through the existing Media3 service | Passed on physical Android 16 Razr through DHU 2.0; returned to paused |
-| Signing | Owner enters the existing external JKS password in the approved one-prompt Linux flow; signer and artifact hashes are verified without retaining a secret | Owner interaction required |
+| Signing | Owner enters the existing external JKS password in the approved one-prompt Linux flow; the resulting signer must match Play's registered upload certificate | Blocked: owner-directed V3 JKS matches neither registered Play certificate; correct registered JKS or explicit upload-key-reset decision required |
 | Play candidate | Code 18 accepted on a test track; Play-generated splits, update from Alpha08, clean install, pre-launch report, app-content declarations, and reviewer access reconciled | External action not authorized yet |
 | Review control | Claude, Gemini, and DeepSeek findings dispositioned with no accepted unresolved BLOCKER/HIGH risk | Cast-site and production-candidate control-plane closures are `READY` |
 | First-launch geography | Owner names the initial production countries/regions | Owner decision required |
@@ -129,6 +141,7 @@ first release, stop geographic expansion immediately on a release-blocking findi
 be percentage-halted like a staged update; recovery must use the applicable Play control and, when code correction is
 required, a separately tested and authorized higher-version replacement. Never reuse version code 18 for a replacement.
 
-## Current owner-controlled decision
+## Current owner-controlled decisions
 
-Name the initial production countries/regions. A first production release cannot be percentage-staged.
+1. Supply the currently registered upload JKS, or explicitly authorize a Play upload-key reset to V3.
+2. Name the initial production countries/regions. A first production release cannot be percentage-staged.
