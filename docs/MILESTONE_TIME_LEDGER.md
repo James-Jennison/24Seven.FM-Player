@@ -767,7 +767,7 @@ independently.
   validation. Google Play does not offer percentage staging for a first production release.
 - **Start, completion, and intervals:** Readiness work began September 2, 2026 after the owner elected to begin. The
   exact signed code-18 bundle is now saved in a Play Production draft, but it has not been sent for review or
-  published. Active and automated intervals remain open; geography, review submission, and publication remain gated.
+  published. Active and automated intervals remain open; review submission and publication remain gated.
   The existing Android Cast path's omitted public web
   receiver was restored through the approved atomic Player-site workflow, and the code-18 sender then completed a
   successful remote media load with owner-confirmed audio. The Google TV Streamer was only a passive Cast target; this
@@ -790,10 +790,13 @@ independently.
   certificate; it was not uploaded. The recovery folder's V2 JKS exactly matches the registered upload certificate,
   and the protected one-password flow produced a locally verified exact-source bundle signed by that identity. No
   upload-key reset is needed. The owner then authorized the first Play upload and Production draft: Play accepted code
-  18 / `1.0.0`, attached the ReTrace mapping file, and saved the English release notes. Preview is blocked only by the
-  absence of selected Production countries/regions and also shows the known non-blocking upstream native-symbol
-  warning. Count validation, external review, owner interaction, and provider waits in their actual categories; no
-  review submission, production rollout, publication, tag, PR, or workflow has occurred.
+  18 / `1.0.0`, attached the ReTrace mapping file, and saved the English release notes. The owner approved United States
+  as the sole initial region; it is saved with the draft and the country-selection error is cleared. Only the known
+  non-blocking upstream native-symbol warning remains. Publishing overview shows the Alpha08 release and default store
+  listing still in review, so the two new Production changes cannot yet be submitted. Managed publishing is
+  unavailable for a first production release, making eventual review submission a potential automatic-publication
+  action upon approval. Count validation, external review, owner interaction, and provider waits in their actual
+  categories; no review submission, production rollout, publication, tag, PR, or workflow has occurred.
 
 ### M45 — Operational Reliability and Recertification
 
