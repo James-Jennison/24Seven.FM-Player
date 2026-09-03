@@ -778,8 +778,14 @@ independently.
   production launch. Exact-candidate audit also corrected stale privacy/Data Safety and foreground-service declaration
   wording for the Cast SDK's anonymous diagnostics and the optional special-use Chat monitor. Physical Razr inspection
   then found a remote Death.FM selector-logo fallback; the selector was corrected to use five bundled station resources
-  in every layout. Count validation, external review, owner interaction, and provider waits in their actual categories;
-  no production release, tag, PR, or workflow has occurred.
+  in every layout. The final implementation at `7aa5e74` then passed 203 unit tests, 73 connected Razr tests, lint,
+  release bundle/APK and 16 KB packaging checks, and post-shrinking inspection of all five selector resources plus the
+  fallback. Physical DHU 2.0 acceptance on the USB-connected Android 16 Razr 2026 discovered the exact-candidate native
+  media catalog and reached live Now Playing for 1980s.FM, Adagio.FM, Death.FM, Entranced.FM, and
+  StreamingSoundtracks.com before returning the final session to paused. The temporary head-unit server, ADB forward,
+  and Android Auto developer mode were removed after acceptance. Cast-site and production-candidate reviewer/evidence
+  cycles both closed `READY`. Count validation, external review, owner interaction, and provider waits in their actual
+  categories; no signed production artifact, Play upload/draft, production release, tag, PR, or workflow has occurred.
 
 ### M45 — Operational Reliability and Recertification
 
