@@ -110,11 +110,10 @@ Publishing overview, and the previous country-selection error is cleared. Previe
 non-blocking native debug-symbol warning; the packaged upstream native library does not supply symbols, so there is no
 truthful symbol archive to upload.
 
-Publishing overview currently shows the Alpha08 release and default store-listing changes still in review, and the
-control to submit the two new Production changes is disabled. Managed publishing is off because Google Play does not
-make it available for an app's first production publication. Therefore submitting this first Production release must
-be treated as launch authorization: after approval, Play may publish it automatically. The release was not sent for
-review, started, or published.
+Publishing overview currently shows managed publishing on. The Alpha08 release and default store-listing changes are
+still in review, while the two new Production changes are separately ready to submit. The submission control is
+enabled, and Play is running quick checks; if submitted during that interval, Play states that it will send the changes
+after those checks complete successfully. The release was not sent for review, started, or published.
 
 ## Gates before a production rollout can be authorized
 
@@ -126,10 +125,10 @@ review, started, or published.
 | Physical mobile acceptance | Exact committed debug candidate on the connected Razr; five-station playback; navigation, onboarding, feedback, account, notification, and background-media smoke tests | Passed locally; exact-candidate artifact identity and bundled-selector visual repeat confirmed. Play-delivered clean/update evidence remains below |
 | Android Auto acceptance | Exact candidate browses and plays the five approved stations through the existing Media3 service | Passed on physical Android 16 Razr through DHU 2.0; returned to paused |
 | Signing | Owner enters the existing external JKS password in the approved one-prompt Linux flow; the resulting signer must match Play's registered upload certificate | Passed locally with the recovered V2 JKS; exact-source bundle signature and signer identity verified |
-| Play candidate | Code 18 accepted by Play; Play-generated delivery, update from Alpha08, clean install, pre-launch report, app-content declarations, and reviewer access reconciled | Partially passed: bundle accepted into a saved Production draft; submission is unavailable while existing changes remain in review |
+| Play candidate | Code 18 accepted by Play; Play-generated delivery, update from Alpha08, clean install, pre-launch report, app-content declarations, and reviewer access reconciled | Partially passed: bundle accepted into a saved Production draft; submission is enabled while quick checks run |
 | Review control | Claude, Gemini, and DeepSeek findings dispositioned with no accepted unresolved BLOCKER/HIGH risk | Cast-site and production-candidate control-plane closures are `READY` |
 | First-launch geography | Owner names the initial production countries/regions | Passed: United States only; Play preview country error cleared |
-| Publication | Owner explicitly authorizes the exact artifact, initial geography, and launch action | Not authorized; first-release review submission may publish automatically after approval |
+| Publication | Owner explicitly authorizes the exact artifact, initial geography, and launch action | Not authorized; managed publishing is on, preserving a separate publish gate after review |
 
 ## Controlled first-launch plan
 
@@ -137,12 +136,11 @@ Google Play does not offer a rollout percentage for an app's first production re
 available to all eligible users in the selected countries/regions. The first-launch control is therefore geography,
 not a nominal percentage.
 
-1. Keep the accepted exact code-18 bundle in its saved Production draft. Managed publishing is unavailable for this
-   first production publication.
+1. Keep the accepted exact code-18 bundle in its saved Production draft with managed publishing on.
 2. Retain United States as the only owner-approved initial region and recheck device availability, store listing,
    pricing, declarations, reviewer access, and the release summary.
-3. After the existing Alpha08/store-listing review completes, submit Production only under explicit launch
-   authorization; treat review submission as potentially publishing automatically after approval.
+3. After the quick checks complete successfully, submit the two Production changes only under explicit review-submission
+   authorization. Preserve the separate managed-publishing gate after approval.
 4. Hold geographic expansion while reviewing Play pre-launch output, Android vitals, support reports, stream health,
    account/UGC reports, and the Play-delivered clean-install/update smoke tests.
 5. Expand deliberately after 24 hours, 72 hours, and 7 days only when there is no unresolved release-blocking issue.
@@ -162,6 +160,5 @@ required, a separately tested and authorized higher-version replacement. Never r
 
 ## Current owner-controlled decisions
 
-After the existing Alpha08/store-listing review completes and Play enables the control, explicitly authorize sending
-the United States-only Production release for review. Because managed publishing is unavailable for a first
-production release, that authorization must also authorize publication upon approval.
+After the quick checks complete successfully, explicitly authorize sending the United States-only Production changes
+for review. Managed publishing is on, so publication remains a later, separate owner-controlled action.
