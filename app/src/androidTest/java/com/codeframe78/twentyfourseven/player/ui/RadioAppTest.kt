@@ -1013,7 +1013,7 @@ class RadioAppTest {
         }
 
         composeRule.onNodeWithText("Read privacy notice").performScrollTo().performClick()
-        composeRule.onNodeWithText("Data handled by the Alpha").assertIsDisplayed()
+        composeRule.onNodeWithText("Data handled by the Player").assertIsDisplayed()
         composeRule.onNodeWithText("Close").assertIsDisplayed()
     }
 
@@ -1213,7 +1213,7 @@ class RadioAppTest {
             substring = true,
         ).performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText(
-            "The current Alpha does not link to station websites",
+            "The current Player does not link to station websites",
             substring = true,
         ).performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Open project privacy questions").assertDoesNotExist()

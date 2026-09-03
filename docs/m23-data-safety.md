@@ -1,6 +1,6 @@
 # M29 Google Play Data Safety worksheet
 
-Checked against the current Google Play definitions through July 19, 2026, the release variant on July 18, 2026, and
+Checked against the current Google Play definitions and the code-18 production candidate on September 2, 2026, and
 the authorized network-administrator response on August 11, 2026. This is a conservative
 implementation worksheet, not the final owner declaration. Reconcile it with the exact signed candidate and active
 Console form immediately before submission.
@@ -23,9 +23,13 @@ Console form immediately before submission.
 
 ## Exact artifact basis
 
-- The release manifest contains no sensitive-data permission beyond Internet/network state, notifications, and the
-  foreground-media permissions needed for playback.
-- The release dependency graph contains no advertising, analytics, crash-reporting, tracking, billing, or social-login SDK.
+- The release manifest contains no sensitive-data permission beyond Internet/network state, notifications, the
+  foreground-media permissions needed for playback, and special-use foreground service access for the optional,
+  user-started, visibly disclosed one-station Chat-mention monitor.
+- The release dependency graph contains no advertising, crash-reporting, tracking, billing, or social-login SDK. It
+  does contain Google Cast Android Sender SDK 22.3.1 and its Google Data Transport dependencies; Google's current SDK
+  disclosure says Cast automatically collects encrypted, anonymous interaction diagnostics for aggregate Cast
+  analytics and product improvement.
 - The Player has no developer-operated server.
 - Credentials, sessions, Chat, search, Favorites, request, Queue, History, and artwork paths enforce approved same-station
   HTTPS behavior. Final probes must repeat against the exact candidate.
@@ -47,11 +51,12 @@ Console form immediately before submission.
 | Abuse-report email handoff | Player transfers a bounded fixed-recipient draft to the chosen email app; Player does not persist it or send/read email | Personal info → Name/Email; Messages → Emails or Other in-app messages; possibly Other UGC under active wording | Optional; app functionality, security, and compliance | On-device app-to-app transfer is sharing, but the explicit Review email/send flow may qualify for the specific user-initiated exception | Email-app and receiving administration retention/processors/deletion |
 | Diagnostic Copy/Share | Generated locally from a fixed allowlist; Copy uses Android clipboard and Share opens the chooser; no automatic upload or persistence | On-device processing is out of collection scope; selected external transfer must still be evaluated | Optional; support/app functionality | Explicit user-selected destination is provisionally within the user-initiated sharing exception | Confirm active Console treatment |
 | Source IP/network identifier | The station/CDN necessarily receives connection-level network information; Player does not read or persist the source IP | Declare only according to actual station/CDN use, such as approximate location if inferred | Core/optional depending on request; app functionality and possibly security | Recipient and processor treatment depends on station/CDN facts | Whether IP is retained, shared, used for location/security, and deletion rule |
+| Google Cast SDK diagnostics | Cast Sender SDK 22.3.1 automatically sends Google encrypted, anonymous generic discovery/session events, mobile-device information, and client Cast-app information; Google says logs contain no identifier traceable to a specific user, are retained briefly before aggregation, cannot be opted out of or deleted, and omit content metadata | App activity → App interactions is the provisional closest type; reconcile the exact active form | Automatic when the Cast SDK operates; analytics and product improvement | Google says the SDK does not transfer this data to third parties or other apps | Confirm the exact Data Safety type/purpose selections in the active Console form |
 | Public playback, Queue, History, artwork, Chat, and station catalog responses | Requests leave device; returned public content is not user data supplied by this app | No additional user-data type identified | Core functionality | No additional sharing identified | Normal IP/server logging covered above |
 | Favorites, request activity, and membership indicators | Existing account identifier fetches station-owned values; returned UI state is memory-only and clears on sign-out | No additional outgoing type beyond User IDs identified | Optional; app functionality | No additional sharing identified | Station-side retention is covered by account/request facts |
 | App preferences and safety state | Selected/default/last station, age-screen result, Terms version, community reveal, blocked identities, mention opt-ins, and UI state remain local; date of birth is not saved | On-device processing outside collection | Core/optional; app functionality and safety | No | None for Data Safety; public/local retention remains disclosed |
 | Local mention matching | Exact name matching, first-snapshot baselining, blocked filtering, and bounded SHA-256 fingerprints occur on-device; notification omits message text | On-device processing outside collection | Optional; app functionality | No additional transfer | None unless future closed-app delivery changes architecture |
-| Crash, analytics, ads, location sensors, contacts, files, microphone, camera, phone, or SMS | No corresponding SDK, permission, or developer endpoint | Not collected | N/A | No | Re-audit the final candidate |
+| Developer-operated analytics, crash reporting, ads, tracking, location sensors, contacts, files, microphone, camera, phone, or SMS | No corresponding SDK, permission, or developer endpoint; Cast SDK diagnostics are disclosed separately above | Not collected | N/A | No | Re-audit the final candidate |
 
 ## Provisional Console posture
 
@@ -69,7 +74,8 @@ Console form immediately before submission.
 - **Ephemeral processing:** Password/security-code, local search UI, and pending-message handling are transient inside the
   Player, but end-to-end processing is not known to be ephemeral while station retention is unknown.
 - **Independent security review:** No.
-- **Ads/analytics:** None.
+- **Ads/analytics:** No ads or developer-operated analytics. Declare the Cast SDK's automatic, encrypted, anonymous
+  App Activity diagnostics using the active Console wording; do not answer that the app has no analytics collection.
 
 ## Interim five-station TLS probe — July 19, 2026
 

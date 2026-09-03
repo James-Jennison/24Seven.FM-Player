@@ -767,13 +767,18 @@ independently.
   validation. Google Play does not offer percentage staging for a first production release.
 - **Start, completion, and intervals:** Readiness work began September 2, 2026 after the owner elected to begin. No
   production artifact has been signed, uploaded, drafted, or published by this work. Active and automated intervals
-  remain open; signing and publication remain separately gated.
+  remain open; signing and publication remain separately gated. The existing Android Cast path's omitted public web
+  receiver was restored through the approved atomic Player-site workflow, and the code-18 sender then completed a
+  successful remote media load with owner-confirmed audio. The Google TV Streamer was only a passive Cast target; this
+  work did not open or change a Google TV app.
 - **Model, reasoning strength, and original forecast:** Sol Extra High; current forecast 1–4 calendar weeks after production access and
   rollout approval.
 - **Time, variance, evidence, confidence, and forecasting lessons:** Current evidence and gates are recorded in
   `docs/PRODUCTION_RELEASE_READINESS.md`. Use selected-country scope, not a fictional percentage, to control the first
-  production launch. Count validation, external review, owner interaction, and provider waits in their actual
-  categories; no production release, tag, PR, or workflow has occurred.
+  production launch. Exact-candidate audit also corrected stale privacy/Data Safety and foreground-service declaration
+  wording for the Cast SDK's anonymous diagnostics and the optional special-use Chat monitor. Count validation,
+  external review, owner interaction, and provider waits in their actual categories; no production release, tag, PR,
+  or workflow has occurred.
 
 ### M45 — Operational Reliability and Recertification
 
@@ -867,11 +872,13 @@ independently.
 - **Time, variance, evidence, confidence, and forecasting lessons:** No counted or elapsed time and no variance can be assigned. Roadmap `e249071`
   and retirement `8b9980f`; no implementation/PR/release/workflow. **Unknown** rather than zero.
 
-### M55 — Google Cast Feasibility and Certification
+### M55 — Expanded Google Cast Feasibility and Certification
 
-- **Objective:** Deferred optional scope. Resume go/no-go research only after explicit owner direction, permitted stream
-  use, receiver compatibility, lifecycle/route behavior, rights review, and five-station validation.
-- **Start, completion, and intervals:** Not started; all actual intervals and totals are not applicable.
+- **Objective:** Deferred scope beyond M44's narrow repair of the already-present Android sender and public web receiver.
+  Resume broader go/no-go work only after explicit owner direction, permitted stream use, receiver compatibility,
+  lifecycle/route behavior, rights review, and five-station validation. Separate Google TV app work is not authorized.
+- **Start, completion, and intervals:** Not started. The September 2 M44 receiver restoration and functional Cast check
+  did not start this broader milestone; all M55 actual intervals and totals remain not applicable.
 - **Model, reasoning strength, and original forecast:** No model or forecast is assigned while deferred. The owner scope
   decision was recorded August 11, 2026 at 8:00:11 AM PDT (UTC−07:00).
 - **Time, variance, evidence, confidence, and forecasting lessons:** No actual variance or Cast evidence. **Unknown**.
