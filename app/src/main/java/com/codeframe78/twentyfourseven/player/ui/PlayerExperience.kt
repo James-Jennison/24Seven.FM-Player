@@ -1,7 +1,9 @@
 package com.codeframe78.twentyfourseven.player.ui
 
 import android.view.ContextThemeWrapper
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.Arrangement
@@ -240,13 +242,10 @@ private fun CoverStationSelector(
                     .testTag("cover_station_${station.id.value}"),
             ) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    AsyncImage(
-                        model = station.logoUrl,
+                    Image(
+                        painter = painterResource(stationSelectorLogoResource(station.id)),
                         contentDescription = null,
                         contentScale = ContentScale.Fit,
-                        fallback = painterResource(R.drawable.app_logo),
-                        error = painterResource(R.drawable.app_logo),
-                        placeholder = painterResource(R.drawable.app_logo),
                         modifier = Modifier.size(52.dp),
                     )
                 }
@@ -441,19 +440,26 @@ private fun LandscapeStationSelector(
                     .testTag("landscape_station_${station.id.value}"),
             ) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    AsyncImage(
-                        model = station.logoUrl,
+                    Image(
+                        painter = painterResource(stationSelectorLogoResource(station.id)),
                         contentDescription = null,
                         contentScale = ContentScale.Fit,
-                        fallback = painterResource(R.drawable.app_logo),
-                        error = painterResource(R.drawable.app_logo),
-                        placeholder = painterResource(R.drawable.app_logo),
                         modifier = Modifier.size(36.dp),
                     )
                 }
             }
         }
     }
+}
+
+@DrawableRes
+internal fun stationSelectorLogoResource(stationId: StationId): Int = when (stationId.value) {
+    "1980s" -> R.drawable.station_logo_1980s
+    "afm" -> R.drawable.station_logo_adagio
+    "dfm" -> R.drawable.station_logo_death
+    "efm" -> R.drawable.station_logo_entranced
+    "sst" -> R.drawable.station_logo_sst
+    else -> R.drawable.app_logo
 }
 
 @Composable
@@ -883,13 +889,10 @@ private fun StationSelector(
                         .testTag("station_card_${station.id.value}"),
                 ) {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        AsyncImage(
-                            model = station.logoUrl,
+                        Image(
+                            painter = painterResource(stationSelectorLogoResource(station.id)),
                             contentDescription = null,
                             contentScale = ContentScale.Fit,
-                            fallback = painterResource(R.drawable.app_logo),
-                            error = painterResource(R.drawable.app_logo),
-                            placeholder = painterResource(R.drawable.app_logo),
                             modifier = Modifier.size(56.dp),
                         )
                     }
