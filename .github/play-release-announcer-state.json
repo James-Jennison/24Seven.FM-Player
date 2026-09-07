@@ -24,6 +24,14 @@
       "versionCodes": [
         "16"
       ]
+    },
+    "alpha:17 (0.1.0-alpha08):17": {
+      "announcedAt": "2026-09-07T23:30:18.016Z",
+      "track": "alpha",
+      "releaseName": "17 (0.1.0-alpha08)",
+      "versionCodes": [
+        "17"
+      ]
     }
   }
 }
