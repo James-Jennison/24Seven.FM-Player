@@ -31,8 +31,8 @@ kotlin {
 }
 
 dependencies {
-    implementation("androidx.media3:media3-common:1.10.1")
-    implementation("androidx.media3:media3-session:1.10.1")
+    implementation("androidx.media3:media3-common:1.11.0")
+    implementation("androidx.media3:media3-session:1.11.0")
     androidTestImplementation("androidx.test:core-ktx:1.7.0")
     androidTestImplementation("androidx.test.ext:junit-ktx:1.3.0")
     androidTestImplementation("androidx.test:runner:1.7.0")
