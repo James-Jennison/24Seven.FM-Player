@@ -13,6 +13,13 @@ return HTTP `308` and preserve the requested path and query string:
 The rules are deliberately exact-host matches. They do not redirect a parent
 domain or any other subdomain.
 
+Cloudflare applies baseline URL normalization before these rules. The routing
+contract is therefore preservation of the canonicalized path and the query
+string, not byte-for-byte preservation of deliberately non-canonical path
+syntax. In particular, Cloudflare always collapses adjacent path slashes; an
+encoded unreserved character can also be rendered in canonical form. Do not
+use those forms as a rollback or deep-link compatibility contract.
+
 ## Normal verification
 
 Use public HTTPS header checks, without sending form data, for all three
@@ -23,6 +30,13 @@ For each host, the expected transformations include:
 - `/` → `https://24sevenfmplayer.com/` (exactly one slash after `.com`)
 - `/privacy/?x=1&y=a%20b` →
   `https://24sevenfmplayer.com/privacy/?x=1&y=a%20b`
+
+Also test a repeated query key and an embedded primary-host string, for
+example `/?a=1&a=2` and
+`/path/24sevenfmplayer.com?origin=24sevenfmplayer.com`. The resulting
+`Location` must retain the canonicalized path and exact query semantics. A
+double-slash path is expected to be normalized by Cloudflare; it is not a
+byte-preserving probe.
 
 Then check the primary public routes:
 
@@ -70,6 +84,14 @@ old hostname, and then retest all three hostnames plus the primary route.
 4. Publicly verify the changed old host, the two unchanged old hosts, and the
    primary route. Record that a previously cached `308` may continue directing
    some clients to the primary during cache expiry.
+
+There is intentionally no assumed numeric cache-expiry bound for a browser's
+stored permanent redirect. Cloudflare Redirect Rules execute before its
+standard CDN cache, so a CDN purge is not a substitute for clearing an end
+user's cached `308`. Verify a reversal immediately with a fresh browser
+profile or device and a unique query string, then repeat the verification on a
+separate later check. Record both observations; do not declare a host-routing
+reversal complete from a single warm-browser result.
 
 Do not simply disable a rule as an emergency shortcut: the alternate new apex
 domains are redirect-only and may not have a viable independent origin. Also,
