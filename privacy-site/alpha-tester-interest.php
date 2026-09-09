@@ -9,12 +9,12 @@ declare(strict_types=1);
  * artifact or replace them with browser-visible configuration.
  */
 
-const FORM_ORIGIN = 'https://player.jamesjennison.net';
+const FORM_ORIGIN = 'https://24sevenfmplayer.com';
 const FALLBACK_LOCATION = '/product-testing/';
 const DELIVERY_DOMAIN = 'jamesjennison.net';
 const TURNSTILE_CONFIG_FILE = '.turnstile-test-config.php';
 const TURNSTILE_ACTION = 'alpha-tester-interest';
-const TURNSTILE_HOSTNAME = 'player.jamesjennison.net';
+const TURNSTILE_HOSTNAME = '24sevenfmplayer.com';
 const TESTER_ONBOARDING_STORAGE_FILE = 'tester-onboarding-storage.php';
 const MAX_REQUEST_BYTES = 16_384;
 const RATE_WINDOW_SECONDS = 1_800;

@@ -8,14 +8,14 @@ from pathlib import Path
 
 
 EXPECTED_TARGETS = {
-    "index.html": "https://player.jamesjennison.net/privacy/",
-    "project/index.html": "https://player.jamesjennison.net/",
-    "project/features/index.html": "https://player.jamesjennison.net/features/",
-    "project/development/index.html": "https://player.jamesjennison.net/development/",
-    "project/testing/index.html": "https://player.jamesjennison.net/testing/",
-    "project/product-testing/index.html": "https://player.jamesjennison.net/product-testing/",
-    "project/roadmap/index.html": "https://player.jamesjennison.net/roadmap/",
-    "project/resources/index.html": "https://player.jamesjennison.net/resources/",
+    "index.html": "https://24sevenfmplayer.com/privacy/",
+    "project/index.html": "https://24sevenfmplayer.com/",
+    "project/features/index.html": "https://24sevenfmplayer.com/features/",
+    "project/development/index.html": "https://24sevenfmplayer.com/development/",
+    "project/testing/index.html": "https://24sevenfmplayer.com/testing/",
+    "project/product-testing/index.html": "https://24sevenfmplayer.com/product-testing/",
+    "project/roadmap/index.html": "https://24sevenfmplayer.com/roadmap/",
+    "project/resources/index.html": "https://24sevenfmplayer.com/resources/",
 }
 
 

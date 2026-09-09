@@ -14,7 +14,7 @@ function expectTurnstileTest(bool $condition, string $message): void
 
 $confirmation = testConfirmationEmail();
 expectTurnstileTest($confirmation['subject'] === '24Seven.FM Player Turnstile test succeeded', 'Turnstile test subject is incorrect.');
-expectTurnstileTest(str_contains($confirmation['plainText'], 'player.jamesjennison.net'), 'Turnstile test confirmation must identify the tested site.');
+expectTurnstileTest(str_contains($confirmation['plainText'], '24sevenfmplayer.com'), 'Turnstile test confirmation must identify the tested site.');
 expectTurnstileTest(str_contains($confirmation['plainText'], 'No application or account data was stored.'), 'Turnstile test confirmation must preserve its no-intake guarantee.');
 
 $source = file_get_contents(dirname(__DIR__) . '/privacy-site/turnstile-test.php');

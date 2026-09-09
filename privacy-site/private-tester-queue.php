@@ -18,7 +18,7 @@ const ADMIN_LOGIN_MAX_PASSWORD_BYTES = 4_096;
 const ADMIN_LOGIN_NAME_MAX_LENGTH = 64;
 const ADMIN_LOGIN_FREE_FAILURES = 4;
 const ADMIN_LOGIN_MAX_LOCK_SECONDS = 3_600;
-const ADMIN_LOGIN_ORIGIN = 'https://player.jamesjennison.net';
+const ADMIN_LOGIN_ORIGIN = 'https://24sevenfmplayer.com';
 const STAGING_ADMIN_LOGIN_HOST = 'onboarding-staging.player.jamesjennison.net';
 const STAGING_ADMIN_LOGIN_ORIGIN = 'https://onboarding-staging.player.jamesjennison.net';
 const ADMIN_TOTP_STEP_SECONDS = 30;
@@ -28,7 +28,7 @@ const MAX_SUBJECT_LENGTH = 180;
 const MAX_BODY_LENGTH = 12_000;
 const MAX_HTML_BODY_LENGTH = 24_000;
 const MAIL_SUBMISSION_HOST = 'mail.jamesjennison.net';
-const TESTER_PORTAL_PUBLIC_URL = 'https://player.jamesjennison.net/tester-portal.php';
+const TESTER_PORTAL_PUBLIC_URL = 'https://24sevenfmplayer.com/tester-portal.php';
 const TASK_REGISTRY_FILE = 'assets/tester-tasks.json';
 const MAX_ASSIGNMENT_CONFIGURATION_LENGTH = 300;
 const MAX_ASSIGNMENT_NOTE_LENGTH = 1_000;
@@ -87,11 +87,17 @@ function fail(int $status, string $message): never
 
 function config(): array
 {
-    $path = dirname(__DIR__) . '/' . QUEUE_CONFIG_FILE;
-    if (!is_file($path)) {
+    $paths = [];
+    foreach ([dirname(__DIR__), dirname(__DIR__, 2)] as $root) {
+        $candidate = $root . '/' . QUEUE_CONFIG_FILE;
+        if (is_file($candidate)) {
+            $paths[] = $candidate;
+        }
+    }
+    if (count($paths) !== 1) {
         fail(503, 'The private tester queue is not configured.');
     }
-    $config = require $path;
+    $config = require $paths[0];
     foreach (['admin_password_hash', 'database_path', 'from_email'] as $key) {
         if (!isset($config[$key]) || !is_string($config[$key]) || $config[$key] === '') {
             fail(503, 'The private tester queue configuration is incomplete.');
@@ -1937,8 +1943,8 @@ function onboardingMessage(array $tester): string
     return 'Hi ' . $tester['display_name'] . ",\n\n"
         . "Welcome to the 24Seven.FM Player Google Play Closed Test. The Player is an independently developed, unofficial player for the 24Seven.FM network of internet radio stations. Your tester profile is complete, and you are ready for the next step.\n\n"
         . "1. Join the Android test from the project’s Google Play testing link when your Play access is granted.\n"
-        . "2. Open your tester portal at https://player.jamesjennison.net/tester-portal.php to keep your device profile current and submit focused task reports.\n"
-        . "3. Install or update 24Seven.FM Player, then complete the first-run checklist at https://player.jamesjennison.net/product-testing/.\n"
+        . "2. Open your tester portal at https://24sevenfmplayer.com/tester-portal.php to keep your device profile current and submit focused task reports.\n"
+        . "3. Install or update 24Seven.FM Player, then complete the first-run checklist at https://24sevenfmplayer.com/product-testing/.\n"
         . "4. Complete the short first-use smoke check in your tester portal, then use only the focused Tester Tasks you are assigned. Each task has its own safety boundary and needs one result per PT case.\n"
         . "5. Send results through the portal or linked feedback form, including the app version, device, Android version, station, steps, and outcome.\n\n"
         . "You need your own Google account only to opt in to Google Play. Guest testing does not require a 24Seven.FM station account; do not create, use, or share one for this program.\n\n"
@@ -1958,7 +1964,7 @@ function smokeTestReminderMessage(array $tester): string
 {
     return 'Hi ' . $tester['display_name'] . ",\n\n"
         . "Your Profile & Device and Google Play opt-in are recorded. Your onboarding is waiting at Step 4 — First-Use Smoke Test.\n\n"
-        . "Open https://player.jamesjennison.net/product-testing/#alpha-tester-interest to return directly to that screen.\n\n"
+        . "Open https://24sevenfmplayer.com/product-testing/#alpha-tester-interest to return directly to that screen.\n\n"
         . "On your Play-installed build:\n"
         . "1. Launch 24Seven.FM Player and play one station for a few minutes.\n"
         . "2. Switch stations.\n"
@@ -2105,9 +2111,9 @@ function assignmentMessage(array $task, array $assignment, ?array $requiredPtCas
     }
     if ($retest) {
         $lines[] = 'This is a separate re-test. Complete only the exact PT case listed above; do not repeat unrelated task cases.';
-        $lines[] = 'Tester portal: https://player.jamesjennison.net/tester-portal.php?view=tasks';
+        $lines[] = 'Tester portal: https://24sevenfmplayer.com/tester-portal.php?view=tasks';
     }
-    $lines[] = 'Task cases: https://player.jamesjennison.net/product-testing/?task=' . rawurlencode($task['id']);
+    $lines[] = 'Task cases: https://24sevenfmplayer.com/product-testing/?task=' . rawurlencode($task['id']);
     $lines[] = 'Submit one result for each PT case.';
     return implode("\n", $lines);
 }

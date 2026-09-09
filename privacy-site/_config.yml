@@ -1,6 +1,6 @@
 title: 24Seven.FM Player
 description: An unofficial, community-built native Android player for the 24seven.FM radio network
-url: https://player.jamesjennison.net
+url: https://24sevenfmplayer.com
 baseurl: ""
 markdown: kramdown
 strict_front_matter: true
@@ -9,7 +9,7 @@ repository: James-Jennison/24Seven.FM-Player
 github_url: https://github.com/James-Jennison/24Seven.FM-Player
 master_url: https://jamesjennison.net
 status_url: https://status.jamesjennison.net
-alpha_tester_application_url: https://player.jamesjennison.net/product-testing/#alpha-tester-interest
+alpha_tester_application_url: https://24sevenfmplayer.com/product-testing/#alpha-tester-interest
 
 include:
   - .htaccess

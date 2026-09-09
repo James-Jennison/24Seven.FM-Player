@@ -180,7 +180,7 @@ try {
       assert(state.h1 === 1, `${viewport.label} ${route} has ${state.h1} h1 elements`);
       assert(!state.overflow, `${viewport.label} ${route} has horizontal overflow`);
       assert(state.missingImages.length === 0, `${viewport.label} ${route} has missing images: ${state.missingImages.join(", ")}`);
-      assert(state.canonical.startsWith("https://player.jamesjennison.net/"), `${route} has the wrong canonical URL`);
+      assert(state.canonical.startsWith("https://24sevenfmplayer.com/"), `${route} has the wrong canonical URL`);
       assert(state.navigation === state.expectedNavigation, `${route} exposes the wrong workspace navigation`);
     }
   }

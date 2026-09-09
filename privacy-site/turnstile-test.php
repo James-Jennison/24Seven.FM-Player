@@ -7,9 +7,9 @@ declare(strict_types=1);
  * application or account data.
  */
 
-const TEST_ORIGIN = 'https://player.jamesjennison.net';
+const TEST_ORIGIN = 'https://24sevenfmplayer.com';
 const TEST_ACTION = 'turnstile-test';
-const TEST_HOSTNAME = 'player.jamesjennison.net';
+const TEST_HOSTNAME = '24sevenfmplayer.com';
 const TEST_CONFIG_FILE = '.turnstile-test-config.php';
 const TEST_MAIL_CONFIG_FILE = '.turnstile-test-mail-config.php';
 const ALPHA_TESTER_CONFIG_FILE = '.alpha-tester-interest-config.php';
@@ -30,7 +30,7 @@ function testConfirmationEmail(): array
 {
     return [
         'subject' => '24Seven.FM Player Turnstile test succeeded',
-        'plainText' => "The isolated Turnstile test at player.jamesjennison.net was verified successfully.\n\nNo application or account data was stored. This message confirms only the test email delivery path.\n",
+        'plainText' => "The isolated Turnstile test at 24sevenfmplayer.com was verified successfully.\n\nNo application or account data was stored. This message confirms only the test email delivery path.\n",
     ];
 }
 

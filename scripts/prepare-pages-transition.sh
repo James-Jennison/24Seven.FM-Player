@@ -61,14 +61,14 @@ write_transition() {
     '</html>' > "${output_path}"
 }
 
-write_transition "${destination}/index.html" "https://player.jamesjennison.net/privacy/" "The privacy notice"
-write_transition "${destination}/project/index.html" "https://player.jamesjennison.net/" "The project overview"
-write_transition "${destination}/project/features/index.html" "https://player.jamesjennison.net/features/" "Product features"
-write_transition "${destination}/project/development/index.html" "https://player.jamesjennison.net/development/" "Development documentation"
-write_transition "${destination}/project/testing/index.html" "https://player.jamesjennison.net/testing/" "Testing evidence"
-write_transition "${destination}/project/product-testing/index.html" "https://player.jamesjennison.net/product-testing/" "The product-testing workspace"
-write_transition "${destination}/project/roadmap/index.html" "https://player.jamesjennison.net/roadmap/" "The project roadmap"
-write_transition "${destination}/project/resources/index.html" "https://player.jamesjennison.net/resources/" "Project resources"
+write_transition "${destination}/index.html" "https://24sevenfmplayer.com/privacy/" "The privacy notice"
+write_transition "${destination}/project/index.html" "https://24sevenfmplayer.com/" "The project overview"
+write_transition "${destination}/project/features/index.html" "https://24sevenfmplayer.com/features/" "Product features"
+write_transition "${destination}/project/development/index.html" "https://24sevenfmplayer.com/development/" "Development documentation"
+write_transition "${destination}/project/testing/index.html" "https://24sevenfmplayer.com/testing/" "Testing evidence"
+write_transition "${destination}/project/product-testing/index.html" "https://24sevenfmplayer.com/product-testing/" "The product-testing workspace"
+write_transition "${destination}/project/roadmap/index.html" "https://24sevenfmplayer.com/roadmap/" "The project roadmap"
+write_transition "${destination}/project/resources/index.html" "https://24sevenfmplayer.com/resources/" "Project resources"
 
 printf '%s\n' 'User-agent: *' 'Disallow: /' > "${destination}/robots.txt"
 touch "${destination}/.nojekyll"

@@ -13,10 +13,10 @@ define('PRIVATE_TESTER_QUEUE_LIBRARY_ONLY', true);
 require __DIR__ . '/private-tester-queue.php';
 
 const TESTER_PORTAL_SESSION_NAME = 'player_tester_portal';
-const TESTER_PORTAL_URL = 'https://player.jamesjennison.net/tester-portal.php';
-const TESTER_PORTAL_ORIGIN = 'https://player.jamesjennison.net';
+const TESTER_PORTAL_URL = 'https://24sevenfmplayer.com/tester-portal.php';
+const TESTER_PORTAL_ORIGIN = 'https://24sevenfmplayer.com';
 const TESTER_PORTAL_TURNSTILE_ACTION = 'tester-portal-link';
-const TESTER_PORTAL_TURNSTILE_HOSTNAME = 'player.jamesjennison.net';
+const TESTER_PORTAL_TURNSTILE_HOSTNAME = '24sevenfmplayer.com';
 const TESTER_PORTAL_TURNSTILE_CONFIG_FILE = '.turnstile-test-config.php';
 const TESTER_PORTAL_TURNSTILE_SITEKEY = '0x4AAAAAAEPR2A0JwM5Qhrvt';
 const PORTAL_TOKEN_TTL_SECONDS = 1_800;

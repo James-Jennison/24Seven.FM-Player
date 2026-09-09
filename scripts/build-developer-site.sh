@@ -6,7 +6,7 @@ repository_root="$(cd -- "${script_dir}/.." && pwd)"
 source_site="${repository_root}/_site"
 destination="${repository_root}/_dev_site"
 developer_origin="https://dev.jamesjennison.net"
-public_origin="https://player.jamesjennison.net"
+public_origin="https://24sevenfmplayer.com"
 
 "${script_dir}/build-project-site.sh"
 
@@ -23,8 +23,8 @@ while IFS= read -r -d '' document; do
   perl -0pi -e '
     s{https://player\.jamesjennison\.net/dev(?=[/"])}{https://dev.jamesjennison.net}g;
     s{href="/dev(?=[/"])}{href="https://dev.jamesjennison.net}g;
-    s{href="/(privacy|product-testing)/}{href="https://player.jamesjennison.net/$1/}g;
-    s{href="/"}{href="https://player.jamesjennison.net/"}g;
+    s{href="/(privacy|product-testing)/}{href="https://24sevenfmplayer.com/$1/}g;
+    s{href="/"}{href="https://24sevenfmplayer.com/"}g;
   ' "${document}"
 done < <(find "${destination}" -type f -name '*.html' -print0)
 

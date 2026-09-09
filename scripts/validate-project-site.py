@@ -10,7 +10,7 @@ from pathlib import Path
 from urllib.parse import unquote, urlparse
 
 
-PRODUCTION_ORIGIN = "https://player.jamesjennison.net"
+PRODUCTION_ORIGIN = "https://24sevenfmplayer.com"
 EXPECTED_PAGES = {
     "/": "index.html",
     "/features/": "features/index.html",
@@ -260,7 +260,7 @@ def audit() -> int:
             if not raw_reference or raw_reference.startswith(("data:", "javascript:")):
                 continue
             parsed = urlparse(raw_reference)
-            if parsed.scheme in {"http", "https"} and parsed.netloc != "player.jamesjennison.net":
+            if parsed.scheme in {"http", "https"} and parsed.netloc != "24sevenfmplayer.com":
                 continue
             if parsed.scheme and parsed.scheme not in {"http", "https"}:
                 fail(f"Unsupported URL scheme in {source_route}: {raw_reference}", failures)
