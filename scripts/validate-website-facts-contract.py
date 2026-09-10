@@ -301,6 +301,16 @@ def main(require_public_privacy_ready: bool = False, require_interim_privacy_cor
                 require_sha(provenance.get("artifact_source_commit"), "verified artifact provenance source commit")
                 require(isinstance(provenance.get("evidence_reference"), str) and provenance["evidence_reference"], "verified artifact provenance requires evidence_reference")
 
+        production_review = release.get("production_review_status")
+        require(isinstance(production_review, dict), "production_review_status is required")
+        require(production_review.get("status") in {"not_recorded", "in_review", "approved", "published", "rejected", "withdrawn"}, "production review status is invalid")
+        require(isinstance(production_review.get("recorded_at"), str) and production_review["recorded_at"], "production review recorded_at is required")
+        require(production_review.get("source") in {"owner_attested_google_play_console", "read_only_play_console"}, "production review source is invalid")
+        require(isinstance(production_review.get("release_record"), str) and production_review["release_record"].startswith("docs/releases/"), "production review release record is invalid")
+        require((ROOT / production_review["release_record"]).is_file(), "production review release record is missing")
+        require(isinstance(production_review.get("public_statement"), str) and production_review["public_statement"], "production review public_statement is required")
+        require(isinstance(production_review.get("scope_rule"), str) and production_review["scope_rule"], "production review scope_rule is required")
+
         portal = contract["portal_surface"]
         require(portal.get("authority_branch") == "codex/onboarding-portal-production", "portal authority branch is invalid")
         require_git_commit(portal.get("pinned_commit"), "portal_surface.pinned_commit")

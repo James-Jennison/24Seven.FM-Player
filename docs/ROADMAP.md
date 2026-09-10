@@ -117,8 +117,8 @@ M38 must not start by substituting background polling or forwarding protected st
 | ID | Milestone | State | Required gate | Forecast after trigger |
 | --- | --- | --- | --- | --- |
 | M42 | Closed-Test Operations and Stabilization | Active · owner-confirmed two-week closed test | Qualifying tester continuity, structured feedback, fixes/retests, Play vitals/pre-launch review, update delivery, and exit criteria | Medium · 3–5 calendar weeks |
-| M43 | Production Access and Policy Approval | Planned after M42 | Production-access questionnaire, testing/feedback/change evidence, final policy review, and resolved Play response | Medium · 1–2 calendar weeks |
-| M44 | Production Release and Staged Rollout | Planned after M43 | Explicit authorization, production candidate, staged percentages, health thresholds, pause/rollback, release notes, and update validation | Medium · 1–4 calendar weeks |
+| M43 | Production Access and Policy Approval | External · first production release under Google Play review | Google Play review outcome and an owner-controlled publication decision; review status does not mean the app is publicly available | External · timing determined by Google Play review |
+| M44 | Production Release and Staged Rollout | Waiting for M43 outcome | Explicit publication authorization, staged percentages, health thresholds, pause/rollback, release notes, and update validation | Medium · 1–4 calendar weeks after approval |
 | M45 | Operational Reliability and Recertification | Planned | Play vitals/support/privacy handling, station outage and contract-drift procedures, rights/moderation recertification, target/API/dependency cadence, and key recovery | High · recurring monthly, quarterly, and release-triggered review |
 
 ## Phase 8 — Deferred and future programs

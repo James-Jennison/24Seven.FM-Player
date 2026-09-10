@@ -38,14 +38,15 @@ developer_navigation:
     description: Architecture, research, testing, release, and contributor library.
 
 site_meta:
-  verified: 2026-08-16
-  source_commit: 99cda41
-  verification_label: Owner-confirmed M42 closed-test operations are active
+  verified: 2026-09-10
+  source_commit: owner-attested-production-review
+  verification_label: Owner-attested first production release is under Google Play review
 
 play_status:
-  label: M42 · Google Play closed testing
-  headline: Closed-test operations and stabilization are active
-  detail: The owner-confirmed Google Play closed test is live. M42 maintains tester continuity, collects structured feedback, verifies remediation, and records the evidence required before production access can be requested.
+  label: Google Play review in progress
+  headline: First production release under review
+  home_detail: The first production release is under review by Google Play and is not yet available for public installation.
+  detail: The first production release is currently under review by Google Play. It is not yet publicly available; closed testing remains a separate program while the review is pending.
 
 roadmap_meta:
   updated: 2026-08-16
@@ -53,8 +54,8 @@ roadmap_meta:
   scope_total_count: 55
   active_total_count: 50
   retired_count: 10
-  active_phase: M42
-  active_label: Closed-test operations and stabilization
+  active_phase: M43
+  active_label: First production release under Google Play review
 
 milestones:
   - order: 1
@@ -556,23 +557,23 @@ roadmap:
   - id: "M43"
     phase: "production"
     name: "Production Access and Policy Approval"
-    state: "planned"
-    state_label: "Planned after M42"
-    blocking: false
-    dependencies: "M42"
-    forecast: "1–2 calendar weeks after trigger"
-    forecast_confidence: "Medium"
-    forecast_model: "Sol Extra High"
+    state: "waiting"
+    state_label: "External · Google Play review in progress"
+    blocking: true
+    dependencies: "Google Play review outcome and owner-controlled publication decision"
+    forecast: "External · timing determined by Google Play review"
+    forecast_confidence: "External"
+    forecast_model: "Google Play review process"
     evidence: "docs/ROADMAP.md"
-    summary: "Submit testing feedback changes value and readiness evidence and resolve Play response."
+    summary: "The first production release is under Google Play review. Approval is not public availability and does not publish the release automatically."
 
   - id: "M44"
     phase: "production"
     name: "Production Release and Staged Rollout"
     state: "planned"
-    state_label: "Planned after M43"
+    state_label: "Waiting for Google Play approval"
     blocking: false
-    dependencies: "M43 and owner authorization"
+    dependencies: "Google Play approval and owner authorization"
     forecast: "1–4 calendar weeks after trigger"
     forecast_confidence: "Medium"
     forecast_model: "Sol Extra High"

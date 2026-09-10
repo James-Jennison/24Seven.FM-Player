@@ -24,9 +24,14 @@ the portal checkout is not source evidence.
 
 The contract records the native `main` pin and the portal pin observed during
 the August 28, 2026 remediation. It also records the Alpha 08 release document
-as a **submitted candidate**. That document says Google Play review and tester
-availability checks are still pending, so it is not authority to change any
-public availability or current-version statement.
+as a **submitted candidate**. That record remains the authority for its exact
+closed-test version and availability only.
+
+The contract separately records the owner's September 10, 2026 attestation
+that the first production release is under Google Play review and is not yet
+available publicly. This narrow record authorizes that exact public status
+wording only; it does not identify a version, establish artifact provenance,
+or authorize publication.
 
 The privacy notice is pinned as the canonical native privacy source, but its
 content-review digest has not yet been recorded. The contract therefore blocks
