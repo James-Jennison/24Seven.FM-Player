@@ -48,6 +48,10 @@ play_status:
   home_detail: The first production release is under review by Google Play and is not yet available for public installation.
   detail: The first production release is under review by Google Play and is not yet available for public installation.
 
+tv_status:
+  label: Early development & testing
+  home_detail: The Android TV Player is in early development and testing, with no public Android TV install path yet.
+
 roadmap_meta:
   updated: 2026-08-16
   achieved_count: 38

@@ -1,6 +1,6 @@
 # Milestone Real-World Time Ledger
 
-Last updated: `August 16, 2026 at 5:01:00 PM PDT (UTC−07:00)`
+Last updated: `September 10, 2026 at 1:39:31 PM PDT (UTC−07:00)`
 
 This is the permanent time-accounting record for the canonical M01–M60 milestones in [ROADMAP.md](ROADMAP.md). It
 preserves historical uncertainty instead of treating commit spans as labor time. Future milestone work must be
@@ -42,6 +42,7 @@ does not alter the status, numbering, or cumulative totals of the canonical Andr
 | Master M14 — Cloudflare and Player TLS verification | Complete | `July 22, 2026 at 3:07:22 PM PDT (UTC−07:00)` | 0.5–1.5 active h | Completed `July 22, 2026 at 3:54:26 PM PDT (UTC−07:00)` | GPT-5; current default reasoning strength, unchanged | 0.32 h | 0.00 h | 0.46 h |
 | Master M15 — Player trusted-origin hardening | Complete | `July 22, 2026 at 3:59:38 PM PDT (UTC−07:00)` | 1–2 active h | Completed `July 22, 2026 at 4:24:19 PM PDT (UTC−07:00)` | GPT-5; current default reasoning strength, unchanged | 0.41 h | 0.00 h | 0.00 h |
 | Master M16A — Cloudflare Full (Strict) hardening | Complete | `July 22, 2026 at 4:32:50 PM PDT (UTC−07:00)` | 0.25–0.5 active h | Completed `July 22, 2026 at 4:36:32 PM PDT (UTC−07:00)` | GPT-5; current default reasoning strength, unchanged | 0.03 h | 0.00 h | 0.03 h |
+| Master M17 — Consumer landing-page redesign | Complete | `September 10, 2026 at 12:57:26 PM PDT (UTC−07:00)` | 14–22 active h | Completed `September 10, 2026 at 1:39:31 PM PDT (UTC−07:00)` | GPT-5; current reasoning strength | 0.70 h | 0.00 h | 0.00 h |
 
 ### Master M12 — Player local migration implementation
 
@@ -341,6 +342,32 @@ Total elapsed time: 0.66 h
 User-blocked time excluded: 0.24 h
 Forecast variance: 0.57 h below the lower bound (57.0%)
 Cumulative counted project time through Milestone Master M16B: 2.01 h (master-site program website milestones only; canonical Android cumulative remains Unknown)
+```
+
+### Master M17 — Consumer landing-page redesign
+
+- **Objective:** Replace the current static product-showcase landing page with a polished consumer landing page that makes station discovery immediate, clearly differentiates Android mobile and early-development Android TV, and drives only evidence-backed app acquisition. The site must remain a Player product surface and link outward to official station experiences rather than duplicate their sites or host browser audio.
+- **Authorization and start:** The owner approved the reviewed structural layout and authorized use of real Google TV Streamer captures. Execution started `September 10, 2026 at 12:57:26 PM PDT (UTC−07:00)` on isolated branch `codex/public-landing-redesign`, based on clean consumer-site commit `e3af1cb`.
+- **Model, reasoning strength, and original forecast:** GPT-5 with the current reasoning strength; 14–22 active hours; expected completion by `September 15, 2026 at 12:57:26 PM PDT (UTC−07:00)` if uninterrupted.
+- **Completion gates:** Resolve a single authoritative availability-to-CTA model; capture and review only real Android TV app screens; preserve official-station external-link boundaries; implement the approved landing structure without a web player; verify responsive, keyboard, reduced-motion, contrast, and link behavior; obtain targeted reviewer closure; commit locally. Push, production deployment, public release claims, Google Play, Cloudflare, and any station-site change remain separate gates.
+- **Completion:** Implemented and locally validated `September 10, 2026 at 1:39:31 PM PDT (UTC−07:00)`. The capture is now a committed source asset, explicitly labeled as an Android TV testing build. There was no push or deployment.
+- **Measured time:** 0.70 active hours, 0.00 automated-wait hours, and 0.00 user-blocked hours. The execution window was 0.70 h; browser and reviewer waits were actively monitored within the same work interval rather than separately measured pauses.
+- **Forecast variance:** 13.30 h (95.0%) below the 14-hour lower bound. The prior consumer site, official station marks, mobile captures, test harnesses, existing release-status contract, and a verified live TV test device reduced the implementation uncertainty materially.
+- **Evidence:** Gemini UX review cycle `review-cycle-fda319c95928` identified the availability-CTA, Android TV proof/acquisition, and outbound-link corrections. Closure review cycle `review-cycle-d3643b487f87` completed with NO_FINDINGS from Gemini, Grok, and DeepSeek. `heavy-build -- ./scripts/validate-project-site.sh`, Chromium responsive testing across 320–1920px, Firefox responsive testing across 500–1440px, and `git diff --check` passed. Evidence cycle `evidence-cycle-bcdaf7dab200` recorded required static checks as PASS.
+- **Forecasting lesson:** For a known site with reusable assets and a settled component language, forecast the information-architecture change separately from any future consumer-copy, store-listing, deployment, or availability work. Keep actual release-state changes and Android TV acquisition design behind their own authoritative-data gates.
+
+| Started | Ended | Category | Reason or work | Evidence | Hours |
+| --- | --- | --- | --- | --- | ---: |
+| `September 10, 2026 at 12:57:26 PM PDT (UTC−07:00)` | `September 10, 2026 at 1:39:31 PM PDT (UTC−07:00)` | Active | Implement the approved redesign, collect the app-only Google TV Streamer capture, update responsive validation, and complete independent review/evidence closure. | Owner approval; branch `codex/public-landing-redesign`; base `e3af1cb`; review cycles `review-cycle-fda319c95928` and `review-cycle-d3643b487f87`; evidence cycle `evidence-cycle-bcdaf7dab200` | 0.70 h |
+
+```text
+Milestone Master M17 time:
+Forecast: 14–22 active hours
+Counted project time: 0.70 h
+Total elapsed time: 0.70 h
+User-blocked time excluded: 0.00 h
+Forecast variance: 13.30 h below the lower bound (95.0%)
+Cumulative counted project time through Milestone Master M17: 2.71 h (master-site program website milestones only; canonical Android cumulative remains Unknown)
 ```
 
 ## Definitions and confidence rules

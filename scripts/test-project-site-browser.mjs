@@ -181,23 +181,30 @@ try {
         title: document.title,
         h1: document.querySelectorAll('h1').length,
         overflow: document.documentElement.scrollWidth > window.innerWidth + 1,
+        overflowingElements: [...document.querySelectorAll('body *')]
+          .map((element) => {
+            const rect = element.getBoundingClientRect();
+            return { selector: element.className || element.id || element.tagName, left: Math.round(rect.left), right: Math.round(rect.right) };
+          })
+          .filter((element) => element.left < -1 || element.right > window.innerWidth + 1)
+          .slice(0, 8),
         missingImages: [...document.images].filter((image) => image.getAttribute('src') && (!image.complete || image.naturalWidth === 0)).map((image) => image.src),
         canonical: document.querySelector('link[rel="canonical"]')?.href ?? '',
         navigation: document.querySelectorAll('#project-navigation a').length,
-        expectedNavigation: document.body.classList.contains('developer-workspace') ? 5 : 3
+        expectedNavigation: document.body.classList.contains('developer-workspace') ? 5 : document.querySelector('.landing-hero') ? 4 : 3
       }))()`);
       assert(state.title, `${viewport.label} ${route} has no title`);
       assert(state.h1 === 1, `${viewport.label} ${route} has ${state.h1} h1 elements`);
-      assert(!state.overflow, `${viewport.label} ${route} has horizontal overflow`);
+      assert(!state.overflow, `${viewport.label} ${route} has horizontal overflow: ${JSON.stringify(state.overflowingElements)}`);
       assert(state.missingImages.length === 0, `${viewport.label} ${route} has missing images: ${state.missingImages.join(", ")}`);
       assert(state.canonical.startsWith("https://24sevenfmplayer.com/"), `${route} has the wrong canonical URL`);
       assert(state.navigation === state.expectedNavigation, `${route} exposes the wrong workspace navigation`);
 
       if (route === "/") {
         const stationLayout = await evaluate(`(() => {
-          const intro = document.querySelector('.station-showcase-intro');
-          const grid = document.querySelector('.station-bento');
-          const cards = [...document.querySelectorAll('.station-panel')];
+          const intro = document.querySelector('.landing-section-heading');
+          const grid = document.querySelector('.landing-station-grid');
+          const cards = [...document.querySelectorAll('.landing-station')];
           const bounds = (element) => {
             const { left, top, width, height } = element.getBoundingClientRect();
             return { left, top, width, height, right: left + width, bottom: top + height, center: left + width / 2 };
@@ -206,22 +213,21 @@ try {
         })()`);
         assert(stationLayout.cards.length === 5, `${viewport.label} home has the wrong station-card count`);
         const [introHeading, introCopy] = stationLayout.intro;
-        if (viewport.width <= 800) {
+        if (viewport.width <= 900) {
           assert(introCopy.top >= introHeading.bottom - 1, `${viewport.label} station introduction did not stack`);
           stationLayoutAssertions.intro.push(viewport.width);
         }
         const [first, second, third, fourth, fifth] = stationLayout.cards;
-        if (viewport.width > 800) {
+        if (viewport.width > 900) {
           assert(Math.abs(first.top - fifth.top) < 2, `${viewport.label} station cards did not remain in one desktop row`);
           stationLayoutAssertions.desktop.push(viewport.width);
-        } else if (viewport.width > 560) {
+        } else if (viewport.width > 580) {
           assert(Math.abs(first.top - third.top) < 2 && fourth.top > first.bottom, `${viewport.label} station cards did not form a 3+2 tablet lineup`);
           assert(Math.abs(((fourth.center + fifth.center) / 2) - stationLayout.grid.center) < 2, `${viewport.label} tablet remainder cards are not centered`);
           stationLayoutAssertions.tablet.push(viewport.width);
         } else {
-          assert(Math.abs(first.top - second.top) < 2 && third.top > first.bottom, `${viewport.label} station cards did not form a two-column lineup`);
-          assert(fifth.top > fourth.bottom && Math.abs(fifth.center - stationLayout.grid.center) < 2, `${viewport.label} final station card is not centered`);
-          assert(Math.abs(fifth.width - first.width) < 2, `${viewport.label} final station card lost equal-card sizing`);
+          assert(second.top > first.bottom && third.top > second.bottom && fourth.top > third.bottom && fifth.top > fourth.bottom, `${viewport.label} station cards did not form a one-column mobile stack`);
+          assert(Math.abs(fifth.width - first.width) < 2, `${viewport.label} station cards lost equal sizing on mobile`);
           stationLayoutAssertions.mobile.push(viewport.width);
         }
       }
@@ -400,10 +406,10 @@ try {
   const noScript = await evaluate(`(() => ({
     h1: document.querySelectorAll('h1').length,
     navigation: document.querySelectorAll('#project-navigation a').length,
-    stationPanels: document.querySelectorAll('.station-panel').length,
-    momentScreens: document.querySelectorAll('.moment-screen').length
+    stationPanels: document.querySelectorAll('.landing-station').length,
+    momentScreens: document.querySelectorAll('.landing-capture-stack figure').length
   }))()`);
-  assert(noScript.h1 === 1 && noScript.navigation === 3 && noScript.stationPanels === 5 && noScript.momentScreens === 2, "No-JavaScript fallback lost essential content");
+  assert(noScript.h1 === 1 && noScript.navigation === 4 && noScript.stationPanels === 5 && noScript.momentScreens === 2, "No-JavaScript fallback lost essential content");
 
   assert(browserErrors.length === 0, `Browser errors: ${browserErrors.join(" | ")}`);
   assert(Object.values(stationLayoutAssertions).every((viewports) => viewports.length > 0), "Station layout assertions did not cover every responsive branch");

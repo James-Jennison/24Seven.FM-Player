@@ -165,7 +165,7 @@ try {
               title: document.title,
               h1: document.querySelectorAll("h1").length,
               navigation: document.querySelectorAll("#project-navigation a").length,
-              expectedNavigation: document.body.classList.contains("developer-workspace") ? 5 : 3,
+              expectedNavigation: document.body.classList.contains("developer-workspace") ? 5 : document.querySelector(".landing-hero") ? 4 : 3,
               clientWidth: document.documentElement.clientWidth,
               scrollWidth: document.documentElement.scrollWidth,
               missingImages: [...document.images].filter((image) => image.getAttribute("src") && (!image.complete || image.naturalWidth === 0)).map((image) => image.src),
