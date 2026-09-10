@@ -1,6 +1,6 @@
 # Milestone Real-World Time Ledger
 
-Last updated: `September 10, 2026 at 2:20:48 PM PDT (UTC−07:00)`
+Last updated: `September 10, 2026 at 3:22:57 PM PDT (UTC−07:00)`
 
 This is the permanent time-accounting record for the canonical M01–M60 milestones in [ROADMAP.md](ROADMAP.md). It
 preserves historical uncertainty instead of treating commit spans as labor time. Future milestone work must be
@@ -44,6 +44,7 @@ does not alter the status, numbering, or cumulative totals of the canonical Andr
 | Master M16A — Cloudflare Full (Strict) hardening | Complete | `July 22, 2026 at 4:32:50 PM PDT (UTC−07:00)` | 0.25–0.5 active h | Completed `July 22, 2026 at 4:36:32 PM PDT (UTC−07:00)` | GPT-5; current default reasoning strength, unchanged | 0.03 h | 0.00 h | 0.03 h |
 | Master M17 — Consumer landing-page redesign | Complete | `September 10, 2026 at 12:57:26 PM PDT (UTC−07:00)` | 14–22 active h | Completed `September 10, 2026 at 1:39:31 PM PDT (UTC−07:00)` | GPT-5; current reasoning strength | 0.70 h | 0.00 h | 0.00 h |
 | Master M18 — Navigation-first public-site architecture | Complete | `September 10, 2026 at 1:47:00 PM PDT (UTC−07:00)` | 1.5–3 active h | Completed `September 10, 2026 at 2:20:48 PM PDT (UTC−07:00)` | GPT-5; current reasoning strength | 0.56 h | 0.00 h | 0.00 h |
+| Master M19 — Viewport-fit Home refinement | Complete | `September 10, 2026 at 3:04:36 PM PDT (UTC−07:00)` | 0.5–1.5 active h | Completed `September 10, 2026 at 3:22:57 PM PDT (UTC−07:00)` | GPT-5; current reasoning strength | 0.24 h | 0.07 h | 0.00 h |
 
 ### Master M12 — Player local migration implementation
 
@@ -395,6 +396,33 @@ Total elapsed time: 0.56 h
 User-blocked time excluded: 0.00 h
 Forecast variance: 0.94 h below the lower bound (62.7%)
 Cumulative counted project time through Milestone Master M18: 3.27 h (master-site program website milestones only; canonical Android cumulative remains Unknown)
+```
+
+### Master M19 — Viewport-fit Home refinement
+
+- **Objective:** Make the Home route's primary content—identity, app preview, and purpose-specific destinations—fit within a standard desktop/laptop viewport instead of pushing the navigation choices below the fold.
+- **Authorization and start:** The owner directed the refinement and execution started `September 10, 2026 at 3:04:36 PM PDT (UTC−07:00)` on `codex/public-landing-redesign`.
+- **Model, reasoning strength, and original forecast:** GPT-5 with the current reasoning strength; 0.5–1.5 active hours; expected completion by `September 10, 2026 at 4:34:36 PM PDT (UTC−07:00)` if uninterrupted.
+- **Completion gates:** Keep readable mobile reflow; make desktop/laptop Home primary content viewport-fit; preserve route hierarchy and accessibility; validate responsive behavior and commit locally. Push and production deployment remain separate owner-controlled gates.
+- **Completion:** Completed locally `September 10, 2026 at 3:22:57 PM PDT (UTC−07:00)`. The Home decision surface—header, identity, two actions, preview, and four destination cards—fits within the verified 1366 by 768 viewport. The global footer remains outside that decision surface; mobile preserves readable scrolling.
+- **Measured time:** 0.24 active hours, 0.07 automated-wait hours, and 0.00 user-blocked hours. Counted project time and elapsed time are each 0.31 h.
+- **Forecast variance:** 0.19 h (38.0%) below the 0.5-hour lower bound. The existing responsive suite made it practical to express the owner-visible design requirement as an executable browser invariant instead of relying on a one-off screenshot.
+- **Evidence:** `heavy-build -- ./scripts/validate-project-site.sh`, Chromium responsive validation (including 1366 by 768), Firefox responsive validation, and `git diff --check` passed. A headless 1366 by 768 capture confirmed the full decision surface visually. Corrected closure review `review-cycle-22a0502759a9` returned NO FINDINGS from Gemini, Grok, and DeepSeek; evidence cycle `evidence-cycle-2d8d4f899939` recorded static and whitespace checks as PASS. The earlier `review-cycle-e4f19abd3eac` had a transcribed base SHA and is superseded rather than used as closure evidence.
+- **Forecasting lesson:** Treat a product Home route as an explicit decision surface with a target viewport contract. Global chrome and footer content do not need to compete with the primary choices, and mobile readability should not be sacrificed to force a desktop-height constraint.
+
+| Started | Ended | Category | Reason or work | Evidence | Hours |
+| --- | --- | --- | --- | --- | ---: |
+| `September 10, 2026 at 3:04:36 PM PDT (UTC−07:00)` | `September 10, 2026 at 3:22:57 PM PDT (UTC−07:00)` | Active | Compact Home hero and destination grid so primary navigation is visible without campaign-style scrolling. | Owner direction; branch `codex/public-landing-redesign`; closure review `review-cycle-22a0502759a9`; evidence cycle `evidence-cycle-2d8d4f899939` | 0.24 h |
+| `September 10, 2026 at 3:15:00 PM PDT (UTC−07:00)` | `September 10, 2026 at 3:20:00 PM PDT (UTC−07:00)` | Automated wait | Responsive-browser and reviewer completion waits while independent work continued. | Chromium and Firefox suite logs; reviewer cycle `review-cycle-22a0502759a9` | 0.07 h |
+
+```text
+Milestone Master M19 time:
+Forecast: 0.5–1.5 active hours
+Counted project time: 0.31 h
+Total elapsed time: 0.31 h
+User-blocked time excluded: 0.00 h
+Forecast variance: 0.19 h below the lower bound (38.0%)
+Cumulative counted project time through Milestone Master M19: 3.58 h (master-site program website milestones only; canonical Android cumulative remains Unknown)
 ```
 
 ## Definitions and confidence rules

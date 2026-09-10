@@ -163,6 +163,7 @@ try {
     { width: 800, height: 1024, label: "tablet grid boundary" },
     { width: 801, height: 1024, label: "tablet grid boundary plus one" },
     { width: 1024, height: 1000, label: "compact laptop" },
+    { width: 1366, height: 768, label: "standard laptop" },
     { width: 1440, height: 1000, label: "laptop" },
     { width: 1920, height: 1080, label: "large desktop" },
   ]) {
@@ -207,6 +208,14 @@ try {
       assert(state.navigation === state.expectedNavigation, `${route} exposes the wrong workspace navigation`);
       const expectedNavigation = state.developerWorkspace ? expectedDeveloperNavigation : expectedPublicNavigation;
       assert(JSON.stringify(state.navigationPaths) === JSON.stringify(expectedNavigation), `${route} exposes the wrong primary navigation destinations: ${state.navigationPaths.join(", ")}`);
+
+      if (route === "/" && viewport.width >= 1024) {
+        const homeViewport = await evaluate(`(() => ({
+          destinationsBottom: document.querySelector('.home-destination-grid').getBoundingClientRect().bottom,
+          viewportHeight: window.innerHeight
+        }))()`);
+        assert(homeViewport.destinationsBottom <= homeViewport.viewportHeight + 1, `${viewport.label} Home leaves its primary destinations below the initial viewport`);
+      }
 
       if (route === "/stations/") {
         const stationLinks = await evaluate(`(() => [...document.querySelectorAll('.landing-station a')].map((link) => ({
