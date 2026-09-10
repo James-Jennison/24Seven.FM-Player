@@ -1,6 +1,6 @@
 # Milestone Real-World Time Ledger
 
-Last updated: `September 10, 2026 at 4:19:42 PM PDT (UTC−07:00)`
+Last updated: `September 10, 2026 at 4:42:38 PM PDT (UTC−07:00)`
 
 This is the permanent time-accounting record for the canonical M01–M60 milestones in [ROADMAP.md](ROADMAP.md). It
 preserves historical uncertainty instead of treating commit spans as labor time. Future milestone work must be
@@ -46,6 +46,7 @@ does not alter the status, numbering, or cumulative totals of the canonical Andr
 | Master M18 — Navigation-first public-site architecture | Complete | `September 10, 2026 at 1:47:00 PM PDT (UTC−07:00)` | 1.5–3 active h | Completed `September 10, 2026 at 2:20:48 PM PDT (UTC−07:00)` | GPT-5; current reasoning strength | 0.56 h | 0.00 h | 0.00 h |
 | Master M19 — Viewport-fit Home refinement | Complete | `September 10, 2026 at 3:04:36 PM PDT (UTC−07:00)` | 0.5–1.5 active h | Completed `September 10, 2026 at 3:22:57 PM PDT (UTC−07:00)` | GPT-5; current reasoning strength | 0.24 h | 0.07 h | 0.00 h |
 | Master M20 — Compact public directories | Complete | `September 10, 2026 at 3:35:00 PM PDT (UTC−07:00)` | 1–2 active h | Completed `September 10, 2026 at 4:19:42 PM PDT (UTC−07:00)` | GPT-5; current reasoning strength | 0.59 h | 0.16 h | 0.00 h |
+| Master M21 — Footer relationship correction | Complete | `September 10, 2026 at 4:34:16 PM PDT (UTC−07:00)` | 0.1–0.25 active h | Completed `September 10, 2026 at 4:42:38 PM PDT (UTC−07:00)` | GPT-5; current reasoning strength | 0.08 h | 0.06 h | 0.00 h |
 
 ### Master M12 — Player local migration implementation
 
@@ -451,6 +452,33 @@ Total elapsed time: 0.75 h
 User-blocked time excluded: 0.00 h
 Forecast variance: 0.25 h below the lower bound (25.0%)
 Cumulative counted project time through Milestone Master M20: 4.33 h (master-site program website milestones only; canonical Android cumulative remains Unknown)
+```
+
+### Master M21 — Footer relationship correction
+
+- **Objective:** Correct the public footer's false statement that the Player is not affiliated with 24Seven.FM when its creator is a network administrator and founding member, while retaining the precise independent-development and publishing/sponsorship boundary.
+- **Authorization and start:** The owner identified the inaccurate footer and execution started `September 10, 2026 at 4:34:16 PM PDT (UTC−07:00)` on `codex/public-landing-redesign`.
+- **Model, reasoning strength, and original forecast:** GPT-5 with the current reasoning strength; 0.1–0.25 active hours; expected completion by `September 10, 2026 at 4:49:16 PM PDT (UTC−07:00)` if uninterrupted.
+- **Completion gates:** Update each public footer layout consistently; preserve the truthful independent-development boundary; build the local artifact; verify rendered output; and commit locally. Production remains a separate gate.
+- **Completion:** Completed locally `September 10, 2026 at 4:42:38 PM PDT (UTC−07:00)`. The shared footer now recognizes the durable founder relationship rather than falsely disclaiming affiliation, while accurately stating that the Player is independently developed and not published or sponsored by the network or its individual stations.
+- **Measured time:** 0.08 active hours, 0.06 automated-wait hours, and 0.00 user-blocked hours. Counted project time and elapsed time are each 0.14 h.
+- **Forecast variance:** 0.04 h (40.0%) above the 0.1-hour lower bound. The extra review time was useful because it removed a stale current-role title and independently confirmed the documented independent-development boundary.
+- **Evidence:** `heavy-build -- ./scripts/validate-project-site.sh`, rendered Home/Stations/Privacy footer assertion, and `git diff --check` passed. Initial review `review-cycle-99e25921d12d` identified a LOW current-role-staleness concern, resolved by removing “network administrator.” Final closure `review-cycle-4f05c0298541` returned NO FINDINGS from Gemini, Grok, and DeepSeek after source-backed relationship evidence was supplied. Evidence cycle `evidence-cycle-d4bcb63e94e7` recorded static validation and whitespace checks as PASS.
+- **Forecasting lesson:** A disclaimer must be specific to the real ownership and relationship facts. Avoid both blanket disaffiliation claims and living job titles when a durable, evidence-backed founder attribution conveys the necessary boundary.
+
+| Started | Ended | Category | Reason or work | Evidence | Hours |
+| --- | --- | --- | --- | --- | ---: |
+| `September 10, 2026 at 4:34:16 PM PDT (UTC−07:00)` | `September 10, 2026 at 4:42:38 PM PDT (UTC−07:00)` | Active | Correct the shared footer relationship wording, validate the rendered artifact, and resolve review findings. | Owner clarification; branch `codex/public-landing-redesign`; closure `review-cycle-4f05c0298541` | 0.08 h |
+| `September 10, 2026 at 4:35:32 PM PDT (UTC−07:00)` | `September 10, 2026 at 4:41:38 PM PDT (UTC−07:00)` | Automated wait | Static build and independent-review completion waits while the next bounded remediation/evidence step was prepared. | Site validation output; review cycles `review-cycle-99e25921d12d` and `review-cycle-4f05c0298541` | 0.06 h |
+
+```text
+Milestone Master M21 time:
+Forecast: 0.1–0.25 active hours
+Counted project time: 0.14 h
+Total elapsed time: 0.14 h
+User-blocked time excluded: 0.00 h
+Forecast variance: 0.04 h above the lower bound (40.0%)
+Cumulative counted project time through Milestone Master M21: 4.47 h (master-site program website milestones only; canonical Android cumulative remains Unknown)
 ```
 
 ## Definitions and confidence rules
