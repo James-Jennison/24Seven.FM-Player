@@ -1,6 +1,6 @@
 # Milestone Real-World Time Ledger
 
-Last updated: `September 10, 2026 at 3:22:57 PM PDT (UTC−07:00)`
+Last updated: `September 10, 2026 at 4:19:42 PM PDT (UTC−07:00)`
 
 This is the permanent time-accounting record for the canonical M01–M60 milestones in [ROADMAP.md](ROADMAP.md). It
 preserves historical uncertainty instead of treating commit spans as labor time. Future milestone work must be
@@ -45,6 +45,7 @@ does not alter the status, numbering, or cumulative totals of the canonical Andr
 | Master M17 — Consumer landing-page redesign | Complete | `September 10, 2026 at 12:57:26 PM PDT (UTC−07:00)` | 14–22 active h | Completed `September 10, 2026 at 1:39:31 PM PDT (UTC−07:00)` | GPT-5; current reasoning strength | 0.70 h | 0.00 h | 0.00 h |
 | Master M18 — Navigation-first public-site architecture | Complete | `September 10, 2026 at 1:47:00 PM PDT (UTC−07:00)` | 1.5–3 active h | Completed `September 10, 2026 at 2:20:48 PM PDT (UTC−07:00)` | GPT-5; current reasoning strength | 0.56 h | 0.00 h | 0.00 h |
 | Master M19 — Viewport-fit Home refinement | Complete | `September 10, 2026 at 3:04:36 PM PDT (UTC−07:00)` | 0.5–1.5 active h | Completed `September 10, 2026 at 3:22:57 PM PDT (UTC−07:00)` | GPT-5; current reasoning strength | 0.24 h | 0.07 h | 0.00 h |
+| Master M20 — Compact public directories | Complete | `September 10, 2026 at 3:35:00 PM PDT (UTC−07:00)` | 1–2 active h | Completed `September 10, 2026 at 4:19:42 PM PDT (UTC−07:00)` | GPT-5; current reasoning strength | 0.59 h | 0.16 h | 0.00 h |
 
 ### Master M12 — Player local migration implementation
 
@@ -423,6 +424,33 @@ Total elapsed time: 0.31 h
 User-blocked time excluded: 0.00 h
 Forecast variance: 0.19 h below the lower bound (38.0%)
 Cumulative counted project time through Milestone Master M19: 3.58 h (master-site program website milestones only; canonical Android cumulative remains Unknown)
+```
+
+### Master M20 — Compact public directories
+
+- **Objective:** Replace the oversized campaign-style entry layouts on the public Stations and Platforms routes with compact, scan-friendly directories that respect the owner-approved navigation-first information architecture.
+- **Authorization and start:** The owner identified visible layout defects and execution started `September 10, 2026 at 3:35:00 PM PDT (UTC−07:00)` on `codex/public-landing-redesign`.
+- **Model, reasoning strength, and original forecast:** GPT-5 with the current reasoning strength; 1–2 active hours; expected completion by `September 10, 2026 at 5:35:00 PM PDT (UTC−07:00)` if uninterrupted.
+- **Completion gates:** Preserve official station targets and fact-bound platform availability; remove duplicated platform content only when already represented in the compact directory; avoid campaign-style vertical panels; validate responsive behavior and commit locally. Push and production deployment remain separate owner-controlled gates.
+- **Completion:** Completed locally `September 10, 2026 at 4:19:42 PM PDT (UTC−07:00)`. The shared visual system now uses a broadcast-editorial earth, ember, and sage palette instead of the repeated violet/cyan dashboard treatment. Stations is a compact 3+2 desktop, 2+2+1 tablet, and one-column mobile directory; Platforms is two concise availability cards; Features is a four-card essentials directory. The official station targets and fact-bound production-review / invitation-only testing copy remain protected.
+- **Measured time:** 0.59 active hours, 0.16 automated-wait hours, and 0.00 user-blocked hours. Counted project time and elapsed time are each 0.75 h.
+- **Forecast variance:** 0.25 h (25.0%) below the 1-hour lower bound. The prior responsive test framework and compact route scope avoided a speculative full-site rewrite, while independent closure review added useful focused accessibility guards.
+- **Evidence:** `heavy-build -- ./scripts/validate-project-site.sh`, Chromium responsive validation, Firefox responsive validation, and `git diff --check` passed. Chromium now proves the Station action contract at desktop, tablet, and mobile breakpoints, verifies named visible forced-colors focus, and includes negative probes for an injected second control and a suppressed outline. `validate-project-site.py` enforces exact rendered production-review and separate-testing strings. Initial review `review-cycle-9a4a3cebf1e9` raised a MEDIUM accessibility-evidence finding and a LOW claim-evidence finding; both were resolved. Closure review `review-cycle-078da7e88e29` identified one further LOW evidence-artifact gap, resolved by the negative probes. Final remediation review `review-cycle-89f0b200c2d4` returned NO FINDINGS from Gemini, Grok, and DeepSeek. Evidence cycle `evidence-cycle-aee03e0e33f6` recorded static validation and whitespace checks as PASS.
+- **Forecasting lesson:** A visual reset must begin with product-specific source material and page purpose, not a recycled “modern app” palette or oversized campaign composition. Treat visual distinctiveness, compact route silhouette, and accessibility semantics as executable acceptance criteria.
+
+| Started | Ended | Category | Reason or work | Evidence | Hours |
+| --- | --- | --- | --- | --- | ---: |
+| `September 10, 2026 at 3:35:00 PM PDT (UTC−07:00)` | `September 10, 2026 at 4:19:42 PM PDT (UTC−07:00)` | Active | Rework the visual system and the Stations, Platforms, and Features directories; inspect, correct, document, and integrate independent review findings. | Owner screenshots; branch `codex/public-landing-redesign`; final review `review-cycle-89f0b200c2d4` | 0.59 h |
+| `September 10, 2026 at 3:45:00 PM PDT (UTC−07:00)` | `September 10, 2026 at 4:17:00 PM PDT (UTC−07:00)` | Automated wait | Browser matrices, static builds, Firefox audit, and independent reviewer completion waits while the next bounded validation step was prepared. | Chromium and Firefox suite output; review cycles `review-cycle-9a4a3cebf1e9`, `review-cycle-078da7e88e29`, and `review-cycle-89f0b200c2d4` | 0.16 h |
+
+```text
+Milestone Master M20 time:
+Forecast: 1–2 active hours
+Counted project time: 0.75 h
+Total elapsed time: 0.75 h
+User-blocked time excluded: 0.00 h
+Forecast variance: 0.25 h below the lower bound (25.0%)
+Cumulative counted project time through Milestone Master M20: 4.33 h (master-site program website milestones only; canonical Android cumulative remains Unknown)
 ```
 
 ## Definitions and confidence rules

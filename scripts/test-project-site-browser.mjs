@@ -222,10 +222,24 @@ try {
           href: link.href,
           target: link.target,
           rel: link.rel,
-          text: link.textContent.replace(/\\s+/g, ' ').trim()
+          text: link.textContent.replace(/\\s+/g, ' ').trim(),
+          accessibleName: link.getAttribute('aria-label') ?? '',
+          cardLinkCount: link.closest('.landing-station')?.querySelectorAll('a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])').length ?? 0
         })))()`);
         assert(stationLinks.length === 5, "Station directory does not expose five official destinations");
         assert(stationLinks.every((link) => link.target === "_blank" && link.rel.includes("noopener") && link.rel.includes("noreferrer") && link.text.includes("Visit official site") && link.text.includes("↗")), "Station directory lost its visible new-tab disclosure or tab-nabbing protection");
+        assert(stationLinks.every((link) => link.accessibleName.trim().length > 0 && link.cardLinkCount === 1), "Each station card must expose exactly one named keyboard destination");
+        const stationActionNegative = await evaluate(`(() => {
+          const card = document.querySelector('.landing-station');
+          const probe = document.createElement('button');
+          probe.type = 'button';
+          probe.textContent = 'Regression probe';
+          card.append(probe);
+          const rejected = card.querySelectorAll('a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])').length !== 1;
+          probe.remove();
+          return rejected;
+        })()`);
+        assert(stationActionNegative, "Station-directory action guard did not reject an added keyboard control");
         const stationLayout = await evaluate(`(() => {
           const intro = document.querySelector('.landing-section-heading');
           const grid = document.querySelector('.landing-station-grid');
@@ -244,11 +258,12 @@ try {
         }
         const [first, second, third, fourth, fifth] = stationLayout.cards;
         if (viewport.width > 900) {
-          assert(Math.abs(first.top - fifth.top) < 2, `${viewport.label} station cards did not remain in one desktop row`);
+          assert(Math.abs(first.top - second.top) < 2 && Math.abs(second.top - third.top) < 2, `${viewport.label} station cards did not form a three-card desktop opening row`);
+          assert(Math.abs(fourth.top - fifth.top) < 2 && fourth.top > first.bottom, `${viewport.label} station cards did not form a compact 3+2 desktop directory`);
           stationLayoutAssertions.desktop.push(viewport.width);
         } else if (viewport.width > 580) {
-          assert(Math.abs(first.top - third.top) < 2 && fourth.top > first.bottom, `${viewport.label} station cards did not form a 3+2 tablet lineup`);
-          assert(Math.abs(((fourth.center + fifth.center) / 2) - stationLayout.grid.center) < 2, `${viewport.label} tablet remainder cards are not centered`);
+          assert(Math.abs(first.top - second.top) < 2 && Math.abs(third.top - fourth.top) < 2 && third.top > first.bottom, `${viewport.label} station cards did not form a 2+2 tablet directory`);
+          assert(fifth.top > third.bottom && Math.abs(fifth.center - stationLayout.grid.center) < 2, `${viewport.label} tablet remainder card is not centered`);
           stationLayoutAssertions.tablet.push(viewport.width);
         } else {
           assert(second.top > first.bottom && third.top > second.bottom && fourth.top > third.bottom && fifth.top > fourth.bottom, `${viewport.label} station cards did not form a one-column mobile stack`);
@@ -270,6 +285,22 @@ try {
         assert(platformContract.googlePlayLinks.length === 0 && platformContract.publicInstallLabels.length === 0, "Platforms exposed an unsupported public install path");
         assert(platformContract.headingSizes.length === 2 && platformContract.headingSizes.every((size) => size <= 60), "Platforms lost its bounded card-heading typography");
         assert(platformContract.imageRatios.length === 2 && platformContract.imageRatios.every((ratio) => ratio > 0 && ratio <= 2.3), "Platforms stretched a capture beyond its natural aspect ratio");
+      }
+
+      if (route === "/features/") {
+        const featureContract = await evaluate(`(() => {
+          const cards = [...document.querySelectorAll('.feature-directory-grid article')];
+          return {
+            text: document.body.innerText,
+            actionsPerCard: cards.map((card) => [...card.querySelectorAll('a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])')].map((control) => ({
+              label: control.getAttribute('aria-label') || control.textContent.replace(/\\s+/g, ' ').trim()
+            })))
+          };
+        })()`);
+        assert(featureContract.text.includes("The first production release is under review by Google Play and is not yet available for public installation."), "Features lost the fact-bound production-review statement");
+        assert(featureContract.text.includes("The invitation-only closed-testing program is separate from the production release under review."), "Features lost the separate closed-testing statement");
+        assert(featureContract.actionsPerCard.slice(0, 3).every((actions) => actions.length === 0), "Informational feature cards unexpectedly introduced keyboard destinations");
+        assert(featureContract.actionsPerCard[3]?.length === 1 && featureContract.actionsPerCard[3][0].label === "Apply to invitation-only closed testing", "Closed-testing feature card must expose one named keyboard destination");
       }
     }
   }
@@ -440,6 +471,30 @@ try {
   }))()`);
   assert(forcedColors.ambientDisplay === "none", "Forced colors left decorative ambient layers visible");
   assert(forcedColors.buttonBorder !== "none", "Forced colors removed the theme control boundary");
+
+  await navigate("/stations/");
+  const forcedStationFocus = await evaluate(`(() => [...document.querySelectorAll('.landing-station a')].map((link) => {
+    link.focus({ focusVisible: true });
+    const style = getComputedStyle(link);
+    return {
+      named: Boolean(link.getAttribute('aria-label')?.trim()),
+      visible: style.outlineStyle !== 'none' && style.outlineWidth !== '0px',
+      inVisualAndDomOrder: [...document.querySelectorAll('.landing-station a')].indexOf(link) === [...document.querySelectorAll('.landing-station')].indexOf(link.closest('.landing-station'))
+    };
+  }))()`);
+  assert(forcedStationFocus.length === 5 && forcedStationFocus.every((link) => link.named && link.visible && link.inVisualAndDomOrder), "Forced colors lost named, visible, ordered station-directory keyboard focus");
+  const forcedStationFocusNegative = await evaluate(`(() => {
+    const link = document.querySelector('.landing-station a');
+    link.focus({ focusVisible: true });
+    const priorValue = link.style.getPropertyValue('outline');
+    const priorPriority = link.style.getPropertyPriority('outline');
+    link.style.setProperty('outline', 'none', 'important');
+    const rejected = getComputedStyle(link).outlineStyle === 'none' || getComputedStyle(link).outlineWidth === '0px';
+    if (priorValue) link.style.setProperty('outline', priorValue, priorPriority);
+    else link.style.removeProperty('outline');
+    return rejected;
+  })()`);
+  assert(forcedStationFocusNegative, "Forced-colors focus guard did not reject a suppressed station-link outline");
 
   await send("Emulation.setScriptExecutionDisabled", { value: true });
   await navigate("/");

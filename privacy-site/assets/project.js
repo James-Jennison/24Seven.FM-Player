@@ -49,7 +49,7 @@
     const nextTheme = theme === 'dark' ? 'light' : 'dark';
     if (themeLabel) themeLabel.textContent = theme === 'dark' ? 'Dark' : 'Light';
     if (themeToggle) themeToggle.setAttribute('aria-label', 'Switch to ' + nextTheme + ' theme');
-    if (themeColor) themeColor.setAttribute('content', theme === 'dark' ? '#090c15' : '#f5f7fb');
+    if (themeColor) themeColor.setAttribute('content', theme === 'dark' ? '#1a1814' : '#f5efe4');
     if (persist) {
       try {
         localStorage.setItem('project-theme', theme);
