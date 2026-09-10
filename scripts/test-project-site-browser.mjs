@@ -322,11 +322,11 @@ try {
     field.dispatchEvent(new Event('input', { bubbles: true }));
     return {
       visible: [...document.querySelectorAll('[data-privacy-document] > section')].filter((item) => !item.hidden).length,
-      stationDeletionContact: document.body.textContent.includes('morg@24seven.fm')
+      stationDeletionPath: document.body.textContent.includes('Contact/Feedback system to reach Network/Station Administration')
     };
   })()`);
   assert(privacyState.visible > 0, "Privacy search returned no session results");
-  assert(privacyState.stationDeletionContact, "The approved station deletion contact is missing");
+  assert(privacyState.stationDeletionPath, "The source-backed station deletion path is missing");
 
   await send("Emulation.setEmulatedMedia", {
     media: "screen",

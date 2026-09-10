@@ -35,13 +35,10 @@
         {% endfor %}
       </nav>
       <div class="header-actions">
-        <a class="header-utility" href="https://dev.jamesjennison.net/">Developer Workspace <span aria-hidden="true">↗</span></a>
-        <a class="header-utility" href="https://24sevenfmplayer.com/tester-portal.php">Developer / Tester Sign In <span aria-hidden="true">↗</span></a>
         <button class="theme-toggle" type="button" aria-label="Switch color theme">
           <span class="theme-toggle-icon" aria-hidden="true">◐</span>
           <span class="theme-toggle-label">Theme</span>
         </button>
-        <a class="header-github" href="{{ page.github_url | default: site.github_url }}">GitHub <span aria-hidden="true">↗</span></a>
       </div>
     </header>
     <main id="main-content" class="privacy-main">
@@ -80,16 +77,10 @@
         <p>An unofficial, non-commercial community project. Not affiliated with or endorsed by 24seven.FM or its stations.</p>
         <p class="site-verification">{{ site.data.project.site_meta.verification_label }}.</p>
       </div>
-      <nav aria-label="Footer navigation">
-        <a href="{{ '/' | relative_url }}">Home</a>
-        <a href="{{ '/features/' | relative_url }}">Features</a>
-        <a href="{{ '/product-testing/' | relative_url }}">Closed Alpha access</a>
-        <a href="https://dev.jamesjennison.net/">Developer workspace <span aria-hidden="true">↗</span></a>
-        <a href="https://24sevenfmplayer.com/tester-portal.php">Developer / Tester Sign In <span aria-hidden="true">↗</span></a>
-        <a href="{{ page.github_url | default: site.github_url }}/issues">Report an app issue</a>
-        <a href="{{ site.master_url }}">JamesJennison.net</a>
-        <a href="{{ site.status_url }}">Service status</a>
-      </nav>
+      <div class="footer-link-groups">
+        <nav aria-label="Product navigation"><strong>Player</strong><a href="{{ '/' | relative_url }}">Home</a><a href="{{ '/features/' | relative_url }}">Features</a><a href="{{ '/privacy/' | relative_url }}">Privacy notice</a><a href="{{ '/product-testing/' | relative_url }}">Closed testing</a></nav>
+        <nav aria-label="Project navigation"><strong>Project</strong><a href="{{ page.github_url | default: site.github_url }}/issues">Report an app issue</a><a href="{{ site.status_url }}">Service status</a><a href="https://dev.jamesjennison.net/">Developer workspace <span aria-hidden="true">↗</span></a><a href="https://24sevenfmplayer.com/tester-portal.php">Tester sign in <span aria-hidden="true">↗</span></a></nav>
+      </div>
     </footer>
     <button class="back-to-top" type="button" aria-label="Back to top" title="Back to top"><span aria-hidden="true">↑</span></button>
     <div class="site-toast" role="status" aria-live="polite" aria-atomic="true"></div>

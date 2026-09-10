@@ -662,6 +662,7 @@
     const progressText = document.createElement('p');
     progressText.className = 'tester-application-progress-text';
     progressText.setAttribute('aria-live', 'polite');
+    progressText.tabIndex = -1;
     const actions = document.createElement('div');
     actions.className = 'tester-application-actions';
     actions.dataset.applicationWizardActions = '';
@@ -677,7 +678,9 @@
       });
     };
 
-    const showStep = function (nextStep) {
+    const showStep = function (nextStep, options) {
+      const shouldMoveFocus = options && options.moveFocus;
+      const shouldScroll = options && options.scroll;
       currentStep = Math.max(0, Math.min(nextStep, applicationSteps.length - 1));
       applicationSteps.forEach(function (step, index) {
         step.hidden = index !== currentStep;
@@ -693,7 +696,7 @@
         button.disabled = index > currentStep;
         button.classList.toggle('is-current', index === currentStep);
         button.classList.toggle('is-complete', index < currentStep);
-        button.addEventListener('click', function () { showStep(index); });
+        button.addEventListener('click', function () { showStep(index, { moveFocus: true, scroll: true }); });
         progress.append(button);
       });
       const title = applicationSteps[currentStep].dataset.applicationStepTitle || 'Application';
@@ -705,7 +708,7 @@
         back.type = 'button';
         back.className = 'button secondary';
         back.textContent = 'Back';
-        back.addEventListener('click', function () { showStep(currentStep - 1); });
+        back.addEventListener('click', function () { showStep(currentStep - 1, { moveFocus: true, scroll: true }); });
         actions.append(back);
       }
       if (currentStep < applicationSteps.length - 1) {
@@ -720,11 +723,12 @@
             invalid.focus();
             return;
           }
-          showStep(currentStep + 1);
+          showStep(currentStep + 1, { moveFocus: true, scroll: true });
         });
         actions.append(next);
       }
-      form.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      if (shouldScroll) form.scrollIntoView({ block: 'start', behavior: reducedMotion ? 'auto' : 'smooth' });
+      if (shouldMoveFocus) window.requestAnimationFrame(function () { progressText.focus({ preventScroll: true }); });
     };
 
     showStep(currentStep);
@@ -948,6 +952,7 @@
     document.addEventListener('keydown', function (event) {
       const shortcut = (event.key === '/' && !isEditable(event.target)) || ((event.ctrlKey || event.metaKey) && event.key.toLocaleLowerCase() === 'k');
       if (!shortcut) return;
+      if (!explorer.open && document.querySelector('dialog[open]')) return;
       event.preventDefault();
       if (explorer.open) closeExplorer();
       else openExplorer();
