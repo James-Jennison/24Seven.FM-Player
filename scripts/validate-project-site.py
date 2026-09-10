@@ -78,6 +78,17 @@ SECRET_MARKERS = {
     "ghp_",
     "sk-proj-",
 }
+PRODUCTION_REVIEW_STATEMENT = (
+    "The first production release is under review by Google Play and is not yet "
+    "available for public installation."
+)
+PRODUCTION_REVIEW_PAGES = {
+    "index.html",
+    "features/index.html",
+    "product-testing/index.html",
+    "dev/roadmap/index.html",
+}
+INVITATION_ONLY_CTA = "Apply to invitation-only closed testing"
 REQUIRED_HTACCESS_DIRECTIVES = {
     "ErrorDocument 404 /404.html",
     "<IfModule mod_headers.c>",
@@ -158,6 +169,46 @@ def output_path_for_url(root: Path, path: str) -> Path:
     if decoded.endswith("/"):
         return root / decoded.lstrip("/") / "index.html"
     return root / decoded.lstrip("/")
+
+
+def validate_production_review_claims(
+    repository_root: Path,
+    artifact_root: Path,
+    html_documents: dict[Path, DocumentAudit],
+    failures: list[str],
+) -> None:
+    """Keep the versionless review attestation separate from public installs and closed testing."""
+
+    try:
+        contract = json.loads((repository_root / "docs" / "WEBSITE_FACTS_CONTRACT.json").read_text(encoding="utf-8"))
+        review = contract["release_claims"]["production_review_status"]
+    except (KeyError, OSError, json.JSONDecodeError) as error:
+        fail(f"Unable to validate production review claims: {error}", failures)
+        return
+
+    if review.get("status") != "in_review":
+        return
+    if review.get("public_statement") != PRODUCTION_REVIEW_STATEMENT:
+        fail("In-review production claim does not match the fixed no-availability statement", failures)
+        return
+
+    for relative_path in PRODUCTION_REVIEW_PAGES:
+        path = artifact_root / relative_path
+        if not path.is_file():
+            continue
+        text = path.read_text(encoding="utf-8")
+        if PRODUCTION_REVIEW_STATEMENT not in text:
+            fail(f"Production review statement is missing from {relative_path}", failures)
+        document = html_documents.get(path)
+        if document and any("play.google.com" in href.lower() for href in document.hrefs):
+            fail(f"Public Google Play install link is not permitted while review is in progress: {relative_path}", failures)
+
+    for relative_path in ("index.html", "features/index.html", "product-testing/index.html"):
+        text = (artifact_root / relative_path).read_text(encoding="utf-8")
+        if INVITATION_ONLY_CTA not in text:
+            fail(f"Closed-testing CTA is not explicitly invitation-only in {relative_path}", failures)
+        if "Join closed testing" in text:
+            fail(f"Ambiguous closed-testing CTA remains in {relative_path}", failures)
 
 
 def audit() -> int:
@@ -308,6 +359,8 @@ def audit() -> int:
         else:
             if manifest.get("start_url") != "/" or manifest.get("scope") != "/":
                 fail("Manifest start_url and scope must use the dedicated-domain root", failures)
+
+    validate_production_review_claims(repository_root, artifact_root, html_documents, failures)
 
     if failures:
         for failure in failures:

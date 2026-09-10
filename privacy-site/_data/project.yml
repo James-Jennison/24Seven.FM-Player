@@ -46,7 +46,7 @@ play_status:
   label: Google Play review in progress
   headline: First production release under review
   home_detail: The first production release is under review by Google Play and is not yet available for public installation.
-  detail: The first production release is currently under review by Google Play. It is not yet publicly available; closed testing remains a separate program while the review is pending.
+  detail: The first production release is under review by Google Play and is not yet available for public installation.
 
 roadmap_meta:
   updated: 2026-08-16

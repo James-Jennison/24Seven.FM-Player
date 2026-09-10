@@ -16,6 +16,18 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 CONTRACT_PATH = ROOT / "docs" / "WEBSITE_FACTS_CONTRACT.json"
 SHA = re.compile(r"^[0-9a-f]{40}$")
+PRODUCTION_REVIEW_STATEMENT = (
+    "The first production release is under review by Google Play and is not yet "
+    "available for public installation."
+)
+PRODUCTION_REVIEW_FIELDS = {
+    "status",
+    "recorded_at",
+    "source",
+    "release_record",
+    "public_statement",
+    "scope_rule",
+}
 
 
 def require(condition: bool, message: str) -> None:
@@ -303,6 +315,7 @@ def main(require_public_privacy_ready: bool = False, require_interim_privacy_cor
 
         production_review = release.get("production_review_status")
         require(isinstance(production_review, dict), "production_review_status is required")
+        require(set(production_review) == PRODUCTION_REVIEW_FIELDS, "production review status must contain only its narrowly scoped fields")
         require(production_review.get("status") in {"not_recorded", "in_review", "approved", "published", "rejected", "withdrawn"}, "production review status is invalid")
         require(isinstance(production_review.get("recorded_at"), str) and production_review["recorded_at"], "production review recorded_at is required")
         require(production_review.get("source") in {"owner_attested_google_play_console", "read_only_play_console"}, "production review source is invalid")
@@ -310,6 +323,13 @@ def main(require_public_privacy_ready: bool = False, require_interim_privacy_cor
         require((ROOT / production_review["release_record"]).is_file(), "production review release record is missing")
         require(isinstance(production_review.get("public_statement"), str) and production_review["public_statement"], "production review public_statement is required")
         require(isinstance(production_review.get("scope_rule"), str) and production_review["scope_rule"], "production review scope_rule is required")
+        if production_review.get("status") == "in_review":
+            require(production_review.get("source") == "owner_attested_google_play_console", "in-review production status must remain owner-attested until read-only Console evidence is recorded")
+            require(production_review.get("public_statement") == PRODUCTION_REVIEW_STATEMENT, "in-review production status must use the approved no-availability statement")
+            review_record = (ROOT / production_review["release_record"]).read_text(encoding="utf-8")
+            require(PRODUCTION_REVIEW_STATEMENT in review_record, "production review release record must repeat the public statement verbatim")
+            require(candidate["version_name"] not in review_record, "production review release record must not inherit the closed-test version name")
+            require(str(candidate["version_code"]) not in review_record, "production review release record must not inherit the closed-test version code")
 
         portal = contract["portal_surface"]
         require(portal.get("authority_branch") == "codex/onboarding-portal-production", "portal authority branch is invalid")

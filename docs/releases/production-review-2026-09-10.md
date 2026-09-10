@@ -4,8 +4,7 @@
 
 ## Owner-attested public status
 
-The first production release of 24Seven.FM Player is under review by Google
-Play. It is not yet available for public installation.
+The first production release is under review by Google Play and is not yet available for public installation.
 
 ## Scope boundary
 

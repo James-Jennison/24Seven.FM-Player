@@ -43,7 +43,7 @@ robots: noindex, nofollow
   <div class="content-intro wide">
     <p class="eyebrow">{{ site.data.project.roadmap_meta.active_phase }} · Current program</p>
     <h2>{{ site.data.project.roadmap_meta.active_label }}</h2>
-    <p>The first production release is under Google Play review and is not yet publicly available. Closed-test operations remain separate recorded evidence; Google Play approval and publication remain distinct owner-controlled gates.</p>
+    <p>The first production release is under review by Google Play and is not yet available for public installation. Closed-test operations remain separate recorded evidence; Google Play approval and publication remain distinct owner-controlled gates.</p>
   </div>
   <div class="roadmap-callout migration-callout">
     <div><p class="eyebrow">Status discipline</p><h2>Current operations and recorded evidence stay distinct</h2></div>
@@ -128,7 +128,7 @@ robots: noindex, nofollow
 
 {% assign production_items = site.data.project.roadmap | where: "phase", "production" %}
 <section class="content-section" id="production">
-  <div class="content-intro wide"><p class="eyebrow">M42–M45 · Current operations and production path</p><h2>First production release under review</h2><p>The first production release is under Google Play review. It is not yet publicly available. Any approval, staged rollout, and continuing operations remain separate later gates with explicit owner control.</p></div>
+  <div class="content-intro wide"><p class="eyebrow">M42–M45 · Current operations and production path</p><h2>First production release under review</h2><p>The first production release is under review by Google Play and is not yet available for public installation. Any approval, staged rollout, and continuing operations remain separate later gates with explicit owner control.</p></div>
   <div class="workstream-grid">
     {% for item in production_items %}<article class="roadmap-card {{ item.state }}"><p class="status"><span></span>{{ item.state_label }}</p><p class="milestone-id">{{ item.id }}</p><h3>{{ item.name }}</h3><p>{{ item.summary }}</p><p class="roadmap-dependency"><strong>Dependency:</strong> {{ item.dependencies }}</p></article>{% endfor %}
   </div>
