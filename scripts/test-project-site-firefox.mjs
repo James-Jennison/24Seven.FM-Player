@@ -96,7 +96,9 @@ try {
 
   const routes = [
     "/",
+    "/stations/",
     "/features/",
+    "/platforms/",
     "/development/",
     "/testing/",
     "/product-testing/",
@@ -125,7 +127,7 @@ try {
       method: "POST",
       body: JSON.stringify({ width, height, x: 0, y: 0 }),
     });
-    const testedRoutes = width === 500 ? routes : ["/", "/product-testing/", "/privacy/", "/privacy/tv/", "/dev/", "/dev/tester-workspace/"];
+    const testedRoutes = width === 500 ? routes : ["/", "/stations/", "/platforms/", "/product-testing/", "/privacy/", "/privacy/tv/", "/dev/", "/dev/tester-workspace/"];
     for (const route of testedRoutes) {
       await request(`/session/${sessionId}/url`, {
         method: "POST",
@@ -165,7 +167,7 @@ try {
               title: document.title,
               h1: document.querySelectorAll("h1").length,
               navigation: document.querySelectorAll("#project-navigation a").length,
-              expectedNavigation: document.body.classList.contains("developer-workspace") ? 5 : document.querySelector(".landing-hero") ? 4 : 3,
+              expectedNavigation: 5,
               clientWidth: document.documentElement.clientWidth,
               scrollWidth: document.documentElement.scrollWidth,
               missingImages: [...document.images].filter((image) => image.getAttribute("src") && (!image.complete || image.naturalWidth === 0)).map((image) => image.src),

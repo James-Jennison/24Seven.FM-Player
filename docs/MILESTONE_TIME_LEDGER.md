@@ -1,6 +1,6 @@
 # Milestone Real-World Time Ledger
 
-Last updated: `September 10, 2026 at 1:39:31 PM PDT (UTC−07:00)`
+Last updated: `September 10, 2026 at 2:20:48 PM PDT (UTC−07:00)`
 
 This is the permanent time-accounting record for the canonical M01–M60 milestones in [ROADMAP.md](ROADMAP.md). It
 preserves historical uncertainty instead of treating commit spans as labor time. Future milestone work must be
@@ -43,6 +43,7 @@ does not alter the status, numbering, or cumulative totals of the canonical Andr
 | Master M15 — Player trusted-origin hardening | Complete | `July 22, 2026 at 3:59:38 PM PDT (UTC−07:00)` | 1–2 active h | Completed `July 22, 2026 at 4:24:19 PM PDT (UTC−07:00)` | GPT-5; current default reasoning strength, unchanged | 0.41 h | 0.00 h | 0.00 h |
 | Master M16A — Cloudflare Full (Strict) hardening | Complete | `July 22, 2026 at 4:32:50 PM PDT (UTC−07:00)` | 0.25–0.5 active h | Completed `July 22, 2026 at 4:36:32 PM PDT (UTC−07:00)` | GPT-5; current default reasoning strength, unchanged | 0.03 h | 0.00 h | 0.03 h |
 | Master M17 — Consumer landing-page redesign | Complete | `September 10, 2026 at 12:57:26 PM PDT (UTC−07:00)` | 14–22 active h | Completed `September 10, 2026 at 1:39:31 PM PDT (UTC−07:00)` | GPT-5; current reasoning strength | 0.70 h | 0.00 h | 0.00 h |
+| Master M18 — Navigation-first public-site architecture | Complete | `September 10, 2026 at 1:47:00 PM PDT (UTC−07:00)` | 1.5–3 active h | Completed `September 10, 2026 at 2:20:48 PM PDT (UTC−07:00)` | GPT-5; current reasoning strength | 0.56 h | 0.00 h | 0.00 h |
 
 ### Master M12 — Player local migration implementation
 
@@ -368,6 +369,32 @@ Total elapsed time: 0.70 h
 User-blocked time excluded: 0.00 h
 Forecast variance: 13.30 h below the lower bound (95.0%)
 Cumulative counted project time through Milestone Master M17: 2.71 h (master-site program website milestones only; canonical Android cumulative remains Unknown)
+```
+
+### Master M18 — Navigation-first public-site architecture
+
+- **Objective:** Replace the campaign-style home-page sequence with a compact, navigation-first public information architecture: Home is a short launch point, while Stations, Features, Platforms, and Privacy are purpose-specific routes.
+- **Authorization and start:** The owner directed this correction and execution began `September 10, 2026 at 1:47:00 PM PDT (UTC−07:00)` on isolated branch `codex/public-landing-redesign`.
+- **Model, reasoning strength, and original forecast:** GPT-5 with the current reasoning strength; 1.5–3 active hours; expected completion by `September 10, 2026 at 4:47:00 PM PDT (UTC−07:00)` if uninterrupted.
+- **Completion gates:** Preserve the no-web-player and official-station-link boundaries; implement real public routes; retain data-driven availability claims; pass static, Chromium, Firefox, keyboard, no-JavaScript, and responsive validation; obtain targeted independent review; commit locally. Push and production deployment remain separate owner-controlled gates.
+- **Completion:** Completed locally `September 10, 2026 at 2:20:48 PM PDT (UTC−07:00)`. Home is a short route launcher; Stations and Platforms are dedicated public routes; the existing Features and Privacy routes remain purpose-specific. No push or deployment occurred.
+- **Measured time:** 0.56 active hours, 0.00 automated-wait hours, and 0.00 user-blocked hours. The measured execution window was 0.56 h.
+- **Forecast variance:** 0.94 h (62.7%) below the 1.5-hour lower bound. Existing static route composition, a reusable responsive suite, and the prior asset set reduced implementation time; the explicit visual checks nevertheless caught and corrected heading inheritance and capture-aspect-ratio regressions.
+- **Evidence:** `heavy-build -- ./scripts/validate-project-site.sh`, Chromium responsive validation, Firefox responsive validation, and `git diff --check` passed after final corrections. Review cycle `review-cycle-324b267799f8` found two LOW evidence gaps, both confirmed and corrected. Closure review `review-cycle-9afbb15940ae` completed with NO FINDINGS from Gemini, Grok, and DeepSeek. Evidence cycle `evidence-cycle-1de20288884b` recorded static validation and whitespace checks as PASS.
+- **Forecasting lesson:** Treat navigation architecture as a first-class acceptance criterion. Make route destinations and visual invariants executable, because a responsive overflow check alone does not detect an inherited heading scale or an HTML-attribute image-height regression.
+
+| Started | Ended | Category | Reason or work | Evidence | Hours |
+| --- | --- | --- | --- | --- | ---: |
+| `September 10, 2026 at 1:47:00 PM PDT (UTC−07:00)` | `September 10, 2026 at 2:20:48 PM PDT (UTC−07:00)` | Active | Rework public information architecture, validation contracts, and route layout after owner feedback rejecting campaign-style scrolling. | Owner direction; branch `codex/public-landing-redesign`; review cycles `review-cycle-324b267799f8`, `review-cycle-9afbb15940ae`; evidence cycle `evidence-cycle-1de20288884b` | 0.56 h |
+
+```text
+Milestone Master M18 time:
+Forecast: 1.5–3 active hours
+Counted project time: 0.56 h
+Total elapsed time: 0.56 h
+User-blocked time excluded: 0.00 h
+Forecast variance: 0.94 h below the lower bound (62.7%)
+Cumulative counted project time through Milestone Master M18: 3.27 h (master-site program website milestones only; canonical Android cumulative remains Unknown)
 ```
 
 ## Definitions and confidence rules

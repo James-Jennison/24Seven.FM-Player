@@ -3,12 +3,22 @@ navigation:
     label: Home
     path: /
     primary: true
-    description: A native listening experience for five independent stations.
+    description: A compact launch point for the Player, its stations, and platform availability.
+  - section: stations
+    label: Stations
+    path: /stations/
+    primary: true
+    description: Official destinations for the five 24Seven.FM stations.
   - section: features
     label: Features
     path: /features/
     primary: true
     description: Playback, favorites, chat, requests, and five station experiences.
+  - section: platforms
+    label: Platforms
+    path: /platforms/
+    primary: true
+    description: Clear availability for Android mobile and early-development Android TV.
   - section: privacy
     label: Privacy
     path: /privacy/

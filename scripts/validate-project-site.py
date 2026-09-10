@@ -13,7 +13,9 @@ from urllib.parse import unquote, urlparse
 PRODUCTION_ORIGIN = "https://24sevenfmplayer.com"
 EXPECTED_PAGES = {
     "/": "index.html",
+    "/stations/": "stations/index.html",
     "/features/": "features/index.html",
+    "/platforms/": "platforms/index.html",
     "/development/": "development/index.html",
     "/testing/": "testing/index.html",
     "/product-testing/": "product-testing/index.html",
@@ -52,6 +54,7 @@ REQUIRED_FILES = {
     "assets/project/marketing/stations/death.png",
     "assets/project/marketing/stations/entranced.png",
     "assets/project/marketing/stations/sst.png",
+    "assets/project/marketing/tv-now-playing-testing.png",
     "assets/project/screenshots/more.png",
     "assets/project/screenshots/player.png",
     "assets/project/screenshots/queue.png",
@@ -83,15 +86,15 @@ PRODUCTION_REVIEW_STATEMENT = (
     "available for public installation."
 )
 PRODUCTION_REVIEW_PAGES = {
-    "index.html",
     "features/index.html",
+    "platforms/index.html",
     "product-testing/index.html",
     "dev/roadmap/index.html",
 }
 INVITATION_ONLY_CTA = "Apply to invitation-only closed testing"
 SEPARATE_TESTING_COPY = {
-    "index.html": "Separately, eligible listeners may apply for the invitation-only closed-testing program.",
     "features/index.html": "The invitation-only closed-testing program is separate from the production release under review.",
+    "platforms/index.html": "Separately, eligible listeners may apply for the invitation-only closed-testing program.",
     "product-testing/index.html": "Apply to join the separate invitation-only Closed Alpha",
 }
 REQUIRED_HTACCESS_DIRECTIVES = {
@@ -208,7 +211,7 @@ def validate_production_review_claims(
         if document and any("play.google.com" in href.lower() for href in document.hrefs):
             fail(f"Public Google Play install link is not permitted while review is in progress: {relative_path}", failures)
 
-    for relative_path in ("index.html", "features/index.html", "product-testing/index.html"):
+    for relative_path in SEPARATE_TESTING_COPY:
         text = (artifact_root / relative_path).read_text(encoding="utf-8")
         if INVITATION_ONLY_CTA not in text:
             fail(f"Closed-testing CTA is not explicitly invitation-only in {relative_path}", failures)

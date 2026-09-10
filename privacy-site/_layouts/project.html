@@ -27,22 +27,15 @@
         <span>Menu</span>
       </button>
       <nav id="project-navigation" aria-label="Primary navigation">
-        {% if page.consumer_landing %}
-        <a href="#stations">Stations</a>
-        <a href="{{ '/features/' | relative_url }}">Features</a>
-        <a href="#platforms">Platforms</a>
-        <a href="{{ '/privacy/' | relative_url }}">Privacy</a>
-        {% else %}
         {% for item in site.data.project.navigation %}
         {% if item.primary %}
         <a{% if page.section == item.section %} aria-current="page"{% endif %} href="{{ item.path | relative_url }}">{{ item.label }}</a>
         {% endif %}
         {% endfor %}
-        {% endif %}
       </nav>
       <div class="header-actions">
-        {% if page.consumer_landing %}
-        <a class="header-utility" href="#availability">Release status</a>
+        {% if page.section == 'overview' or page.section == 'platforms' %}
+        <a class="header-utility" href="{{ '/platforms/#availability' | relative_url }}">Release status</a>
         {% endif %}
         {% if page.section == 'product-testing' %}
         <a class="header-utility tester-sign-in" href="https://24sevenfmplayer.com/tester-portal.php">Tester sign in <span aria-hidden="true">↗</span></a>
@@ -63,7 +56,7 @@
         <p class="site-verification">{{ site.data.project.site_meta.verification_label }}.</p>
       </div>
       <div class="footer-link-groups">
-        <nav aria-label="Product navigation"><strong>Player</strong><a href="{{ '/' | relative_url }}">Home</a><a href="{{ '/features/' | relative_url }}">Features</a><a href="{{ '/privacy/' | relative_url }}">Privacy notice</a><a href="{{ '/product-testing/' | relative_url }}">Closed testing</a></nav>
+        <nav aria-label="Product navigation"><strong>Player</strong><a href="{{ '/' | relative_url }}">Home</a><a href="{{ '/stations/' | relative_url }}">Stations</a><a href="{{ '/features/' | relative_url }}">Features</a><a href="{{ '/platforms/' | relative_url }}">Platforms</a><a href="{{ '/privacy/' | relative_url }}">Privacy notice</a><a href="{{ '/product-testing/' | relative_url }}">Closed testing</a></nav>
         <nav aria-label="Project navigation"><strong>Project</strong><a href="{{ site.github_url }}/issues">Report an app issue</a><a href="{{ site.status_url }}">Service status</a><a href="https://dev.jamesjennison.net/">Developer workspace <span aria-hidden="true">↗</span></a><a href="https://24sevenfmplayer.com/tester-portal.php">Tester sign in <span aria-hidden="true">↗</span></a></nav>
       </div>
     </footer>

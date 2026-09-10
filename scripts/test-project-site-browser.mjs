@@ -133,7 +133,9 @@ try {
 
   const routes = [
     "/",
+    "/stations/",
     "/features/",
+    "/platforms/",
     "/development/",
     "/testing/",
     "/product-testing/",
@@ -149,6 +151,8 @@ try {
     "/privacy/tv/",
     "/404.html",
   ];
+  const expectedPublicNavigation = ["/", "/stations/", "/features/", "/platforms/", "/privacy/"];
+  const expectedDeveloperNavigation = ["/dev/development/", "/dev/testing/", "/dev/tester-workspace/", "/dev/roadmap/", "/dev/resources/"];
 
   for (const viewport of [
     { width: 320, height: 568, label: "narrow mobile" },
@@ -171,8 +175,8 @@ try {
     const testedRoutes = viewport.width <= 390
       ? routes
       : [560, 561, 800, 801].includes(viewport.width)
-        ? ["/"]
-        : ["/", "/product-testing/", "/privacy/", "/privacy/tv/", "/dev/", "/dev/tester-workspace/"];
+        ? ["/stations/"]
+        : ["/", "/stations/", "/platforms/", "/product-testing/", "/privacy/", "/privacy/tv/", "/dev/", "/dev/tester-workspace/"];
     for (const route of testedRoutes) {
       await navigate(route);
       await evaluate("window.scrollTo(0, document.documentElement.scrollHeight)");
@@ -191,7 +195,9 @@ try {
         missingImages: [...document.images].filter((image) => image.getAttribute('src') && (!image.complete || image.naturalWidth === 0)).map((image) => image.src),
         canonical: document.querySelector('link[rel="canonical"]')?.href ?? '',
         navigation: document.querySelectorAll('#project-navigation a').length,
-        expectedNavigation: document.body.classList.contains('developer-workspace') ? 5 : document.querySelector('.landing-hero') ? 4 : 3
+        navigationPaths: [...document.querySelectorAll('#project-navigation a')].map((link) => new URL(link.href).pathname),
+        developerWorkspace: document.body.classList.contains('developer-workspace'),
+        expectedNavigation: 5
       }))()`);
       assert(state.title, `${viewport.label} ${route} has no title`);
       assert(state.h1 === 1, `${viewport.label} ${route} has ${state.h1} h1 elements`);
@@ -199,8 +205,18 @@ try {
       assert(state.missingImages.length === 0, `${viewport.label} ${route} has missing images: ${state.missingImages.join(", ")}`);
       assert(state.canonical.startsWith("https://24sevenfmplayer.com/"), `${route} has the wrong canonical URL`);
       assert(state.navigation === state.expectedNavigation, `${route} exposes the wrong workspace navigation`);
+      const expectedNavigation = state.developerWorkspace ? expectedDeveloperNavigation : expectedPublicNavigation;
+      assert(JSON.stringify(state.navigationPaths) === JSON.stringify(expectedNavigation), `${route} exposes the wrong primary navigation destinations: ${state.navigationPaths.join(", ")}`);
 
-      if (route === "/") {
+      if (route === "/stations/") {
+        const stationLinks = await evaluate(`(() => [...document.querySelectorAll('.landing-station a')].map((link) => ({
+          href: link.href,
+          target: link.target,
+          rel: link.rel,
+          text: link.textContent.replace(/\\s+/g, ' ').trim()
+        })))()`);
+        assert(stationLinks.length === 5, "Station directory does not expose five official destinations");
+        assert(stationLinks.every((link) => link.target === "_blank" && link.rel.includes("noopener") && link.rel.includes("noreferrer") && link.text.includes("Visit official site") && link.text.includes("↗")), "Station directory lost its visible new-tab disclosure or tab-nabbing protection");
         const stationLayout = await evaluate(`(() => {
           const intro = document.querySelector('.landing-section-heading');
           const grid = document.querySelector('.landing-station-grid');
@@ -211,7 +227,7 @@ try {
           };
           return { intro: [...intro.children].map(bounds), grid: bounds(grid), cards: cards.map(bounds) };
         })()`);
-        assert(stationLayout.cards.length === 5, `${viewport.label} home has the wrong station-card count`);
+        assert(stationLayout.cards.length === 5, `${viewport.label} station directory has the wrong station-card count`);
         const [introHeading, introCopy] = stationLayout.intro;
         if (viewport.width <= 900) {
           assert(introCopy.top >= introHeading.bottom - 1, `${viewport.label} station introduction did not stack`);
@@ -230,6 +246,21 @@ try {
           assert(Math.abs(fifth.width - first.width) < 2, `${viewport.label} station cards lost equal sizing on mobile`);
           stationLayoutAssertions.mobile.push(viewport.width);
         }
+      }
+
+      if (route === "/platforms/") {
+        const platformContract = await evaluate(`(() => ({
+          text: document.body.innerText,
+          googlePlayLinks: [...document.querySelectorAll('a')].filter((link) => /play\\.google\\.com/i.test(link.href)).map((link) => link.href),
+          publicInstallLabels: [...document.querySelectorAll('a, button')].map((control) => control.textContent.replace(/\\s+/g, ' ').trim()).filter((label) => /^(install|download|get it on google play)/i.test(label)),
+          headingSizes: [...document.querySelectorAll('.platform-card h2')].map((heading) => Number.parseFloat(getComputedStyle(heading).fontSize)),
+          imageRatios: [...document.querySelectorAll('.platform-card img')].map((image) => image.getBoundingClientRect().height / image.getBoundingClientRect().width)
+        }))()`);
+        assert(platformContract.text.includes("The first production release is under review by Google Play and is not yet available for public installation."), "Platforms lost the fact-bound Android mobile review statement");
+        assert(platformContract.text.includes("The Android TV Player is in early development and testing, with no public Android TV install path yet."), "Platforms lost the fact-bound Android TV availability statement");
+        assert(platformContract.googlePlayLinks.length === 0 && platformContract.publicInstallLabels.length === 0, "Platforms exposed an unsupported public install path");
+        assert(platformContract.headingSizes.length === 2 && platformContract.headingSizes.every((size) => size <= 60), "Platforms lost its bounded card-heading typography");
+        assert(platformContract.imageRatios.length === 2 && platformContract.imageRatios.every((ratio) => ratio > 0 && ratio <= 2.3), "Platforms stretched a capture beyond its natural aspect ratio");
       }
     }
   }
@@ -406,10 +437,13 @@ try {
   const noScript = await evaluate(`(() => ({
     h1: document.querySelectorAll('h1').length,
     navigation: document.querySelectorAll('#project-navigation a').length,
-    stationPanels: document.querySelectorAll('.landing-station').length,
-    momentScreens: document.querySelectorAll('.landing-capture-stack figure').length
+    destinations: document.querySelectorAll('.home-destination').length,
+    heroCapture: document.querySelectorAll('.landing-hero-device figure, .landing-hero-device').length
   }))()`);
-  assert(noScript.h1 === 1 && noScript.navigation === 4 && noScript.stationPanels === 5 && noScript.momentScreens === 2, "No-JavaScript fallback lost essential content");
+  assert(noScript.h1 === 1 && noScript.navigation === 5 && noScript.destinations === 4 && noScript.heroCapture === 1, "No-JavaScript home fallback lost essential content");
+  await navigate("/stations/");
+  const noScriptStations = await evaluate(`(() => ({ h1: document.querySelectorAll('h1').length, stationPanels: document.querySelectorAll('.landing-station').length }))()`);
+  assert(noScriptStations.h1 === 1 && noScriptStations.stationPanels === 5, "No-JavaScript station directory lost essential content");
 
   assert(browserErrors.length === 0, `Browser errors: ${browserErrors.join(" | ")}`);
   assert(Object.values(stationLayoutAssertions).every((viewports) => viewports.length > 0), "Station layout assertions did not cover every responsive branch");
