@@ -20,6 +20,28 @@ PRODUCTION_REVIEW_STATEMENT = (
     "The first production release is under review by Google Play and is not yet "
     "available for public installation."
 )
+PRODUCTION_REVIEW_SCOPE_RULE = (
+    "This status attests only the review state and public unavailability. It does not "
+    "identify a version, assert artifact provenance, or authorize publication."
+)
+PRODUCTION_REVIEW_RECORD = """# First production release — Google Play review status
+
+**Recorded:** September 10, 2026
+
+## Owner-attested public status
+
+The first production release is under review by Google Play and is not yet available for public installation.
+
+## Scope boundary
+
+This record is an owner-attested status observation. It deliberately does not
+identify a version, version code, artifact hash, source commit, approval
+outcome, rollout percentage, or publication date. It must not be used to claim
+that the app is approved, published, or available on Google Play.
+
+Closed testing is a separate distribution program and remains governed by its
+own version-specific release records and availability observations.
+"""
 PRODUCTION_REVIEW_FIELDS = {
     "status",
     "recorded_at",
@@ -324,10 +346,13 @@ def main(require_public_privacy_ready: bool = False, require_interim_privacy_cor
         require(isinstance(production_review.get("public_statement"), str) and production_review["public_statement"], "production review public_statement is required")
         require(isinstance(production_review.get("scope_rule"), str) and production_review["scope_rule"], "production review scope_rule is required")
         if production_review.get("status") == "in_review":
+            require(production_review.get("recorded_at") == "2026-09-10", "in-review production status must use the owner-attested observation date")
             require(production_review.get("source") == "owner_attested_google_play_console", "in-review production status must remain owner-attested until read-only Console evidence is recorded")
+            require(production_review.get("release_record") == "docs/releases/production-review-2026-09-10.md", "in-review production status must use the dated owner-attested record")
             require(production_review.get("public_statement") == PRODUCTION_REVIEW_STATEMENT, "in-review production status must use the approved no-availability statement")
+            require(production_review.get("scope_rule") == PRODUCTION_REVIEW_SCOPE_RULE, "in-review production status must use the fixed no-claim scope rule")
             review_record = (ROOT / production_review["release_record"]).read_text(encoding="utf-8")
-            require(PRODUCTION_REVIEW_STATEMENT in review_record, "production review release record must repeat the public statement verbatim")
+            require(review_record == PRODUCTION_REVIEW_RECORD, "production review release record must exactly match its owner-attested no-claim form")
             review_fields = "\n".join(str(value) for value in production_review.values())
             require(candidate["version_name"] not in review_fields, "production review status must not inherit the closed-test version name")
             require(str(candidate["version_code"]) not in review_fields, "production review status must not inherit the closed-test version code")

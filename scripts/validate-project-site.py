@@ -89,6 +89,11 @@ PRODUCTION_REVIEW_PAGES = {
     "dev/roadmap/index.html",
 }
 INVITATION_ONLY_CTA = "Apply to invitation-only closed testing"
+SEPARATE_TESTING_COPY = {
+    "index.html": "Separately, eligible listeners may apply for the invitation-only closed-testing program.",
+    "features/index.html": "The invitation-only closed-testing program is separate from the production release under review.",
+    "product-testing/index.html": "Apply to join the separate invitation-only Closed Alpha",
+}
 REQUIRED_HTACCESS_DIRECTIVES = {
     "ErrorDocument 404 /404.html",
     "<IfModule mod_headers.c>",
@@ -209,6 +214,8 @@ def validate_production_review_claims(
             fail(f"Closed-testing CTA is not explicitly invitation-only in {relative_path}", failures)
         if "Join closed testing" in text:
             fail(f"Ambiguous closed-testing CTA remains in {relative_path}", failures)
+        if SEPARATE_TESTING_COPY[relative_path] not in text:
+            fail(f"Closed-testing program is not explicitly separate from the production review in {relative_path}", failures)
 
 
 def audit() -> int:

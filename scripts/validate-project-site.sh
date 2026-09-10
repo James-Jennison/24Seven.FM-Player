@@ -5,6 +5,7 @@ script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repository_root="$(cd -- "${script_dir}/.." && pwd)"
 
 python3 "${script_dir}/validate-website-facts-contract.py"
+python3 "${script_dir}/test-production-review-status.py"
 "${script_dir}/build-project-site.sh"
 python3 "${script_dir}/validate-tester-tasks.py"
 node --check "${repository_root}/privacy-site/assets/project.js"
