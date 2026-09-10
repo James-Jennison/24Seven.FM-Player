@@ -328,6 +328,9 @@ def main(require_public_privacy_ready: bool = False, require_interim_privacy_cor
             require(production_review.get("public_statement") == PRODUCTION_REVIEW_STATEMENT, "in-review production status must use the approved no-availability statement")
             review_record = (ROOT / production_review["release_record"]).read_text(encoding="utf-8")
             require(PRODUCTION_REVIEW_STATEMENT in review_record, "production review release record must repeat the public statement verbatim")
+            review_fields = "\n".join(str(value) for value in production_review.values())
+            require(candidate["version_name"] not in review_fields, "production review status must not inherit the closed-test version name")
+            require(str(candidate["version_code"]) not in review_fields, "production review status must not inherit the closed-test version code")
             require(candidate["version_name"] not in review_record, "production review release record must not inherit the closed-test version name")
             require(str(candidate["version_code"]) not in review_record, "production review release record must not inherit the closed-test version code")
 
