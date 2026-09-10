@@ -1,6 +1,6 @@
 # Milestone Real-World Time Ledger
 
-Last updated: `September 10, 2026 at 4:42:38 PM PDT (UTC−07:00)`
+Last updated: `September 10, 2026 at 4:49:51 PM PDT (UTC−07:00)`
 
 This is the permanent time-accounting record for the canonical M01–M60 milestones in [ROADMAP.md](ROADMAP.md). It
 preserves historical uncertainty instead of treating commit spans as labor time. Future milestone work must be
@@ -47,6 +47,7 @@ does not alter the status, numbering, or cumulative totals of the canonical Andr
 | Master M19 — Viewport-fit Home refinement | Complete | `September 10, 2026 at 3:04:36 PM PDT (UTC−07:00)` | 0.5–1.5 active h | Completed `September 10, 2026 at 3:22:57 PM PDT (UTC−07:00)` | GPT-5; current reasoning strength | 0.24 h | 0.07 h | 0.00 h |
 | Master M20 — Compact public directories | Complete | `September 10, 2026 at 3:35:00 PM PDT (UTC−07:00)` | 1–2 active h | Completed `September 10, 2026 at 4:19:42 PM PDT (UTC−07:00)` | GPT-5; current reasoning strength | 0.59 h | 0.16 h | 0.00 h |
 | Master M21 — Footer relationship correction | Complete | `September 10, 2026 at 4:34:16 PM PDT (UTC−07:00)` | 0.1–0.25 active h | Completed `September 10, 2026 at 4:42:38 PM PDT (UTC−07:00)` | GPT-5; current reasoning strength | 0.08 h | 0.06 h | 0.00 h |
+| Master M22 — Footer attribution precision | Complete | `September 10, 2026 at 4:47:22 PM PDT (UTC−07:00)` | 0.05–0.15 active h | Completed `September 10, 2026 at 4:49:51 PM PDT (UTC−07:00)` | GPT-5; current reasoning strength | 0.02 h | 0.02 h | 0.00 h |
 
 ### Master M12 — Player local migration implementation
 
@@ -456,7 +457,7 @@ Cumulative counted project time through Milestone Master M20: 4.33 h (master-sit
 
 ### Master M21 — Footer relationship correction
 
-- **Objective:** Correct the public footer's false statement that the Player is not affiliated with 24Seven.FM when its creator is a network administrator and founding member, while retaining the precise independent-development and publishing/sponsorship boundary.
+- **Objective:** Correct the public footer's false statement that the Player is not affiliated with 24Seven.FM when its creator is a network administrator and early member, while retaining the precise independent-development and publishing/sponsorship boundary.
 - **Authorization and start:** The owner identified the inaccurate footer and execution started `September 10, 2026 at 4:34:16 PM PDT (UTC−07:00)` on `codex/public-landing-redesign`.
 - **Model, reasoning strength, and original forecast:** GPT-5 with the current reasoning strength; 0.1–0.25 active hours; expected completion by `September 10, 2026 at 4:49:16 PM PDT (UTC−07:00)` if uninterrupted.
 - **Completion gates:** Update each public footer layout consistently; preserve the truthful independent-development boundary; build the local artifact; verify rendered output; and commit locally. Production remains a separate gate.
@@ -479,6 +480,33 @@ Total elapsed time: 0.14 h
 User-blocked time excluded: 0.00 h
 Forecast variance: 0.04 h above the lower bound (40.0%)
 Cumulative counted project time through Milestone Master M21: 4.47 h (master-site program website milestones only; canonical Android cumulative remains Unknown)
+```
+
+### Master M22 — Footer attribution precision
+
+- **Objective:** Replace the founder attribution in the public footer with the owner's preferred, accurate “early 24Seven.FM member” wording while preserving the independent-development and publishing/sponsorship boundary.
+- **Authorization and start:** The owner directed the precision edit and execution started `September 10, 2026 at 4:47:22 PM PDT (UTC−07:00)` on `codex/public-landing-redesign`.
+- **Model, reasoning strength, and original forecast:** GPT-5 with the current reasoning strength; 0.05–0.15 active hours; expected completion by `September 10, 2026 at 4:56:22 PM PDT (UTC−07:00)` if uninterrupted.
+- **Completion gates:** Update both shared footer layouts, regenerate the local artifact, verify the exact rendered wording, and commit locally. Production remains a separate gate.
+- **Completion:** Completed locally `September 10, 2026 at 4:49:51 PM PDT (UTC−07:00)`. Both shared footer layouts now use the owner's preferred “early 24Seven.FM member” attribution, with the independently-developed, non-published, non-sponsored boundary unchanged.
+- **Measured time:** 0.02 active hours, 0.02 automated-wait hours, and 0.00 user-blocked hours. Counted project time and elapsed time are each 0.04 h.
+- **Forecast variance:** 0.01 h (20.0%) below the 0.05-hour lower bound. The bounded lexical edit and existing artifact validator allowed quick objective confirmation without broadening the public claim.
+- **Evidence:** `heavy-build -- ./scripts/validate-project-site.sh`, rendered Home/Stations/Privacy early-member assertion, and `git diff --check` passed. Final review `review-cycle-ec5731b85a3b` returned NO FINDINGS from Gemini, Grok, and DeepSeek. Evidence cycle `evidence-cycle-bb0a39aff6f2` recorded static validation and whitespace checks as PASS.
+- **Forecasting lesson:** When a user corrects an identity nuance, keep the edit lexical and bounded; preserve the separately supported disclosure language around it.
+
+| Started | Ended | Category | Reason or work | Evidence | Hours |
+| --- | --- | --- | --- | --- | ---: |
+| `September 10, 2026 at 4:47:22 PM PDT (UTC−07:00)` | `September 10, 2026 at 4:49:51 PM PDT (UTC−07:00)` | Active | Replace the footer founder attribution with the owner's preferred early-member wording, validate the artifact, and record final review. | Owner direction; branch `codex/public-landing-redesign`; review `review-cycle-ec5731b85a3b` | 0.02 h |
+| `September 10, 2026 at 4:48:00 PM PDT (UTC−07:00)` | `September 10, 2026 at 4:49:12 PM PDT (UTC−07:00)` | Automated wait | Static build and independent reviewer completion wait. | Site validation output; review `review-cycle-ec5731b85a3b` | 0.02 h |
+
+```text
+Milestone Master M22 time:
+Forecast: 0.05–0.15 active hours
+Counted project time: 0.04 h
+Total elapsed time: 0.04 h
+User-blocked time excluded: 0.00 h
+Forecast variance: 0.01 h below the lower bound (20.0%)
+Cumulative counted project time through Milestone Master M22: 4.51 h (master-site program website milestones only; canonical Android cumulative remains Unknown)
 ```
 
 ## Definitions and confidence rules
