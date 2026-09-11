@@ -165,6 +165,7 @@ try {
     { width: 1024, height: 1000, label: "compact laptop" },
     { width: 1366, height: 768, label: "standard laptop" },
     { width: 1440, height: 1000, label: "laptop" },
+    { width: 1920, height: 864, label: "27-inch desktop browser" },
     { width: 1920, height: 1080, label: "large desktop" },
   ]) {
     await send("Emulation.setDeviceMetricsOverride", {
@@ -210,11 +211,39 @@ try {
       assert(JSON.stringify(state.navigationPaths) === JSON.stringify(expectedNavigation), `${route} exposes the wrong primary navigation destinations: ${state.navigationPaths.join(", ")}`);
 
       if (route === "/" && viewport.width >= 1024) {
-        const homeViewport = await evaluate(`(() => ({
-          destinationsBottom: document.querySelector('.home-destination-grid').getBoundingClientRect().bottom,
-          viewportHeight: window.innerHeight
-        }))()`);
-        assert(homeViewport.destinationsBottom <= homeViewport.viewportHeight + 1, `${viewport.label} Home leaves its primary destinations below the initial viewport`);
+        const homeViewport = await evaluate(`(() => {
+          const destinationGrid = document.querySelector('.home-destination-grid');
+          const decisionSurface = document.querySelector('.home-decision-surface');
+          const scrollY = window.scrollY;
+          const primaryElements = [
+            document.querySelector('#hero-title'),
+            ...document.querySelectorAll('.landing-home .actions a'),
+            document.querySelector('.landing-hero-device'),
+            ...destinationGrid.querySelectorAll('.home-destination')
+          ];
+          return {
+            destinationsDocumentBottom: destinationGrid.getBoundingClientRect().bottom + scrollY,
+            decisionSurfaceDocumentBottom: decisionSurface.getBoundingClientRect().bottom + scrollY,
+            viewportHeight: window.innerHeight,
+            viewportWidth: window.innerWidth,
+            destinationCount: destinationGrid.querySelectorAll('.home-destination').length,
+            primaryBounds: primaryElements.map((element) => {
+              const rect = element.getBoundingClientRect();
+              return {
+                label: element.id || element.textContent.trim().replace(/\s+/g, ' ').slice(0, 32),
+                top: rect.top + scrollY,
+                bottom: rect.bottom + scrollY,
+                left: rect.left,
+                right: rect.right
+              };
+            })
+          };
+        })()`);
+        assert(homeViewport.destinationCount === 4, `${viewport.label} Home lost a primary destination`);
+        assert(homeViewport.destinationsDocumentBottom <= homeViewport.viewportHeight + 1, `${viewport.label} Home leaves its primary destinations below the initial viewport`);
+        assert(homeViewport.decisionSurfaceDocumentBottom <= homeViewport.viewportHeight + 1, `${viewport.label} Home decision surface exceeds the initial viewport`);
+        assert(homeViewport.primaryBounds.length === 8, `${viewport.label} Home primary-surface inventory changed unexpectedly`);
+        assert(homeViewport.primaryBounds.every((element) => element.top >= -1 && element.bottom <= homeViewport.viewportHeight + 1 && element.left >= -1 && element.right <= homeViewport.viewportWidth + 1), `${viewport.label} Home leaves a primary control or capture outside the initial viewport: ${JSON.stringify(homeViewport.primaryBounds)}`);
       }
 
       if (route === "/stations/") {

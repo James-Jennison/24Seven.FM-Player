@@ -1,6 +1,6 @@
 # Milestone Real-World Time Ledger
 
-Last updated: `September 10, 2026 at 4:49:51 PM PDT (UTC−07:00)`
+Last updated: `September 10, 2026 at 5:28:08 PM PDT (UTC−07:00)`
 
 This is the permanent time-accounting record for the canonical M01–M60 milestones in [ROADMAP.md](ROADMAP.md). It
 preserves historical uncertainty instead of treating commit spans as labor time. Future milestone work must be
@@ -48,6 +48,7 @@ does not alter the status, numbering, or cumulative totals of the canonical Andr
 | Master M20 — Compact public directories | Complete | `September 10, 2026 at 3:35:00 PM PDT (UTC−07:00)` | 1–2 active h | Completed `September 10, 2026 at 4:19:42 PM PDT (UTC−07:00)` | GPT-5; current reasoning strength | 0.59 h | 0.16 h | 0.00 h |
 | Master M21 — Footer relationship correction | Complete | `September 10, 2026 at 4:34:16 PM PDT (UTC−07:00)` | 0.1–0.25 active h | Completed `September 10, 2026 at 4:42:38 PM PDT (UTC−07:00)` | GPT-5; current reasoning strength | 0.08 h | 0.06 h | 0.00 h |
 | Master M22 — Footer attribution precision | Complete | `September 10, 2026 at 4:47:22 PM PDT (UTC−07:00)` | 0.05–0.15 active h | Completed `September 10, 2026 at 4:49:51 PM PDT (UTC−07:00)` | GPT-5; current reasoning strength | 0.02 h | 0.02 h | 0.00 h |
+| Master M23 — Home working-surface correction | Complete | `September 10, 2026 at 5:03:16 PM PDT (UTC−07:00)` | 0.5–1 active h | Completed `September 10, 2026 at 5:28:08 PM PDT (UTC−07:00)` | GPT-5; current reasoning strength | 0.36 h | 0.06 h | 0.00 h |
 
 ### Master M12 — Player local migration implementation
 
@@ -507,6 +508,36 @@ Total elapsed time: 0.04 h
 User-blocked time excluded: 0.00 h
 Forecast variance: 0.01 h below the lower bound (20.0%)
 Cumulative counted project time through Milestone Master M22: 4.51 h (master-site program website milestones only; canonical Android cumulative remains Unknown)
+```
+
+### Master M23 — Home working-surface correction
+
+- **Objective:** Correct the false viewport-fit acceptance on the public Home route so a 27-inch desktop browser content area shows the direct choices without first requiring a scroll through a marketing-sized hero.
+- **Authorization and start:** The owner reported the regression and execution started `September 10, 2026 at 5:03:16 PM PDT (UTC−07:00)` on `codex/public-landing-redesign`.
+- **Model, reasoning strength, and original forecast:** GPT-5 with the current reasoning strength; 0.5–1 active hours; expected completion by `September 10, 2026 at 6:03:16 PM PDT (UTC−07:00)` if uninterrupted.
+- **Completion gates:** Make the Home identity, platform actions, mobile capture, and all four public destinations a single desktop working surface; test the browser-content heights represented by the owner's screenshots; preserve readable mobile reflow and route hierarchy; validate and commit locally. Push and production deployment remain separate owner-controlled gates.
+- **Completion:** Completed locally `September 10, 2026 at 5:28:08 PM PDT (UTC−07:00)`. Home is now a single desktop working surface: identity, both public actions, Android capture, and all four destination links fit in the initial viewport at 1366 by 768 and 1920 by 864. The route returns to normal readable document flow at tablet/mobile widths. No push or deployment occurred.
+- **Measured time:** 0.36 active hours, 0.06 automated-wait hours, and 0.00 user-blocked hours. Counted project time and total elapsed time are both 0.41 h.
+- **Forecast variance:** 0.09 h (18.0%) below the 0.5-hour lower bound. The existing route and responsive harness kept the source change small, while the corrected measurement exposed the false positive and made the remaining acceptance condition executable.
+- **Evidence:** `heavy-build -- ./scripts/validate-project-site.sh`, Chromium responsive validation with element-level initial-viewport assertions, Firefox responsive validation, and `git diff --check` passed. Remediation review `review-cycle-14e41fe15bc3` and closure review `review-cycle-fd29ebadd186` both returned NO FINDINGS from Gemini, Grok, and DeepSeek; final evidence cycle `evidence-cycle-8446ec1a7052` recorded static validation and whitespace checks as PASS. The full browser test confirmed the corrected Home contract at 1024, 1366 by 768, 1440, 1920 by 864, and 1920 by 1080.
+- **Forecasting lesson:** Viewport-fit tests must measure initial document coordinates, never a client rectangle after a test has scrolled the target into view. A monitor's diagonal is not a layout primitive; representative browser-content dimensions are.
+
+| Started | Ended | Category | Reason or work | Evidence | Hours |
+| --- | --- | --- | --- | --- | ---: |
+| `September 10, 2026 at 5:03:16 PM PDT (UTC−07:00)` | `September 10, 2026 at 5:18:22 PM PDT (UTC−07:00)` | Active | Rework Home into a genuinely viewport-fit decision surface, rebuild the artifact, and replace the false-positive browser contract. | Owner screenshots; Chromium and Firefox local validation | 0.25 h |
+| `September 10, 2026 at 5:18:22 PM PDT (UTC−07:00)` | `September 10, 2026 at 5:20:34 PM PDT (UTC−07:00)` | Automated wait | Independent reviewer and evidence-cycle completion while source review was pending. | Review `review-cycle-14e41fe15bc3`; evidence `evidence-cycle-75e685e49420` | 0.04 h |
+| `September 10, 2026 at 5:20:34 PM PDT (UTC−07:00)` | `September 10, 2026 at 5:25:56 PM PDT (UTC−07:00)` | Active | Strengthen the Home guard to assert every primary control/capture fits, rerun Chromium, rebuild, and prepare final closure evidence. | Chromium responsive validation; `heavy-build -- ./scripts/validate-project-site.sh` | 0.09 h |
+| `September 10, 2026 at 5:25:56 PM PDT (UTC−07:00)` | `September 10, 2026 at 5:27:09 PM PDT (UTC−07:00)` | Automated wait | Final independent closure review and final static evidence completion. | Closure `review-cycle-fd29ebadd186`; evidence `evidence-cycle-8446ec1a7052` | 0.02 h |
+| `September 10, 2026 at 5:27:09 PM PDT (UTC−07:00)` | `September 10, 2026 at 5:28:08 PM PDT (UTC−07:00)` | Active | Record closure, perform final working-tree verification, and commit the local correction. | Local commit `e52670e` | 0.02 h |
+
+```text
+Milestone Master M23 time:
+Forecast: 0.5–1 active hours
+Counted project time: 0.41 h
+Total elapsed time: 0.41 h
+User-blocked time excluded: 0.00 h
+Forecast variance: 0.09 h below the lower bound (18.0%)
+Cumulative counted project time through Milestone Master M23: 4.92 h (master-site program website milestones only; canonical Android cumulative remains Unknown)
 ```
 
 ## Definitions and confidence rules
