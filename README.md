@@ -69,6 +69,24 @@ changes Webuzo, or sends tester email. The required release command is:
 ./scripts/validate-onboarding-portal-release.sh
 ```
 
+After that eligibility gate, the owner-authorized promotion channel requires
+an exact clean commit on the tracked portal-production branch. Run its
+read-only preflight first, then its explicit promotion mode only for that same
+commit:
+
+```bash
+PLAYER_PORTAL_EXPECTED_COMMIT=<exact-commit> ./scripts/promote-tester-portal-release.sh --dry-run
+PLAYER_PORTAL_EXPECTED_COMMIT=<exact-commit> ./scripts/promote-tester-portal-release.sh --promote
+```
+
+`--dry-run` performs the release validator plus read-only live HTTP/HTTPS
+mapping discovery, then exits before creating a sibling release, uploading,
+or changing live content. `--promote` stages the reviewed artifact as a sibling
+release, compares relative SHA-256 manifests, retains a rollback release during
+atomic activation, and runs the protected runtime guard. A failed
+post-promotion guard restores the retained release; neither mode changes DNS,
+Cloudflare, Webuzo configuration, or a server process.
+
 ## Alpha status
 
 The canonical roadmap now runs from **M01 through M60**. **M01–M35 and the current closed-test release sequence M39–M41 are complete**. Closed-app notification delivery **M36–M38 is deferred** unless JERIC authorizes an official station-app program; **M42 is the active two-week Google Play closed-test phase**.

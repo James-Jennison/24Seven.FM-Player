@@ -51,6 +51,7 @@ does not alter the status, numbering, or cumulative totals of the canonical Andr
 | Master M23 — Home working-surface correction | Complete | `September 10, 2026 at 5:03:16 PM PDT (UTC−07:00)` | 0.5–1 active h | Completed `September 10, 2026 at 5:28:08 PM PDT (UTC−07:00)` | GPT-5; current reasoning strength | 0.36 h | 0.06 h | 0.00 h |
 | Master M24 — Home hero capture composition | Complete | `September 10, 2026 at 5:57:23 PM PDT (UTC−07:00)` | 0.25–0.5 active h | Completed `September 10, 2026 at 6:42:13 PM PDT (UTC−07:00)` | GPT-5; current reasoning strength | 0.59 h | 0.16 h | 0.00 h |
 | Master M25 — Tester portal Turnstile configuration recovery | Complete | `September 10, 2026 at 7:05:20 PM PDT (UTC−07:00)` | 0.1–0.25 active h | Completed `September 10, 2026 at 7:22:23 PM PDT (UTC−07:00)` | GPT-5; current reasoning strength | 0.24 h | 0.04 h | 0.00 h |
+| Master M26 — Tester portal autonomous promotion channel | Complete | `September 10, 2026 at 7:26:19 PM PDT (UTC−07:00)` | 0.5–1 active h | Completed `September 10, 2026 at 7:37:57 PM PDT (UTC−07:00)` | GPT-5; current reasoning strength | 0.15 h | 0.05 h | 0.00 h |
 
 ### Master M12 — Player local migration implementation
 
@@ -580,7 +581,25 @@ Cumulative counted project time through Milestone Master M23: 4.92 h (master-sit
 | `September 10, 2026 at 7:13:58 PM PDT (UTC−07:00)` | `September 10, 2026 at 7:18:07 PM PDT (UTC−07:00)` | Active | Add and execute the secret-safe, post-promotion runtime guard; validate shell syntax, protected-layout metadata, and non-delivery public behavior. | `scripts/verify-tester-portal-runtime.sh`; public runtime pass; `git diff --check` | 0.07 h |
 | `September 10, 2026 at 7:18:07 PM PDT (UTC−07:00)` | `September 10, 2026 at 7:18:59 PM PDT (UTC−07:00)` | Automated wait | Independent closure review of the guard and residual-risk classification. | Review `review-cycle-854fe6122764` | 0.02 h |
 | `September 10, 2026 at 7:18:59 PM PDT (UTC−07:00)` | `September 10, 2026 at 7:20:20 PM PDT (UTC−07:00)` | Active | Run the complete project-site validator and record closeout. | `heavy-build -- ./scripts/validate-project-site.sh`; `git diff --check` | 0.02 h |
-| `September 10, 2026 at 7:20:20 PM PDT (UTC−07:00)` | `September 10, 2026 at 7:22:23 PM PDT (UTC−07:00)` | Active | Verify the final scoped diff and commit the runtime guard and measured ledger record. | Commit `272626e` (amended with final ledger closeout) | 0.03 h |
+| `September 10, 2026 at 7:20:20 PM PDT (UTC−07:00)` | `September 10, 2026 at 7:22:23 PM PDT (UTC−07:00)` | Active | Verify the final scoped diff and commit the runtime guard and measured ledger record. | Final local commit | 0.03 h |
+
+### Master M26 — Tester portal autonomous promotion channel
+
+- **Objective:** Create a source-controlled, owner-authorized promotion channel for future reviewed tester-portal artifacts. It must retain the existing explicit release-eligibility gate, discover the live canonical mapping, use hash-verified sibling staging and atomic activation, retain one rollback release, invoke the protected runtime guard after promotion, and fail closed without DNS, Cloudflare, Webuzo-configuration, or service-process changes.
+- **Authorization and start:** The owner authorized creation of this autonomous deploy channel on `September 10, 2026 at 7:26:19 PM PDT (UTC−07:00)`.
+- **Model, reasoning strength, and original forecast:** GPT-5 with the current reasoning strength; 0.5–1 active hours; expected completion by `September 10, 2026 at 8:26:19 PM PDT (UTC−07:00)` if uninterrupted.
+- **Completion gates:** Creating the channel must not deploy the current branch. It must reject dirty or non-production source, require a reviewed artifact, avoid secrets, retain an explicit rollback directory, automatically run the runtime guard after promotion, and provide dry-run validation. Any future content promotion stays a separate invocation of the channel using an exact eligible commit.
+- **Completion:** The channel is source-controlled and intentionally inert until `--promote` is used from a clean, exact production-branch commit matching its tracked reference and owner-supplied commit. Dry-run is read-only after local validation and stops before any staging, upload, manifest comparison, lock, or cutover. Promotion serializes writers with a sibling lock, uses non-empty relative SHA-256 manifests for local/staged/prior/restored content, retains a rollback release, and runs the protected runtime guard; a guard failure reverses the swap, proves the restored prior manifest, reruns the guard, and exits non-zero. It does not change DNS, Cloudflare, generated Webuzo configuration, or server processes.
+- **Reviewer disposition and residual risk:** The initial review found unproven separation, mapping cardinality, manifest, lock, rollback, and source-evidence gaps. All were corrected and Gemini, Grok, and DeepSeek returned no closure findings. Empirical dry-run and promotion evidence are deliberately deferred to a future exact eligible portal-production commit; this current non-production branch remains blocked before any SSH operation and was not deployed.
+- **Measured time:** 0.15 active h + 0.05 automated-review wait h = 0.20 counted project h. Total elapsed was 0.19 h; user-blocked time was 0.00 h. The active forecast was 0.35 h below the lower bound (70%).
+
+| Started | Ended | Category | Reason or work | Evidence | Hours |
+| --- | --- | --- | --- | --- | ---: |
+| `September 10, 2026 at 7:26:19 PM PDT (UTC−07:00)` | `September 10, 2026 at 7:29:53 PM PDT (UTC−07:00)` | Active | Implement the non-secret deployment contract, exact-commit gates, staging/manifest/atomic promotion flow, retained rollback, and post-promotion runtime guard. | Source review; `bash -n`; no production mutation | 0.06 h |
+| `September 10, 2026 at 7:29:53 PM PDT (UTC−07:00)` | `September 10, 2026 at 7:31:37 PM PDT (UTC−07:00)` | Automated wait | Independent initial review of the promotion channel. | Review `review-cycle-9e1ead665079` | 0.03 h |
+| `September 10, 2026 at 7:31:37 PM PDT (UTC−07:00)` | `September 10, 2026 at 7:36:19 PM PDT (UTC−07:00)` | Active | Strengthen dry-run semantics, exact vhost cardinality, non-empty manifest guards, promotion serialization, restored-manifest proof, and focused local contracts. | `scripts/test-tester-portal-promotion-channel.sh`; `git diff --check` | 0.08 h |
+| `September 10, 2026 at 7:36:19 PM PDT (UTC−07:00)` | `September 10, 2026 at 7:37:30 PM PDT (UTC−07:00)` | Automated wait | Independent closure review of corrected source-level promotion contracts. | Review `review-cycle-0b3ce5c8ac8c` | 0.02 h |
+| `September 10, 2026 at 7:37:30 PM PDT (UTC−07:00)` | `September 10, 2026 at 7:37:57 PM PDT (UTC−07:00)` | Active | Reconcile reviewer closure and record measured closeout. | Closure review; local contract pass | 0.01 h |
 
 ## Definitions and confidence rules
 
