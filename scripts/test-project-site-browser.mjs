@@ -214,11 +214,13 @@ try {
         const homeViewport = await evaluate(`(() => {
           const destinationGrid = document.querySelector('.home-destination-grid');
           const decisionSurface = document.querySelector('.home-decision-surface');
+          const heroGallery = document.querySelector('.landing-hero-gallery');
+          const heroCopy = [document.querySelector('#hero-title'), document.querySelector('.landing-home .hero-lede')];
           const scrollY = window.scrollY;
           const primaryElements = [
             document.querySelector('#hero-title'),
             ...document.querySelectorAll('.landing-home .actions a'),
-            document.querySelector('.landing-hero-device'),
+            ...document.querySelectorAll('.landing-hero-device'),
             ...destinationGrid.querySelectorAll('.home-destination')
           ];
           return {
@@ -227,6 +229,32 @@ try {
             viewportHeight: window.innerHeight,
             viewportWidth: window.innerWidth,
             destinationCount: destinationGrid.querySelectorAll('.home-destination').length,
+            heroCaptureCount: document.querySelectorAll('.landing-hero-device').length,
+            heroGallery: (() => {
+              const rect = heroGallery.getBoundingClientRect();
+              return { top: rect.top + scrollY, bottom: rect.bottom + scrollY, left: rect.left, right: rect.right };
+            })(),
+            heroGallerySemantics: {
+              role: heroGallery.getAttribute('role'),
+              label: heroGallery.getAttribute('aria-label'),
+              captionCount: heroGallery.querySelectorAll('figcaption').length
+            },
+            heroCopyBounds: heroCopy.map((element) => {
+              const rect = element.getBoundingClientRect();
+              return { top: rect.top + scrollY, bottom: rect.bottom + scrollY, left: rect.left, right: rect.right };
+            }),
+            heroFigureBounds: [...document.querySelectorAll('.landing-hero-device')].map((element) => {
+              const rect = element.getBoundingClientRect();
+              return { top: rect.top + scrollY, bottom: rect.bottom + scrollY, left: rect.left, right: rect.right };
+            }),
+            actionBounds: [...document.querySelectorAll('.landing-home .actions a')].map((element) => {
+              const rect = element.getBoundingClientRect();
+              return { top: rect.top + scrollY, bottom: rect.bottom + scrollY, left: rect.left, right: rect.right };
+            }),
+            destinationBounds: [...destinationGrid.querySelectorAll('.home-destination')].map((element) => {
+              const rect = element.getBoundingClientRect();
+              return { top: rect.top + scrollY, bottom: rect.bottom + scrollY, left: rect.left, right: rect.right };
+            }),
             primaryBounds: primaryElements.map((element) => {
               const rect = element.getBoundingClientRect();
               return {
@@ -240,10 +268,21 @@ try {
           };
         })()`);
         assert(homeViewport.destinationCount === 4, `${viewport.label} Home lost a primary destination`);
+        assert(homeViewport.heroCaptureCount === 2, `${viewport.label} Home must present both primary mobile captures`);
+        assert(homeViewport.heroGallerySemantics.role === 'group' && homeViewport.heroGallerySemantics.label === 'Captured Android mobile Player screens' && homeViewport.heroGallerySemantics.captionCount === 2, `${viewport.label} Home hero gallery lost its named two-capture semantics`);
         assert(homeViewport.destinationsDocumentBottom <= homeViewport.viewportHeight + 1, `${viewport.label} Home leaves its primary destinations below the initial viewport`);
         assert(homeViewport.decisionSurfaceDocumentBottom <= homeViewport.viewportHeight + 1, `${viewport.label} Home decision surface exceeds the initial viewport`);
-        assert(homeViewport.primaryBounds.length === 8, `${viewport.label} Home primary-surface inventory changed unexpectedly`);
+        assert(homeViewport.primaryBounds.length === 9, `${viewport.label} Home primary-surface inventory changed unexpectedly`);
         assert(homeViewport.primaryBounds.every((element) => element.top >= -1 && element.bottom <= homeViewport.viewportHeight + 1 && element.left >= -1 && element.right <= homeViewport.viewportWidth + 1), `${viewport.label} Home leaves a primary control or capture outside the initial viewport: ${JSON.stringify(homeViewport.primaryBounds)}`);
+        assert(homeViewport.heroCopyBounds.every((element) => element.top >= -1 && element.bottom <= homeViewport.viewportHeight + 1 && element.left >= -1 && element.right <= homeViewport.viewportWidth + 1), `${viewport.label} Home leaves hero copy outside the initial viewport: ${JSON.stringify(homeViewport.heroCopyBounds)}`);
+        assert(homeViewport.heroFigureBounds.every((figure) => figure.top >= homeViewport.heroGallery.top - 1 && figure.bottom <= homeViewport.heroGallery.bottom + 1 && figure.left >= homeViewport.heroGallery.left - 1 && figure.right <= homeViewport.heroGallery.right + 1), `${viewport.label} Home hero media paints outside its reserved gallery: ${JSON.stringify(homeViewport)}`);
+        const intersects = (left, right) => left.left < right.right && left.right > right.left && left.top < right.bottom && left.bottom > right.top;
+        const nonFigureBounds = [...homeViewport.heroCopyBounds, ...homeViewport.actionBounds, ...homeViewport.destinationBounds];
+        assert(homeViewport.heroFigureBounds.every((figure) => !nonFigureBounds.some((element) => intersects(figure, element))), `${viewport.label} Home hero media overlaps copy, a primary action, or a destination: ${JSON.stringify(homeViewport)}`);
+        assert(!intersects(homeViewport.heroFigureBounds[0], homeViewport.heroFigureBounds[1]), `${viewport.label} Home hero captures overlap each other: ${JSON.stringify(homeViewport.heroFigureBounds)}`);
+        assert(homeViewport.heroFigureBounds[0].right - homeViewport.heroFigureBounds[0].left >= 150 && homeViewport.heroFigureBounds[1].right - homeViewport.heroFigureBounds[1].left >= 120, `${viewport.label} Home hero captures are too small to serve as useful product previews: ${JSON.stringify(homeViewport.heroFigureBounds)}`);
+        const measuredCaptureWidths = homeViewport.heroFigureBounds.map((figure) => Math.round(figure.right - figure.left));
+        console.log(`Home hero geometry ${viewport.label}: captures=${measuredCaptureWidths.join("px,")}px; gallery=${Math.round(homeViewport.heroGallery.right - homeViewport.heroGallery.left)}px wide; decisionSurfaceBottom=${Math.round(homeViewport.decisionSurfaceDocumentBottom)}px of ${homeViewport.viewportHeight}px.`);
       }
 
       if (route === "/stations/") {
@@ -531,9 +570,12 @@ try {
     h1: document.querySelectorAll('h1').length,
     navigation: document.querySelectorAll('#project-navigation a').length,
     destinations: document.querySelectorAll('.home-destination').length,
-    heroCapture: document.querySelectorAll('.landing-hero-device figure, .landing-hero-device').length
+    heroCaptures: document.querySelectorAll('.landing-hero-device').length,
+    heroGalleryRole: document.querySelector('.landing-hero-gallery')?.getAttribute('role') ?? '',
+    heroGalleryLabel: document.querySelector('.landing-hero-gallery')?.getAttribute('aria-label') ?? '',
+    heroCaptions: document.querySelectorAll('.landing-hero-device figcaption').length
   }))()`);
-  assert(noScript.h1 === 1 && noScript.navigation === 5 && noScript.destinations === 4 && noScript.heroCapture === 1, "No-JavaScript home fallback lost essential content");
+  assert(noScript.h1 === 1 && noScript.navigation === 5 && noScript.destinations === 4 && noScript.heroCaptures === 2 && noScript.heroCaptions === 2 && noScript.heroGalleryRole === 'group' && noScript.heroGalleryLabel === 'Captured Android mobile Player screens', "No-JavaScript home fallback lost essential content");
   await navigate("/stations/");
   const noScriptStations = await evaluate(`(() => ({ h1: document.querySelectorAll('h1').length, stationPanels: document.querySelectorAll('.landing-station').length }))()`);
   assert(noScriptStations.h1 === 1 && noScriptStations.stationPanels === 5, "No-JavaScript station directory lost essential content");

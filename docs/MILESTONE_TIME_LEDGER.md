@@ -1,6 +1,6 @@
 # Milestone Real-World Time Ledger
 
-Last updated: `September 10, 2026 at 5:28:08 PM PDT (UTC−07:00)`
+Last updated: `September 10, 2026 at 6:42:13 PM PDT (UTC−07:00)`
 
 This is the permanent time-accounting record for the canonical M01–M60 milestones in [ROADMAP.md](ROADMAP.md). It
 preserves historical uncertainty instead of treating commit spans as labor time. Future milestone work must be
@@ -49,6 +49,7 @@ does not alter the status, numbering, or cumulative totals of the canonical Andr
 | Master M21 — Footer relationship correction | Complete | `September 10, 2026 at 4:34:16 PM PDT (UTC−07:00)` | 0.1–0.25 active h | Completed `September 10, 2026 at 4:42:38 PM PDT (UTC−07:00)` | GPT-5; current reasoning strength | 0.08 h | 0.06 h | 0.00 h |
 | Master M22 — Footer attribution precision | Complete | `September 10, 2026 at 4:47:22 PM PDT (UTC−07:00)` | 0.05–0.15 active h | Completed `September 10, 2026 at 4:49:51 PM PDT (UTC−07:00)` | GPT-5; current reasoning strength | 0.02 h | 0.02 h | 0.00 h |
 | Master M23 — Home working-surface correction | Complete | `September 10, 2026 at 5:03:16 PM PDT (UTC−07:00)` | 0.5–1 active h | Completed `September 10, 2026 at 5:28:08 PM PDT (UTC−07:00)` | GPT-5; current reasoning strength | 0.36 h | 0.06 h | 0.00 h |
+| Master M24 — Home hero capture composition | Complete | `September 10, 2026 at 5:57:23 PM PDT (UTC−07:00)` | 0.25–0.5 active h | Completed `September 10, 2026 at 6:42:13 PM PDT (UTC−07:00)` | GPT-5; current reasoning strength | 0.59 h | 0.16 h | 0.00 h |
 
 ### Master M12 — Player local migration implementation
 
@@ -539,6 +540,27 @@ User-blocked time excluded: 0.00 h
 Forecast variance: 0.09 h below the lower bound (18.0%)
 Cumulative counted project time through Milestone Master M23: 4.92 h (master-site program website milestones only; canonical Android cumulative remains Unknown)
 ```
+
+### Master M24 — Home hero capture composition
+
+- **Objective:** Replace the distant single-image treatment on Home with a compact, two-capture Android Player composition that fills the hero's media field while retaining the verified viewport-fit decision surface.
+- **Authorization and start:** The owner requested the refinement and execution started `September 10, 2026 at 5:57:23 PM PDT (UTC−07:00)` on `codex/public-landing-redesign`.
+- **Model, reasoning strength, and original forecast:** GPT-5 with the current reasoning strength; 0.25–0.5 active hours; expected completion by `September 10, 2026 at 6:27:23 PM PDT (UTC−07:00)` if uninterrupted.
+- **Completion gates:** Use only existing, authentic Player captures; retain Home's actions and four destinations in the initial desktop viewport; preserve mobile reflow; build, validate, and commit locally. Push and production deployment remain separate owner-controlled gates.
+- **Completion:** Local implementation and validation completed `September 10, 2026 at 6:42:13 PM PDT (UTC−07:00)`. The final browser guard recorded primary/secondary capture widths of at least 150px/120px at every contracted desktop viewport; static validation, Chromium, Firefox, local HTTP, whitespace checks, reviewer-control evidence, and a three-reviewer closure cycle all passed. No push or production deployment occurred.
+- **Measured time:** 0.59 active h + 0.16 automated-review/evidence wait h = 0.75 counted project h. Total elapsed was 0.75 h; user-blocked time was 0.00 h. The active forecast was exceeded by 0.09 h (18%) because the initial closure review required an all-desktop geometry floor and source-backed measurement traces.
+
+| Started | Ended | Category | Reason or work | Evidence | Hours |
+| --- | --- | --- | --- | --- | ---: |
+| `September 10, 2026 at 5:57:23 PM PDT (UTC−07:00)` | `September 10, 2026 at 6:07:25 PM PDT (UTC−07:00)` | Active | Replace the distant lone phone treatment with a compact, two-capture Home hero composition; rebuild the static artifact; run Chromium and Firefox verification; and complete isolated visual QA. | Owner screenshots; local build; Chromium and Firefox passes | 0.17 h |
+| `September 10, 2026 at 6:07:25 PM PDT (UTC−07:00)` | `September 10, 2026 at 6:10:29 PM PDT (UTC−07:00)` | Automated wait | Independent reviewer cycle completed. | Review `review-cycle-9b97cda33924` | 0.05 h |
+| `September 10, 2026 at 6:10:29 PM PDT (UTC−07:00)` | `September 10, 2026 at 6:15:59 PM PDT (UTC−07:00)` | Active | Remediate independent findings: semantic gallery grouping, in-flow media layout, useful compact-height sizing, and objective collision checks; then rebuild and run Chromium, Firefox, and visual acceptance. | Review `review-cycle-9b97cda33924`; local validation passes | 0.09 h |
+| `September 10, 2026 at 6:15:59 PM PDT (UTC−07:00)` | `September 10, 2026 at 6:17:50 PM PDT (UTC−07:00)` | Automated wait | Targeted closure review completed and exposed one remaining browser-geometry evidence gap. | Review `review-cycle-14ed5c989710` | 0.03 h |
+| `September 10, 2026 at 6:17:50 PM PDT (UTC−07:00)` | `September 10, 2026 at 6:21:07 PM PDT (UTC−07:00)` | Active | Extend the desktop guard to cover visible captions, hero copy, capture-to-capture separation, and named gallery semantics; rebuild and rerun full Chromium and Firefox validation. | Review `review-cycle-14ed5c989710`; local validation passes | 0.05 h |
+| `September 10, 2026 at 6:21:07 PM PDT (UTC−07:00)` | `September 10, 2026 at 6:23:23 PM PDT (UTC−07:00)` | Automated wait | Final targeted closure review completed; the remaining reviewer required the size floor at every desktop viewport and source-backed closure evidence. | Review `review-cycle-3ca0c148e34a` | 0.04 h |
+| `September 10, 2026 at 6:23:23 PM PDT (UTC−07:00)` | `September 10, 2026 at 6:38:12 PM PDT (UTC−07:00)` | Active | Enforce both capture-width floors at every contracted desktop viewport; emit per-viewport geometry traces; rebuild; rerun Chromium and Firefox; and prepare the source-backed closure package. | Local validation; Chromium geometry traces; Firefox pass | 0.25 h |
+| `September 10, 2026 at 6:38:12 PM PDT (UTC−07:00)` | `September 10, 2026 at 6:40:38 PM PDT (UTC−07:00)` | Automated wait | Independent three-reviewer closure cycle completed with no findings. | Review `review-cycle-e9a4d7632bed` | 0.04 h |
+| `September 10, 2026 at 6:40:38 PM PDT (UTC−07:00)` | `September 10, 2026 at 6:42:13 PM PDT (UTC−07:00)` | Active | Record reviewer-control evidence and complete the measured ledger closeout. | Evidence `evidence-cycle-0b09c514965c` | 0.03 h |
 
 ## Definitions and confidence rules
 
