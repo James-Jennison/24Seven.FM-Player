@@ -50,6 +50,7 @@ does not alter the status, numbering, or cumulative totals of the canonical Andr
 | Master M22 — Footer attribution precision | Complete | `September 10, 2026 at 4:47:22 PM PDT (UTC−07:00)` | 0.05–0.15 active h | Completed `September 10, 2026 at 4:49:51 PM PDT (UTC−07:00)` | GPT-5; current reasoning strength | 0.02 h | 0.02 h | 0.00 h |
 | Master M23 — Home working-surface correction | Complete | `September 10, 2026 at 5:03:16 PM PDT (UTC−07:00)` | 0.5–1 active h | Completed `September 10, 2026 at 5:28:08 PM PDT (UTC−07:00)` | GPT-5; current reasoning strength | 0.36 h | 0.06 h | 0.00 h |
 | Master M24 — Home hero capture composition | Complete | `September 10, 2026 at 5:57:23 PM PDT (UTC−07:00)` | 0.25–0.5 active h | Completed `September 10, 2026 at 6:42:13 PM PDT (UTC−07:00)` | GPT-5; current reasoning strength | 0.59 h | 0.16 h | 0.00 h |
+| Master M25 — Tester portal Turnstile configuration recovery | Complete | `September 10, 2026 at 7:05:20 PM PDT (UTC−07:00)` | 0.1–0.25 active h | Completed `September 10, 2026 at 7:22:23 PM PDT (UTC−07:00)` | GPT-5; current reasoning strength | 0.24 h | 0.04 h | 0.00 h |
 
 ### Master M12 — Player local migration implementation
 
@@ -561,6 +562,25 @@ Cumulative counted project time through Milestone Master M23: 4.92 h (master-sit
 | `September 10, 2026 at 6:23:23 PM PDT (UTC−07:00)` | `September 10, 2026 at 6:38:12 PM PDT (UTC−07:00)` | Active | Enforce both capture-width floors at every contracted desktop viewport; emit per-viewport geometry traces; rebuild; rerun Chromium and Firefox; and prepare the source-backed closure package. | Local validation; Chromium geometry traces; Firefox pass | 0.25 h |
 | `September 10, 2026 at 6:38:12 PM PDT (UTC−07:00)` | `September 10, 2026 at 6:40:38 PM PDT (UTC−07:00)` | Automated wait | Independent three-reviewer closure cycle completed with no findings. | Review `review-cycle-e9a4d7632bed` | 0.04 h |
 | `September 10, 2026 at 6:40:38 PM PDT (UTC−07:00)` | `September 10, 2026 at 6:42:13 PM PDT (UTC−07:00)` | Active | Record reviewer-control evidence and complete the measured ledger closeout. | Evidence `evidence-cycle-0b09c514965c` | 0.03 h |
+
+### Master M25 — Tester portal Turnstile configuration recovery
+
+- **Objective:** Restore the protected tester-portal request-link path after its canonical domain cutover left the existing protected Turnstile configuration outside the location expected by the deployed PHP endpoint.
+- **Authorization and start:** The owner granted standing authority to perform the narrowly scoped protected configuration repair. Execution started `September 10, 2026 at 7:05:20 PM PDT (UTC−07:00)` on `codex/public-landing-redesign`.
+- **Model, reasoning strength, and original forecast:** GPT-5 with the current reasoning strength; 0.1–0.25 active hours; expected completion by `September 10, 2026 at 7:20:20 PM PDT (UTC−07:00)` if uninterrupted.
+- **Completion gates:** Do not read, copy, log, or expose the protected configuration; restore only the missing reference; retain rollback clarity; verify public GET remains healthy and a deliberately incomplete request-link POST reaches the normal verification response rather than the generic 503. No mail or tester token may be sent by the acceptance probe.
+- **Completion:** The missing private configuration reference was restored as a relative symlink to the existing protected file, without opening, copying, logging, or exposing it. Public HTTPS GET returned 200 and a deliberately incomplete request-link POST returned the normal 303 verification redirect rather than 503; that probe cannot send mail or create a tester token. A source-controlled post-promotion guard now discovers the running canonical HTTPS vhost and verifies only symlink shape, target identity, service-account readability, and those same public responses. No PHP source, public content, server process, DNS, Cloudflare, account, or release state changed.
+- **Reviewer disposition and residual risk:** Initial review identified that a missing-file probe did not prove valid Turnstile delivery. The guard closed the configuration-identity and manual post-deploy durability findings; Gemini and Grok returned no closure defects. DeepSeek's remaining LOW observation is that the repository has no autonomous production-deploy channel that could schedule the guard; that absence is intentional under the owner-controlled promotion procedure, so the guard is a required post-promotion check rather than a new auto-deploy mechanism. A human-solved valid Turnstile request-link flow remains intentionally unautomated because success can create a tester token and send mail.
+- **Measured time:** 0.24 active h + 0.04 automated-review wait h = 0.28 counted project h. Total elapsed was 0.28 h; user-blocked time was 0.00 h. The active forecast was met.
+
+| Started | Ended | Category | Reason or work | Evidence | Hours |
+| --- | --- | --- | --- | --- | ---: |
+| `September 10, 2026 at 7:05:20 PM PDT (UTC−07:00)` | `September 10, 2026 at 7:12:31 PM PDT (UTC−07:00)` | Active | Diagnose the request-link 503, establish the active canonical vhost, and restore the existing protected configuration reference without inspecting its contents. | Public response behavior; running-vhost discovery; filename-only protected configuration discovery; no-secret metadata checks | 0.12 h |
+| `September 10, 2026 at 7:12:31 PM PDT (UTC−07:00)` | `September 10, 2026 at 7:13:58 PM PDT (UTC−07:00)` | Automated wait | Independent initial architecture, platform, and adversarial review. | Review `review-cycle-e5e11a55eec1` | 0.02 h |
+| `September 10, 2026 at 7:13:58 PM PDT (UTC−07:00)` | `September 10, 2026 at 7:18:07 PM PDT (UTC−07:00)` | Active | Add and execute the secret-safe, post-promotion runtime guard; validate shell syntax, protected-layout metadata, and non-delivery public behavior. | `scripts/verify-tester-portal-runtime.sh`; public runtime pass; `git diff --check` | 0.07 h |
+| `September 10, 2026 at 7:18:07 PM PDT (UTC−07:00)` | `September 10, 2026 at 7:18:59 PM PDT (UTC−07:00)` | Automated wait | Independent closure review of the guard and residual-risk classification. | Review `review-cycle-854fe6122764` | 0.02 h |
+| `September 10, 2026 at 7:18:59 PM PDT (UTC−07:00)` | `September 10, 2026 at 7:20:20 PM PDT (UTC−07:00)` | Active | Run the complete project-site validator and record closeout. | `heavy-build -- ./scripts/validate-project-site.sh`; `git diff --check` | 0.02 h |
+| `September 10, 2026 at 7:20:20 PM PDT (UTC−07:00)` | `September 10, 2026 at 7:22:23 PM PDT (UTC−07:00)` | Active | Verify the final scoped diff and commit the runtime guard and measured ledger record. | Commit `272626e` (amended with final ledger closeout) | 0.03 h |
 
 ## Definitions and confidence rules
 
