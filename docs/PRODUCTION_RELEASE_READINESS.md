@@ -1,8 +1,21 @@
 # Production release readiness
 
-Status: In progress for M44. Production access is granted; the registered V2 upload identity is validated and the
-exact code-18 bundle is saved in a United States-only Play Production draft. It has not been sent for review or
-published.
+Status: The code-18 `1.0.0` release is publicly listed in Google Play. On September 20, 2026, the owner authorized a
+code-19 `1.0.1` Production maintenance candidate containing only the verified onboarding contrast correction. Managed
+Publishing must remain enabled so an approved update stays behind a separate publication action.
+
+## 1.0.1 onboarding contrast maintenance update
+
+- Candidate identity: `1.0.1`, version code 19.
+- Source lineage: current remote `main`, the exact code-18 production changes, and the reviewed onboarding contrast fix.
+- Scope: explicit theme-aware title/body content color plus dark/light rendering, contrast, mutation, and interaction
+  regression coverage. The dark translucent card, Player context, copy, layout, navigation, and product behavior remain
+  unchanged.
+- Public-state observation: the United States Play listing was visible on September 20, 2026 with the code-18
+  production release notes and an `Updated on Sep 2, 2026` date. The public listing does not expose version code, so
+  Console verification remains required before submitting code 19.
+- Release control: prepare and submit under Managed Publishing; do not reuse code 18 and do not publish an approved
+  code-19 update without the separate final action-time confirmation.
 
 ## Candidate lineage
 
