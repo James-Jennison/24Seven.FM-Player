@@ -117,7 +117,7 @@ active execution.
 | M41 | Planned after M40 | — | — | 0.5–1 active d | — | — | — | — | — | — | Unknown |
 | M42 | Active · owner-confirmed two-week closed test | `August 16, 2026 at 5:51:14 PM PDT (UTC-07:00)` first recorded remediation interval; earlier campaign start not supplied | — | 3–5 calendar wk | 0.44 h recorded Issue #26, v3/v4 preparation, signing recovery, and Razr landscape remediation | 0.11 h recorded | 0.42 h recorded while credentials were unavailable | 0.55 h recorded | ≥0.90 h recorded intervals | Not assessable while active | Confirmed current phase |
 | M43 | Complete · production access granted | Unknown | Grant notice supplied September 2, 2026; exact provider timestamp unknown | 1–2 calendar wk | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown | Grant confirmed; timing unknown |
-| M44 | Active · readiness only | September 2, 2026 | — | 1–4 calendar wk | Ongoing | Ongoing | — | Ongoing | Ongoing | Not assessable while active | Confirmed current phase |
+| M44 | Active · 1.0.0 published; 1.0.1 in review | September 2, 2026 | — | 1–4 calendar wk | Ongoing | Ongoing | — | Ongoing | Ongoing | Not assessable while active | Confirmed current phase |
 | M45 | Planned recurring | — | — | Monthly, quarterly, and release-triggered | — | — | — | — | — | — | Unknown |
 | M46 | Planned post-Alpha | — | — | 1–3 active wk per approved slice | — | — | — | — | — | — | Unknown |
 | M47 | Deferred | — | — | External repair; then 1–3 active wk | — | — | — | — | — | — | Unknown |
@@ -765,9 +765,10 @@ independently.
 - **Objective:** Prepare and, only after explicit authorization, run a controlled first production launch with an exact
   candidate, owner-selected initial countries/regions, health thresholds, recovery, release notes, and update
   validation. Google Play does not offer percentage staging for a first production release.
-- **Start, completion, and intervals:** Readiness work began September 2, 2026 after the owner elected to begin. The
-  exact signed code-18 bundle is now saved in a Play Production draft, but it has not been sent for review or
-  published. Active and automated intervals remain open; review submission and publication remain gated.
+- **Start, completion, and intervals:** Readiness work began September 2, 2026 after the owner elected to begin. Code 18
+  / `1.0.0` is now publicly listed. On September 20, 2026, the owner authorized and submitted the exact code-19
+  `1.0.1` onboarding-contrast maintenance update for Production review. Active and automated intervals remain open;
+  Managed Publishing preserves a separate publication gate after approval.
   The existing Android Cast path's omitted public web
   receiver was restored through the approved atomic Player-site workflow, and the code-18 sender then completed a
   successful remote media load with owner-confirmed audio. The Google TV Streamer was only a passive Cast target; this
@@ -796,7 +797,13 @@ independently.
   Production changes ready to submit while Play runs quick checks; the submission control is enabled even though the
   Alpha08 release and default store listing remain in review. This preserves separate owner gates for review submission
   and later publication. Count validation, external review, owner interaction, and provider waits in their actual
-  categories; no review submission, production rollout, publication, tag, PR, or workflow has occurred.
+  categories. Code 18 has since been published. For code 19, the first attempted upload used the unused V3 recovery
+  identity and Play rejected it; the owner removed that artifact. A fresh V2-signed replacement from exact artifact
+  commit `b151652` passed protected local validation and 75/75 connected Razr tests, and Play accepted it with the
+  ReTrace mapping attached. Preview showed unchanged device support, 16 KB page-size support, optimized R8/resource
+  shrinking, and only the known non-blocking native-symbol warning. The owner approved the release note and authorized
+  review submission. Code 19 is now under `Changes in review` while quick checks complete; Managed Publishing remains
+  on, and publication is not authorized. No tag, PR, or release workflow has occurred for code 19.
 
 ### M45 — Operational Reliability and Recertification
 

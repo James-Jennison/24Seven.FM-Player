@@ -1,8 +1,9 @@
 # Production release readiness
 
-Status: The code-18 `1.0.0` release is publicly listed in Google Play. On September 20, 2026, the owner authorized a
-code-19 `1.0.1` Production maintenance candidate containing only the verified onboarding contrast correction. Managed
-Publishing must remain enabled so an approved update stays behind a separate publication action.
+Status: The code-18 `1.0.0` release is publicly listed in Google Play. On September 20, 2026, the owner authorized and
+submitted code 19 / `1.0.1` to Production review with only the verified onboarding contrast correction. Play accepted
+the registered V2-signed bundle, attached its ReTrace mapping, and reported no device-loss regression. Managed
+Publishing remains on so an approved update stays behind a separate publication action.
 
 ## 1.0.1 onboarding contrast maintenance update
 
@@ -12,10 +13,26 @@ Publishing must remain enabled so an approved update stays behind a separate pub
   regression coverage. The dark translucent card, Player context, copy, layout, navigation, and product behavior remain
   unchanged.
 - Public-state observation: the United States Play listing was visible on September 20, 2026 with the code-18
-  production release notes and an `Updated on Sep 2, 2026` date. The public listing does not expose version code, so
-  Console verification remains required before submitting code 19.
-- Release control: prepare and submit under Managed Publishing; do not reuse code 18 and do not publish an approved
-  code-19 update without the separate final action-time confirmation.
+  production release notes. Live Console evidence confirms code 19 is the sole Production change in review for the one
+  currently targeted country/region.
+- Release control: code 19 is submitted under Managed Publishing; do not publish an approved update without the
+  separate final action-time confirmation.
+
+### Code-19 validation and Play submission
+
+- Exact artifact source: commit `b151652` on `codex/production-1.0.1`; the later documentation-only record does not
+  change the uploaded artifact identity.
+- Protected unit tests and lint passed; the full connected suite passed 75/75 tests on the Android 16 Razr.
+- Fresh R8/resource-shrunk bundle inspection confirmed version `1.0.1`, exact source revision, the ReTrace mapping,
+  valid signing, and all five bundled station-selector artworks.
+- The first attempted upload used the unused V3 recovery identity. Play rejected it, and the owner removed that failed
+  artifact from the draft. The V3 local recovery file remains untouched pending separate archival handling.
+- A freshly built bundle signed with the registered V2 upload identity was accepted as code 19. Play reports target SDK
+  36, unchanged supported-device counts, 16 KB page-size support, high R8 optimization, and optimized resource shrinking.
+- The only preview warning is the already-known missing native debug-symbol archive for an upstream packaged library;
+  no truthful symbol archive is available from the project build.
+- The owner approved the English release note and authorized the final review-submission action. Publishing overview
+  now shows code 19 under `Changes in review` while quick checks finish, with Managed Publishing still on.
 
 ## Candidate lineage
 
