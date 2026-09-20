@@ -79,6 +79,7 @@ internal fun AppGuideDialog(
                     .clip(RoundedCornerShape(28.dp))
                     .testTag("app_guide_overlay"),
                 color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.94f),
+                contentColor = MaterialTheme.colorScheme.onSurface,
                 tonalElevation = 8.dp,
             ) {
                 Column(
