@@ -47,7 +47,7 @@ Do not distribute the development debug APK as the public Alpha. Its machine-loc
 
 ## Reporting a problem
 
-Use the public [product-testing workspace](https://24sevenfmplayer.com/product-testing/) to choose a test session and open the structured GitHub result form. The same form accepts passes, failures, passes with notes, and blocked tests so successful coverage is recorded alongside defects.
+Use the public [tester workspace](https://24sevenfmplayer.com/dev/tester-workspace/) to choose a test session and open the structured GitHub result form. The same form accepts passes, failures, passes with notes, and blocked tests so successful coverage is recorded alongside defects.
 
 Include:
 
