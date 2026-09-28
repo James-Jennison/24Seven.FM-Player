@@ -129,3 +129,19 @@ be reused to alter another.
 
 This record does not alter a public privacy statement, production artifact, or
 tester data.
+
+## Resolution recorded September 27, 2026
+
+The operational-policy conflict is resolved by the owner's statements in
+`docs/privacy-reviews/operational-attestation-2026-09-27.md`:
+
+- The 30-day and 90-day station retention periods stand, attested with the
+  network's authority. The native notice on `main` adopts the same periods in
+  place of "retention periods are currently unknown."
+- Station-side requests go to the email contact named in the native notice or
+  to the station's Contact/Feedback system.
+- The one-year investigation-record statement is withdrawn from both notices.
+
+The application-behavior drift is resolved by adopting the native notice's
+statements, recorded in
+`docs/privacy-reviews/unified-notice-proposal-2026-09-27.md`.

@@ -20,22 +20,18 @@ artifact can pass its release gate, `validate-website-facts-contract.py` uses
 commit. A SHA-shaped string, a moving branch name, or a file only present in
 the portal checkout is not source evidence.
 
-## Current conservative state
+## Current state
 
-The contract records the native `main` pin and the portal pin observed during
-the August 28, 2026 remediation. It also records the Alpha 08 release document
-as a **submitted candidate**. That record remains the authority for its exact
+The contract records production availability from the September 27, 2026
+observation of the public Google Play listing. That record supports only the
+versionless statement that the Player is available on Google Play in the United
+States. The Alpha 08 release document remains the authority for its exact
 closed-test version and availability only.
 
-The contract separately records the owner's September 10, 2026 attestation
-that the first production release is under Google Play review and is not yet
-available publicly. This narrow record authorizes that exact public status
-wording only; it does not identify a version, establish artifact provenance,
-or authorize publication.
-
-The privacy notice is pinned as the canonical native privacy source, but its
-content-review digest has not yet been recorded. The contract therefore blocks
-the website from adopting a privacy-text update until that review is complete.
+The privacy publication gate is ready. The native notice is pinned with its
+review digest, the owner's operational attestation is complete, the legacy
+surfaces have a recorded disposition, and the reconciled `PRIVACY.md` on the
+site lineage is the approved replacement source.
 
 ## Required order for a user-facing change
 
@@ -50,10 +46,8 @@ the website from adopting a privacy-text update until that review is complete.
 This order prevents a portal branch, a development `versionName`, or an
 unverified live page from becoming an accidental authority.
 
-The legacy portal privacy notice remains a distinct, pending-reconciliation
-source. It must be explicitly retired or marked superseded at every public
-location before a reviewed privacy page replaces it; merely recording a newer
-source does not make a contradictory legacy statement disappear.
+The legacy portal privacy notice is superseded. Its disposition at each known
+public location is recorded in `PRIVACY_LEGACY_SURFACE_INVENTORY.md`.
 
 Each release manifest has two independent gates. A recorded read-only Play
 Console observation supports a matching availability statement only. A

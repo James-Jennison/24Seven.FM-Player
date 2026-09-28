@@ -82,3 +82,15 @@ repository's narrow interim-correction validator may prepare only that claim's
 correction. It still requires the exact wording, separate production approval,
 validation, and rollback plan, but it does not wait for unrelated full-notice
 review work.
+
+## Disposition recorded September 27, 2026
+
+| Surface | Disposition |
+| --- | --- |
+| Public `/privacy/` on `24sevenfmplayer.com` | Replaced. The reconciled notice was promoted on September 27, 2026; see `docs/deployments/2026-09-27-privacy-reconciliation.md`. The served page no longer contains the no-background-polling statement. |
+| `player.jamesjennison.net/privacy/` | Redirected. The host returns `308` to the primary hostname for every path. |
+| Retained earlier artifacts | Moved out of the web root into `site-rollbacks/24sevenfmplayer.com/`. Their former public addresses return `404`. |
+| Portal root `PRIVACY.md` at `c00c2f4` | Superseded. `PRIVACY.md` on the `codex/site-production-release` lineage is the only build input for `/privacy/`. The portal commit remains in history as the dated legacy source. |
+| Generated `privacy-site/privacy/index.md` | Generated only from the reconciled `PRIVACY.md` on the site lineage. |
+
+Caches and external copies outside the project's control were not inventoried.
