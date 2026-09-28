@@ -90,6 +90,14 @@ PRODUCTION_REVIEW_STATEMENT = (
     "The first production release is under review by Google Play and is not yet "
     "available for public installation."
 )
+PRODUCTION_PUBLISHED_STATEMENT = "24Seven.FM Player is available on Google Play in the United States."
+PLAY_LISTING_URL = "https://play.google.com/store/apps/details?id=com.codeframe78.twentyfourseven.player"
+PLAY_LINK_PAGES = {"index.html", "features/index.html"}
+PUBLISHED_SEPARATE_TESTING_COPY = {
+    "index.html": "Separately, eligible listeners may apply for the invitation-only closed-testing program.",
+    "features/index.html": "The invitation-only closed-testing program is separate from the production release on Google Play.",
+    "product-testing/index.html": "Apply to join the separate invitation-only Closed Alpha",
+}
 PRODUCTION_REVIEW_PAGES = {
     "index.html",
     "features/index.html",
@@ -199,6 +207,9 @@ def validate_production_review_claims(
         fail(f"Unable to validate production review claims: {error}", failures)
         return
 
+    if review.get("status") == "published":
+        validate_production_published_claims(review, artifact_root, html_documents, failures)
+        return
     if review.get("status") != "in_review":
         return
     if review.get("public_statement") != PRODUCTION_REVIEW_STATEMENT:
@@ -224,6 +235,50 @@ def validate_production_review_claims(
             fail(f"Ambiguous closed-testing CTA remains in {relative_path}", failures)
         if SEPARATE_TESTING_COPY[relative_path] not in text:
             fail(f"Closed-testing program is not explicitly separate from the production review in {relative_path}", failures)
+
+
+def validate_production_published_claims(
+    review: dict[str, object],
+    artifact_root: Path,
+    html_documents: dict[Path, DocumentAudit],
+    failures: list[str],
+) -> None:
+    """Require the versionless availability statement and retire every in-review claim."""
+
+    if review.get("public_statement") != PRODUCTION_PUBLISHED_STATEMENT:
+        fail("Published production claim does not match the fixed availability statement", failures)
+        return
+
+    for path, document in html_documents.items():
+        relative_path = path.relative_to(artifact_root).as_posix()
+        text = path.read_text(encoding="utf-8")
+        if PRODUCTION_REVIEW_STATEMENT in text or "under review" in text.lower():
+            fail(f"In-review production claim remains in {relative_path}", failures)
+        for href in document.hrefs:
+            if "play.google.com" in href.lower() and href != PLAY_LISTING_URL:
+                fail(f"Unexpected Google Play link in {relative_path}: {href}", failures)
+
+    for relative_path in PRODUCTION_REVIEW_PAGES:
+        path = artifact_root / relative_path
+        if not path.is_file():
+            continue
+        if PRODUCTION_PUBLISHED_STATEMENT not in path.read_text(encoding="utf-8"):
+            fail(f"Production availability statement is missing from {relative_path}", failures)
+
+    for relative_path in PLAY_LINK_PAGES:
+        document = html_documents.get(artifact_root / relative_path)
+        if document is None or PLAY_LISTING_URL not in document.hrefs:
+            fail(f"Google Play listing link is missing from {relative_path}", failures)
+
+    for relative_path, separate_copy in PUBLISHED_SEPARATE_TESTING_COPY.items():
+        text = (artifact_root / relative_path).read_text(encoding="utf-8")
+        if relative_path != "features/index.html" or INVITATION_ONLY_CTA in text:
+            if INVITATION_ONLY_CTA not in text:
+                fail(f"Closed-testing CTA is not explicitly invitation-only in {relative_path}", failures)
+        if "Join closed testing" in text:
+            fail(f"Ambiguous closed-testing CTA remains in {relative_path}", failures)
+        if separate_copy not in text:
+            fail(f"Closed-testing program is not explicitly separate from the production release in {relative_path}", failures)
 
 
 def audit() -> int:

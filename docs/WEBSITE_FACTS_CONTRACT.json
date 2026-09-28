@@ -119,12 +119,12 @@
     "availability_claim_status": "ready_from_console_observation",
     "artifact_provenance_status": "incomplete",
     "production_review_status": {
-      "status": "in_review",
-      "recorded_at": "2026-09-10",
-      "source": "owner_attested_google_play_console",
-      "release_record": "docs/releases/production-review-2026-09-10.md",
-      "public_statement": "The first production release is under review by Google Play and is not yet available for public installation.",
-      "scope_rule": "This status attests only the review state and public unavailability. It does not identify a version, assert artifact provenance, or authorize publication."
+      "status": "published",
+      "recorded_at": "2026-09-27",
+      "source": "public_play_listing_observation",
+      "release_record": "docs/releases/production-availability-2026-09-27.md",
+      "public_statement": "24Seven.FM Player is available on Google Play in the United States.",
+      "scope_rule": "This status attests only public Google Play availability in the United States. It does not identify a version, assert artifact provenance, or claim availability in any other country or region."
     },
     "non_authoritative_status_records": [
       {
@@ -148,7 +148,7 @@
       "artifact_source_commit",
       "evidence_reference"
     ],
-    "publication_rule": "A recorded read-only Play Console observation is sufficient only for an availability claim about its exact version and track. Artifact provenance is sufficient only for a code-content claim about its exact version. A compound availability-and-content claim requires both gates. The owner-attested production-review record may state only that the first production release is under review and not yet publicly available; it cannot override those version-specific gates."
+    "publication_rule": "A recorded read-only Play Console observation is sufficient only for an availability claim about its exact version and track. Artifact provenance is sufficient only for a code-content claim about its exact version. A compound availability-and-content claim requires both gates. The production availability record may state only that the application is available on Google Play in the United States; it cannot override those version-specific gates."
   },
   "portal_surface": {
     "authority_branch": "codex/onboarding-portal-production",

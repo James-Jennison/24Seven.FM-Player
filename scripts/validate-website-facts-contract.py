@@ -42,6 +42,12 @@ that the app is approved, published, or available on Google Play.
 Closed testing is a separate distribution program and remains governed by its
 own version-specific release records and availability observations.
 """
+PRODUCTION_PUBLISHED_STATEMENT = "24Seven.FM Player is available on Google Play in the United States."
+PRODUCTION_PUBLISHED_SCOPE_RULE = (
+    "This status attests only public Google Play availability in the United States. It does not "
+    "identify a version, assert artifact provenance, or claim availability in any other country or region."
+)
+VERSION_PATTERN = re.compile(r"\b\d+\.\d+\.\d+")
 PRODUCTION_REVIEW_FIELDS = {
     "status",
     "recorded_at",
@@ -340,7 +346,7 @@ def main(require_public_privacy_ready: bool = False, require_interim_privacy_cor
         require(set(production_review) == PRODUCTION_REVIEW_FIELDS, "production review status must contain only its narrowly scoped fields")
         require(production_review.get("status") in {"not_recorded", "in_review", "approved", "published", "rejected", "withdrawn"}, "production review status is invalid")
         require(isinstance(production_review.get("recorded_at"), str) and production_review["recorded_at"], "production review recorded_at is required")
-        require(production_review.get("source") in {"owner_attested_google_play_console", "read_only_play_console"}, "production review source is invalid")
+        require(production_review.get("source") in {"owner_attested_google_play_console", "read_only_play_console", "public_play_listing_observation"}, "production review source is invalid")
         require(isinstance(production_review.get("release_record"), str) and production_review["release_record"].startswith("docs/releases/"), "production review release record is invalid")
         require((ROOT / production_review["release_record"]).is_file(), "production review release record is missing")
         require(isinstance(production_review.get("public_statement"), str) and production_review["public_statement"], "production review public_statement is required")
@@ -358,6 +364,20 @@ def main(require_public_privacy_ready: bool = False, require_interim_privacy_cor
             require(str(candidate["version_code"]) not in review_fields, "production review status must not inherit the closed-test version code")
             require(candidate["version_name"] not in review_record, "production review release record must not inherit the closed-test version name")
             require(str(candidate["version_code"]) not in review_record, "production review release record must not inherit the closed-test version code")
+        if production_review.get("status") == "published":
+            require(production_review.get("source") in {"read_only_play_console", "public_play_listing_observation"}, "published production status requires a recorded Console or public-listing observation")
+            require(production_review.get("public_statement") == PRODUCTION_PUBLISHED_STATEMENT, "published production status must use the approved availability statement")
+            require(production_review.get("scope_rule") == PRODUCTION_PUBLISHED_SCOPE_RULE, "published production status must use the fixed versionless scope rule")
+            try:
+                datetime.strptime(production_review["recorded_at"], "%Y-%m-%d")
+            except ValueError as error:
+                raise ValueError("published production status recorded_at must be an ISO date") from error
+            availability_record = (ROOT / production_review["release_record"]).read_text(encoding="utf-8")
+            require(PRODUCTION_PUBLISHED_STATEMENT in availability_record, "production availability record must contain the approved availability statement")
+            require(PRODUCTION_REVIEW_STATEMENT not in availability_record, "production availability record must not repeat the in-review statement")
+            require(VERSION_PATTERN.search(availability_record) is None, "production availability record must remain versionless")
+            published_fields = "\n".join(str(value) for key, value in production_review.items() if key not in {"recorded_at", "release_record"})
+            require(VERSION_PATTERN.search(published_fields) is None, "published production status must remain versionless")
 
         portal = contract["portal_surface"]
         require(portal.get("authority_branch") == "codex/onboarding-portal-production", "portal authority branch is invalid")

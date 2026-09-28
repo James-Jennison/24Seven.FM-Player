@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Exercise fail-closed boundaries for the in-review production status record."""
+"""Exercise fail-closed boundaries for the recorded production status."""
 
 from __future__ import annotations
 
@@ -63,7 +63,32 @@ def main() -> int:
             "public_statement", "The production release is rolling out to everyone."
         ),
     )
-    print("Production-review status contract: fail-closed negative fixtures passed.")
+    require_rejection(
+        "version-claim-in-public-statement",
+        lambda value: value["release_claims"]["production_review_status"].__setitem__(
+            "public_statement", "24Seven.FM Player 1.0.0 is available on Google Play in the United States."
+        ),
+    )
+    require_rejection(
+        "wider-geography-in-public-statement",
+        lambda value: value["release_claims"]["production_review_status"].__setitem__(
+            "public_statement", "24Seven.FM Player is available on Google Play."
+        ),
+    )
+    require_rejection(
+        "stale-review-statement-after-publication",
+        lambda value: value["release_claims"]["production_review_status"].__setitem__(
+            "public_statement",
+            "The first production release is under review by Google Play and is not yet available for public installation.",
+        ),
+    )
+    require_rejection(
+        "unrecorded-owner-only-publication",
+        lambda value: value["release_claims"]["production_review_status"].__setitem__(
+            "source", "owner_attested_google_play_console"
+        ),
+    )
+    print("Production status contract: fail-closed negative fixtures passed.")
     return 0
 
 

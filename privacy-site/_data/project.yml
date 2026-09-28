@@ -38,15 +38,16 @@ developer_navigation:
     description: Architecture, research, testing, release, and contributor library.
 
 site_meta:
-  verified: 2026-09-10
-  source_commit: owner-attested-production-review
-  verification_label: Owner-attested first production release is under Google Play review
+  verified: 2026-09-27
+  source_commit: public-play-listing-observation
+  verification_label: Production availability confirmed against the public Google Play listing
 
 play_status:
-  label: Google Play review in progress
-  headline: First production release under review
-  home_detail: The first production release is under review by Google Play and is not yet available for public installation.
-  detail: The first production release is under review by Google Play and is not yet available for public installation.
+  label: Now on Google Play
+  headline: Available on Google Play
+  url: https://play.google.com/store/apps/details?id=com.codeframe78.twentyfourseven.player
+  home_detail: 24Seven.FM Player is available on Google Play in the United States.
+  detail: 24Seven.FM Player is available on Google Play in the United States.
 
 roadmap_meta:
   updated: 2026-08-16
@@ -54,8 +55,8 @@ roadmap_meta:
   scope_total_count: 55
   active_total_count: 50
   retired_count: 10
-  active_phase: M43
-  active_label: First production release under Google Play review
+  active_phase: M44
+  active_label: First production release available on Google Play
 
 milestones:
   - order: 1
@@ -557,28 +558,28 @@ roadmap:
   - id: "M43"
     phase: "production"
     name: "Production Access and Policy Approval"
-    state: "waiting"
-    state_label: "External · Google Play review in progress"
-    blocking: true
-    dependencies: "Google Play review outcome and owner-controlled publication decision"
-    forecast: "External · timing determined by Google Play review"
-    forecast_confidence: "External"
+    state: "done"
+    state_label: "Complete · production access granted"
+    blocking: false
+    dependencies: "Completed before the active M44 phase"
+    forecast: "Complete"
+    forecast_confidence: "Complete"
     forecast_model: "Google Play review process"
     evidence: "docs/ROADMAP.md"
-    summary: "The first production release is under Google Play review. Approval is not public availability and does not publish the release automatically."
+    summary: "Google Play granted production access and the first production release passed review."
 
   - id: "M44"
     phase: "production"
     name: "Production Release and Staged Rollout"
-    state: "planned"
-    state_label: "Waiting for Google Play approval"
-    blocking: false
-    dependencies: "Google Play approval and owner authorization"
+    state: "active"
+    state_label: "Active · available in the United States"
+    blocking: true
+    dependencies: "Owner-controlled geography, health review, and update validation"
     forecast: "1–4 calendar weeks after trigger"
     forecast_confidence: "Medium"
     forecast_model: "Sol Extra High"
     evidence: "docs/ROADMAP.md"
-    summary: "Stage the production release with health thresholds pause rollback and update validation."
+    summary: "The first production release is available on Google Play in the United States. Geographic expansion and updates remain owner-controlled."
 
   - id: "M45"
     phase: "production"
