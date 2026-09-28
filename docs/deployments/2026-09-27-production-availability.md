@@ -30,10 +30,16 @@ manifest was compared exactly, and the five PHP entry points passed syntax
 checks under the server runtime before promotion. The former live artifact is
 retained as:
 
-`.24sevenfmplayer.com.rollback-production-availability-369c21c-20260928T040234Z`
+`site-rollbacks/24sevenfmplayer.com/24sevenfmplayer.com.rollback-production-availability-369c21c-20260928T040234Z`
 
 This is the content rollback point for the primary hostname. It does not alter
 the separate Cloudflare redirect rules for the legacy domains.
+
+The rollback was first retained beside the document root. Directories there are
+served by the parent site's virtual host, so after verification it and the three
+earlier retained copies were moved, unmodified, into `site-rollbacks/` in the
+account's home directory. Public HTTPS then returned `404` for each former
+address and the primary hostname's routes were unchanged.
 
 ## Verification
 

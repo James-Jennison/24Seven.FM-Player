@@ -106,5 +106,9 @@ a content rollback on the primary hostname.
   never hand-edit Webuzo-generated virtual-host configuration.
 - Keep the existing prior primary artifact until a later, separately approved
   cleanup.
+- Retained artifacts live in `site-rollbacks/24sevenfmplayer.com/` in the
+  account's home directory. A directory beside the primary document root is
+  publicly served by the parent site's virtual host, so move each rollback
+  there once promotion is verified, and restore from there.
 - Host-scoped tester and Coordinator sessions do not transfer to the new
   primary hostname. Existing users sign in again at `24sevenfmplayer.com`.
