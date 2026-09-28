@@ -1,4 +1,4 @@
-# Privacy notice for 24Seven.FM Player Alpha
+# Privacy notice for 24Seven.FM Player
 
 Last updated: September 27, 2026.
 
@@ -18,7 +18,7 @@ Last updated: September 27, 2026.
 - **Chat history:** Chat messages are kept in memory for the current app session and are not persisted by the app.
 - **Favorite tracks:** Favorite lists are loaded only after station sign-in, kept in memory, and cleared from the interface when the user signs out. They are not written to app storage.
 - **Request activity and membership:** Where verified for a station, the app can load the signed-in member's recent request summaries, station-reported request readiness, and explicit membership indicator. These values are kept in memory, cleared from the interface on sign-out, and are not written to app storage.
-- **External contact and station pages:** The current Alpha exposes only **Contact Us**, which opens an Android email composer addressed to the monitored Player contact after an explicit tap; the app does not send the message itself. VIP/RIP membership, payment, registration, recovery, management, and deletion pages are not linked from the Player. The app does not copy its protected station session into the email app. Drafts, sent mail, and retention are controlled independently by the selected email app and recipient.
+- **External contact and station pages:** The current Player exposes only **Contact Us**, which opens an Android email composer addressed to the monitored Player contact after an explicit tap; the app does not send the message itself. VIP/RIP membership, payment, registration, recovery, management, and deletion pages are not linked from the Player. The app does not copy its protected station session into the email app. Drafts, sent mail, and retention are controlled independently by the selected email app and recipient.
 - **In-app diagnostics:** The app can generate a local support snapshot containing app/build version, Android/API and coarse device model, selected station, bounded playback/error category, validated-network availability, broad audio-output category, and up to five recent non-sensitive playback transitions. The preview excludes account data, messages, request/report content, URLs, route names, stable device identifiers, raw errors, and logs. It remains on the device unless the user explicitly copies it to Android's clipboard or opens Android's Share chooser and selects a recipient; the receiving app then handles the text under its own privacy practices.
 
 The application does not include advertising, crash reporting, tracking SDKs, developer-operated analytics, or a developer-operated data server. The Google Cast Android Sender SDK automatically sends encrypted, anonymous Cast-interaction diagnostics to a Google log-collection server. Google documents these diagnostics as generic discovery and session-management events, mobile-device information, and client Cast-app information used in aggregate to monitor Cast SDK use and performance and detect product defects. Google states that these logs do not contain identifiers traceable to a specific user, are retained briefly before aggregation, are not transferred to third parties or other apps, and cannot be opted out of or deleted by the app developer or user.
@@ -47,9 +47,9 @@ For verified deletion requests, 24seven.FM deletes or anonymizes personally iden
 
 Encrypted backups are retained for no more than 90 days. Deleted data is not intentionally restored; if disaster recovery restores deleted information, the deletion is reapplied. Payment providers retain payment credentials and any legally required transaction records for their own required period; 24seven.FM does not directly store payment-card information. Irreversibly aggregated or anonymized statistics may be retained indefinitely because they no longer identify an individual.
 
-## Alpha limitations
+## Reporting problems
 
-This is pre-release software. Testers should use a non-administrator station account where practical and should not include credentials, private messages, session values, or security-code images in bug reports.
+When reporting a problem, do not include credentials, private messages, session values, or security-code images. Closed-test participants should use a non-administrator station account where practical.
 
 ## Closed-test tester-interest form
 
