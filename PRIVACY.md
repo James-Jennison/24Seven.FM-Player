@@ -1,6 +1,6 @@
 # Privacy notice for 24Seven.FM Player
 
-Last updated: September 2, 2026.
+Last updated: September 27, 2026.
 
 24Seven.FM Player is an unofficial, non-commercial native Android client for the five public 24Seven.FM radio stations. It is not affiliated with or endorsed by 24Seven.FM or its stations.
 
@@ -45,8 +45,8 @@ Protected station sessions, the adult age-screen result, accepted Terms version,
 
 To request access to, correction of, or deletion of station-side data, email [morg@24seven.fm](mailto:morg@24seven.fm) with the station name, the account name, and the request type. Do not include a password, security-code answer, session value, or other authentication secret. This request path covers account information, sign-in/session and IP/security logs, station-library searches, public Chat posts, song requests and optional request messages, and abuse-report information that the station retains. The five stations share one policy: retention periods are currently unknown; the station owner and network administrators may access the information; and it is not shared with another provider except PayPal when processing premium subscriptions or donations. Clearing local app data does not remove station-side accounts, content, or logs.
 
-## Pre-release limitations
+## Reporting problems
 
-This is pre-release software. Testers should use a non-administrator station account where practical and should not include credentials, private messages, session values, or security-code images in bug reports.
+When reporting a problem, do not include credentials, private messages, session values, or security-code images. Closed-test participants should use a non-administrator station account where practical.
 
 The application is maintained by the community contributors to the `James-Jennison/24Seven.FM-Player` project. Privacy questions about the Player can be sent to [24sevenplayer@jamesjennison.net](mailto:24sevenplayer@jamesjennison.net). For station-side access, correction, or deletion requests, contact [morg@24seven.fm](mailto:morg@24seven.fm), the network-authorized contact for this application. Reports can also be submitted through [the project's GitHub issue channel](https://github.com/James-Jennison/24Seven.FM-Player/issues) without sensitive account information.
