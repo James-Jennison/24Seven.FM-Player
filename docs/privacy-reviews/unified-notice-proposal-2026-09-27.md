@@ -1,7 +1,8 @@
 # Unified privacy notice proposal — September 27, 2026
 
-**Status:** Proposal for owner review. Not published. The live notice at `https://24sevenfmplayer.com/privacy/` is
-unchanged by this branch.
+**Status:** Approved by the owner for publication on September 27, 2026, as drafted. The owner also accepted the
+recommendations recorded under "Decisions" below; those are a separate follow-up change and are not part of this
+publication.
 
 ## Purpose
 
@@ -30,19 +31,21 @@ Each replacement is copied verbatim from `PRIVACY.md` at `main`.
 | Tester-program records removed or anonymized within 90 days | Same attestation. |
 | Closed-test tester-interest form section | Reviewed extraction recorded in `docs/privacy-reviews/tester-program-addendum-c00c2f.md`. |
 
-## Decisions still required from the owner
+## Decisions
 
-1. **Supported privacy-request contact.** The website notice directs station-side requests to the station's
-   Contact/Feedback system. The native notice names an email contact. The facts contract records this as pending
-   confirmation, so the website wording is kept unchanged here.
-2. **Investigation records.** "Kept for no more than one year" is served today and is recorded as awaiting owner
-   attestation. It is kept unchanged here.
-3. **Native notice retention wording.** `PRIVACY.md` on `main` says station-side retention periods are unknown. If the
-   August 28 attestation stands, `main` should adopt the attested periods so the two notices agree.
-4. **Email addresses on the website.** The site validator forbids email links in the published artifact. The native
-   notice's email contacts are therefore not carried over.
+The owner accepted these recommendations on September 27, 2026. None is applied by this publication.
 
-## Before publication
+1. **Supported privacy-request contact.** Use the email contact named in the native notice, and keep the station's
+   Contact/Feedback system as an alternative. The website shows the address as plain text because the site validator
+   forbids email links.
+2. **Investigation records.** Remove "kept for no more than one year" unless the network confirms it, and state that a
+   record is retained only while an active investigation requires it.
+3. **Retention periods.** Both notices must say the same thing. Adopt the 30-day and 90-day periods in the native
+   notice if the August 28 attestation was made with the network's authority; otherwise use the "unknown" wording in
+   both until the network confirms the periods in writing. Which case applies is still to be confirmed.
+4. **Email addresses on the website.** The native notice's email links are not carried over as links.
 
-Publishing this proposal requires the owner's decisions above, a recorded review digest, an updated facts contract, and
-the atomic deployment procedure. This branch changes none of those.
+## This publication
+
+This publication changes only the application-behavior statements listed above. The facts contract's privacy
+publication gate remains open for the follow-up change.
