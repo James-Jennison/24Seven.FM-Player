@@ -34,6 +34,12 @@ Publishing remains on so an approved update stays behind a separate publication 
 - The owner approved the English release note and authorized the final review-submission action. Publishing overview
   now shows code 19 under `Changes in review` while quick checks finish, with Managed Publishing still on.
 
+## Code-18 record
+
+The sections from here through the recovery boundary are the September 2, 2026 code-18 readiness record, retained as
+written. Where they say code 18 was not sent for review or published, they describe that date; code 18 has since been
+published, as stated in the status above.
+
 ## Candidate lineage
 
 - Google Play accepted `0.1.0-alpha08`, version code 17, from candidate commit `55a6ea1` for closed testing.
@@ -190,5 +196,5 @@ required, a separately tested and authorized higher-version replacement. Never r
 
 ## Current owner-controlled decisions
 
-After the quick checks complete successfully, explicitly authorize sending the United States-only Production changes
-for review. Managed publishing is on, so publication remains a later, separate owner-controlled action.
+Code 18 is published and code 19 is in Production review. Managed Publishing is on, so publishing an approved code-19
+update remains a separate owner-controlled action that requires its own action-time confirmation.

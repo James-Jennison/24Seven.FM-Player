@@ -803,7 +803,9 @@ independently.
   ReTrace mapping attached. Preview showed unchanged device support, 16 KB page-size support, optimized R8/resource
   shrinking, and only the known non-blocking native-symbol warning. The owner approved the release note and authorized
   review submission. Code 19 is now under `Changes in review` while quick checks complete; Managed Publishing remains
-  on, and publication is not authorized. No tag, PR, or release workflow has occurred for code 19.
+  on, and publication is not authorized. On September 27, 2026, the owner authorized pushing the release branches and
+  tagging the exact artifact sources: `v1.0.0` at `1e1d75f` and `v1.0.1` at `b151652`, followed by a pull request to
+  land the release lineage on `main`. No release workflow has occurred for code 19.
 
 ### M45 — Operational Reliability and Recertification
 

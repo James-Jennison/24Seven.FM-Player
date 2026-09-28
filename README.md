@@ -31,7 +31,20 @@
 
 The [comprehensive project portal](https://codeframe78.github.io/24Seven.FM-Player/project/) connects the product experience to its native architecture, development workflow, validation evidence, milestone history, release readiness, and contributor resources. The canonical [privacy notice](https://codeframe78.github.io/24Seven.FM-Player/) remains at the site root.
 
+## Release status
+
+| Version | Version code | Google Play state | Source tag |
+| --- | :---: | --- | --- |
+| [1.0.0](docs/releases/1.0.0.md) | 18 | Published to Production, United States only | `v1.0.0` |
+| [1.0.1](docs/releases/1.0.1.md) | 19 | Submitted to Production review on September 20, 2026 under Managed Publishing | `v1.0.1` |
+
+Version 1.0.1 is an onboarding-contrast maintenance update. Its candidate passed 203 unit tests, lint, and 75 connected
+tests on the Android 16 Razr. Gates, evidence, and the controlled first-launch plan are recorded in the
+[production release readiness record](docs/PRODUCTION_RELEASE_READINESS.md).
+
 ## Alpha status
+
+The milestone narrative below predates the production release and is retained for roadmap traceability.
 
 The canonical roadmap now runs from **M01 through M60**. **M01–M28 and M31–M35 are complete**, preserving 33 verified achievements. The active Alpha-readiness program is **M29–M35** with two gates still open; authorized closed-app community delivery is **M36–M38**; candidate delivery and publication are **M39–M41**.
 
@@ -96,7 +109,7 @@ notes remain in [MILESTONE_FORECAST.md](docs/MILESTONE_FORECAST.md).
 | Alpha readiness | M29–M35 | 🚧 Active | Play declarations, rights, payments/account lifecycle, security, request integrity, device/accessibility, and signing |
 | Community delivery | M36–M38 | ⏳ Authorization-gated | Authorized event source, secure delivery, and lifecycle/privacy certification |
 | Alpha delivery | M39–M41 | ⏳ Planned | Candidate freeze, Play-delivered remediation, and explicitly authorized Alpha publication |
-| Production readiness | M42–M45 | ⏳ Planned | Closed-test stabilization, production access, staged rollout, and operations |
+| Production readiness | M42–M45 | 🚧 Active | Closed-test stabilization, production access (M43 granted), controlled first launch (M44 in progress), and operations |
 | Bounded future scope | M46–M60 | 🧊 Planned/deferred | Architecture sustainability, repaired Private Messages, retired Forum scope, Cast feasibility, extended station/account capabilities, and authorized native VIP/RIP commerce |
 
 ### Current progression
@@ -106,7 +119,7 @@ notes remain in [MILESTONE_FORECAST.md](docs/MILESTONE_FORECAST.md).
   each milestone still has an independent acceptance gate.
 - **Authorization-gated:** M36–M38 require an approved station-side event source or privacy-compatible relay before implementation.
 - **Publication:** M39–M41 deliberately separate candidate freeze, Play delivery, and the final user-authorized Alpha action.
-- **Production:** M42–M45 add stabilization, production-access evidence, staged release, and operational recertification.
+- **Production:** M43 production access is granted and M44 is in progress with 1.0.0 published and 1.0.1 in review. M42 closed-test evidence is being reconciled, and M45 operational recertification is planned.
 - **Deferred/future:** Private Messages remain excluded until M47 repairs and verifies server delivery. M51–M54 are retired by project decision: the Player will not expose, retrieve, or participate in station Forums; the historical research remains retained as evidence. Google Cast is an optional deferred M55 scope, and native VIP/RIP commerce is authorization-gated across M58–M60.
 - **Testing:** the [Product Testing catalog](https://codeframe78.github.io/24Seven.FM-Player/project/product-testing/) now contains 35 stable test cases covering the current product, Alpha gates, release campaigns, and capability-gated future slices. PT-29–PT-31 were retired with the permanent removal of Forum scope. PT-35 is the exact-artifact M29 Play declaration/privacy/reviewer-access case; PT-36–PT-38 define the future authorized VIP/RIP purchase, activation, and lifecycle evidence.
 
@@ -201,7 +214,7 @@ Audio stream addresses come from station-provided playlists and remain subject t
 
 M17 tracks the native Private Messages experience, which remains deferred until the website's underlying server issues and production behavior are settled. See [docs/future-scope.md](docs/future-scope.md).
 
-Alpha testers and distributors should read [the privacy notice](PRIVACY.md), [Alpha testing guide](docs/alpha-testing.md), [release notes](docs/releases/0.1.0-alpha01.md), [Play Console checklist](docs/play-console-checklist.md), and [M23 signing handoff](docs/m23-alpha-readiness.md). Development debug APKs are not intended for external distribution.
+Alpha testers and distributors should read [the privacy notice](PRIVACY.md), [Alpha testing guide](docs/alpha-testing.md), [Alpha release notes](docs/releases/0.1.0-alpha01.md), [1.0.0](docs/releases/1.0.0.md) and [1.0.1](docs/releases/1.0.1.md) release notes, [Play Console checklist](docs/play-console-checklist.md), and [M23 signing handoff](docs/m23-alpha-readiness.md). Development debug APKs are not intended for external distribution.
 
 ## Building
 
