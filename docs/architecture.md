@@ -21,16 +21,16 @@ The UI must not import Retrofit, OkHttp, cookies, WebSockets, or ExoPlayer. A sc
 
 The bundled catalog contains identities and public website addresses only. Stream URLs and protocol endpoints must come from a reviewed source rather than guesses embedded in UI code.
 
-The initial stream addresses were extracted from station-provided PLS playlists. Each catalog entry keeps the primary `hi5` relay first and the `hi` source stream as a fallback. Because those playlists use HTTP, Android cleartext access is permitted only for the five explicit station domains; cleartext remains disabled globally.
+Each catalog entry carries one station-provided `https://<station-domain>/live` stream. The station's reverse proxy handles failover between its `hi5` primary and `hi` backup relays, so the Player no longer catalogs separate relay URLs. Because every stream is HTTPS, cleartext traffic is disabled globally with no per-domain exception. The earlier HTTP relay addresses extracted from station-provided PLS playlists were replaced on August 11, 2026.
 
-All ten committed relay URLs advertise `audio/aacp` and 128 kbps through ICY headers. The catalog therefore records `StreamFormat.Aac` and 128 kbps based on protocol evidence, not hostname inference. Revalidate this evidence before changing the labels.
+The catalog records `StreamFormat.Aac` and 192 kbps from the verified stream evidence in `docs/ENDPOINT_INVENTORY.md`, not hostname inference. Revalidate this evidence before changing the labels.
 
 Live ICY titles flow from the service-owned player through a station-scoped `NowPlayingRepository` contract. Compose receives only immutable domain state. ICY supplies one composite title, so the application displays it unchanged and does not guess artist, album, composer, or duration fields. On each distinct ICY title, the service requests the station's public current-track record once and optionally enriches state and MediaSession metadata with an explicit same-station cover URL. This is event-driven rather than separately polled, and artwork failure never affects playback or title updates.
 
 
 ## Playback ownership
 
-`RadioPlaybackService` owns the single `ExoPlayer` and `MediaSession`. The application connects through a Media3 `MediaController` adapter implementing the domain-facing `PlaybackController` interface. Switching stations stops the current item and atomically replaces the playlist with the selected station's ordered primary and fallback streams; two stations can never play simultaneously. The service advances to the fallback once when the primary stream fails.
+`RadioPlaybackService` owns the single `ExoPlayer` and `MediaSession`. The application connects through a Media3 `MediaController` adapter implementing the domain-facing `PlaybackController` interface. Switching stations stops the current item and atomically replaces the playlist with the selected station's streams ordered by priority; two stations can never play simultaneously. The service still advances to the next catalogued stream when one fails, but the current catalog has a single stream per station, so relay failover happens at the station's proxy.
 
 ## Native navigation
 

@@ -73,9 +73,9 @@ Publication is never an automatic consequence of a passing local build or CI run
 
 | ID | Size | State | Implementation focus |
 | --- | --- | --- | --- |
-| M42 Closed-Test Operations and Stabilization | Campaign | Planned after M41 | Maintain qualifying tester continuity, collect structured feedback, fix/retest findings, review Play vitals, and meet exit criteria |
-| M43 Production Access and Policy Approval | External gate | Planned after M42 | Submit testing, feedback, change, value, and readiness evidence; reconcile any additional testing request |
-| M44 Production Release and Staged Rollout | Campaign | Planned after M43 | Final production candidate, explicit authorization, staged percentages, health thresholds, pause/rollback, release notes, and update validation |
+| M42 Closed-Test Operations and Stabilization | Campaign | Evidence reconciliation in progress | Reconcile retained campaign, tester, Play delivery, vitals, and remediation evidence without treating production access alone as every project-specific exit gate |
+| M43 Production Access and Policy Approval | External gate | Complete — access granted | Preserve the owner-supplied grant as non-secret evidence; do not treat access as publication |
+| M44 Production Release and Controlled First Launch | Campaign | In progress — readiness only | Prepare the exact candidate, owner-selected initial countries/regions, health thresholds, recovery plan, release notes, and update validation; no percentage control exists for the first production release |
 | M45 Operational Reliability and Recertification | Recurring | Planned | Monitor Play quality/support without invasive tracking, recertify station contracts/rights/moderation, maintain policies/toolchain/dependencies, and exercise key recovery |
 
 ## Deferred and future programs
@@ -86,7 +86,8 @@ one into the Alpha contract.
 - M46 — Architecture Sustainability.
 - M47–M50 — repaired and certified Private Messages.
 - M51–M54 — retired Forum scope; retained only as historical roadmap IDs and research evidence.
-- M55 — deferred optional Google Cast feasibility and certification.
+- M55 — deferred expanded Google Cast feasibility/certification beyond M44's repaired existing sender/public receiver;
+  no separate Google TV app work is authorized.
 - M56 — extended station capability certification.
 - M57 — account registration, recovery, and management access.
 - M58 — membership commerce authorization and billing architecture (**Sol Extra High**).

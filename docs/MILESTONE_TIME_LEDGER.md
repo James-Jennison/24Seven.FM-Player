@@ -116,8 +116,8 @@ active execution.
 | M40 | Active · Alpha08 sent for Google Play review | August 20, 2026 | — | 3–10 calendar d | Not recorded individually | Not recorded individually | — | — | Ongoing external review | Not assessable while active | Confirmed current phase |
 | M41 | Planned after M40 | — | — | 0.5–1 active d | — | — | — | — | — | — | Unknown |
 | M42 | Active · owner-confirmed two-week closed test | `August 16, 2026 at 5:51:14 PM PDT (UTC-07:00)` first recorded remediation interval; earlier campaign start not supplied | — | 3–5 calendar wk | 0.44 h recorded Issue #26, v3/v4 preparation, signing recovery, and Razr landscape remediation | 0.11 h recorded | 0.42 h recorded while credentials were unavailable | 0.55 h recorded | ≥0.90 h recorded intervals | Not assessable while active | Confirmed current phase |
-| M43 | Planned after M42 | — | — | 1–2 calendar wk | — | — | — | — | — | — | Unknown |
-| M44 | Planned after M43 | — | — | 1–4 calendar wk | — | — | — | — | — | — | Unknown |
+| M43 | Complete · production access granted | Unknown | Grant notice supplied September 2, 2026; exact provider timestamp unknown | 1–2 calendar wk | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown | Grant confirmed; timing unknown |
+| M44 | Active · 1.0.0 published; 1.0.1 in review | September 2, 2026 | — | 1–4 calendar wk | Ongoing | Ongoing | — | Ongoing | Ongoing | Not assessable while active | Confirmed current phase |
 | M45 | Planned recurring | — | — | Monthly, quarterly, and release-triggered | — | — | — | — | — | — | Unknown |
 | M46 | Planned post-Alpha | — | — | 1–3 active wk per approved slice | — | — | — | — | — | — | Unknown |
 | M47 | Deferred | — | — | External repair; then 1–3 active wk | — | — | — | — | — | — | Unknown |
@@ -751,20 +751,61 @@ independently.
 
 - **Objective:** Submit the production-access questionnaire with testing, feedback, change, value, policy, and readiness
   evidence and resolve the Play response.
-- **Start, completion, and intervals:** Not started; all actual intervals and totals are not applicable.
-- **Model, reasoning strength, and original forecast:** Sol Extra High; current forecast 1–2 calendar weeks after M42 evidence is complete.
-- **Time, variance, evidence, confidence, and forecasting lessons:** No actual variance. Roadmap `e249071`, forecast `f971a9e`; no application or
-  workflow record. **Unknown**. Track Play review separately from active response work.
+- **Start, completion, and intervals:** Complete. On September 2, 2026, the owner supplied a Google Play notice that
+  production access had been granted for `com.codeframe78.twentyfourseven.player`. The application date, provider-side
+  grant timestamp, active work, automated wait, and external-review interval were not retained and remain **Unknown**.
+- **Model, reasoning strength, and original forecast:** Sol Extra High; original current forecast was 1–2 calendar
+  weeks after M42 evidence was complete.
+- **Time, variance, evidence, confidence, and forecasting lessons:** Access is confirmed by the owner-supplied notice,
+  but timing variance cannot be calculated. Do not retain the private screenshot in Git and do not treat access as a
+  production publication.
 
-### M44 — Production Release and Staged Rollout
+### M44 — Production Release and Controlled First Launch
 
-- **Objective:** Run an explicitly authorized staged production rollout with health thresholds, pause/rollback,
-  release notes, and update validation.
-- **Start, completion, and intervals:** Not started; all actual intervals and totals are not applicable.
+- **Objective:** Prepare and, only after explicit authorization, run a controlled first production launch with an exact
+  candidate, owner-selected initial countries/regions, health thresholds, recovery, release notes, and update
+  validation. Google Play does not offer percentage staging for a first production release.
+- **Start, completion, and intervals:** Readiness work began September 2, 2026 after the owner elected to begin. Code 18
+  / `1.0.0` is now publicly listed. On September 20, 2026, the owner authorized and submitted the exact code-19
+  `1.0.1` onboarding-contrast maintenance update for Production review. Active and automated intervals remain open;
+  Managed Publishing preserves a separate publication gate after approval.
+  The existing Android Cast path's omitted public web
+  receiver was restored through the approved atomic Player-site workflow, and the code-18 sender then completed a
+  successful remote media load with owner-confirmed audio. The Google TV Streamer was only a passive Cast target; this
+  work did not open or change a Google TV app.
 - **Model, reasoning strength, and original forecast:** Sol Extra High; current forecast 1–4 calendar weeks after production access and
   rollout approval.
-- **Time, variance, evidence, confidence, and forecasting lessons:** No actual variance. Roadmap `e249071`, forecast `f971a9e`; no production release,
-  tag, PR, or workflow. **Unknown**. Count monitoring work and waits in their actual categories.
+- **Time, variance, evidence, confidence, and forecasting lessons:** Current evidence and gates are recorded in
+  `docs/PRODUCTION_RELEASE_READINESS.md`. Use selected-country scope, not a fictional percentage, to control the first
+  production launch. Exact-candidate audit also corrected stale privacy/Data Safety and foreground-service declaration
+  wording for the Cast SDK's anonymous diagnostics and the optional special-use Chat monitor. Physical Razr inspection
+  then found a remote Death.FM selector-logo fallback; the selector was corrected to use five bundled station resources
+  in every layout. The final implementation at `7aa5e74` then passed 203 unit tests, 73 connected Razr tests, lint,
+  release bundle/APK and 16 KB packaging checks, and post-shrinking inspection of all five selector resources plus the
+  fallback. Physical DHU 2.0 acceptance on the USB-connected Android 16 Razr 2026 discovered the exact-candidate native
+  media catalog and reached live Now Playing for 1980s.FM, Adagio.FM, Death.FM, Entranced.FM, and
+  StreamingSoundtracks.com before returning the final session to paused. The temporary head-unit server, ADB forward,
+  and Android Auto developer mode were removed after acceptance. Cast-site and production-candidate reviewer/evidence
+  cycles both closed `READY`. The owner-directed V3 JKS then produced an internally valid exact-source bundle, but a
+  read-only comparison against the active Play Console proved that its signer matches neither registered Play
+  certificate; it was not uploaded. The recovery folder's V2 JKS exactly matches the registered upload certificate,
+  and the protected one-password flow produced a locally verified exact-source bundle signed by that identity. No
+  upload-key reset is needed. The owner then authorized the first Play upload and Production draft: Play accepted code
+  18 / `1.0.0`, attached the ReTrace mapping file, and saved the English release notes. The owner approved United States
+  as the sole initial region; it is saved with the draft and the country-selection error is cleared. Only the known
+  non-blocking upstream native-symbol warning remains. Publishing overview shows managed publishing on and the two new
+  Production changes ready to submit while Play runs quick checks; the submission control is enabled even though the
+  Alpha08 release and default store listing remain in review. This preserves separate owner gates for review submission
+  and later publication. Count validation, external review, owner interaction, and provider waits in their actual
+  categories. Code 18 has since been published. For code 19, the first attempted upload used the unused V3 recovery
+  identity and Play rejected it; the owner removed that artifact. A fresh V2-signed replacement from exact artifact
+  commit `b151652` passed protected local validation and 75/75 connected Razr tests, and Play accepted it with the
+  ReTrace mapping attached. Preview showed unchanged device support, 16 KB page-size support, optimized R8/resource
+  shrinking, and only the known non-blocking native-symbol warning. The owner approved the release note and authorized
+  review submission. Code 19 is now under `Changes in review` while quick checks complete; Managed Publishing remains
+  on, and publication is not authorized. On September 27, 2026, the owner authorized pushing the release branches and
+  tagging the exact artifact sources: `v1.0.0` at `1e1d75f` and `v1.0.1` at `b151652`, followed by a pull request to
+  land the release lineage on `main`. No release workflow has occurred for code 19.
 
 ### M45 — Operational Reliability and Recertification
 
@@ -858,11 +899,13 @@ independently.
 - **Time, variance, evidence, confidence, and forecasting lessons:** No counted or elapsed time and no variance can be assigned. Roadmap `e249071`
   and retirement `8b9980f`; no implementation/PR/release/workflow. **Unknown** rather than zero.
 
-### M55 — Google Cast Feasibility and Certification
+### M55 — Expanded Google Cast Feasibility and Certification
 
-- **Objective:** Deferred optional scope. Resume go/no-go research only after explicit owner direction, permitted stream
-  use, receiver compatibility, lifecycle/route behavior, rights review, and five-station validation.
-- **Start, completion, and intervals:** Not started; all actual intervals and totals are not applicable.
+- **Objective:** Deferred scope beyond M44's narrow repair of the already-present Android sender and public web receiver.
+  Resume broader go/no-go work only after explicit owner direction, permitted stream use, receiver compatibility,
+  lifecycle/route behavior, rights review, and five-station validation. Separate Google TV app work is not authorized.
+- **Start, completion, and intervals:** Not started. The September 2 M44 receiver restoration and functional Cast check
+  did not start this broader milestone; all M55 actual intervals and totals remain not applicable.
 - **Model, reasoning strength, and original forecast:** No model or forecast is assigned while deferred. The owner scope
   decision was recorded August 11, 2026 at 8:00:11 AM PDT (UTC−07:00).
 - **Time, variance, evidence, confidence, and forecasting lessons:** No actual variance or Cast evidence. **Unknown**.

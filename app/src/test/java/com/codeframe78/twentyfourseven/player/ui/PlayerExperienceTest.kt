@@ -1,5 +1,6 @@
 package com.codeframe78.twentyfourseven.player.ui
 
+import com.codeframe78.twentyfourseven.player.R
 import com.codeframe78.twentyfourseven.player.domain.Station
 import com.codeframe78.twentyfourseven.player.domain.StationId
 import androidx.compose.ui.unit.dp
@@ -9,6 +10,16 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class PlayerExperienceTest {
+    @Test
+    fun `station selector uses bundled artwork for every public station`() {
+        assertEquals(R.drawable.station_logo_1980s, stationSelectorLogoResource(StationId("1980s")))
+        assertEquals(R.drawable.station_logo_adagio, stationSelectorLogoResource(StationId("afm")))
+        assertEquals(R.drawable.station_logo_death, stationSelectorLogoResource(StationId("dfm")))
+        assertEquals(R.drawable.station_logo_entranced, stationSelectorLogoResource(StationId("efm")))
+        assertEquals(R.drawable.station_logo_sst, stationSelectorLogoResource(StationId("sst")))
+        assertEquals(R.drawable.app_logo, stationSelectorLogoResource(StationId("unknown")))
+    }
+
     @Test
     fun `adjacent stations wrap in both directions`() {
         val stations = listOf("1980s", "afm", "dfm", "efm", "sst").map(::station)

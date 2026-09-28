@@ -118,9 +118,9 @@ near-immediate push delivery.
 
 | ID | Milestone | State | Required gate | Forecast after trigger |
 | --- | --- | --- | --- | --- |
-| M42 | Closed-Test Operations and Stabilization | Planned after M41 | Qualifying tester continuity, structured feedback, fixes/retests, Play vitals/pre-launch review, update delivery, and exit criteria | Medium · 3–5 calendar weeks |
-| M43 | Production Access and Policy Approval | Planned after M42 | Production-access questionnaire, testing/feedback/change evidence, final policy review, and resolved Play response | Medium · 1–2 calendar weeks |
-| M44 | Production Release and Staged Rollout | Planned after M43 | Explicit authorization, production candidate, staged percentages, health thresholds, pause/rollback, release notes, and update validation | Medium · 1–4 calendar weeks |
+| M42 | Closed-Test Operations and Stabilization | Evidence reconciliation in progress | Qualifying tester continuity, structured feedback, fixes/retests, Play vitals/pre-launch review, update delivery, and exit criteria | Reconcile retained campaign evidence |
+| M43 | Production Access and Policy Approval | Complete — access granted | Owner-supplied Google Play notice confirms production access for the Player package; exact provider timestamp remains outside the repository | Complete · notice supplied September 2, 2026 |
+| M44 | Production Release and Controlled First Launch | In progress — readiness only | Exact production candidate, explicit authorization, owner-selected initial countries/regions, health thresholds, recovery plan, release notes, and Play-delivered update validation; first production releases do not support percentage staging | Medium · 1–4 calendar weeks |
 | M45 | Operational Reliability and Recertification | Planned | Play vitals/support/privacy handling, station outage and contract-drift procedures, rights/moderation recertification, target/API/dependency cadence, and key recovery | High · recurring monthly, quarterly, and release-triggered review |
 
 ## Phase 8 — Deferred and future programs
@@ -138,7 +138,7 @@ None of these milestones blocks M41 unless a later owner decision explicitly mov
 | M52 | Native Forum Read-Only Foundation | Retired by project decision | Native Forum retrieval and rendering are permanently out of Player scope | No forecast |
 | M53 | Authenticated Forum Participation | Retired by project decision | Forum sign-in reuse, posting, replies, and moderation actions are permanently out of Player scope | No forecast |
 | M54 | Forum Five-Station and Notification Certification | Retired by project decision | Forum certification and Forum notifications are permanently out of Player scope | No forecast |
-| M55 | Google Cast Feasibility and Certification | Deferred by product decision | Reopen only with explicit owner direction, permitted stream use, receiver compatibility, lifecycle/route behavior, rights review, and five-station validation | No forecast while deferred |
+| M55 | Expanded Google Cast Feasibility and Certification | Deferred beyond M44's narrow restoration | M44 may retain and repair the already-present Android sender/public web receiver. Any separate Google TV app work or broader Cast certification still requires explicit owner direction, permitted stream use, receiver compatibility, lifecycle/route behavior, rights review, and five-station validation | No forecast while deferred |
 | M56 | Extended Station Capability Certification | Planned research gate | Independently verify non-SST request messages, activity/cooldown, membership, and other capability differences without inheritance | Medium · 1–3 active weeks |
 | M57 | Account Registration, Recovery, and Management Access | Planned research gate | Verify permitted station routes and deletion/recovery behavior, then choose trusted browser or authorized native interfaces without sharing browser/app sessions | Medium · 1–3 active weeks |
 | M58 | Membership Commerce Authorization and Billing Architecture | Planned research/authorization gate | Confirm station-owner and merchant authority, choose Play Billing or an enrolled regional alternative, define VIP/RIP products and trusted activation contracts, and close tax, support, refund, privacy, and security obligations | Conditional · 2–4 active weeks for architecture; contract timing external |

@@ -52,9 +52,9 @@ on July 19.
 
 | ID | Trigger to start the range | Forecast | Confidence | Model at the next substantive step |
 | --- | --- | --- | --- | --- |
-| M42 | A qualifying closed-test release is available and at least 12 testers have opted in | 3–5 calendar weeks, including the mandatory 14-day continuity window and a feedback/fix buffer | Medium | Terra Medium, with Sol High checkpoint reviews |
-| M43 | M42 evidence and the production-access questionnaire are complete | 1–2 calendar weeks; Google's usual review target is seven days or less, but longer remains possible | Medium | Sol Extra High |
-| M44 | M43 access is granted and the owner approves a staged rollout plan | 1–4 calendar weeks, chosen by health thresholds and rollout pace | Medium | Sol Extra High |
+| M42 | Production access proves the Play testing prerequisite was accepted; reconcile the remaining project-specific campaign evidence | No new calendar forecast; evidence reconciliation is active | Medium | Sol High acceptance |
+| M43 | Complete — owner supplied the production-access grant notice | Recorded September 2, 2026; exact provider timestamp unknown | Confirmed access; timing unknown | — |
+| M44 | M43 access is granted and the owner approves candidate scope plus initial countries/regions | 1–4 calendar weeks, controlled by exact-candidate validation, selected-country first launch, health evidence, and deliberate expansion | Medium | Sol Extra High |
 | M45 | M41 is published | Recurring: monthly light review, quarterly station/policy recertification, and release-triggered review | High | Terra Medium; Sol High for material policy or security changes |
 
 ## Post-Alpha and deferred forecast
@@ -69,7 +69,7 @@ authorization or repair trigger is still authoritative.
 | M48 | M47 is complete | 1–2 active weeks | Medium | Terra High |
 | M49 | M48 is complete and mutation authorization is explicit | 1–2 active weeks | Medium | Terra High |
 | M50 | M49 and M38 are complete | 2–4 active weeks | Medium | Sol Extra High |
-| M55 | Owner explicitly reopens Cast scope after stream-use permission and compatible-receiver evidence are available | No forecast while deferred | Deferred | No model assigned |
+| M55 | Owner explicitly reopens Cast work beyond M44's repaired existing sender/public receiver; separate Google TV app work is not authorized | No forecast while deferred | Deferred | No model assigned |
 | M56 | Controlled station evidence and approved test accounts are available | 1–3 active weeks | Medium | Sol High |
 | M57 | Station route authorization and account-lifecycle facts are available | 1–3 active weeks | Medium | Sol High |
 | M58 | Written station/merchant authority and a viable billing/activation partner are available | 2–4 active weeks for architecture; full contract timing is external | Conditional | Sol Extra High |

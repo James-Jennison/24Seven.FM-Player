@@ -1,6 +1,6 @@
-# Privacy notice for 24Seven.FM Player Alpha
+# Privacy notice for 24Seven.FM Player
 
-Last updated: August 11, 2026.
+Last updated: September 2, 2026.
 
 24Seven.FM Player is an unofficial, non-commercial native Android client for the five public 24Seven.FM radio stations. It is not affiliated with or endorsed by 24Seven.FM or its stations.
 
@@ -19,10 +19,12 @@ Last updated: August 11, 2026.
 - **Chat history:** Chat messages are kept in memory for the current app session and are not persisted by the app.
 - **Favorite tracks:** Favorite lists are loaded only after station sign-in, kept in memory, and cleared from the interface when the user signs out. They are not written to app storage.
 - **Request activity and membership:** Where verified for a station, the app can load the signed-in member's recent request summaries, station-reported request readiness, and explicit membership indicator. These values are kept in memory, cleared from the interface on sign-out, and are not written to app storage.
-- **External contact and station pages:** The current Alpha exposes only **Contact Us**, which opens an Android email composer addressed to the monitored Player contact after an explicit tap; the app does not send the message itself. VIP/RIP membership, payment, registration, recovery, management, and deletion pages are not linked from the Player. The app does not copy its protected station session into the email app. Drafts, sent mail, and retention are controlled independently by the selected email app and recipient.
+- **External contact and station pages:** The current Player exposes only **Contact Us**, which opens an Android email composer addressed to the monitored Player contact after an explicit tap; the app does not send the message itself. VIP/RIP membership, payment, registration, recovery, management, and deletion pages are not linked from the Player. The app does not copy its protected station session into the email app. Drafts, sent mail, and retention are controlled independently by the selected email app and recipient.
 - **In-app diagnostics:** The app can generate a local support snapshot containing app/build version, Android/API and coarse device model, selected station, bounded playback/error category, the most recent in-memory stream-start or station-switch duration, validated-network availability, broad audio-output category, and up to five recent non-sensitive playback transitions. The preview excludes account data, messages, request/report content, URLs, route names, stable device identifiers, raw errors, and logs. It remains on the device unless the user explicitly copies it to Android's clipboard or opens Android's Share chooser and selects a recipient; the receiving app then handles the text under its own privacy practices.
 
-The application does not include advertising, analytics, crash-reporting, tracking SDKs, or a developer-operated data server. An authorized network Administrator states that all five stations share one policy: account username, email address, and IP address support account security and network access; cookies support signed-in sessions, preferences, and Chat; and non-identifying browser, operating-system, and page-view data may be collected. Station-side retention periods are unknown. The stated access roles are the station owner and network administrators. Information is not sold, traded, or rented, and is not shared with another provider except PayPal when processing premium subscriptions or donations; financial data is not stored directly on station servers. Station operators and network providers may independently retain normal server or network logs; those systems are outside this application's control.
+The application does not include advertising, crash reporting, tracking SDKs, developer-operated analytics, or a developer-operated data server. The Google Cast Android Sender SDK automatically sends encrypted, anonymous Cast-interaction diagnostics to a Google log-collection server. Google documents these diagnostics as generic discovery and session-management events, mobile-device information, and client Cast-app information used in aggregate to monitor Cast SDK use and performance and detect product defects. Google states that these logs do not contain identifiers traceable to a specific user, are retained briefly before aggregation, are not transferred to third parties or other apps, and cannot be opted out of or deleted by the app developer or user.
+
+An authorized network Administrator states that all five stations share one policy: account username, email address, and IP address support account security and network access; cookies support signed-in sessions, preferences, and Chat; and non-identifying browser, operating-system, and page-view data may be collected. Station-side retention periods are unknown. The stated access roles are the station owner and network administrators. Information is not sold, traded, or rented, and is not shared with another provider except PayPal when processing premium subscriptions or donations; financial data is not stored directly on station servers. Station operators and network providers may independently retain normal server or network logs; those systems are outside this application's control.
 
 ## Android permissions
 
@@ -43,7 +45,7 @@ Protected station sessions, the adult age-screen result, accepted Terms version,
 
 To request access to, correction of, or deletion of station-side data, email [morg@24seven.fm](mailto:morg@24seven.fm) with the station name, the account name, and the request type. Do not include a password, security-code answer, session value, or other authentication secret. This request path covers account information, sign-in/session and IP/security logs, station-library searches, public Chat posts, song requests and optional request messages, and abuse-report information that the station retains. The five stations share one policy: retention periods are currently unknown; the station owner and network administrators may access the information; and it is not shared with another provider except PayPal when processing premium subscriptions or donations. Clearing local app data does not remove station-side accounts, content, or logs.
 
-## Alpha limitations
+## Pre-release limitations
 
 This is pre-release software. Testers should use a non-administrator station account where practical and should not include credentials, private messages, session values, or security-code images in bug reports.
 
