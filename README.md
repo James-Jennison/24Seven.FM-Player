@@ -5,13 +5,13 @@
   <p>A community-built Kotlin, Jetpack Compose, and Media3 client for the 24seven.FM internet-radio network.</p>
   <p>
     <a href="https://github.com/James-Jennison/24Seven.FM-Player/actions/workflows/android.yml"><img src="https://github.com/James-Jennison/24Seven.FM-Player/actions/workflows/android.yml/badge.svg?branch=main" alt="Android CI status"></a>
-    <a href="https://github.com/James-Jennison/24Seven.FM-Player/actions/workflows/privacy-pages.yml"><img src="https://github.com/James-Jennison/24Seven.FM-Player/actions/workflows/privacy-pages.yml/badge.svg?branch=main" alt="Project Pages status"></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-7b52ab" alt="Apache-2.0 license"></a>
   </p>
   <p>
-    <a href="https://codeframe78.github.io/24Seven.FM-Player/project/"><strong>Project portal</strong></a> ·
-    <a href="https://codeframe78.github.io/24Seven.FM-Player/project/product-testing/"><strong>Test the Player</strong></a> ·
-    <a href="https://codeframe78.github.io/24Seven.FM-Player/project/roadmap/"><strong>Interactive roadmap</strong></a> ·
+    <a href="https://24sevenfmplayer.com/"><strong>Player site</strong></a> ·
+    <a href="https://play.google.com/store/apps/details?id=com.codeframe78.twentyfourseven.player"><strong>Get it on Google Play</strong></a> ·
+    <a href="https://24sevenfmplayer.com/product-testing/"><strong>Test the Player</strong></a> ·
+    <a href="https://24sevenfmplayer.com/privacy/"><strong>Privacy</strong></a> ·
     <a href="https://github.com/users/codeframe78/projects/1"><strong>Build dashboard</strong></a>
   </p>
 </div>
@@ -29,7 +29,7 @@
 | :---: | :---: | :---: | :---: | :---: |
 | Soundtracks | 1980s | Classical | Extreme metal | Trance |
 
-The [comprehensive project portal](https://codeframe78.github.io/24Seven.FM-Player/project/) connects the product experience to its native architecture, development workflow, validation evidence, milestone history, release readiness, and contributor resources. The canonical [privacy notice](https://codeframe78.github.io/24Seven.FM-Player/) remains at the site root.
+The [Player site](https://24sevenfmplayer.com/) introduces the product and its five stations, and hosts the public [privacy notice](https://24sevenfmplayer.com/privacy/). Architecture, validation evidence, milestone history, and release records are kept in this repository under [docs](docs).
 
 ## Release status
 
@@ -121,7 +121,7 @@ notes remain in [MILESTONE_FORECAST.md](docs/MILESTONE_FORECAST.md).
 - **Publication:** M39–M41 deliberately separate candidate freeze, Play delivery, and the final user-authorized Alpha action.
 - **Production:** M43 production access is granted and M44 is in progress with 1.0.0 published and 1.0.1 in review. M42 closed-test evidence is being reconciled, and M45 operational recertification is planned.
 - **Deferred/future:** Private Messages remain excluded until M47 repairs and verifies server delivery. M51–M54 are retired by project decision: the Player will not expose, retrieve, or participate in station Forums; the historical research remains retained as evidence. Google Cast is an optional deferred M55 scope, and native VIP/RIP commerce is authorization-gated across M58–M60.
-- **Testing:** the [Product Testing catalog](https://codeframe78.github.io/24Seven.FM-Player/project/product-testing/) now contains 35 stable test cases covering the current product, Alpha gates, release campaigns, and capability-gated future slices. PT-29–PT-31 were retired with the permanent removal of Forum scope. PT-35 is the exact-artifact M29 Play declaration/privacy/reviewer-access case; PT-36–PT-38 define the future authorized VIP/RIP purchase, activation, and lifecycle evidence.
+- **Testing:** the Product Testing catalog now contains 35 stable test cases covering the current product, Alpha gates, release campaigns, and capability-gated future slices. PT-29–PT-31 were retired with the permanent removal of Forum scope. PT-35 is the exact-artifact M29 Play declaration/privacy/reviewer-access case; PT-36–PT-38 define the future authorized VIP/RIP purchase, activation, and lifecycle evidence.
 
 Use these sources as the current planning authority:
 
@@ -131,7 +131,6 @@ Use these sources as the current planning authority:
 - [Milestone ID migration ledger](docs/MILESTONE_MIGRATION.md)
 - [Implementation and acceptance plan](docs/IMPLEMENTATION_PLAN.md)
 - [Future-scope boundaries](docs/future-scope.md)
-- [Interactive public roadmap](https://codeframe78.github.io/24Seven.FM-Player/project/roadmap/)
 - [GitHub Project delivery dashboard](https://github.com/users/codeframe78/projects/1)
 
 The app remains fully native and uses immutable Compose UI state, repository boundaries, and station capability flags. It includes play, pause, stop, live metadata and artwork, a persistent mini-player, signed-in favorite-track browsing/filtering, capability-aware states, and Android Keystore-backed account sessions. Remote data stays bounded to documented station interfaces and approved refresh rules.
