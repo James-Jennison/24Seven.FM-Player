@@ -524,7 +524,11 @@ private fun ExpandedLandscapeStationSelector(
                                 Text(
                                     station.description,
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    color = if (selected) {
+                                        Color.White.copy(alpha = 0.88f)
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                    },
                                     maxLines = 2,
                                     overflow = TextOverflow.Ellipsis,
                                 )
