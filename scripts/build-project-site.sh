@@ -31,9 +31,10 @@ docker run --rm \
   -v "${repository_root}:/workspace" \
   "${jekyll_image}"
 
-# Jekyll intentionally excludes executable server files. Copy them in a second
-# container invocation so a rootless Docker host keeps the generated assets and
-# PHP hand-off writable by the same mapped container identity.
+# Jekyll intentionally excludes executable server files. Copy them, and stage
+# the Cast receiver, in a second container invocation so a rootless Docker host
+# keeps the generated assets, PHP hand-off, and receiver writable by the same
+# mapped container identity.
 docker run --rm \
   --user "${docker_user}" \
   -v "${repository_root}:/workspace" \
@@ -46,6 +47,7 @@ docker run --rm \
     install -m 0644 /workspace/privacy-site/tester-portal.php /workspace/_site/tester-portal.php
     install -m 0644 /workspace/privacy-site/turnstile-test.php /workspace/_site/turnstile-test.php
     install -m 0644 /workspace/privacy-site/_data/tester_tasks.json /workspace/_site/assets/tester-tasks.json
+    bash /workspace/scripts/stage-cast-receiver.sh
   '
 
 printf 'Built the project site at %s\n' "${destination}"

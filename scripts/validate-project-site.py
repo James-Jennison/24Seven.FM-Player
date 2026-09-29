@@ -32,6 +32,7 @@ EXPECTED_PAGES = {
     "/turnstile-test/": "turnstile-test/index.html",
     "/404.html": "404.html",
 }
+ALLOWED_NON_PAGE_HTML_FILES = {"cast/index.html"}
 REQUIRED_FILES = {
     ".htaccess",
     "alpha-tester-interest.php",
@@ -62,6 +63,13 @@ REQUIRED_FILES = {
     "robots.txt",
     "sitemap.xml",
     "site.webmanifest",
+    "cast/.htaccess",
+    "cast/index.html",
+    "cast/receiver-artwork-v1.css",
+    "cast/receiver-artwork-v2.css",
+    "cast/receiver-landscape-v1.css",
+    "cast/receiver-landscape-v2.js",
+    "cast/assets/24seven-fm-mark.svg",
 }
 FORBIDDEN_TEXT = {
     "codeframe78.github.io",
@@ -252,7 +260,7 @@ def audit() -> int:
     relative_files = {path.relative_to(artifact_root).as_posix() for path in files}
     expected_html_files = set(EXPECTED_PAGES.values())
     actual_html_files = {path for path in relative_files if path.endswith(".html")}
-    unexpected_html_files = sorted(actual_html_files - expected_html_files)
+    unexpected_html_files = sorted(actual_html_files - expected_html_files - ALLOWED_NON_PAGE_HTML_FILES)
     if unexpected_html_files:
         fail(f"Unexpected HTML files: {', '.join(unexpected_html_files)}", failures)
 
@@ -389,6 +397,19 @@ def audit() -> int:
                 fail("Manifest start_url and scope must use the dedicated-domain root", failures)
 
     validate_public_google_play_availability(repository_root, artifact_root, html_documents, failures)
+
+    cast_index = artifact_root / "cast/index.html"
+    cast_script = artifact_root / "cast/receiver-landscape-v2.js"
+    cast_policy = artifact_root / "cast/.htaccess"
+    if cast_index.is_file() and "https://www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js" not in cast_index.read_text(encoding="utf-8"):
+        fail("Cast receiver does not load the explicit HTTPS CAF runtime", failures)
+    if cast_script.is_file() and "urn:x-cast:com.codeframe78.twentyfourseven.player.nowplaying" not in cast_script.read_text(encoding="utf-8"):
+        fail("Cast receiver is missing the native sender namespace", failures)
+    if cast_policy.is_file():
+        policy = cast_policy.read_text(encoding="utf-8")
+        for marker in ("https://www.gstatic.com", "media-src 'self' https:", "img-src 'self' data: https:"):
+            if marker not in policy:
+                fail(f"Cast receiver policy is missing {marker!r}", failures)
 
     if failures:
         for failure in failures:
