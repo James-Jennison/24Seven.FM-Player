@@ -10,9 +10,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -27,6 +30,9 @@ import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import com.codeframe78.twentyfourseven.player.domain.Station
@@ -506,6 +512,87 @@ class RadioAppTest {
         composeRule.onNodeWithTag("tablet_station_selector").assertExists()
         composeRule.onNodeWithTag("tablet_station_sst").assertExists().assertHasClickAction()
         composeRule.onNodeWithTag("landscape_player").assertDoesNotExist()
+    }
+
+    @Test
+    fun minimumExpandedTabletViewportKeepsPlayerAndEveryStationVisible() {
+        val stations = tabletStations()
+        composeRule.setContent {
+            val density = LocalDensity.current
+            CompositionLocalProvider(
+                LocalDensity provides Density(density.density, fontScale = 1.15f),
+            ) {
+                MaterialTheme {
+                    Box(Modifier.requiredSize(1000.dp, 640.dp)) {
+                        AdaptivePlayerScreen(
+                            state = sampleState().copy(
+                                stations = stations,
+                                selectedStation = stations.first(),
+                            ),
+                            padding = androidx.compose.foundation.layout.PaddingValues(0.dp),
+                            onSelectStation = {},
+                            onPlay = {},
+                            onStop = {},
+                        )
+                    }
+                }
+            }
+        }
+
+        composeRule.onNodeWithTag("expanded_landscape_player").assertIsDisplayed()
+        composeRule.onNodeWithTag("tablet_player_hero").assertIsDisplayed()
+        composeRule.onNodeWithTag("primary_play_pause").assertIsDisplayed()
+        composeRule.onNodeWithTag("tablet_station_selector").assertIsDisplayed()
+        stations.forEach { station ->
+            composeRule.onNodeWithTag("tablet_station_${station.id.value}").assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun expandedTabletStationAndPlaybackActionsRemainIndependentAndSemantic() {
+        val stations = tabletStations()
+        val selectedStations = mutableListOf<StationId>()
+        var playCount = 0
+        var timerDuration = 0L
+        var audioOutputCount = 0
+        composeRule.setContent {
+            MaterialTheme {
+                Box(Modifier.requiredSize(1200.dp, 800.dp)) {
+                    AdaptivePlayerScreen(
+                        state = sampleState().copy(
+                            stations = stations,
+                            selectedStation = stations.first(),
+                        ),
+                        padding = androidx.compose.foundation.layout.PaddingValues(0.dp),
+                        onSelectStation = { selectedStations += it },
+                        onPlay = { playCount++ },
+                        onStop = {},
+                        sleepTimerActions = SleepTimerActions(onSet = { timerDuration = it }),
+                        audioOutputActions = AudioOutputActions(onOpenChooser = { audioOutputCount++ }),
+                    )
+                }
+            }
+        }
+
+        val radioButtonRole = SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton)
+        stations.forEachIndexed { index, station ->
+            composeRule.onNodeWithTag("tablet_station_${station.id.value}")
+                .assertHasClickAction()
+                .assert(radioButtonRole)
+                .run { if (index == 0) assertIsSelected() else assertIsNotSelected() }
+                .performClick()
+        }
+        composeRule.onNodeWithTag("primary_play_pause").performClick()
+        composeRule.onNodeWithTag("audio_output_open").performClick()
+        composeRule.onNodeWithTag("sleep_timer_open").performClick()
+        composeRule.onNodeWithTag("sleep_timer_preset_15").performClick()
+
+        composeRule.runOnIdle {
+            assertEquals(stations.map(Station::id), selectedStations)
+            assertEquals(1, playCount)
+            assertEquals(15L * 60L * 1_000L, timerDuration)
+            assertEquals(1, audioOutputCount)
+        }
     }
 
     @Test
@@ -1891,6 +1978,20 @@ class RadioAppTest {
         websiteUrl = "https://$id.example/",
         capabilities = StationCapabilities(supportsAuthentication = true),
     )
+
+    private fun tabletStations() = listOf(
+        accountStation("sst", "StreamingSoundtracks.com", "SST"),
+        accountStation("1980s", "1980s.FM", "1980s"),
+        accountStation("afm", "Adagio.FM", "Adagio"),
+        accountStation("dfm", "Death.FM", "Death"),
+        accountStation("efm", "Entranced.FM", "Entranced"),
+    ).map { station ->
+        station.copy(
+            streams = listOf(
+                StreamVariant("https://example.invalid/${station.id.value}", "Test", 0),
+            ),
+        )
+    }
 
     private companion object {
         val station = Station(

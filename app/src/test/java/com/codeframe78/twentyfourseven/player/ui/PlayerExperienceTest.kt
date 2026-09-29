@@ -59,7 +59,10 @@ class PlayerExperienceTest {
         assertTrue(usesExpandedLandscapePlayerLayout(1200.dp, 800.dp, fontScale = 1f))
         assertFalse(usesExpandedLandscapePlayerLayout(1000.dp, 400.dp, fontScale = 1f))
         assertFalse(usesExpandedLandscapePlayerLayout(800.dp, 700.dp, fontScale = 1f))
-        assertFalse(usesExpandedLandscapePlayerLayout(1200.dp, 800.dp, fontScale = 1.5f))
+        assertTrue(usesExpandedLandscapePlayerLayout(1000.dp, 640.dp, fontScale = 1.15f))
+        assertFalse(usesExpandedLandscapePlayerLayout(999.dp, 640.dp, fontScale = 1f))
+        assertFalse(usesExpandedLandscapePlayerLayout(1000.dp, 639.dp, fontScale = 1f))
+        assertFalse(usesExpandedLandscapePlayerLayout(1200.dp, 800.dp, fontScale = 1.3f))
     }
 
     @Test

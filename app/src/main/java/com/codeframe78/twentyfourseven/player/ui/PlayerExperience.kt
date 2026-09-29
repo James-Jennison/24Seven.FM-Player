@@ -104,7 +104,9 @@ private val LandscapePlayerMinimumHeight = 300.dp
 private val LandscapeArtworkMinimumSize = 120.dp
 private val LandscapeArtworkMaximumSize = 200.dp
 private val LandscapeStationSelectorWidth = 56.dp
-private val ExpandedLandscapeMinimumHeight = 600.dp
+private val ExpandedLandscapeMinimumWidth = 1000.dp
+private val ExpandedLandscapeMinimumHeight = 640.dp
+private const val ExpandedLandscapeMaximumFontScale = 1.15f
 private val SleepTimerPresetsMinutes = listOf(15, 30, 45, 60, 90)
 
 @Immutable
@@ -180,10 +182,10 @@ internal fun usesLandscapePlayerLayout(width: Dp, height: Dp): Boolean =
     width > height && height >= LandscapePlayerMinimumHeight
 
 internal fun usesExpandedLandscapePlayerLayout(width: Dp, height: Dp, fontScale: Float): Boolean =
-    width >= ExpandedPlayerBreakpoint &&
+    width >= ExpandedLandscapeMinimumWidth &&
         width > height &&
         height >= ExpandedLandscapeMinimumHeight &&
-        fontScale <= 1.3f
+        fontScale <= ExpandedLandscapeMaximumFontScale
 
 @Composable
 private fun CoverPlayerContent(
