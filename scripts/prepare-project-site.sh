@@ -36,6 +36,9 @@ temporary_privacy="$(mktemp "${privacy_directory}/.index.XXXXXX")"
 
 mv -- "${temporary_privacy}" "${privacy_page}"
 temporary_privacy=""
+# mktemp creates a private file by default. Jekyll runs inside a container, so
+# the generated public source page must be readable by that non-host user.
+chmod 644 "${privacy_page}"
 
 cp -- "${repository_root}/docs/play-store-assets/app-icon-512.png" "${site_root}/assets/project/app-icon.png"
 cp -- "${repository_root}/docs/play-store-assets/feature-graphic-1024x500.png" "${site_root}/assets/project/feature-graphic.png"

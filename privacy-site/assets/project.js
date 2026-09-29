@@ -513,8 +513,8 @@
         {
           selectors: ['#alpha-tester-interest'],
           eyebrow: 'New tester',
-          title: 'Apply for Closed Alpha access',
-          description: 'Open the private application when you are ready to provide your device and testing coverage.'
+          title: 'Register testing interest',
+          description: 'Share your device and testing coverage for a potential invitation to focused testing.'
         },
         {
           selectors: ['#testing-tasks'],

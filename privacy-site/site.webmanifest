@@ -1,7 +1,7 @@
 {
   "name": "24Seven.FM Player",
   "short_name": "24Seven Player",
-  "description": "An unofficial, community-built native Android player for the 24seven.FM radio network.",
+  "description": "An independently developed native Android player for the 24seven.FM radio network.",
   "start_url": "/",
   "scope": "/",
   "display": "browser",

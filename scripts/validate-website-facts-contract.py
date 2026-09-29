@@ -16,33 +16,35 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 CONTRACT_PATH = ROOT / "docs" / "WEBSITE_FACTS_CONTRACT.json"
 SHA = re.compile(r"^[0-9a-f]{40}$")
-PRODUCTION_REVIEW_STATEMENT = (
-    "The first production release is under review by Google Play and is not yet "
-    "available for public installation."
+PUBLIC_GOOGLE_PLAY_STATEMENT = "24Seven.FM: Internet Radio App is available to install from Google Play."
+PUBLIC_GOOGLE_PLAY_SCOPE_RULE = (
+    "This status attests only public Google Play availability observed at the recorded listing URL. It does not "
+    "identify an installed version, country availability, artifact hash, source commit, or rollout state."
 )
-PRODUCTION_REVIEW_SCOPE_RULE = (
-    "This status attests only the review state and public unavailability. It does not "
-    "identify a version, assert artifact provenance, or authorize publication."
-)
-PRODUCTION_REVIEW_RECORD = """# First production release — Google Play review status
+PUBLIC_GOOGLE_PLAY_RECORD = """# Public Google Play availability observation
 
-**Recorded:** September 10, 2026
+**Recorded:** September 29, 2026
 
-## Owner-attested public status
+## Public listing observation
 
-The first production release is under review by Google Play and is not yet available for public installation.
+The public Google Play listing for
+`com.codeframe78.twentyfourseven.player` presents an install action for
+**24Seven.FM: Internet Radio App**:
+
+<https://play.google.com/store/apps/details?id=com.codeframe78.twentyfourseven.player>
+
+The observed listing also identifies James Jennison as the developer and shows
+an update date of September 2, 2026.
 
 ## Scope boundary
 
-This record is an owner-attested status observation. It deliberately does not
-identify a version, version code, artifact hash, source commit, approval
-outcome, rollout percentage, or publication date. It must not be used to claim
-that the app is approved, published, or available on Google Play.
-
-Closed testing is a separate distribution program and remains governed by its
-own version-specific release records and availability observations.
+This is a read-only public-listing observation. It supports only the statement
+that the Android app is available to install from Google Play. It does not
+identify the installed version, enumerate country availability, prove artifact
+or source provenance, establish rollout state, or replace the release records
+for tester distributions.
 """
-PRODUCTION_REVIEW_FIELDS = {
+PUBLIC_AVAILABILITY_FIELDS = {
     "status",
     "recorded_at",
     "source",
@@ -335,29 +337,22 @@ def main(require_public_privacy_ready: bool = False, require_interim_privacy_cor
                 require_sha(provenance.get("artifact_source_commit"), "verified artifact provenance source commit")
                 require(isinstance(provenance.get("evidence_reference"), str) and provenance["evidence_reference"], "verified artifact provenance requires evidence_reference")
 
-        production_review = release.get("production_review_status")
-        require(isinstance(production_review, dict), "production_review_status is required")
-        require(set(production_review) == PRODUCTION_REVIEW_FIELDS, "production review status must contain only its narrowly scoped fields")
-        require(production_review.get("status") in {"not_recorded", "in_review", "approved", "published", "rejected", "withdrawn"}, "production review status is invalid")
-        require(isinstance(production_review.get("recorded_at"), str) and production_review["recorded_at"], "production review recorded_at is required")
-        require(production_review.get("source") in {"owner_attested_google_play_console", "read_only_play_console"}, "production review source is invalid")
-        require(isinstance(production_review.get("release_record"), str) and production_review["release_record"].startswith("docs/releases/"), "production review release record is invalid")
-        require((ROOT / production_review["release_record"]).is_file(), "production review release record is missing")
-        require(isinstance(production_review.get("public_statement"), str) and production_review["public_statement"], "production review public_statement is required")
-        require(isinstance(production_review.get("scope_rule"), str) and production_review["scope_rule"], "production review scope_rule is required")
-        if production_review.get("status") == "in_review":
-            require(production_review.get("recorded_at") == "2026-09-10", "in-review production status must use the owner-attested observation date")
-            require(production_review.get("source") == "owner_attested_google_play_console", "in-review production status must remain owner-attested until read-only Console evidence is recorded")
-            require(production_review.get("release_record") == "docs/releases/production-review-2026-09-10.md", "in-review production status must use the dated owner-attested record")
-            require(production_review.get("public_statement") == PRODUCTION_REVIEW_STATEMENT, "in-review production status must use the approved no-availability statement")
-            require(production_review.get("scope_rule") == PRODUCTION_REVIEW_SCOPE_RULE, "in-review production status must use the fixed no-claim scope rule")
-            review_record = (ROOT / production_review["release_record"]).read_text(encoding="utf-8")
-            require(review_record == PRODUCTION_REVIEW_RECORD, "production review release record must exactly match its owner-attested no-claim form")
-            review_fields = "\n".join(str(value) for value in production_review.values())
-            require(candidate["version_name"] not in review_fields, "production review status must not inherit the closed-test version name")
-            require(str(candidate["version_code"]) not in review_fields, "production review status must not inherit the closed-test version code")
-            require(candidate["version_name"] not in review_record, "production review release record must not inherit the closed-test version name")
-            require(str(candidate["version_code"]) not in review_record, "production review release record must not inherit the closed-test version code")
+        public_availability = release.get("production_review_status")
+        require(isinstance(public_availability, dict), "production_review_status is required")
+        require(set(public_availability) == PUBLIC_AVAILABILITY_FIELDS, "public availability status must contain only its narrowly scoped fields")
+        require(public_availability.get("status") == "published", "public availability status must be published only after a public-listing observation")
+        require(public_availability.get("recorded_at") == "2026-09-29", "public availability status must use the public-listing observation date")
+        require(public_availability.get("source") == "read_only_google_play_listing", "public availability status must use the read-only listing source")
+        require(public_availability.get("release_record") == "docs/releases/public-google-play-availability-2026-09-29.md", "public availability status must use the dated public-listing record")
+        require(public_availability.get("public_statement") == PUBLIC_GOOGLE_PLAY_STATEMENT, "public availability must use the approved listing-backed statement")
+        require(public_availability.get("scope_rule") == PUBLIC_GOOGLE_PLAY_SCOPE_RULE, "public availability must use the fixed no-overclaim scope rule")
+        availability_record = (ROOT / public_availability["release_record"]).read_text(encoding="utf-8")
+        require(availability_record == PUBLIC_GOOGLE_PLAY_RECORD, "public availability release record must exactly match its read-only listing form")
+        availability_fields = "\n".join(str(value) for value in public_availability.values())
+        require(candidate["version_name"] not in availability_fields, "public availability status must not infer a version from the tester record")
+        require(str(candidate["version_code"]) not in availability_fields, "public availability status must not infer a version code from the tester record")
+        require(candidate["version_name"] not in availability_record, "public availability release record must not infer a version from the tester record")
+        require(str(candidate["version_code"]) not in availability_record, "public availability release record must not infer a version code from the tester record")
 
         portal = contract["portal_surface"]
         require(portal.get("authority_branch") == "codex/onboarding-portal-production", "portal authority branch is invalid")

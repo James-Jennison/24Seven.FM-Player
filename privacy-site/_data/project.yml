@@ -48,28 +48,28 @@ developer_navigation:
     description: Architecture, research, testing, release, and contributor library.
 
 site_meta:
-  verified: 2026-09-10
-  source_commit: owner-attested-production-review
-  verification_label: Owner-attested first production release is under Google Play review
+  verified: 2026-09-29
+  source_commit: public-google-play-listing-2026-09-29
+  verification_label: Public Android availability verified against the Google Play listing
 
 play_status:
-  label: Google Play review in progress
-  headline: First production release under review
-  home_detail: The first production release is under review by Google Play and is not yet available for public installation.
-  detail: The first production release is under review by Google Play and is not yet available for public installation.
+  label: Available on Google Play
+  headline: Android mobile is available
+  home_detail: "24Seven.FM: Internet Radio App is available to install from Google Play."
+  detail: "24Seven.FM: Internet Radio App is available to install from Google Play."
 
 tv_status:
   label: Early development & testing
   home_detail: The Android TV Player is in early development and testing, with no public Android TV install path yet.
 
 roadmap_meta:
-  updated: 2026-08-16
+  updated: 2026-09-29
   achieved_count: 38
   scope_total_count: 55
   active_total_count: 50
   retired_count: 10
-  active_phase: M43
-  active_label: First production release under Google Play review
+  active_phase: Public Android availability
+  active_label: Android mobile is available on Google Play
 
 milestones:
   - order: 1
@@ -571,23 +571,23 @@ roadmap:
   - id: "M43"
     phase: "production"
     name: "Production Access and Policy Approval"
-    state: "waiting"
-    state_label: "External · Google Play review in progress"
-    blocking: true
-    dependencies: "Google Play review outcome and owner-controlled publication decision"
-    forecast: "External · timing determined by Google Play review"
-    forecast_confidence: "External"
-    forecast_model: "Google Play review process"
-    evidence: "docs/ROADMAP.md"
-    summary: "The first production release is under Google Play review. Approval is not public availability and does not publish the release automatically."
+    state: "done"
+    state_label: "Complete · Android mobile available on Google Play"
+    blocking: false
+    dependencies: "Public Google Play listing availability"
+    forecast: "Completed"
+    forecast_confidence: "High"
+    forecast_model: "Public Google Play listing"
+    evidence: "docs/releases/public-google-play-availability-2026-09-29.md"
+    summary: "Public Google Play availability is verified for Android mobile. This availability observation does not identify an installed version or prove artifact provenance."
 
   - id: "M44"
     phase: "production"
     name: "Production Release and Staged Rollout"
     state: "planned"
-    state_label: "Waiting for Google Play approval"
+    state_label: "Planned · release operations"
     blocking: false
-    dependencies: "Google Play approval and owner authorization"
+    dependencies: "Owner-authorized release operations and current evidence"
     forecast: "1–4 calendar weeks after trigger"
     forecast_confidence: "Medium"
     forecast_model: "Sol Extra High"

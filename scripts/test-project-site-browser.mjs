@@ -343,14 +343,14 @@ try {
       if (route === "/platforms/") {
         const platformContract = await evaluate(`(() => ({
           text: document.body.innerText,
-          googlePlayLinks: [...document.querySelectorAll('a')].filter((link) => /play\\.google\\.com/i.test(link.href)).map((link) => link.href),
-          publicInstallLabels: [...document.querySelectorAll('a, button')].map((control) => control.textContent.replace(/\\s+/g, ' ').trim()).filter((label) => /^(install|download|get it on google play)/i.test(label)),
+          googlePlayLinks: [...document.querySelectorAll('.platform-card#android-mobile a')].filter((link) => /play\\.google\\.com/i.test(link.href)).map((link) => link.href),
+          publicInstallLabels: [...document.querySelectorAll('.platform-card#android-mobile a, .platform-card#android-mobile button')].map((control) => control.textContent.replace(/\\s+/g, ' ').trim()).filter((label) => /^(install|download|get it on google play)/i.test(label)),
           headingSizes: [...document.querySelectorAll('.platform-card h2')].map((heading) => Number.parseFloat(getComputedStyle(heading).fontSize)),
           imageRatios: [...document.querySelectorAll('.platform-card img')].map((image) => image.getBoundingClientRect().height / image.getBoundingClientRect().width)
         }))()`);
-        assert(platformContract.text.includes("The first production release is under review by Google Play and is not yet available for public installation."), "Platforms lost the fact-bound Android mobile review statement");
+        assert(platformContract.text.includes("24Seven.FM: Internet Radio App is available to install from Google Play."), "Platforms lost the listing-backed Android mobile availability statement");
         assert(platformContract.text.includes("The Android TV Player is in early development and testing, with no public Android TV install path yet."), "Platforms lost the fact-bound Android TV availability statement");
-        assert(platformContract.googlePlayLinks.length === 0 && platformContract.publicInstallLabels.length === 0, "Platforms exposed an unsupported public install path");
+        assert(platformContract.googlePlayLinks.length === 1 && platformContract.publicInstallLabels.length === 1 && platformContract.publicInstallLabels[0] === "Get it on Google Play ↗", "Platforms must expose the single listing-backed Android install path");
         assert(platformContract.headingSizes.length === 2 && platformContract.headingSizes.every((size) => size <= 60), "Platforms lost its bounded card-heading typography");
         assert(platformContract.imageRatios.length === 2 && platformContract.imageRatios.every((ratio) => ratio > 0 && ratio <= 2.3), "Platforms stretched a capture beyond its natural aspect ratio");
       }
@@ -365,10 +365,10 @@ try {
             })))
           };
         })()`);
-        assert(featureContract.text.includes("The first production release is under review by Google Play and is not yet available for public installation."), "Features lost the fact-bound production-review statement");
-        assert(featureContract.text.includes("The invitation-only closed-testing program is separate from the production release under review."), "Features lost the separate closed-testing statement");
+        assert(featureContract.text.includes("24Seven.FM: Internet Radio App is available to install from Google Play."), "Features lost the listing-backed Android availability statement");
+        assert(featureContract.text.includes("The invited tester program remains separate from the public Android release."), "Features lost the separate tester-program statement");
         assert(featureContract.actionsPerCard.slice(0, 3).every((actions) => actions.length === 0), "Informational feature cards unexpectedly introduced keyboard destinations");
-        assert(featureContract.actionsPerCard[3]?.length === 1 && featureContract.actionsPerCard[3][0].label === "Apply to invitation-only closed testing", "Closed-testing feature card must expose one named keyboard destination");
+        assert(featureContract.actionsPerCard[3]?.length === 1 && featureContract.actionsPerCard[3][0].label === "Get it on Google Play ↗", "Android-availability feature card must expose one named install destination");
       }
     }
   }

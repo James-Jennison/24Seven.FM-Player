@@ -81,21 +81,24 @@ SECRET_MARKERS = {
     "ghp_",
     "sk-proj-",
 }
-PRODUCTION_REVIEW_STATEMENT = (
-    "The first production release is under review by Google Play and is not yet "
-    "available for public installation."
-)
-PRODUCTION_REVIEW_PAGES = {
+PUBLIC_GOOGLE_PLAY_STATEMENT = "24Seven.FM: Internet Radio App is available to install from Google Play."
+PUBLIC_GOOGLE_PLAY_PAGES = {
+    "index.html",
     "features/index.html",
     "platforms/index.html",
-    "product-testing/index.html",
-    "dev/roadmap/index.html",
 }
-INVITATION_ONLY_CTA = "Apply to invitation-only closed testing"
-SEPARATE_TESTING_COPY = {
-    "features/index.html": "The invitation-only closed-testing program is separate from the production release under review.",
-    "platforms/index.html": "Separately, eligible listeners may apply for the invitation-only closed-testing program.",
-    "product-testing/index.html": "Apply to join the separate invitation-only Closed Alpha",
+PUBLIC_GOOGLE_PLAY_URL = "https://play.google.com/store/apps/details?id=com.codeframe78.twentyfourseven.player"
+PLAYER_RELATIONSHIP = "A non-commercial Player created by an early 24Seven.FM member. It is independently developed and not published or sponsored by 24Seven.FM or its individual stations."
+STALE_PUBLIC_RELEASE_COPY = {
+    "The first production release is under review by Google Play",
+    "not yet available for public installation",
+    "independently developed, unofficial",
+    "Not affiliated with or endorsed by 24seven.FM or its stations",
+}
+TESTER_PROGRAM_COPY = {
+    "features/index.html": "The invited tester program remains separate from the public Android release.",
+    "platforms/index.html": "The invited tester program remains separate from the public Android release.",
+    "product-testing/index.html": "Android mobile is available from Google Play. The tester program is separate and is for invited participants working on specific coverage or upcoming changes.",
 }
 REQUIRED_HTACCESS_DIRECTIVES = {
     "ErrorDocument 404 /404.html",
@@ -179,46 +182,61 @@ def output_path_for_url(root: Path, path: str) -> Path:
     return root / decoded.lstrip("/")
 
 
-def validate_production_review_claims(
+def validate_public_google_play_availability(
     repository_root: Path,
     artifact_root: Path,
     html_documents: dict[Path, DocumentAudit],
     failures: list[str],
 ) -> None:
-    """Keep the versionless review attestation separate from public installs and closed testing."""
+    """Keep the listing-backed install claim scoped to public availability only."""
 
     try:
         contract = json.loads((repository_root / "docs" / "WEBSITE_FACTS_CONTRACT.json").read_text(encoding="utf-8"))
-        review = contract["release_claims"]["production_review_status"]
+        availability = contract["release_claims"]["production_review_status"]
     except (KeyError, OSError, json.JSONDecodeError) as error:
-        fail(f"Unable to validate production review claims: {error}", failures)
+        fail(f"Unable to validate public Google Play availability: {error}", failures)
         return
 
-    if review.get("status") != "in_review":
+    if availability.get("status") != "published":
+        fail("Public Google Play availability must have a listing-backed published status", failures)
         return
-    if review.get("public_statement") != PRODUCTION_REVIEW_STATEMENT:
-        fail("In-review production claim does not match the fixed no-availability statement", failures)
+    if availability.get("public_statement") != PUBLIC_GOOGLE_PLAY_STATEMENT:
+        fail("Public Google Play availability does not match the fixed listing-backed statement", failures)
         return
 
-    for relative_path in PRODUCTION_REVIEW_PAGES:
+    for relative_path in PUBLIC_GOOGLE_PLAY_PAGES:
         path = artifact_root / relative_path
         if not path.is_file():
             continue
         text = path.read_text(encoding="utf-8")
-        if PRODUCTION_REVIEW_STATEMENT not in text:
-            fail(f"Production review statement is missing from {relative_path}", failures)
+        if PUBLIC_GOOGLE_PLAY_STATEMENT not in text:
+            fail(f"Public Google Play statement is missing from {relative_path}", failures)
         document = html_documents.get(path)
-        if document and any("play.google.com" in href.lower() for href in document.hrefs):
-            fail(f"Public Google Play install link is not permitted while review is in progress: {relative_path}", failures)
+        if document and PUBLIC_GOOGLE_PLAY_URL not in document.hrefs:
+            fail(f"Public Google Play install link is missing from {relative_path}", failures)
 
-    for relative_path in SEPARATE_TESTING_COPY:
+    for relative_path in TESTER_PROGRAM_COPY:
         text = (artifact_root / relative_path).read_text(encoding="utf-8")
-        if INVITATION_ONLY_CTA not in text:
-            fail(f"Closed-testing CTA is not explicitly invitation-only in {relative_path}", failures)
-        if "Join closed testing" in text:
-            fail(f"Ambiguous closed-testing CTA remains in {relative_path}", failures)
-        if SEPARATE_TESTING_COPY[relative_path] not in text:
-            fail(f"Closed-testing program is not explicitly separate from the production review in {relative_path}", failures)
+        if TESTER_PROGRAM_COPY[relative_path] not in text:
+            fail(f"Tester-program boundary is missing from {relative_path}", failures)
+
+    for relative_path in ("index.html", "stations/index.html", "features/index.html", "platforms/index.html", "product-testing/index.html"):
+        text = (artifact_root / relative_path).read_text(encoding="utf-8")
+        if PLAYER_RELATIONSHIP not in text:
+            fail(f"Early-member relationship wording is missing from {relative_path}", failures)
+        for stale_copy in STALE_PUBLIC_RELEASE_COPY:
+            if stale_copy.lower() in text.lower():
+                fail(f"Stale public release copy appears in {relative_path}: {stale_copy!r}", failures)
+
+    for relative_path in ("index.html", "features/index.html", "platforms/index.html"):
+        document = html_documents.get(artifact_root / relative_path)
+        if document and PUBLIC_GOOGLE_PLAY_URL not in document.hrefs:
+            fail(f"Public Android CTA is missing from {relative_path}", failures)
+
+    android_tv = (artifact_root / "platforms/index.html").read_text(encoding="utf-8")
+    android_tv_section = android_tv.split('id="android-tv"', 1)[-1].split("</article>", 1)[0]
+    if PUBLIC_GOOGLE_PLAY_URL in android_tv_section:
+        fail("Android TV card must not expose the Android mobile install path", failures)
 
 
 def audit() -> int:
@@ -370,7 +388,7 @@ def audit() -> int:
             if manifest.get("start_url") != "/" or manifest.get("scope") != "/":
                 fail("Manifest start_url and scope must use the dedicated-domain root", failures)
 
-    validate_production_review_claims(repository_root, artifact_root, html_documents, failures)
+    validate_public_google_play_availability(repository_root, artifact_root, html_documents, failures)
 
     if failures:
         for failure in failures:

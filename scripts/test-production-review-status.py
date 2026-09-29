@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Exercise fail-closed boundaries for the in-review production status record."""
+"""Exercise fail-closed boundaries for the public Google Play availability record."""
 
 from __future__ import annotations
 
@@ -36,13 +36,13 @@ def main() -> int:
     require_rejection(
         "paraphrased-public-statement",
         lambda value: value["release_claims"]["production_review_status"].__setitem__(
-            "public_statement", "The production release is under review."
+            "public_statement", "The app is available on Google Play."
         ),
     )
     require_rejection(
         "inherited-version-in-scope-rule",
         lambda value: value["release_claims"]["production_review_status"].__setitem__(
-            "scope_rule", "Closed-test version 0.1.0-alpha08."
+            "scope_rule", "Public version 0.1.0-alpha08."
         ),
     )
     require_rejection(
@@ -52,18 +52,18 @@ def main() -> int:
         ),
     )
     require_rejection(
-        "approval-claim-in-public-statement",
+        "unsupported-country-claim",
         lambda value: value["release_claims"]["production_review_status"].__setitem__(
-            "public_statement", "The production release is approved and available now."
+            "public_statement", "24Seven.FM: Internet Radio App is available worldwide from Google Play."
         ),
     )
     require_rejection(
-        "rollout-claim-in-public-statement",
+        "unsupported-rollout-claim",
         lambda value: value["release_claims"]["production_review_status"].__setitem__(
-            "public_statement", "The production release is rolling out to everyone."
+            "public_statement", "24Seven.FM: Internet Radio App is available to install from Google Play and has completed its rollout."
         ),
     )
-    print("Production-review status contract: fail-closed negative fixtures passed.")
+    print("Public Google Play availability contract: fail-closed negative fixtures passed.")
     return 0
 
 

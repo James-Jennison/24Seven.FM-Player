@@ -395,7 +395,7 @@ function signupConfirmationEmail(string $recruitmentSource = 'direct'): array
         return [
             'subject' => SIGNUP_CONFIRMATION_SUBJECT,
             'plainText' => <<<'TEXT'
-Thanks for registering your Testers Community profile for the independently developed, unofficial 24Seven.FM Player!
+Thanks for registering your Testers Community profile for the independently developed 24Seven.FM Player!
 
 Testers Community Pack access uses the Google Play Closed Test opt-in instructions supplied in the Pack. Opt in through Google Play with the same Google account that Testers Community enrolled for the Pack and that you registered here.
 
@@ -406,7 +406,7 @@ After your profile is reviewed for coverage, you will receive a separate Tester 
 James — 24Seven.FM Player Testing Team
 TEXT,
             'html' => <<<'HTML'
-<p>Thanks for registering your Testers Community profile for the independently developed, unofficial <strong>24Seven.FM Player</strong>!</p>
+<p>Thanks for registering your Testers Community profile for the independently developed <strong>24Seven.FM Player</strong>!</p>
 
 <p>Testers Community Pack access uses the Google Play Closed Test opt-in instructions supplied in the Pack. Opt in through Google Play with the same Google account that Testers Community enrolled for the Pack and that you registered here.</p>
 
@@ -422,9 +422,9 @@ HTML,
     return [
         'subject' => SIGNUP_CONFIRMATION_SUBJECT,
         'plainText' => <<<'TEXT'
-Thanks for signing up to help test the independently developed, unofficial 24Seven.FM Player!
+Thanks for registering interest in the independently developed 24Seven.FM Player!
 
-We've received your interest in joining the Google Play Closed Testing program. The Player is an independently developed, unofficial player for the 24Seven.FM network of internet radio stations. We appreciate your willingness to help test the app, find bugs, and improve the experience before a wider release.
+We've received your testing-interest profile. Android mobile is available through Google Play; the invitation-led tester program is separate and supports focused testing assignments. We appreciate your willingness to help test the app, find bugs, and improve the experience.
 
 At this stage, there's nothing else you need to do yet.
 
@@ -450,9 +450,9 @@ Thanks again for volunteering to help make the 24Seven.FM Player better.
 James — 24Seven.FM Player Testing Team
 TEXT,
         'html' => <<<'HTML'
-<p>Thanks for signing up to help test the independently developed, unofficial <strong>24Seven.FM Player</strong>!</p>
+<p>Thanks for registering interest in the independently developed <strong>24Seven.FM Player</strong>!</p>
 
-<p>We've received your interest in joining the Google Play Closed Testing program. The Player is an independently developed, unofficial player for the 24Seven.FM network of internet radio stations. We appreciate your willingness to help test the app, find bugs, and improve the experience before a wider release.</p>
+<p>We've received your testing-interest profile. Android mobile is available through Google Play; the invitation-led tester program is separate and supports focused testing assignments. We appreciate your willingness to help test the app, find bugs, and improve the experience.</p>
 
 <p>At this stage, <strong>there's nothing else you need to do yet</strong>.</p>
 
