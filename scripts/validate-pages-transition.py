@@ -11,11 +11,11 @@ EXPECTED_TARGETS = {
     "index.html": "https://24sevenfmplayer.com/privacy/",
     "project/index.html": "https://24sevenfmplayer.com/",
     "project/features/index.html": "https://24sevenfmplayer.com/features/",
-    "project/development/index.html": "https://24sevenfmplayer.com/dev/development/",
-    "project/testing/index.html": "https://24sevenfmplayer.com/dev/testing/",
+    "project/development/index.html": "https://24sevenfmplayer.com/",
+    "project/testing/index.html": "https://24sevenfmplayer.com/",
     "project/product-testing/index.html": "https://24sevenfmplayer.com/product-testing/",
-    "project/roadmap/index.html": "https://24sevenfmplayer.com/dev/roadmap/",
-    "project/resources/index.html": "https://24sevenfmplayer.com/dev/resources/",
+    "project/roadmap/index.html": "https://24sevenfmplayer.com/",
+    "project/resources/index.html": "https://24sevenfmplayer.com/",
 }
 
 

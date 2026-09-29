@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="robots" content="noindex, nofollow, noarchive">
+    <title>{{ page.title | escape }}</title>
+  </head>
+  <body>
+    {% comment %}
+    Not a public page. The protected tester portal reads the PT case articles
+    from this file on disk; the site's .htaccess answers 404 for /dev/.
+    {% endcomment %}
+    {{ content }}
+  </body>
+</html>

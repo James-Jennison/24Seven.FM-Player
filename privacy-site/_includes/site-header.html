@@ -1,0 +1,24 @@
+{% assign play_url = 'https://play.google.com/store/apps/details?id=com.codeframe78.twentyfourseven.player' %}
+<a class="skip-link" href="#main-content">Skip to content</a>
+<header class="site-header" data-site-header>
+  <a class="site-brand" href="{{ '/' | relative_url }}" aria-label="{{ include.product_name | default: '24Seven.FM Player' | escape }} home">
+    <img src="{{ '/assets/project/web/app-icon-96.png' | relative_url }}" alt="" width="42" height="42">
+    <span>{{ include.product_name | default: '24Seven.FM Player' }}</span>
+  </a>
+  <nav class="site-nav" id="site-navigation" aria-label="Primary navigation">
+    {% for item in site.data.project.navigation %}{% if item.primary and item.section != 'overview' %}
+    <a{% if include.section == item.section %} aria-current="page"{% endif %} href="{{ item.path | relative_url }}">{{ item.label }}</a>
+    {% endif %}{% endfor %}
+  </nav>
+  <div class="site-actions">
+    <button class="theme-toggle" type="button" aria-label="Switch color theme" hidden>
+      <svg class="icon theme-icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="M4.9 4.9l1.4 1.4"></path><path d="M17.7 17.7l1.4 1.4"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="M4.9 19.1l1.4-1.4"></path><path d="M17.7 6.3l1.4-1.4"></path></svg>
+      <svg class="icon theme-icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a7 7 0 1 0 10.5 10.5z"></path></svg>
+      <span class="theme-toggle-label">Theme</span>
+    </button>
+    <a class="button outline header-play" href="{{ play_url }}" rel="noopener">Google Play {% include icons/arrow.html %}</a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-navigation" aria-label="Open menu" hidden>
+      <svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path></svg>
+    </button>
+  </div>
+</header>

@@ -1,5 +1,11 @@
 ErrorDocument 404 /404.html
 
+# The tester catalog under /dev/ is read from disk by the protected tester
+# portal. It is not a public page, so every /dev/ address answers 404.
+<IfModule mod_alias.c>
+  RedirectMatch 404 ^/dev(/.*)?$
+</IfModule>
+
 <IfModule mod_headers.c>
   Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'self'; form-action 'self'; frame-ancestors 'none'; frame-src https://challenges.cloudflare.com; img-src 'self' data:; object-src 'none'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; upgrade-insecure-requests"
   Header always set Permissions-Policy "camera=(), geolocation=(), microphone=(), payment=(), usb=()"

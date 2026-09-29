@@ -17,23 +17,35 @@ EXPECTED_PAGES = {
     "/features/": "features/index.html",
     "/platforms/": "platforms/index.html",
     "/product-testing/": "product-testing/index.html",
-    "/dev/": "dev/index.html",
-    "/dev/development/": "dev/development/index.html",
-    "/dev/testing/": "dev/testing/index.html",
-    "/dev/tester-workspace/": "dev/tester-workspace/index.html",
-    "/dev/roadmap/": "dev/roadmap/index.html",
-    "/dev/resources/": "dev/resources/index.html",
     "/privacy/": "privacy/index.html",
     "/privacy/tv/": "privacy/tv/index.html",
-    "/turnstile-test/": "turnstile-test/index.html",
     "/404.html": "404.html",
 }
-ALLOWED_NON_PAGE_HTML_FILES = {"cast/index.html"}
+# The tester catalog is read from disk by the protected tester portal and is
+# closed to visitors by the RedirectMatch rule required below.
+PORTAL_SOURCE_FILE = "dev/tester-workspace/index.html"
+ALLOWED_NON_PAGE_HTML_FILES = {"cast/index.html", PORTAL_SOURCE_FILE}
+# Routes retired from the public site. None may reappear in a build.
+RETIRED_PATHS = {
+    "dev/index.html",
+    "dev/development",
+    "dev/resources",
+    "dev/roadmap",
+    "dev/testing",
+    "turnstile-test",
+    "turnstile-test.php",
+    "roadmap",
+    "development",
+    "resources",
+    "testing",
+}
+# The font licences are reproduced verbatim and cite an http:// address.
+VERBATIM_LICENCE_FILES = {"assets/fonts/OFL-InstrumentSans.txt", "assets/fonts/OFL-InstrumentSerif.txt"}
 REQUIRED_FILES = {
     ".htaccess",
+    PORTAL_SOURCE_FILE,
     "alpha-tester-interest.php",
     "private-tester-queue.php",
-    "turnstile-test.php",
     "assets/privacy.css",
     "assets/private-tester-queue.js",
     "assets/tester-tasks.json",
@@ -42,20 +54,22 @@ REQUIRED_FILES = {
     "assets/theme-init.js",
     "assets/project/app-icon.png",
     "assets/project/feature-graphic.png",
-    "assets/project/marketing/chat-synthetic.png",
-    "assets/project/marketing/favorites-live.png",
-    "assets/project/marketing/now-playing-live.png",
-    "assets/project/marketing/queue-live.png",
-    "assets/project/marketing/stations/1980s.png",
-    "assets/project/marketing/stations/adagio.png",
-    "assets/project/marketing/stations/death.png",
-    "assets/project/marketing/stations/entranced.png",
-    "assets/project/marketing/stations/sst.png",
-    "assets/project/marketing/tv-now-playing-testing.png",
-    "assets/project/screenshots/more.png",
-    "assets/project/screenshots/player.png",
-    "assets/project/screenshots/queue.png",
-    "assets/project/screenshots/stations.png",
+    "assets/project/web/app-icon-96.png",
+    "assets/project/web/now-playing.webp",
+    "assets/project/web/queue.webp",
+    "assets/project/web/favorites.webp",
+    "assets/project/web/chat-demonstration.webp",
+    "assets/project/web/tv-testing.webp",
+    "assets/project/web/stations/1980s.webp",
+    "assets/project/web/stations/adagio.webp",
+    "assets/project/web/stations/death.webp",
+    "assets/project/web/stations/entranced.webp",
+    "assets/project/web/stations/sst.webp",
+    "assets/fonts/InstrumentSans-Variable.woff2",
+    "assets/fonts/InstrumentSerif-Italic.woff2",
+    "assets/fonts/InstrumentSerif-Regular.woff2",
+    "assets/fonts/OFL-InstrumentSans.txt",
+    "assets/fonts/OFL-InstrumentSerif.txt",
     "robots.txt",
     "sitemap.xml",
     "site.webmanifest",
@@ -106,6 +120,7 @@ TESTER_PROGRAM_COPY = {
 }
 REQUIRED_HTACCESS_DIRECTIVES = {
     "ErrorDocument 404 /404.html",
+    "RedirectMatch 404 ^/dev(/.*)?$",
     "<IfModule mod_headers.c>",
     "Header always set Content-Security-Policy \"default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'self'; form-action 'self'; frame-ancestors 'none'; frame-src https://challenges.cloudflare.com; img-src 'self' data:; object-src 'none'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; upgrade-insecure-requests\"",
     "Header always set Permissions-Policy \"camera=(), geolocation=(), microphone=(), payment=(), usb=()\"",
@@ -269,6 +284,10 @@ def audit() -> int:
         if path.is_file() and path.suffix.lower() in FORBIDDEN_SUFFIXES:
             fail(f"Forbidden artifact file type: {relative}", failures)
 
+    for retired in sorted(RETIRED_PATHS):
+        if (artifact_root / retired).exists():
+            fail(f"Retired route is present in the artifact: {retired}", failures)
+
     expected_files = expected_html_files | REQUIRED_FILES
     missing_files = sorted(expected_files - relative_files)
     if missing_files:
@@ -306,7 +325,12 @@ def audit() -> int:
         for marker in SECRET_MARKERS:
             if marker in text:
                 fail(f"Secret marker {marker!r} in {path.relative_to(artifact_root)}", failures)
-        if "http://" in text.lower() and 'xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"' not in text:
+        relative_name = path.relative_to(artifact_root).as_posix()
+        if (
+            "http://" in text.lower()
+            and 'xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"' not in text
+            and relative_name not in VERBATIM_LICENCE_FILES
+        ):
             fail(f"Insecure HTTP URL in {path.relative_to(artifact_root)}", failures)
         if path.suffix.lower() == ".html":
             parser = DocumentAudit()

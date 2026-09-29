@@ -5,10 +5,38 @@ description: See the current availability of 24Seven.FM Player for Android mobil
 permalink: /platforms/
 section: platforms
 ---
-<section class="landing-platforms platform-directory" aria-labelledby="platforms-title">
-  <div class="landing-section-heading directory-heading"><div><p class="eyebrow">Platform availability</p><h1 id="platforms-title">Where Player is available.</h1></div><p>Availability stays explicit so the site never promises an install path that is not actually available.</p></div>
-  <div class="landing-platform-grid">
-    <article class="platform-card" id="android-mobile"><div class="platform-copy"><span class="platform-kicker">Android mobile</span><h2>Your five stations, ready to go.</h2><p>Built for phones and tablets, with native playback, system media controls, and station-aware features where they are supported.</p><div class="platform-status" id="availability"><strong>{{ site.data.project.play_status.label }}</strong><span>{{ site.data.project.play_status.home_detail }}</span></div><p class="platform-boundary">The invited tester program remains separate from the public Android release.</p><div class="actions"><a class="button primary" href="https://play.google.com/store/apps/details?id=com.codeframe78.twentyfourseven.player" rel="noopener">Get it on Google Play <span aria-hidden="true">↗</span></a><a class="button secondary" href="{{ '/product-testing/' | relative_url }}">Tester program</a></div></div><img src="{{ '/assets/project/marketing/now-playing-live.png' | relative_url }}" alt="Captured Player Now Playing screen on Android mobile" width="648" height="1422" fetchpriority="high"></article>
-    <article class="platform-card platform-card-tv" id="android-tv"><div class="platform-copy"><span class="platform-kicker">Android TV &amp; Google TV</span><h2>A lean-back Player is in early development.</h2><p>Designed for the television screen, D-pad navigation, and an at-a-glance view of what is playing around the station.</p><div class="platform-status"><strong>{{ site.data.project.tv_status.label }}</strong><span>{{ site.data.project.tv_status.home_detail }}</span></div></div><figure><img src="{{ '/assets/project/marketing/tv-now-playing-testing.png' | relative_url }}" alt="Captured early-development 24Seven.FM TV testing screen with now playing, upcoming tracks, and recently played tracks" width="1920" height="1080" loading="lazy"><figcaption>Captured Android TV testing build · early development</figcaption></figure></article>
+<section class="page-intro">
+  <div>
+    <p class="eyebrow">Platform availability</p>
+    <h1>Where the Player is available.</h1>
   </div>
+  <p>Availability stays explicit so the site never promises an install path that is not actually available.</p>
+</section>
+
+<section class="platform-grid" aria-label="Platforms">
+  <article class="platform-card platform-mobile panel" id="android-mobile">
+    <div>
+      <p class="eyebrow">Android mobile</p>
+      <h2>Your five stations, ready to go.</h2>
+      <p>Built for phones and tablets, with native playback, system media controls, and station-aware features where they are supported.</p>
+      <div class="status-box"><strong>Available on Google Play</strong><span>24Seven.FM: Internet Radio App is available to install from Google Play.</span></div>
+      <p class="platform-note">The invited tester program remains separate from the public Android release. <a href="{{ '/product-testing/' | relative_url }}">About the tester program</a></p>
+      <div class="actions"><a class="button primary" href="https://play.google.com/store/apps/details?id=com.codeframe78.twentyfourseven.player" rel="noopener">Get it on Google Play {% include icons/arrow.html %}</a></div>
+    </div>
+    <div class="phone"><img src="{{ '/assets/project/web/now-playing.webp' | relative_url }}" alt="The Player's Now Playing screen on Android mobile" width="560" height="1229"></div>
+  </article>
+  <article class="platform-card panel" id="android-tv">
+    <p class="eyebrow">Android TV and Google TV</p>
+    <h2>A lean-back Player is in early development.</h2>
+    <div class="platform-tv-row">
+      <div>
+        <p>Designed for the television screen, D-pad navigation, and an at-a-glance view of what is playing around the station.</p>
+        <div class="status-box"><strong>Early development and testing</strong><span>The Android TV Player is in early development and testing, with no public Android TV install path yet.</span></div>
+      </div>
+      <figure class="tv-shot">
+        <div><img src="{{ '/assets/project/web/tv-testing.webp' | relative_url }}" alt="Android TV testing build showing Up next, the current track, and Recently played" width="720" height="405" loading="lazy"></div>
+        <figcaption>Captured Android TV testing build, early development.</figcaption>
+      </figure>
+    </div>
+  </article>
 </section>

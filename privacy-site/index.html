@@ -1,33 +1,35 @@
 ---
 layout: project
-title: 24Seven.FM Player · Five stations, one native home
+title: 24Seven.FM Player · Five stations, one place to press play
 description: A focused native Player for StreamingSoundtracks.com, 1980s.FM, Adagio.FM, Death.FM, and Entranced.FM on Android mobile and Android TV.
 permalink: /
 section: overview
 consumer_landing: true
 ---
-<div class="home-decision-surface">
-<section class="landing-home" aria-labelledby="hero-title">
-  <div class="landing-home-copy">
-    <p class="eyebrow">24Seven.FM Player</p>
-    <h1 id="hero-title">Your stations.<br><span>One native home.</span></h1>
-    <p class="hero-lede">A focused way to move between five official 24Seven.FM stations without duplicating the listening experience they already own.</p>
-    <div class="actions"><a class="button primary" href="https://play.google.com/store/apps/details?id=com.codeframe78.twentyfourseven.player" rel="noopener">Get it on Google Play <span aria-hidden="true">↗</span></a><a class="button secondary" href="{{ '/stations/' | relative_url }}">Explore stations</a></div>
-    <p class="release-note" id="release-status"><span class="live-dot" aria-hidden="true"></span><span><strong>Available on Google Play</strong> · 24Seven.FM: Internet Radio App is available to install from Google Play.</span></p>
+<section class="home-hero" aria-labelledby="hero-title">
+  <div class="home-hero-copy">
+    <h1 id="hero-title">Five stations,<br><em>one place</em> <span class="nowrap">to press play.</span></h1>
+    <div class="cta-row">
+      <a class="button primary large" href="https://play.google.com/store/apps/details?id=com.codeframe78.twentyfourseven.player" rel="noopener">Get it on Google Play {% include icons/arrow.html %}</a>
+      <p class="availability" id="release-status">24Seven.FM: Internet Radio App is available to install from Google Play.</p>
+    </div>
   </div>
-  <div class="landing-hero-gallery" role="group" aria-label="Captured Android mobile Player screens">
-    <figure class="landing-hero-device landing-hero-device-primary"><a class="gallery-open" href="{{ '/assets/project/marketing/now-playing-live.png' | relative_url }}" data-lightbox="{{ '/assets/project/marketing/now-playing-live.png' | relative_url }}" data-lightbox-alt="Captured 24Seven.FM Player Now Playing screen" data-lightbox-caption="Captured Player screen · Android mobile"><img src="{{ '/assets/project/marketing/now-playing-live.png' | relative_url }}" alt="Captured Android mobile Player screen with Now Playing controls and station choices" width="648" height="1422" fetchpriority="high"></a><figcaption>Now Playing</figcaption></figure>
-    <figure class="landing-hero-device landing-hero-device-secondary"><a class="gallery-open" href="{{ '/assets/project/marketing/queue-live.png' | relative_url }}" data-lightbox="{{ '/assets/project/marketing/queue-live.png' | relative_url }}" data-lightbox-alt="Captured 24Seven.FM Player Up Next screen" data-lightbox-caption="Captured Player screen · Up Next"><img src="{{ '/assets/project/marketing/queue-live.png' | relative_url }}" alt="Captured Android mobile Player screen showing the Up Next queue" width="648" height="1422" loading="eager"></a><figcaption>Up Next</figcaption></figure>
+  <div class="home-hero-phone">
+    <div class="phone"><img src="{{ '/assets/project/web/now-playing.webp' | relative_url }}" alt="The Player's Now Playing screen with artwork, playback controls, and five station choices" width="560" height="1229" fetchpriority="high"></div>
   </div>
 </section>
 
-<nav class="home-destinations" aria-labelledby="destinations-title">
-  <div><p class="eyebrow">Choose a destination</p><h2 id="destinations-title">Go directly to what you need.</h2></div>
-  <div class="home-destination-grid">
-    <a class="home-destination" href="{{ '/stations/' | relative_url }}"><strong>Stations</strong><span>Five official station sites, each with its own listening experience.</span><b aria-hidden="true">→</b></a>
-    <a class="home-destination" href="{{ '/features/' | relative_url }}"><strong>Features</strong><span>Playback, favorites, context, and station-aware capabilities.</span><b aria-hidden="true">→</b></a>
-    <a class="home-destination" href="{{ '/platforms/' | relative_url }}"><strong>Platforms</strong><span>Current Android mobile and Android TV availability.</span><b aria-hidden="true">→</b></a>
-    <a class="home-destination" href="{{ '/privacy/' | relative_url }}"><strong>Privacy</strong><span>Plain-language data boundaries and the canonical notice.</span><b aria-hidden="true">→</b></a>
-  </div>
-</nav>
-</div>
+<section class="doors" aria-label="The five stations" data-doors>
+  {% for station in site.data.stations %}
+  <article class="door station-{{ station.key }}{% if forloop.first %} is-open{% endif %}" data-door>
+    <div class="door-head" aria-hidden="true"><span>{{ station.number }}</span><svg class="icon door-plus" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" focusable="false"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></div>
+    <img class="door-logo" src="{{ '/assets/project/web/stations/' | append: station.key | append: '.webp' | relative_url }}" alt="{{ station.name }} logo" width="200" height="200">
+    <div class="door-body">
+      <p class="door-genre"><span class="door-genre-number">{{ station.number }} · </span>{{ station.genre }}</p>
+      <h2 class="door-name">{{ station.name }}</h2>
+      <p class="door-tagline">{{ station.tagline }}</p>
+      <a class="button station door-link" href="{{ station.url }}" rel="noopener"><span class="door-link-text">Visit <span class="visually-hidden">the {{ station.name }} </span>official site</span> <span class="icon-arrow">{% include icons/arrow.html %}</span><span class="icon-chevron">{% include icons/chevron.html %}</span></a>
+    </div>
+  </article>
+  {% endfor %}
+</section>

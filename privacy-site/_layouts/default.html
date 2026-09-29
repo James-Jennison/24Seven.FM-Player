@@ -1,48 +1,13 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#1a1814">
-    <meta name="color-scheme" content="dark light">
-    {% include metadata.html %}
-    <title>{{ page.title | default: site.title | escape }}</title>
-    <link rel="icon" type="image/png" href="{{ '/assets/project/app-icon.png' | relative_url }}">
-    <link rel="manifest" href="{{ '/site.webmanifest' | relative_url }}">
-    {% assign asset_version = site.time | date: '%s' %}
-    <script src="{{ '/assets/theme-init.js' | relative_url }}?v={{ asset_version }}"></script>
-    <link rel="stylesheet" href="{{ '/assets/project.css' | relative_url }}?v={{ asset_version }}">
+    {% include site-head.html %}
     <link rel="stylesheet" href="{{ '/assets/privacy.css' | relative_url }}?v={{ asset_version }}">
   </head>
-  <body class="privacy-page" data-page-section="privacy">
-    <a class="skip-link" href="#main-content">Skip to content</a>
-    <div class="ambient-stage" aria-hidden="true"><span></span><span></span></div>
-    <div class="scroll-progress" aria-hidden="true"><span></span></div>
-    <header class="project-header" data-site-header>
-      <a class="project-brand" href="{{ '/' | relative_url }}" aria-label="{{ page.product_name | default: '24Seven.FM Player' | escape }} project home">
-        <img src="{{ '/assets/project/app-icon.png' | relative_url }}" alt="" width="44" height="44">
-        <span><strong>{{ page.product_name | default: '24Seven.FM Player' }}</strong><small>{{ page.product_context | default: 'Privacy center' }}</small></span>
-      </a>
-      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="project-navigation">
-        <span class="nav-toggle-icon" aria-hidden="true"><i></i><i></i><i></i></span>
-        <span>Menu</span>
-      </button>
-      <nav id="project-navigation" aria-label="Primary navigation">
-        {% for item in site.data.project.navigation %}
-        {% if item.primary %}
-        <a{% if item.section == 'privacy' %} aria-current="page"{% endif %} href="{{ item.path | relative_url }}">{{ item.label }}</a>
-        {% endif %}
-        {% endfor %}
-      </nav>
-      <div class="header-actions">
-        <button class="theme-toggle" type="button" aria-label="Switch color theme">
-          <span class="theme-toggle-icon" aria-hidden="true">◐</span>
-          <span class="theme-toggle-label">Theme</span>
-        </button>
-      </div>
-    </header>
-    <main id="main-content" class="privacy-main">
-      <section class="page-hero privacy-hero">
+  <body class="page page-privacy" data-page-section="privacy">
+    {% include site-header.html section='privacy' product_name=page.product_name %}
+    <main id="main-content">
+      <section class="page-hero">
         <div>
           <p class="eyebrow">{{ page.privacy_eyebrow | default: 'User trust · Canonical notice' }}</p>
           <h1>{{ page.privacy_heading | default: 'Privacy without guesswork' }}</h1>
@@ -60,31 +25,18 @@
       </section>
       <div class="privacy-workspace">
         <aside class="privacy-tools" aria-label="Privacy notice tools">
-          <label class="filter-search" for="privacy-search">Find in this notice<input id="privacy-search" type="search" placeholder="Try sessions, backup, reports…" autocomplete="off" data-privacy-query></label>
+          <label class="privacy-search" for="privacy-search">Find in this notice<input id="privacy-search" type="search" placeholder="Try sessions, backup, reports" autocomplete="off" data-privacy-query></label>
           <p class="privacy-match-count" aria-live="polite"><strong data-privacy-count>0</strong> sections visible</p>
           <nav class="privacy-toc" aria-label="Privacy notice sections" data-privacy-toc></nav>
-          <button class="privacy-reset" type="button" data-privacy-reset hidden>Clear search</button>
+          <button class="button outline privacy-reset" type="button" data-privacy-reset hidden>Clear search</button>
         </aside>
         <article class="privacy-document" data-privacy-document>
           {{ content }}
-          <p class="filter-empty" data-privacy-empty hidden>No privacy section matches that search.</p>
+          <p class="privacy-empty" data-privacy-empty hidden>No privacy section matches that search.</p>
         </article>
       </div>
     </main>
-    <footer class="project-footer">
-      <div>
-        <strong>{{ page.product_name | default: '24Seven.FM Player' }}</strong>
-        <p>A non-commercial Player created by an early 24Seven.FM member. It is independently developed and not published or sponsored by 24Seven.FM or its individual stations.</p>
-        <p class="site-verification">{{ site.data.project.site_meta.verification_label }}.</p>
-      </div>
-      <div class="footer-link-groups">
-        <nav aria-label="Product navigation"><strong>Player</strong><a href="{{ '/' | relative_url }}">Home</a><a href="{{ '/features/' | relative_url }}">Features</a><a href="{{ '/privacy/' | relative_url }}">Privacy notice</a><a href="https://play.google.com/store/apps/details?id=com.codeframe78.twentyfourseven.player" rel="noopener">Google Play <span aria-hidden="true">↗</span></a><a href="{{ '/product-testing/' | relative_url }}">Tester program</a></nav>
-        <nav aria-label="Project navigation"><strong>Project</strong><a href="{{ page.github_url | default: site.github_url }}/issues">Report an app issue</a><a href="{{ site.status_url }}">Service status</a><a href="https://dev.jamesjennison.net/">Developer workspace <span aria-hidden="true">↗</span></a><a href="https://24sevenfmplayer.com/tester-portal.php">Tester sign in <span aria-hidden="true">↗</span></a></nav>
-      </div>
-    </footer>
-    <button class="back-to-top" type="button" aria-label="Back to top" title="Back to top"><span aria-hidden="true">↑</span></button>
-    <div class="site-toast" role="status" aria-live="polite" aria-atomic="true"></div>
-    {% include site-explorer.html %}
+    {% if page.product_name %}{% include site-footer.html github_url=page.github_url hide_verification=true %}{% else %}{% include site-footer.html %}{% endif %}
     <script src="{{ '/assets/project.js' | relative_url }}?v={{ asset_version }}" defer></script>
   </body>
 </html>

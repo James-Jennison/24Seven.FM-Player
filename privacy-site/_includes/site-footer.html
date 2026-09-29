@@ -1,0 +1,13 @@
+<footer class="site-footer">
+  <div class="site-footer-note">
+    <p>A non-commercial Player created by an early 24Seven.FM member. It is independently developed and not published or sponsored by 24Seven.FM or its individual stations.</p>
+    {% unless include.hide_verification %}<p class="site-verification">{{ site.data.project.site_meta.verification_label }}.</p>{% endunless %}
+  </div>
+  <nav class="site-footer-links" aria-label="Footer navigation">
+    <a href="{{ '/privacy/' | relative_url }}">Privacy notice</a>
+    <a href="{{ '/product-testing/' | relative_url }}">Tester program</a>
+    <a href="https://24sevenfmplayer.com/tester-portal.php">Tester sign in</a>
+    <a href="{{ include.github_url | default: site.github_url }}/issues">Report an app issue</a>
+    <a href="{{ site.status_url }}">Service status</a>
+  </nav>
+</footer>

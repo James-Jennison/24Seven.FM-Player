@@ -45,7 +45,6 @@ docker run --rm \
     install -m 0644 /workspace/privacy-site/tester-onboarding-storage.php /workspace/_site/tester-onboarding-storage.php
     install -m 0644 /workspace/privacy-site/private-tester-queue.php /workspace/_site/private-tester-queue.php
     install -m 0644 /workspace/privacy-site/tester-portal.php /workspace/_site/tester-portal.php
-    install -m 0644 /workspace/privacy-site/turnstile-test.php /workspace/_site/turnstile-test.php
     install -m 0644 /workspace/privacy-site/_data/tester_tasks.json /workspace/_site/assets/tester-tasks.json
     bash /workspace/scripts/stage-cast-receiver.sh
   '

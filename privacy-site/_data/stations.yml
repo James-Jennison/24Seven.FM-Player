@@ -1,0 +1,32 @@
+# The five stations, in the order the site presents them. Names, genres, and
+# taglines are public copy; "key" selects the station's colours in project.css.
+- key: sst
+  number: "01"
+  name: StreamingSoundtracks.com
+  genre: Movie, game, TV and anime scores
+  tagline: Scores, soundtracks, and music made for the scene.
+  url: https://streamingsoundtracks.com/
+- key: "1980s"
+  number: "02"
+  name: 1980s.FM
+  genre: Music from the 1980s
+  tagline: Big hooks, bright synths, and classics that stay in rotation.
+  url: https://1980s.fm/
+- key: adagio
+  number: "03"
+  name: Adagio.FM
+  genre: Classical and light music
+  tagline: Classical music for focus, stillness, and space to breathe.
+  url: https://adagio.fm/
+- key: death
+  number: "04"
+  name: Death.FM
+  genre: Extreme metal
+  tagline: Extreme metal with a direct route to what matters.
+  url: https://death.fm/
+- key: entranced
+  number: "05"
+  name: Entranced.FM
+  genre: Trance and electronic music
+  tagline: Trance for the long drive, the late set, and beyond.
+  url: https://entranced.fm/
