@@ -484,6 +484,31 @@ class RadioAppTest {
     }
 
     @Test
+    fun roomyTabletLandscapeUsesImmersivePlayerAndStationDeck() {
+        composeRule.setContent {
+            MaterialTheme {
+                Box(Modifier.requiredSize(1200.dp, 800.dp)) {
+                    RadioApp(
+                        state = sampleState(),
+                        onSelectStation = {},
+                        onSelectDestination = {},
+                        onPlay = {},
+                        onPause = {},
+                        onStop = {},
+                        onRefreshQueue = {},
+                    )
+                }
+            }
+        }
+
+        composeRule.onNodeWithTag("expanded_landscape_player").assertExists()
+        composeRule.onNodeWithTag("tablet_player_hero").assertExists()
+        composeRule.onNodeWithTag("tablet_station_selector").assertExists()
+        composeRule.onNodeWithTag("tablet_station_sst").assertExists().assertHasClickAction()
+        composeRule.onNodeWithTag("landscape_player").assertDoesNotExist()
+    }
+
+    @Test
     fun playerControlsDispatchPlaybackAndWrappedStationActions() {
         val selectedStations = mutableListOf<StationId>()
         var playCount = 0
