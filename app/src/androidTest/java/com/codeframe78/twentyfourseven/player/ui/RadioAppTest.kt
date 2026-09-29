@@ -549,6 +549,16 @@ class RadioAppTest {
     }
 
     @Test
+    fun formerExpandedMinimumKeepsEssentialControlsVisibleInCompactFallback() {
+        assertCompactLandscapeFallbackVisible(width = 840.dp, height = 600.dp, fontScale = 1.3f)
+    }
+
+    @Test
+    fun narrowExpandedBoundaryKeepsEssentialControlsVisibleInCompactFallback() {
+        assertCompactLandscapeFallbackVisible(width = 999.dp, height = 639.dp, fontScale = 1f)
+    }
+
+    @Test
     fun expandedTabletStationAndPlaybackActionsRemainIndependentAndSemantic() {
         val stations = tabletStations()
         val selectedStations = mutableListOf<StationId>()
@@ -1991,6 +2001,43 @@ class RadioAppTest {
                 StreamVariant("https://example.invalid/${station.id.value}", "Test", 0),
             ),
         )
+    }
+
+    private fun assertCompactLandscapeFallbackVisible(
+        width: androidx.compose.ui.unit.Dp,
+        height: androidx.compose.ui.unit.Dp,
+        fontScale: Float,
+    ) {
+        val stations = tabletStations()
+        composeRule.setContent {
+            val density = LocalDensity.current
+            CompositionLocalProvider(
+                LocalDensity provides Density(density.density, fontScale = fontScale),
+            ) {
+                MaterialTheme {
+                    Box(Modifier.requiredSize(width, height)) {
+                        AdaptivePlayerScreen(
+                            state = sampleState().copy(
+                                stations = stations,
+                                selectedStation = stations.first(),
+                            ),
+                            padding = androidx.compose.foundation.layout.PaddingValues(0.dp),
+                            onSelectStation = {},
+                            onPlay = {},
+                            onStop = {},
+                        )
+                    }
+                }
+            }
+        }
+
+        composeRule.onNodeWithTag("expanded_landscape_player").assertDoesNotExist()
+        composeRule.onNodeWithTag("landscape_player").assertIsDisplayed()
+        composeRule.onNodeWithTag("primary_play_pause").assertIsDisplayed()
+        composeRule.onNodeWithTag("landscape_station_selector").assertIsDisplayed()
+        stations.forEach { station ->
+            composeRule.onNodeWithTag("landscape_station_${station.id.value}").assertIsDisplayed()
+        }
     }
 
     private companion object {
