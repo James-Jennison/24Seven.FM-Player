@@ -28,7 +28,7 @@ consumer_landing: true
       <p class="door-genre"><span class="door-genre-number">{{ station.number }} · </span>{{ station.genre }}</p>
       <h2 class="door-name">{{ station.name }}</h2>
       <p class="door-tagline">{{ station.tagline }}</p>
-      <a class="button station door-link" href="{{ station.url }}" rel="noopener"><span class="door-link-text">Visit <span class="visually-hidden">the {{ station.name }} </span>official site</span> <span class="icon-arrow">{% include icons/arrow.html %}</span><span class="icon-chevron">{% include icons/chevron.html %}</span></a>
+      <a class="button station door-link" href="{{ station.url }}" rel="noopener"><span class="door-link-text">Visit<span class="visually-hidden"> the {{ station.name }}</span> official site</span> <span class="icon-arrow">{% include icons/arrow.html %}</span><span class="icon-chevron">{% include icons/chevron.html %}</span></a>
     </div>
   </article>
   {% endfor %}

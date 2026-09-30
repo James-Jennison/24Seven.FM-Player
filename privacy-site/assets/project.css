@@ -50,7 +50,7 @@
     0 40px 60px -30px light-dark(rgba(28, 23, 34, 0.6), transparent);
 
   --gutter: clamp(18px, 3.4vw, 48px);
-  --header-height: 78px;
+  --header-height: clamp(62px, 9.4vh, 78px);
 }
 
 :root[data-theme="light"] { color-scheme: light; }
@@ -343,20 +343,20 @@ a:hover { color: var(--text); }
   align-items: center;
   justify-content: space-between;
   gap: 16px 40px;
-  padding: 18px 0 22px;
+  padding: 14px 0 18px;
   border-top: 1px solid var(--panel-line);
   color: var(--muted);
   font-size: 13px;
 }
 
-.site-footer-note { max-width: 760px; }
+.site-footer-note { max-width: min(640px, 48%); }
 .site-verification { margin-top: 2px; }
 
 .site-footer-links {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 8px 22px;
+  gap: 6px clamp(12px, 1.4vw, 22px);
   font-size: 14px;
   font-weight: 500;
 }
@@ -377,10 +377,12 @@ a:hover { color: var(--text); }
 
 /* Home */
 
+/* Home is sized from the window height as well as its width, so that the
+   header, headline, doors, and footer share one screen on a desktop. */
 .home-hero {
   position: relative;
   flex: 1 0 auto;
-  min-height: 384px;
+  min-height: clamp(230px, 36vh, 384px);
   display: flex;
   align-items: center;
 }
@@ -391,12 +393,15 @@ a:hover { color: var(--text); }
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 22px;
-  padding: 24px 0;
+  gap: clamp(14px, 2.6vh, 22px);
+  padding: clamp(10px, 2vh, 24px) 0;
 }
 
+.home-hero-copy { max-width: calc(100% - 420px); }
+
+/* Sized so the second line always clears the phone beside it. */
 .home-hero h1 {
-  font-size: clamp(50px, 6.8vw, 98px);
+  font-size: clamp(56px, min(calc((100vw - 500px) / 9.2), 11vh), 98px);
   line-height: 0.95;
   letter-spacing: -0.02em;
   text-wrap: nowrap;
@@ -430,12 +435,18 @@ a:hover { color: var(--text); }
 
 .doors { position: relative; z-index: 2; display: flex; gap: 12px; }
 
+.doors {
+  --door-height: clamp(272px, 38vh, 356px);
+  --door-logo: clamp(88px, 12.5vh, 116px);
+  --door-logo-open: clamp(100px, 17vh, 176px);
+}
+
 .door {
   position: relative;
   flex: 1 1 0;
   min-width: 0;
-  height: 356px;
-  padding: 20px 14px 24px;
+  height: var(--door-height);
+  padding: 20px 8px 24px;
   border: 1px solid var(--st-quiet-line);
   border-radius: 24px;
   background: var(--st-quiet);
@@ -445,6 +456,7 @@ a:hover { color: var(--text); }
   align-items: center;
   gap: 14px;
   text-align: center;
+  container-type: inline-size;
   transition: flex-grow 0.45s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
@@ -453,7 +465,7 @@ a:hover { color: var(--text); }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 8px;
+  padding: 0 14px;
   color: var(--muted);
   font-size: 13px;
   font-weight: 700;
@@ -464,8 +476,8 @@ a:hover { color: var(--text); }
 
 .door-logo {
   display: block;
-  width: 116px;
-  height: 116px;
+  width: var(--door-logo);
+  height: var(--door-logo);
   margin-top: auto;
   border-radius: 12px;
   box-shadow: var(--logo-shadow);
@@ -476,7 +488,8 @@ a:hover { color: var(--text); }
 
 .door-name {
   font-family: var(--sans);
-  font-size: 13px;
+  /* The longest name, StreamingSoundtracks.com, must stay on one line. */
+  font-size: min(13px, 7.4cqi);
   font-weight: 600;
   line-height: 1.25;
   letter-spacing: 0;
@@ -507,11 +520,11 @@ a:hover { color: var(--text); }
 
 .doors.is-accordion .door.is-open {
   flex-grow: 2.6;
-  padding: 30px 36px;
+  padding: clamp(20px, 3.2vh, 30px) 36px;
   border-color: var(--st-line);
   background: var(--st-calm);
   display: grid;
-  grid-template-columns: 176px minmax(0, 1fr);
+  grid-template-columns: var(--door-logo-open) minmax(0, 1fr);
   grid-template-areas:
     "genre genre"
     "name name"
@@ -536,14 +549,13 @@ a:hover { color: var(--text); }
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  white-space: nowrap;
 }
 
 .doors.is-accordion .door.is-open .door-name {
   grid-area: name;
-  margin: 8px 0 18px;
+  margin: 8px 0 clamp(12px, 2vh, 18px);
   font-family: var(--serif);
-  font-size: 42px;
+  font-size: min(42px, 9.9cqi, 5.2vh);
   font-weight: 400;
   line-height: 1;
   letter-spacing: -0.01em;
@@ -551,8 +563,8 @@ a:hover { color: var(--text); }
 
 .doors.is-accordion .door.is-open .door-logo {
   grid-area: logo;
-  width: 176px;
-  height: 176px;
+  width: var(--door-logo-open);
+  height: var(--door-logo-open);
   margin: 0;
   border-radius: 16px;
 }
@@ -921,11 +933,34 @@ a:hover { color: var(--text); }
 
 /* Narrower screens */
 
-@media (max-width: 1099px) {
+/* Between 1240 and 1399 pixels the open door is narrower. */
+@media (min-width: 1240px) and (max-width: 1399px) {
+  .doors { --door-logo-open: clamp(88px, 13vh, 120px); }
+
+  .doors.is-accordion .door.is-open {
+    flex-grow: 2;
+    padding: clamp(18px, 2.8vh, 26px) 30px;
+    grid-template-columns: var(--door-logo-open) minmax(0, 1fr);
+    grid-template-areas:
+      "genre genre"
+      "name name"
+      "logo tagline"
+      "link link";
+    grid-template-rows: auto auto auto auto;
+    gap: 0 20px;
+  }
+
+  .doors.is-accordion .door.is-open .door-tagline { align-self: center; padding-bottom: 0; font-size: 16px; }
+  .doors.is-accordion .door.is-open .door-link { margin-top: clamp(10px, 2vh, 18px); }
+}
+
+/* Below 1240 pixels the doors become rows. */
+@media (max-width: 1239px) {
   .home-hero { min-height: 0; }
   .home-hero-phone { width: 300px; }
   .home-hero-phone .phone { top: 26px; right: 22px; width: 244px; }
-  .home-hero h1 { text-wrap: balance; }
+  .home-hero-copy { max-width: calc(100% - 320px); }
+  .home-hero h1 { font-size: clamp(50px, 6.8vw, 76px); text-wrap: wrap; }
 
   .doors { flex-direction: column; padding-bottom: 28px; }
 
@@ -933,6 +968,7 @@ a:hover { color: var(--text); }
     flex: none;
     height: auto;
     min-height: 100px;
+    container-type: normal;
     padding: 12px 16px 12px 12px;
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
@@ -957,8 +993,8 @@ a:hover { color: var(--text); }
   .door-genre { grid-area: genre; align-self: start; display: block; color: var(--st-c); font-size: 13px; }
   .door-genre-number { display: none; }
 
-  .door-link,
-  .door-link:hover {
+  .door .button.door-link,
+  .door .button.door-link:hover {
     grid-area: link;
     margin: 0;
     min-height: 44px;
@@ -971,7 +1007,9 @@ a:hover { color: var(--text); }
   .door-link .door-link-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
   .door-link .icon-arrow { display: none; }
   .door-link .icon-chevron { display: block; }
+}
 
+@media (max-width: 1099px) {
   .station-band { grid-template-columns: 98px minmax(0, 1fr) auto; }
   .station-number { display: none; }
   .station-band > p { grid-column: 2 / -1; grid-row: 2; }
@@ -1013,12 +1051,13 @@ a:hover { color: var(--text); }
   .page-intro > p { width: auto; max-width: 640px; }
   .cta-band { flex-direction: column; align-items: flex-start; }
   .site-footer { flex-direction: column; align-items: flex-start; }
+  .site-footer-note { max-width: none; }
   .site-footer-links { justify-content: flex-start; }
 }
 
 @media (max-width: 759px) {
   .home-hero-phone { display: none; }
-  .home-hero-copy { align-items: stretch; padding: 8px 0 18px; gap: 14px; }
+  .home-hero-copy { max-width: none; align-items: stretch; padding: 8px 0 18px; gap: 14px; }
   .home-hero h1 { font-size: clamp(44px, 12.8vw, 64px); }
   .cta-row { flex-direction: column; align-items: stretch; }
   .availability { max-width: none; font-size: 13px; }

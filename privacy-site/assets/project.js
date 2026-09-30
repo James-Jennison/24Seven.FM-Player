@@ -100,12 +100,13 @@
     });
   }
 
-  // Station doors: an accordion on wide screens, plain rows below that.
+  // Station doors: an accordion from 1240 pixels wide, plain rows below that.
+  // project.css uses the same width.
   function enhanceDoors() {
     const container = document.querySelector('[data-doors]');
     if (!container) return;
     const doors = Array.from(container.querySelectorAll('[data-door]'));
-    const wide = window.matchMedia('(min-width: 1100px)');
+    const wide = window.matchMedia('(min-width: 1240px)');
 
     function openDoor(door, moveFocus) {
       doors.forEach(function (item) {

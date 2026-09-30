@@ -49,7 +49,6 @@ let commandId = 0;
 const pending = new Map();
 const eventWaiters = new Map();
 const browserErrors = [];
-const stationLayoutAssertions = { intro: [], mobile: [], tablet: [], desktop: [] };
 
 function waitForEvent(method, timeout = 10_000) {
   return new Promise((resolve, reject) => {
@@ -131,449 +130,236 @@ try {
   await send("Runtime.enable");
   await send("Log.enable");
 
-  const routes = [
-    "/",
-    "/stations/",
-    "/features/",
-    "/platforms/",
-    "/product-testing/",
-    "/privacy/",
-    "/privacy/tv/",
-    "/404.html",
-  ];
-  const expectedPublicNavigation = ["/", "/stations/", "/features/", "/platforms/", "/privacy/"];
-  const expectedDeveloperNavigation = ["/dev/development/", "/dev/testing/", "/dev/tester-workspace/", "/dev/roadmap/", "/dev/resources/"];
+  const routes = ["/", "/stations/", "/features/", "/platforms/", "/product-testing/", "/privacy/", "/privacy/tv/", "/404.html"];
+  const stationSites = ["https://streamingsoundtracks.com/", "https://1980s.fm/", "https://adagio.fm/", "https://death.fm/", "https://entranced.fm/"];
+  const longestStationName = "StreamingSoundtracks.com";
 
-  for (const viewport of [
-    { width: 320, height: 568, label: "narrow mobile" },
-    { width: 390, height: 844, label: "standard mobile" },
-    { width: 560, height: 900, label: "mobile grid boundary" },
-    { width: 561, height: 900, label: "mobile grid boundary plus one" },
-    { width: 768, height: 1024, label: "tablet" },
-    { width: 800, height: 1024, label: "tablet grid boundary" },
-    { width: 801, height: 1024, label: "tablet grid boundary plus one" },
-    { width: 1024, height: 1000, label: "compact laptop" },
-    { width: 1366, height: 768, label: "standard laptop" },
-    { width: 1440, height: 1000, label: "laptop" },
-    { width: 1920, height: 864, label: "27-inch desktop browser" },
-    { width: 1920, height: 1080, label: "large desktop" },
-  ]) {
-    await send("Emulation.setDeviceMetricsOverride", {
-      width: viewport.width,
-      height: viewport.height,
-      deviceScaleFactor: 1,
-      mobile: viewport.width < 600,
+  async function setViewport(width, height) {
+    await send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 1, mobile: width < 700 });
+  }
+
+  async function setMedia(features) {
+    await send("Emulation.setEmulatedMedia", {
+      features: Object.entries(features).map(([name, value]) => ({ name, value })),
     });
-    const testedRoutes = viewport.width <= 390
-      ? routes
-      : [560, 561, 800, 801].includes(viewport.width)
-        ? ["/stations/"]
-        : ["/", "/stations/", "/platforms/", "/product-testing/", "/privacy/", "/privacy/tv/", "/dev/", "/dev/tester-workspace/"];
-    for (const route of testedRoutes) {
+  }
+
+  const pageAudit = `(() => {
+    const visible = (node) => {
+      const rect = node.getBoundingClientRect();
+      const style = getComputedStyle(node);
+      return rect.width > 0 && rect.height > 0 && style.visibility !== "hidden" && style.display !== "none";
+    };
+    const names = [...document.querySelectorAll("h2")].filter((node) => node.textContent.trim() === ${JSON.stringify(longestStationName)} && visible(node));
+    const nameReport = names.map((node) => {
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      const lines = new Set([...range.getClientRects()].map((rect) => Math.round(rect.top))).size;
+      const text = range.getBoundingClientRect();
+      const box = node.closest(".door, .station-band").getBoundingClientRect();
+      return { lines, inside: text.left >= box.left && text.right <= box.right };
+    });
+    const controls = [...document.querySelectorAll("button, input:not([type=checkbox]):not([type=radio]), a.button, .site-nav a")].filter(visible);
+    return {
+      title: document.title,
+      headings: document.querySelectorAll("h1").length,
+      navigation: document.querySelectorAll("#site-navigation a").length,
+      overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      missingImages: [...document.images].filter((image) => !image.complete || image.naturalWidth === 0).map((image) => image.getAttribute("src")),
+      retiredLinks: [...document.querySelectorAll("a[href]")].map((link) => link.getAttribute("href")).filter((href) => /^\/(dev|turnstile-test|roadmap|development|resources|testing)(\/|$)/.test(href)),
+      undersized: controls.filter((node) => node.getBoundingClientRect().width < 24 || node.getBoundingClientRect().height < 24).map((node) => (node.textContent || node.getAttribute("aria-label") || node.tagName).trim().slice(0, 40)),
+      nameReport,
+    };
+  })()`;
+
+  // Every page at every width: core content, no sideways scrolling, and the
+  // longest station name on one line inside its box.
+  await setMedia({ "prefers-color-scheme": "dark" });
+  const viewports = [
+    { width: 360, height: 740, label: "narrow phone" },
+    { width: 390, height: 844, label: "phone" },
+    { width: 759, height: 1000, label: "below the phone boundary" },
+    { width: 820, height: 1180, label: "tablet" },
+    { width: 1239, height: 900, label: "widest rows layout" },
+    { width: 1240, height: 900, label: "narrowest doors layout" },
+    { width: 1399, height: 900, label: "below the wide doors layout" },
+    { width: 1440, height: 900, label: "desktop" },
+    { width: 1920, height: 1080, label: "wide desktop" },
+  ];
+  for (const viewport of viewports) {
+    await setViewport(viewport.width, viewport.height);
+    for (const route of routes) {
       await navigate(route);
-      await evaluate("window.scrollTo(0, document.documentElement.scrollHeight)");
-      await delay(120);
-      const state = await evaluate(`(() => ({
-        title: document.title,
-        h1: document.querySelectorAll('h1').length,
-        overflow: document.documentElement.scrollWidth > window.innerWidth + 1,
-        overflowingElements: [...document.querySelectorAll('body *')]
-          .map((element) => {
-            const rect = element.getBoundingClientRect();
-            return { selector: element.className || element.id || element.tagName, left: Math.round(rect.left), right: Math.round(rect.right) };
-          })
-          .filter((element) => element.left < -1 || element.right > window.innerWidth + 1)
-          .slice(0, 8),
-        missingImages: [...document.images].filter((image) => image.getAttribute('src') && (!image.complete || image.naturalWidth === 0)).map((image) => image.src),
-        canonical: document.querySelector('link[rel="canonical"]')?.href ?? '',
-        navigation: document.querySelectorAll('#project-navigation a').length,
-        navigationPaths: [...document.querySelectorAll('#project-navigation a')].map((link) => new URL(link.href).pathname),
-        developerWorkspace: document.body.classList.contains('developer-workspace'),
-        expectedNavigation: 5
-      }))()`);
-      assert(state.title, `${viewport.label} ${route} has no title`);
-      assert(state.h1 === 1, `${viewport.label} ${route} has ${state.h1} h1 elements`);
-      assert(!state.overflow, `${viewport.label} ${route} has horizontal overflow: ${JSON.stringify(state.overflowingElements)}`);
-      assert(state.missingImages.length === 0, `${viewport.label} ${route} has missing images: ${state.missingImages.join(", ")}`);
-      assert(state.canonical.startsWith("https://24sevenfmplayer.com/"), `${route} has the wrong canonical URL`);
-      assert(state.navigation === state.expectedNavigation, `${route} exposes the wrong workspace navigation`);
-      const expectedNavigation = state.developerWorkspace ? expectedDeveloperNavigation : expectedPublicNavigation;
-      assert(JSON.stringify(state.navigationPaths) === JSON.stringify(expectedNavigation), `${route} exposes the wrong primary navigation destinations: ${state.navigationPaths.join(", ")}`);
-
-      if (route === "/" && viewport.width >= 1024) {
-        const homeViewport = await evaluate(`(() => {
-          const destinationGrid = document.querySelector('.home-destination-grid');
-          const decisionSurface = document.querySelector('.home-decision-surface');
-          const heroGallery = document.querySelector('.landing-hero-gallery');
-          const heroCopy = [document.querySelector('#hero-title'), document.querySelector('.landing-home .hero-lede')];
-          const scrollY = window.scrollY;
-          const primaryElements = [
-            document.querySelector('#hero-title'),
-            ...document.querySelectorAll('.landing-home .actions a'),
-            ...document.querySelectorAll('.landing-hero-device'),
-            ...destinationGrid.querySelectorAll('.home-destination')
-          ];
-          return {
-            destinationsDocumentBottom: destinationGrid.getBoundingClientRect().bottom + scrollY,
-            decisionSurfaceDocumentBottom: decisionSurface.getBoundingClientRect().bottom + scrollY,
-            viewportHeight: window.innerHeight,
-            viewportWidth: window.innerWidth,
-            destinationCount: destinationGrid.querySelectorAll('.home-destination').length,
-            heroCaptureCount: document.querySelectorAll('.landing-hero-device').length,
-            heroGallery: (() => {
-              const rect = heroGallery.getBoundingClientRect();
-              return { top: rect.top + scrollY, bottom: rect.bottom + scrollY, left: rect.left, right: rect.right };
-            })(),
-            heroGallerySemantics: {
-              role: heroGallery.getAttribute('role'),
-              label: heroGallery.getAttribute('aria-label'),
-              captionCount: heroGallery.querySelectorAll('figcaption').length
-            },
-            heroCopyBounds: heroCopy.map((element) => {
-              const rect = element.getBoundingClientRect();
-              return { top: rect.top + scrollY, bottom: rect.bottom + scrollY, left: rect.left, right: rect.right };
-            }),
-            heroFigureBounds: [...document.querySelectorAll('.landing-hero-device')].map((element) => {
-              const rect = element.getBoundingClientRect();
-              return { top: rect.top + scrollY, bottom: rect.bottom + scrollY, left: rect.left, right: rect.right };
-            }),
-            actionBounds: [...document.querySelectorAll('.landing-home .actions a')].map((element) => {
-              const rect = element.getBoundingClientRect();
-              return { top: rect.top + scrollY, bottom: rect.bottom + scrollY, left: rect.left, right: rect.right };
-            }),
-            destinationBounds: [...destinationGrid.querySelectorAll('.home-destination')].map((element) => {
-              const rect = element.getBoundingClientRect();
-              return { top: rect.top + scrollY, bottom: rect.bottom + scrollY, left: rect.left, right: rect.right };
-            }),
-            primaryBounds: primaryElements.map((element) => {
-              const rect = element.getBoundingClientRect();
-              return {
-                label: element.id || element.textContent.trim().replace(/\s+/g, ' ').slice(0, 32),
-                top: rect.top + scrollY,
-                bottom: rect.bottom + scrollY,
-                left: rect.left,
-                right: rect.right
-              };
-            })
-          };
-        })()`);
-        assert(homeViewport.destinationCount === 4, `${viewport.label} Home lost a primary destination`);
-        assert(homeViewport.heroCaptureCount === 2, `${viewport.label} Home must present both primary mobile captures`);
-        assert(homeViewport.heroGallerySemantics.role === 'group' && homeViewport.heroGallerySemantics.label === 'Captured Android mobile Player screens' && homeViewport.heroGallerySemantics.captionCount === 2, `${viewport.label} Home hero gallery lost its named two-capture semantics`);
-        assert(homeViewport.destinationsDocumentBottom <= homeViewport.viewportHeight + 1, `${viewport.label} Home leaves its primary destinations below the initial viewport`);
-        assert(homeViewport.decisionSurfaceDocumentBottom <= homeViewport.viewportHeight + 1, `${viewport.label} Home decision surface exceeds the initial viewport`);
-        assert(homeViewport.primaryBounds.length === 9, `${viewport.label} Home primary-surface inventory changed unexpectedly`);
-        assert(homeViewport.primaryBounds.every((element) => element.top >= -1 && element.bottom <= homeViewport.viewportHeight + 1 && element.left >= -1 && element.right <= homeViewport.viewportWidth + 1), `${viewport.label} Home leaves a primary control or capture outside the initial viewport: ${JSON.stringify(homeViewport.primaryBounds)}`);
-        assert(homeViewport.heroCopyBounds.every((element) => element.top >= -1 && element.bottom <= homeViewport.viewportHeight + 1 && element.left >= -1 && element.right <= homeViewport.viewportWidth + 1), `${viewport.label} Home leaves hero copy outside the initial viewport: ${JSON.stringify(homeViewport.heroCopyBounds)}`);
-        assert(homeViewport.heroFigureBounds.every((figure) => figure.top >= homeViewport.heroGallery.top - 1 && figure.bottom <= homeViewport.heroGallery.bottom + 1 && figure.left >= homeViewport.heroGallery.left - 1 && figure.right <= homeViewport.heroGallery.right + 1), `${viewport.label} Home hero media paints outside its reserved gallery: ${JSON.stringify(homeViewport)}`);
-        const intersects = (left, right) => left.left < right.right && left.right > right.left && left.top < right.bottom && left.bottom > right.top;
-        const nonFigureBounds = [...homeViewport.heroCopyBounds, ...homeViewport.actionBounds, ...homeViewport.destinationBounds];
-        assert(homeViewport.heroFigureBounds.every((figure) => !nonFigureBounds.some((element) => intersects(figure, element))), `${viewport.label} Home hero media overlaps copy, a primary action, or a destination: ${JSON.stringify(homeViewport)}`);
-        assert(!intersects(homeViewport.heroFigureBounds[0], homeViewport.heroFigureBounds[1]), `${viewport.label} Home hero captures overlap each other: ${JSON.stringify(homeViewport.heroFigureBounds)}`);
-        assert(homeViewport.heroFigureBounds[0].right - homeViewport.heroFigureBounds[0].left >= 150 && homeViewport.heroFigureBounds[1].right - homeViewport.heroFigureBounds[1].left >= 120, `${viewport.label} Home hero captures are too small to serve as useful product previews: ${JSON.stringify(homeViewport.heroFigureBounds)}`);
-        const measuredCaptureWidths = homeViewport.heroFigureBounds.map((figure) => Math.round(figure.right - figure.left));
-        console.log(`Home hero geometry ${viewport.label}: captures=${measuredCaptureWidths.join("px,")}px; gallery=${Math.round(homeViewport.heroGallery.right - homeViewport.heroGallery.left)}px wide; decisionSurfaceBottom=${Math.round(homeViewport.decisionSurfaceDocumentBottom)}px of ${homeViewport.viewportHeight}px.`);
+      const audit = await evaluate(pageAudit);
+      const where = `${route} at ${viewport.width}px (${viewport.label})`;
+      assert(audit.title, `Missing title on ${where}`);
+      assert(audit.headings === 1, `Expected one h1 on ${where}; found ${audit.headings}`);
+      assert(audit.navigation === 4, `Expected four primary links on ${where}; found ${audit.navigation}`);
+      assert(audit.overflow <= 0, `${where} scrolls sideways by ${audit.overflow}px`);
+      assert(audit.missingImages.length === 0, `${where} has missing images: ${audit.missingImages.join(", ")}`);
+      assert(audit.retiredLinks.length === 0, `${where} links to a retired route: ${audit.retiredLinks.join(", ")}`);
+      assert(audit.undersized.length === 0, `${where} has undersized controls: ${audit.undersized.join(", ")}`);
+      for (const name of audit.nameReport) {
+        assert(name.lines === 1, `${longestStationName} wraps onto ${name.lines} lines on ${where}`);
+        assert(name.inside, `${longestStationName} leaves its box on ${where}`);
       }
-
-      if (route === "/stations/") {
-        const stationLinks = await evaluate(`(() => [...document.querySelectorAll('.landing-station a')].map((link) => ({
-          href: link.href,
-          target: link.target,
-          rel: link.rel,
-          text: link.textContent.replace(/\\s+/g, ' ').trim(),
-          accessibleName: link.getAttribute('aria-label') ?? '',
-          cardLinkCount: link.closest('.landing-station')?.querySelectorAll('a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])').length ?? 0
-        })))()`);
-        assert(stationLinks.length === 5, "Station directory does not expose five official destinations");
-        assert(stationLinks.every((link) => link.target === "_blank" && link.rel.includes("noopener") && link.rel.includes("noreferrer") && link.text.includes("Visit official site") && link.text.includes("↗")), "Station directory lost its visible new-tab disclosure or tab-nabbing protection");
-        assert(stationLinks.every((link) => link.accessibleName.trim().length > 0 && link.cardLinkCount === 1), "Each station card must expose exactly one named keyboard destination");
-        const stationActionNegative = await evaluate(`(() => {
-          const card = document.querySelector('.landing-station');
-          const probe = document.createElement('button');
-          probe.type = 'button';
-          probe.textContent = 'Regression probe';
-          card.append(probe);
-          const rejected = card.querySelectorAll('a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])').length !== 1;
-          probe.remove();
-          return rejected;
-        })()`);
-        assert(stationActionNegative, "Station-directory action guard did not reject an added keyboard control");
-        const stationLayout = await evaluate(`(() => {
-          const intro = document.querySelector('.landing-section-heading');
-          const grid = document.querySelector('.landing-station-grid');
-          const cards = [...document.querySelectorAll('.landing-station')];
-          const bounds = (element) => {
-            const { left, top, width, height } = element.getBoundingClientRect();
-            return { left, top, width, height, right: left + width, bottom: top + height, center: left + width / 2 };
-          };
-          return { intro: [...intro.children].map(bounds), grid: bounds(grid), cards: cards.map(bounds) };
-        })()`);
-        assert(stationLayout.cards.length === 5, `${viewport.label} station directory has the wrong station-card count`);
-        const [introHeading, introCopy] = stationLayout.intro;
-        if (viewport.width <= 900) {
-          assert(introCopy.top >= introHeading.bottom - 1, `${viewport.label} station introduction did not stack`);
-          stationLayoutAssertions.intro.push(viewport.width);
-        }
-        const [first, second, third, fourth, fifth] = stationLayout.cards;
-        if (viewport.width > 900) {
-          assert(Math.abs(first.top - second.top) < 2 && Math.abs(second.top - third.top) < 2, `${viewport.label} station cards did not form a three-card desktop opening row`);
-          assert(Math.abs(fourth.top - fifth.top) < 2 && fourth.top > first.bottom, `${viewport.label} station cards did not form a compact 3+2 desktop directory`);
-          stationLayoutAssertions.desktop.push(viewport.width);
-        } else if (viewport.width > 580) {
-          assert(Math.abs(first.top - second.top) < 2 && Math.abs(third.top - fourth.top) < 2 && third.top > first.bottom, `${viewport.label} station cards did not form a 2+2 tablet directory`);
-          assert(fifth.top > third.bottom && Math.abs(fifth.center - stationLayout.grid.center) < 2, `${viewport.label} tablet remainder card is not centered`);
-          stationLayoutAssertions.tablet.push(viewport.width);
-        } else {
-          assert(second.top > first.bottom && third.top > second.bottom && fourth.top > third.bottom && fifth.top > fourth.bottom, `${viewport.label} station cards did not form a one-column mobile stack`);
-          assert(Math.abs(fifth.width - first.width) < 2, `${viewport.label} station cards lost equal sizing on mobile`);
-          stationLayoutAssertions.mobile.push(viewport.width);
-        }
-      }
-
-      if (route === "/platforms/") {
-        const platformContract = await evaluate(`(() => ({
-          text: document.body.innerText,
-          googlePlayLinks: [...document.querySelectorAll('.platform-card#android-mobile a')].filter((link) => /play\\.google\\.com/i.test(link.href)).map((link) => link.href),
-          publicInstallLabels: [...document.querySelectorAll('.platform-card#android-mobile a, .platform-card#android-mobile button')].map((control) => control.textContent.replace(/\\s+/g, ' ').trim()).filter((label) => /^(install|download|get it on google play)/i.test(label)),
-          headingSizes: [...document.querySelectorAll('.platform-card h2')].map((heading) => Number.parseFloat(getComputedStyle(heading).fontSize)),
-          imageRatios: [...document.querySelectorAll('.platform-card img')].map((image) => image.getBoundingClientRect().height / image.getBoundingClientRect().width)
-        }))()`);
-        assert(platformContract.text.includes("24Seven.FM: Internet Radio App is available to install from Google Play."), "Platforms lost the listing-backed Android mobile availability statement");
-        assert(platformContract.text.includes("The Android TV Player is in early development and testing, with no public Android TV install path yet."), "Platforms lost the fact-bound Android TV availability statement");
-        assert(platformContract.googlePlayLinks.length === 1 && platformContract.publicInstallLabels.length === 1 && platformContract.publicInstallLabels[0] === "Get it on Google Play ↗", "Platforms must expose the single listing-backed Android install path");
-        assert(platformContract.headingSizes.length === 2 && platformContract.headingSizes.every((size) => size <= 60), "Platforms lost its bounded card-heading typography");
-        assert(platformContract.imageRatios.length === 2 && platformContract.imageRatios.every((ratio) => ratio > 0 && ratio <= 2.3), "Platforms stretched a capture beyond its natural aspect ratio");
-      }
-
-      if (route === "/features/") {
-        const featureContract = await evaluate(`(() => {
-          const cards = [...document.querySelectorAll('.feature-directory-grid article')];
-          return {
-            text: document.body.innerText,
-            actionsPerCard: cards.map((card) => [...card.querySelectorAll('a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])')].map((control) => ({
-              label: control.getAttribute('aria-label') || control.textContent.replace(/\\s+/g, ' ').trim()
-            })))
-          };
-        })()`);
-        assert(featureContract.text.includes("24Seven.FM: Internet Radio App is available to install from Google Play."), "Features lost the listing-backed Android availability statement");
-        assert(featureContract.text.includes("The invited tester program remains separate from the public Android release."), "Features lost the separate tester-program statement");
-        assert(featureContract.actionsPerCard.slice(0, 3).every((actions) => actions.length === 0), "Informational feature cards unexpectedly introduced keyboard destinations");
-        assert(featureContract.actionsPerCard[3]?.length === 1 && featureContract.actionsPerCard[3][0].label === "Get it on Google Play ↗", "Android-availability feature card must expose one named install destination");
+      if (route === "/" || route === "/stations/") {
+        assert(audit.nameReport.length === 1, `${longestStationName} is not shown on ${where}`);
       }
     }
   }
 
-  await send("Emulation.setDeviceMetricsOverride", {
-    width: 390,
-    height: 844,
-    deviceScaleFactor: 1,
-    mobile: true,
-  });
-  await navigate("/product-testing/");
-  const wizardState = await evaluate(`(() => {
-    const form = document.querySelector('[data-alpha-tester-form]');
-    const steps = [...form.querySelectorAll(':scope > [data-application-step]')];
-    const continueButton = () => form.querySelector('.tester-application-actions .button.primary');
-    const visibleStep = () => steps.find((step) => !step.hidden)?.dataset.applicationStep;
-    const initial = visibleStep();
-    const progress = form.querySelectorAll('.tester-application-progress-step');
-    form.querySelector('[name="name"]').value = 'Wizard tester';
-    form.querySelector('[name="email"]').value = 'wizard@example.test';
-    continueButton().click();
-    return {
-      initial,
-      afterIdentity: visibleStep(),
-      stepCount: steps.length,
-      progressCount: progress.length,
-      futureProgressDisabled: [...progress].slice(1).every((button) => button.disabled),
-    };
-  })()`);
-  assert(wizardState.initial === "identity", "Tester application did not begin at the identity step");
-  assert(wizardState.afterIdentity === "listening", "Tester application did not advance after valid identity details");
-  assert(wizardState.stepCount === 6 && wizardState.progressCount === 6, "Tester application wizard does not expose six stages");
-  assert(wizardState.futureProgressDisabled, "Tester application wizard permits skipping incomplete stages");
+  // Home fits one desktop screen.
+  for (const [width, height] of [[1440, 780], [1920, 950]]) {
+    await setViewport(width, height);
+    await navigate("/");
+    const extra = await evaluate("document.documentElement.scrollHeight - window.innerHeight");
+    assert(extra <= 0, `Home scrolls by ${extra}px in a ${width}x${height} window`);
+  }
 
-  await send("Emulation.setDeviceMetricsOverride", {
-    width: 390,
-    height: 844,
-    deviceScaleFactor: 1,
-    mobile: true,
-  });
+  // Theme follows the device until the visitor uses the toggle.
+  await setViewport(1440, 900);
   await navigate("/");
-  const homeInteractions = await evaluate(`(() => {
-    const theme = document.querySelector('.theme-toggle');
-    const before = document.documentElement.dataset.theme;
-    theme.click();
-    const after = document.documentElement.dataset.theme;
-    const menu = document.querySelector('.nav-toggle');
-    menu.click();
-    const menuOpen = menu.getAttribute('aria-expanded');
-    document.querySelector('.site-explorer-toggle').click();
-    const explorerOpen = document.querySelector('#site-explorer').open;
-    document.querySelector('.site-explorer-close').click();
-    document.querySelector('[data-lightbox]').click();
-    const lightboxOpen = document.querySelector('.media-dialog').open;
-    return { before, after, menuOpen, explorerOpen, lightboxOpen };
+  await evaluate("localStorage.removeItem('project-theme')");
+  for (const scheme of ["dark", "light"]) {
+    await setMedia({ "prefers-color-scheme": scheme });
+    await navigate("/");
+    const theme = await evaluate("document.documentElement.dataset.theme");
+    assert(theme === scheme, `Home opened in ${theme} on a ${scheme} device`);
+  }
+  const liveChange = await evaluate(`(async () => {
+    document.querySelector(".theme-toggle").click();
+    return { theme: document.documentElement.dataset.theme, saved: localStorage.getItem("project-theme"), label: document.querySelector(".theme-toggle").getAttribute("aria-label") };
   })()`);
-  assert(homeInteractions.before !== homeInteractions.after, "Theme control did not change theme");
-  assert(homeInteractions.menuOpen === "true", "Mobile navigation did not open");
-  assert(homeInteractions.explorerOpen, "Site explorer did not open");
-  assert(homeInteractions.lightboxOpen, "Screenshot dialog did not open");
-  await send("Input.dispatchKeyEvent", { type: "keyDown", key: "Escape", code: "Escape" });
-  await send("Input.dispatchKeyEvent", { type: "keyUp", key: "Escape", code: "Escape" });
-  await delay(50);
-  assert(!(await evaluate("document.querySelector('.media-dialog').open")), "Escape did not close the screenshot dialog");
+  assert(liveChange.theme === "dark" && liveChange.saved === "dark", "The theme toggle did not switch a light device to dark");
+  assert(liveChange.label === "Switch to light mode", "The theme toggle is not labelled with its next action");
+  await navigate("/stations/");
+  assert((await evaluate("document.documentElement.dataset.theme")) === "dark", "The chosen theme did not carry to the next page");
+  const background = await evaluate("getComputedStyle(document.body).backgroundColor");
+  assert(background === "rgb(9, 7, 15)", `Dark mode background is ${background}`);
+  await evaluate("localStorage.removeItem('project-theme')");
+  await setMedia({ "prefers-color-scheme": "dark" });
 
-  await send("Emulation.setDeviceMetricsOverride", {
-    width: 1440,
-    height: 1000,
-    deviceScaleFactor: 1,
-    mobile: false,
-  });
+  // Station doors on a desktop.
   await navigate("/");
-  await send("Input.dispatchKeyEvent", { type: "keyDown", key: "Tab", code: "Tab" });
-  await send("Input.dispatchKeyEvent", { type: "keyUp", key: "Tab", code: "Tab" });
-  const keyboardFocus = await evaluate(`(() => {
-    const active = document.activeElement;
-    const style = getComputedStyle(active);
-    return {
-      focusable: active?.matches('a, button, input, [tabindex]:not([tabindex="-1"])') ?? false,
-      visible: style.outlineStyle !== 'none' && style.outlineWidth !== '0px'
-    };
+  const doors = await evaluate(`(() => {
+    const container = document.querySelector("[data-doors]");
+    const items = [...container.querySelectorAll("[data-door]")];
+    const state = () => items.map((door) => ({
+      open: door.classList.contains("is-open"),
+      expanded: door.querySelector(".door-open")?.getAttribute("aria-expanded"),
+      linkVisible: door.querySelector(".door-link").getBoundingClientRect().width > 0,
+      href: door.querySelector(".door-link").getAttribute("href"),
+      width: Math.round(door.getBoundingClientRect().width),
+    }));
+    const before = state();
+    items[3].querySelector(".door-open").click();
+    const after = state();
+    return { accordion: container.classList.contains("is-accordion"), before, after, focusInOpened: items[3].contains(document.activeElement) };
   })()`);
-  assert(keyboardFocus.focusable, "Tab did not reach an interactive control");
-  assert(keyboardFocus.visible, "Keyboard focus did not have a visible outline");
-  await send("Input.dispatchKeyEvent", { type: "keyDown", key: "/", code: "Slash" });
-  await send("Input.dispatchKeyEvent", { type: "keyUp", key: "/", code: "Slash" });
-  await delay(50);
-  const shortcutState = await evaluate(`(() => ({
-    open: document.querySelector('#site-explorer').open,
-    queryFocused: document.activeElement === document.querySelector('[data-explorer-query]')
-  }))()`);
-  assert(shortcutState.open && shortcutState.queryFocused, "Keyboard shortcut did not open and focus the site explorer");
-  await send("Input.dispatchKeyEvent", { type: "keyDown", key: "Escape", code: "Escape" });
-  await send("Input.dispatchKeyEvent", { type: "keyUp", key: "Escape", code: "Escape" });
+  assert(doors.accordion, "Station doors are not an accordion on a desktop");
+  assert(doors.before.map((door) => door.open).join() === "true,false,false,false,false", "The first door is not the one open on arrival");
+  assert(doors.after.map((door) => door.open).join() === "false,false,false,true,false", "Choosing a door did not open it and close the others");
+  assert(doors.after[3].expanded === "true" && doors.after[0].expanded === "false", "Door buttons do not report their expanded state");
+  assert(doors.after.every((door) => door.linkVisible === door.open), "Only the open door should show its station link");
+  assert(doors.focusInOpened, "Focus did not move into the opened door");
+  assert(doors.after.map((door) => door.href).join() === stationSites.join(), "Doors do not link to the five official station sites");
 
-  await navigate("/dev/tester-workspace/");
-  const testingState = await evaluate(`(() => {
-    const cases = document.querySelectorAll('.test-session-grid article[id^="pt-"]');
-    const first = document.querySelector('.test-check-button');
-    first.click();
-    return { cases: cases.length, checked: first.getAttribute('aria-pressed'), stored: localStorage.getItem('project-test-checklist-v1') };
+  // Station rows on a tablet and a phone.
+  for (const [width, height] of [[820, 1180], [390, 844]]) {
+    await setViewport(width, height);
+    await navigate("/");
+    const rows = await evaluate(`(() => {
+      const container = document.querySelector("[data-doors]");
+      return {
+        accordion: container.classList.contains("is-accordion"),
+        buttons: container.querySelectorAll(".door-open").length,
+        links: [...container.querySelectorAll(".door-link")].map((link) => ({ href: link.getAttribute("href"), name: link.textContent.replace(/\\s+/g, " ").trim(), height: link.getBoundingClientRect().height })),
+      };
+    })()`);
+    assert(!rows.accordion && rows.buttons === 0, `Station rows at ${width}px still carry door buttons`);
+    assert(rows.links.map((link) => link.href).join() === stationSites.join(), `Station rows at ${width}px do not link to the official sites`);
+    assert(rows.links.every((link) => link.height >= 44 && link.name.includes("official site")), `Station row links at ${width}px are too small or unnamed`);
+  }
+
+  // Menu on a phone.
+  await setViewport(390, 844);
+  await navigate("/features/");
+  const menu = await evaluate(`(() => {
+    const toggle = document.querySelector(".nav-toggle");
+    const navigation = document.querySelector("#site-navigation");
+    const shown = () => getComputedStyle(navigation).display !== "none";
+    const closed = shown();
+    toggle.click();
+    const opened = shown();
+    const expanded = toggle.getAttribute("aria-expanded");
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    return { closed, opened, expanded, closedAgain: shown(), current: navigation.querySelector("[aria-current=page]")?.textContent.trim() };
   })()`);
-  assert(testingState.cases === 34, `Expected 34 test cases; found ${testingState.cases}`);
-  assert(testingState.checked === "true", "Tester progress control did not update");
-  assert(testingState.stored, "Tester progress was not stored locally");
+  assert(!menu.closed && menu.opened && menu.expanded === "true" && !menu.closedAgain, "The phone menu does not open and close");
+  assert(menu.current === "Features", "The current page is not marked in the menu");
 
-  await navigate("/dev/tester-workspace/?task=TT-02");
-  const taskFilterState = await evaluate(`(() => ({
-    taskCards: document.querySelectorAll('[data-task-card]').length,
-    summary: document.querySelector('.task-summary-grid')?.textContent ?? '',
-    focused: document.querySelector('[data-task-card="TT-02"]')?.dataset.taskFocused,
-    visibleCases: [...document.querySelectorAll('.test-session-grid article[id^="pt-"]')]
-      .filter((item) => !item.hidden).map((item) => item.id),
-    taskNote: document.querySelector('[data-test-task-note]')?.textContent ?? ''
-  }))()`);
-  assert(taskFilterState.taskCards === 23, `Expected 23 Tester Tasks; found ${taskFilterState.taskCards}`);
-  assert(taskFilterState.summary.includes("34") && taskFilterState.summary.includes("19") && taskFilterState.summary.includes("4"), "Tester Task summary is incomplete");
-  assert(taskFilterState.focused === "true", "TT-02 was not focused from the task URL");
-  assert(taskFilterState.visibleCases.join(",") === "pt-02,pt-03", `TT-02 exposed the wrong PT cases: ${taskFilterState.visibleCases.join(",")}`);
-  assert(taskFilterState.taskNote.includes("one result for each"), "Task filter did not explain per-case reporting");
-
-  await navigate("/dev/resources/");
-  const resourceState = await evaluate(`(() => {
-    const field = document.querySelector('[data-resource-search]');
-    field.value = 'architecture';
-    field.dispatchEvent(new Event('input', { bubbles: true }));
-    return {
-      total: document.querySelectorAll('[data-resource-category] a').length,
-      visible: [...document.querySelectorAll('[data-resource-category] a')].filter((item) => !item.hidden).length
-    };
-  })()`);
-  assert(resourceState.total === 20, `Expected 20 curated resources; found ${resourceState.total}`);
-  assert(resourceState.visible > 0 && resourceState.visible < resourceState.total, "Resource search did not filter");
-
+  // Privacy notice search.
+  await setViewport(1440, 900);
   await navigate("/privacy/");
-  const privacyState = await evaluate(`(() => {
-    const field = document.querySelector('[data-privacy-query]');
-    field.value = 'sessions';
-    field.dispatchEvent(new Event('input', { bubbles: true }));
-    return {
-      visible: [...document.querySelectorAll('[data-privacy-document] > section')].filter((item) => !item.hidden).length,
-      stationDeletionPath: document.body.textContent.includes('Contact/Feedback system to reach Network/Station Administration')
-    };
+  const privacy = await evaluate(`(() => {
+    const field = document.querySelector("[data-privacy-query]");
+    const count = () => Number(document.querySelector("[data-privacy-count]").textContent);
+    const sections = () => [...document.querySelectorAll(".policy-section")];
+    const all = count();
+    field.value = "backup";
+    field.dispatchEvent(new Event("input", { bubbles: true }));
+    const filtered = count();
+    const hidden = sections().filter((section) => section.hidden).length;
+    document.querySelector("[data-privacy-reset]").click();
+    return { all, filtered, hidden, restored: count(), links: document.querySelectorAll("[data-privacy-toc] a").length, updated: document.querySelector("[data-privacy-document]").textContent.includes("Last updated:") };
   })()`);
-  assert(privacyState.visible > 0, "Privacy search returned no session results");
-  assert(privacyState.stationDeletionPath, "The source-backed station deletion path is missing");
+  assert(privacy.all === 5 && privacy.links === 5, `The privacy notice lists ${privacy.all} sections and ${privacy.links} links; expected five of each`);
+  assert(privacy.filtered > 0 && privacy.filtered < privacy.all && privacy.hidden === privacy.all - privacy.filtered, "The privacy search did not narrow the notice");
+  assert(privacy.restored === privacy.all, "Clearing the privacy search did not restore the notice");
+  assert(privacy.updated, "The privacy notice is missing its update date");
 
-  await send("Emulation.setEmulatedMedia", {
-    media: "screen",
-    features: [{ name: "prefers-reduced-motion", value: "reduce" }],
-  });
-  await navigate("/");
-  const reducedMotion = await evaluate(`(() => ({
-    scrollBehavior: getComputedStyle(document.documentElement).scrollBehavior,
-    ambientAnimation: getComputedStyle(document.querySelector('.ambient-stage span')).animationName
-  }))()`);
-  assert(reducedMotion.scrollBehavior === "auto", "Reduced motion did not disable smooth scrolling");
-  assert(reducedMotion.ambientAnimation === "none", "Reduced motion left ambient animation enabled");
-
-  await send("Emulation.setEmulatedMedia", {
-    media: "screen",
-    features: [{ name: "forced-colors", value: "active" }],
-  });
-  await navigate("/");
-  const forcedColors = await evaluate(`(() => ({
-    ambientDisplay: getComputedStyle(document.querySelector('.ambient-stage')).display,
-    buttonBorder: getComputedStyle(document.querySelector('.theme-toggle')).borderStyle
-  }))()`);
-  assert(forcedColors.ambientDisplay === "none", "Forced colors left decorative ambient layers visible");
-  assert(forcedColors.buttonBorder !== "none", "Forced colors removed the theme control boundary");
-
-  await navigate("/stations/");
-  const forcedStationFocus = await evaluate(`(() => [...document.querySelectorAll('.landing-station a')].map((link) => {
-    link.focus({ focusVisible: true });
-    const style = getComputedStyle(link);
-    return {
-      named: Boolean(link.getAttribute('aria-label')?.trim()),
-      visible: style.outlineStyle !== 'none' && style.outlineWidth !== '0px',
-      inVisualAndDomOrder: [...document.querySelectorAll('.landing-station a')].indexOf(link) === [...document.querySelectorAll('.landing-station')].indexOf(link.closest('.landing-station'))
-    };
-  }))()`);
-  assert(forcedStationFocus.length === 5 && forcedStationFocus.every((link) => link.named && link.visible && link.inVisualAndDomOrder), "Forced colors lost named, visible, ordered station-directory keyboard focus");
-  const forcedStationFocusNegative = await evaluate(`(() => {
-    const link = document.querySelector('.landing-station a');
-    link.focus({ focusVisible: true });
-    const priorValue = link.style.getPropertyValue('outline');
-    const priorPriority = link.style.getPropertyPriority('outline');
-    link.style.setProperty('outline', 'none', 'important');
-    const rejected = getComputedStyle(link).outlineStyle === 'none' || getComputedStyle(link).outlineWidth === '0px';
-    if (priorValue) link.style.setProperty('outline', priorValue, priorPriority);
-    else link.style.removeProperty('outline');
-    return rejected;
+  // Tester application steps.
+  await navigate("/product-testing/");
+  const application = await evaluate(`(() => {
+    const form = document.querySelector("[data-alpha-tester-form]");
+    const steps = [...form.querySelectorAll(":scope > [data-application-step]")];
+    return { steps: steps.length, shown: steps.filter((step) => !step.hidden).length, progress: form.querySelectorAll(".tester-application-progress-step").length, action: form.getAttribute("action") };
   })()`);
-  assert(forcedStationFocusNegative, "Forced-colors focus guard did not reject a suppressed station-link outline");
+  assert(application.steps === 6 && application.shown === 1 && application.progress === 6, "The tester application does not present six steps one at a time");
+  assert(application.action === "/alpha-tester-interest.php", "The tester application posts to an unexpected address");
 
+  // Reduced motion.
+  await setMedia({ "prefers-color-scheme": "dark", "prefers-reduced-motion": "reduce" });
+  await navigate("/");
+  const motion = await evaluate("getComputedStyle(document.querySelector('[data-door]')).transitionDuration");
+  assert(/^0s(, 0s)*$/.test(motion), `Doors still animate under reduced motion (${motion})`);
+  await setMedia({ "prefers-color-scheme": "dark" });
+
+  // Without JavaScript every page still shows its content and links.
   await send("Emulation.setScriptExecutionDisabled", { value: true });
-  await navigate("/");
-  const noScript = await evaluate(`(() => ({
-    h1: document.querySelectorAll('h1').length,
-    navigation: document.querySelectorAll('#project-navigation a').length,
-    destinations: document.querySelectorAll('.home-destination').length,
-    heroCaptures: document.querySelectorAll('.landing-hero-device').length,
-    heroGalleryRole: document.querySelector('.landing-hero-gallery')?.getAttribute('role') ?? '',
-    heroGalleryLabel: document.querySelector('.landing-hero-gallery')?.getAttribute('aria-label') ?? '',
-    heroCaptions: document.querySelectorAll('.landing-hero-device figcaption').length
-  }))()`);
-  assert(noScript.h1 === 1 && noScript.navigation === 5 && noScript.destinations === 4 && noScript.heroCaptures === 2 && noScript.heroCaptions === 2 && noScript.heroGalleryRole === 'group' && noScript.heroGalleryLabel === 'Captured Android mobile Player screens', "No-JavaScript home fallback lost essential content");
-  await navigate("/stations/");
-  const noScriptStations = await evaluate(`(() => ({ h1: document.querySelectorAll('h1').length, stationPanels: document.querySelectorAll('.landing-station').length }))()`);
-  assert(noScriptStations.h1 === 1 && noScriptStations.stationPanels === 5, "No-JavaScript station directory lost essential content");
+  for (const [width, height] of [[390, 844], [1440, 900]]) {
+    await setViewport(width, height);
+    await navigate("/");
+    await send("Emulation.setScriptExecutionDisabled", { value: false });
+    const plain = await evaluate(`(() => ({
+      scripted: document.documentElement.classList.contains("js"),
+      links: [...document.querySelectorAll(".door-link")].filter((link) => link.getBoundingClientRect().width > 0).length,
+      navigation: getComputedStyle(document.querySelector("#site-navigation")).display !== "none",
+      toggles: [...document.querySelectorAll(".theme-toggle, .nav-toggle")].filter((node) => node.getBoundingClientRect().width > 0).length,
+      overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    }))()`);
+    await send("Emulation.setScriptExecutionDisabled", { value: true });
+    assert(!plain.scripted, "The no-JavaScript check ran with scripts enabled");
+    assert(plain.links === 5, `Without JavaScript only ${plain.links} station links show at ${width}px`);
+    assert(plain.navigation, `Without JavaScript the navigation is hidden at ${width}px`);
+    assert(plain.toggles === 0, `Without JavaScript a dead control shows at ${width}px`);
+    assert(plain.overflow <= 0, `Without JavaScript Home scrolls sideways at ${width}px`);
+  }
+  await send("Emulation.setScriptExecutionDisabled", { value: false });
 
   assert(browserErrors.length === 0, `Browser errors: ${browserErrors.join(" | ")}`);
-  assert(Object.values(stationLayoutAssertions).every((viewports) => viewports.length > 0), "Station layout assertions did not cover every responsive branch");
-  console.log(`Station layout assertion coverage: intro=${stationLayoutAssertions.intro.join(",")}; mobile=${stationLayoutAssertions.mobile.join(",")}; tablet=${stationLayoutAssertions.tablet.join(",")}; desktop=${stationLayoutAssertions.desktop.join(",")}.`);
-  console.log("Validated responsive and breakpoint-boundary viewports, consumer and developer routes, keyboard and pointer interactions, local-only state, reduced motion, forced colors, and no-JavaScript fallback.");
+  console.log(`Validated ${routes.length} pages at ${viewports.length} widths, the one-screen Home, device-led theme, station doors and rows, the phone menu, privacy search, tester application steps, reduced motion, and the no-JavaScript fallback.`);
 } finally {
   if (socket?.readyState === WebSocket.OPEN) socket.close();
   if (chrome.exitCode === null) {

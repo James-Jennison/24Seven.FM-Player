@@ -88,3 +88,17 @@ the Mozilla Public License, Version 2.0:
 
 The upstream notice is retained in the release artifact at
 `okhttp3/internal/publicsuffix/NOTICE`.
+
+## Website typefaces — SIL Open Font License 1.1
+
+The project website, not the Android application, serves two typefaces from
+`privacy-site/assets/fonts/`:
+
+- Instrument Serif, Copyright 2022 The Instrument Serif Project Authors
+  (<https://github.com/Instrument/instrument-serif>)
+- Instrument Sans, Copyright 2022 The Instrument Sans Project Authors
+  (<https://github.com/Instrument/instrument-sans>)
+
+Both are used unmodified, as the Latin subset distributed by Google Fonts. The
+licence text is published beside the font files as `OFL-InstrumentSerif.txt`
+and `OFL-InstrumentSans.txt`.

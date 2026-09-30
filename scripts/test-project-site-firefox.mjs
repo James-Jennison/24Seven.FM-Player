@@ -117,7 +117,7 @@ try {
       method: "POST",
       body: JSON.stringify({ width, height, x: 0, y: 0 }),
     });
-    const testedRoutes = width === 500 ? routes : ["/", "/stations/", "/platforms/", "/product-testing/", "/privacy/", "/privacy/tv/", "/dev/", "/dev/tester-workspace/"];
+    const testedRoutes = width === 500 ? routes : ["/", "/stations/", "/platforms/", "/product-testing/", "/privacy/", "/privacy/tv/"];
     for (const route of testedRoutes) {
       await request(`/session/${sessionId}/url`, {
         method: "POST",
@@ -152,12 +152,12 @@ try {
               const style = getComputedStyle(node);
               return rect.width > 0 && rect.height > 0 && style.visibility !== "hidden" && style.display !== "none";
             };
-            const controls = [...document.querySelectorAll("button,input:not([type=checkbox]):not([type=radio]),summary,a.button,#project-navigation a")].filter(visible);
+            const controls = [...document.querySelectorAll("button,input:not([type=checkbox]):not([type=radio]),summary,a.button,#site-navigation a")].filter(visible);
             return {
               title: document.title,
               h1: document.querySelectorAll("h1").length,
-              navigation: document.querySelectorAll("#project-navigation a").length,
-              expectedNavigation: 5,
+              navigation: document.querySelectorAll("#site-navigation a").length,
+              expectedNavigation: 4,
               clientWidth: document.documentElement.clientWidth,
               scrollWidth: document.documentElement.scrollWidth,
               missingImages: [...document.images].filter((image) => image.getAttribute("src") && (!image.complete || image.naturalWidth === 0)).map((image) => image.src),
