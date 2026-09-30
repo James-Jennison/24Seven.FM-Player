@@ -30,9 +30,9 @@
 - For any 24Seven.FM Player website deployment, verification, or server-side investigation, use only the canonical SSH alias `website-vm-admin`.
 - Do not use `webuzo-production-admin` for this project. Resolve the required alias through the managed SSH configuration before connecting.
 - The Player site is served at `24sevenfmplayer.com`. `player.jamesjennison.net`, `24sevenfmplayer.net`, and `24sevenfmplayer.app` are redirect-only through Cloudflare and are not deployment targets. GitHub Pages is not used.
-- The site source is the `codex/site-production-release` lineage, not `main`. Its public wording is governed by `docs/WEBSITE_FACTS_CONTRACT.json` on that lineage; run `scripts/validate-project-site.sh` there before any deployment.
+- The site source is the `codex/site-c2-redesign` lineage, not `main`. Its public wording is governed by `docs/WEBSITE_FACTS_CONTRACT.json` on that lineage; run `scripts/validate-project-site.sh` there before any deployment.
 - Discover the live static artifact from the active HTTP and HTTPS `24sevenfmplayer.com` virtual-host mappings; both mappings must resolve to the same directory. Do not rely on a stale documented path or infer a target from another site.
-- Build the reviewed `_site/` artifact locally, stage it as a sibling directory, compare file hashes using relative paths, then atomically swap the verified staging directory into place. Retain the previous live directory as the rollback point and run public HTTPS verification before reporting success.
+- Build the reviewed `_site/` artifact on the GTHost build server (`gthost-build01`), never on the workstation, and record its source commit and file-hash manifest. Copy it to the web host, stage it as a sibling directory, compare file hashes using relative paths, then atomically swap the verified staging directory into place. Retain the previous live directory as the rollback point and run public HTTPS verification before reporting success.
 - Directories beside the document root are publicly served by the parent site. After verification, move the rollback into `site-rollbacks/24sevenfmplayer.com/` in the account's home directory and confirm its former address returns 404.
 
 ## Milestones
