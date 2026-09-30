@@ -132,7 +132,8 @@ try {
   await send("Log.enable");
 
   const routes = ["/", "/stations/", "/features/", "/platforms/", "/product-testing/", "/privacy/", "/privacy/tv/", "/404.html"];
-  const stationSites = ["https://streamingsoundtracks.com/", "https://1980s.fm/", "https://adagio.fm/", "https://death.fm/", "https://entranced.fm/"];
+  // The Player lists its stations alphabetically by name; the site follows it.
+  const stationSites = ["https://1980s.fm/", "https://adagio.fm/", "https://death.fm/", "https://entranced.fm/", "https://streamingsoundtracks.com/"];
   const longestStationName = "StreamingSoundtracks.com";
 
   async function setViewport(width, height) {
