@@ -78,7 +78,8 @@ async function evaluate(expression) {
     awaitPromise: true,
   });
   if (response.exceptionDetails) {
-    throw new Error(response.exceptionDetails.text ?? "Browser evaluation failed");
+    const details = response.exceptionDetails;
+    throw new Error(details.exception?.description ?? details.text ?? "Browser evaluation failed");
   }
   return response.result.value;
 }
@@ -166,7 +167,7 @@ try {
       navigation: document.querySelectorAll("#site-navigation a").length,
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
       missingImages: [...document.images].filter((image) => !image.complete || image.naturalWidth === 0).map((image) => image.getAttribute("src")),
-      retiredLinks: [...document.querySelectorAll("a[href]")].map((link) => link.getAttribute("href")).filter((href) => /^\/(dev|turnstile-test|roadmap|development|resources|testing)(\/|$)/.test(href)),
+      retiredLinks: [...document.querySelectorAll("a[href]")].map((link) => link.getAttribute("href")).filter((href) => new RegExp("^/(dev|turnstile-test|roadmap|development|resources|testing)(/|$)").test(href)),
       undersized: controls.filter((node) => node.getBoundingClientRect().width < 24 || node.getBoundingClientRect().height < 24).map((node) => (node.textContent || node.getAttribute("aria-label") || node.tagName).trim().slice(0, 40)),
       nameReport,
     };
@@ -190,6 +191,19 @@ try {
     await setViewport(viewport.width, viewport.height);
     for (const route of routes) {
       await navigate(route);
+      // Images below the first screen load only once they are scrolled to.
+      await evaluate(`(async () => {
+        const step = Math.max(200, Math.floor(window.innerHeight / 2));
+        for (let y = 0; y <= document.documentElement.scrollHeight; y += step) {
+          window.scrollTo(0, y);
+          await new Promise((resolve) => setTimeout(resolve, 20));
+        }
+        const deadline = Date.now() + 3000;
+        while (Date.now() < deadline && [...document.images].some((image) => !image.complete)) {
+          await new Promise((resolve) => setTimeout(resolve, 50));
+        }
+        window.scrollTo(0, 0);
+      })()`);
       const audit = await evaluate(pageAudit);
       const where = `${route} at ${viewport.width}px (${viewport.label})`;
       assert(audit.title, `Missing title on ${where}`);

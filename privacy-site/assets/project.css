@@ -997,6 +997,7 @@ a:hover { color: var(--text); }
   .door .button.door-link:hover {
     grid-area: link;
     margin: 0;
+    min-width: 44px;
     min-height: 44px;
     padding: 0;
     background: transparent;
