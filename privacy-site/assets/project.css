@@ -956,7 +956,7 @@ a:hover { color: var(--text); }
 
 /* Below 1240 pixels the doors become rows. */
 @media (max-width: 1239px) {
-  .home-hero { min-height: 0; }
+  .home-hero { flex: 0 0 auto; min-height: 0; }
   .home-hero-phone { width: 300px; }
   .home-hero-phone .phone { top: 26px; right: 22px; width: 244px; }
   .home-hero-copy { max-width: calc(100% - 320px); }
