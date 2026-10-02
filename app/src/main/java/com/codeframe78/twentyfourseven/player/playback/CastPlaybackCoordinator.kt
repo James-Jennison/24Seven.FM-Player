@@ -45,7 +45,10 @@ internal class CastPlaybackCoordinator(
     }
 
     private val appContext = context.applicationContext
-    private val castContext = CastContext.getSharedInstance(appContext)
+    // Cast needs Google Play services. Where they are missing or out of date the Player stays a local player.
+    private val castContext = runCatching { CastContext.getSharedInstance(appContext) }
+        .onFailure { Log.w(LogTag, "Cast is unavailable on this device") }
+        .getOrNull()
     private var selectedStation: Station? = null
     private var nowPlaying: NowPlayingState? = null
     private var shouldPlay = false
@@ -113,8 +116,10 @@ internal class CastPlaybackCoordinator(
     }
 
     init {
-        castContext.sessionManager.addSessionManagerListener(sessionListener, CastSession::class.java)
-        castContext.sessionManager.currentCastSession?.takeIf(CastSession::isConnected)?.let(::attach)
+        castContext?.sessionManager?.let { sessionManager ->
+            sessionManager.addSessionManagerListener(sessionListener, CastSession::class.java)
+            sessionManager.currentCastSession?.takeIf(CastSession::isConnected)?.let(::attach)
+        }
     }
 
     fun selectStation(station: Station) {

@@ -68,7 +68,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        requestedChatStationId.value = intent.chatStationId()
+        // A recreated Activity still holds the launching intent; its chat destination was already applied.
+        if (savedInstanceState == null) requestedChatStationId.value = intent.chatStationId()
         if (
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED

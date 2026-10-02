@@ -41,5 +41,6 @@ class CastExpandedControlsActivity : ExpandedControllerActivity() {
 }
 
 internal fun setUpCastRouteButton(context: Context, button: MediaRouteButton) {
-    CastButtonFactory.setUpMediaRouteButton(context.applicationContext, button)
+    // Without usable Google Play services there is no Cast route to offer; the button stays inert.
+    runCatching { CastButtonFactory.setUpMediaRouteButton(context.applicationContext, button) }
 }
