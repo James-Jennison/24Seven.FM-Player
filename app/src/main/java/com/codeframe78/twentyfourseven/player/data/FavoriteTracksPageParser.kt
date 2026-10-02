@@ -77,10 +77,17 @@ internal class FavoriteTracksPageParser {
                     availabilityMessage = availability,
                     availability = requestTrack?.availability
                         ?: classifyStationRequestAvailability(availability),
+                    albumId = requestTrack?.albumId ?: rowAlbumId(row),
                 )
             }
             .take(MAX_TRACKS)
             .toList()
+    }
+
+    /** A row that cannot be requested still names its album in the links beside the track. */
+    private fun rowAlbumId(row: org.jsoup.nodes.Element): String? = row.select("a[href]").firstNotNullOfOrNull { link ->
+        val href = link.attr("href")
+        (ALBUM_QUERY.find(href) ?: ALBUM_STORE_PATH.find(href))?.groupValues?.get(1)?.takeIf { it.matches(SAFE_ALBUM_ID) }
     }
 
     private fun parseRequestTrack(
@@ -133,6 +140,8 @@ internal class FavoriteTracksPageParser {
         const val MAX_TRACKS = 5_000
         val NUMERIC_ID = Regex("^[0-9]{1,10}$")
         val SAFE_ALBUM_ID = Regex("^[A-Za-z0-9_.-]{1,64}$")
+        val ALBUM_QUERY = Regex("[?&]asin=([^&#]+)")
+        val ALBUM_STORE_PATH = Regex("/dp/ASIN/([^/?#]+)")
     }
 }
 

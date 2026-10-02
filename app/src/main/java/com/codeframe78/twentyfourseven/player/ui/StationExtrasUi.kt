@@ -27,6 +27,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -54,6 +55,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -99,6 +101,18 @@ internal val LocalStationExtrasActions = staticCompositionLocalOf { StationExtra
 
 /** Opens a member's profile card from wherever that member's name is shown; null where profiles are unavailable. */
 internal val LocalMemberProfileOpener = staticCompositionLocalOf<((String) -> Unit)?> { null }
+
+/** Makes a member's name open that member's profile card. It stays plain text where profiles are unavailable. */
+@Composable
+internal fun Modifier.opensMemberProfile(name: String?): Modifier {
+    val open = LocalMemberProfileOpener.current
+    val member = name?.takeIf(String::isNotBlank)
+    return if (open == null || member == null) {
+        this
+    } else {
+        clickable(onClickLabel = "View profile", role = Role.Button) { open(member) }
+    }
+}
 
 @Composable
 internal fun MemberProfileDialog(state: MainUiState, actions: StationExtrasActions, onSendMessage: (String) -> Unit) {
@@ -213,18 +227,11 @@ private fun MemberProfileBody(
     }
 }
 
-/** True while another member's favorites list covers the screen; that list then hosts the request confirmation. */
-internal val MainUiState.isBrowsingMemberFavorites: Boolean
-    get() = extras?.memberFavorites?.let { it.status != MemberFavoritesStatus.Closed } == true
-
 @Composable
 internal fun MemberFavoritesDialog(
     state: MainUiState,
     actions: StationExtrasActions,
     onPrepareRequest: (FavoriteTrack) -> Unit,
-    onCancelRequest: () -> Unit,
-    onConfirmRequest: (String) -> Unit,
-    onReviewTerms: () -> Unit,
 ) {
     val favorites = state.extras?.memberFavorites ?: return
     if (favorites.status == MemberFavoritesStatus.Closed) return
@@ -320,7 +327,6 @@ internal fun MemberFavoritesDialog(
                 }
             }
         }
-        RequestConfirmationDialog(state, onCancelRequest, onConfirmRequest, onReviewTerms)
     }
 }
 
@@ -447,7 +453,12 @@ private fun PlayedHistoryList(history: PlayedHistoryState, onRetry: () -> Unit) 
 @Composable
 private fun PlayedHistoryRow(entry: PlayedHistoryEntry) {
     val openProfile = LocalMemberProfileOpener.current
-    Card(Modifier.fillMaxWidth()) {
+    Card(
+        Modifier
+            .fillMaxWidth()
+            .clip(CardDefaults.shape)
+            .opensAlbum(entry.albumId, entry.albumTitle, entry.artworkUrl),
+    ) {
         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(
                 historyTimeLabel(entry.playedAtLabel),
@@ -590,12 +601,26 @@ private fun StationNewsCard(story: StationNewsStory) {
     Card(onClick = { expanded = !expanded }, modifier = Modifier.fillMaxWidth().testTag("station_news_story")) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(story.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-            listOfNotNull(story.publishedLabel, story.author?.let { "by $it" }).takeIf(List<String>::isNotEmpty)?.let { meta ->
-                Text(
-                    meta.joinToString(" · "),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+            if (story.publishedLabel != null || story.author != null) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    story.publishedLabel?.let { published ->
+                        Text(
+                            if (story.author == null) published else "$published · ",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    story.author?.let { author ->
+                        Text(
+                            "by $author",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.opensMemberProfile(author).padding(vertical = 6.dp),
+                        )
+                    }
+                }
             }
             if (story.coverUrls.isNotEmpty()) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -604,7 +629,10 @@ private fun StationNewsCard(story: StationNewsStory) {
                             model = cover,
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
-                            modifier = Modifier.size(64.dp).clip(RoundedCornerShape(8.dp)),
+                            modifier = Modifier
+                                .size(64.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .opensAlbum(albumIdFromCoverUrl(cover), null, cover),
                         )
                     }
                 }

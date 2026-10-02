@@ -78,6 +78,25 @@ class FavoriteTracksPageParserTest {
         assertEquals("197907", tracks[0].requestTrack?.songId)
         assertNull(tracks[1].requestTrack)
         assertEquals("The artist is already in queue.", tracks[1].availabilityMessage)
+        assertEquals("B000KNB1IM", tracks[0].albumId)
+        assertNull(tracks[1].albumId)
+    }
+
+    @Test
+    fun `a track that cannot be requested still names its album from the links beside it`() {
+        val html = """
+            <table><tr>
+              <td>7</td>
+              <td><img src="/images/requestbutton_unavailable.gif" title="Played recently."></td>
+              <td><span><b>Opening</b></span><br><span>Album Two</span></td>
+              <td><span><b>Composer Two</b></span><br><span>Soundtrack</span></td>
+              <td>2001</td><td>4:53</td>
+              <td><a href="https://www.amazon.com/dp/ASIN/B000000002/example-20" target="_blank">Buy</a></td>
+              <td><a href="/modules.php?name=Album&amp;asin=B000000002">Detail</a></td>
+            </tr></table>
+        """.trimIndent()
+
+        assertEquals("B000000002", parser.parseTracks(html, origin).single().albumId)
     }
 
     @Test

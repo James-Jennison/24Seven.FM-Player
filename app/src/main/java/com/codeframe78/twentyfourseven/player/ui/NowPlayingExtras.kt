@@ -90,13 +90,13 @@ internal fun NowPlayingArtworkOverlay(
         TrackActionButtons(state, actions, Modifier.align(Alignment.TopEnd).padding(actionPadding))
         if (!showsCaption || maxWidth < MinimumOverlayArtworkSize) return@BoxWithConstraints
         val nowPlaying = state.nowPlaying
-        val isPlaying = state.playback.status == PlaybackStatus.Playing
+        val request = requestLine(nowPlaying)
         val caption = listOfNotNull(
             favoriteResultLine(state),
-            requestLine(nowPlaying),
+            request,
             nowPlaying.listenerCount?.let(::listenerCountLabel),
         )
-        val showsProgress = isPlaying &&
+        val showsProgress = state.playback.status.followsStationTrack &&
             nowPlaying.trackLengthMillis != null &&
             nowPlaying.trackStartedElapsedRealtimeMillis != null
         if (caption.isNotEmpty() || showsProgress) {
@@ -115,7 +115,9 @@ internal fun NowPlayingArtworkOverlay(
                         style = MaterialTheme.typography.labelLarge,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.testTag("now_playing_caption_$index"),
+                        modifier = Modifier
+                            .testTag("now_playing_caption_$index")
+                            .then(if (line === request) Modifier.opensMemberProfile(nowPlaying.requesterName) else Modifier),
                     )
                 }
                 if (showsProgress) TrackProgress(nowPlaying)
@@ -128,11 +130,12 @@ internal fun NowPlayingArtworkOverlay(
 @Composable
 internal fun NowPlayingInlineExtras(state: MainUiState, modifier: Modifier = Modifier) {
     val nowPlaying = state.nowPlaying
-    val caption = favoriteResultLine(state)
+    val favoriteResult = favoriteResultLine(state)
+    val caption = favoriteResult
         ?: listOfNotNull(requestLine(nowPlaying), nowPlaying.listenerCount?.let(::listenerCountLabel))
             .joinToString(" • ")
             .takeIf(String::isNotEmpty)
-    val showsProgress = state.playback.status == PlaybackStatus.Playing &&
+    val showsProgress = state.playback.status.followsStationTrack &&
         nowPlaying.trackLengthMillis != null &&
         nowPlaying.trackStartedElapsedRealtimeMillis != null
     if (caption == null && !showsProgress) return
@@ -145,7 +148,9 @@ internal fun NowPlayingInlineExtras(state: MainUiState, modifier: Modifier = Mod
                 style = MaterialTheme.typography.labelLarge,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.testTag("now_playing_caption_0"),
+                modifier = Modifier
+                    .testTag("now_playing_caption_0")
+                    .then(if (favoriteResult == null) Modifier.opensMemberProfile(nowPlaying.requesterName) else Modifier),
             )
         }
         if (showsProgress) {
@@ -153,6 +158,13 @@ internal fun NowPlayingInlineExtras(state: MainUiState, modifier: Modifier = Mod
         }
     }
 }
+
+/**
+ * True when the shown track is the one the station is playing right now, so its progress can be drawn: while this
+ * device is playing it, and while the device is idle and the Player shows what is on air.
+ */
+internal val PlaybackStatus.followsStationTrack: Boolean
+    get() = this == PlaybackStatus.Playing || showsOnAirPreview
 
 @Composable
 private fun TrackActionButtons(state: MainUiState, actions: TrackActions, modifier: Modifier) {

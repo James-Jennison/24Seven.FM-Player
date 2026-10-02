@@ -52,13 +52,8 @@ internal fun FavoriteTracksScreen(
     onRefresh: () -> Unit,
     onPrepareRequest: (FavoriteTrack) -> Unit,
     onCancelRequest: () -> Unit,
-    onConfirmRequest: (String) -> Unit,
     onOpenAccount: () -> Unit,
-    onReviewTerms: () -> Unit,
 ) {
-    if (!state.isBrowsingMemberFavorites) {
-        RequestConfirmationDialog(state, onCancelRequest, onConfirmRequest, onReviewTerms)
-    }
     val favorites = state.favorites
     val signedIn = state.auth?.status == AuthStatus.SignedIn
     var filter by rememberSaveable(state.selectedStation?.id?.value) { mutableStateOf("") }
@@ -76,8 +71,13 @@ internal fun FavoriteTracksScreen(
     }
 
     Box(Modifier.fillMaxSize()) {
+        RefreshableBox(
+            onRefresh = { if (signedIn) onRefresh() },
+            modifier = Modifier.fillMaxSize().padding(padding),
+            isLoading = favorites?.status == FavoriteTracksLoadStatus.Loading,
+        ) {
         LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(padding).testTag("favorite_tracks_list"),
+            modifier = Modifier.fillMaxSize().testTag("favorite_tracks_list"),
             contentPadding = PaddingValues(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -187,6 +187,7 @@ internal fun FavoriteTracksScreen(
                 }
             }
         }
+        }
 
         FavoriteRequestFeedback(
             notice = state.requests?.notice,
@@ -272,12 +273,22 @@ internal fun FavoriteTrackCard(
             track.availability.detail?.let {
                 Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            if (available) {
-                Button(
-                    onClick = { onPrepareRequest(track) },
-                    enabled = canRequest,
-                    modifier = Modifier.align(Alignment.End),
-                ) { Text("Request Now") }
+            val openAlbum = LocalAlbumOpener.current.takeIf { track.albumId != null }
+            if (available || openAlbum != null) {
+                Row(
+                    Modifier.align(Alignment.End),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    if (openAlbum != null) {
+                        TextButton(
+                            onClick = { track.albumId?.let { openAlbum(AlbumLink(it, track.album.takeIf(String::isNotBlank))) } },
+                        ) { Text("View album") }
+                    }
+                    if (available) {
+                        Button(onClick = { onPrepareRequest(track) }, enabled = canRequest) { Text("Request Now") }
+                    }
+                }
             }
         }
     }

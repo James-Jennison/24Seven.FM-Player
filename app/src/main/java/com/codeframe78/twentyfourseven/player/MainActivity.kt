@@ -54,6 +54,7 @@ import com.codeframe78.twentyfourseven.player.ui.MainDestination
 import com.codeframe78.twentyfourseven.player.ui.MainViewModel
 import com.codeframe78.twentyfourseven.player.ui.RadioApp
 import com.codeframe78.twentyfourseven.player.ui.PrivateMessageActions
+import com.codeframe78.twentyfourseven.player.ui.AlbumActions
 import com.codeframe78.twentyfourseven.player.ui.StationExtrasActions
 import com.codeframe78.twentyfourseven.player.ui.SleepTimerActions
 import com.codeframe78.twentyfourseven.player.ui.TrackActions
@@ -100,6 +101,7 @@ class MainActivity : AppCompatActivity() {
                     container.trackActionsRepository,
                     container.privateMessagesRepository,
                     container.stationExtrasRepository,
+                    container.nowPlayingDetailsRepository,
                 ),
             )
             val state = viewModel.uiState.collectAsStateWithLifecycle().value
@@ -193,6 +195,12 @@ class MainActivity : AppCompatActivity() {
                             onNewMessage = viewModel::beginPrivateMessage,
                             onSend = viewModel::sendPrivateMessage,
                             onCancelCompose = viewModel::cancelPrivateMessage,
+                        ),
+                        albumActions = AlbumActions(
+                            onOpen = { album -> viewModel.openAlbum(album.albumId, album.title, album.artworkUrl) },
+                            onClose = viewModel::closeAlbum,
+                            onRate = viewModel::rateAlbum,
+                            onPrepareRequest = viewModel::prepareSongRequest,
                         ),
                         stationExtrasActions = StationExtrasActions(
                             onOpenProfile = viewModel::openMemberProfile,

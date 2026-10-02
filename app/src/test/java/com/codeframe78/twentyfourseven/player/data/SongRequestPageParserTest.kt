@@ -82,6 +82,42 @@ class SongRequestPageParserTest {
     }
 
     @Test
+    fun `album parser reads the track title from the stations' structured markup`() {
+        val album = parser.parseAlbum(
+            """
+                <meta property="og:title" content="Album Two - Composer Two | StreamingSoundtracks.com">
+                <table>
+                  <tr><th>Request</th><th>#</th><th>Track Listing</th><th>Length</th><th>Played</th></tr>
+                  <tr itemprop="track" itemscope itemtype="https://schema.org/MusicRecording">
+                    <td><a href="../../modules.php?name=Req&amp;asin=B000000002&songID=328994"><img src="modules/SAM/images/requestbutton_request.png" title="Last played: 2026-08-20 11:31:16" alt="Request status"></a></td>
+                    <td>01</td>
+                    <td><span itemprop="name">Opening</span><br><i itemprop="byArtist" itemscope><a href="https://www.streamingsoundtracks.com/modules.php?name=Requests&amp;postartistsearch=true&amp;artist=Composer+Two"><span itemprop="name">Composer Two</span></a></i></td>
+                    <td><time itemprop="duration" datetime="PT6M48S">6:48</time></td>
+                    <td>128</td>
+                  </tr>
+                  <tr itemprop="track" itemscope itemtype="https://schema.org/MusicRecording">
+                    <td><img src="modules/SAM/images/requestbutton_disabled.png" title="Last played: 2026-09-18 03:58:54; Request cooldown ends: 2026-10-03 03:58:54" alt="Request status"></td>
+                    <td>02</td>
+                    <td><span itemprop="name">Finale</span><br><i itemprop="byArtist" itemscope><a href="https://www.streamingsoundtracks.com/modules.php?name=Requests&amp;postartistsearch=true&amp;artist=Composer+Two"><span itemprop="name">Composer Two</span></a></i></td>
+                    <td><time itemprop="duration" datetime="PT3M05S">3:05</time></td>
+                    <td>7</td>
+                  </tr>
+                </table>
+            """.trimIndent(),
+            "https://streamingsoundtracks.com/",
+            "B000000002",
+        )
+
+        assertEquals("Album Two - Composer Two", album.title)
+        assertEquals(listOf("Opening", "Finale"), album.tracks.map { it.title })
+        assertEquals(listOf("Composer Two", "Composer Two"), album.tracks.map { it.artist })
+        assertEquals(listOf("6:48", "3:05"), album.tracks.map { it.duration })
+        assertEquals("328994", album.tracks[0].songId)
+        assertEquals(true, album.tracks[0].eligible)
+        assertEquals(false, album.tracks[1].eligible)
+    }
+
+    @Test
     fun `parses one same-origin random suggestion`() {
         val suggestion = parser.parseSuggestion(
             """

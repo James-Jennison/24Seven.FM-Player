@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Policy
+import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Radio
@@ -38,6 +39,7 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
@@ -164,6 +166,12 @@ private fun NavigationItemIcon(item: NavigationItem, unreadMessages: Int) {
     }
 }
 
+internal fun messagesButtonDescription(unreadMessages: Int): String = when {
+    unreadMessages <= 0 -> "Private messages"
+    unreadMessages == 1 -> "Private messages, 1 unread"
+    else -> "Private messages, $unreadMessages unread"
+}
+
 internal fun navigationItemDescription(destination: MainDestination, label: String, unreadMessages: Int): String =
     when {
         destination != MainDestination.More || unreadMessages <= 0 -> label
@@ -223,17 +231,31 @@ internal fun RadioApp(
     trackActions: TrackActions = TrackActions(),
     privateMessageActions: PrivateMessageActions = PrivateMessageActions(),
     stationExtrasActions: StationExtrasActions = StationExtrasActions(),
+    albumActions: AlbumActions = AlbumActions(),
 ) {
     val profileOpener = stationExtrasActions.onOpenProfile.takeIf {
         state.selectedStation?.capabilities?.supportsMemberProfiles == true &&
             state.communitySafety.canViewCommunityContent
     }
+    val albumOpener = albumActions.onOpen.takeIf { state.selectedStation?.capabilities?.supportsRequests == true }
+    var showMessages by rememberSaveable(state.selectedStation?.id?.value) { mutableStateOf(false) }
+    val messagesOpener: (() -> Unit)? = if (state.selectedStation?.capabilities?.supportsPrivateMessages == true) {
+        { showMessages = true }
+    } else {
+        null
+    }
     CompositionLocalProvider(
         LocalStationExtrasActions provides stationExtrasActions,
         LocalMemberProfileOpener provides profileOpener,
+        LocalAlbumOpener provides albumOpener,
+        LocalMessagesOpener provides messagesOpener,
     ) {
-        RadioAppContent(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, trackActions, privateMessageActions)
+        RadioAppContent(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, trackActions)
+        if (showMessages && messagesOpener != null) {
+            PrivateMessagesScreen(state, privateMessageActions, communitySafetyActions) { showMessages = false }
+        }
         PlayedHistoryDialog(state, stationExtrasActions)
+        AlbumDialog(state, albumActions)
         MemberProfileDialog(state, stationExtrasActions, privateMessageActions.onNewMessage)
         PrivateMessageComposeDialog(state.privateMessages?.compose, privateMessageActions)
     }
@@ -272,14 +294,13 @@ private fun RadioAppContent(
     communitySafetyActions: CommunitySafetyActions,
     onOpenAppGuide: () -> Unit,
     trackActions: TrackActions,
-    privateMessageActions: PrivateMessageActions,
 ) {
     var showTerms by rememberSaveable { mutableStateOf(false) }
     BoxWithConstraints(Modifier.fillMaxSize()) {
         if (usesNavigationRail(maxWidth, maxHeight)) {
-            TabletShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, trackActions = trackActions, privateMessageActions = privateMessageActions) { showTerms = true }
+            TabletShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, trackActions = trackActions) { showTerms = true }
         } else {
-            PhoneShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, isCoverDisplay = isCoverDisplayWindow(maxWidth, maxHeight), onOpenAppGuide = onOpenAppGuide, trackActions = trackActions, privateMessageActions = privateMessageActions) { showTerms = true }
+            PhoneShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, isCoverDisplay = isCoverDisplayWindow(maxWidth, maxHeight), onOpenAppGuide = onOpenAppGuide, trackActions = trackActions) { showTerms = true }
         }
     }
     if (showTerms) {
@@ -330,14 +351,13 @@ private fun PhoneShell(
     isCoverDisplay: Boolean,
     onOpenAppGuide: () -> Unit,
     trackActions: TrackActions,
-    privateMessageActions: PrivateMessageActions,
     onReviewTerms: () -> Unit,
 ) {
     val showNavigationLabels = LocalDensity.current.fontScale <= 1.5f
     Scaffold(
         topBar = {
             if (!isCoverDisplay) {
-                StationTopBar(onSelectDestination)
+                StationTopBar(state, onSelectDestination)
             }
         },
         bottomBar = {
@@ -374,12 +394,14 @@ private fun PhoneShell(
             }
         },
     ) { padding ->
-        DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, onReviewTerms, isCoverDisplay, trackActions, privateMessageActions)
+        DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, onReviewTerms, isCoverDisplay, trackActions)
     }
-    if (state.destination != MainDestination.Favorites) {
+    if (state.destination != MainDestination.Favorites && state.album == null) {
         RequestResultDialog(state, onCancelRequest)
     }
-    MemberFavoritesDialog(state, LocalStationExtrasActions.current, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onReviewTerms)
+    MemberFavoritesDialog(state, LocalStationExtrasActions.current, onPrepareFavoriteRequest)
+    // One confirmation for every place a request can start from; it opens last, so it sits above those screens.
+    RequestConfirmationDialog(state, onCancelRequest, onConfirmRequest, onReviewTerms)
 }
 
 /**
@@ -433,7 +455,6 @@ private fun TabletShell(
     communitySafetyActions: CommunitySafetyActions,
     onOpenAppGuide: () -> Unit,
     trackActions: TrackActions,
-    privateMessageActions: PrivateMessageActions,
     onReviewTerms: () -> Unit,
 ) {
     val showNavigationLabels = LocalDensity.current.fontScale <= 1.5f
@@ -464,27 +485,30 @@ private fun TabletShell(
         VerticalDivider(Modifier.fillMaxHeight())
         Scaffold(
             modifier = Modifier.weight(1f),
-            topBar = { StationTopBar(onSelectDestination) },
+            topBar = { StationTopBar(state, onSelectDestination) },
             bottomBar = {
                 if (state.destination != MainDestination.Player) {
                     PersistentMiniPlayer(state, onSelectDestination, onPlay, onPause)
                 }
             },
         ) { padding ->
-            DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, onReviewTerms, trackActions = trackActions, privateMessageActions = privateMessageActions)
+            DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, onReviewTerms, trackActions = trackActions)
         }
-        if (state.destination != MainDestination.Favorites) {
+        if (state.destination != MainDestination.Favorites && state.album == null) {
             RequestResultDialog(state, onCancelRequest)
         }
-        MemberFavoritesDialog(state, LocalStationExtrasActions.current, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onReviewTerms)
+        MemberFavoritesDialog(state, LocalStationExtrasActions.current, onPrepareFavoriteRequest)
+        RequestConfirmationDialog(state, onCancelRequest, onConfirmRequest, onReviewTerms)
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun StationTopBar(
+    state: MainUiState,
     onSelectDestination: (MainDestination) -> Unit,
 ) {
+    val openMessages = LocalMessagesOpener.current.takeIf { state.auth?.status == AuthStatus.SignedIn }
     CenterAlignedTopAppBar(
         navigationIcon = {
             Image(
@@ -495,6 +519,25 @@ private fun StationTopBar(
         },
         title = { Text("24Seven.FM", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) },
         actions = {
+            openMessages?.let { open ->
+                val unread = state.privateMessages?.unreadCount ?: 0
+                IconButton(
+                    onClick = open,
+                    modifier = Modifier.testTag("open_private_messages").semantics {
+                        contentDescription = messagesButtonDescription(unread)
+                    },
+                ) {
+                    BadgedBox(
+                        badge = {
+                            if (unread > 0) {
+                                Badge(Modifier.testTag("unread_messages_top_badge")) {
+                                    Text(if (unread > 99) "99+" else unread.toString())
+                                }
+                            }
+                        },
+                    ) { Icon(Icons.Default.Mail, contentDescription = null) }
+                }
+            }
             CastRouteButton()
             IconButton(onClick = { onSelectDestination(MainDestination.More) }) {
                 Icon(Icons.Default.MoreVert, contentDescription = "Account and station options")
@@ -530,7 +573,6 @@ private fun DestinationContent(
     onPrepareRequest: (String) -> Unit,
     onPrepareFavoriteRequest: (FavoriteTrack) -> Unit,
     onCancelRequest: () -> Unit,
-    onConfirmRequest: (String) -> Unit,
     onUseLastStationAtStartup: () -> Unit,
     onSetStartupStation: (StationId) -> Unit,
     onOpenStationPage: (StationPage) -> Unit,
@@ -539,7 +581,6 @@ private fun DestinationContent(
     onReviewTerms: () -> Unit,
     isCoverDisplay: Boolean = false,
     trackActions: TrackActions = TrackActions(),
-    privateMessageActions: PrivateMessageActions = PrivateMessageActions(),
 ) {
     when (state.destination) {
         MainDestination.Player -> AdaptivePlayerScreen(
@@ -559,13 +600,11 @@ private fun DestinationContent(
             onRefresh = onRefreshFavorites,
             onPrepareRequest = onPrepareFavoriteRequest,
             onCancelRequest = onCancelRequest,
-            onConfirmRequest = onConfirmRequest,
             onOpenAccount = { onSelectDestination(MainDestination.More) },
-            onReviewTerms = onReviewTerms,
         )
         MainDestination.Chat -> ChatScreen(state, padding, onRefreshChat, onSendChatMessage, communitySafetyActions, onReviewTerms)
         MainDestination.Queue -> QueueScreen(state, padding, onRefreshQueue, communitySafetyActions)
-        MainDestination.More -> MoreScreen(state, padding, onRefreshAuth, onSignIn, onSignOut, onRefreshListenerActivity, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, diagnosticUi, feedbackUi, onOpenAppGuide, onReviewTerms, privateMessageActions)
+        MainDestination.More -> MoreScreen(state, padding, onRefreshAuth, onSignIn, onSignOut, onRefreshListenerActivity, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, diagnosticUi, feedbackUi, onOpenAppGuide, onReviewTerms)
     }
 }
 
@@ -658,8 +697,9 @@ private fun ChatMessages(
                 Icon(Icons.Default.Refresh, contentDescription = "Refresh chat")
             }
         }
+        RefreshableBox(onRefresh = onRefresh, modifier = Modifier.weight(1f).fillMaxWidth()) {
         LazyColumn(
-            modifier = Modifier.weight(1f).fillMaxWidth(),
+            modifier = Modifier.fillMaxSize(),
             reverseLayout = true,
             contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -674,12 +714,16 @@ private fun ChatMessages(
                     Card(Modifier.fillMaxWidth()) {
                         Column(Modifier.padding(12.dp)) {
                             Row(Modifier.fillMaxWidth()) {
-                                Text(
-                                    message.authorDisplayName,
-                                    style = MaterialTheme.typography.titleSmall,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.weight(1f),
-                                )
+                                Box(Modifier.weight(1f)) {
+                                    Text(
+                                        message.authorDisplayName,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier
+                                            .opensMemberProfile(message.authorDisplayName)
+                                            .padding(vertical = 6.dp),
+                                    )
+                                }
                                 message.postedAtLabel?.let { timestamp ->
                                     Text(
                                         timestamp,
@@ -723,6 +767,7 @@ private fun ChatMessages(
                     }
                 }
             }
+        }
         }
         if (state.auth?.status == AuthStatus.SignedIn) {
             Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
@@ -1195,8 +1240,9 @@ private fun QueueLists(
     communitySafetyActions: CommunitySafetyActions,
     onOpenHistory: (() -> Unit)? = null,
 ) {
+    RefreshableBox(onRefresh = onRefresh, modifier = Modifier.fillMaxSize().padding(padding)) {
     LazyColumn(
-        Modifier.fillMaxSize().padding(padding),
+        Modifier.fillMaxSize().testTag("queue_lists"),
         contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
@@ -1258,6 +1304,7 @@ private fun QueueLists(
                             )
                         }
                     },
+                    albumId = track.albumId,
                 )
             }
         }
@@ -1314,9 +1361,11 @@ private fun QueueLists(
                             )
                         }
                     },
+                    albumId = track.albumId,
                 )
             }
         }
+    }
     }
 }
 
@@ -1336,8 +1385,9 @@ private fun TrackCard(
     requesterName: String? = null,
     requestMessage: String? = null,
     communityActions: (@Composable () -> Unit)? = null,
+    albumId: String? = null,
 ) {
-    Card(Modifier.fillMaxWidth()) {
+    Card(Modifier.fillMaxWidth().clip(CardDefaults.shape).opensAlbum(albumId, album, artworkUrl)) {
         Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
             position?.let {
                 Text(it, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
@@ -1369,6 +1419,7 @@ private fun TrackCard(
                         color = MaterialTheme.colorScheme.primary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.opensMemberProfile(it).padding(vertical = 6.dp),
                     )
                 }
                 requestMessage?.let {
@@ -1423,7 +1474,6 @@ private fun MoreScreen(
     onOpenRequestAlbum: (RequestSearchTarget) -> Unit,
     onPrepareRequest: (String) -> Unit,
     onCancelRequest: () -> Unit,
-    onConfirmRequest: (String) -> Unit,
     onUseLastStationAtStartup: () -> Unit,
     onSetStartupStation: (StationId) -> Unit,
     onOpenStationPage: (StationPage) -> Unit,
@@ -1432,7 +1482,6 @@ private fun MoreScreen(
     feedbackUi: FeedbackUi,
     onOpenAppGuide: () -> Unit,
     onReviewTerms: () -> Unit,
-    privateMessageActions: PrivateMessageActions = PrivateMessageActions(),
 ) {
     Column(
         Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(24.dp),
@@ -1445,14 +1494,13 @@ private fun MoreScreen(
             communitySafetyActions.onSetChatMentionsEnabled,
             communitySafetyActions.onSetForegroundChatMentionMonitorEnabled,
         )
-        if (state.selectedStation?.capabilities?.supportsPrivateMessages == true) {
-            MoreDisclosure(
+        LocalMessagesOpener.current?.let { openMessages ->
+            MoreLink(
                 title = "Private messages",
                 summary = privateMessagesSummary(state.privateMessages),
                 testTag = "more_private_messages",
-            ) {
-                PrivateMessagesSection(state, privateMessageActions, communitySafetyActions)
-            }
+                onClick = openMessages,
+            )
         }
         if (state.selectedStation?.capabilities?.supportsStationNews == true) {
             MoreDisclosure(
@@ -1468,7 +1516,7 @@ private fun MoreScreen(
             summary = "Search or ask the station for an available track.",
             testTag = "more_song_requests",
         ) {
-            SongRequestSection(state, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onConfirmRequest, onReviewTerms, showTitle = false)
+            SongRequestSection(state, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, showTitle = false)
         }
         if (state.selectedStation?.capabilities?.supportsListenerActivity == true) {
             MoreDisclosure(
@@ -1851,6 +1899,28 @@ private fun CommunitySafetySection(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
+        }
+    }
+}
+
+/** A More entry that opens a screen of its own. */
+@Composable
+private fun MoreLink(title: String, summary: String, testTag: String, onClick: () -> Unit) {
+    Card(onClick = onClick, modifier = Modifier.fillMaxWidth().testTag(testTag)) {
+        Row(
+            Modifier.fillMaxWidth().padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                Text(
+                    summary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Spacer(Modifier.width(12.dp))
+            Text("Open", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
         }
     }
 }
@@ -2413,8 +2483,6 @@ private fun SongRequestSection(
     onOpenAlbum: (RequestSearchTarget) -> Unit,
     onPrepareRequest: (String) -> Unit,
     onCancelRequest: () -> Unit,
-    onConfirmRequest: (String) -> Unit,
-    onReviewTerms: () -> Unit,
     showTitle: Boolean = true,
 ) {
     val requests = state.requests
@@ -2424,10 +2492,6 @@ private fun SongRequestSection(
     var trackSortOrder by rememberSaveable(state.selectedStation?.id?.value) { mutableStateOf(TrackSortOrder.LibraryOrder) }
     var trackSortMenuOpen by remember { mutableStateOf(false) }
     val signedIn = state.auth?.status == AuthStatus.SignedIn
-
-    if (!state.isBrowsingMemberFavorites) {
-        RequestConfirmationDialog(state, onCancelRequest, onConfirmRequest, onReviewTerms)
-    }
 
     if (showTitle) Text("Song requests", style = MaterialTheme.typography.titleMedium)
     Card(Modifier.fillMaxWidth()) {
@@ -2557,36 +2621,11 @@ private fun SongRequestSection(
                     }
                 }
                 tracks.sortedForDisplay(trackSortOrder) { it.availability }.forEach { track ->
-                    Row(
-                        Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Column(Modifier.weight(1f)) {
-                            Text(track.title, fontWeight = FontWeight.Medium)
-                            Text(
-                                listOfNotNull(track.artist, track.duration).joinToString(" • "),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                            RequestStatusIndicator(
-                                availability = track.availability,
-                                modifier = Modifier.padding(top = 4.dp),
-                            )
-                            track.availability.detail?.let { detail ->
-                                Text(
-                                    detail,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                        }
-                        if (track.availability.canRequest) {
-                            TextButton(
-                                onClick = { onPrepareRequest(track.songId) },
-                                enabled = requests.status == SongRequestLoadStatus.Ready,
-                            ) { Text("Request Now") }
-                        }
-                    }
+                    RequestableTrackRow(
+                        track = track,
+                        canRequest = requests.status == SongRequestLoadStatus.Ready,
+                        onPrepareRequest = onPrepareRequest,
+                    )
                 }
             }
         }

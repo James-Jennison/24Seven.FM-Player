@@ -3,7 +3,10 @@ package com.codeframe78.twentyfourseven.player.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -11,6 +14,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -21,6 +26,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -31,6 +37,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -39,6 +46,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.codeframe78.twentyfourseven.player.domain.AbuseReportKind
 import com.codeframe78.twentyfourseven.player.domain.AbuseReportSource
 import com.codeframe78.twentyfourseven.player.domain.AbuseReportTarget
@@ -66,6 +75,54 @@ internal data class PrivateMessageActions(
     val onCancelCompose: () -> Unit = {},
 )
 
+/** Opens the private messages screen from anywhere in the app; null where the station has no private messages. */
+internal val LocalMessagesOpener = staticCompositionLocalOf<(() -> Unit)?> { null }
+
+/** Private messages as a screen of their own, opened from the top bar or from More. */
+@Composable
+internal fun PrivateMessagesScreen(
+    state: MainUiState,
+    actions: PrivateMessageActions,
+    communityActions: CommunitySafetyActions,
+    onClose: () -> Unit,
+) {
+    val station = state.selectedStation ?: return
+    val messages = state.privateMessages
+    Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Surface(Modifier.fillMaxSize().testTag("private_messages_screen")) {
+            Column(Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 12.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Mail, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Spacer(Modifier.width(12.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text("Private messages", style = MaterialTheme.typography.titleLarge)
+                        Text(
+                            station.name,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    IconButton(onClick = onClose) {
+                        Icon(Icons.Default.Close, contentDescription = "Close private messages")
+                    }
+                }
+                RefreshableBox(
+                    onRefresh = { messages?.let { actions.onRefresh(it.folder, it.page) } },
+                    modifier = Modifier.fillMaxSize().padding(top = 8.dp),
+                    isLoading = messages?.status == PrivateMessagesStatus.Loading,
+                ) {
+                    Column(
+                        Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        PrivateMessagesSection(state, actions, communityActions)
+                    }
+                }
+            }
+        }
+    }
+}
+
 /** The summary line of the Private messages entry in More. */
 internal fun privateMessagesSummary(messages: PrivateMessagesState?): String = when (val unread = messages?.unreadCount) {
     null -> "Read and reply to messages from station members."
@@ -84,11 +141,11 @@ internal fun PrivateMessagesSection(
     val messages = state.privateMessages
     when {
         state.auth?.status != AuthStatus.SignedIn -> Text(
-            "Sign in to ${station.shortName} above to read your private messages.",
+            "Sign in to ${station.shortName} from the More tab to read your private messages.",
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         !state.communitySafety.canViewCommunityContent || messages == null -> Text(
-            "Private messages are community content. Complete Community safety above to read them.",
+            "Private messages are community content. Complete Community safety in the More tab to read them.",
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         else -> {
@@ -131,7 +188,7 @@ private fun PrivateMessagesFolder(station: Station, messages: PrivateMessagesSta
                     Text("Loading messages…")
                 }
                 PrivateMessagesStatus.SignInRequired -> Text(
-                    "${station.shortName} asked for sign-in again. Sign in above to read your private messages.",
+                    "${station.shortName} asked for sign-in again. Sign in from the More tab to read your private messages.",
                     color = MaterialTheme.colorScheme.error,
                 )
                 PrivateMessagesStatus.Error -> Text(
@@ -294,6 +351,15 @@ private fun PrivateMessageBody(
         )
         SelectionContainer { Text(message.body, modifier = Modifier.testTag("private_message_body")) }
         val fromAnotherMember = !message.sender.equals(state.auth?.displayName, ignoreCase = true)
+        val otherMember = if (message.folder == PrivateMessageFolder.Sent) message.recipient else message.sender
+        LocalMemberProfileOpener.current
+            ?.takeIf { !otherMember.equals(state.auth?.displayName, ignoreCase = true) }
+            ?.let { openProfile ->
+                TextButton(
+                    onClick = { openProfile(otherMember) },
+                    modifier = Modifier.testTag("private_message_profile"),
+                ) { Text("View $otherMember's profile") }
+            }
         if (fromAnotherMember && message.folder != PrivateMessageFolder.Sent) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 TextButton(

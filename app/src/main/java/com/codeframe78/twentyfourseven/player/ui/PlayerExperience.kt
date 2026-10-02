@@ -302,7 +302,7 @@ private fun CoverNowPlayingDetails(
         )
         if (state.playback.status != PlaybackStatus.Playing) {
             Text(
-                state.playback.status.userMessage,
+                playbackStatusMessage(state.playback.status, hasTrack = state.nowPlaying.displayTitle != null),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
@@ -781,7 +781,11 @@ private fun NowPlayingArtwork(
             fallback = painterResource(R.drawable.app_logo),
             error = painterResource(R.drawable.app_logo),
             placeholder = painterResource(R.drawable.app_logo),
-            modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(22.dp)).testTag("now_playing_artwork"),
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(RoundedCornerShape(22.dp))
+                .testTag("now_playing_artwork")
+                .opensAlbum(state.nowPlaying.albumId, state.nowPlaying.album, state.nowPlaying.artworkUrl),
         )
         if (trackActions != null) {
             NowPlayingArtworkOverlay(
@@ -888,7 +892,7 @@ private fun PlaybackStatusPill(state: MainUiState, palette: StationPalette) {
             .testTag("playback_status"),
     ) {
         Text(
-            state.playback.status.userMessage,
+            playbackStatusMessage(state.playback.status, hasTrack = state.nowPlaying.displayTitle != null),
             Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
             style = MaterialTheme.typography.labelLarge,
             maxLines = 2,
@@ -1310,6 +1314,10 @@ private val PlaybackStatus.accessibleName: String
         PlaybackStatus.WaitingForNetwork -> "Waiting for network"
         PlaybackStatus.Error -> "Playback error"
     }
+
+/** Before Play is pressed the Player already shows the station's current track, so it says so instead of "Not connected". */
+internal fun playbackStatusMessage(status: PlaybackStatus, hasTrack: Boolean): String =
+    if (status == PlaybackStatus.Idle && hasTrack) "On air now" else status.userMessage
 
 private val PlaybackStatus.userMessage: String
     get() = when (this) {

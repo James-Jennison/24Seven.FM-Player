@@ -23,6 +23,8 @@ import com.codeframe78.twentyfourseven.player.domain.AuthStatus
 import com.codeframe78.twentyfourseven.player.domain.PlaybackController
 import com.codeframe78.twentyfourseven.player.domain.PlaybackState
 import com.codeframe78.twentyfourseven.player.domain.NowPlayingRepository
+import com.codeframe78.twentyfourseven.player.domain.NowPlayingDetailsRepository
+import com.codeframe78.twentyfourseven.player.domain.PlaybackStatus
 import com.codeframe78.twentyfourseven.player.domain.NowPlayingState
 import com.codeframe78.twentyfourseven.player.domain.QueueLoadStatus
 import com.codeframe78.twentyfourseven.player.domain.QueueRepository
@@ -60,7 +62,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -793,6 +797,95 @@ class MainViewModelTest {
         assertSame(beforeMetadataUpdate, viewModel.uiState.value.favorites?.tracks)
     }
 
+    @Test
+    fun `the station's current track is shown before Play and yields to playback's own track`() = runTest(dispatcher) {
+        val station = StationId("sst")
+        val playback = FakePlaybackController()
+        val nowPlaying = FakeNowPlayingRepository()
+        val onAir = FakeNowPlayingDetails(NowPlayingState(station, "Composer Two - Opening", track = "Opening"))
+        val viewModel = MainViewModel(
+            BootstrapStationRepository(),
+            playback,
+            nowPlaying,
+            FakeQueueRepository(),
+            UnavailableAuthRepository(),
+            UnavailableChatRepository(),
+            UnavailableSongRequestRepository(),
+            UnavailableFavoriteTracksRepository(),
+            UnavailableListenerActivityRepository(),
+            enabledSafetyRepository(),
+            nowPlayingDetails = onAir,
+            elapsedRealtimeMillis = { 0L },
+        )
+        backgroundScope.launch { viewModel.uiState.collect() }
+        runCurrent()
+
+        assertEquals("Composer Two - Opening", viewModel.uiState.value.nowPlaying.displayTitle)
+        assertEquals(listOf(station), onAir.requests)
+        // The preview never reaches the media session; only playback's own track does.
+        assertEquals(null, playback.nowPlaying.displayTitle)
+
+        advanceTimeBy(31_000)
+        runCurrent()
+        assertEquals(2, onAir.requests.size)
+
+        (playback.state as MutableStateFlow<PlaybackState>).value = PlaybackState(status = PlaybackStatus.Playing)
+        runCurrent()
+        // Until playback reports its own track, the last on-air reading stays on screen.
+        assertEquals("Composer Two - Opening", viewModel.uiState.value.nowPlaying.displayTitle)
+
+        nowPlaying.state.value = NowPlayingState(station, "Composer Three - Finale")
+        runCurrent()
+        assertEquals("Composer Three - Finale", viewModel.uiState.value.nowPlaying.displayTitle)
+
+        advanceTimeBy(300_000)
+        runCurrent()
+        assertEquals(2, onAir.requests.size)
+    }
+
+    @Test
+    fun `an album page opens for a valid album and closes when a request is confirmed`() = runTest(dispatcher) {
+        val requests = RecordingSongRequestRepository()
+        val viewModel = MainViewModel(
+            BootstrapStationRepository(),
+            FakePlaybackController(),
+            FakeNowPlayingRepository(),
+            FakeQueueRepository(),
+            UnavailableAuthRepository(),
+            UnavailableChatRepository(),
+            requests,
+            UnavailableFavoriteTracksRepository(),
+            UnavailableListenerActivityRepository(),
+            enabledSafetyRepository(),
+        )
+        backgroundScope.launch { viewModel.uiState.collect() }
+        advanceUntilIdle()
+
+        viewModel.openAlbum("not an album", null, null)
+        advanceUntilIdle()
+        assertEquals(null, viewModel.uiState.value.album)
+
+        viewModel.openAlbum("B000000001", "Album Two", null)
+        advanceUntilIdle()
+        assertEquals("B000000001", viewModel.uiState.value.album?.albumId)
+        assertEquals("Album Two", viewModel.uiState.value.album?.title)
+        assertEquals(listOf<RequestSearchTarget>(RequestSearchTarget.Album("B000000001")), requests.openedTargets)
+
+        viewModel.confirmSongRequest("")
+        advanceUntilIdle()
+        assertEquals(null, viewModel.uiState.value.album)
+        assertEquals(MainDestination.Queue, viewModel.uiState.value.destination)
+    }
+
+    private class FakeNowPlayingDetails(private val current: NowPlayingState?) : NowPlayingDetailsRepository {
+        val requests = mutableListOf<StationId>()
+
+        override suspend fun fetchNowPlaying(stationId: StationId): NowPlayingState? {
+            requests += stationId
+            return current
+        }
+    }
+
     private fun enabledSafetyRepository() = InMemoryCommunitySafetyRepository(
         CommunitySafetyState(
             ageGateStatus = AgeGateStatus.Adult,
@@ -944,7 +1037,12 @@ class MainViewModelTest {
 
         override suspend fun search(stationId: StationId, query: String, field: RequestSearchField) = Unit
         override suspend fun suggest(stationId: StationId, mode: RequestSuggestionMode) = Unit
-        override suspend fun openSearchResult(stationId: StationId, target: RequestSearchTarget) = Unit
+        val openedTargets = mutableListOf<RequestSearchTarget>()
+
+        override suspend fun openSearchResult(stationId: StationId, target: RequestSearchTarget) {
+            openedTargets += target
+        }
+
         override suspend fun prepareRequest(stationId: StationId, songId: String, accountDisplayName: String) = Unit
         override suspend fun prepareRequest(stationId: StationId, track: RequestableTrack, accountDisplayName: String) = Unit
         override suspend fun cancelRequest(stationId: StationId) = Unit

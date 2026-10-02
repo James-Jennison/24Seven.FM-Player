@@ -16,6 +16,8 @@ data class FavoriteTrack(
     val availabilityMessage: String? = null,
     val availability: TrackRequestAvailability = requestTrack?.availability
         ?: classifyStationRequestAvailability(availabilityMessage),
+    /** The station's identifier for the track's album, known even when the track cannot be requested right now. */
+    val albumId: String? = requestTrack?.albumId,
 ) {
     val identity: RequestTrackIdentity get() = requestTrack?.identity?.copy(
         artist = requestTrack.artist ?: artist,

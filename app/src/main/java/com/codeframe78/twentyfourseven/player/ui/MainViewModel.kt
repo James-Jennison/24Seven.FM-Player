@@ -9,7 +9,9 @@ import com.codeframe78.twentyfourseven.player.domain.StationId
 import com.codeframe78.twentyfourseven.player.domain.StationRepository
 import com.codeframe78.twentyfourseven.player.domain.PlaybackController
 import com.codeframe78.twentyfourseven.player.domain.PlaybackState
+import com.codeframe78.twentyfourseven.player.domain.NowPlayingDetailsRepository
 import com.codeframe78.twentyfourseven.player.domain.NowPlayingRepository
+import com.codeframe78.twentyfourseven.player.domain.PlaybackStatus
 import com.codeframe78.twentyfourseven.player.domain.NowPlayingState
 import com.codeframe78.twentyfourseven.player.domain.QueueRepository
 import com.codeframe78.twentyfourseven.player.domain.QueueState
@@ -60,7 +62,12 @@ import com.codeframe78.twentyfourseven.player.domain.StationExtrasRepository
 import com.codeframe78.twentyfourseven.player.domain.StationExtrasState
 import com.codeframe78.twentyfourseven.player.domain.UnavailableStationExtrasRepository
 import com.codeframe78.twentyfourseven.player.domain.currentPlayedHistoryBlock
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -74,6 +81,14 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 enum class MainDestination { Player, Favorites, Chat, Queue, More }
+
+/** The album whose page is open over the current screen, with what the tapped item already knew about it. */
+data class AlbumBrowserState(
+    val stationId: StationId,
+    val albumId: String,
+    val title: String? = null,
+    val artworkUrl: String? = null,
+)
 
 data class MainUiState(
     val stations: List<Station> = emptyList(),
@@ -96,6 +111,7 @@ data class MainUiState(
     val trackActions: TrackActionsState? = null,
     val privateMessages: PrivateMessagesState? = null,
     val extras: StationExtrasState? = null,
+    val album: AlbumBrowserState? = null,
 )
 
 data class StationAccountUiState(
@@ -119,9 +135,51 @@ class MainViewModel(
     private val trackActions: TrackActionsRepository = UnavailableTrackActionsRepository,
     private val privateMessages: PrivateMessagesRepository = UnavailablePrivateMessagesRepository,
     private val extras: StationExtrasRepository = UnavailableStationExtrasRepository,
+    private val nowPlayingDetails: NowPlayingDetailsRepository? = null,
+    private val elapsedRealtimeMillis: () -> Long = { android.os.SystemClock.elapsedRealtime() },
 ) : ViewModel() {
     private val observedSessionStations = mutableSetOf<StationId>()
     private val destination = MutableStateFlow(MainDestination.Player)
+    private val albumBrowser = MutableStateFlow<AlbumBrowserState?>(null)
+
+    @Volatile
+    private var latestOnAir: NowPlayingState? = null
+
+    /**
+     * What the selected station is playing while this device is not playing it, so the Player is never blank. It is
+     * read only while the screen is being shown, about once per track, and is never published to the media session.
+     */
+    private val onAirPreview: Flow<NowPlayingState?> = combine(
+        stations.observeSelectedStation().map { it.id }.distinctUntilChanged(),
+        playback.state.map { it.status.showsOnAirPreview }.distinctUntilChanged(),
+    ) { stationId, wanted -> stationId to wanted }
+        .transformLatest { (stationId, wanted) ->
+            val details = nowPlayingDetails ?: return@transformLatest
+            if (!wanted) {
+                // Once playback has had time to report its own track, the last reading is too old to fall back on.
+                delay(ON_AIR_STALE_AFTER_MILLIS)
+                latestOnAir = null
+                emit(null)
+                return@transformLatest
+            }
+            while (true) {
+                val current = try {
+                    details.fetchNowPlaying(stationId)
+                } catch (cancellation: CancellationException) {
+                    throw cancellation
+                } catch (_: Exception) {
+                    null
+                }
+                if (current != null) {
+                    latestOnAir = current
+                    emit(current)
+                }
+                delay(onAirRefreshDelayMillis(current, elapsedRealtimeMillis()))
+            }
+        }
+        .onStart { emit(null) }
+
+    private val screenContent = combine(destination, albumBrowser, onAirPreview, ::ScreenContent)
     private val diagnosticTransitions = MutableStateFlow<List<DiagnosticTransition>>(emptyList())
     private val playbackContent = combine(
         playback.state,
@@ -310,10 +368,11 @@ class MainViewModel(
         stationSelection,
         playbackContent,
         stationContent,
-        destination,
+        screenContent,
         safetyContent,
-    ) { selection, playbackContent, content, selectedDestination, safety ->
+    ) { selection, playbackContent, content, screen, safety ->
         val selected = selection.selected
+        val selectedDestination = screen.destination
         val selectedQueueState = content.queue.takeIf { it.stationId == selected.id }
             ?: QueueState(selected.id)
         val selectedAuthState = content.account.auth.selected.takeIf { it.stationId == selected.id }
@@ -331,9 +390,8 @@ class MainViewModel(
             stations = selection.all,
             selectedStation = selected,
             playback = playbackContent.state,
-            nowPlaying = content.nowPlaying.takeIf { it.stationId == selected.id }
-                ?.withCommunityVisibility(selected.id, safety.safety)
-                ?: NowPlayingState(stationId = selected.id),
+            nowPlaying = shownNowPlaying(content.nowPlaying, screen.onAir, selected.id, playbackContent.state.status)
+                .withCommunityVisibility(selected.id, safety.safety),
             queue = selectedQueueState.withCommunityVisibility(selected.id, safety.safety),
             auth = selectedAuthState,
             accounts = content.account.auth.accounts,
@@ -352,6 +410,7 @@ class MainViewModel(
                 ?.withCommunityVisibility(selected.id, safety.safety),
             extras = content.extras.takeIf { it.stationId == selected.id }
                 ?.withCommunityVisibility(selected.id, safety.safety),
+            album = screen.album?.takeIf { it.stationId == selected.id },
         )
     }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), MainUiState())
@@ -682,8 +741,31 @@ class MainViewModel(
         return station.takeIf { hasCapability(it.capabilities) && signedIn }
     }
 
-    private suspend fun currentStationTrack(stationId: StationId): NowPlayingState? =
-        nowPlaying.observeNowPlaying().first().takeIf { it.stationId == stationId }
+    /** The track the Player is showing for this station, which is what the favorite and rating buttons act on. */
+    private suspend fun currentStationTrack(stationId: StationId): NowPlayingState? = shownNowPlaying(
+        nowPlaying.observeNowPlaying().first(),
+        latestOnAir,
+        stationId,
+        playback.state.value.status,
+    ).takeIf { it.displayTitle != null }
+
+    /** Opens an album's page: its tracks, their request status, and the album rating. */
+    fun openAlbum(albumId: String, title: String?, artworkUrl: String?) = viewModelScope.launch {
+        val station = stations.observeSelectedStation().first()
+        if (!station.capabilities.supportsRequests || !albumId.matches(ALBUM_ID)) return@launch
+        albumBrowser.value = AlbumBrowserState(station.id, albumId, title, artworkUrl)
+        requests.openSearchResult(station.id, RequestSearchTarget.Album(albumId))
+    }
+
+    fun closeAlbum() {
+        albumBrowser.value = null
+    }
+
+    fun rateAlbum(albumId: String) = viewModelScope.launch {
+        val station = signedInStation { it.supportsAlbumRating } ?: return@launch
+        if (!albumId.matches(ALBUM_ID)) return@launch
+        trackActions.openAlbumRating(station.id, albumId)
+    }
 
     fun searchRequests(query: String, field: RequestSearchField) = viewModelScope.launch {
         requests.search(stations.observeSelectedStation().first().id, query, field)
@@ -724,7 +806,9 @@ class MainViewModel(
         // Queue is the confirmation surface. Navigate immediately; the result remains
         // station-authoritative and the refresh below renders the final queue state.
         destination.value = MainDestination.Queue
-        // A request made from a member's favorites list leaves that list, so the Queue is what the listener sees.
+        // A request made from an album page or a member's favorites list leaves it, so the Queue is what the
+        // listener sees.
+        albumBrowser.value = null
         extras.closeMemberFavorites(stationId)
         extras.closeProfile(stationId)
         requests.confirmRequest(
@@ -755,6 +839,7 @@ class MainViewModel(
         private val trackActions: TrackActionsRepository,
         private val privateMessages: PrivateMessagesRepository,
         private val extras: StationExtrasRepository,
+        private val nowPlayingDetails: NowPlayingDetailsRepository,
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =
@@ -773,8 +858,52 @@ class MainViewModel(
                 trackActions,
                 privateMessages,
                 extras,
+                nowPlayingDetails,
             ) as T
     }
+
+    private companion object {
+        const val ON_AIR_STALE_AFTER_MILLIS = 60_000L
+        val ALBUM_ID = Regex("[A-Za-z0-9_.-]{1,64}")
+    }
+}
+
+private data class ScreenContent(
+    val destination: MainDestination,
+    val album: AlbumBrowserState?,
+    val onAir: NowPlayingState?,
+)
+
+/** Playback states in which this device has no track of its own to show. */
+internal val PlaybackStatus.showsOnAirPreview: Boolean
+    get() = this == PlaybackStatus.Idle || this == PlaybackStatus.Paused || this == PlaybackStatus.Error
+
+/**
+ * The track to show for [stationId]. While this device is playing, that is the track playback reported; before it
+ * has reported one, and while the device is not playing, it is what the station says is on air.
+ */
+internal fun shownNowPlaying(
+    live: NowPlayingState,
+    onAir: NowPlayingState?,
+    stationId: StationId,
+    status: PlaybackStatus,
+): NowPlayingState {
+    val liveHere = live.takeIf { it.stationId == stationId }
+    val onAirHere = onAir?.takeIf { it.stationId == stationId }
+    val preferred = if (status.showsOnAirPreview) {
+        onAirHere ?: liveHere
+    } else {
+        liveHere?.takeIf { it.displayTitle != null } ?: onAirHere ?: liveHere
+    }
+    return preferred ?: NowPlayingState(stationId = stationId)
+}
+
+/** Asks again a few seconds after the current track should end, and never more often than every fifteen seconds. */
+internal fun onAirRefreshDelayMillis(current: NowPlayingState?, nowElapsedRealtimeMillis: Long): Long {
+    val length = current?.trackLengthMillis
+    val started = current?.trackStartedElapsedRealtimeMillis
+    if (length == null || started == null) return 30_000L
+    return (started + length - nowElapsedRealtimeMillis + 3_000L).coerceIn(15_000L, 60_000L)
 }
 
 private data class StationContent(

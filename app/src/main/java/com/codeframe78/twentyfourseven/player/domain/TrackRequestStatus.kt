@@ -122,10 +122,13 @@ fun classifyStationRequestAvailability(message: String?): TrackRequestAvailabili
         ?: return TrackRequestAvailability.unknown()
     val normalized = detail.lowercase(Locale.ROOT)
     return when {
-        listOf("last played", "played recently", "recently played", "requestable again").any(normalized::contains) ->
-            TrackRequestAvailability(TrackRequestStatus.RecentlyPlayed, detail)
+        // The stations append "Last played" to every reason, so a queue reason is recognized before it.
         listOf("track is already in queue", "track is already in the queue", "track is currently in queue").any(normalized::contains) ->
             TrackRequestAvailability(TrackRequestStatus.InCurrentQueue, detail)
+        listOf("already in queue", "already in the queue").any(normalized::contains) ->
+            TrackRequestAvailability(TrackRequestStatus.RequestsUnavailable, detail)
+        listOf("last played", "played recently", "recently played", "requestable again").any(normalized::contains) ->
+            TrackRequestAvailability(TrackRequestStatus.RecentlyPlayed, detail)
         listOf("sign in", "log in", "login").any(normalized::contains) ->
             TrackRequestAvailability(TrackRequestStatus.AuthenticationRequired, detail)
         listOf("vip", "membership", "member only").any(normalized::contains) ->
