@@ -34,6 +34,7 @@ internal interface AuthRemoteDataSource {
     ): AuthenticatedPage
     suspend fun restoredSession(stationId: StationId): RestoredAuthSession
     fun persistSession(stationId: StationId, displayName: String)
+    fun discardUnconfirmedSession(stationId: StationId) = Unit
     suspend fun signOut(stationId: StationId)
 }
 
@@ -107,6 +108,10 @@ internal class StationAuthRemoteDataSource(
 
     override fun persistSession(stationId: StationId, displayName: String) {
         sessions.persistAuthenticated(stationId, origin(stationId), displayName)
+    }
+
+    override fun discardUnconfirmedSession(stationId: StationId) {
+        sessions.clear(stationId)
     }
 
     private fun request(stationId: StationId, initialUri: URI, method: String, body: String? = null): AuthenticatedPage {

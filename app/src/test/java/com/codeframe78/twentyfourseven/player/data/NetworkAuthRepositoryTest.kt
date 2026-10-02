@@ -54,6 +54,33 @@ class NetworkAuthRepositoryTest {
     }
 
     @Test
+    fun `failed login drops unconfirmed station cookies before loading the fresh challenge`() = runTest {
+        val remote = FakeAuthRemoteDataSource(challenge, signInPage = "<p>Unrecognized station page</p>")
+        val repository = NetworkAuthRepository(remote)
+        repository.refreshChallenge(stationId)
+
+        repository.signIn(stationId, "Listener", "secret", "654321")
+
+        assertEquals(AuthStatus.Error, repository.observeAuth(stationId).first().status)
+        assertEquals(listOf("challenge", "signIn", "discard", "challenge"), remote.calls)
+        assertEquals(0, remote.persistCalls)
+    }
+
+    @Test
+    fun `surrounding whitespace in the username is not submitted or required on the signed-in page`() = runTest {
+        val remote = FakeAuthRemoteDataSource(challenge)
+        val repository = NetworkAuthRepository(remote)
+        repository.refreshChallenge(stationId)
+
+        repository.signIn(stationId, " Listener ", "secret", "654321")
+
+        val state = repository.observeAuth(stationId).first()
+        assertEquals(AuthStatus.SignedIn, state.status)
+        assertEquals("Listener", state.displayName)
+        assertEquals(listOf("Listener", "secret", "654321"), remote.submittedInputs)
+    }
+
+    @Test
     fun `text anti-spam challenge is exposed without an image`() = runTest {
         val textChallenge = LoginChallenge.Text(
             actionUrl = "https://streamingsoundtracks.com/modules.php?name=Your_Account",
@@ -169,7 +196,10 @@ class NetworkAuthRepositoryTest {
         private val challenge: LoginChallenge,
         private val failSignIn: Boolean = false,
         private val restoredSessions: Map<StationId, RestoredAuthSession> = emptyMap(),
+        private val signInPage: String =
+            "<p>Welcome, Listener.</p><a href='/modules.php?name=Your_Account&op=logout'>Logout</a>",
     ) : AuthRemoteDataSource {
+        val calls = mutableListOf<String>()
         var challengeCalls = 0
         val signedOutStations = mutableListOf<StationId>()
         var persistCalls = 0
@@ -180,6 +210,7 @@ class NetworkAuthRepositoryTest {
             validity(stationId)
 
         override suspend fun fetchChallenge(stationId: StationId): LoginChallenge {
+            calls += "challenge"
             challengeCalls++
             return challenge
         }
@@ -191,12 +222,14 @@ class NetworkAuthRepositoryTest {
             password: String,
             securityCode: String,
         ): AuthenticatedPage {
+            calls += "signIn"
             submittedInputs = listOf(username, password, securityCode)
             if (failSignIn) throw IOException("sanitized")
-            return AuthenticatedPage(
-                "<p>Welcome, Listener.</p><a href='/modules.php?name=Your_Account&op=logout'>Logout</a>",
-                "https://streamingsoundtracks.com/",
-            )
+            return AuthenticatedPage(signInPage, "https://streamingsoundtracks.com/")
+        }
+
+        override fun discardUnconfirmedSession(stationId: StationId) {
+            calls += "discard"
         }
 
         override suspend fun signOut(stationId: StationId) {
