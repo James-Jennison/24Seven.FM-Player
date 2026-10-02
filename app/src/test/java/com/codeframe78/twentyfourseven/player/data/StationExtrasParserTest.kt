@@ -22,6 +22,29 @@ class StationExtrasParserTest {
         assertTrue(profile.isOnline)
         assertEquals("https://streamingsoundtracks.com/images/avatars/listener.png", profile.avatarUrl)
         assertEquals(listOf("Public Favorites"), profile.badges)
+        assertEquals("4821", profile.memberNumber)
+        assertEquals("Public Favorites", profile.publicFavoritesBadge)
+    }
+
+    @Test
+    fun `a member without the public favorites badge has no list to open`() {
+        val card = StationExtrasFixtures.profileCard()
+            .replace("Public Favorites", "Donor")
+            .replace("/images/favorites/heart.svg", "/images/badges/donor.svg")
+
+        val profile = parser.parseProfile(card, origin)!!
+
+        assertEquals(listOf("Donor"), profile.badges)
+        assertNull(profile.publicFavoritesBadge)
+    }
+
+    @Test
+    fun `the public favorites badge is recognized by its picture when a station words it differently`() {
+        val card = StationExtrasFixtures.profileCard()
+            .replace("Public Favorites", "Shares favorites")
+            .replace("/images/favorites/heart.svg", "/images/favorites/biohazard.svg")
+
+        assertEquals("Shares favorites", parser.parseProfile(card, origin)!!.publicFavoritesBadge)
     }
 
     @Test

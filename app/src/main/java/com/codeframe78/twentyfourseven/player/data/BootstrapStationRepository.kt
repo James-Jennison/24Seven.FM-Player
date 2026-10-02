@@ -124,6 +124,8 @@ class BootstrapStationRepository(
             // Public profile cards, the history archive, and the news page use one format on all five stations,
             // checked against each on October 2, 2026.
             supportsMemberProfiles = true,
+            // A member's public favorites list uses the page the Player already reads for the listener's own list.
+            supportsMemberFavorites = true,
             supportsPlayedHistoryArchive = true,
             supportsStationNews = true,
         )

@@ -56,7 +56,9 @@ internal fun FavoriteTracksScreen(
     onOpenAccount: () -> Unit,
     onReviewTerms: () -> Unit,
 ) {
-    RequestConfirmationDialog(state, onCancelRequest, onConfirmRequest, onReviewTerms)
+    if (!state.isBrowsingMemberFavorites) {
+        RequestConfirmationDialog(state, onCancelRequest, onConfirmRequest, onReviewTerms)
+    }
     val favorites = state.favorites
     val signedIn = state.auth?.status == AuthStatus.SignedIn
     var filter by rememberSaveable(state.selectedStation?.id?.value) { mutableStateOf("") }
@@ -198,7 +200,7 @@ internal fun FavoriteTracksScreen(
     }
 }
 
-private fun FavoriteTrack.matchesFilter(query: String): Boolean =
+internal fun FavoriteTrack.matchesFilter(query: String): Boolean =
     title.contains(query, ignoreCase = true) ||
         album.contains(query, ignoreCase = true) ||
         artist.contains(query, ignoreCase = true) ||
@@ -232,7 +234,7 @@ private fun FavoriteRequestFeedback(
 }
 
 @Composable
-private fun FavoriteTrackCard(
+internal fun FavoriteTrackCard(
     track: FavoriteTrack,
     canRequest: Boolean,
     onPrepareRequest: (FavoriteTrack) -> Unit,

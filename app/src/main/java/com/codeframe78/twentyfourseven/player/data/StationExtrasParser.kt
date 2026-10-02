@@ -17,6 +17,7 @@ internal class StationExtrasParser {
         val profile = JSONObject(json).optJSONObject("profile") ?: return null
         val username = profile.text("username", MAX_NAME_CHARACTERS) ?: return null
         val badges = profile.optJSONArray("badges")
+        val badgeEntries = (0 until (badges?.length() ?: 0)).mapNotNull { index -> badges?.optJSONObject(index) }
         return MemberProfile(
             username = username,
             memberSince = profile.text("since", MAX_LABEL_CHARACTERS),
@@ -28,9 +29,10 @@ internal class StationExtrasParser {
             avatarUrl = profile.text("avatar", MAX_URL_CHARACTERS)
                 ?.takeUnless { it.substringBefore('?').endsWith(".svg", ignoreCase = true) }
                 ?.let { stationUrl(it, origin) },
-            badges = (0 until (badges?.length() ?: 0))
-                .mapNotNull { index -> badges?.optJSONObject(index)?.text("label", MAX_LABEL_CHARACTERS) }
-                .take(MAX_BADGES),
+            badges = badgeEntries.mapNotNull { it.text("label", MAX_LABEL_CHARACTERS) }.take(MAX_BADGES),
+            memberNumber = profile.text("id", MAX_LABEL_CHARACTERS)?.takeIf { it.matches(MEMBER_NUMBER) },
+            publicFavoritesBadge = badgeEntries.firstOrNull { it.marksPublicFavorites() }
+                ?.let { it.text("label", MAX_LABEL_CHARACTERS) ?: PUBLIC_FAVORITES_LABEL },
         )
     }
 
@@ -122,6 +124,11 @@ internal class StationExtrasParser {
         }?.toASCIIString()
     }.getOrNull()
 
+    /** The stations mark a public favorites list with a named badge whose picture differs from station to station. */
+    private fun JSONObject.marksPublicFavorites(): Boolean =
+        text("label", MAX_LABEL_CHARACTERS).equals(PUBLIC_FAVORITES_LABEL, ignoreCase = true) ||
+            text("image", MAX_URL_CHARACTERS)?.substringBefore('?') in PUBLIC_FAVORITES_IMAGES
+
     private fun JSONObject.text(name: String, maxCharacters: Int): String? =
         if (isNull(name)) null else optString(name).trim().takeIf { it.isNotEmpty() && it.length <= maxCharacters }
 
@@ -138,6 +145,13 @@ internal class StationExtrasParser {
         val CLOCK_TIME = Regex("\\d{2}:\\d{2}:\\d{2}")
         val TRACK_LENGTH = Regex("\\d{1,3}:\\d{2}")
         val SAFE_IDENTIFIER = Regex("[A-Za-z0-9_.-]{1,64}")
+        val MEMBER_NUMBER = Regex("[0-9]{1,10}")
+        const val PUBLIC_FAVORITES_LABEL = "Public Favorites"
+        val PUBLIC_FAVORITES_IMAGES = setOf(
+            "/images/favorites/heart.svg",
+            "/images/favorites/biohazard.svg",
+            "/images/badges/public-favorites.svg",
+        )
         val STORY_ID = Regex("[?&]sid=(\\d{1,12})(?:&|$)")
         val SPACES = Regex("[ \\t\\u00A0]+")
         val BLANK_RUN = Regex("\\n{3,}")

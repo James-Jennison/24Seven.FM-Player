@@ -379,6 +379,7 @@ private fun PhoneShell(
     if (state.destination != MainDestination.Favorites) {
         RequestResultDialog(state, onCancelRequest)
     }
+    MemberFavoritesDialog(state, LocalStationExtrasActions.current, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onReviewTerms)
 }
 
 /**
@@ -475,6 +476,7 @@ private fun TabletShell(
         if (state.destination != MainDestination.Favorites) {
             RequestResultDialog(state, onCancelRequest)
         }
+        MemberFavoritesDialog(state, LocalStationExtrasActions.current, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onReviewTerms)
     }
 }
 
@@ -2423,7 +2425,9 @@ private fun SongRequestSection(
     var trackSortMenuOpen by remember { mutableStateOf(false) }
     val signedIn = state.auth?.status == AuthStatus.SignedIn
 
-    RequestConfirmationDialog(state, onCancelRequest, onConfirmRequest, onReviewTerms)
+    if (!state.isBrowsingMemberFavorites) {
+        RequestConfirmationDialog(state, onCancelRequest, onConfirmRequest, onReviewTerms)
+    }
 
     if (showTitle) Text("Song requests", style = MaterialTheme.typography.titleMedium)
     Card(Modifier.fillMaxWidth()) {

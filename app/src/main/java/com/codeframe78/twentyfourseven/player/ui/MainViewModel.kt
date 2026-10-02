@@ -54,6 +54,7 @@ import com.codeframe78.twentyfourseven.player.domain.PrivateMessageFolder
 import com.codeframe78.twentyfourseven.player.domain.PrivateMessagesRepository
 import com.codeframe78.twentyfourseven.player.domain.PrivateMessagesState
 import com.codeframe78.twentyfourseven.player.domain.UnavailablePrivateMessagesRepository
+import com.codeframe78.twentyfourseven.player.domain.MemberFavoritesState
 import com.codeframe78.twentyfourseven.player.domain.MemberProfileState
 import com.codeframe78.twentyfourseven.player.domain.StationExtrasRepository
 import com.codeframe78.twentyfourseven.player.domain.StationExtrasState
@@ -565,6 +566,28 @@ class MainViewModel(
         extras.closeProfile(stations.observeSelectedStation().first().id)
     }
 
+    /** Opens the public favorites list of the member whose profile card is showing. */
+    fun openMemberFavorites() = viewModelScope.launch {
+        val station = stations.observeSelectedStation().first()
+        val safety = communitySafety.observeSafety().first()
+        val profile = extras.observeExtras(station.id).first().profile.profile ?: return@launch
+        val memberNumber = profile.memberNumber ?: return@launch
+        if (
+            !station.capabilities.supportsMemberFavorites ||
+            profile.publicFavoritesBadge == null ||
+            !safety.canViewCommunityContent ||
+            safety.isBlocked(station.id, profile.username) ||
+            auth.observeAuth(station.id).first().status != AuthStatus.SignedIn
+        ) {
+            return@launch
+        }
+        extras.openMemberFavorites(station.id, profile.username, memberNumber)
+    }
+
+    fun closeMemberFavorites() = viewModelScope.launch {
+        extras.closeMemberFavorites(stations.observeSelectedStation().first().id)
+    }
+
     fun openPlayedHistory() {
         val (date, startHour) = currentPlayedHistoryBlock()
         loadPlayedHistory(date, startHour)
@@ -701,6 +724,9 @@ class MainViewModel(
         // Queue is the confirmation surface. Navigate immediately; the result remains
         // station-authoritative and the refresh below renders the final queue state.
         destination.value = MainDestination.Queue
+        // A request made from a member's favorites list leaves that list, so the Queue is what the listener sees.
+        extras.closeMemberFavorites(stationId)
+        extras.closeProfile(stationId)
         requests.confirmRequest(
             stationId,
             RequestConfirmationContext(
@@ -842,6 +868,9 @@ private fun StationExtrasState.withCommunityVisibility(
     profile = profile.takeIf {
         safety.canViewCommunityContent && !safety.isBlocked(stationId, it.requestedName)
     } ?: MemberProfileState(),
+    memberFavorites = memberFavorites.takeIf {
+        safety.canViewCommunityContent && !safety.isBlocked(stationId, it.memberName)
+    } ?: MemberFavoritesState(),
     history = history.copy(
         entries = history.entries.map { entry ->
             val hide = !safety.canViewCommunityContent || safety.isBlocked(stationId, entry.requesterName)

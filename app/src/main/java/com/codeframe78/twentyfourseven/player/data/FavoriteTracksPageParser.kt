@@ -34,6 +34,9 @@ internal class FavoriteTracksPageParser {
         return uri.toASCIIString()
     }
 
+    /** The member number a list address from [parseListUrl] belongs to. */
+    fun listMemberNumber(listUrl: String): String? = queryValue(URI(listUrl).rawQuery, "user2view")
+
     fun parseTracks(html: String, origin: String): List<FavoriteTrack> {
         val originUri = trustedOrigin(origin)
         val document = Jsoup.parse(html, origin)
@@ -42,16 +45,19 @@ internal class FavoriteTracksPageParser {
                 val cells = row.children().filter { it.tagName() == "td" }
                 val position = cells.getOrNull(0)?.text()?.trim()?.toIntOrNull() ?: return@mapNotNull null
                 if (cells.size < 8) return@mapNotNull null
+                // Another member's list carries one more cell after the request button, saying whether the track
+                // is also in the listener's own favorites.
+                val shift = if (cells.size > 8 && cells[2].children().none { it.tagName() == "span" }) 1 else 0
 
-                val titleParts = cells[2].children().filter { it.tagName() == "span" }.map { it.text().trim() }
-                val artistParts = cells[3].children().filter { it.tagName() == "span" }.map { it.text().trim() }
+                val titleParts = cells[2 + shift].children().filter { it.tagName() == "span" }.map { it.text().trim() }
+                val artistParts = cells[3 + shift].children().filter { it.tagName() == "span" }.map { it.text().trim() }
                 val title = titleParts.getOrNull(0)?.takeIf(String::isNotBlank) ?: return@mapNotNull null
                 val album = titleParts.getOrNull(1).orEmpty()
                 val artist = artistParts.getOrNull(0).orEmpty()
                 val genre = artistParts.getOrNull(1)?.takeIf(String::isNotBlank)
                 val requestCell = cells[1]
                 val requestTrack = requestCell.selectFirst("a[href]")?.absUrl("href")
-                    ?.let { parseRequestTrack(it, originUri, title, album, artist, cells[5].text().trim()) }
+                    ?.let { parseRequestTrack(it, originUri, title, album, artist, cells[5 + shift].text().trim()) }
                 val availability = if (requestTrack == null) {
                     requestCell.selectFirst("img[src*=requestbutton]")?.let { image ->
                         image.attr("title").ifBlank { image.attr("alt") }.trim().takeIf(String::isNotBlank)
@@ -65,8 +71,8 @@ internal class FavoriteTracksPageParser {
                     album = album,
                     artist = artist,
                     genre = genre,
-                    year = cells[4].text().trim().takeIf(String::isNotBlank),
-                    duration = cells[5].text().trim().takeIf(String::isNotBlank),
+                    year = cells[4 + shift].text().trim().takeIf(String::isNotBlank),
+                    duration = cells[5 + shift].text().trim().takeIf(String::isNotBlank),
                     requestTrack = requestTrack,
                     availabilityMessage = availability,
                     availability = requestTrack?.availability

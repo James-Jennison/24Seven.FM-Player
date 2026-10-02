@@ -16,6 +16,10 @@ data class MemberProfile(
     val isOnline: Boolean,
     val avatarUrl: String?,
     val badges: List<String>,
+    /** The station's number for this member, which its other pages use to name them. */
+    val memberNumber: String? = null,
+    /** The label of the badge a member wears when they have made their favorites list public. */
+    val publicFavoritesBadge: String? = null,
 )
 
 enum class MemberProfileStatus { Closed, Loading, Ready, NotFound, Error }
@@ -24,6 +28,15 @@ data class MemberProfileState(
     val status: MemberProfileStatus = MemberProfileStatus.Closed,
     val requestedName: String = "",
     val profile: MemberProfile? = null,
+)
+
+enum class MemberFavoritesStatus { Closed, Loading, Ready, SignInRequired, Error }
+
+/** Another member's public favorites list, as the station shows it to a signed-in member. */
+data class MemberFavoritesState(
+    val status: MemberFavoritesStatus = MemberFavoritesStatus.Closed,
+    val memberName: String = "",
+    val tracks: List<FavoriteTrack> = emptyList(),
 )
 
 /** One track from the station's played-history archive. Times are on the station's own clock. */
@@ -68,6 +81,7 @@ data class StationNewsState(
 data class StationExtrasState(
     val stationId: StationId,
     val profile: MemberProfileState = MemberProfileState(),
+    val memberFavorites: MemberFavoritesState = MemberFavoritesState(),
     val history: PlayedHistoryState = PlayedHistoryState(),
     val news: StationNewsState = StationNewsState(),
 )
@@ -88,13 +102,15 @@ fun currentPlayedHistoryBlock(now: ZonedDateTime = ZonedDateTime.now(STATION_CLO
 }
 
 /**
- * Public, read-only station information that sits beside the core player: member profile cards, the played-history
- * archive, and station news. Everything is fetched on request and held in memory only.
+ * Read-only station information that sits beside the core player: member profile cards, a member's public favorites
+ * list, the played-history archive, and station news. Everything is fetched on request and held in memory only.
  */
 interface StationExtrasRepository {
     fun observeExtras(stationId: StationId): Flow<StationExtrasState>
     suspend fun openProfile(stationId: StationId, username: String)
     suspend fun closeProfile(stationId: StationId)
+    suspend fun openMemberFavorites(stationId: StationId, memberName: String, memberNumber: String)
+    suspend fun closeMemberFavorites(stationId: StationId)
     suspend fun loadHistory(stationId: StationId, date: LocalDate, startHour: Int)
     suspend fun closeHistory(stationId: StationId)
     suspend fun refreshNews(stationId: StationId)
@@ -104,6 +120,8 @@ object UnavailableStationExtrasRepository : StationExtrasRepository {
     override fun observeExtras(stationId: StationId): Flow<StationExtrasState> = flowOf(StationExtrasState(stationId))
     override suspend fun openProfile(stationId: StationId, username: String) = Unit
     override suspend fun closeProfile(stationId: StationId) = Unit
+    override suspend fun openMemberFavorites(stationId: StationId, memberName: String, memberNumber: String) = Unit
+    override suspend fun closeMemberFavorites(stationId: StationId) = Unit
     override suspend fun loadHistory(stationId: StationId, date: LocalDate, startHour: Int) = Unit
     override suspend fun closeHistory(stationId: StationId) = Unit
     override suspend fun refreshNews(stationId: StationId) = Unit

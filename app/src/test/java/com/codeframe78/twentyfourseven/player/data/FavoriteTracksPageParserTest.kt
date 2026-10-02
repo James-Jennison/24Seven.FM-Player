@@ -44,6 +44,51 @@ class FavoriteTracksPageParserTest {
     }
 
     @Test
+    fun `parses another member's list, whose rows carry an extra cell for the listener's own favorites`() {
+        val html = """
+            <table>
+              <tr><td colspan="3">Listener's Favorites</td></tr>
+              <tr>
+                <td>1</td>
+                <td><a href="/modules.php?name=Req&amp;asin=B000KNB1IM&amp;songID=197907" target="_top"><img src="/images/requestbutton_request.png" title="Last Played: Jun 18"></a></td>
+                <td><a href="/modules.php?name=Favorites&amp;song2view=197907" target="_top"><img src="/images/heart-red.png"></a><a href="#" onclick="return false"><img src="/images/heart-gray.png"></a></td>
+                <td><span><b>Scherzo Berzerko</b></span><br><span>Cartoon Concerto</span></td>
+                <td><span><b>Bruce Broughton</b></span><br><span>Soundtrack</span></td>
+                <td>2003</td><td>18:36</td><td><a href="https://example.com/buy">Buy</a></td><td><a href="/detail">Detail</a></td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td><img src="/images/requestbutton_unavailable.gif" title="The artist is already in queue."></td>
+                <td><a href="#" onclick="return false"><img src="/images/heart-gray.png"></a></td>
+                <td><span><b>Unavailable Track</b></span><br><span>Example Album</span></td>
+                <td><span><b>Example Artist</b></span><br><span>Game</span></td>
+                <td>2020</td><td>3:10</td><td></td><td></td>
+              </tr>
+            </table>
+        """.trimIndent()
+
+        val tracks = parser.parseTracks(html, origin)
+
+        assertEquals(listOf("Scherzo Berzerko", "Unavailable Track"), tracks.map { it.title })
+        assertEquals("Cartoon Concerto", tracks[0].album)
+        assertEquals("Bruce Broughton", tracks[0].artist)
+        assertEquals("Soundtrack", tracks[0].genre)
+        assertEquals("2003", tracks[0].year)
+        assertEquals("18:36", tracks[0].duration)
+        assertEquals("197907", tracks[0].requestTrack?.songId)
+        assertNull(tracks[1].requestTrack)
+        assertEquals("The artist is already in queue.", tracks[1].availabilityMessage)
+    }
+
+    @Test
+    fun `names the member a list address belongs to`() {
+        assertEquals(
+            "4821",
+            parser.listMemberNumber("https://streamingsoundtracks.com/modules/Favorites/thelist.php?user2view=4821"),
+        )
+    }
+
+    @Test
     fun `parses requestable and unavailable favorite tracks with station status`() {
         val html = """
             <table>

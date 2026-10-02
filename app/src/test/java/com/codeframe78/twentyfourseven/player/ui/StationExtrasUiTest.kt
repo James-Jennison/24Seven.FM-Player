@@ -56,6 +56,18 @@ class StationExtrasUiTest {
     }
 
     @Test
+    fun `the public favorites badge is left out of the badge line because the card shows it as a button`() {
+        val member = MemberProfile(
+            "Listener", null, null, null, null, false, null, listOf("Public Favorites", "Donor"),
+            memberNumber = "4821",
+            publicFavoritesBadge = "Public Favorites",
+        )
+
+        assertEquals(listOf("Badges: Donor"), memberProfileLines(member, "SST"))
+        assertEquals(emptyList<String>(), memberProfileLines(member.copy(badges = listOf("Public Favorites")), "SST"))
+    }
+
+    @Test
     fun `the More tab announces unread private messages`() {
         assertEquals("More", navigationItemDescription(MainDestination.More, "More", 0))
         assertEquals("More, 1 unread private message", navigationItemDescription(MainDestination.More, "More", 1))

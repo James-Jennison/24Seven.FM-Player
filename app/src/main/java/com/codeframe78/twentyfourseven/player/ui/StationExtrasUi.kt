@@ -21,8 +21,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -32,6 +34,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -42,6 +45,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -59,6 +63,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil3.compose.AsyncImage
 import com.codeframe78.twentyfourseven.player.domain.AuthStatus
+import com.codeframe78.twentyfourseven.player.domain.FavoriteTrack
+import com.codeframe78.twentyfourseven.player.domain.MemberFavoritesStatus
 import com.codeframe78.twentyfourseven.player.domain.MemberProfile
 import com.codeframe78.twentyfourseven.player.domain.MemberProfileStatus
 import com.codeframe78.twentyfourseven.player.domain.PLAYED_HISTORY_ARCHIVE_DAYS
@@ -67,6 +73,7 @@ import com.codeframe78.twentyfourseven.player.domain.PlayedHistoryEntry
 import com.codeframe78.twentyfourseven.player.domain.PlayedHistoryState
 import com.codeframe78.twentyfourseven.player.domain.PlayedHistoryStatus
 import com.codeframe78.twentyfourseven.player.domain.STATION_CLOCK_ZONE
+import com.codeframe78.twentyfourseven.player.domain.SongRequestLoadStatus
 import com.codeframe78.twentyfourseven.player.domain.StationNewsStatus
 import com.codeframe78.twentyfourseven.player.domain.StationNewsStory
 import java.time.Instant
@@ -79,6 +86,8 @@ import java.util.Locale
 internal data class StationExtrasActions(
     val onOpenProfile: (String) -> Unit = {},
     val onCloseProfile: () -> Unit = {},
+    val onOpenMemberFavorites: () -> Unit = {},
+    val onCloseMemberFavorites: () -> Unit = {},
     val onOpenHistory: () -> Unit = {},
     val onLoadHistory: (LocalDate, Int) -> Unit = { _, _ -> },
     val onCloseHistory: () -> Unit = {},
@@ -102,6 +111,7 @@ internal fun MemberProfileDialog(state: MainUiState, actions: StationExtrasActio
         state.auth?.status == AuthStatus.SignedIn &&
         state.communitySafety.canContributeCommunityContent &&
         !profile.username.equals(state.auth.displayName, ignoreCase = true)
+    val signedIn = state.auth?.status == AuthStatus.SignedIn
     AlertDialog(
         onDismissRequest = actions.onCloseProfile,
         modifier = Modifier.testTag("member_profile_dialog"),
@@ -116,7 +126,15 @@ internal fun MemberProfileDialog(state: MainUiState, actions: StationExtrasActio
                     Text("Loading profile…")
                 }
                 MemberProfileStatus.NotFound -> Text("${station.shortName} has no member profile under that name.")
-                MemberProfileStatus.Ready -> profile?.let { MemberProfileBody(it, station.shortName) }
+                MemberProfileStatus.Ready -> profile?.let {
+                    MemberProfileBody(
+                        profile = it,
+                        stationName = station.shortName,
+                        showsFavorites = station.capabilities.supportsMemberFavorites && it.memberNumber != null,
+                        signedIn = signedIn,
+                        onOpenFavorites = actions.onOpenMemberFavorites,
+                    )
+                }
                 else -> Text("This profile could not be loaded right now.", color = MaterialTheme.colorScheme.error)
             }
         },
@@ -136,7 +154,13 @@ internal fun MemberProfileDialog(state: MainUiState, actions: StationExtrasActio
 }
 
 @Composable
-private fun MemberProfileBody(profile: MemberProfile, stationName: String) {
+private fun MemberProfileBody(
+    profile: MemberProfile,
+    stationName: String,
+    showsFavorites: Boolean,
+    signedIn: Boolean,
+    onOpenFavorites: () -> Unit,
+) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
             Box(
@@ -167,15 +191,149 @@ private fun MemberProfileBody(profile: MemberProfile, stationName: String) {
             }
         }
         memberProfileLines(profile, stationName).forEach { line -> Text(line, style = MaterialTheme.typography.bodyMedium) }
+        profile.publicFavoritesBadge?.let { badge ->
+            // The badge opens the list it stands for. The stations show that list to signed-in members only.
+            AssistChip(
+                onClick = onOpenFavorites,
+                enabled = showsFavorites && signedIn,
+                label = { Text(badge) },
+                leadingIcon = { Icon(Icons.Default.Favorite, contentDescription = null, Modifier.size(18.dp)) },
+                modifier = Modifier
+                    .testTag("member_profile_favorites")
+                    .semantics { contentDescription = "$badge, view ${profile.username}'s favorites" },
+            )
+            if (showsFavorites && !signedIn) {
+                Text(
+                    "Sign in to $stationName to see ${profile.username}'s favorites.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
     }
 }
 
-/** The plain facts of a profile card, one per line, leaving out whatever the station did not supply. */
+/** True while another member's favorites list covers the screen; that list then hosts the request confirmation. */
+internal val MainUiState.isBrowsingMemberFavorites: Boolean
+    get() = extras?.memberFavorites?.let { it.status != MemberFavoritesStatus.Closed } == true
+
+@Composable
+internal fun MemberFavoritesDialog(
+    state: MainUiState,
+    actions: StationExtrasActions,
+    onPrepareRequest: (FavoriteTrack) -> Unit,
+    onCancelRequest: () -> Unit,
+    onConfirmRequest: (String) -> Unit,
+    onReviewTerms: () -> Unit,
+) {
+    val favorites = state.extras?.memberFavorites ?: return
+    if (favorites.status == MemberFavoritesStatus.Closed) return
+    val station = state.selectedStation ?: return
+    var filter by rememberSaveable(favorites.memberName) { mutableStateOf("") }
+    val visibleTracks = remember(favorites.tracks, filter) {
+        val query = filter.trim()
+        if (query.isBlank()) favorites.tracks else favorites.tracks.filter { it.matchesFilter(query) }
+    }
+    Dialog(
+        onDismissRequest = actions.onCloseMemberFavorites,
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        Surface(Modifier.fillMaxSize().testTag("member_favorites_dialog")) {
+            Column(Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 12.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Favorite, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Spacer(Modifier.width(12.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            "${favorites.memberName}'s favorites",
+                            style = MaterialTheme.typography.titleLarge,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Text(
+                            station.name,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    IconButton(onClick = actions.onCloseMemberFavorites) {
+                        Icon(Icons.Default.Close, contentDescription = "Close ${favorites.memberName}'s favorites")
+                    }
+                }
+                when (favorites.status) {
+                    MemberFavoritesStatus.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                    MemberFavoritesStatus.SignInRequired -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("Sign in to ${station.shortName} again to see this list.")
+                    }
+                    MemberFavoritesStatus.Ready -> LazyColumn(
+                        Modifier.fillMaxSize().testTag("member_favorites_list"),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        item {
+                            OutlinedTextField(
+                                value = filter,
+                                onValueChange = { filter = it.take(100) },
+                                label = { Text("Filter favorites") },
+                                supportingText = {
+                                    Text(
+                                        if (filter.isBlank()) {
+                                            "${visibleTracks.size} tracks"
+                                        } else {
+                                            "${visibleTracks.size} of ${favorites.tracks.size} tracks"
+                                        },
+                                    )
+                                },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
+                        if (visibleTracks.isEmpty()) {
+                            item {
+                                Text(
+                                    if (filter.isBlank()) "This list has no tracks." else "No favorites match this filter.",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                        items(
+                            items = visibleTracks,
+                            key = { track -> "${track.position}-${track.requestTrack?.songId ?: track.title}" },
+                        ) { track ->
+                            FavoriteTrackCard(
+                                track = track,
+                                canRequest = station.capabilities.supportsRequests &&
+                                    state.requests?.status != SongRequestLoadStatus.Submitting,
+                                onPrepareRequest = onPrepareRequest,
+                            )
+                        }
+                    }
+                    else -> Column(
+                        Modifier.fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                    ) {
+                        Text("This list could not be loaded right now.", color = MaterialTheme.colorScheme.error)
+                        TextButton(onClick = actions.onOpenMemberFavorites) { Text("Try again") }
+                    }
+                }
+            }
+        }
+        RequestConfirmationDialog(state, onCancelRequest, onConfirmRequest, onReviewTerms)
+    }
+}
+
+/**
+ * The plain facts of a profile card, one per line, leaving out whatever the station did not supply. The public
+ * favorites badge is left out because the card shows it as a button of its own.
+ */
 internal fun memberProfileLines(profile: MemberProfile, stationName: String): List<String> = listOfNotNull(
     profile.memberSince?.let { "$stationName member since $it" },
     profile.location?.let { "Location: $it" },
     profile.membership?.let { "Membership: $it" },
-    profile.badges.takeIf(List<String>::isNotEmpty)?.joinToString(prefix = "Badges: "),
+    (profile.badges - listOfNotNull(profile.publicFavoritesBadge).toSet())
+        .takeIf(List<String>::isNotEmpty)?.joinToString(prefix = "Badges: "),
 )
 
 @OptIn(ExperimentalMaterial3Api::class)

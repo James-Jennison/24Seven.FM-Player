@@ -44,6 +44,7 @@ data class StationCapabilities(
     val supportsPrivateMessages: Boolean = false,
     val supportsPrivateMessageSending: Boolean = false,
     val supportsMemberProfiles: Boolean = false,
+    val supportsMemberFavorites: Boolean = false,
     val supportsPlayedHistoryArchive: Boolean = false,
     val supportsStationNews: Boolean = false,
 )

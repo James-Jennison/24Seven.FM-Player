@@ -1,5 +1,7 @@
 package com.codeframe78.twentyfourseven.player.data
 
+import com.codeframe78.twentyfourseven.player.domain.FavoriteTrack
+import com.codeframe78.twentyfourseven.player.domain.MemberFavoritesStatus
 import com.codeframe78.twentyfourseven.player.domain.MemberProfile
 import com.codeframe78.twentyfourseven.player.domain.MemberProfileStatus
 import com.codeframe78.twentyfourseven.player.domain.PlayedHistoryEntry
@@ -35,6 +37,35 @@ class NetworkStationExtrasRepositoryTest {
         with(repository.observeExtras(station).first().profile) {
             assertEquals(MemberProfileStatus.Closed, status)
             assertNull(profile)
+        }
+    }
+
+    @Test
+    fun `a member's favorites open, report a needed sign-in or a failure, and close`() = runTest {
+        val repository = NetworkStationExtrasRepository(FakeRemote())
+
+        repository.openMemberFavorites(station, "Listener", "4821")
+        with(repository.observeExtras(station).first().memberFavorites) {
+            assertEquals(MemberFavoritesStatus.Ready, status)
+            assertEquals("Listener", memberName)
+            assertEquals("Opening", tracks.single().title)
+        }
+
+        repository.closeMemberFavorites(station)
+        with(repository.observeExtras(station).first().memberFavorites) {
+            assertEquals(MemberFavoritesStatus.Closed, status)
+            assertEquals(emptyList<FavoriteTrack>(), tracks)
+        }
+
+        val signedOut = NetworkStationExtrasRepository(FakeRemote(failure = FavoritesAuthenticationRequiredException()))
+        signedOut.openMemberFavorites(station, "Listener", "4821")
+        assertEquals(MemberFavoritesStatus.SignInRequired, signedOut.observeExtras(station).first().memberFavorites.status)
+
+        val offline = NetworkStationExtrasRepository(FakeRemote(failure = IOException("offline")))
+        offline.openMemberFavorites(station, "Listener", "4821")
+        with(offline.observeExtras(station).first().memberFavorites) {
+            assertEquals(MemberFavoritesStatus.Error, status)
+            assertEquals("Listener", memberName)
         }
     }
 
@@ -91,6 +122,11 @@ class NetworkStationExtrasRepositoryTest {
             } else {
                 null
             }
+        }
+
+        override suspend fun memberFavorites(stationId: StationId, memberNumber: String): List<FavoriteTrack> {
+            failure?.let { throw it }
+            return listOf(FavoriteTrack(1, "Opening", "Album Two", "Composer Two"))
         }
 
         override suspend fun history(stationId: StationId, date: LocalDate, startHour: Int): List<PlayedHistoryEntry> {

@@ -197,6 +197,8 @@ class MainActivity : AppCompatActivity() {
                         stationExtrasActions = StationExtrasActions(
                             onOpenProfile = viewModel::openMemberProfile,
                             onCloseProfile = viewModel::closeMemberProfile,
+                            onOpenMemberFavorites = viewModel::openMemberFavorites,
+                            onCloseMemberFavorites = viewModel::closeMemberFavorites,
                             onOpenHistory = viewModel::openPlayedHistory,
                             onLoadHistory = viewModel::loadPlayedHistory,
                             onCloseHistory = viewModel::closePlayedHistory,

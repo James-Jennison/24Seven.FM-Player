@@ -1,5 +1,7 @@
 package com.codeframe78.twentyfourseven.player.data
 
+import com.codeframe78.twentyfourseven.player.domain.MemberFavoritesState
+import com.codeframe78.twentyfourseven.player.domain.MemberFavoritesStatus
 import com.codeframe78.twentyfourseven.player.domain.MemberProfileState
 import com.codeframe78.twentyfourseven.player.domain.MemberProfileStatus
 import com.codeframe78.twentyfourseven.player.domain.PLAYED_HISTORY_BLOCK_HOURS
@@ -52,6 +54,32 @@ internal class NetworkStationExtrasRepository(
         state(stationId.canonicalized()).update { it.copy(profile = MemberProfileState()) }
     }
 
+    override suspend fun openMemberFavorites(stationId: StationId, memberName: String, memberNumber: String) {
+        val state = state(stationId.canonicalized())
+        state.update { it.copy(memberFavorites = MemberFavoritesState(MemberFavoritesStatus.Loading, memberName)) }
+        val loaded = try {
+            MemberFavoritesState(
+                MemberFavoritesStatus.Ready,
+                memberName,
+                remote.memberFavorites(state.value.stationId, memberNumber),
+            )
+        } catch (cancellation: CancellationException) {
+            state.update {
+                if (it.memberFavorites.isLoading(memberName)) it.copy(memberFavorites = MemberFavoritesState()) else it
+            }
+            throw cancellation
+        } catch (_: FavoritesAuthenticationRequiredException) {
+            MemberFavoritesState(MemberFavoritesStatus.SignInRequired, memberName)
+        } catch (_: Exception) {
+            MemberFavoritesState(MemberFavoritesStatus.Error, memberName)
+        }
+        state.update { if (it.memberFavorites.isLoading(memberName)) it.copy(memberFavorites = loaded) else it }
+    }
+
+    override suspend fun closeMemberFavorites(stationId: StationId) {
+        state(stationId.canonicalized()).update { it.copy(memberFavorites = MemberFavoritesState()) }
+    }
+
     override suspend fun loadHistory(stationId: StationId, date: LocalDate, startHour: Int) {
         val block = startHour.coerceIn(0, 24 - PLAYED_HISTORY_BLOCK_HOURS)
             .let { it - it % PLAYED_HISTORY_BLOCK_HOURS }
@@ -94,6 +122,9 @@ internal class NetworkStationExtrasRepository(
 
     private fun MemberProfileState.isLoading(name: String) =
         status == MemberProfileStatus.Loading && requestedName == name
+
+    private fun MemberFavoritesState.isLoading(name: String) =
+        status == MemberFavoritesStatus.Loading && memberName == name
 
     private fun PlayedHistoryState.isLoading(date: LocalDate, block: Int) =
         status == PlayedHistoryStatus.Loading && this.date == date && startHour == block
