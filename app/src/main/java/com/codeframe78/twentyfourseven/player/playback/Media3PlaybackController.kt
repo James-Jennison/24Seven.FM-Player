@@ -88,6 +88,9 @@ class Media3PlaybackController(
     private val listener = object : Player.Listener {
         override fun onPlaybackStateChanged(playbackState: Int) = updateState()
         override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+            // A pause from the notification, a headset, or lost audio focus also ends the listener's play request,
+            // so a later station change or the end of a Cast session does not start audio unasked.
+            if (!playWhenReady) playRequested = false
             maybeRetryAfterNetworkRestored()
             updateState()
         }
@@ -116,6 +119,8 @@ class Media3PlaybackController(
             args: Bundle,
         ) = if (command == SleepTimerSessionContract.expiredCommand) {
             playRequested = false
+            // The service stopped the local player; audio on a Cast device has to be stopped from here.
+            castPlayback.stop()
             updateSleepTimerState(controller.sessionExtras)
             updateState()
             Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
@@ -186,7 +191,8 @@ class Media3PlaybackController(
             stateFlow.value = stateFlow.value.copy(status = PlaybackStatus.Connecting)
             return
         }
-        if (connected.mediaItemCount == 0) selectedStation?.let(::setStationMediaItems)
+        // A station chosen during a Cast session never reached the local player, so load what is selected now.
+        if (connected.loadedStationId() != selectedStation?.id?.value) selectedStation?.let(::setStationMediaItems)
         connected.prepare()
         connected.play()
         updateState()
@@ -232,7 +238,16 @@ class Media3PlaybackController(
 
     private fun setStationMediaItems(station: Station) {
         val connected = controller ?: return
-        val resumePlayback = playRequested || connected.playWhenReady
+        // The service may already be playing this station, started in the background or from Android Auto.
+        // Replacing its playlist would restart the stream and clear Now Playing.
+        if (connected.playbackState != Player.STATE_IDLE && connected.loadedStationId() == station.id.value) {
+            if (playRequested) connected.play()
+            updateState()
+            return
+        }
+        // A stopped player keeps playWhenReady set, so it counts as playing only while it holds a prepared stream.
+        val resumePlayback = playRequested ||
+            (connected.playWhenReady && connected.playbackState != Player.STATE_IDLE)
         val mediaItems = station.streams
             .sortedBy { it.priority }
             .map { stream ->
@@ -307,7 +322,8 @@ class Media3PlaybackController(
 
     private fun stopLocalPlaybackForCast() {
         networkRecovery.cancel()
-        controller?.stop()
+        // Not controller.stop(): the service treats Stop as the listener ending the session and cancels the timer.
+        controller?.sendCustomCommand(CastHandoffSessionContract.stopLocalPlaybackCommand, Bundle.EMPTY)
     }
 
     private fun updateCastState(snapshot: CastPlaybackSnapshot) {
@@ -405,6 +421,11 @@ class Media3PlaybackController(
         }
     }
 }
+
+/** The station whose streams are loaded, read from the `<stationId>:<priority>` media ID the Player assigns. */
+private fun MediaController.loadedStationId(): String? = currentMediaItem?.mediaId
+    ?.substringBefore(':')
+    ?.takeIf(String::isNotBlank)
 
 private fun ConnectivityManager.hasValidatedDefaultNetwork(): Boolean = activeNetwork
     ?.let(::getNetworkCapabilities)

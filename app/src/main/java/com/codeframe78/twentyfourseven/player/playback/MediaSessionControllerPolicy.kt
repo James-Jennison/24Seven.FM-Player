@@ -61,6 +61,7 @@ internal object MediaSessionControllerPolicy {
                 ControllerAccess.LocalApp -> {
                     add(SleepTimerSessionContract.setCommand)
                     add(SleepTimerSessionContract.cancelCommand)
+                    add(CastHandoffSessionContract.stopLocalPlaybackCommand)
                 }
 
                 ControllerAccess.Automotive -> Unit
@@ -73,6 +74,8 @@ internal object MediaSessionControllerPolicy {
 
     fun mayCancelSleepTimer(access: ControllerAccess) =
         access == ControllerAccess.LocalApp || access == ControllerAccess.TrustedSystem
+
+    fun mayHandOffToCast(access: ControllerAccess) = access == ControllerAccess.LocalApp
 
     fun mayChangeMedia(access: ControllerAccess) =
         access == ControllerAccess.LocalApp || access == ControllerAccess.Automotive

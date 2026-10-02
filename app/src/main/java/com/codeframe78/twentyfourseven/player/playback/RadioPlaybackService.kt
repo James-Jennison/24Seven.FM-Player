@@ -218,6 +218,17 @@ class RadioPlaybackService : MediaLibraryService() {
                 }
             }
 
+            CastHandoffSessionContract.stopLocalPlaybackCommand -> {
+                val access = MediaSessionControllerPolicy.access(controller, packageName)
+                if (!MediaSessionControllerPolicy.mayHandOffToCast(access)) {
+                    Futures.immediateFuture(SessionResult(SessionError.ERROR_NOT_SUPPORTED))
+                } else {
+                    // The audio continues on the Cast device, so an active sleep timer keeps running.
+                    player.stop()
+                    Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+                }
+            }
+
             else -> super.onCustomCommand(session, controller, customCommand, args)
         }
 
