@@ -1,6 +1,6 @@
 # Endpoint inventory
 
-Sanitized inventory updated October 1, 2026. No cookies, credentials, anti-spam answers, authentication headers, personal identifiers, or message IDs belong in this document.
+Sanitized inventory updated October 2, 2026. No cookies, credentials, anti-spam answers, authentication headers, personal identifiers, or message IDs belong in this document.
 
 All relative HTTPS paths below are resolved independently against one of these five station origins: `streamingsoundtracks.com`, `1980s.fm`, `adagio.fm`, `death.fm`, or `entranced.fm`. Requests validate the expected origin before sending station sessions.
 
@@ -8,10 +8,9 @@ All relative HTTPS paths below are resolved independently against one of these f
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | All five | Live audio | Station-provided `https://<station-domain>/live` | HTTPS-proxied Icecast AAC+ stream, 192 kbps | None | Continuous Media3 playback; reverse proxy handles `hi5` primary and `hi` backup failover | Playback error when the redundant proxy cannot serve audio | Administrator-directed redundant Icecast architecture; verified HTTPS 200 on August 10, 2026 |
 | All five | ICY metadata | Audio response headers/metadata | ICY text | None | Event driven; no independent poll | Playback continues without metadata | Implemented/verified |
-| All five | Current artwork | `/soap/FM24sevenJSON.php?action=GetCurrentlyPlaying` | Bounded JSON | None | Once per distinct ICY title; no interval poll | Omit artwork and retain station fallback | Implemented/verified |
+| All five | Current artwork and track details | `/soap/FM24sevenJSON.php?action=GetCurrentlyPlaying` | Bounded JSON: artwork, album identifier, requester and optional message, listener count, track length and start | None | Once per distinct ICY title; no interval poll | Omit artwork and details and retain station fallback; details attach only when the JSON track matches the ICY title | Implemented; verified on all five October 1, 2026 |
 | All five | Cover station logos | Station-specific `/images/logos/` 200×200 PNG URL in the bootstrap station contract | PNG | None | Requested only while the folded cover selector is visible; Coil cache applies | Fall back to the app logo | Owner-provided official paths; all five verified HTTPS 200 on August 11, 2026 |
-| SST, 1980s, Adagio, Entranced | Queue and recent history | `/modules/Queue_Played/Queue_Played-gen.php`, Queue page referer | Bounded HTML in the declared character set (UTF-8 as of October 1, 2026) | None | No more than once per 60 seconds; memory last-known | Preserve prior ready state or show refresh error | Administrator-authorized; implemented |
-| Death.FM | Compact queue/history | `/player.php?ajax_action=get_db_info&station=dfm&asin=` | Bounded JSON containing HTML fragments | None | Same shared 60-second limit | Same queue repository error policy | Administrator-authorized; implemented |
+| All five | Queue and recent history | `/modules/Queue_Played/Queue_Played-gen.php`, Queue page referer | Bounded HTML in the declared character set (UTF-8 as of October 1, 2026) | None | No more than once per 60 seconds; memory last-known | Preserve prior ready state or show refresh error | Administrator-authorized; implemented. Each table's heading row decides whether album or artist is listed first. Death.FM moved from the retired compact feed to this page October 2, 2026 |
 | All five | Login challenge/form discovery | `/signin.php`; server-provided same-origin form action | Bounded HTML + text anti-spam prompt | Credentials and answer transient on POST | User initiated; restored session revalidated | New challenge and safe error | Administrator-directed text anti-spam migration; implemented |
 | All five | Logout | `/modules.php?name=Your_Account&op=logout` | HTML/redirect | Station session | User initiated | Local protected session cleared even on remote failure | Implemented |
 | All five | Chat read | `/modules/ClearChat/block-files/view.php?username=&sort=desc` | Bounded HTML in the declared character set (UTF-8 as of October 1, 2026) | No | 30-second minimum; memory-only | Prior state/error, no persisted history | Administrator-authorized; implemented |
@@ -27,11 +26,18 @@ All relative HTTPS paths below are resolved independently against one of these f
 | SST only | Listener request history | `/modules.php?name=Your_Requests` | Bounded HTML in the declared character set | SST session | More destination/manual refresh only; memory-only; up to 10 rows | Sign-in-specific or generic load error | Administrator-authorized; M15 implemented and live researched |
 | SST only | Request cooldown/readiness | Page-discovered exact `/modules/VIP_Subscribe/vip_req_timer.php` | Bounded HTML | SST session | At most once per explicit listener-activity refresh | Unknown when trusted evidence is absent | M15 implemented; representative VIP evidence verified |
 | SST only | Membership badge | Page-discovered same-origin forum profile with bounded numeric member identifier | Bounded HTML | SST session | At most once per explicit listener-activity refresh | Unknown when profile or explicit badge is absent | M15 implemented; VIP evidence verified; rank ignored |
+| SST only | Current track identifier for add-to-favorites | `/studio.php` | Bounded HTML in the declared character set | SST session | Read once per explicit tap, immediately before the mutation | Stop when the page shows a different track, no identifier, or a signed-out visitor | Implemented; owner-verified on device October 2, 2026 |
+| SST only | Add current track to favorites | `/modules.php?name=Favorites&op=add&songid=<validated-id>` | HTML | SST session | Explicit tap; sent once, never retried | Failure message; no repeat | Implemented; owner-verified on device October 2, 2026 |
+| SST only | Album rating form | `/modules/Ratings/playing_rating.php?asin=<validated-id>` | Bounded HTML form with server-issued hidden fields | SST session | Opened by explicit tap; re-read immediately before submission | Already-rated, signed-out, and unknown states shown without a mutation | Implemented; owner-verified on device October 2, 2026 |
+| SST only | Album rating submission | The rating form's own same-origin action | Form POST, then one confirming read | SST session | Explicit choice and confirmation; sent once, never retried | Unconfirmed result is reported as such | Implemented; owner-verified on device October 2, 2026 |
+| SST only | Private message folders and messages | `/modules.php?name=Private_Messages` with the station's folder, page, and read parameters | Bounded HTML | SST session | On section open, folder change, paging, manual refresh, or opening a message; no polling; memory-only | Sign-in-required state on HTTP 403; generic load error otherwise | Implemented; owner-verified on device October 2, 2026. The page's Save and Delete links are plain GET mutations and are never fetched |
+| SST only | Private message recipient lookup | `/modules.php?name=Your_Account&op=userinfo&username=<name>`, following the same-origin redirect to the member profile | Bounded HTML | SST session | Only when the member starts a new message | Recipient-not-found when the profile or the resulting form names a different member | Implemented; owner-verified on device October 2, 2026 |
+| SST only | Private message form and send | Station reply/new-message form, then its same-origin form action | HTML form; form POST, then one confirming read of the Sent folder | SST session | Explicit Review then Send; sent once, never retried; the form is spent after one send | Unconfirmed result directs the member to check Sent before trying again | Implemented; delivery owner-verified October 2, 2026 |
 | All five | Player Contact handoff | Fixed monitored `mailto:` recipient; station-specific subject/body generated locally | Android email draft | No station session or email credentials | Explicit native-card tap; user reviews, cancels, or sends in email app | Reject non-catalogued recipients, URI query/fragment injection, and missing email handler | Current M31 catalog; no station browser page |
 
 ## Caching and safety policy
 
-- Queue, chat, request catalog, Favorites, and listener request-activity data are memory-only today. Queue retains its last ready state when a later refresh fails.
+- Queue, chat, request catalog, Favorites, listener request-activity, private-message, and album-rating data are memory-only today. Private-message content is excluded from notifications, diagnostics, and logs. Queue retains its last ready state when a later refresh fails.
 - Artwork URL acceptance is restricted to the selected station host. Authentication, request, chat, and Favorites actions require same-origin validation.
 - Public queue polling must remain at or below once per 60 seconds per selected station. Chat reads must remain at or below once per 30 seconds.
 - M12 fails closed when queue or fresh eligibility cannot be established before a request; it never infers `Request Now` solely from stale display state.
@@ -45,7 +51,7 @@ All relative HTTPS paths below are resolved independently against one of these f
 - An October 1, 2026 read-only rescan of the upgraded station sites found that responses now declare their own character
   set (Chat read and the extended Queue page are UTF-8; the Chat input form remains ISO-8859-1), so the Player decodes
   each response with the character set it declares. Death.FM now also serves the extended Queue page with the same
-  Queue/Played tables as the other stations; the Player still uses the compact Death.FM feed until that page is
-  certified. The Player reads the sign-in form from `/signin.php`, verified on all five stations on October 2, 2026,
+  Queue/Played tables as the other stations, and the Player reads it there as of October 2, 2026; the compact Death.FM
+  feed is no longer used. The Player reads the sign-in form from `/signin.php`, verified on all five stations on October 2, 2026,
   and no longer loads the account page for sign-in. Signed-in confirmation relies on the logout action and account
   menu, not on a welcome greeting.

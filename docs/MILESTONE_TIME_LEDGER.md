@@ -1,6 +1,6 @@
 # Milestone Real-World Time Ledger
 
-Last updated: `August 20, 2026 at 5:17:20 AM PDT (UTC−07:00)`
+Last updated: `October 2, 2026 at 4:44:57 AM PDT (UTC−07:00)`
 
 This is the permanent time-accounting record for the canonical M01–M60 milestones in [ROADMAP.md](ROADMAP.md). It
 preserves historical uncertainty instead of treating commit spans as labor time. Future milestone work must be
@@ -120,9 +120,9 @@ active execution.
 | M44 | Active · 1.0.0 published; 1.0.1 in review | September 2, 2026 | — | 1–4 calendar wk | Ongoing | Ongoing | — | Ongoing | Ongoing | Not assessable while active | Confirmed current phase |
 | M45 | Planned recurring | — | — | Monthly, quarterly, and release-triggered | — | — | — | — | — | — | Unknown |
 | M46 | Planned post-Alpha | — | — | 1–3 active wk per approved slice | — | — | — | — | — | — | Unknown |
-| M47 | Deferred | — | — | External repair; then 1–3 active wk | — | — | — | — | — | — | Unknown |
-| M48 | Deferred after M47 | — | — | 1–2 active wk | — | — | — | — | — | — | Unknown |
-| M49 | Deferred after M48 | — | — | 1–2 active wk | — | — | — | — | — | — | Unknown |
+| M47 | In progress | `October 2, 2026 at 3:39:07 AM PDT (UTC−07:00)` | — | External repair; then 1–3 active wk | Shared; see M47 | Shared | Shared | Not split | Open | — | Reconstructed |
+| M48 | In progress | `October 2, 2026 at 3:39:07 AM PDT (UTC−07:00)` | — | 1–2 active wk | Shared; see M47 | Shared | Shared | Not split | Open | — | Reconstructed |
+| M49 | In progress | `October 2, 2026 at 3:39:07 AM PDT (UTC−07:00)` | — | 1–2 active wk | Shared; see M47 | Shared | Shared | Not split | Open | — | Reconstructed |
 | M50 | Deferred after M49/M38 | — | — | 2–4 active wk | — | — | — | — | — | — | Unknown |
 | M51 | Retired | No later than `July 19, 2026 at 7:37:21 AM PDT (UTC−07:00)` | Retired `July 19, 2026 at 8:55:35 AM PDT (UTC−07:00)` | No forecast | Unknown | Unknown | Unknown | Unknown | ≥1.30 h decision window | — | Estimated |
 | M52 | Retired | — | Retired `July 19, 2026 at 8:55:35 AM PDT (UTC−07:00)` | No forecast | — | — | — | — | — | — | Unknown |
@@ -831,16 +831,28 @@ independently.
 
 - **Objective:** Wait for site-owner delivery repair, then certify limits, station isolation, error/indeterminate behavior,
   and operator-confirmed production behavior.
-- **Start, completion, and intervals:** Not started; no repair-trigger or actual interval is recorded.
+- **Start, completion, and intervals:** The owner reported the delivery repair and authorized Private Messages work
+  together with five other station features at `October 2, 2026 at 3:39:07 AM PDT (UTC−07:00)`. Not complete: send limits,
+  moderation boundaries, and the other four stations remain open. One shared session window covers M47–M49 and the
+  non-milestone station features (current-track details, add-to-favorites, album rating, Death.FM queue, sign-in page);
+  it was not split per milestone.
+
+  | Started | Ended | Category | Reason or work | Evidence | Hours |
+  | --- | --- | --- | --- | --- | ---: |
+  | `October 2, 2026 at 3:39:07 AM PDT (UTC−07:00)` | `October 2, 2026 at 3:54:22 AM PDT (UTC−07:00)` | Active | Read-only site rescan follow-up, implementation, unit tests | Session transcript; branch `codex/station-features` | 0.25 |
+  | `October 2, 2026 at 3:54:22 AM PDT (UTC−07:00)` | `October 2, 2026 at 4:04:27 AM PDT (UTC−07:00)` | User-blocked | Test-message send waited for the owner's own click; owner confirmed arrival | Session transcript | 0.17 |
+  | `October 2, 2026 at 4:04:27 AM PDT (UTC−07:00)` | `October 2, 2026 at 4:44:57 AM PDT (UTC−07:00)` | Active | Sign-in page change, device verification on the Razr 2023, landscape layout, owner confirmation of favorite, rating, reply, and sign-in | Session transcript; owner statement | 0.68 |
 - **Model, reasoning strength, and original forecast:** Sol Extra High; no calendar forecast before external repair, then 1–3 active weeks.
-- **Time, variance, evidence, confidence, and forecasting lessons:** No actual variance. Roadmap `e249071`, forecast `f971a9e`; no repair evidence.
-  **Unknown**. Do not start elapsed time until the repaired production-verification trigger is accepted.
+- **Time, variance, evidence, confidence, and forecasting lessons:** No variance yet; the milestone is open. Roadmap `e249071`, forecast `f971a9e`.
+  **Reconstructed** from session transcript timestamps. Implementation used Claude Fable 5.1 rather than the forecast model.
 
 ### M48 — Native Private Message Reading
 
 - **Objective:** Add bounded protected Inbox/Sent models and immutable native UI with complete states and privacy tests.
-- **Start, completion, and intervals:** Not started; all actual intervals and totals are not applicable.
-- **Model, reasoning strength, and original forecast:** Terra High; current forecast 1–2 active weeks after M47.
+- **Start, completion, and intervals:** Started `October 2, 2026 at 3:39:07 AM PDT (UTC−07:00)` with M47; intervals are the shared
+  window recorded under M47. StreamingSoundtracks.com reading is implemented and owner-verified on a device; not
+  released and not accepted as complete.
+- **Model, reasoning strength, and original forecast:** Terra High; current forecast 1–2 active weeks after M47. Implemented with Claude Fable 5.1.
 - **Time, variance, evidence, confidence, and forecasting lessons:** No actual variance. Roadmap `e249071`, forecast `f971a9e`; no implementation.
   **Unknown**. Snapshot forecast/model when M47 closes and M48 is authorized.
 
@@ -848,8 +860,10 @@ independently.
 
 - **Objective:** Add explicit preview/confirmation, one-shot mutation, limits, CSRF/session safety, and indeterminate
   delivery recovery.
-- **Start, completion, and intervals:** Not started; all actual intervals and totals are not applicable.
-- **Model, reasoning strength, and original forecast:** Terra High; current forecast 1–2 active weeks after M48 and explicit mutation authority.
+- **Start, completion, and intervals:** Started `October 2, 2026 at 3:39:07 AM PDT (UTC−07:00)` with M47; intervals are the shared
+  window recorded under M47. StreamingSoundtracks.com reply and new-message sending are implemented; the owner sent one
+  reply from the device and confirmed it worked. Not released and not accepted as complete.
+- **Model, reasoning strength, and original forecast:** Terra High; current forecast 1–2 active weeks after M48 and explicit mutation authority. Implemented with Claude Fable 5.1.
 - **Time, variance, evidence, confidence, and forecasting lessons:** No actual variance. Roadmap `e249071`, forecast `f971a9e`; no mutation evidence.
   **Unknown**. User/owner authorization waits must be recorded separately.
 
@@ -972,7 +986,7 @@ complete translation layer remains in [MILESTONE_MIGRATION.md](MILESTONE_MIGRATI
 | Legacy M24–M26 and M27.1 | M24–M27 | Same work; M27.1 became canonical M27. |
 | Legacy M27.2 authorization, implementation, and validation slices | M36–M38 | Planned work; no actual interval has started. |
 | Legacy M28 release slices | M39–M41 | Planned work; no actual interval has started. |
-| Legacy M17 private-message repair and delivery slices | M47–M50 | Deferred work; no actual interval has started. |
+| Legacy M17 private-message repair and delivery slices | M47–M50 | M47–M49 started October 2, 2026; M50 has not started. |
 | Forum F1–F4 | M51–M54 | M51 preserves the research-to-retirement window; M52–M54 never started. |
 
 ## Prospective operating procedure

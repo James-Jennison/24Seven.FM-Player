@@ -16,9 +16,10 @@ a WebView, share Administrator sessions, or infer one station's capability from 
 
 ### M47 — Server Repair and Protocol Certification
 
-Private Messages remain deferred. Resume only after the site owner repairs the reproduced server delivery failure and
-production behavior can establish authenticated routes, send limits, station isolation, error/indeterminate results,
-moderation boundaries, and representative accounts. Do not expose a partial shipping interface.
+The site owner repaired delivery. On October 2, 2026 a read-only rescan established the authenticated routes, and one
+owner-authorized test message on StreamingSoundtracks.com confirmed delivery, the Sent copy, accented text, and read
+marking. Send limits, moderation boundaries, and the other four stations are not yet established. M48 and M49 are
+implemented for StreamingSoundtracks.com only, verified by the owner on a device, and not yet in a released build.
 
 ### M48 — Native Private Message Reading
 

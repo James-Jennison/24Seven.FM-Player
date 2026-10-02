@@ -36,33 +36,20 @@ internal class PlayerQueueRemoteDataSource(
         stationId: StationId,
         maxExtendedTracks: Int,
     ): QueuePayload = withContext(Dispatchers.IO) {
-        val endpoint = endpoints[stationId.canonicalized()] ?: throw IOException("Unsupported station")
-        if (endpoint.extendedQueue) {
-            val origin = "https://${endpoint.domain}/"
-            val response = get(
-                url = "${origin}modules/Queue_Played/Queue_Played-gen.php",
-                referer = "${origin}modules.php?name=Queue_Played",
-                accept = "text/html",
-                fallbackCharset = StandardCharsets.ISO_8859_1,
-                expectedOrigin = URI(origin),
-            )
-            return@withContext parser.parseExtended(response, origin, maxExtendedTracks)
-        }
-        val playerUrl = "https://${endpoint.domain}/player.php"
+        val domain = domains[stationId.canonicalized()] ?: throw IOException("Unsupported station")
+        val origin = "https://$domain/"
         val response = get(
-            url = "$playerUrl?ajax_action=get_db_info&station=${endpoint.stationCode}&asin=",
-            referer = playerUrl,
-            accept = "application/json",
-            fallbackCharset = StandardCharsets.UTF_8,
-            expectedOrigin = URI("https://${endpoint.domain}/"),
+            url = "${origin}modules/Queue_Played/Queue_Played-gen.php",
+            referer = "${origin}modules.php?name=Queue_Played",
+            fallbackCharset = StandardCharsets.ISO_8859_1,
+            expectedOrigin = URI(origin),
         )
-        parser.parse(response, "https://${endpoint.domain}/")
+        parser.parseExtended(response, origin, maxExtendedTracks)
     }
 
     private fun get(
         url: String,
         referer: String,
-        accept: String,
         fallbackCharset: Charset,
         expectedOrigin: URI,
     ): String {
@@ -74,12 +61,9 @@ internal class PlayerQueueRemoteDataSource(
                 connection.connectTimeout = REQUEST_TIMEOUT_MILLIS
                 connection.readTimeout = REQUEST_TIMEOUT_MILLIS
                 connection.instanceFollowRedirects = false
-                connection.setRequestProperty("Accept", accept)
+                connection.setRequestProperty("Accept", "text/html")
                 connection.setRequestProperty("Referer", referer)
                 connection.setRequestProperty("User-Agent", USER_AGENT)
-                if (accept == "application/json") {
-                    connection.setRequestProperty("X-Requested-With", "XMLHttpRequest")
-                }
                 val status = connection.responseCode
                 if (status in REDIRECT_STATUSES) {
                     if (redirectCount == MAX_REDIRECTS) throw IOException("Too many station redirects")
@@ -102,12 +86,6 @@ internal class PlayerQueueRemoteDataSource(
         throw IOException("Station request did not complete")
     }
 
-    private data class Endpoint(
-        val domain: String,
-        val stationCode: String,
-        val extendedQueue: Boolean = true,
-    )
-
     private companion object {
         const val USER_AGENT = "24Seven.FM-Player/0.1 (Android; unofficial non-commercial client)"
         const val REQUEST_TIMEOUT_MILLIS = 10_000
@@ -116,12 +94,12 @@ internal class PlayerQueueRemoteDataSource(
         const val VISIBLE_QUEUE_TRACK_LIMIT = 30
         const val VERIFICATION_QUEUE_TRACK_LIMIT = 500
         val REDIRECT_STATUSES = setOf(301, 302, 303, 307, 308)
-        val endpoints = mapOf(
-            StationId("sst") to Endpoint("streamingsoundtracks.com", "sst"),
-            StationId("1980s") to Endpoint("1980s.fm", "80s"),
-            StationId("afm") to Endpoint("adagio.fm", "afm"),
-            StationId("dfm") to Endpoint("death.fm", "dfm"),
-            StationId("efm") to Endpoint("entranced.fm", "efm"),
+        val domains = mapOf(
+            StationId("sst") to "streamingsoundtracks.com",
+            StationId("1980s") to "1980s.fm",
+            StationId("afm") to "adagio.fm",
+            StationId("dfm") to "death.fm",
+            StationId("efm") to "entranced.fm",
         )
     }
 }
