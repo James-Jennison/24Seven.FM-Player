@@ -15,6 +15,7 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.browser.customtabs.CustomTabsIntent
@@ -72,16 +73,34 @@ class MainActivity : AppCompatActivity() {
         ActivityResultContracts.RequestPermission(),
     ) { }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        // A recreated Activity still holds the launching intent; its chat destination was already applied.
-        if (savedInstanceState == null) requestedChatStationId.value = intent.chatStationId()
+    private fun requestNotificationPermissionIfMissing() {
         if (
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
         ) {
             notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        val splash = installSplashScreen()
+        super.onCreate(savedInstanceState)
+        // The launch screen stays until the station list and the remembered station are back, so the first frame
+        // the listener sees is their station rather than an empty player.
+        var stationRestored = false
+        splash.setKeepOnScreenCondition { !stationRestored }
+        splash.setOnExitAnimationListener { view ->
+            view.iconView.animate()
+                .alpha(0f)
+                .scaleX(1.15f)
+                .scaleY(1.15f)
+                .setDuration(SPLASH_EXIT_MILLIS)
+                .withEndAction { view.remove() }
+                .start()
+            view.view.animate().alpha(0f).setDuration(SPLASH_EXIT_MILLIS).start()
+        }
+        // A recreated Activity still holds the launching intent; its chat destination was already applied.
+        if (savedInstanceState == null) requestedChatStationId.value = intent.chatStationId()
         enableEdgeToEdge()
         val container = (application as RadioApplication).appContainer
         setContent {
@@ -105,6 +124,7 @@ class MainActivity : AppCompatActivity() {
                 ),
             )
             val state = viewModel.uiState.collectAsStateWithLifecycle().value
+            if (state.selectedStation != null) stationRestored = true
             // Returning to the app is a moment to learn about new private messages.
             LifecycleEventEffect(Lifecycle.Event.ON_START) { viewModel.refreshUnreadPrivateMessages() }
             val chatStationId = requestedChatStationId.collectAsStateWithLifecycle().value
@@ -143,7 +163,12 @@ class MainActivity : AppCompatActivity() {
                         state = state,
                         onSelectStation = viewModel::selectStation,
                         onSelectDestination = viewModel::selectDestination,
-                        onPlay = viewModel::play,
+                        onPlay = {
+                            // The playback notification is the first thing that needs the permission, so the
+                            // question is asked when the listener presses Play rather than over the launch screen.
+                            requestNotificationPermissionIfMissing()
+                            viewModel.play()
+                        },
                         onPause = viewModel::pause,
                         onStop = viewModel::stop,
                         sleepTimerActions = SleepTimerActions(
@@ -408,3 +433,5 @@ class MainActivity : AppCompatActivity() {
 private fun Intent.chatStationId(): String? =
     getStringExtra(AndroidCommunityNotificationRepository.EXTRA_CHAT_STATION_ID)
         ?.takeIf(String::isNotBlank)
+
+private const val SPLASH_EXIT_MILLIS = 220L

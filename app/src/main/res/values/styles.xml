@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.TwentyFourSevenPlayer" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="Theme.TwentyFourSevenPlayer" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/window_background</item>
         <item name="colorPrimary">#10131A</item>
         <item name="colorPrimaryDark">#10131A</item>
         <item name="colorAccent">#E6E1E5</item>
@@ -17,4 +18,13 @@
         <item name="android:statusBarColor">#10131A</item>
         <item name="android:navigationBarColor">#10131A</item>
     </style>
+    <!-- The launch screen: the logo's dark purple, its arcs sweeping in, and the wordmark. The system swaps to the
+         app theme once the splash is dismissed. -->
+    <style name="Theme.TwentyFourSevenPlayer.Starting.Base" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon_animated</item>
+        <item name="windowSplashScreenAnimationDuration">800</item>
+        <item name="postSplashScreenTheme">@style/Theme.TwentyFourSevenPlayer</item>
+    </style>
+    <style name="Theme.TwentyFourSevenPlayer.Starting" parent="Theme.TwentyFourSevenPlayer.Starting.Base" />
 </resources>

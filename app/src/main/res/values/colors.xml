@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="launcher_background">#160A23</color>
+    <color name="splash_background">#160A23</color>
+    <!-- Matches the Compose light background so the first frame does not flash. -->
+    <color name="window_background">#FFF8FC</color>
 </resources>

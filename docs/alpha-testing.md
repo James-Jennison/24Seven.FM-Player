@@ -23,7 +23,7 @@ Do not distribute the development debug APK as the public Alpha. Its machine-loc
 ## First-run checklist
 
 1. Confirm the launcher shows the purple 24Seven.FM icon.
-2. Open the app and grant notification permission when desired.
+2. Open the app. Android asks for notification permission the first time you press Play; grant it when desired.
 3. Confirm all five station cards are visible by horizontal scrolling.
 4. Start one station, verify audio and artwork/title behavior, then switch stations.
 5. Leave the app and verify the media notification and background controls. Tap the notification body outside
