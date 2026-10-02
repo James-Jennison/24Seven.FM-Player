@@ -61,7 +61,13 @@ class ChatMentionMonitorService : Service() {
             stopMonitoring()
             return START_NOT_STICKY
         }
-        startForeground(NOTIFICATION_ID, monitorNotification(stationId))
+        // Android 12 and later can refuse to promote a service the system restarted in the background. The monitor
+        // then turns itself off, so the setting never claims a monitor that is not running.
+        val promoted = runCatching { startForeground(NOTIFICATION_ID, monitorNotification(stationId)) }.isSuccess
+        if (!promoted) {
+            stopFromUserAction(stationId)
+            return START_NOT_STICKY
+        }
         monitorJob?.cancel()
         monitorJob = serviceScope.launch {
             while (isActive && monitor.refresh(stationId)) {
