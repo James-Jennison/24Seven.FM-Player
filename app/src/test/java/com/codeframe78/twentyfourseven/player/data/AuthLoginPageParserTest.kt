@@ -76,6 +76,48 @@ class AuthLoginPageParserTest {
         )
     }
 
+    @Test
+    fun `sign-in page form produces the text challenge and keeps its hidden fields`() {
+        val challenge = parser.parse(signInPage(), "https://streamingsoundtracks.com/") as LoginChallenge.Text
+
+        assertEquals("https://streamingsoundtracks.com/modules.php?name=Your_Account", challenge.actionUrl)
+        assertEquals("Anti-spam check: Type the word “stream” below.", challenge.prompt)
+        assertEquals("gfx_check", challenge.answerFieldName)
+        assertEquals(
+            listOf(
+                LoginFormField("random_num", "stream"),
+                LoginFormField("op", "login"),
+                LoginFormField("redirect", ""),
+                LoginFormField("mode", ""),
+                LoginFormField("f", ""),
+                LoginFormField("t", ""),
+            ),
+            challenge.hiddenFields,
+        )
+    }
+
+    private fun signInPage() = """
+        <main>
+          <h1>Sign In</h1>
+          <p>You can sign in here even if this browser already has an account session.</p>
+          <form action="/modules.php?name=Your_Account" method="post">
+            <label for="username">Nickname</label>
+            <input type="text" name="username" id="username" maxlength="25" required>
+            <label for="user_password">Password</label>
+            <input type="password" name="user_password" id="user_password" maxlength="20" required>
+            <label for="gfx_check">Anti-Spam Check: type <strong>stream</strong></label>
+            <input type="text" name="gfx_check" id="gfx_check" maxlength="20" required>
+            <input type="hidden" name="random_num" value="stream">
+            <input type="hidden" name="op" value="login">
+            <input type="hidden" name="redirect" value="">
+            <input type="hidden" name="mode" value="">
+            <input type="hidden" name="f" value="">
+            <input type="hidden" name="t" value="">
+            <button type="submit">Log In</button>
+          </form>
+        </main>
+    """.trimIndent()
+
     private fun loginPage(
         token: String = "123456",
         operation: String = "login",

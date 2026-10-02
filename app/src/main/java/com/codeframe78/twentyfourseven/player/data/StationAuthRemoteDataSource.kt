@@ -49,8 +49,9 @@ internal class StationAuthRemoteDataSource(
 
     override suspend fun fetchChallenge(stationId: StationId): LoginChallenge = withContext(Dispatchers.IO) {
         val origin = origin(stationId)
-        val accountPage = URI(origin).resolve("/modules.php?name=Your_Account")
-        parser.parse(request(stationId, accountPage, method = "GET").html, origin)
+        // The stations' dedicated sign-in page offers the form even when a session already exists.
+        val signInPage = URI(origin).resolve(SIGN_IN_PATH)
+        parser.parse(request(stationId, signInPage, method = "GET").html, origin)
     }
 
     override suspend fun signIn(
@@ -182,6 +183,7 @@ internal class StationAuthRemoteDataSource(
 
     private companion object {
         const val USER_AGENT = "24Seven.FM-Player/0.1 (Android; unofficial non-commercial client)"
+        const val SIGN_IN_PATH = "/signin.php"
         const val CONNECT_TIMEOUT_MILLIS = 15_000
         const val READ_TIMEOUT_MILLIS = 30_000
         const val MAX_RESPONSE_CHARACTERS = 512_000

@@ -12,7 +12,7 @@ All relative HTTPS paths below are resolved independently against one of these f
 | All five | Cover station logos | Station-specific `/images/logos/` 200×200 PNG URL in the bootstrap station contract | PNG | None | Requested only while the folded cover selector is visible; Coil cache applies | Fall back to the app logo | Owner-provided official paths; all five verified HTTPS 200 on August 11, 2026 |
 | SST, 1980s, Adagio, Entranced | Queue and recent history | `/modules/Queue_Played/Queue_Played-gen.php`, Queue page referer | Bounded HTML in the declared character set (UTF-8 as of October 1, 2026) | None | No more than once per 60 seconds; memory last-known | Preserve prior ready state or show refresh error | Administrator-authorized; implemented |
 | Death.FM | Compact queue/history | `/player.php?ajax_action=get_db_info&station=dfm&asin=` | Bounded JSON containing HTML fragments | None | Same shared 60-second limit | Same queue repository error policy | Administrator-authorized; implemented |
-| All five | Login challenge/form discovery | `/modules.php?name=Your_Account`; server-provided same-origin form action | Bounded HTML + text anti-spam prompt | Credentials and answer transient on POST | User initiated; restored session revalidated | New challenge and safe error | Administrator-directed text anti-spam migration; implemented |
+| All five | Login challenge/form discovery | `/signin.php`; server-provided same-origin form action | Bounded HTML + text anti-spam prompt | Credentials and answer transient on POST | User initiated; restored session revalidated | New challenge and safe error | Administrator-directed text anti-spam migration; implemented |
 | All five | Logout | `/modules.php?name=Your_Account&op=logout` | HTML/redirect | Station session | User initiated | Local protected session cleared even on remote failure | Implemented |
 | All five | Chat read | `/modules/ClearChat/block-files/view.php?username=&sort=desc` | Bounded HTML in the declared character set (UTF-8 as of October 1, 2026) | No | 30-second minimum; memory-only | Prior state/error, no persisted history | Administrator-authorized; implemented |
 | All five | Chat post-form discovery | Station root plus server form at `/modules/ClearChat/block-files/input.php` | HTML form | Station session | User initiated | No mutation without validated form/session | Administrator-authorized; implemented |
@@ -46,4 +46,6 @@ All relative HTTPS paths below are resolved independently against one of these f
   set (Chat read and the extended Queue page are UTF-8; the Chat input form remains ISO-8859-1), so the Player decodes
   each response with the character set it declares. Death.FM now also serves the extended Queue page with the same
   Queue/Played tables as the other stations; the Player still uses the compact Death.FM feed until that page is
-  certified. The sign-in form remains available at `/modules.php?name=Your_Account`; the sites also added `/signin.php`.
+  certified. The Player reads the sign-in form from `/signin.php`, verified on all five stations on October 2, 2026,
+  and no longer loads the account page for sign-in. Signed-in confirmation relies on the logout action and account
+  menu, not on a welcome greeting.
