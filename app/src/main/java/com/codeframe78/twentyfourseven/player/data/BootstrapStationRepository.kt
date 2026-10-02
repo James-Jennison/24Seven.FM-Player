@@ -34,6 +34,8 @@ class BootstrapStationRepository(
                 supportsRequestMessages = true,
                 supportsListenerActivity = true,
                 supportsSecondaryContent = true,
+                supportsNowPlayingFavorite = true,
+                supportsAlbumRating = true,
             ),
         ),
         station(

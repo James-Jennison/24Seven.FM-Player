@@ -52,6 +52,7 @@ import com.codeframe78.twentyfourseven.player.ui.MainDestination
 import com.codeframe78.twentyfourseven.player.ui.MainViewModel
 import com.codeframe78.twentyfourseven.player.ui.RadioApp
 import com.codeframe78.twentyfourseven.player.ui.SleepTimerActions
+import com.codeframe78.twentyfourseven.player.ui.TrackActions
 import com.codeframe78.twentyfourseven.player.ui.theme.TwentyFourSevenTheme
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -92,6 +93,7 @@ class MainActivity : AppCompatActivity() {
                     container.listenerActivityRepository,
                     container.communitySafetyRepository,
                     container.communityNotificationRepository,
+                    container.trackActionsRepository,
                 ),
             )
             val state = viewModel.uiState.collectAsStateWithLifecycle().value
@@ -168,6 +170,12 @@ class MainActivity : AppCompatActivity() {
                                     }
                                 },
                             ),
+                        ),
+                        trackActions = TrackActions(
+                            onAddFavorite = viewModel::addCurrentTrackToFavorites,
+                            onOpenRating = viewModel::openAlbumRating,
+                            onSubmitRating = viewModel::submitAlbumRating,
+                            onCloseRating = viewModel::closeAlbumRating,
                         ),
                         onRefreshQueue = viewModel::refreshQueue,
                         onRefreshChat = viewModel::refreshChat,

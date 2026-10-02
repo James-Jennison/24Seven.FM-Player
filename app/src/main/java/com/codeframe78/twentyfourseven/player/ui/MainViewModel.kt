@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.codeframe78.twentyfourseven.player.domain.Station
+import com.codeframe78.twentyfourseven.player.domain.StationCapabilities
 import com.codeframe78.twentyfourseven.player.domain.StationId
 import com.codeframe78.twentyfourseven.player.domain.StationRepository
 import com.codeframe78.twentyfourseven.player.domain.PlaybackController
@@ -46,6 +47,9 @@ import com.codeframe78.twentyfourseven.player.domain.AbuseReportSubmission
 import com.codeframe78.twentyfourseven.player.domain.AbuseReportTarget
 import com.codeframe78.twentyfourseven.player.domain.CommunitySafetyRepository
 import com.codeframe78.twentyfourseven.player.domain.CommunitySafetyState
+import com.codeframe78.twentyfourseven.player.domain.TrackActionsRepository
+import com.codeframe78.twentyfourseven.player.domain.TrackActionsState
+import com.codeframe78.twentyfourseven.player.domain.UnavailableTrackActionsRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -79,6 +83,7 @@ data class MainUiState(
     val stationPreferences: LocalStationPreferences = LocalStationPreferences(),
     val diagnosticTransitions: List<DiagnosticTransition> = emptyList(),
     val destination: MainDestination = MainDestination.Player,
+    val trackActions: TrackActionsState? = null,
 )
 
 data class StationAccountUiState(
@@ -99,6 +104,7 @@ class MainViewModel(
     private val listenerActivity: ListenerActivityRepository,
     private val communitySafety: CommunitySafetyRepository,
     private val communityNotifications: CommunityNotificationRepository = UnavailableCommunityNotificationRepository,
+    private val trackActions: TrackActionsRepository = UnavailableTrackActionsRepository,
 ) : ViewModel() {
     private val observedSessionStations = mutableSetOf<StationId>()
     private val destination = MutableStateFlow(MainDestination.Player)
@@ -248,18 +254,23 @@ class MainViewModel(
         )
     }
 
+    private val selectedTrackActions = stations.observeSelectedStation()
+        .flatMapLatest { station -> trackActions.observeTrackActions(station.id) }
+
     private val stationContent = combine(
         nowPlaying.observeNowPlaying(),
         accountContent,
         selectedChat,
         requestContent,
-    ) { nowPlayingState, accountState, chatState, requestsState ->
+        selectedTrackActions,
+    ) { nowPlayingState, accountState, chatState, requestsState, trackActionsState ->
         StationContent(
             nowPlaying = nowPlayingState,
             queue = requestsState.queue,
             account = accountState,
             chat = chatState,
             requestContent = requestsState,
+            trackActions = trackActionsState,
         )
     }
 
@@ -311,6 +322,7 @@ class MainViewModel(
             stationPreferences = selection.preferences,
             diagnosticTransitions = playbackContent.transitions,
             destination = selectedDestination,
+            trackActions = content.trackActions.takeIf { it.stationId == selected.id },
         )
     }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), MainUiState())
@@ -352,6 +364,7 @@ class MainViewModel(
                                         favorites.clear(station.id)
                                         listenerActivity.clear(station.id)
                                         requests.clear(station.id)
+                                        trackActions.clear(station.id)
                                     }
                                 }
                         }
@@ -488,7 +501,39 @@ class MainViewModel(
         favorites.clear(stationId)
         listenerActivity.clear(stationId)
         requests.clear(stationId)
+        trackActions.clear(stationId)
     }
+
+    fun addCurrentTrackToFavorites() = viewModelScope.launch {
+        val station = signedInStation { it.supportsNowPlayingFavorite } ?: return@launch
+        val track = currentStationTrack(station.id)?.track ?: return@launch
+        trackActions.addCurrentTrackToFavorites(station.id, track)
+    }
+
+    fun openAlbumRating() = viewModelScope.launch {
+        val station = signedInStation { it.supportsAlbumRating } ?: return@launch
+        val albumId = currentStationTrack(station.id)?.albumId ?: return@launch
+        trackActions.openAlbumRating(station.id, albumId)
+    }
+
+    fun submitAlbumRating(value: String) = viewModelScope.launch {
+        val station = signedInStation { it.supportsAlbumRating } ?: return@launch
+        trackActions.submitAlbumRating(station.id, value)
+    }
+
+    fun closeAlbumRating() = viewModelScope.launch {
+        trackActions.closeAlbumRating(stations.observeSelectedStation().first().id)
+    }
+
+    /** The selected station when it has the capability and the listener is signed in to it. */
+    private suspend fun signedInStation(hasCapability: (StationCapabilities) -> Boolean): Station? {
+        val station = stations.observeSelectedStation().first()
+        val signedIn = auth.observeAuth(station.id).first().status == AuthStatus.SignedIn
+        return station.takeIf { hasCapability(it.capabilities) && signedIn }
+    }
+
+    private suspend fun currentStationTrack(stationId: StationId): NowPlayingState? =
+        nowPlaying.observeNowPlaying().first().takeIf { it.stationId == stationId }
 
     fun searchRequests(query: String, field: RequestSearchField) = viewModelScope.launch {
         requests.search(stations.observeSelectedStation().first().id, query, field)
@@ -554,6 +599,7 @@ class MainViewModel(
         private val listenerActivity: ListenerActivityRepository,
         private val communitySafety: CommunitySafetyRepository,
         private val communityNotifications: CommunityNotificationRepository,
+        private val trackActions: TrackActionsRepository,
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =
@@ -569,6 +615,7 @@ class MainViewModel(
                 listenerActivity,
                 communitySafety,
                 communityNotifications,
+                trackActions,
             ) as T
     }
 }
@@ -579,6 +626,7 @@ private data class StationContent(
     val account: AccountContent,
     val chat: ChatState,
     val requestContent: RequestContent,
+    val trackActions: TrackActionsState,
 )
 
 private data class StationSelectionContent(

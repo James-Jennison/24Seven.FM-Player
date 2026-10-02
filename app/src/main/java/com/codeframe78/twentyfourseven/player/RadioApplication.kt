@@ -29,6 +29,10 @@ import com.codeframe78.twentyfourseven.player.domain.NowPlayingRepository
 import com.codeframe78.twentyfourseven.player.domain.SongRequestRepository
 import com.codeframe78.twentyfourseven.player.domain.FavoriteTracksRepository
 import com.codeframe78.twentyfourseven.player.domain.ListenerActivityRepository
+import com.codeframe78.twentyfourseven.player.domain.TrackActionsRepository
+import com.codeframe78.twentyfourseven.player.data.HttpStationPages
+import com.codeframe78.twentyfourseven.player.data.NetworkTrackActionsRepository
+import com.codeframe78.twentyfourseven.player.data.StationTrackActionsRemoteDataSource
 import com.codeframe78.twentyfourseven.player.playback.Media3PlaybackController
 
 class RadioApplication : Application() {
@@ -39,6 +43,7 @@ class AppContainer(application: Application) {
     private val nowPlayingStore = InMemoryNowPlayingRepository()
     private val authSessionStore = AndroidKeystoreAuthSessionStore(application)
     private val authSessions = StationAuthSessionCoordinator(authSessionStore)
+    private val stationPages = HttpStationPages(authSessions)
     private val stationPreferences = SharedPreferencesStationPreferencesRepository(application)
     val appGuideRepository = SharedPreferencesAppGuideRepository(
         application,
@@ -75,5 +80,8 @@ class AppContainer(application: Application) {
     )
     val listenerActivityRepository: ListenerActivityRepository = NetworkListenerActivityRepository(
         StationListenerActivityRemoteDataSource(sessionStore = authSessionStore, sessions = authSessions),
+    )
+    val trackActionsRepository: TrackActionsRepository = NetworkTrackActionsRepository(
+        StationTrackActionsRemoteDataSource(stationPages),
     )
 }

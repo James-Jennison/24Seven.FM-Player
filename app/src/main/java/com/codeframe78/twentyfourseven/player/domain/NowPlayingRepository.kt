@@ -64,7 +64,7 @@ fun String.normalizeTrailingTheArticle(): String {
 }
 
 /** Letters and digits only, without "the", so "Story, The" and "The Story" compare equal. */
-private fun String.trackMatchKey(): String = lowercase()
+fun String.trackMatchKey(): String = lowercase()
     .replace(TheArticle, " ")
     .filter(Char::isLetterOrDigit)
 

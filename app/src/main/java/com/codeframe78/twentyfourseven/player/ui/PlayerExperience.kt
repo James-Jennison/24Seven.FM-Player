@@ -126,6 +126,7 @@ internal fun AdaptivePlayerScreen(
     sleepTimerActions: SleepTimerActions = SleepTimerActions(),
     audioOutputActions: AudioOutputActions = AudioOutputActions(),
     isCoverDisplay: Boolean = false,
+    trackActions: TrackActions = TrackActions(),
 ) {
     val palette = stationPalette(state.selectedStation?.id)
     BoxWithConstraints(
@@ -145,9 +146,9 @@ internal fun AdaptivePlayerScreen(
         if (isCoverDisplay) {
             CoverPlayerContent(state, palette, onSelectStation, onPlay, onStop, sleepTimerActions, audioOutputActions)
         } else if (usesLandscapePlayerLayout(maxWidth, maxHeight)) {
-            LandscapePlayerContent(state, palette, maxWidth, maxHeight, onSelectStation, onPlay, onStop, sleepTimerActions, audioOutputActions)
+            LandscapePlayerContent(state, palette, maxWidth, maxHeight, onSelectStation, onPlay, onStop, sleepTimerActions, audioOutputActions, trackActions)
         } else if (maxWidth >= ExpandedPlayerBreakpoint) {
-            ExpandedPlayerContent(state, palette, onSelectStation, onPlay, onStop, sleepTimerActions, audioOutputActions)
+            ExpandedPlayerContent(state, palette, onSelectStation, onPlay, onStop, sleepTimerActions, audioOutputActions, trackActions)
         } else {
             val compactPlayerCanFitWithoutScroll =
                 maxHeight >= CompactPlayerNoScrollHeight && LocalDensity.current.fontScale <= 1.3f
@@ -159,7 +160,7 @@ internal fun AdaptivePlayerScreen(
                 availableArtworkHeight,
                 MaximumCompactArtworkSize,
             )
-            CompactPlayerContent(state, palette, artworkSize, onSelectStation, onPlay, onStop, sleepTimerActions, audioOutputActions, isScrollable = !compactPlayerCanFitWithoutScroll)
+            CompactPlayerContent(state, palette, artworkSize, onSelectStation, onPlay, onStop, sleepTimerActions, audioOutputActions, trackActions, isScrollable = !compactPlayerCanFitWithoutScroll)
         }
     }
 }
@@ -300,6 +301,7 @@ private fun CompactPlayerContent(
     onStop: () -> Unit,
     sleepTimerActions: SleepTimerActions,
     audioOutputActions: AudioOutputActions,
+    trackActions: TrackActions,
     isScrollable: Boolean,
 ) {
     val scrollModifier = if (isScrollable) Modifier.verticalScroll(rememberScrollState()) else Modifier
@@ -312,7 +314,7 @@ private fun CompactPlayerContent(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        NowPlayingArtwork(state, palette, Modifier.size(artworkSize))
+        NowPlayingArtwork(state, palette, Modifier.size(artworkSize), trackActions)
         NowPlayingDetails(state, palette)
         PrimaryPlayerControls(state, onSelectStation, onPlay, onStop, sleepTimerActions, audioOutputActions, isCompact = true)
         if (!isScrollable) Spacer(Modifier.weight(1f))
@@ -332,6 +334,7 @@ private fun LandscapePlayerContent(
     onStop: () -> Unit,
     sleepTimerActions: SleepTimerActions,
     audioOutputActions: AudioOutputActions,
+    trackActions: TrackActions,
 ) {
     val artworkSize = minOf(
         LandscapeArtworkMaximumSize,
@@ -346,7 +349,8 @@ private fun LandscapePlayerContent(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        NowPlayingArtwork(state, palette, Modifier.size(artworkSize))
+        // The landscape artwork is too small for the caption, so it sits with the track details instead.
+        NowPlayingArtwork(state, palette, Modifier.size(artworkSize), trackActions, showsOverlayCaption = false)
         Column(
             Modifier
                 .weight(1f)
@@ -354,6 +358,7 @@ private fun LandscapePlayerContent(
             verticalArrangement = Arrangement.Center,
         ) {
             LandscapeNowPlayingDetails(state, palette)
+            NowPlayingInlineExtras(state, Modifier.padding(top = 8.dp))
             Spacer(Modifier.height(14.dp))
             PrimaryPlayerControls(
                 state,
@@ -402,7 +407,6 @@ private fun LandscapeNowPlayingDetails(
             )
         }
         PlaybackStatusPill(state, palette)
-        NowPlayingTrackExtras(state, Alignment.Start)
     }
 }
 
@@ -472,6 +476,7 @@ private fun ExpandedPlayerContent(
     onStop: () -> Unit,
     sleepTimerActions: SleepTimerActions,
     audioOutputActions: AudioOutputActions,
+    trackActions: TrackActions,
 ) {
     Row(
         Modifier.fillMaxSize().padding(32.dp),
@@ -483,7 +488,7 @@ private fun ExpandedPlayerContent(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            NowPlayingArtwork(state, palette, Modifier.fillMaxWidth().aspectRatio(1f))
+            NowPlayingArtwork(state, palette, Modifier.fillMaxWidth().aspectRatio(1f), trackActions)
         }
         Column(
             Modifier.weight(1.15f).fillMaxHeight().verticalScroll(rememberScrollState()),
@@ -521,6 +526,8 @@ private fun NowPlayingArtwork(
     state: MainUiState,
     palette: StationPalette,
     modifier: Modifier = Modifier,
+    trackActions: TrackActions? = null,
+    showsOverlayCaption: Boolean = true,
 ) {
     val artworkUrl = preferredPlayerArtworkUrl(
         nowPlayingArtworkUrl = state.nowPlaying.artworkUrl,
@@ -550,6 +557,14 @@ private fun NowPlayingArtwork(
             placeholder = painterResource(R.drawable.app_logo),
             modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(22.dp)).testTag("now_playing_artwork"),
         )
+        if (trackActions != null) {
+            NowPlayingArtworkOverlay(
+                state,
+                trackActions,
+                Modifier.matchParentSize().clip(RoundedCornerShape(22.dp)),
+                showsOverlayCaption,
+            )
+        }
     }
 }
 
@@ -601,7 +616,6 @@ private fun NowPlayingDetails(
         }
         PlaybackStatusPill(state, palette)
         CastRouteLabel(state)
-        NowPlayingTrackExtras(state, alignment)
     }
 }
 
