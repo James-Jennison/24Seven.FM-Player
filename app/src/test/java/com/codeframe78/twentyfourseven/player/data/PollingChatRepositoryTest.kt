@@ -6,6 +6,7 @@ import com.codeframe78.twentyfourseven.player.domain.StationId
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
@@ -13,6 +14,7 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -65,6 +67,52 @@ class PollingChatRepositoryTest {
         assertEquals(ChatLoadStatus.Ready, states.last().status)
         assertEquals("Protocol test", states.last().messages.single().messageText)
         assertFalse(states.last().isSending)
+    }
+
+    @Test
+    fun `send shows at once behind a read in flight and a second tap does not post twice`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val remote = FakeRemote(fetchGate = gate)
+        val repository = repository(remote) { testScheduler.currentTime }
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            repository.observeChat(stationId).collect()
+        }
+        runCurrent()
+
+        val first = launch(UnconfinedTestDispatcher(testScheduler)) { repository.sendMessage(stationId, "Hello") }
+        val second = launch(UnconfinedTestDispatcher(testScheduler)) { repository.sendMessage(stationId, "Hello") }
+        runCurrent()
+        assertTrue(repository.observeCachedChat(stationId).first().isSending)
+        assertEquals(0, remote.sendCalls)
+
+        gate.complete(Unit)
+        runCurrent()
+        first.join()
+        second.join()
+
+        assertEquals(listOf("Hello"), remote.sentMessages)
+        assertFalse(repository.observeCachedChat(stationId).first().isSending)
+    }
+
+    @Test
+    fun `send cancelled while waiting for a read does not stay marked as sending`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val remote = FakeRemote(fetchGate = gate)
+        val repository = repository(remote) { testScheduler.currentTime }
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            repository.observeChat(stationId).collect()
+        }
+        runCurrent()
+        val send = launch(UnconfinedTestDispatcher(testScheduler)) { repository.sendMessage(stationId, "Hello") }
+        runCurrent()
+
+        send.cancel()
+        runCurrent()
+        gate.complete(Unit)
+        runCurrent()
+
+        assertEquals(0, remote.sendCalls)
+        assertFalse(repository.observeCachedChat(stationId).first().isSending)
     }
 
     @Test

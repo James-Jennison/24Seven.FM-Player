@@ -540,8 +540,9 @@ private fun ChatMessages(
     communitySafetyActions: CommunitySafetyActions,
 ) {
     val chat = checkNotNull(state.chat)
-    var draft by remember(state.selectedStation?.id) { mutableStateOf("") }
+    var draft by rememberSaveable(state.selectedStation?.id?.value) { mutableStateOf("") }
     var awaitingSend by remember(state.selectedStation?.id) { mutableStateOf(false) }
+    val messageKeys = remember(chat.messages) { chatMessageKeys(chat.messages) }
     LaunchedEffect(chat.isSending, chat.sendErrorMessage, chat.messages) {
         if (awaitingSend && !chat.isSending) {
             if (chat.sendErrorMessage != null) {
@@ -573,9 +574,7 @@ private fun ChatMessages(
             } else {
                 itemsIndexed(
                     chat.messages,
-                    key = { index, message ->
-                        "$index-${message.postedAtLabel}-${message.authorDisplayName}-${message.messageText}"
-                    },
+                    key = { index, _ -> messageKeys[index] },
                 ) { _, message ->
                     Card(Modifier.fillMaxWidth()) {
                         Column(Modifier.padding(12.dp)) {
