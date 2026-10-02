@@ -29,9 +29,7 @@ internal class AutomotiveMediaCatalog(stations: List<Station>) {
 
     fun children(parentId: String, page: Int, pageSize: Int): List<MediaItem>? {
         if (parentId != ROOT_MEDIA_ID || page < 0 || pageSize <= 0) return null
-        val fromIndex = (page.toLong() * pageSize).coerceAtMost(stationItems.size.toLong()).toInt()
-        val toIndex = (fromIndex + pageSize).coerceAtMost(stationItems.size)
-        return stationItems.subList(fromIndex, toIndex)
+        return stationItems.page(page, pageSize)
     }
 
     fun item(mediaId: String): MediaItem? = stationsById[mediaId.toStationIdOrNull()]?.let(::stationItem)
@@ -44,9 +42,7 @@ internal class AutomotiveMediaCatalog(stations: List<Station>) {
             listOf(station.name, station.shortName, station.description)
                 .any { value -> value.lowercase().contains(terms) }
         }
-        val fromIndex = (page.toLong() * pageSize).coerceAtMost(matches.size.toLong()).toInt()
-        val toIndex = (fromIndex + pageSize).coerceAtMost(matches.size)
-        return matches.subList(fromIndex, toIndex)
+        return matches.page(page, pageSize)
     }
 
     fun playbackItems(mediaItems: List<MediaItem>): List<MediaItem>? {
@@ -99,4 +95,11 @@ internal class AutomotiveMediaCatalog(stations: List<Station>) {
         const val ROOT_MEDIA_ID = "24seven:auto:root"
         const val STATION_MEDIA_ID_PREFIX = "24seven:auto:station:"
     }
+}
+
+/** One page of a list for any non-negative page and positive size a media browser sends, however large. */
+internal fun <T> List<T>.page(page: Int, pageSize: Int): List<T> {
+    val fromIndex = (page.toLong() * pageSize).coerceAtMost(size.toLong())
+    val toIndex = (fromIndex + pageSize).coerceAtMost(size.toLong())
+    return subList(fromIndex.toInt(), toIndex.toInt())
 }

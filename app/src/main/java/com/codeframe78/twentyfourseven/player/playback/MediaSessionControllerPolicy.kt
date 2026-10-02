@@ -30,8 +30,13 @@ internal object MediaSessionControllerPolicy {
         isPackageNameVerified: Boolean,
         applicationPackageName: String,
     ): ControllerAccess = when {
-        controllerPackageName == applicationPackageName -> ControllerAccess.LocalApp
-        isPackageNameVerified && controllerPackageName in ANDROID_AUTO_HOST_PACKAGES -> ControllerAccess.Automotive
+        // A Media3 controller supplies its own package name, so only a verified name earns full control.
+        isPackageNameVerified && controllerPackageName == applicationPackageName -> ControllerAccess.LocalApp
+        // Media3 verifies a platform session controller's package name only on Android 13 and later, so Android
+        // Auto's play requests arrive unverified on older releases. A caller the system trusts for media control
+        // may use the Android Auto name there: the role only selects stations from the Player's own catalog.
+        controllerPackageName in ANDROID_AUTO_HOST_PACKAGES && (isPackageNameVerified || isTrusted) ->
+            ControllerAccess.Automotive
         isTrusted -> ControllerAccess.TrustedSystem
         else -> ControllerAccess.Foreign
     }
