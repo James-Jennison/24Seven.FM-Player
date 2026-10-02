@@ -103,8 +103,11 @@ internal class ChatResponseParser {
     }
 }
 
-internal fun String.toSubmittedChatVisibleText(): String = decodeChatNumericEntities()
+/** The text a submitted message reads back as: the parser collapses whitespace, so the comparison must too. */
+internal fun String.toSubmittedChatVisibleText(): String = replace(SUBMITTED_WHITESPACE, " ")
+    .decodeChatNumericEntities()
     .replace(PHPBB_EMOTICON_CODE) { match -> match.groupValues[1] }
+    .trim()
 
 private fun String.decodeChatNumericEntities(): String = replace(NUMERIC_ENTITY) { match ->
     val digits = match.groups[2]?.value ?: match.groups[3]?.value.orEmpty()
@@ -119,5 +122,6 @@ private fun String.decodeChatNumericEntities(): String = replace(NUMERIC_ENTITY)
     }
 }
 
+private val SUBMITTED_WHITESPACE = Regex("\\s+")
 private val NUMERIC_ENTITY = Regex("&#(x([0-9A-Fa-f]{1,6})|([0-9]{1,7}));", RegexOption.IGNORE_CASE)
 private val PHPBB_EMOTICON_CODE = Regex("(?<![A-Za-z0-9])-([A-Za-z][A-Za-z0-9_]*)-(?![A-Za-z0-9])")

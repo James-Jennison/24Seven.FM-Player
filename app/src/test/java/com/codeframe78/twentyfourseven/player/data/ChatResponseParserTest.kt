@@ -76,6 +76,18 @@ class ChatResponseParserTest {
     }
 
     @Test
+    fun `submitted text with repeated whitespace matches the message the station shows`() {
+        val submitted = "hi  there\tfriend "
+        val shown = parser.parse(
+            "<div class=msg-row><span class=nick>Listener:</span><span class=say>hi  there\tfriend</span></div>",
+            "https://streamingsoundtracks.com/",
+        ).single().messageText
+
+        assertEquals("hi there friend", shown)
+        assertEquals(shown, submitted.toSubmittedChatVisibleText())
+    }
+
+    @Test
     fun `limits retained message rows`() {
         val html = (1..60).joinToString("") { index ->
             "<div class=msg-row><span class=nick>User:</span><span class=say>Message $index</span></div>"
