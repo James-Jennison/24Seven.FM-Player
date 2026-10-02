@@ -43,6 +43,82 @@ class ListenerActivityPageParserTest {
     }
 
     @Test
+    fun `discovery reads the current page's request list, request clock, and queued request`() {
+        val result = parser.parseDiscovery(currentPage(seconds = "0", word = "Ready", queueSeconds = "1054"), origin, "Listener")
+
+        assertEquals(3, result.recentRequests.size)
+        assertEquals("Untitled track — Composer Four", result.recentRequests[2].trackSummary)
+        assertEquals("Album Four", result.recentRequests[2].albumTitle)
+        with(result.recentRequests[0]) {
+            assertEquals(1, position)
+            assertEquals("Opening — Composer Two", trackSummary)
+            assertEquals("2026-10-02 16:16:02", requestedAtLabel)
+            assertEquals("Album Two", albumTitle)
+            assertEquals("B000000002", albumId)
+            assertEquals("https://streamingsoundtracks.com/images/cover/040/B000000002.jpg", artworkUrl)
+        }
+        assertEquals(2, result.recentRequests[1].position)
+        assertEquals("Finale — Composer Three", result.recentRequests[1].trackSummary)
+        assertEquals(RequestReadiness.Ready, result.cooldown?.readiness)
+        assertNull(result.cooldown?.waitMinutes)
+        assertEquals(1054, result.cooldown?.queuedRequestWaitSeconds)
+    }
+
+    @Test
+    fun `the request clock reports a wait in whole minutes and no queued request when none is queued`() {
+        val waiting = parser.parseDiscovery(currentPage(seconds = "125", word = "02:05", queueSeconds = ""), origin, "Listener")
+
+        assertEquals(RequestReadiness.Waiting, waiting.cooldown?.readiness)
+        assertEquals(3, waiting.cooldown?.waitMinutes)
+        assertNull(waiting.cooldown?.queuedRequestWaitSeconds)
+
+        // Zero seconds without the station's own "Ready" is not treated as ready.
+        val unclear = parser.parseDiscovery(currentPage(seconds = "0", word = "Checking…", queueSeconds = ""), origin, "Listener")
+        assertEquals(RequestReadiness.Unknown, unclear.cooldown?.readiness)
+    }
+
+    @Test
+    fun `membership follows the wording on the member's profile card`() {
+        assertEquals(MembershipTier.Vip, parser.membershipTier("VIP"))
+        assertEquals(MembershipTier.Rip, parser.membershipTier("RIP"))
+        assertEquals(MembershipTier.Standard, parser.membershipTier(null))
+        assertEquals(MembershipTier.Standard, parser.membershipTier("Member"))
+    }
+
+    private fun currentPage(seconds: String, word: String, queueSeconds: String) = """
+        <html><body>
+        <a href="/modules.php?name=Your_Account&op=logout">Logout</a>
+        <table><tr><th class="th01"><h2>VIP</h2></th></tr><tr><td class="td01">
+          <div class="vip-request-clock" data-seconds="$seconds" data-queue-seconds="$queueSeconds" data-queue-status="Queued">
+            <div><span class="vip-next-dot vip-status-dot is-ready">●</span> Next Request:
+              <strong class="vip-request-value request-ready">$word</strong> <span class="vip-request-detail"></span></div>
+            <div><span class="vip-play-dot vip-status-dot is-waiting">●</span> Request Play:
+              <strong class="vip-queue-value">17:34</strong></div>
+          </div>
+        </td></tr></table>
+        <section class="request-history"><h2>Your Last 50 Requests</h2>
+        <table>
+          <tr><th class="th01">Track / Album</th><th class="th01">Requested</th><th class="th01">Favorites</th></tr>
+          <tr>
+            <td class="td01"><div class="request-history-track"><img src="/images/cover/040/B000000002.jpg" width="40" height="40" alt=""><div><strong>Opening</strong><br>Composer Two<br><a href="/modules.php?name=Album&amp;asin=B000000002">Album Two</a></div></div></td>
+            <td class="td01">2026-10-02 16:16:02</td>
+            <td class="td01"><a id="request-saved-1" style="display:none" href="/modules.php?name=Favorites&amp;song2view=1">Saved</a><button id="request-add-1" type="button">Add favorite</button></td>
+          </tr>
+          <tr>
+            <td class="td01"><div class="request-history-track"><img src="https://example.com/cover.jpg" alt=""><div><strong>Finale</strong><br>Composer Three<br><a href="https://example.com/modules.php?name=Album&amp;asin=B000000003">Album Three</a></div></div></td>
+            <td class="td01">2026-10-02 14:23:17</td>
+            <td class="td01"></td>
+          </tr>
+          <tr>
+            <td class="td01"><div class="request-history-track"><img src="/images/cover/040/B000000004.jpg" alt=""><div><strong></strong><br>Composer Four<br><a href="/modules.php?name=Album&amp;asin=B000000004">Album Four</a></div></div></td>
+            <td class="td01">2026-08-22 12:35:26</td>
+            <td class="td01"></td>
+          </tr>
+        </table></section>
+        </body></html>
+    """.trimIndent()
+
+    @Test
     fun `discovery ignores cross-origin and unrecognized sources`() {
         val result = parser.parseDiscovery(
             """

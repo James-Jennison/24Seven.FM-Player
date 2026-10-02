@@ -2136,18 +2136,14 @@ private fun ListenerActivitySection(
     val station = state.selectedStation ?: return
     if (!station.capabilities.supportsListenerActivity) return
     val activity = state.listenerActivity
-    val membershipLabel = when (activity?.membershipTier) {
-        MembershipTier.Standard -> "Standard member"
-        MembershipTier.Vip -> "VIP member"
-        MembershipTier.Rip -> "RIP member"
-        MembershipTier.Unknown, null -> "Not reported by station"
-    }
+    val membershipLabel = membershipLabel(activity?.membershipTier, activity?.rankTitle)
     val readinessLabel = when (activity?.requestReadiness) {
         RequestReadiness.Ready -> "Ready to request"
-        RequestReadiness.Waiting -> activity.waitMinutes?.let { "Wait $it minutes" }
+        RequestReadiness.Waiting -> activity.waitMinutes?.let { if (it == 1) "Wait 1 minute" else "Wait $it minutes" }
             ?: "Request cooldown active"
         RequestReadiness.Unknown, null -> "Not reported by station"
     }
+    var showAllRequests by rememberSaveable(station.id.value) { mutableStateOf(false) }
 
     if (showTitle) Text("Request activity", style = MaterialTheme.typography.titleMedium)
     Card(Modifier.fillMaxWidth().testTag("listener_activity_card")) {
@@ -2193,6 +2189,9 @@ private fun ListenerActivitySection(
                 else -> {
                     ListenerStatusRow("Membership", membershipLabel)
                     ListenerStatusRow("Request status", readinessLabel)
+                    activity.queuedRequestWaitSeconds?.let { seconds ->
+                        ListenerStatusRow("Your queued request", queuedRequestLabel(seconds))
+                    }
                     Text("Your last requests", style = MaterialTheme.typography.titleSmall)
                     if (activity.recentRequests.isEmpty()) {
                         Text(
@@ -2200,13 +2199,20 @@ private fun ListenerActivitySection(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     } else {
-                        activity.recentRequests.forEach { request ->
+                        val shown = if (showAllRequests) {
+                            activity.recentRequests
+                        } else {
+                            activity.recentRequests.take(COLLAPSED_REQUEST_HISTORY_ROWS)
+                        }
+                        shown.forEach { request ->
+                            val requestedAt = requestTimeLabel(request.requestedAtLabel)
                             Row(
                                 Modifier
                                     .fillMaxWidth()
                                     .testTag("request_history_${request.position}")
+                                    .opensAlbum(request.albumId, request.albumTitle, request.artworkUrl)
                                     .semantics {
-                                        contentDescription = "Request ${request.position}: ${request.trackSummary}; ${request.requestedAtLabel}"
+                                        contentDescription = "Request ${request.position}: ${request.trackSummary}; $requestedAt"
                                     },
                                 verticalAlignment = Alignment.Top,
                             ) {
@@ -2219,11 +2225,19 @@ private fun ListenerActivitySection(
                                 Column(Modifier.weight(1f)) {
                                     Text(request.trackSummary, style = MaterialTheme.typography.bodyMedium)
                                     Text(
-                                        request.requestedAtLabel,
+                                        listOfNotNull(request.albumTitle, requestedAt).joinToString(" • "),
                                         style = MaterialTheme.typography.labelMedium,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                 }
+                            }
+                        }
+                        if (activity.recentRequests.size > COLLAPSED_REQUEST_HISTORY_ROWS) {
+                            TextButton(
+                                onClick = { showAllRequests = !showAllRequests },
+                                modifier = Modifier.testTag("request_history_toggle"),
+                            ) {
+                                Text(if (showAllRequests) "Show fewer" else "Show all ${activity.recentRequests.size}")
                             }
                         }
                     }
@@ -2241,10 +2255,43 @@ private fun ListenerStatusRow(label: String, value: String) {
             .semantics { contentDescription = "$label: $value" },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
-        Text(value, fontWeight = FontWeight.SemiBold)
+        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Spacer(Modifier.width(16.dp))
+        Text(value, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.End, modifier = Modifier.weight(1f))
     }
 }
+
+private const val COLLAPSED_REQUEST_HISTORY_ROWS = 10
+
+/** "VIP member · Admiral (Administrator)": the membership the station reports, then the member's rank when it has one. */
+internal fun membershipLabel(tier: MembershipTier?, rankTitle: String?): String {
+    val membership = when (tier) {
+        MembershipTier.Standard -> "Standard member"
+        MembershipTier.Vip -> "VIP member"
+        MembershipTier.Rip -> "RIP member"
+        MembershipTier.Unknown, null -> null
+    }
+    return listOfNotNull(membership, rankTitle?.takeIf(String::isNotBlank)).joinToString(" · ")
+        .ifEmpty { "Not reported by station" }
+}
+
+/** How long until the listener's earliest queued request should start, as the station estimates it. */
+internal fun queuedRequestLabel(seconds: Int): String {
+    val minutes = (seconds + 30) / 60
+    return when {
+        seconds < 60 -> "Due shortly"
+        minutes < 60 -> if (minutes == 1) "Plays in about 1 minute" else "Plays in about $minutes minutes"
+        else -> "Plays in about ${minutes / 60} hr ${minutes % 60} min"
+    }
+}
+
+/** "Oct 2, 2026 · 4:16 PM" for the station's "2026-10-02 16:16:02"; anything else is shown as the station wrote it. */
+internal fun requestTimeLabel(raw: String): String = runCatching {
+    java.time.LocalDateTime.parse(raw.trim(), STATION_TIMESTAMP).format(REQUEST_TIME_LABEL)
+}.getOrDefault(raw)
+
+private val STATION_TIMESTAMP = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", java.util.Locale.US)
+private val REQUEST_TIME_LABEL = java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy · h:mm a", java.util.Locale.US)
 
 @Composable
 private fun AccountCard(

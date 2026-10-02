@@ -14,11 +14,14 @@ internal data class ListenerActivityDiscovery(
     val recentRequests: List<RequestHistoryEntry>,
     val requestTimerUrl: String?,
     val memberProfileUrl: String?,
+    /** The request clock the stations now print on the page itself; null on a page without one. */
+    val cooldown: RequestCooldownEvidence? = null,
 )
 
 internal data class RequestCooldownEvidence(
     val readiness: RequestReadiness,
     val waitMinutes: Int?,
+    val queuedRequestWaitSeconds: Int? = null,
 )
 
 internal class ListenerActivityPageParser {
@@ -30,13 +33,23 @@ internal class ListenerActivityPageParser {
         val originUri = trustedOrigin(origin)
         val document = Jsoup.parse(html, origin)
         requireSignedIn(document)
-        val historyTable = document.select("strong")
-            .firstOrNull { it.text().trim().equals(HISTORY_HEADING, ignoreCase = true) }
-            ?.closest("table")
-        val requests = historyTable?.select("tr").orEmpty().asSequence()
-            .mapNotNull(::parseHistoryRow)
-            .take(MAX_HISTORY_ITEMS)
-            .toList()
+        val currentRows = document.select("section.request-history tr")
+        val requests = if (currentRows.isNotEmpty()) {
+            currentRows.asSequence()
+                .mapNotNull { row -> parseCurrentHistoryRow(row, originUri) }
+                .take(MAX_HISTORY_ITEMS)
+                .mapIndexed { index, entry -> entry.copy(position = index + 1) }
+                .toList()
+        } else {
+            // Before the stations' 2026 upgrade the page listed ten numbered rows under a bold heading.
+            document.select("strong")
+                .firstOrNull { it.text().trim().equals(LEGACY_HISTORY_HEADING, ignoreCase = true) }
+                ?.closest("table")
+                ?.select("tr").orEmpty().asSequence()
+                .mapNotNull(::parseHistoryRow)
+                .take(LEGACY_MAX_HISTORY_ITEMS)
+                .toList()
+        }
         val timerUrl = document.select("iframe[src]").asSequence()
             .mapNotNull { trustedTimerUrl(it.absUrl("src"), originUri) }
             .firstOrNull()
@@ -44,7 +57,36 @@ internal class ListenerActivityPageParser {
             .filter { it.text().trim().equals(displayName, ignoreCase = true) }
             .mapNotNull { trustedProfileUrl(it.absUrl("href"), originUri) }
             .firstOrNull()
-        return ListenerActivityDiscovery(requests, timerUrl, profileUrl)
+        return ListenerActivityDiscovery(requests, timerUrl, profileUrl, parseRequestClock(document))
+    }
+
+    /**
+     * The request clock block: seconds until the next request is allowed, the station's own word for the state, and
+     * seconds until the listener's earliest queued request should start.
+     */
+    private fun parseRequestClock(document: org.jsoup.nodes.Document): RequestCooldownEvidence? {
+        val clock = document.selectFirst("div[class*=request-clock][data-seconds]") ?: return null
+        val seconds = clock.attr("data-seconds").trim().toIntOrNull()?.takeIf { it in 0..MAX_CLOCK_SECONDS }
+        val word = clock.selectFirst("[class*=request-value]")?.text()?.trim().orEmpty()
+        val readiness = when {
+            seconds != null && seconds > 0 -> RequestReadiness.Waiting
+            seconds == 0 && word.equals("Ready", ignoreCase = true) -> RequestReadiness.Ready
+            else -> RequestReadiness.Unknown
+        }
+        return RequestCooldownEvidence(
+            readiness = readiness,
+            waitMinutes = seconds?.takeIf { it > 0 }?.let { (it + 59) / 60 },
+            queuedRequestWaitSeconds = clock.attr("data-queue-seconds").trim().toIntOrNull()
+                ?.takeIf { it in 0..MAX_CLOCK_SECONDS },
+        )
+    }
+
+    /** The membership a public profile card names: the stations word it "VIP" or "RIP", and leave it out otherwise. */
+    fun membershipTier(membership: String?): MembershipTier = when {
+        membership == null -> MembershipTier.Standard
+        membership.contains("RIP", ignoreCase = true) -> MembershipTier.Rip
+        membership.contains("VIP", ignoreCase = true) -> MembershipTier.Vip
+        else -> MembershipTier.Standard
     }
 
     fun parseCooldown(html: String): RequestCooldownEvidence {
@@ -93,6 +135,37 @@ internal class ListenerActivityPageParser {
         ?.parent()
         ?.parent()
         ?.selectFirst("table.table01")
+
+    /** A row of the current page: a cover, the track in bold, the artist, a link to the album, and the time. */
+    private fun parseCurrentHistoryRow(row: Element, origin: URI): RequestHistoryEntry? {
+        val cells = row.children().filter { it.tagName() == "td" }
+        if (cells.size < 2) return null
+        val heading = cells[0].selectFirst("strong") ?: return null
+        val artist = heading.parent()?.ownText()?.trim()?.takeIf(String::isNotEmpty)
+        // The station has a few library tracks with no title; the request still counts and still names its album.
+        val track = heading.text().trim().ifEmpty { UNTITLED_TRACK }
+        val albumLink = cells[0].select("a[href]").firstOrNull { link ->
+            val uri = runCatching { URI(link.absUrl("href")) }.getOrNull()
+            uri != null && isSameOrigin(uri, origin) && uri.path == MODULES_PATH &&
+                queryValues(uri.rawQuery)["name"] == "Album"
+        }
+        val albumId = albumLink?.let { queryValues(URI(it.absUrl("href")).rawQuery)["asin"] }
+            ?.takeIf { it.matches(ALBUM_ID) }
+        val artwork = cells[0].selectFirst("img[src]")?.absUrl("src")
+            ?.let { runCatching { URI(it) }.getOrNull() }
+            ?.takeIf { isSameOrigin(it, origin) && it.path.startsWith("/images/cover/") }
+            ?.toASCIIString()
+        val requestedAt = cells[1].text().trim().take(MAX_REQUESTED_AT_CHARACTERS)
+        if (requestedAt.isBlank()) return null
+        return RequestHistoryEntry(
+            position = 0,
+            trackSummary = listOfNotNull(track, artist).joinToString(" — ").take(MAX_HISTORY_SUMMARY_CHARACTERS),
+            requestedAtLabel = requestedAt,
+            albumTitle = albumLink?.text()?.trim()?.takeIf(String::isNotEmpty)?.take(MAX_HISTORY_SUMMARY_CHARACTERS),
+            albumId = albumId,
+            artworkUrl = artwork,
+        )
+    }
 
     private fun parseHistoryRow(row: Element): RequestHistoryEntry? {
         val cells = row.children().filter { it.tagName() == "td" }
@@ -160,9 +233,13 @@ internal class ListenerActivityPageParser {
     private fun decode(value: String): String = URLDecoder.decode(value, StandardCharsets.UTF_8.name())
 
     private companion object {
-        const val HISTORY_HEADING = "Your Last 10 Requests"
+        const val LEGACY_HISTORY_HEADING = "Your Last 10 Requests"
         const val MODULES_PATH = "/modules.php"
-        const val MAX_HISTORY_ITEMS = 10
+        const val LEGACY_MAX_HISTORY_ITEMS = 10
+        const val MAX_HISTORY_ITEMS = 50
+        const val UNTITLED_TRACK = "Untitled track"
+        const val MAX_CLOCK_SECONDS = 7 * 24 * 60 * 60
+        val ALBUM_ID = Regex("^[A-Za-z0-9_.-]{1,64}$")
         const val MAX_HISTORY_SUMMARY_CHARACTERS = 300
         const val MAX_REQUESTED_AT_CHARACTERS = 64
         val HISTORY_POSITION = Regex("^([0-9]{1,2})\\.\\s+(.+)$")

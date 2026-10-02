@@ -1,5 +1,6 @@
 package com.codeframe78.twentyfourseven.player.ui
 
+import com.codeframe78.twentyfourseven.player.domain.MembershipTier
 import com.codeframe78.twentyfourseven.player.domain.NowPlayingState
 import com.codeframe78.twentyfourseven.player.domain.PlaybackStatus
 import com.codeframe78.twentyfourseven.player.domain.StationId
@@ -73,6 +74,28 @@ class PlayerLinksTest {
         assertEquals("B000KNB1IM", albumIdFromCoverUrl("/images/cover/B000KNB1IM.jpg?v=2"))
         assertNull(albumIdFromCoverUrl("https://streamingsoundtracks.com/images/news/banner.png"))
         assertNull(albumIdFromCoverUrl(null))
+    }
+
+    @Test
+    fun `membership shows the tier the station reports and the member's rank`() {
+        assertEquals("VIP member · Admiral (Administrator)", membershipLabel(MembershipTier.Vip, "Admiral (Administrator)"))
+        assertEquals("Standard member", membershipLabel(MembershipTier.Standard, null))
+        assertEquals("Captain", membershipLabel(MembershipTier.Unknown, "Captain"))
+        assertEquals("Not reported by station", membershipLabel(null, null))
+    }
+
+    @Test
+    fun `a queued request says about when it will play`() {
+        assertEquals("Due shortly", queuedRequestLabel(20))
+        assertEquals("Plays in about 1 minute", queuedRequestLabel(70))
+        assertEquals("Plays in about 18 minutes", queuedRequestLabel(1054))
+        assertEquals("Plays in about 1 hr 5 min", queuedRequestLabel(3_900))
+    }
+
+    @Test
+    fun `request times read naturally and unknown formats are left as the station wrote them`() {
+        assertEquals("Oct 2, 2026 · 4:16 PM", requestTimeLabel("2026-10-02 16:16:02"))
+        assertEquals("14 Jul 26 - 17:01", requestTimeLabel("14 Jul 26 - 17:01"))
     }
 
     @Test
