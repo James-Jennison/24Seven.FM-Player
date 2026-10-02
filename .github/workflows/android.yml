@@ -38,6 +38,13 @@ jobs:
           bash ./gradlew test lint --no-daemon --console=plain
           bash scripts/build-debug-candidate.sh
 
+      # The release build shrinks with R8 and no project keep rules; only this step would notice a breaking rule.
+      - name: Shrink the release build
+        run: bash ./gradlew :app:minifyReleaseWithR8 --no-daemon --console=plain
+
+      - name: Test release scripts
+        run: node --test scripts/tests/test_announce_google_play_releases.mjs
+
   notify-discord:
     name: Post milestone update to Discord
     needs: build
