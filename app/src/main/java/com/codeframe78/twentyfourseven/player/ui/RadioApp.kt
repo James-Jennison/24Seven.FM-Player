@@ -909,10 +909,10 @@ private fun AbuseReportDialog(state: MainUiState, actions: CommunitySafetyAction
     val report = state.abuseReport
     if (report.status == AbuseReportStatus.Idle) return
     val target = report.target ?: return
-    var reporterName by remember(target) { mutableStateOf(state.auth?.displayName.orEmpty()) }
-    var category by remember(target) { mutableStateOf(AbuseReportCategory.Harassment) }
+    var reporterName by rememberSaveable(target) { mutableStateOf(state.auth?.displayName.orEmpty()) }
+    var category by rememberSaveable(target) { mutableStateOf(AbuseReportCategory.Harassment) }
     var categoryMenuOpen by remember { mutableStateOf(false) }
-    var details by remember(target) { mutableStateOf("") }
+    var details by rememberSaveable(target) { mutableStateOf("") }
     val canDismiss = report.status !in setOf(
         AbuseReportStatus.PreparingEmail,
         AbuseReportStatus.EmailReady,
@@ -2052,10 +2052,11 @@ private fun AccountCard(
     val station = account.station
     val auth = account.auth
     val palette = stationPalette(station.id)
-    var username by remember(station.id) { mutableStateOf("") }
+    var username by rememberSaveable(station.id.value) { mutableStateOf("") }
+    // The password is deliberately not saved: saved state can be written to disk.
     var password by remember(station.id) { mutableStateOf("") }
     var passwordVisible by remember(station.id) { mutableStateOf(false) }
-    var securityCode by remember(station.id) { mutableStateOf("") }
+    var securityCode by rememberSaveable(station.id.value) { mutableStateOf("") }
     val useStackedHeader = LocalDensity.current.fontScale > 1.5f
     Card(modifier.fillMaxWidth().testTag("account_card_${station.id.value}")) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -2129,6 +2130,7 @@ private fun AccountCard(
                             { password = it },
                             label = { Text("Password") },
                             singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                             visualTransformation = if (passwordVisible) {
                                 VisualTransformation.None
                             } else {
@@ -2280,10 +2282,10 @@ private fun SongRequestSection(
     showTitle: Boolean = true,
 ) {
     val requests = state.requests
-    var query by remember(state.selectedStation?.id) { mutableStateOf("") }
-    var field by remember(state.selectedStation?.id) { mutableStateOf(RequestSearchField.Title) }
+    var query by rememberSaveable(state.selectedStation?.id?.value) { mutableStateOf("") }
+    var field by rememberSaveable(state.selectedStation?.id?.value) { mutableStateOf(RequestSearchField.Title) }
     var fieldMenuOpen by remember { mutableStateOf(false) }
-    var trackSortOrder by remember(state.selectedStation?.id) { mutableStateOf(TrackSortOrder.LibraryOrder) }
+    var trackSortOrder by rememberSaveable(state.selectedStation?.id?.value) { mutableStateOf(TrackSortOrder.LibraryOrder) }
     var trackSortMenuOpen by remember { mutableStateOf(false) }
     val signedIn = state.auth?.status == AuthStatus.SignedIn
 

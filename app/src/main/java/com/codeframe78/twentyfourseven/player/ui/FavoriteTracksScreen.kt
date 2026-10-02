@@ -32,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -58,7 +59,7 @@ internal fun FavoriteTracksScreen(
     RequestConfirmationDialog(state, onCancelRequest, onConfirmRequest, onReviewTerms)
     val favorites = state.favorites
     val signedIn = state.auth?.status == AuthStatus.SignedIn
-    var filter by remember(state.selectedStation?.id) { mutableStateOf("") }
+    var filter by rememberSaveable(state.selectedStation?.id?.value) { mutableStateOf("") }
     var sortOrder by remember(state.selectedStation?.id) { mutableStateOf(FavoriteTrackSortOrder.Position) }
     var sortMenuOpen by remember { mutableStateOf(false) }
     val allTracks = favorites?.tracks.orEmpty()
