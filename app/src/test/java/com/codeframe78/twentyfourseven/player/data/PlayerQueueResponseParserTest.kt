@@ -102,6 +102,36 @@ class PlayerQueueResponseParserTest {
     }
 
     @Test
+    fun `reads album and artist in the order the table heading gives`() {
+        val result = parser.parseExtended(
+            extendedPage(
+                queue = """
+                    <tr>
+                      <td class="td01"><b>No.</b><br>Time</td>
+                      <td class="td01"><img src="/images/logos/logo-sst-40x40.jpg"></td>
+                      <td class="td01"><b> Album</b> - Artist<br> Title</td>
+                    </tr>
+                    <tr>
+                      <td><span class="glowing-rank">1</span><br>11:32</td>
+                      <td><a href="/modules.php?name=Album&amp;asin=ALBUM_1"><img src="/covers/queue.jpg"></a></td>
+                      <td><b>Listed album</b> - Listed artist<br>
+                        <span style="color: #AAAAAA;">Listed title</span>
+                      </td>
+                    </tr>
+                """.trimIndent(),
+                history = "",
+            ),
+            "https://streamingsoundtracks.com/",
+        )
+
+        with(result.upcoming.single()) {
+            assertEquals("Listed title", displayTitle)
+            assertEquals("Listed artist", artistName)
+            assertEquals("Listed album", albumTitle)
+        }
+    }
+
+    @Test
     fun `ignores malformed requester labels without changing track fields`() {
         val result = parser.parseExtended(
             extendedPage(

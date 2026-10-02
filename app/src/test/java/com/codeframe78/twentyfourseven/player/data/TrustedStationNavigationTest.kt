@@ -74,7 +74,7 @@ class TrustedStationNavigationTest {
     @Test
     fun `artwork follows bounded same-origin redirect and rejects downgrade`() = runTest {
         val acceptedConnections = mutableListOf<FakeConnection>()
-        val accepted = StationNowPlayingArtworkRepository(connectionFactory = { uri ->
+        val accepted = StationNowPlayingArtworkRepository(elapsedRealtimeMillis = { 0L }, connectionFactory = { uri ->
             val connection = if (acceptedConnections.isEmpty()) {
                 FakeConnection(uri.toURL(), status = 307, location = "/soap/current.json")
             } else {

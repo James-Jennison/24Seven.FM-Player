@@ -120,7 +120,7 @@ internal class PlayerQueueRemoteDataSource(
             StationId("sst") to Endpoint("streamingsoundtracks.com", "sst"),
             StationId("1980s") to Endpoint("1980s.fm", "80s"),
             StationId("afm") to Endpoint("adagio.fm", "afm"),
-            StationId("dfm") to Endpoint("death.fm", "dfm", extendedQueue = false),
+            StationId("dfm") to Endpoint("death.fm", "dfm"),
             StationId("efm") to Endpoint("entranced.fm", "efm"),
         )
     }

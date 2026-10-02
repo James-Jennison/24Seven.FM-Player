@@ -27,7 +27,7 @@ import androidx.media3.session.SessionResult
 import com.codeframe78.twentyfourseven.player.MainActivity
 import com.codeframe78.twentyfourseven.player.RadioApplication
 import com.codeframe78.twentyfourseven.player.domain.NowPlayingPublisher
-import com.codeframe78.twentyfourseven.player.domain.NowPlayingArtworkRepository
+import com.codeframe78.twentyfourseven.player.domain.NowPlayingDetailsRepository
 import com.codeframe78.twentyfourseven.player.domain.NowPlayingState
 import com.codeframe78.twentyfourseven.player.domain.StationId
 import com.codeframe78.twentyfourseven.player.domain.normalizeTrailingTheArticle
@@ -48,8 +48,8 @@ class RadioPlaybackService : MediaLibraryService() {
     private val nowPlayingPublisher: NowPlayingPublisher by lazy {
         (application as RadioApplication).appContainer.nowPlayingPublisher
     }
-    private val artworkRepository: NowPlayingArtworkRepository by lazy {
-        (application as RadioApplication).appContainer.nowPlayingArtworkRepository
+    private val nowPlayingDetails: NowPlayingDetailsRepository by lazy {
+        (application as RadioApplication).appContainer.nowPlayingDetailsRepository
     }
     private val stationRepository by lazy {
         (application as RadioApplication).appContainer.stationRepository
@@ -113,9 +113,9 @@ class RadioPlaybackService : MediaLibraryService() {
             updateSessionMetadata(nowPlaying)
             nowPlayingPublisher.publish(nowPlaying)
             artworkJob = serviceScope.launch {
-                val artworkUrl = runCatching { artworkRepository.fetchArtwork(stationId) }.getOrNull() ?: return@launch
+                val details = runCatching { nowPlayingDetails.fetchNowPlaying(stationId) }.getOrNull() ?: return@launch
                 if (activeNowPlaying != nowPlaying || player.currentMediaItem?.stationId() != stationId) return@launch
-                val enriched = nowPlaying.copy(artworkUrl = artworkUrl)
+                val enriched = nowPlaying.withStationDetails(details)
                 activeNowPlaying = enriched
                 updateSessionMetadata(enriched)
                 nowPlayingPublisher.publish(enriched)

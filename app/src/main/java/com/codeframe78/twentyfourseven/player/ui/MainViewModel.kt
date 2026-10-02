@@ -296,6 +296,7 @@ class MainViewModel(
             selectedStation = selected,
             playback = playbackContent.state,
             nowPlaying = content.nowPlaying.takeIf { it.stationId == selected.id }
+                ?.withCommunityVisibility(selected.id, safety.safety)
                 ?: NowPlayingState(stationId = selected.id),
             queue = selectedQueueState.withCommunityVisibility(selected.id, safety.safety),
             auth = selectedAuthState,
@@ -624,6 +625,14 @@ private data class PlaybackContent(
     val state: PlaybackState,
     val transitions: List<DiagnosticTransition>,
 )
+
+private fun NowPlayingState.withCommunityVisibility(
+    stationId: StationId,
+    safety: CommunitySafetyState,
+): NowPlayingState {
+    val hide = !safety.canViewCommunityContent || safety.isBlocked(stationId, requesterName)
+    return if (hide) copy(requesterName = null, requestMessage = null) else this
+}
 
 private fun QueueState.withCommunityVisibility(
     stationId: StationId,

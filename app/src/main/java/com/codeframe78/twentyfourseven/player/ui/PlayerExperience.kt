@@ -402,6 +402,7 @@ private fun LandscapeNowPlayingDetails(
             )
         }
         PlaybackStatusPill(state, palette)
+        NowPlayingTrackExtras(state, Alignment.Start)
     }
 }
 
@@ -600,6 +601,7 @@ private fun NowPlayingDetails(
         }
         PlaybackStatusPill(state, palette)
         CastRouteLabel(state)
+        NowPlayingTrackExtras(state, alignment)
     }
 }
 

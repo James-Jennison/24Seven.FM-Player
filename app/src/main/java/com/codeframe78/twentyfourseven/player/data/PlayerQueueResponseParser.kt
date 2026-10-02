@@ -65,9 +65,11 @@ internal class PlayerQueueResponseParser {
                 }
             }
         }
+        val queueAlbumFirst = queueTable?.let(::listsAlbumFirst) == true
+        val playedAlbumFirst = playedTable?.let(::listsAlbumFirst) == true
         return QueuePayload(
             upcoming = queueTable?.let(::directRows).orEmpty().mapNotNull { row ->
-                val track = parseExtendedRow(row, baseUrl) ?: return@mapNotNull null
+                val track = parseExtendedRow(row, baseUrl, queueAlbumFirst) ?: return@mapNotNull null
                 QueueTrack(
                     position = track.position,
                     displayTitle = track.displayTitle,
@@ -82,7 +84,7 @@ internal class PlayerQueueResponseParser {
                 )
             }.take(maxTracks),
             recentlyPlayed = playedTable?.let(::directRows).orEmpty().mapNotNull { row ->
-                val track = parseExtendedRow(row, baseUrl) ?: return@mapNotNull null
+                val track = parseExtendedRow(row, baseUrl, playedAlbumFirst) ?: return@mapNotNull null
                 HistoryTrack(
                     displayTitle = track.displayTitle,
                     songId = track.songId,
@@ -104,6 +106,15 @@ internal class PlayerQueueResponseParser {
             "tbody", "thead", "tfoot" -> child.children().filter { it.normalName() == "tr" }
             else -> emptyList()
         }
+    }
+
+    /**
+     * Each table's own heading row names the order of its bold and plain labels. StreamingSoundtracks.com lists the
+     * album first; the other stations list the artist first.
+     */
+    private fun listsAlbumFirst(table: Element): Boolean = directRows(table).any { row ->
+        val cells = row.select("td")
+        cells.size == 3 && cells[2].selectFirst("b")?.text()?.trim().equals("Album", ignoreCase = true)
     }
 
     private fun rows(html: String, baseUrl: String): List<Element> =
@@ -128,7 +139,7 @@ internal class PlayerQueueResponseParser {
         )
     }
 
-    private fun parseExtendedRow(row: Element, baseUrl: String): ExtendedTrack? {
+    private fun parseExtendedRow(row: Element, baseUrl: String, albumFirst: Boolean): ExtendedTrack? {
         val cells = row.select("td")
         if (cells.size != 3) return null
         val position = cells[0].selectFirst("b, .glowing-rank")?.text()?.trim()?.toIntOrNull() ?: return null
@@ -138,14 +149,18 @@ internal class PlayerQueueResponseParser {
             .firstOrNull { !it.hasClass("req-text") && it.text().trim().isNotEmpty() }
         val usesCurrentStationMarkup = titleSpan != null && details.selectFirst("i") == null
         val (album, artist, title) = if (usesCurrentStationMarkup) {
-            val parsedArtist = details.selectFirst("b")?.text()?.trim()?.takeIf(String::isNotEmpty) ?: return null
-            val parsedAlbum = details.clone().apply { select("b, span, br").remove() }
+            val boldLabel = details.selectFirst("b")?.text()?.trim()?.takeIf(String::isNotEmpty) ?: return null
+            val plainLabel = details.clone().apply { select("b, span, br").remove() }
                 .text()
                 .trim()
                 .removePrefix("-")
                 .trim()
                 .takeIf(String::isNotEmpty) ?: return null
-            Triple(parsedAlbum, parsedArtist, titleSpan.text().trim())
+            if (albumFirst) {
+                Triple(boldLabel, plainLabel, titleSpan.text().trim())
+            } else {
+                Triple(plainLabel, boldLabel, titleSpan.text().trim())
+            }
         } else {
             val parsedAlbum = details.selectFirst("b")?.text()?.trim()?.takeIf(String::isNotEmpty) ?: return null
             val parsedArtist = details.selectFirst("i")?.text()?.trim()?.takeIf(String::isNotEmpty)
