@@ -3,6 +3,7 @@ package com.codeframe78.twentyfourseven.player.data
 import com.codeframe78.twentyfourseven.player.domain.ChatLoadStatus
 import com.codeframe78.twentyfourseven.player.domain.ChatMessage
 import com.codeframe78.twentyfourseven.player.domain.StationId
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
@@ -84,18 +85,43 @@ class PollingChatRepositoryTest {
         assertEquals("This station cannot send one or more characters in that message.", states.last().sendErrorMessage)
     }
 
+    @Test
+    fun `read that outlives its observer still reaches the next observer without an error`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val remote = FakeRemote(fetchGate = gate)
+        val repository = repository(remote) { testScheduler.currentTime }
+        val first = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            repository.observeChat(stationId).collect()
+        }
+        runCurrent()
+        first.cancel()
+        val states = mutableListOf<ChatLoadStatus>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            repository.observeChat(stationId).collect { states += it.status }
+        }
+        runCurrent()
+
+        gate.complete(Unit)
+        runCurrent()
+
+        assertEquals(1, remote.fetchCalls)
+        assertFalse(ChatLoadStatus.Error in states)
+        assertEquals(ChatLoadStatus.Ready, states.last())
+    }
+
     private fun repository(remote: ChatRemoteDataSource, now: () -> Long) = PollingChatRepository(
         remote = remote,
         elapsedRealtimeMillis = now,
     )
 
-    private class FakeRemote : ChatRemoteDataSource {
+    private class FakeRemote(private val fetchGate: CompletableDeferred<Unit>? = null) : ChatRemoteDataSource {
         var fetchCalls = 0
         var sendCalls = 0
         val sentMessages = mutableListOf<String>()
 
         override suspend fun fetch(stationId: StationId): List<ChatMessage> {
             fetchCalls++
+            fetchGate?.await()
             return emptyList()
         }
 

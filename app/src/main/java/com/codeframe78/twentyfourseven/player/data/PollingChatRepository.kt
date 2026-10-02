@@ -4,6 +4,7 @@ import com.codeframe78.twentyfourseven.player.domain.ChatLoadStatus
 import com.codeframe78.twentyfourseven.player.domain.ChatRepository
 import com.codeframe78.twentyfourseven.player.domain.ChatState
 import com.codeframe78.twentyfourseven.player.domain.StationId
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -15,6 +16,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.ConcurrentHashMap
 
@@ -59,7 +61,9 @@ class PollingChatRepository internal constructor(
             if (state.value.status != ChatLoadStatus.Ready) {
                 state.value = state.value.copy(status = ChatLoadStatus.Loading, errorMessage = null)
             }
-            runCatching { remote.fetch(stationId) }
+            // A started read always finishes, even when its observer goes away: the result reaches the next
+            // observer through the shared state, and the station still sees one read per interval.
+            runCatching { withContext(NonCancellable) { remote.fetch(stationId) } }
                 .onSuccess { messages ->
                     state.value = ChatState(stationId, ChatLoadStatus.Ready, messages)
                 }
