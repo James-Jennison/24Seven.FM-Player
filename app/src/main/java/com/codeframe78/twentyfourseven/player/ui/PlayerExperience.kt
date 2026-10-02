@@ -61,6 +61,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
@@ -103,6 +104,10 @@ private val LandscapePlayerMinimumHeight = 300.dp
 private val LandscapeArtworkMinimumSize = 120.dp
 private val LandscapeArtworkMaximumSize = 200.dp
 private val LandscapeStationSelectorWidth = 56.dp
+private val ExpandedLandscapeMinimumWidth = 1000.dp
+private val ExpandedLandscapeMinimumHeight = 640.dp
+private const val ExpandedLandscapeMaximumFontScale = 1.15f
+private val ArtworkFramePadding = 8.dp
 private val SleepTimerPresetsMinutes = listOf(15, 30, 45, 60, 90)
 
 @Immutable
@@ -145,6 +150,17 @@ internal fun AdaptivePlayerScreen(
     ) {
         if (isCoverDisplay) {
             CoverPlayerContent(state, palette, onSelectStation, onPlay, onStop, sleepTimerActions, audioOutputActions)
+        } else if (usesExpandedLandscapePlayerLayout(maxWidth, maxHeight, LocalDensity.current.fontScale)) {
+            ExpandedLandscapePlayerContent(
+                state,
+                palette,
+                onSelectStation,
+                onPlay,
+                onStop,
+                sleepTimerActions,
+                audioOutputActions,
+                trackActions,
+            )
         } else if (usesLandscapePlayerLayout(maxWidth, maxHeight)) {
             LandscapePlayerContent(state, palette, maxWidth, maxHeight, onSelectStation, onPlay, onStop, sleepTimerActions, audioOutputActions, trackActions)
         } else if (maxWidth >= ExpandedPlayerBreakpoint) {
@@ -167,6 +183,12 @@ internal fun AdaptivePlayerScreen(
 
 internal fun usesLandscapePlayerLayout(width: Dp, height: Dp): Boolean =
     width > height && height >= LandscapePlayerMinimumHeight
+
+internal fun usesExpandedLandscapePlayerLayout(width: Dp, height: Dp, fontScale: Float): Boolean =
+    width >= ExpandedLandscapeMinimumWidth &&
+        width > height &&
+        height >= ExpandedLandscapeMinimumHeight &&
+        fontScale <= ExpandedLandscapeMaximumFontScale
 
 @Composable
 private fun CoverPlayerContent(
@@ -320,6 +342,210 @@ private fun CompactPlayerContent(
         if (!isScrollable) Spacer(Modifier.weight(1f))
         StationSelector(state, onSelectStation, isCompact = true)
         if (!isScrollable) Spacer(Modifier.weight(1f))
+    }
+}
+
+@Composable
+private fun ExpandedLandscapePlayerContent(
+    state: MainUiState,
+    palette: StationPalette,
+    onSelectStation: (StationId) -> Unit,
+    onPlay: () -> Unit,
+    onStop: () -> Unit,
+    sleepTimerActions: SleepTimerActions,
+    audioOutputActions: AudioOutputActions,
+    trackActions: TrackActions,
+) {
+    Box(
+        Modifier
+            .fillMaxSize()
+            .background(
+                Brush.radialGradient(
+                    colors = listOf(
+                        palette.secondary.copy(alpha = 0.26f),
+                        palette.glow.copy(alpha = 0.12f),
+                        Color.Transparent,
+                    ),
+                ),
+            )
+            .testTag("expanded_landscape_player"),
+    ) {
+        Column(
+            Modifier
+                .fillMaxSize()
+                .padding(horizontal = 28.dp, vertical = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
+        ) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .testTag("tablet_player_hero"),
+                shape = RoundedCornerShape(36.dp),
+                color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.84f),
+                border = BorderStroke(1.dp, palette.secondary.copy(alpha = 0.52f)),
+                tonalElevation = 8.dp,
+            ) {
+                BoxWithConstraints(Modifier.fillMaxSize().padding(28.dp)) {
+                    val artworkSize = minOf(maxHeight, maxWidth * 0.34f, 320.dp)
+                    // Artwork too small for the caption shows it with the track details instead.
+                    val captionOverArtwork = artworkSize - (ArtworkFramePadding * 2) >= MinimumOverlayArtworkSize
+                    Row(
+                        Modifier.fillMaxSize(),
+                        horizontalArrangement = Arrangement.spacedBy(36.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        NowPlayingArtwork(state, palette, Modifier.size(artworkSize), trackActions, captionOverArtwork)
+                        Column(
+                            Modifier.weight(1f).fillMaxHeight(),
+                            verticalArrangement = Arrangement.Center,
+                        ) {
+                            Text(
+                                "YOUR LIVE RADIO NETWORK",
+                                color = palette.accent,
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Spacer(Modifier.height(10.dp))
+                            NowPlayingDetails(state, palette, Alignment.Start)
+                            if (!captionOverArtwork) NowPlayingInlineExtras(state, Modifier.padding(top = 8.dp))
+                            state.selectedStation?.description?.takeIf(String::isNotBlank)?.let { description ->
+                                Spacer(Modifier.height(10.dp))
+                                Text(
+                                    description,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
+                            Spacer(Modifier.height(24.dp))
+                            Surface(
+                                color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.9f),
+                                shape = RoundedCornerShape(28.dp),
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)),
+                            ) {
+                                PrimaryPlayerControls(
+                                    state,
+                                    onSelectStation,
+                                    onPlay,
+                                    onStop,
+                                    sleepTimerActions,
+                                    audioOutputActions,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            ExpandedLandscapeStationSelector(state, onSelectStation)
+        }
+    }
+}
+
+@Composable
+private fun ExpandedLandscapeStationSelector(
+    state: MainUiState,
+    onSelectStation: (StationId) -> Unit,
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 138.dp)
+            .testTag("tablet_station_selector"),
+        shape = RoundedCornerShape(28.dp),
+        color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.9f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)),
+        tonalElevation = 4.dp,
+    ) {
+        Column(
+            Modifier.padding(horizontal = 18.dp, vertical = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    "Explore the network",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                )
+                Text(
+                    "${state.stations.size} live stations",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                state.stations.forEach { station ->
+                    val selected = station.id == state.selectedStation?.id
+                    val stationPalette = stationPalette(station.id)
+                    Card(
+                        onClick = { onSelectStation(station.id) },
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (selected) {
+                                stationPalette.glow.copy(alpha = 0.94f)
+                            } else {
+                                MaterialTheme.colorScheme.surfaceContainerHigh
+                            },
+                        ),
+                        border = BorderStroke(
+                            if (selected) 2.dp else 1.dp,
+                            if (selected) stationPalette.accent else MaterialTheme.colorScheme.outlineVariant,
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(78.dp)
+                            .semantics {
+                                this.selected = selected
+                                role = Role.RadioButton
+                                contentDescription = if (selected) "${station.name}, selected" else station.name
+                            }
+                            .testTag("tablet_station_${station.id.value}"),
+                    ) {
+                        Row(
+                            Modifier.fillMaxSize().padding(10.dp),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Image(
+                                painter = painterResource(stationSelectorLogoResource(station.id)),
+                                contentDescription = null,
+                                contentScale = ContentScale.Fit,
+                                modifier = Modifier.size(54.dp).clip(RoundedCornerShape(12.dp)),
+                            )
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    station.shortName,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = if (selected) stationPalette.accent else MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                                Text(
+                                    station.description,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = if (selected) {
+                                        Color.White.copy(alpha = 0.88f)
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                    },
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -542,7 +768,7 @@ private fun NowPlayingArtwork(
                     listOf(palette.glow, palette.secondary.copy(alpha = 0.48f)),
                 ),
             )
-            .padding(8.dp),
+            .padding(ArtworkFramePadding),
     ) {
         AsyncImage(
             model = artworkUrl,

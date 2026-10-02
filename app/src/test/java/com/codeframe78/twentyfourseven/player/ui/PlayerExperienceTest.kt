@@ -55,6 +55,17 @@ class PlayerExperienceTest {
     }
 
     @Test
+    fun `roomy tablet landscape uses immersive player while short windows stay compact`() {
+        assertTrue(usesExpandedLandscapePlayerLayout(1200.dp, 800.dp, fontScale = 1f))
+        assertFalse(usesExpandedLandscapePlayerLayout(1000.dp, 400.dp, fontScale = 1f))
+        assertFalse(usesExpandedLandscapePlayerLayout(800.dp, 700.dp, fontScale = 1f))
+        assertTrue(usesExpandedLandscapePlayerLayout(1000.dp, 640.dp, fontScale = 1.15f))
+        assertFalse(usesExpandedLandscapePlayerLayout(999.dp, 640.dp, fontScale = 1f))
+        assertFalse(usesExpandedLandscapePlayerLayout(1000.dp, 639.dp, fontScale = 1f))
+        assertFalse(usesExpandedLandscapePlayerLayout(1200.dp, 800.dp, fontScale = 1.3f))
+    }
+
+    @Test
     fun `short wide app windows use the navigation rail except on the cover display`() {
         assertTrue(usesNavigationRail(640.dp, 320.dp))
         assertTrue(usesNavigationRail(600.dp, 900.dp))

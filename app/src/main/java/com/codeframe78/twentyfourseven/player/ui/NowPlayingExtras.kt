@@ -61,7 +61,7 @@ internal data class TrackActions(
     val onCloseRating: () -> Unit = {},
 )
 
-private val MinimumOverlayArtworkSize = 200.dp
+internal val MinimumOverlayArtworkSize = 200.dp
 // Two 48 dp touch targets and the gap between them.
 private val MinimumActionArtworkSize = 104.dp
 // Artwork often carries its own lettering near the bottom edge, so the scrim reaches full strength above the first line.
