@@ -97,7 +97,7 @@ dependencies {
     implementation("androidx.media3:media3-session:1.10.1")
     implementation("androidx.mediarouter:mediarouter:1.8.1")
     implementation("com.google.android.gms:play-services-cast-framework:22.3.1")
-    implementation("org.jsoup:jsoup:1.22.2")
+    implementation("org.jsoup:jsoup:1.23.1")
     implementation("io.coil-kt.coil3:coil-compose:3.4.0")
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.4.0")
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
