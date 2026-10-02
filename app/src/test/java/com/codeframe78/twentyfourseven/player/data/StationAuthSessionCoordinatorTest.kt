@@ -52,6 +52,29 @@ class StationAuthSessionCoordinatorTest {
         assertEquals(ProtectedSessionValidity.Expired, coordinator.observeValidity(station).first())
     }
 
+    @Test
+    fun `restored and refreshed cookies are sent as plain name value pairs`() {
+        val station = StationId("sst")
+        val origin = "https://streamingsoundtracks.com/"
+        val store = InMemoryAuthSessionStore().apply {
+            save(station, "streamingsoundtracks.com", listOf(sessionCookie("restored")), "Listener")
+        }
+        val coordinator = StationAuthSessionCoordinator(store)
+        val manager = coordinator.cookieManager(station, origin)
+
+        // java.net would send a rebuilt cookie as $Version="1"; session="restored";$Path="/"; ...
+        assertEquals(listOf("session=restored"), manager.get(URI(origin), emptyMap())["Cookie"])
+
+        coordinator.captureResponse(
+            station,
+            origin,
+            URI(origin),
+            mapOf("Set-Cookie" to listOf("session=refreshed; Max-Age=60; Path=/; Secure; HttpOnly")),
+        )
+
+        assertEquals(listOf("session=refreshed"), manager.get(URI(origin), emptyMap())["Cookie"])
+    }
+
     private fun sessionCookie(value: String) = HttpCookie("session", value).apply {
         domain = "streamingsoundtracks.com"
         path = "/"
