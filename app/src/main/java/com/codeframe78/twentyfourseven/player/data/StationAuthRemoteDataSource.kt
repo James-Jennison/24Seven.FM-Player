@@ -96,14 +96,14 @@ internal class StationAuthRemoteDataSource(
         val origin = origin(stationId)
         val page = runCatching { request(stationId, URI(origin), method = "GET") }
             .getOrNull() ?: return@withContext RestoredAuthSession.SignedIn(displayName)
-        runCatching { resultParser.parseSignedInDisplayName(page.html, origin, displayName) }
-            .fold(
-                onSuccess = RestoredAuthSession::SignedIn,
-                onFailure = {
-                    sessions.expire(stationId)
-                    RestoredAuthSession.Expired
-                },
-            )
+        when (resultParser.signedInEvidence(page.html, origin, displayName)) {
+            SignedInEvidence.SignedOut -> {
+                sessions.expire(stationId)
+                RestoredAuthSession.Expired
+            }
+            // A maintenance or unrecognized page says nothing about the session, so the saved sign-in is kept.
+            SignedInEvidence.Confirmed, SignedInEvidence.Unknown -> RestoredAuthSession.SignedIn(displayName)
+        }
     }
 
     override fun persistSession(stationId: StationId, displayName: String) {

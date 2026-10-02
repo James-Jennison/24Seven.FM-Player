@@ -253,6 +253,40 @@ class StationSongRequestRemoteDataSourceTest {
     }
 
     @Test
+    fun `sign-in wording elsewhere on an accepted page does not expire the session`() = runTest {
+        val store = sessionStore()
+        val connections = mutableListOf<FakeConnection>()
+        val response = """
+            <a href="/modules.php?name=Discord">Log in to the community Discord</a>
+            Your request has successfully been delivered to the DJ application.
+            <form action="/modules.php?name=Album&amp;action=submitmessage&amp;asin=B00005BG8G&amp;id=2055716">
+              <textarea name="msg"></textarea>
+              <input name="send" type="submit" value="Send">
+              <input name="remLen" value="80" readonly>
+            </form>
+        """.trimIndent()
+        val remote = StationSongRequestRemoteDataSource(
+            sessionStore = store,
+            requestQueueVerifier = queuedRequestVerifier,
+        ) { uri -> FakeConnection(uri.toURL(), response).also(connections::add) }
+
+        assertTrue(remote.submit(stationId, track(), "") is RequestSubmissionResult.Submitted)
+        assertEquals("Listener", store.loadDisplayName(stationId))
+    }
+
+    @Test
+    fun `sign-in prompt without an acknowledgement still requires authentication`() = runTest {
+        val store = sessionStore()
+        val remote = StationSongRequestRemoteDataSource(
+            sessionStore = store,
+            requestQueueVerifier = queuedRequestVerifier,
+        ) { uri -> FakeConnection(uri.toURL(), "You must log in before you can request a track.") }
+
+        assertEquals(RequestSubmissionResult.AuthenticationRequired, remote.submit(stationId, track(), ""))
+        assertEquals(null, store.loadDisplayName(stationId))
+    }
+
+    @Test
     fun `message form without explicit request success is not posted`() = runTest {
         val connections = mutableListOf<FakeConnection>()
         val response = """

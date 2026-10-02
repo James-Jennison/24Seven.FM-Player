@@ -28,6 +28,13 @@ class FavoriteTracksPageParserTest {
         assertThrows(FavoritesAuthenticationRequiredException::class.java) {
             parser.parseListUrl("<form><input name=user_password></form>", origin)
         }
+        assertThrows(FavoritesAuthenticationRequiredException::class.java) {
+            parser.parseListUrl("<a href='modules.php?name=Your_Account&op=new_user'>Register</a>", origin)
+        }
+        val unrecognized = assertThrows(IOException::class.java) {
+            parser.parseListUrl("<p>The station is being upgraded.</p>", origin)
+        }
+        assertFalse(unrecognized is FavoritesAuthenticationRequiredException)
         assertThrows(IOException::class.java) {
             parser.parseListUrl(
                 """<iframe id="thelist" src="https://example.com/modules/Favorites/thelist.php?user2view=57"></iframe>""",

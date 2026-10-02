@@ -11,13 +11,20 @@ import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 
 internal class FavoriteTracksPageParser {
+    private val sessionEvidence = AuthLoginResultParser()
+
     fun parseListUrl(html: String, origin: String): String {
         val originUri = trustedOrigin(origin)
         val source = Jsoup.parse(html, origin)
             .selectFirst("iframe#thelist[src]")
             ?.absUrl("src")
             ?.takeIf(String::isNotBlank)
-            ?: throw FavoritesAuthenticationRequiredException()
+            // Only a page that shows a signed-out visitor ends the session; any other page is a load failure.
+            ?: throw if (sessionEvidence.showsSignedOutVisitor(html, origin)) {
+                FavoritesAuthenticationRequiredException()
+            } else {
+                IOException("Favorites list was not found")
+            }
         val uri = runCatching { URI(source) }.getOrNull()
             ?: throw IOException("Favorites list URL was invalid")
         requireSameOrigin(uri, originUri)

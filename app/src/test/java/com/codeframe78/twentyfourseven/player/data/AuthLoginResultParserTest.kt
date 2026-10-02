@@ -1,7 +1,9 @@
 package com.codeframe78.twentyfourseven.player.data
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.IOException
 
@@ -97,6 +99,28 @@ class AuthLoginResultParserTest {
                 "Listener",
             )
         }
+    }
+
+    @Test
+    fun `session evidence separates signed-out pages from pages that say nothing`() {
+        val origin = "https://streamingsoundtracks.com/"
+        val visitor = "<nav><a href='modules.php?name=Your_Account'>Login</a>" +
+            "<a href='modules.php?name=Your_Account&op=new_user'>Register</a></nav>"
+
+        assertEquals(SignedInEvidence.Confirmed, parser.signedInEvidence(accountMenuPage(), origin, "Listener"))
+        assertEquals(SignedInEvidence.SignedOut, parser.signedInEvidence(accountMenuPage(), origin, "Someone"))
+        assertEquals(SignedInEvidence.SignedOut, parser.signedInEvidence(visitor, origin, "Listener"))
+        assertEquals(
+            SignedInEvidence.SignedOut,
+            parser.signedInEvidence("<input name=user_password type=password>", origin, "Listener"),
+        )
+        assertEquals(
+            SignedInEvidence.Unknown,
+            parser.signedInEvidence("<p>The station is being upgraded.</p>", origin, "Listener"),
+        )
+        assertTrue(parser.showsSignedOutVisitor(visitor, origin))
+        assertFalse(parser.showsSignedOutVisitor("<p>The station is being upgraded.</p>", origin))
+        assertFalse(parser.showsSignedOutVisitor(accountMenuPage(), origin))
     }
 
     // Mirrors the station navigation observed on October 1, 2026: the account menu is labelled with the member

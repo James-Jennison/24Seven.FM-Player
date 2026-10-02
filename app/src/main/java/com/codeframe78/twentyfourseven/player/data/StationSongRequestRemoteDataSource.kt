@@ -283,13 +283,15 @@ internal class StationSongRequestRemoteDataSource(
         hasAuthenticatedMessageForm: Boolean,
     ): RequestSubmissionResult {
         val text = Jsoup.parse(html).text().replace(Regex("\\s+"), " ").trim()
-        if (text.contains("log in", true) || text.contains("login", true) && text.contains("request", true)) {
-            return RequestSubmissionResult.AuthenticationRequired
-        }
+        // The acknowledgement with its member-only message form is the strongest signal, so unrelated sign-in
+        // wording elsewhere on the page must not turn a delivered request into an expired session.
         if (hasAuthenticatedMessageForm && ACCEPTANCE_PATTERNS.any { it.containsMatchIn(text) }) {
             return RequestSubmissionResult.Submitted(
                 "The station acknowledged the request. Confirm it in Queue before requesting again.",
             )
+        }
+        if (text.contains("log in", true) || text.contains("login", true) && text.contains("request", true)) {
+            return RequestSubmissionResult.AuthenticationRequired
         }
         val rejection = REJECTION_PATTERNS.firstOrNull { it.containsMatchIn(text) }
         if (rejection != null) {
