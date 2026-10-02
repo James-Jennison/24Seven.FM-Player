@@ -1,18 +1,22 @@
 # Third-party software notices
 
-The 24Seven.FM Player is built with the open-source components below. This
-inventory reflects the resolved `releaseRuntimeClasspath` used for the M23.1
-release-candidate audit on July 15, 2026. Artifact-level versions remain
-recorded by Gradle and in the release bundle dependency metadata.
+The 24Seven.FM Player is built with the third-party components below. This
+inventory reflects the resolved `releaseRuntimeClasspath` as checked on
+October 1, 2026. Artifact-level versions remain recorded by Gradle and in the
+release bundle dependency metadata.
 
 ## Apache License 2.0 components
 
 - AndroidX, including Activity 1.11.0, Browser 1.10.0, Compose UI 1.11.3,
   Material icons 1.7.8, Material 3 1.4.0, Core 1.16.0, Lifecycle 2.9.4,
-  Media3 1.10.1, Window 1.5.0, and their AndroidX transitive modules
+  Media 1.7.0, Media3 1.10.1, MediaRouter 1.8.1, Window 1.5.0, and their
+  AndroidX transitive modules
 - Accompanist Drawable Painter 0.37.3
 - Coil 3.4.0
+- Firebase Encoders 17.0.0, with its JSON 18.0.0 and Protobuf 16.0.0 encoders
+- Google Data Transport API 3.0.0, runtime 3.1.3, and CCT backend 3.1.3
 - Guava 33.3.1-android and FailureAccess 1.0.2
+- javax.inject 1
 - JetBrains Compose runtime transitive modules 1.9.3 and JetBrains AndroidX
   transitive modules 1.3.6/2.9.6
 - Kotlin standard library 2.3.10, kotlinx.coroutines 1.10.2, and
@@ -29,7 +33,9 @@ Project sources:
 - <https://github.com/androidx/media>
 - <https://github.com/google/accompanist>
 - <https://github.com/coil-kt/coil>
+- <https://github.com/firebase/firebase-android-sdk>
 - <https://github.com/google/guava>
+- <https://github.com/javax-inject/javax-inject>
 - <https://github.com/JetBrains/compose-multiplatform>
 - <https://github.com/JetBrains/kotlin>
 - <https://github.com/Kotlin/kotlinx.coroutines>
@@ -38,6 +44,20 @@ Project sources:
 - <https://github.com/square/okio>
 - <https://github.com/JetBrains/java-annotations>
 - <https://github.com/jspecify/jspecify>
+
+## Google Play services — Android Software Development Kit License
+
+The Google Cast sender is built with Google Play services libraries that
+Google distributes in binary form under the Android Software Development Kit
+License rather than an open-source license:
+
+- Play services Cast 22.3.1 and Cast Framework 22.3.1
+- Play services Base 18.7.2, Basement 18.9.0, Tasks 18.3.2, and Flags 18.1.0
+
+License: <https://developer.android.com/studio/terms.html>
+
+These libraries are used unmodified. The Firebase Encoders and Google Data
+Transport components listed above are their open-source dependencies.
 
 ## jsoup 1.22.2 — MIT License
 

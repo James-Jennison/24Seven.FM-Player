@@ -33,8 +33,8 @@ Console form immediately before submission.
 - The Player has no developer-operated server.
 - Credentials, sessions, Chat, search, Favorites, request, Queue, History, and artwork paths enforce approved same-station
   HTTPS behavior. Final probes must repeat against the exact candidate.
-- Only verified public live-audio hosts permit cleartext. Player-added credentials, cookies, messages, search terms,
-  reports, and diagnostics are never attached to those stream requests.
+- Cleartext traffic is disabled for every host, including the live-audio hosts. Player-added credentials, cookies,
+  messages, search terms, reports, and diagnostics are never attached to stream requests.
 - App-private data is excluded from Android cloud backup and device-to-device transfer.
 
 ## Implementation inventory
@@ -65,8 +65,9 @@ Console form immediately before submission.
 - **Optional or required?** Account/community/request features are optional because public playback, Queue, and History
   work signed out. Network data needed for the user's selected request may still be required for that feature.
 - **Is all collected data encrypted in transit?** Provisionally Yes for explicit user-data payloads based on the current
-  source audit, but final release probes across every station/redirect are mandatory. Public cleartext live audio carries
-  no Player-added user payload; confirm the active form's treatment before saving Yes.
+  source audit, but final release probes across every station/redirect are mandatory. The network security configuration
+  disables cleartext for every host, and live audio carries no Player-added user payload; confirm the active form's
+  treatment before saving Yes.
 - **Can users request deletion?** The app can remove local protected sessions and application data. It cannot presently
   delete pre-existing station accounts, posts, request records, server logs, or sent email. Do not claim a broader
   mechanism until the station supplies one. M31 confirmed that the current Contact-only external catalog does not
