@@ -77,6 +77,9 @@ data class PrivateMessagesState(
 interface PrivateMessagesRepository {
     fun observeMessages(stationId: StationId): Flow<PrivateMessagesState>
     suspend fun refresh(stationId: StationId, folder: PrivateMessageFolder, page: Int)
+
+    /** Asks the station how many messages are unread, without changing the folder being shown. */
+    suspend fun refreshUnreadCount(stationId: StationId)
     suspend fun openMessage(stationId: StationId, messageId: String)
     suspend fun closeMessage(stationId: StationId)
     suspend fun beginReply(stationId: StationId)
@@ -91,6 +94,7 @@ object UnavailablePrivateMessagesRepository : PrivateMessagesRepository {
         flowOf(PrivateMessagesState(stationId))
 
     override suspend fun refresh(stationId: StationId, folder: PrivateMessageFolder, page: Int) = Unit
+    override suspend fun refreshUnreadCount(stationId: StationId) = Unit
     override suspend fun openMessage(stationId: StationId, messageId: String) = Unit
     override suspend fun closeMessage(stationId: StationId) = Unit
     override suspend fun beginReply(stationId: StationId) = Unit

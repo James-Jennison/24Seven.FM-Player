@@ -121,6 +121,11 @@ class BootstrapStationRepository(
             // The network administrator confirmed on October 2, 2026 that private messages work on all five stations.
             supportsPrivateMessages = true,
             supportsPrivateMessageSending = true,
+            // Public profile cards, the history archive, and the news page use one format on all five stations,
+            // checked against each on October 2, 2026.
+            supportsMemberProfiles = true,
+            supportsPlayedHistoryArchive = true,
+            supportsStationNews = true,
         )
 
         fun streams(domain: String) = listOf(

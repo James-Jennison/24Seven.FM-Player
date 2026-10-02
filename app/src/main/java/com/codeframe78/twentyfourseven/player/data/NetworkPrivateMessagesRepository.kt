@@ -23,8 +23,10 @@ import java.util.concurrent.ConcurrentHashMap
 
 internal class NetworkPrivateMessagesRepository(
     private val remote: PrivateMessagesRemoteDataSource,
+    private val elapsedMillis: () -> Long = { System.nanoTime() / 1_000_000 },
 ) : PrivateMessagesRepository {
     private val states = ConcurrentHashMap<StationId, MutableStateFlow<PrivateMessagesState>>()
+    private val unreadChecks = ConcurrentHashMap<StationId, Long>()
     private val locks = ConcurrentHashMap<StationId, Mutex>()
 
     /** The station's own form for the message being written. It is used for one send and then discarded. */
@@ -64,6 +66,25 @@ internal class NetworkPrivateMessagesRepository(
                 state(canonical).update { it.copy(status = PrivateMessagesStatus.Error) }
             }
         }
+    }
+
+    override suspend fun refreshUnreadCount(stationId: StationId) {
+        val canonical = stationId.canonicalized()
+        val now = elapsedMillis()
+        // Navigation asks often; the station is asked at most once per interval.
+        val last = unreadChecks[canonical]
+        if (last != null && now - last < UNREAD_CHECK_INTERVAL_MILLIS) return
+        unreadChecks[canonical] = now
+        val unread = try {
+            remote.loadFolder(canonical, PrivateMessageFolder.Inbox, 1).unreadCount
+        } catch (cancellation: CancellationException) {
+            unreadChecks.remove(canonical)
+            throw cancellation
+        } catch (_: Exception) {
+            // A failed check leaves the last known count; the Private messages section reports real errors.
+            null
+        }
+        if (unread != null) state(canonical).update { it.copy(unreadCount = unread) }
     }
 
     override suspend fun openMessage(stationId: StationId, messageId: String) {
@@ -214,6 +235,7 @@ internal class NetworkPrivateMessagesRepository(
     override suspend fun clear(stationId: StationId) {
         val canonical = stationId.canonicalized()
         forms.remove(canonical)
+        unreadChecks.remove(canonical)
         state(canonical).value = PrivateMessagesState(canonical)
     }
 
@@ -226,4 +248,8 @@ internal class NetworkPrivateMessagesRepository(
     }
 
     private fun lock(stationId: StationId) = locks.getOrPut(stationId, ::Mutex)
+
+    private companion object {
+        const val UNREAD_CHECK_INTERVAL_MILLIS = 120_000L
+    }
 }

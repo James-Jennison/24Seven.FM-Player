@@ -54,6 +54,11 @@ import com.codeframe78.twentyfourseven.player.domain.PrivateMessageFolder
 import com.codeframe78.twentyfourseven.player.domain.PrivateMessagesRepository
 import com.codeframe78.twentyfourseven.player.domain.PrivateMessagesState
 import com.codeframe78.twentyfourseven.player.domain.UnavailablePrivateMessagesRepository
+import com.codeframe78.twentyfourseven.player.domain.MemberProfileState
+import com.codeframe78.twentyfourseven.player.domain.StationExtrasRepository
+import com.codeframe78.twentyfourseven.player.domain.StationExtrasState
+import com.codeframe78.twentyfourseven.player.domain.UnavailableStationExtrasRepository
+import com.codeframe78.twentyfourseven.player.domain.currentPlayedHistoryBlock
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -89,6 +94,7 @@ data class MainUiState(
     val destination: MainDestination = MainDestination.Player,
     val trackActions: TrackActionsState? = null,
     val privateMessages: PrivateMessagesState? = null,
+    val extras: StationExtrasState? = null,
 )
 
 data class StationAccountUiState(
@@ -111,6 +117,7 @@ class MainViewModel(
     private val communityNotifications: CommunityNotificationRepository = UnavailableCommunityNotificationRepository,
     private val trackActions: TrackActionsRepository = UnavailableTrackActionsRepository,
     private val privateMessages: PrivateMessagesRepository = UnavailablePrivateMessagesRepository,
+    private val extras: StationExtrasRepository = UnavailableStationExtrasRepository,
 ) : ViewModel() {
     private val observedSessionStations = mutableSetOf<StationId>()
     private val destination = MutableStateFlow(MainDestination.Player)
@@ -266,7 +273,11 @@ class MainViewModel(
     private val selectedPrivateMessages = stations.observeSelectedStation()
         .flatMapLatest { station -> privateMessages.observeMessages(station.id) }
 
-    private val listenerActions = combine(selectedTrackActions, selectedPrivateMessages, ::ListenerActionsContent)
+    private val selectedExtras = stations.observeSelectedStation()
+        .flatMapLatest { station -> extras.observeExtras(station.id) }
+
+    private val listenerActions =
+        combine(selectedTrackActions, selectedPrivateMessages, selectedExtras, ::ListenerActionsContent)
 
     private val stationContent = combine(
         nowPlaying.observeNowPlaying(),
@@ -283,6 +294,7 @@ class MainViewModel(
             requestContent = requestsState,
             trackActions = listenerActionsState.trackActions,
             privateMessages = listenerActionsState.privateMessages,
+            extras = listenerActionsState.extras,
         )
     }
 
@@ -337,6 +349,8 @@ class MainViewModel(
             trackActions = content.trackActions.takeIf { it.stationId == selected.id },
             privateMessages = content.privateMessages.takeIf { it.stationId == selected.id }
                 ?.withCommunityVisibility(selected.id, safety.safety),
+            extras = content.extras.takeIf { it.stationId == selected.id }
+                ?.withCommunityVisibility(selected.id, safety.safety),
         )
     }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), MainUiState())
@@ -363,6 +377,13 @@ class MainViewModel(
         }
         viewModelScope.launch {
             stations.observeSelectedStation().collect(playback::selectStation)
+        }
+        viewModelScope.launch {
+            // A sign-in, a restored session, or a station switch is a moment to learn the unread count.
+            selectedAuth
+                .map { state -> state.stationId to state.status }
+                .distinctUntilChanged()
+                .collect { (_, status) -> if (status == AuthStatus.SignedIn) refreshUnreadPrivateMessages() }
         }
         viewModelScope.launch {
             stations.observeStations().collect { all ->
@@ -404,6 +425,7 @@ class MainViewModel(
     fun cancelSleepTimer() = playback.cancelSleepTimer()
     fun selectDestination(destination: MainDestination) {
         this.destination.value = destination
+        refreshUnreadPrivateMessages()
         if (destination == MainDestination.Favorites) {
             viewModelScope.launch {
                 val stationId = stations.observeSelectedStation().first().id
@@ -518,6 +540,50 @@ class MainViewModel(
         requests.clear(stationId)
         trackActions.clear(stationId)
         privateMessages.clear(stationId)
+    }
+
+    /** Keeps the unread badge current. The repository limits how often the station is actually asked. */
+    fun refreshUnreadPrivateMessages() = viewModelScope.launch {
+        val station = privateMessageStation() ?: return@launch
+        privateMessages.refreshUnreadCount(station.id)
+    }
+
+    fun openMemberProfile(username: String) = viewModelScope.launch {
+        val station = stations.observeSelectedStation().first()
+        val safety = communitySafety.observeSafety().first()
+        if (
+            !station.capabilities.supportsMemberProfiles ||
+            !safety.canViewCommunityContent ||
+            safety.isBlocked(station.id, username)
+        ) {
+            return@launch
+        }
+        extras.openProfile(station.id, username)
+    }
+
+    fun closeMemberProfile() = viewModelScope.launch {
+        extras.closeProfile(stations.observeSelectedStation().first().id)
+    }
+
+    fun openPlayedHistory() {
+        val (date, startHour) = currentPlayedHistoryBlock()
+        loadPlayedHistory(date, startHour)
+    }
+
+    fun loadPlayedHistory(date: java.time.LocalDate, startHour: Int) = viewModelScope.launch {
+        val station = stations.observeSelectedStation().first()
+        if (!station.capabilities.supportsPlayedHistoryArchive) return@launch
+        extras.loadHistory(station.id, date, startHour)
+    }
+
+    fun closePlayedHistory() = viewModelScope.launch {
+        extras.closeHistory(stations.observeSelectedStation().first().id)
+    }
+
+    fun refreshStationNews() = viewModelScope.launch {
+        val station = stations.observeSelectedStation().first()
+        if (!station.capabilities.supportsStationNews) return@launch
+        extras.refreshNews(station.id)
     }
 
     fun refreshPrivateMessages(folder: PrivateMessageFolder, page: Int) = viewModelScope.launch {
@@ -662,6 +728,7 @@ class MainViewModel(
         private val communityNotifications: CommunityNotificationRepository,
         private val trackActions: TrackActionsRepository,
         private val privateMessages: PrivateMessagesRepository,
+        private val extras: StationExtrasRepository,
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =
@@ -679,6 +746,7 @@ class MainViewModel(
                 communityNotifications,
                 trackActions,
                 privateMessages,
+                extras,
             ) as T
     }
 }
@@ -691,11 +759,13 @@ private data class StationContent(
     val requestContent: RequestContent,
     val trackActions: TrackActionsState,
     val privateMessages: PrivateMessagesState,
+    val extras: StationExtrasState,
 )
 
 private data class ListenerActionsContent(
     val trackActions: TrackActionsState,
     val privateMessages: PrivateMessagesState,
+    val extras: StationExtrasState,
 )
 
 private data class StationSelectionContent(
@@ -763,6 +833,28 @@ private fun PrivateMessagesState.withCommunityVisibility(
         openMessage = openMessage?.takeUnless { safety.isBlocked(stationId, it.sender) },
     )
 }
+
+/** A profile card is community content, and a history row's requester follows the same rules as the Queue. */
+private fun StationExtrasState.withCommunityVisibility(
+    stationId: StationId,
+    safety: CommunitySafetyState,
+): StationExtrasState = copy(
+    profile = profile.takeIf {
+        safety.canViewCommunityContent && !safety.isBlocked(stationId, it.requestedName)
+    } ?: MemberProfileState(),
+    history = history.copy(
+        entries = history.entries.map { entry ->
+            val hide = !safety.canViewCommunityContent || safety.isBlocked(stationId, entry.requesterName)
+            if (hide) entry.copy(requesterName = null, requestMessage = null) else entry
+        },
+    ),
+    // A story's byline is a member name, so it follows the same rule as other member names.
+    news = if (safety.canViewCommunityContent) {
+        news
+    } else {
+        news.copy(stories = news.stories.map { it.copy(author = null) })
+    },
+)
 
 private fun QueueState.withCommunityVisibility(
     stationId: StationId,

@@ -97,7 +97,6 @@ internal fun PrivateMessagesSection(
             }
             PrivateMessagesFolder(station, messages, actions)
             PrivateMessageDialog(state, station, messages, actions, communityActions)
-            PrivateMessageComposeDialog(messages.compose, actions)
         }
     }
 }
@@ -322,8 +321,9 @@ private fun PrivateMessageBody(
     }
 }
 
+/** Shown from the app root, so a message can also be started from a member's profile card on any screen. */
 @Composable
-private fun PrivateMessageComposeDialog(compose: PrivateMessageCompose?, actions: PrivateMessageActions) {
+internal fun PrivateMessageComposeDialog(compose: PrivateMessageCompose?, actions: PrivateMessageActions) {
     if (compose == null) return
     // The draft lives only in memory: it is not saved across process death or written anywhere.
     var subject by remember(compose.recipient, compose.isReply) { mutableStateOf(compose.subject) }

@@ -50,6 +50,10 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
@@ -144,6 +148,32 @@ private data class NavigationItem(
     val icon: ImageVector,
 )
 
+/** The More tab carries the unread private message count, since that is where messages are read. */
+@Composable
+private fun NavigationItemIcon(item: NavigationItem, unreadMessages: Int) {
+    if (item.destination == MainDestination.More && unreadMessages > 0) {
+        BadgedBox(
+            badge = {
+                Badge(Modifier.testTag("unread_messages_badge")) {
+                    Text(if (unreadMessages > 99) "99+" else unreadMessages.toString())
+                }
+            },
+        ) { Icon(item.icon, contentDescription = null) }
+    } else {
+        Icon(item.icon, contentDescription = null)
+    }
+}
+
+internal fun navigationItemDescription(destination: MainDestination, label: String, unreadMessages: Int): String =
+    when {
+        destination != MainDestination.More || unreadMessages <= 0 -> label
+        unreadMessages == 1 -> "$label, 1 unread private message"
+        else -> "$label, $unreadMessages unread private messages"
+    }
+
+private fun navigationItemDescription(item: NavigationItem, unreadMessages: Int): String =
+    navigationItemDescription(item.destination, item.label, unreadMessages)
+
 internal data class CommunitySafetyActions(
     val onSubmitAgeScreen: (Int, Int, Int) -> Unit = { _, _, _ -> },
     val onAcceptTerms: () -> Unit = {},
@@ -192,6 +222,57 @@ internal fun RadioApp(
     onOpenAppGuide: () -> Unit = {},
     trackActions: TrackActions = TrackActions(),
     privateMessageActions: PrivateMessageActions = PrivateMessageActions(),
+    stationExtrasActions: StationExtrasActions = StationExtrasActions(),
+) {
+    val profileOpener = stationExtrasActions.onOpenProfile.takeIf {
+        state.selectedStation?.capabilities?.supportsMemberProfiles == true &&
+            state.communitySafety.canViewCommunityContent
+    }
+    CompositionLocalProvider(
+        LocalStationExtrasActions provides stationExtrasActions,
+        LocalMemberProfileOpener provides profileOpener,
+    ) {
+        RadioAppContent(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, trackActions, privateMessageActions)
+        PlayedHistoryDialog(state, stationExtrasActions)
+        MemberProfileDialog(state, stationExtrasActions, privateMessageActions.onNewMessage)
+        PrivateMessageComposeDialog(state.privateMessages?.compose, privateMessageActions)
+    }
+}
+
+@Composable
+private fun RadioAppContent(
+    state: MainUiState,
+    onSelectStation: (StationId) -> Unit,
+    onSelectDestination: (MainDestination) -> Unit,
+    onPlay: () -> Unit,
+    onPause: () -> Unit,
+    onStop: () -> Unit,
+    sleepTimerActions: SleepTimerActions,
+    audioOutputActions: AudioOutputActions,
+    diagnosticUi: DiagnosticUi,
+    feedbackUi: FeedbackUi,
+    onRefreshQueue: () -> Unit,
+    onRefreshFavorites: () -> Unit,
+    onRefreshListenerActivity: () -> Unit,
+    onRefreshChat: () -> Unit,
+    onSendChatMessage: (String) -> Unit,
+    onRefreshAuth: (StationId) -> Unit,
+    onSignIn: (StationId, String, String, String) -> Unit,
+    onSignOut: (StationId) -> Unit,
+    onSearchRequests: (String, RequestSearchField) -> Unit,
+    onSuggestRequest: (RequestSuggestionMode) -> Unit,
+    onOpenRequestAlbum: (RequestSearchTarget) -> Unit,
+    onPrepareRequest: (String) -> Unit,
+    onPrepareFavoriteRequest: (FavoriteTrack) -> Unit,
+    onCancelRequest: () -> Unit,
+    onConfirmRequest: (String) -> Unit,
+    onUseLastStationAtStartup: () -> Unit,
+    onSetStartupStation: (StationId) -> Unit,
+    onOpenStationPage: (StationPage) -> Unit,
+    communitySafetyActions: CommunitySafetyActions,
+    onOpenAppGuide: () -> Unit,
+    trackActions: TrackActions,
+    privateMessageActions: PrivateMessageActions,
 ) {
     var showTerms by rememberSaveable { mutableStateOf(false) }
     BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -269,11 +350,12 @@ private fun PhoneShell(
                     PersistentMiniPlayer(state, onSelectDestination, onPlay, onPause)
                 }
                 NavigationBar(Modifier.testTag("phone_navigation_bar")) {
+                    val unreadMessages = state.privateMessages?.unreadCount ?: 0
                     navigationItems.forEach { item ->
                         NavigationBarItem(
                             selected = state.destination == item.destination,
                             onClick = { onSelectDestination(item.destination) },
-                            icon = { Icon(item.icon, contentDescription = null) },
+                            icon = { NavigationItemIcon(item, unreadMessages) },
                             label = if (showNavigationLabels) {
                                 {
                                     Text(
@@ -285,7 +367,7 @@ private fun PhoneShell(
                             } else {
                                 null
                             },
-                            modifier = Modifier.semantics { contentDescription = item.label },
+                            modifier = Modifier.semantics { contentDescription = navigationItemDescription(item, unreadMessages) },
                         )
                     }
                 }
@@ -357,11 +439,12 @@ private fun TabletShell(
     Row(Modifier.fillMaxSize()) {
         NavigationRail(Modifier.fillMaxHeight().testTag("tablet_navigation_rail")) {
             Spacer(Modifier.height(12.dp))
+            val unreadMessages = state.privateMessages?.unreadCount ?: 0
             navigationItems.forEach { item ->
                 NavigationRailItem(
                     selected = state.destination == item.destination,
                     onClick = { onSelectDestination(item.destination) },
-                    icon = { Icon(item.icon, contentDescription = null) },
+                    icon = { NavigationItemIcon(item, unreadMessages) },
                     label = if (showNavigationLabels) {
                         {
                             Text(
@@ -373,7 +456,7 @@ private fun TabletShell(
                     } else {
                         null
                     },
-                    modifier = Modifier.semantics { contentDescription = item.label },
+                    modifier = Modifier.semantics { contentDescription = navigationItemDescription(item, unreadMessages) },
                 )
             }
         }
@@ -717,11 +800,22 @@ private fun CommunityMessageActions(
     onBlockUser: () -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val openProfile = LocalMemberProfileOpener.current
     Box {
         IconButton(onClick = { expanded = true }) {
             Icon(Icons.Default.MoreVert, contentDescription = "Safety actions for $author")
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            openProfile?.let { viewProfile ->
+                DropdownMenuItem(
+                    text = { Text("View profile") },
+                    leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
+                    onClick = {
+                        expanded = false
+                        viewProfile(author)
+                    },
+                )
+            }
             onReportContent?.let { reportContent ->
                 DropdownMenuItem(
                     text = { Text("Report content") },
@@ -1080,6 +1174,9 @@ private fun QueueScreen(
             onRefresh,
             state.selectedStation?.id,
             communitySafetyActions,
+            LocalStationExtrasActions.current.onOpenHistory.takeIf {
+                state.selectedStation?.capabilities?.supportsPlayedHistoryArchive == true
+            },
         )
     }
 }
@@ -1094,6 +1191,7 @@ private fun QueueLists(
     onRefresh: () -> Unit,
     stationId: StationId?,
     communitySafetyActions: CommunitySafetyActions,
+    onOpenHistory: (() -> Unit)? = null,
 ) {
     LazyColumn(
         Modifier.fillMaxSize().padding(padding),
@@ -1163,7 +1261,14 @@ private fun QueueLists(
         }
         item {
             Spacer(Modifier.height(8.dp))
-            Text("Recently played", style = MaterialTheme.typography.headlineSmall)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Recently played", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
+                onOpenHistory?.let { openHistory ->
+                    TextButton(onClick = openHistory, modifier = Modifier.testTag("open_played_history")) {
+                        Text("Browse earlier")
+                    }
+                }
+            }
         }
         if (history.isEmpty()) {
             item { EmptyTrackList("No recent history is available.") }
@@ -1345,6 +1450,15 @@ private fun MoreScreen(
                 testTag = "more_private_messages",
             ) {
                 PrivateMessagesSection(state, privateMessageActions, communitySafetyActions)
+            }
+        }
+        if (state.selectedStation?.capabilities?.supportsStationNews == true) {
+            MoreDisclosure(
+                title = "Station news",
+                summary = "Playlist updates and announcements from the station.",
+                testTag = "more_station_news",
+            ) {
+                StationNewsSection(state, LocalStationExtrasActions.current)
             }
         }
         MoreDisclosure(

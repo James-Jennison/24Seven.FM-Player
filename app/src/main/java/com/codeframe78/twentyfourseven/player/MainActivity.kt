@@ -19,6 +19,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.content.pm.PackageInfoCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -52,6 +54,7 @@ import com.codeframe78.twentyfourseven.player.ui.MainDestination
 import com.codeframe78.twentyfourseven.player.ui.MainViewModel
 import com.codeframe78.twentyfourseven.player.ui.RadioApp
 import com.codeframe78.twentyfourseven.player.ui.PrivateMessageActions
+import com.codeframe78.twentyfourseven.player.ui.StationExtrasActions
 import com.codeframe78.twentyfourseven.player.ui.SleepTimerActions
 import com.codeframe78.twentyfourseven.player.ui.TrackActions
 import com.codeframe78.twentyfourseven.player.ui.theme.TwentyFourSevenTheme
@@ -96,9 +99,12 @@ class MainActivity : AppCompatActivity() {
                     container.communityNotificationRepository,
                     container.trackActionsRepository,
                     container.privateMessagesRepository,
+                    container.stationExtrasRepository,
                 ),
             )
             val state = viewModel.uiState.collectAsStateWithLifecycle().value
+            // Returning to the app is a moment to learn about new private messages.
+            LifecycleEventEffect(Lifecycle.Event.ON_START) { viewModel.refreshUnreadPrivateMessages() }
             val chatStationId = requestedChatStationId.collectAsStateWithLifecycle().value
             val appGuideState = container.appGuideRepository.state.collectAsStateWithLifecycle().value
             var manualGuideOpen by rememberSaveable { mutableStateOf(false) }
@@ -187,6 +193,14 @@ class MainActivity : AppCompatActivity() {
                             onNewMessage = viewModel::beginPrivateMessage,
                             onSend = viewModel::sendPrivateMessage,
                             onCancelCompose = viewModel::cancelPrivateMessage,
+                        ),
+                        stationExtrasActions = StationExtrasActions(
+                            onOpenProfile = viewModel::openMemberProfile,
+                            onCloseProfile = viewModel::closeMemberProfile,
+                            onOpenHistory = viewModel::openPlayedHistory,
+                            onLoadHistory = viewModel::loadPlayedHistory,
+                            onCloseHistory = viewModel::closePlayedHistory,
+                            onRefreshNews = viewModel::refreshStationNews,
                         ),
                         onRefreshQueue = viewModel::refreshQueue,
                         onRefreshChat = viewModel::refreshChat,

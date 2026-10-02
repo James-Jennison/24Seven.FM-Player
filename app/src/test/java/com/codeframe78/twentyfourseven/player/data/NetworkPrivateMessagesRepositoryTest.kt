@@ -33,6 +33,38 @@ class NetworkPrivateMessagesRepositoryTest {
     }
 
     @Test
+    fun `the unread count is learned without opening the folder and is asked for sparingly`() = runTest {
+        val remote = FakeRemote()
+        var now = 0L
+        val repository = NetworkPrivateMessagesRepository(remote, elapsedMillis = { now })
+
+        repository.refreshUnreadCount(station)
+        now = 60_000
+        repository.refreshUnreadCount(station)
+
+        val state = repository.observeMessages(station).first()
+        assertEquals(1, state.unreadCount)
+        assertEquals(PrivateMessagesStatus.Idle, state.status)
+        assertEquals(emptyList<PrivateMessageSummary>(), state.messages)
+        assertEquals(1, remote.folderLoads)
+
+        now = 121_000
+        repository.refreshUnreadCount(station)
+        assertEquals(2, remote.folderLoads)
+    }
+
+    @Test
+    fun `a failed unread check keeps the last known count`() = runTest {
+        val repository = NetworkPrivateMessagesRepository(FakeRemote(folderFailure = java.io.IOException("offline")))
+
+        repository.refreshUnreadCount(station)
+
+        val state = repository.observeMessages(station).first()
+        assertNull(state.unreadCount)
+        assertEquals(PrivateMessagesStatus.Idle, state.status)
+    }
+
+    @Test
     fun `a station that asks for sign-in clears the messages`() = runTest {
         val repository = NetworkPrivateMessagesRepository(FakeRemote(folderFailure = PrivateMessagesSignInRequiredException()))
 
@@ -103,8 +135,10 @@ class NetworkPrivateMessagesRepositoryTest {
         private val sendFailure: Exception? = null,
     ) : PrivateMessagesRemoteDataSource {
         var sent = 0
+        var folderLoads = 0
 
         override suspend fun loadFolder(stationId: StationId, folder: PrivateMessageFolder, page: Int): PrivateMessagesPage {
+            folderLoads++
             folderFailure?.let { throw it }
             return PrivateMessagesPage(
                 messages = listOf(PrivateMessageSummary("901", "Hello", "Listener", "Oct 02, 2026", isUnread = true)),
