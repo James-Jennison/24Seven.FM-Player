@@ -50,6 +50,10 @@ import com.codeframe78.twentyfourseven.player.domain.CommunitySafetyState
 import com.codeframe78.twentyfourseven.player.domain.TrackActionsRepository
 import com.codeframe78.twentyfourseven.player.domain.TrackActionsState
 import com.codeframe78.twentyfourseven.player.domain.UnavailableTrackActionsRepository
+import com.codeframe78.twentyfourseven.player.domain.PrivateMessageFolder
+import com.codeframe78.twentyfourseven.player.domain.PrivateMessagesRepository
+import com.codeframe78.twentyfourseven.player.domain.PrivateMessagesState
+import com.codeframe78.twentyfourseven.player.domain.UnavailablePrivateMessagesRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -84,6 +88,7 @@ data class MainUiState(
     val diagnosticTransitions: List<DiagnosticTransition> = emptyList(),
     val destination: MainDestination = MainDestination.Player,
     val trackActions: TrackActionsState? = null,
+    val privateMessages: PrivateMessagesState? = null,
 )
 
 data class StationAccountUiState(
@@ -105,6 +110,7 @@ class MainViewModel(
     private val communitySafety: CommunitySafetyRepository,
     private val communityNotifications: CommunityNotificationRepository = UnavailableCommunityNotificationRepository,
     private val trackActions: TrackActionsRepository = UnavailableTrackActionsRepository,
+    private val privateMessages: PrivateMessagesRepository = UnavailablePrivateMessagesRepository,
 ) : ViewModel() {
     private val observedSessionStations = mutableSetOf<StationId>()
     private val destination = MutableStateFlow(MainDestination.Player)
@@ -257,20 +263,26 @@ class MainViewModel(
     private val selectedTrackActions = stations.observeSelectedStation()
         .flatMapLatest { station -> trackActions.observeTrackActions(station.id) }
 
+    private val selectedPrivateMessages = stations.observeSelectedStation()
+        .flatMapLatest { station -> privateMessages.observeMessages(station.id) }
+
+    private val listenerActions = combine(selectedTrackActions, selectedPrivateMessages, ::ListenerActionsContent)
+
     private val stationContent = combine(
         nowPlaying.observeNowPlaying(),
         accountContent,
         selectedChat,
         requestContent,
-        selectedTrackActions,
-    ) { nowPlayingState, accountState, chatState, requestsState, trackActionsState ->
+        listenerActions,
+    ) { nowPlayingState, accountState, chatState, requestsState, listenerActionsState ->
         StationContent(
             nowPlaying = nowPlayingState,
             queue = requestsState.queue,
             account = accountState,
             chat = chatState,
             requestContent = requestsState,
-            trackActions = trackActionsState,
+            trackActions = listenerActionsState.trackActions,
+            privateMessages = listenerActionsState.privateMessages,
         )
     }
 
@@ -323,6 +335,8 @@ class MainViewModel(
             diagnosticTransitions = playbackContent.transitions,
             destination = selectedDestination,
             trackActions = content.trackActions.takeIf { it.stationId == selected.id },
+            privateMessages = content.privateMessages.takeIf { it.stationId == selected.id }
+                ?.withCommunityVisibility(selected.id, safety.safety),
         )
     }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), MainUiState())
@@ -365,6 +379,7 @@ class MainViewModel(
                                         listenerActivity.clear(station.id)
                                         requests.clear(station.id)
                                         trackActions.clear(station.id)
+                                        privateMessages.clear(station.id)
                                     }
                                 }
                         }
@@ -502,6 +517,52 @@ class MainViewModel(
         listenerActivity.clear(stationId)
         requests.clear(stationId)
         trackActions.clear(stationId)
+        privateMessages.clear(stationId)
+    }
+
+    fun refreshPrivateMessages(folder: PrivateMessageFolder, page: Int) = viewModelScope.launch {
+        val station = privateMessageStation() ?: return@launch
+        privateMessages.refresh(station.id, folder, page)
+    }
+
+    fun openPrivateMessage(messageId: String) = viewModelScope.launch {
+        val station = privateMessageStation() ?: return@launch
+        privateMessages.openMessage(station.id, messageId)
+    }
+
+    fun closePrivateMessage() = viewModelScope.launch {
+        privateMessages.closeMessage(stations.observeSelectedStation().first().id)
+    }
+
+    fun replyToPrivateMessage() = viewModelScope.launch {
+        val station = privateMessageStation(sending = true) ?: return@launch
+        privateMessages.beginReply(station.id)
+    }
+
+    fun beginPrivateMessage(recipient: String) = viewModelScope.launch {
+        val station = privateMessageStation(sending = true) ?: return@launch
+        privateMessages.beginMessage(station.id, recipient)
+    }
+
+    fun sendPrivateMessage(subject: String, body: String) = viewModelScope.launch {
+        val station = privateMessageStation(sending = true) ?: return@launch
+        privateMessages.send(station.id, subject, body)
+    }
+
+    fun cancelPrivateMessage() = viewModelScope.launch {
+        privateMessages.cancelCompose(stations.observeSelectedStation().first().id)
+    }
+
+    /**
+     * The selected station when private messages may be used on it: the capability is certified, the listener is
+     * signed in, and community access allows viewing, or contributing when [sending].
+     */
+    private suspend fun privateMessageStation(sending: Boolean = false): Station? {
+        val safety = communitySafety.observeSafety().first()
+        if (!safety.canViewCommunityContent || (sending && !safety.canContributeCommunityContent)) return null
+        return signedInStation { capabilities ->
+            capabilities.supportsPrivateMessages && (!sending || capabilities.supportsPrivateMessageSending)
+        }
     }
 
     fun addCurrentTrackToFavorites() = viewModelScope.launch {
@@ -600,6 +661,7 @@ class MainViewModel(
         private val communitySafety: CommunitySafetyRepository,
         private val communityNotifications: CommunityNotificationRepository,
         private val trackActions: TrackActionsRepository,
+        private val privateMessages: PrivateMessagesRepository,
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =
@@ -616,6 +678,7 @@ class MainViewModel(
                 communitySafety,
                 communityNotifications,
                 trackActions,
+                privateMessages,
             ) as T
     }
 }
@@ -627,6 +690,12 @@ private data class StationContent(
     val chat: ChatState,
     val requestContent: RequestContent,
     val trackActions: TrackActionsState,
+    val privateMessages: PrivateMessagesState,
+)
+
+private data class ListenerActionsContent(
+    val trackActions: TrackActionsState,
+    val privateMessages: PrivateMessagesState,
 )
 
 private data class StationSelectionContent(
@@ -680,6 +749,19 @@ private fun NowPlayingState.withCommunityVisibility(
 ): NowPlayingState {
     val hide = !safety.canViewCommunityContent || safety.isBlocked(stationId, requesterName)
     return if (hide) copy(requesterName = null, requestMessage = null) else this
+}
+
+/** Private messages are community content: hidden without access, and never shown from a blocked member. */
+private fun PrivateMessagesState.withCommunityVisibility(
+    stationId: StationId,
+    safety: CommunitySafetyState,
+): PrivateMessagesState = when {
+    !safety.canViewCommunityContent -> PrivateMessagesState(stationId)
+    folder == PrivateMessageFolder.Sent -> this
+    else -> copy(
+        messages = messages.filterNot { safety.isBlocked(stationId, it.correspondent) },
+        openMessage = openMessage?.takeUnless { safety.isBlocked(stationId, it.sender) },
+    )
 }
 
 private fun QueueState.withCommunityVisibility(

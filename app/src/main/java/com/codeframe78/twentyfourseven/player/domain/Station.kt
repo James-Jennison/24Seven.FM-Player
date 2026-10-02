@@ -41,6 +41,8 @@ data class StationCapabilities(
     val supportsSecondaryContent: Boolean = false,
     val supportsNowPlayingFavorite: Boolean = false,
     val supportsAlbumRating: Boolean = false,
+    val supportsPrivateMessages: Boolean = false,
+    val supportsPrivateMessageSending: Boolean = false,
 )
 
 enum class StationPageKind {

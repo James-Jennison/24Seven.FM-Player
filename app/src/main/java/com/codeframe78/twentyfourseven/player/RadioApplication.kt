@@ -33,6 +33,9 @@ import com.codeframe78.twentyfourseven.player.domain.TrackActionsRepository
 import com.codeframe78.twentyfourseven.player.data.HttpStationPages
 import com.codeframe78.twentyfourseven.player.data.NetworkTrackActionsRepository
 import com.codeframe78.twentyfourseven.player.data.StationTrackActionsRemoteDataSource
+import com.codeframe78.twentyfourseven.player.data.NetworkPrivateMessagesRepository
+import com.codeframe78.twentyfourseven.player.data.StationPrivateMessagesRemoteDataSource
+import com.codeframe78.twentyfourseven.player.domain.PrivateMessagesRepository
 import com.codeframe78.twentyfourseven.player.playback.Media3PlaybackController
 
 class RadioApplication : Application() {
@@ -83,5 +86,8 @@ class AppContainer(application: Application) {
     )
     val trackActionsRepository: TrackActionsRepository = NetworkTrackActionsRepository(
         StationTrackActionsRemoteDataSource(stationPages),
+    )
+    val privateMessagesRepository: PrivateMessagesRepository = NetworkPrivateMessagesRepository(
+        StationPrivateMessagesRemoteDataSource(stationPages),
     )
 }

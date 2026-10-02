@@ -46,6 +46,7 @@ enum class AbuseReportKind(val label: String) {
 enum class AbuseReportSource(val label: String) {
     Chat("Chat"),
     Request("request attribution"),
+    PrivateMessage("private message"),
 }
 
 enum class AbuseReportCategory(val label: String) {

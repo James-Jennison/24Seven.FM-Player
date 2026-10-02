@@ -191,13 +191,14 @@ internal fun RadioApp(
     feedbackUi: FeedbackUi = FeedbackUi(),
     onOpenAppGuide: () -> Unit = {},
     trackActions: TrackActions = TrackActions(),
+    privateMessageActions: PrivateMessageActions = PrivateMessageActions(),
 ) {
     var showTerms by rememberSaveable { mutableStateOf(false) }
     BoxWithConstraints(Modifier.fillMaxSize()) {
         if (usesNavigationRail(maxWidth, maxHeight)) {
-            TabletShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, trackActions = trackActions) { showTerms = true }
+            TabletShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, trackActions = trackActions, privateMessageActions = privateMessageActions) { showTerms = true }
         } else {
-            PhoneShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, isCoverDisplay = isCoverDisplayWindow(maxWidth, maxHeight), onOpenAppGuide = onOpenAppGuide, trackActions = trackActions) { showTerms = true }
+            PhoneShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, isCoverDisplay = isCoverDisplayWindow(maxWidth, maxHeight), onOpenAppGuide = onOpenAppGuide, trackActions = trackActions, privateMessageActions = privateMessageActions) { showTerms = true }
         }
     }
     if (showTerms) {
@@ -248,6 +249,7 @@ private fun PhoneShell(
     isCoverDisplay: Boolean,
     onOpenAppGuide: () -> Unit,
     trackActions: TrackActions,
+    privateMessageActions: PrivateMessageActions,
     onReviewTerms: () -> Unit,
 ) {
     val showNavigationLabels = LocalDensity.current.fontScale <= 1.5f
@@ -290,7 +292,7 @@ private fun PhoneShell(
             }
         },
     ) { padding ->
-        DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, onReviewTerms, isCoverDisplay, trackActions)
+        DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, onReviewTerms, isCoverDisplay, trackActions, privateMessageActions)
     }
     if (state.destination != MainDestination.Favorites) {
         RequestResultDialog(state, onCancelRequest)
@@ -348,6 +350,7 @@ private fun TabletShell(
     communitySafetyActions: CommunitySafetyActions,
     onOpenAppGuide: () -> Unit,
     trackActions: TrackActions,
+    privateMessageActions: PrivateMessageActions,
     onReviewTerms: () -> Unit,
 ) {
     val showNavigationLabels = LocalDensity.current.fontScale <= 1.5f
@@ -384,7 +387,7 @@ private fun TabletShell(
                 }
             },
         ) { padding ->
-            DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, onReviewTerms, trackActions = trackActions)
+            DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, onReviewTerms, trackActions = trackActions, privateMessageActions = privateMessageActions)
         }
         if (state.destination != MainDestination.Favorites) {
             RequestResultDialog(state, onCancelRequest)
@@ -451,6 +454,7 @@ private fun DestinationContent(
     onReviewTerms: () -> Unit,
     isCoverDisplay: Boolean = false,
     trackActions: TrackActions = TrackActions(),
+    privateMessageActions: PrivateMessageActions = PrivateMessageActions(),
 ) {
     when (state.destination) {
         MainDestination.Player -> AdaptivePlayerScreen(
@@ -476,7 +480,7 @@ private fun DestinationContent(
         )
         MainDestination.Chat -> ChatScreen(state, padding, onRefreshChat, onSendChatMessage, communitySafetyActions, onReviewTerms)
         MainDestination.Queue -> QueueScreen(state, padding, onRefreshQueue, communitySafetyActions)
-        MainDestination.More -> MoreScreen(state, padding, onRefreshAuth, onSignIn, onSignOut, onRefreshListenerActivity, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, diagnosticUi, feedbackUi, onOpenAppGuide, onReviewTerms)
+        MainDestination.More -> MoreScreen(state, padding, onRefreshAuth, onSignIn, onSignOut, onRefreshListenerActivity, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, diagnosticUi, feedbackUi, onOpenAppGuide, onReviewTerms, privateMessageActions)
     }
 }
 
@@ -1321,6 +1325,7 @@ private fun MoreScreen(
     feedbackUi: FeedbackUi,
     onOpenAppGuide: () -> Unit,
     onReviewTerms: () -> Unit,
+    privateMessageActions: PrivateMessageActions = PrivateMessageActions(),
 ) {
     Column(
         Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(24.dp),
@@ -1333,6 +1338,15 @@ private fun MoreScreen(
             communitySafetyActions.onSetChatMentionsEnabled,
             communitySafetyActions.onSetForegroundChatMentionMonitorEnabled,
         )
+        if (state.selectedStation?.capabilities?.supportsPrivateMessages == true) {
+            MoreDisclosure(
+                title = "Private messages",
+                summary = privateMessagesSummary(state.privateMessages),
+                testTag = "more_private_messages",
+            ) {
+                PrivateMessagesSection(state, privateMessageActions, communitySafetyActions)
+            }
+        }
         MoreDisclosure(
             title = "Song requests",
             summary = "Search or ask the station for an available track.",

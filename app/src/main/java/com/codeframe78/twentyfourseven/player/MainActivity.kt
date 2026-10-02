@@ -51,6 +51,7 @@ import com.codeframe78.twentyfourseven.player.ui.FeedbackUi
 import com.codeframe78.twentyfourseven.player.ui.MainDestination
 import com.codeframe78.twentyfourseven.player.ui.MainViewModel
 import com.codeframe78.twentyfourseven.player.ui.RadioApp
+import com.codeframe78.twentyfourseven.player.ui.PrivateMessageActions
 import com.codeframe78.twentyfourseven.player.ui.SleepTimerActions
 import com.codeframe78.twentyfourseven.player.ui.TrackActions
 import com.codeframe78.twentyfourseven.player.ui.theme.TwentyFourSevenTheme
@@ -94,6 +95,7 @@ class MainActivity : AppCompatActivity() {
                     container.communitySafetyRepository,
                     container.communityNotificationRepository,
                     container.trackActionsRepository,
+                    container.privateMessagesRepository,
                 ),
             )
             val state = viewModel.uiState.collectAsStateWithLifecycle().value
@@ -176,6 +178,15 @@ class MainActivity : AppCompatActivity() {
                             onOpenRating = viewModel::openAlbumRating,
                             onSubmitRating = viewModel::submitAlbumRating,
                             onCloseRating = viewModel::closeAlbumRating,
+                        ),
+                        privateMessageActions = PrivateMessageActions(
+                            onRefresh = viewModel::refreshPrivateMessages,
+                            onOpen = viewModel::openPrivateMessage,
+                            onClose = viewModel::closePrivateMessage,
+                            onReply = viewModel::replyToPrivateMessage,
+                            onNewMessage = viewModel::beginPrivateMessage,
+                            onSend = viewModel::sendPrivateMessage,
+                            onCancelCompose = viewModel::cancelPrivateMessage,
                         ),
                         onRefreshQueue = viewModel::refreshQueue,
                         onRefreshChat = viewModel::refreshChat,
