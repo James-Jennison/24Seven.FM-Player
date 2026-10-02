@@ -18,8 +18,10 @@ a WebView, share Administrator sessions, or infer one station's capability from 
 
 The site owner repaired delivery. On October 2, 2026 a read-only rescan established the authenticated routes, and one
 owner-authorized test message on StreamingSoundtracks.com confirmed delivery, the Sent copy, accented text, and read
-marking. Send limits, moderation boundaries, and the other four stations are not yet established. M48 and M49 are
-implemented for StreamingSoundtracks.com only, verified by the owner on a device, and not yet in a released build.
+marking. The network administrator confirmed the same day that delivery is repaired on all five stations, so the
+Player enables Private Messages on each. Send limits and moderation boundaries are not yet established. M48 and M49
+were verified by the owner on a device for StreamingSoundtracks.com; signed-in device checks on the other four remain
+for M50. None of this is in a released build yet.
 
 ### M48 — Native Private Message Reading
 

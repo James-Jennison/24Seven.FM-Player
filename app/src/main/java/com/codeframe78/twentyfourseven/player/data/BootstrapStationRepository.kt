@@ -36,8 +36,6 @@ class BootstrapStationRepository(
                 supportsSecondaryContent = true,
                 supportsNowPlayingFavorite = true,
                 supportsAlbumRating = true,
-                supportsPrivateMessages = true,
-                supportsPrivateMessageSending = true,
             ),
         ),
         station(
@@ -120,6 +118,9 @@ class BootstrapStationRepository(
             supportsQueue = true,
             supportsHistory = true,
             supportsRequests = true,
+            // The network administrator confirmed on October 2, 2026 that private messages work on all five stations.
+            supportsPrivateMessages = true,
+            supportsPrivateMessageSending = true,
         )
 
         fun streams(domain: String) = listOf(
