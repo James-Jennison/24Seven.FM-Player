@@ -91,14 +91,7 @@ internal class PlayerQueueRemoteDataSource(
                     return@repeat
                 }
                 if (status !in 200..299) throw IOException("Station returned HTTP $status")
-                val charset = connection.contentType
-                    ?.substringAfter("charset=", "")
-                    ?.substringBefore(';')
-                    ?.trim()
-                    ?.trim('"')
-                    ?.takeIf(String::isNotEmpty)
-                    ?.let { runCatching { Charset.forName(it) }.getOrNull() }
-                    ?: fallbackCharset
+                val charset = declaredCharset(connection.contentType, fallbackCharset)
                 return connection.inputStream.bufferedReader(charset).use { reader ->
                     reader.readBounded(MAX_RESPONSE_CHARACTERS)
                 }

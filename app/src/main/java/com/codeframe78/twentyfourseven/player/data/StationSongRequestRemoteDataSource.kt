@@ -416,10 +416,8 @@ internal class StationSongRequestRemoteDataSource(
         else -> -1
     }
 
-    private fun responseCharset(contentType: String?): Charset {
-        val declared = contentType?.substringAfter("charset=", "")?.substringBefore(';')?.trim()?.trim('"')
-        return runCatching { Charset.forName(declared.orEmpty()) }.getOrDefault(StandardCharsets.ISO_8859_1)
-    }
+    private fun responseCharset(contentType: String?): Charset =
+        declaredCharset(contentType, StandardCharsets.ISO_8859_1)
 
     private fun containsCompleteMessageForm(html: String, albumId: String): Boolean {
         val form = Jsoup.parse(html).selectFirst(
