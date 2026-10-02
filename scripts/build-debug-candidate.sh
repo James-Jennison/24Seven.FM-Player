@@ -11,6 +11,9 @@ git diff --quiet || fail 'source worktree has unstaged changes; commit or discar
 git diff --cached --quiet || fail 'source worktree has staged changes; commit them before building'
 
 project_root=$(git rev-parse --show-toplevel)
+# Untracked build inputs compile into the artifact, so they count as local changes too.
+[[ -z "$(git -C "$project_root" ls-files --others --exclude-standard -- app gradle security-harness build.gradle.kts settings.gradle.kts gradle.properties)" ]] \
+  || fail 'source worktree has untracked build inputs; commit or remove them before building'
 
 is_protected_build() {
   [[ ${HEAVY_BUILD_ACTIVE:-0} == 1 ]] \

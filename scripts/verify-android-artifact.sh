@@ -35,6 +35,9 @@ done
 git rev-parse --is-inside-work-tree >/dev/null 2>&1 || fail 'run from a Git worktree'
 git diff --quiet || fail 'source worktree has unstaged changes'
 git diff --cached --quiet || fail 'source worktree has staged changes'
+# Untracked build inputs compile into the artifact, so they count as local changes too.
+[[ -z "$(git -C "$(git rev-parse --show-toplevel)" ls-files --others --exclude-standard -- app gradle security-harness build.gradle.kts settings.gradle.kts gradle.properties)" ]] \
+  || fail 'source worktree has untracked build inputs; commit or remove them before verifying'
 
 baseline_commit=$(git rev-parse --verify "${baseline}^{commit}") || fail 'baseline does not resolve to a commit'
 head_commit=$(git rev-parse HEAD)

@@ -9,6 +9,9 @@ fail() {
 project_root=$(git rev-parse --show-toplevel 2>/dev/null) || fail 'run from a Git worktree'
 git -C "$project_root" diff --quiet || fail 'source worktree has unstaged changes'
 git -C "$project_root" diff --cached --quiet || fail 'source worktree has staged changes'
+# Untracked build inputs compile into the artifact, so they count as local changes too.
+[[ -z "$(git -C "$project_root" ls-files --others --exclude-standard -- app gradle security-harness build.gradle.kts settings.gradle.kts gradle.properties)" ]] \
+  || fail 'source worktree has untracked build inputs; commit or remove them before building'
 
 keystore=${TWENTYFOURSEVEN_UPLOAD_STORE_FILE:-}
 [[ -n "$keystore" ]] || fail 'set TWENTYFOURSEVEN_UPLOAD_STORE_FILE to the authorized external JKS file'
