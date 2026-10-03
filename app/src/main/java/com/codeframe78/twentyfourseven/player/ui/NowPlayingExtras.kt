@@ -80,14 +80,16 @@ private val OverlayScrim = Brush.verticalGradient(
 @Composable
 internal fun NowPlayingArtworkOverlay(
     state: MainUiState,
-    actions: TrackActions,
+    actions: TrackActions?,
     modifier: Modifier = Modifier,
     showsCaption: Boolean = true,
 ) {
     BoxWithConstraints(modifier.testTag("now_playing_extras")) {
         if (maxWidth < MinimumActionArtworkSize) return@BoxWithConstraints
-        val actionPadding = if (maxWidth < MinimumActionArtworkSize + 16.dp) 0.dp else 8.dp
-        TrackActionButtons(state, actions, Modifier.align(Alignment.TopEnd).padding(actionPadding))
+        if (actions != null) {
+            val actionPadding = if (maxWidth < MinimumActionArtworkSize + 16.dp) 0.dp else 8.dp
+            TrackActionButtons(state, actions, Modifier.align(Alignment.TopEnd).padding(actionPadding))
+        }
         if (!showsCaption || maxWidth < MinimumOverlayArtworkSize) return@BoxWithConstraints
         val nowPlaying = state.nowPlaying
         val request = requestLine(nowPlaying)
@@ -166,18 +168,35 @@ internal fun NowPlayingInlineExtras(state: MainUiState, modifier: Modifier = Mod
 internal val PlaybackStatus.followsStationTrack: Boolean
     get() = this == PlaybackStatus.Playing || showsOnAirPreview
 
+/**
+ * The signed-in listener's favorite and rating buttons for the track that is playing. Over artwork they are drawn
+ * dark so they read on any cover; beside the track details ([onArtwork] false) they take the theme's tonal style.
+ */
 @Composable
-private fun TrackActionButtons(state: MainUiState, actions: TrackActions, modifier: Modifier) {
+internal fun TrackActionButtons(
+    state: MainUiState,
+    actions: TrackActions,
+    modifier: Modifier = Modifier,
+    onArtwork: Boolean = true,
+) {
     val station = state.selectedStation ?: return
     val nowPlaying = state.nowPlaying
     if (state.auth?.status != AuthStatus.SignedIn || nowPlaying.track.isNullOrBlank()) return
     val favorite = state.trackActions?.favorite?.takeIf { it.trackTitle == nowPlaying.track }
-    val colors = IconButtonDefaults.filledIconButtonColors(
-        containerColor = Color.Black.copy(alpha = 0.6f),
-        contentColor = Color.White,
-        disabledContainerColor = Color.Black.copy(alpha = 0.6f),
-        disabledContentColor = Color.White,
-    )
+    val colors = if (onArtwork) {
+        IconButtonDefaults.filledIconButtonColors(
+            containerColor = Color.Black.copy(alpha = 0.6f),
+            contentColor = Color.White,
+            disabledContainerColor = Color.Black.copy(alpha = 0.6f),
+            disabledContentColor = Color.White,
+        )
+    } else {
+        IconButtonDefaults.filledTonalIconButtonColors(
+            disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+            disabledContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+        )
+    }
+    val progressColor = if (onArtwork) Color.White else MaterialTheme.colorScheme.onSecondaryContainer
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         if (station.capabilities.supportsNowPlayingFavorite) {
             val isFavorite = favorite?.status in setOf(FavoriteActionStatus.Added, FavoriteActionStatus.AlreadyFavorite)
@@ -197,7 +216,7 @@ private fun TrackActionButtons(state: MainUiState, actions: TrackActions, modifi
                     },
             ) {
                 when {
-                    isWorking -> CircularProgressIndicator(Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
+                    isWorking -> CircularProgressIndicator(Modifier.size(20.dp), color = progressColor, strokeWidth = 2.dp)
                     isFavorite -> Icon(Icons.Default.Favorite, contentDescription = null)
                     else -> Icon(Icons.Default.FavoriteBorder, contentDescription = null)
                 }

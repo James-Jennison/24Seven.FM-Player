@@ -76,42 +76,59 @@ fun TwentyFourSevenTheme(
     )
 }
 
+/**
+ * A station's colours. [accent] is tuned for dark surfaces; [accentOnLight] is the same hue deep enough to read on
+ * the light theme. [themedAccent] picks the right one, and [onAccent] is what sits on a fill of it.
+ */
 @Immutable
 data class StationPalette(
     val accent: Color,
     val secondary: Color,
     val glow: Color,
+    val accentOnLight: Color = accent,
 )
+
+@Composable
+fun StationPalette.themedAccent(): Color = if (isSystemInDarkTheme()) accent else accentOnLight
+
+@Composable
+fun StationPalette.onAccent(): Color = if (isSystemInDarkTheme()) Color(0xFF1C1424) else Color.White
 
 fun stationPalette(stationId: StationId?): StationPalette = when (stationId?.value) {
     "sst" -> StationPalette(
         accent = Color(0xFFFFC65B),
         secondary = Color(0xFF7188C7),
         glow = Color(0xFF172448),
+        accentOnLight = Color(0xFF7A5200),
     )
     "1980s" -> StationPalette(
         accent = Color(0xFFFF4FD8),
         secondary = Color(0xFF35DFFF),
         glow = Color(0xFF3A1647),
+        accentOnLight = Color(0xFFB3007F),
     )
     "afm" -> StationPalette(
         accent = Color(0xFFFFB35C),
         secondary = Color(0xFFFF755F),
         glow = Color(0xFF432519),
+        accentOnLight = Color(0xFF9A4D00),
     )
     "dfm" -> StationPalette(
         accent = Color(0xFFB69CFF),
         secondary = Color(0xFF6E74E8),
         glow = Color(0xFF251B49),
+        accentOnLight = Color(0xFF5B3EC2),
     )
     "efm" -> StationPalette(
         accent = Color(0xFF55D9A4),
         secondary = Color(0xFF2EB8B2),
         glow = Color(0xFF123D38),
+        accentOnLight = Color(0xFF0B7C5C),
     )
     else -> StationPalette(
         accent = RadioLavender,
         secondary = RadioViolet,
         glow = Color(0xFF2B1B3F),
+        accentOnLight = Color(0xFF6942A0),
     )
 }

@@ -56,8 +56,8 @@ class PlayerLinksTest {
     @Test
     fun `an idle player with a track says it is on air instead of not connected`() {
         assertEquals("On air now", playbackStatusMessage(PlaybackStatus.Idle, hasTrack = true))
-        assertEquals("Not connected", playbackStatusMessage(PlaybackStatus.Idle, hasTrack = false))
-        assertEquals("Playback paused", playbackStatusMessage(PlaybackStatus.Paused, hasTrack = true))
+        assertEquals("Tap Play to listen", playbackStatusMessage(PlaybackStatus.Idle, hasTrack = false))
+        assertEquals("Paused", playbackStatusMessage(PlaybackStatus.Paused, hasTrack = true))
     }
 
     @Test

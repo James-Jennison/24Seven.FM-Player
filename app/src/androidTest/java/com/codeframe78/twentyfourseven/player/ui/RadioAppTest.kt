@@ -127,7 +127,7 @@ class RadioAppTest {
         composeRule.onNodeWithText("Account").assertIsDisplayed()
 
         composeRule.onNodeWithContentDescription("Player").performClick()
-        composeRule.onNodeWithText("Not connected").assertIsDisplayed()
+        composeRule.onNodeWithText("Tap Play to listen").assertIsDisplayed()
     }
 
     @Test

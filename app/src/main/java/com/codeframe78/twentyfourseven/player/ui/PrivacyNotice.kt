@@ -2,12 +2,13 @@ package com.codeframe78.twentyfourseven.player.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -25,10 +26,14 @@ import com.codeframe78.twentyfourseven.player.R
 internal fun PrivacySection() {
     var showNotice by remember { mutableStateOf(false) }
     var showThirdPartyNotices by remember { mutableStateOf(false) }
-    Text("Privacy", style = MaterialTheme.typography.titleMedium)
-    Card(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("No ads or developer-operated analytics, tracking, or data server. Google Cast sends anonymous encrypted usage diagnostics to Google.")
+    MoreDisclosure(
+        title = "Privacy",
+        summary = "No ads, analytics, or tracking.",
+        icon = Icons.Default.Lock,
+        testTag = "more_privacy",
+    ) {
+        Text("No ads or developer-operated analytics, tracking, or data server. Google Cast sends anonymous encrypted usage diagnostics to Google.")
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             TextButton(onClick = { showNotice = true }) { Text("Read privacy notice") }
             TextButton(onClick = { showThirdPartyNotices = true }) {
                 Text("Open-source licenses")

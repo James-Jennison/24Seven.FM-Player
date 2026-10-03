@@ -32,8 +32,8 @@ import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Policy
 import androidx.compose.material.icons.filled.Mail
-import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Radio
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Visibility
@@ -43,7 +43,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -74,6 +73,26 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Feedback
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Newspaper
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.NavigationRailItemDefaults
+import androidx.compose.material3.TopAppBar
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.ui.unit.sp
+import com.codeframe78.twentyfourseven.player.ui.theme.themedAccent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
@@ -357,7 +376,7 @@ private fun PhoneShell(
     Scaffold(
         topBar = {
             if (!isCoverDisplay) {
-                StationTopBar(state, onSelectDestination)
+                StationTopBar(state)
             }
         },
         bottomBar = {
@@ -371,10 +390,16 @@ private fun PhoneShell(
                 }
                 NavigationBar(Modifier.testTag("phone_navigation_bar")) {
                     val unreadMessages = state.privateMessages?.unreadCount ?: 0
+                    val accent = stationPalette(state.selectedStation?.id).themedAccent()
                     navigationItems.forEach { item ->
                         NavigationBarItem(
                             selected = state.destination == item.destination,
                             onClick = { onSelectDestination(item.destination) },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = MaterialTheme.colorScheme.onSurface,
+                                selectedTextColor = accent,
+                                indicatorColor = accent.copy(alpha = 0.22f),
+                            ),
                             icon = { NavigationItemIcon(item, unreadMessages) },
                             label = if (showNavigationLabels) {
                                 {
@@ -462,10 +487,16 @@ private fun TabletShell(
         NavigationRail(Modifier.fillMaxHeight().testTag("tablet_navigation_rail")) {
             Spacer(Modifier.height(12.dp))
             val unreadMessages = state.privateMessages?.unreadCount ?: 0
+            val accent = stationPalette(state.selectedStation?.id).themedAccent()
             navigationItems.forEach { item ->
                 NavigationRailItem(
                     selected = state.destination == item.destination,
                     onClick = { onSelectDestination(item.destination) },
+                    colors = NavigationRailItemDefaults.colors(
+                        selectedIconColor = MaterialTheme.colorScheme.onSurface,
+                        selectedTextColor = accent,
+                        indicatorColor = accent.copy(alpha = 0.22f),
+                    ),
                     icon = { NavigationItemIcon(item, unreadMessages) },
                     label = if (showNavigationLabels) {
                         {
@@ -485,7 +516,7 @@ private fun TabletShell(
         VerticalDivider(Modifier.fillMaxHeight())
         Scaffold(
             modifier = Modifier.weight(1f),
-            topBar = { StationTopBar(state, onSelectDestination) },
+            topBar = { StationTopBar(state) },
             bottomBar = {
                 if (state.destination != MainDestination.Player) {
                     PersistentMiniPlayer(state, onSelectDestination, onPlay, onPause)
@@ -502,22 +533,32 @@ private fun TabletShell(
     }
 }
 
+/** The station is the headline: its logo and its full name, which always stays on one line and is never broken up. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun StationTopBar(
-    state: MainUiState,
-    onSelectDestination: (MainDestination) -> Unit,
-) {
+private fun StationTopBar(state: MainUiState) {
+    val station = state.selectedStation
     val openMessages = LocalMessagesOpener.current.takeIf { state.auth?.status == AuthStatus.SignedIn }
-    CenterAlignedTopAppBar(
+    TopAppBar(
         navigationIcon = {
             Image(
-                painter = painterResource(R.drawable.app_logo),
-                contentDescription = "24Seven.FM logo",
-                modifier = Modifier.padding(start = 12.dp).size(40.dp).clip(RoundedCornerShape(10.dp)),
+                painter = painterResource(station?.let { stationSelectorLogoResource(it.id) } ?: R.drawable.app_logo),
+                contentDescription = if (station == null) "24Seven.FM logo" else "${station.name} logo",
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.padding(start = 12.dp).size(38.dp).clip(RoundedCornerShape(10.dp)),
             )
         },
-        title = { Text("24Seven.FM", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) },
+        title = {
+            Text(
+                station?.name ?: "24Seven.FM",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                softWrap = false,
+                autoSize = TextAutoSize.StepBased(minFontSize = 13.sp, maxFontSize = 20.sp, stepSize = 1.sp),
+                modifier = Modifier.padding(start = 4.dp).testTag("top_bar_station_name"),
+            )
+        },
         actions = {
             openMessages?.let { open ->
                 val unread = state.privateMessages?.unreadCount ?: 0
@@ -539,9 +580,6 @@ private fun StationTopBar(
                 }
             }
             CastRouteButton()
-            IconButton(onClick = { onSelectDestination(MainDestination.More) }) {
-                Icon(Icons.Default.MoreVert, contentDescription = "Account and station options")
-            }
         },
     )
 }
@@ -1483,66 +1521,123 @@ private fun MoreScreen(
     onOpenAppGuide: () -> Unit,
     onReviewTerms: () -> Unit,
 ) {
+    val station = state.selectedStation
     Column(
-        Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        Modifier
+            .fillMaxSize()
+            .padding(padding)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp, vertical = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
-        AccountSection(state, onRefreshAuth, onSignIn, onSignOut)
-        CommunitySafetySection(state, communitySafetyActions, onReviewTerms)
-        CommunityNotificationSection(
-            state,
-            communitySafetyActions.onSetChatMentionsEnabled,
-            communitySafetyActions.onSetForegroundChatMentionMonitorEnabled,
-        )
-        LocalMessagesOpener.current?.let { openMessages ->
-            MoreLink(
-                title = "Private messages",
-                summary = privateMessagesSummary(state.privateMessages),
-                testTag = "more_private_messages",
-                onClick = openMessages,
+        SettingsGroup("Account") {
+            AccountSection(state, onRefreshAuth, onSignIn, onSignOut)
+        }
+        SettingsGroup(station?.shortName ?: "Station") {
+            MoreDisclosure(
+                title = "Song requests",
+                summary = "Search the library or ask the station for a track.",
+                icon = Icons.AutoMirrored.Filled.QueueMusic,
+                testTag = "more_song_requests",
+            ) {
+                SongRequestSection(state, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, showTitle = false)
+            }
+            if (station?.capabilities?.supportsListenerActivity == true) {
+                MoreDisclosure(
+                    title = "Request activity",
+                    summary = "Membership, request status, and your recent requests.",
+                    icon = Icons.Default.History,
+                    testTag = "more_request_activity",
+                ) {
+                    ListenerActivitySection(state, onRefreshListenerActivity, showTitle = false)
+                }
+            }
+            if (station?.capabilities?.supportsStationNews == true) {
+                MoreDisclosure(
+                    title = "Station news",
+                    summary = "Playlist updates and announcements.",
+                    icon = Icons.Default.Newspaper,
+                    testTag = "more_station_news",
+                ) {
+                    StationNewsSection(state, LocalStationExtrasActions.current)
+                }
+            }
+            LocalMessagesOpener.current?.let { openMessages ->
+                MoreLink(
+                    title = "Private messages",
+                    summary = privateMessagesSummary(state.privateMessages),
+                    icon = Icons.Default.Mail,
+                    testTag = "more_private_messages",
+                    onClick = openMessages,
+                )
+            }
+            SecondaryContentSection(state, onOpenStationPage)
+        }
+        SettingsGroup("Community") {
+            CommunitySafetySection(state, communitySafetyActions, onReviewTerms)
+            CommunityNotificationSection(
+                state,
+                communitySafetyActions.onSetChatMentionsEnabled,
+                communitySafetyActions.onSetForegroundChatMentionMonitorEnabled,
             )
         }
-        if (state.selectedStation?.capabilities?.supportsStationNews == true) {
+        SettingsGroup("App") {
             MoreDisclosure(
-                title = "Station news",
-                summary = "Playlist updates and announcements from the station.",
-                testTag = "more_station_news",
+                title = "Startup station",
+                summary = "Choose which station opens at startup.",
+                icon = Icons.Default.PlayCircle,
+                testTag = "more_device_preferences",
             ) {
-                StationNewsSection(state, LocalStationExtrasActions.current)
+                DevicePreferencesSection(state, onUseLastStationAtStartup, onSetStartupStation, showTitle = false)
             }
+            MoreLink(
+                title = "App guide",
+                summary = "A short tour of the Player.",
+                icon = Icons.AutoMirrored.Filled.HelpOutline,
+                testTag = "open_app_guide",
+                onClick = onOpenAppGuide,
+            )
+            FeedbackSection(state, diagnosticUi, feedbackUi)
+            DiagnosticsSection(state, diagnosticUi)
+            PrivacySection()
         }
-        MoreDisclosure(
-            title = "Song requests",
-            summary = "Search or ask the station for an available track.",
-            testTag = "more_song_requests",
-        ) {
-            SongRequestSection(state, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, showTitle = false)
-        }
-        if (state.selectedStation?.capabilities?.supportsListenerActivity == true) {
-            MoreDisclosure(
-                title = "Request activity",
-                summary = "View membership, cooldown, and recent requests.",
-                testTag = "more_request_activity",
-            ) {
-                ListenerActivitySection(state, onRefreshListenerActivity, showTitle = false)
-            }
-        }
-        MoreDisclosure(
-            title = "Device preferences",
-            summary = "Choose which station opens at startup.",
-            testTag = "more_device_preferences",
-        ) {
-            DevicePreferencesSection(state, onUseLastStationAtStartup, onSetStartupStation, showTitle = false)
-        }
-        Button(
-            onClick = onOpenAppGuide,
-            modifier = Modifier.fillMaxWidth().testTag("open_app_guide"),
-        ) { Text("App guide") }
-        FeedbackSection(state, diagnosticUi, feedbackUi)
-        DiagnosticsSection(state, diagnosticUi)
-        SecondaryContentSection(state, onOpenStationPage)
-        PrivacySection()
+        AboutFooter()
     }
+}
+
+/** A titled run of settings rows on one rounded surface, the way system settings group related items. */
+@Composable
+private fun SettingsGroup(title: String, content: @Composable ColumnScope.() -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            title,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(start = 6.dp),
+        )
+        Surface(shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.surfaceContainerLow) {
+            Column(
+                Modifier.clip(RoundedCornerShape(20.dp)),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+                content = content,
+            )
+        }
+    }
+}
+
+@Composable
+private fun AboutFooter() {
+    val context = LocalContext.current
+    val version = remember(context) {
+        runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull()
+    }
+    Text(
+        listOfNotNull("24Seven.FM Player", version).joinToString(" ") + "\nAn unofficial listener app for the 24Seven.FM stations",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+    )
 }
 
 @Composable
@@ -1560,6 +1655,7 @@ private fun CommunityNotificationSection(
     MoreDisclosure(
         title = "Community notifications",
         summary = if (enabled) "Chat mentions enabled for ${station.shortName}" else "Off for ${station.shortName}",
+        icon = Icons.Default.Notifications,
         testTag = "more_community_notifications",
     ) {
         Card(Modifier.fillMaxWidth().testTag("community_notification_controls")) {
@@ -1665,6 +1761,7 @@ private fun DiagnosticsSection(
     MoreDisclosure(
         title = "In-app diagnostics",
         summary = "Preview and explicitly copy or share a privacy-safe support snapshot.",
+        icon = Icons.Default.BugReport,
         testTag = "more_diagnostics",
     ) {
         Card(Modifier.fillMaxWidth().testTag("diagnostics_card")) {
@@ -1740,6 +1837,7 @@ private fun FeedbackSection(
     MoreDisclosure(
         title = "Report a problem",
         summary = "Prepare a reviewable feedback draft for the Player team.",
+        icon = Icons.Default.Feedback,
         testTag = "more_feedback",
     ) {
         Card(Modifier.fillMaxWidth().testTag("feedback_card")) {
@@ -1845,6 +1943,7 @@ private fun CommunitySafetySection(
     MoreDisclosure(
         title = "Community safety",
         summary = status,
+        icon = Icons.Default.Shield,
         testTag = "more_community_safety",
     ) {
         Card(Modifier.fillMaxWidth().testTag("community_safety_controls")) {
@@ -1904,13 +2003,25 @@ private fun CommunitySafetySection(
 }
 
 /** A More entry that opens a screen of its own. */
+/** One settings row: an optional leading icon, a title, a one-line summary, and whatever sits at the end. */
 @Composable
-private fun MoreLink(title: String, summary: String, testTag: String, onClick: () -> Unit) {
-    Card(onClick = onClick, modifier = Modifier.fillMaxWidth().testTag(testTag)) {
+private fun MoreRow(
+    title: String,
+    summary: String,
+    icon: ImageVector?,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+    trailing: @Composable () -> Unit,
+) {
+    Surface(onClick = onClick, color = MaterialTheme.colorScheme.surfaceContainer, modifier = modifier.fillMaxWidth()) {
         Row(
-            Modifier.fillMaxWidth().padding(16.dp),
+            Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
+            icon?.let {
+                Icon(it, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(24.dp))
+            }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                 Text(
@@ -1919,50 +2030,62 @@ private fun MoreLink(title: String, summary: String, testTag: String, onClick: (
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            Spacer(Modifier.width(12.dp))
-            Text("Open", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+            trailing()
         }
     }
 }
 
 @Composable
-private fun MoreDisclosure(
+internal fun MoreLink(
     title: String,
     summary: String,
     testTag: String,
-    content: @Composable () -> Unit,
+    icon: ImageVector? = null,
+    trailingIcon: ImageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+    onClick: () -> Unit,
+) {
+    MoreRow(title, summary, icon, Modifier.testTag(testTag), onClick) {
+        Icon(trailingIcon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+/** A settings row that opens in place; its content sits directly under it on the same surface. */
+@Composable
+internal fun MoreDisclosure(
+    title: String,
+    summary: String,
+    testTag: String,
+    icon: ImageVector? = null,
+    content: @Composable ColumnScope.() -> Unit,
 ) {
     var expanded by rememberSaveable(testTag) { mutableStateOf(false) }
-    Card(
-        onClick = { expanded = !expanded },
-        modifier = Modifier
-            .fillMaxWidth()
+    val chevron by animateFloatAsState(if (expanded) 180f else 0f, label = "disclosure")
+    MoreRow(
+        title,
+        summary,
+        icon,
+        Modifier
             .testTag(testTag)
-            .semantics {
-                contentDescription = "$title, ${if (expanded) "expanded" else "collapsed"}"
-            },
+            .semantics { contentDescription = "$title, ${if (expanded) "expanded" else "collapsed"}" },
+        onClick = { expanded = !expanded },
     ) {
-        Row(
-            Modifier.fillMaxWidth().padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                Text(
-                    summary,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Spacer(Modifier.width(12.dp))
-            Text(
-                if (expanded) "Hide" else "Open",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-            )
-        }
+        Icon(
+            Icons.Default.ExpandMore,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.rotate(chevron),
+        )
     }
-    if (expanded) content()
+    if (expanded) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surfaceContainer)
+                .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            content = content,
+        )
+    }
 }
 
 @Composable
@@ -1974,22 +2097,17 @@ private fun SecondaryContentSection(
     if (!station.capabilities.supportsSecondaryContent || station.secondaryPages.isEmpty()) {
         return
     }
-    Text("Station links", style = MaterialTheme.typography.titleMedium)
-    Text(
-        "Contact Us opens a reviewed draft in your email app.",
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
     Column(
         Modifier.fillMaxWidth().testTag("secondary_content_directory"),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         station.secondaryPages.forEach { page ->
             val opensEmail = page.kind == StationPageKind.Contact
-            Card(
-                onClick = { onOpenStationPage(page) },
+            MoreRow(
+                title = page.title,
+                summary = if (opensEmail) "${page.description} Opens a reviewed draft in your email app." else page.description,
+                icon = if (opensEmail) Icons.Default.Email else Icons.AutoMirrored.Filled.OpenInNew,
                 modifier = Modifier
-                    .fillMaxWidth()
                     .testTag("secondary_content_${page.kind.name.lowercase()}")
                     .semantics {
                         contentDescription = if (opensEmail) {
@@ -1998,25 +2116,9 @@ private fun SecondaryContentSection(
                             "Open ${page.title} for ${station.name} in browser"
                         }
                     },
+                onClick = { onOpenStationPage(page) },
             ) {
-                Row(
-                    Modifier.fillMaxWidth().padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text(page.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-                        Text(
-                            page.description,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    Spacer(Modifier.width(12.dp))
-                    Icon(
-                        if (opensEmail) Icons.Default.Email else Icons.AutoMirrored.Filled.OpenInNew,
-                        contentDescription = null,
-                    )
-                }
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -2078,12 +2180,7 @@ private fun AccountSection(
     var showOtherAccounts by remember(state.selectedStation?.id) { mutableStateOf(false) }
     val visibleAccounts = listOfNotNull(selectedAccount) + if (showOtherAccounts) otherAccounts else emptyList()
 
-    Text("Account", style = MaterialTheme.typography.titleMedium)
-    Text(
-        "Accounts and sign-in sessions are station-specific.",
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
+    Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         if (maxWidth >= 720.dp) {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -2124,6 +2221,7 @@ private fun AccountSection(
         ) {
             Text(if (showOtherAccounts) "Hide other station accounts" else "Manage other station accounts")
         }
+    }
     }
 }
 
