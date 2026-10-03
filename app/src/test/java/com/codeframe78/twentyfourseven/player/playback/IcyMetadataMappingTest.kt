@@ -70,7 +70,38 @@ class IcyMetadataMappingTest {
         assertEquals("Raw ICY title", liveMetadata.title)
         assertEquals("StreamingSoundtracks.com", liveMetadata.artist)
         assertEquals("StreamingSoundtracks.com", liveMetadata.albumTitle)
-        assertEquals("24seven.FM", liveMetadata.subtitle)
+        assertEquals("StreamingSoundtracks.com", liveMetadata.station)
+        assertEquals("StreamingSoundtracks.com", liveMetadata.subtitle)
+    }
+
+    @Test
+    fun `a live title is shown as its track over its artist, and keeps the station through later tracks`() {
+        val stationMetadata = MediaMetadata.Builder()
+            .setTitle("StreamingSoundtracks.com")
+            .setArtist("Movie, game, TV and anime scores")
+            .setAlbumTitle("StreamingSoundtracks.com")
+            .setStation("StreamingSoundtracks.com")
+            .build()
+
+        val fromStream = stationMetadata.withNowPlayingTitle("Composer One - Final Confrontation")
+        assertEquals("Final Confrontation", fromStream.title)
+        assertEquals("Composer One", fromStream.artist)
+        assertEquals("StreamingSoundtracks.com", fromStream.albumTitle)
+
+        val withDetails = fromStream.withNowPlayingTitle(
+            "Composer One - Final Confrontation",
+            track = "Final Confrontation",
+            artist = "Composer One",
+            album = "Album One",
+        )
+        assertEquals("Album One", withDetails.albumTitle)
+
+        // The album line no longer names the station, so the next track must not mistake it for one.
+        val next = withDetails.withNowPlayingTitle("Composer Two - Opening")
+        assertEquals("Opening", next.title)
+        assertEquals("Composer Two", next.artist)
+        assertEquals("StreamingSoundtracks.com", next.albumTitle)
+        assertEquals("StreamingSoundtracks.com", next.station)
     }
 
     @Test

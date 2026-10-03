@@ -25,6 +25,13 @@ class AutomotiveMediaCatalogTest {
         assertEquals(5, stations.size)
         assertTrue(stations.all { it.mediaMetadata.isPlayable == true })
         assertTrue(stations.all { it.mediaMetadata.isBrowsable == false })
+        // Each station says what it plays under its name, and the five are offered as a grid of artwork.
+        assertTrue(stations.all { !it.mediaMetadata.artist.isNullOrBlank() && it.mediaMetadata.artist != "24seven.FM" })
+        assertTrue(stations.all { it.mediaMetadata.station == it.mediaMetadata.title })
+        assertEquals(
+            androidx.media3.session.MediaConstants.EXTRAS_VALUE_CONTENT_STYLE_GRID_ITEM,
+            catalog.rootParams().extras.getInt(androidx.media3.session.MediaConstants.EXTRAS_KEY_CONTENT_STYLE_PLAYABLE),
+        )
 
         val playbackItems = requireNotNull(catalog.playbackItems(listOf(stations.first())))
         assertEquals(1, playbackItems.size)

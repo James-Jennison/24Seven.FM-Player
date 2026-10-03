@@ -148,7 +148,7 @@ class RadioPlaybackService : MediaLibraryService() {
             session: MediaLibrarySession,
             browser: MediaSession.ControllerInfo,
             params: LibraryParams?,
-        ) = Futures.immediateFuture(LibraryResult.ofItem(automotiveCatalog.rootItem(), params))
+        ) = Futures.immediateFuture(LibraryResult.ofItem(automotiveCatalog.rootItem(), automotiveCatalog.rootParams()))
 
         override fun onGetItem(
             session: MediaLibrarySession,
@@ -298,18 +298,13 @@ class RadioPlaybackService : MediaLibraryService() {
             nowPlaying.artworkUrl,
             currentItem.mediaMetadata.artworkUri?.toString(),
         )?.let(Uri::parse)
-        if (currentItem.mediaMetadata.title == displayTitle && currentItem.mediaMetadata.artworkUri == artworkUri) return
-        player.replaceMediaItem(
-            index,
-            currentItem.buildUpon()
-                .setMediaMetadata(
-                    currentItem.mediaMetadata.withNowPlayingTitle(displayTitle)
-                        .buildUpon()
-                        .setArtworkUri(artworkUri)
-                        .build(),
-                )
-                .build(),
-        )
+        val metadata = currentItem.mediaMetadata
+            .withNowPlayingTitle(displayTitle, nowPlaying.track, nowPlaying.artist, nowPlaying.album)
+            .buildUpon()
+            .setArtworkUri(artworkUri)
+            .build()
+        if (currentItem.mediaMetadata == metadata) return
+        player.replaceMediaItem(index, currentItem.buildUpon().setMediaMetadata(metadata).build())
     }
 
     private fun startSleepTimer(durationMillis: Long) {
@@ -464,15 +459,33 @@ internal fun String.normalizeLegacyIcyPunctuation(): String = map { character ->
     }
 }.joinToString("")
 
-internal fun MediaMetadata.withNowPlayingTitle(displayTitle: String): MediaMetadata {
-    val stationName = albumTitle ?: title
+/**
+ * The track on air, as a car display, the notification, and the lock screen name it: the title on the first line
+ * and the artist on the second, with the album when the station supplies one. A stream's own title is
+ * "Artist - Title"; the station's details, when they describe the same track, are preferred over splitting it.
+ */
+internal fun MediaMetadata.withNowPlayingTitle(
+    displayTitle: String,
+    track: String? = null,
+    artist: String? = null,
+    album: String? = null,
+): MediaMetadata {
+    // Once a track has been shown the album line holds its album, so the station is carried in its own field.
+    val stationName = station ?: albumTitle ?: title
+    val separator = displayTitle.indexOf(ICY_ARTIST_SEPARATOR)
+    val streamArtist = displayTitle.takeIf { separator > 0 }?.substring(0, separator)?.trim()
+    val streamTitle = displayTitle.takeIf { separator > 0 }
+        ?.substring(separator + ICY_ARTIST_SEPARATOR.length)?.trim()?.takeIf(String::isNotEmpty)
     return buildUpon()
-        .setTitle(displayTitle)
-        .setArtist(stationName)
-        .setAlbumTitle(stationName)
-        .setSubtitle("24seven.FM")
+        .setTitle(track?.takeIf(String::isNotBlank) ?: streamTitle ?: displayTitle)
+        .setArtist(artist?.takeIf(String::isNotBlank) ?: streamArtist?.takeIf { streamTitle != null } ?: stationName)
+        .setAlbumTitle(album?.takeIf(String::isNotBlank) ?: stationName)
+        .setStation(stationName)
+        .setSubtitle(stationName)
         .build()
 }
+
+private const val ICY_ARTIST_SEPARATOR = " - "
 
 internal fun String.normalizeIcyArtistSortArticle(): String {
     val separator = indexOf(" - ")

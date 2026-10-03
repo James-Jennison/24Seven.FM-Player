@@ -1,8 +1,11 @@
 package com.codeframe78.twentyfourseven.player.playback
 
 import android.net.Uri
+import android.os.Bundle
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
+import androidx.media3.session.MediaConstants
+import androidx.media3.session.MediaLibraryService.LibraryParams
 import com.codeframe78.twentyfourseven.player.domain.Station
 import com.codeframe78.twentyfourseven.player.domain.StationId
 
@@ -26,6 +29,9 @@ internal class AutomotiveMediaCatalog(stations: List<Station>) {
                 .build(),
         )
         .build()
+
+    /** Five stations with square logos read best as a grid of artwork, all on one screen, rather than a list. */
+    fun rootParams(): LibraryParams = LibraryParams.Builder().setExtras(contentStyle()).build()
 
     fun children(parentId: String, page: Int, pageSize: Int): List<MediaItem>? {
         if (parentId != ROOT_MEDIA_ID || page < 0 || pageSize <= 0) return null
@@ -71,20 +77,28 @@ internal class AutomotiveMediaCatalog(stations: List<Station>) {
     private fun stationItem(station: Station): MediaItem = MediaItem.Builder()
         .setMediaId("$STATION_MEDIA_ID_PREFIX${station.id.value}")
         .setUri(station.streams.minByOrNull { it.priority }?.url)
-        .setMediaMetadata(stationMetadata(station, subtitle = "Live radio"))
+        .setMediaMetadata(stationMetadata(station, subtitle = station.description))
         .build()
 
     private fun stationMetadata(station: Station, subtitle: String): MediaMetadata = MediaMetadata.Builder()
         .setTitle(station.name)
-        .setArtist("24seven.FM")
-        .setAlbumTitle("24Seven.FM stations")
+        // A browser shows this line under the name, so it says what the station plays.
+        .setArtist(station.description)
+        .setAlbumTitle(station.name)
+        .setStation(station.name)
         .setDescription(station.description)
         .setSubtitle(subtitle)
+        .setExtras(contentStyle())
         .setArtworkUri(station.logoUrl?.let(Uri::parse))
         .setMediaType(MediaMetadata.MEDIA_TYPE_RADIO_STATION)
         .setIsBrowsable(false)
         .setIsPlayable(true)
         .build()
+
+    private fun contentStyle() = Bundle().apply {
+        putInt(MediaConstants.EXTRAS_KEY_CONTENT_STYLE_PLAYABLE, MediaConstants.EXTRAS_VALUE_CONTENT_STYLE_GRID_ITEM)
+        putInt(MediaConstants.EXTRAS_KEY_CONTENT_STYLE_BROWSABLE, MediaConstants.EXTRAS_VALUE_CONTENT_STYLE_GRID_ITEM)
+    }
 
     private fun String.toStationIdOrNull(): StationId? = takeIf { startsWith(STATION_MEDIA_ID_PREFIX) }
         ?.removePrefix(STATION_MEDIA_ID_PREFIX)
