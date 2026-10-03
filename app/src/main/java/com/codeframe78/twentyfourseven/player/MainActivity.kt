@@ -37,6 +37,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import com.codeframe78.twentyfourseven.player.domain.StationPageTrustPolicy
 import com.codeframe78.twentyfourseven.player.domain.StationId
+import com.codeframe78.twentyfourseven.player.shortcuts.StationShortcuts
 import com.codeframe78.twentyfourseven.player.domain.toSupportedStationIdOrNull
 import com.codeframe78.twentyfourseven.player.domain.PlayerEmailDraft
 import com.codeframe78.twentyfourseven.player.domain.feedbackEmailDraft
@@ -100,7 +101,10 @@ class MainActivity : AppCompatActivity() {
             view.view.animate().alpha(0f).setDuration(SPLASH_EXIT_MILLIS).start()
         }
         // A recreated Activity still holds the launching intent; its chat destination was already applied.
-        if (savedInstanceState == null) requestedChatStationId.value = intent.chatStationId()
+        if (savedInstanceState == null) {
+            requestedChatStationId.value = intent.chatStationId()
+            intent.shortcutStation()?.let(::openShortcutStation)
+        }
         enableEdgeToEdge()
         val container = (application as RadioApplication).appContainer
         setContent {
@@ -353,6 +357,7 @@ class MainActivity : AppCompatActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         requestedChatStationId.value = intent.chatStationId()
+        intent.shortcutStation()?.let(::openShortcutStation)
     }
 
     private fun showAudioOutputSwitcher(refreshAudioOutput: () -> Unit) {
@@ -431,6 +436,22 @@ class MainActivity : AppCompatActivity() {
             false
         }
     }
+}
+
+/** A launcher shortcut names a station and asks for it to play straight away. */
+private fun MainActivity.openShortcutStation(request: Pair<StationId, Boolean>) {
+    val controls = (application as RadioApplication).appContainer.listenerControls
+    val (stationId, startPlayback) = request
+    if (startPlayback) {
+        controls.playStation(stationId)
+    } else {
+        lifecycleScope.launch { (application as RadioApplication).appContainer.stationRepository.selectStation(stationId) }
+    }
+}
+
+private fun Intent.shortcutStation(): Pair<StationId, Boolean>? {
+    val id = getStringExtra(StationShortcuts.EXTRA_STATION_ID)?.takeIf(String::isNotBlank) ?: return null
+    return StationId(id) to getBooleanExtra(StationShortcuts.EXTRA_START_PLAYBACK, false)
 }
 
 private fun Intent.chatStationId(): String? =

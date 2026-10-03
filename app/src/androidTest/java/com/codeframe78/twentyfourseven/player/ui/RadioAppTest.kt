@@ -11,7 +11,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.test.platform.app.InstrumentationRegistry
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsNotSelected
@@ -88,6 +90,7 @@ import com.codeframe78.twentyfourseven.player.domain.ListenerActivityState
 import com.codeframe78.twentyfourseven.player.domain.MembershipTier
 import com.codeframe78.twentyfourseven.player.domain.RequestHistoryEntry
 import com.codeframe78.twentyfourseven.player.domain.RequestReadiness
+import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
 import org.junit.Assert.assertEquals
@@ -516,6 +519,7 @@ class RadioAppTest {
 
     @Test
     fun minimumExpandedTabletViewportKeepsPlayerAndEveryStationVisible() {
+        assumeDisplayHolds(1000.dp, 640.dp)
         val stations = tabletStations()
         composeRule.setContent {
             val density = LocalDensity.current
@@ -645,8 +649,8 @@ class RadioAppTest {
             }
         }
 
-        composeRule.onNodeWithContentDescription("Next station").performClick()
-        composeRule.onNodeWithContentDescription("Previous station").performClick()
+        performStationDialAction("Next station")
+        performStationDialAction("Previous station")
         composeRule.onNodeWithContentDescription("Play live radio").performClick()
         composeRule.onNodeWithContentDescription("Stop radio").performClick()
 
@@ -787,7 +791,7 @@ class RadioAppTest {
             }
         }
 
-        composeRule.onNodeWithText("No network · playback will resume automatically").assertIsDisplayed()
+        composeRule.onNodeWithText("Waiting for network · resumes by itself").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Stop radio").assertIsDisplayed().assertHasClickAction()
     }
 
@@ -1134,6 +1138,7 @@ class RadioAppTest {
             }
         }
 
+        composeRule.onNodeWithTag("more_privacy").performScrollTo().performClick()
         composeRule.onNodeWithText("Read privacy notice").performScrollTo().performClick()
         composeRule.onNodeWithText("Data handled by the Player").assertIsDisplayed()
         composeRule.onNodeWithText("Close").assertIsDisplayed()
@@ -1307,6 +1312,7 @@ class RadioAppTest {
             }
         }
 
+        composeRule.onNodeWithTag("more_privacy").performScrollTo().performClick()
         composeRule.onNodeWithText("Open-source licenses").performScrollTo().performClick()
         composeRule.onNodeWithText("third-party software notices", substring = true).assertIsDisplayed()
         composeRule.onNodeWithText("jsoup 1.22.2", substring = true, ignoreCase = true).assertIsDisplayed()
@@ -1329,6 +1335,7 @@ class RadioAppTest {
             }
         }
 
+        composeRule.onNodeWithTag("more_privacy").performScrollTo().performClick()
         composeRule.onNodeWithText("Read privacy notice").performScrollTo().performClick()
         composeRule.onNodeWithText(
             "For privacy questions, close this notice and use Contact Us in More.",
@@ -2003,11 +2010,31 @@ class RadioAppTest {
         )
     }
 
+    /** The artwork offers "Next station" and "Previous station" as accessibility actions in place of the old arrows. */
+    private fun performStationDialAction(label: String) {
+        val actions = composeRule.onNodeWithTag("station_dial").fetchSemanticsNode().config[SemanticsActions.CustomActions]
+        val action = actions.first { it.label == label }
+        composeRule.runOnUiThread { action.action() }
+        composeRule.waitForIdle()
+    }
+
+    /** A pinned viewport wider than the display is centred and clipped, so the test needs a tablet-sized display. */
+    private fun assumeDisplayHolds(width: androidx.compose.ui.unit.Dp, height: androidx.compose.ui.unit.Dp) {
+        val configuration = InstrumentationRegistry.getInstrumentation().targetContext.resources.configuration
+        val longest = maxOf(configuration.screenWidthDp, configuration.screenHeightDp)
+        val shortest = minOf(configuration.screenWidthDp, configuration.screenHeightDp)
+        Assume.assumeTrue(
+            "needs a ${width.value.toInt()}x${height.value.toInt()} dp display, this one is ${longest}x$shortest dp",
+            longest >= width.value && shortest >= height.value,
+        )
+    }
+
     private fun assertCompactLandscapeFallbackVisible(
         width: androidx.compose.ui.unit.Dp,
         height: androidx.compose.ui.unit.Dp,
         fontScale: Float,
     ) {
+        assumeDisplayHolds(width, height)
         val stations = tabletStations()
         composeRule.setContent {
             val density = LocalDensity.current

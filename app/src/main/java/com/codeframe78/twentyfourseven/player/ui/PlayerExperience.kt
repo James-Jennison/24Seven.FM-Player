@@ -794,7 +794,9 @@ private fun NowPlayingArtwork(
     )
     val hasAlbumArtwork = !state.nowPlaying.artworkUrl.isNullOrBlank()
     val swipe = if (onSelectStation != null && state.stations.size > 1) {
-        Modifier.switchesStationOnSwipe(state.stations, state.selectedStation?.id, onSelectStation)
+        Modifier
+            .testTag("station_dial")
+            .switchesStationOnSwipe(state.stations, state.selectedStation?.id, onSelectStation)
     } else {
         Modifier
     }
