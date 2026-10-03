@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -206,7 +207,7 @@ internal fun RequestableTrackRow(track: RequestableTrack, canRequest: Boolean, o
             }
         }
         if (track.availability.canRequest) {
-            TextButton(
+            FilledTonalButton(
                 onClick = { onPrepareRequest(track.songId) },
                 enabled = canRequest,
             ) { Text("Request Now") }

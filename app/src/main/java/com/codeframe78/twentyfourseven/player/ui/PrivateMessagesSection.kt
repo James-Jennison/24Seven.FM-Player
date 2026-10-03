@@ -1,5 +1,17 @@
 package com.codeframe78.twentyfourseven.player.ui
 
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -88,39 +100,91 @@ internal fun PrivateMessagesScreen(
 ) {
     val station = state.selectedStation ?: return
     val messages = state.privateMessages
+    var askingRecipient by rememberSaveable { mutableStateOf(false) }
+    val canCompose = station.capabilities.supportsPrivateMessageSending &&
+        state.auth?.status == AuthStatus.SignedIn &&
+        state.communitySafety.canViewCommunityContent &&
+        messages != null
     Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(Modifier.fillMaxSize().testTag("private_messages_screen")) {
-            Column(Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 12.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Mail, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                    Spacer(Modifier.width(12.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text("Private messages", style = MaterialTheme.typography.titleLarge)
-                        Text(
-                            station.name,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+            Box(Modifier.fillMaxSize()) {
+                Column(Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 12.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Mail, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text("Private messages", style = MaterialTheme.typography.titleLarge)
+                            Text(
+                                station.name,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        IconButton(onClick = onClose) {
+                            Icon(Icons.Default.Close, contentDescription = "Close private messages")
+                        }
                     }
-                    IconButton(onClick = onClose) {
-                        Icon(Icons.Default.Close, contentDescription = "Close private messages")
+                    RefreshableBox(
+                        onRefresh = { messages?.let { actions.onRefresh(it.folder, it.page) } },
+                        modifier = Modifier.fillMaxSize().padding(top = 8.dp),
+                        isLoading = messages?.status == PrivateMessagesStatus.Loading,
+                    ) {
+                        Column(
+                            Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            PrivateMessagesSection(state, actions, communityActions)
+                            // Room for the last row to scroll clear of the floating button.
+                            if (canCompose) Spacer(Modifier.height(80.dp))
+                        }
                     }
                 }
-                RefreshableBox(
-                    onRefresh = { messages?.let { actions.onRefresh(it.folder, it.page) } },
-                    modifier = Modifier.fillMaxSize().padding(top = 8.dp),
-                    isLoading = messages?.status == PrivateMessagesStatus.Loading,
-                ) {
-                    Column(
-                        Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        PrivateMessagesSection(state, actions, communityActions)
-                    }
+                if (canCompose) {
+                    ExtendedFloatingActionButton(
+                        onClick = { askingRecipient = true },
+                        icon = { Icon(Icons.Default.Edit, contentDescription = null) },
+                        text = { Text("New message") },
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(16.dp)
+                            .testTag("private_messages_new"),
+                    )
                 }
             }
         }
     }
+    if (askingRecipient) {
+        NewMessageRecipientDialog(
+            station = station,
+            onDismiss = { askingRecipient = false },
+            onContinue = { recipient ->
+                askingRecipient = false
+                actions.onNewMessage(recipient)
+            },
+        )
+    }
+}
+
+@Composable
+private fun NewMessageRecipientDialog(station: Station, onDismiss: () -> Unit, onContinue: (String) -> Unit) {
+    var recipient by rememberSaveable { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("New message") },
+        text = {
+            OutlinedTextField(
+                value = recipient,
+                onValueChange = { recipient = it.take(MAX_RECIPIENT_CHARACTERS) },
+                label = { Text("${station.shortName} member name") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth().testTag("private_message_recipient"),
+            )
+        },
+        confirmButton = {
+            Button(onClick = { onContinue(recipient.trim()) }, enabled = recipient.isNotBlank()) { Text("Continue") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+    )
 }
 
 /** The summary line of the Private messages entry in More. */
@@ -160,133 +224,141 @@ internal fun PrivateMessagesSection(
 
 @Composable
 private fun PrivateMessagesFolder(station: Station, messages: PrivateMessagesState, actions: PrivateMessageActions) {
-    var askingRecipient by rememberSaveable { mutableStateOf(false) }
-    Card(Modifier.fillMaxWidth().testTag("private_messages_card")) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                PrivateMessageFolder.entries.forEach { folder ->
-                    FilterChip(
-                        selected = messages.folder == folder,
-                        onClick = { actions.onRefresh(folder, 1) },
-                        label = { Text(folder.label) },
-                        modifier = Modifier.testTag("private_messages_folder_${folder.key}"),
-                    )
-                }
-                IconButton(
-                    onClick = { actions.onRefresh(messages.folder, messages.page) },
-                    modifier = Modifier.testTag("private_messages_refresh"),
-                ) {
-                    Icon(Icons.Default.Refresh, contentDescription = "Refresh private messages")
-                }
+    Column(Modifier.fillMaxWidth().testTag("private_messages_card"), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            PrivateMessageFolder.entries.forEach { folder ->
+                FilterChip(
+                    selected = messages.folder == folder,
+                    onClick = { actions.onRefresh(folder, 1) },
+                    label = { Text(folder.label) },
+                    modifier = Modifier.testTag("private_messages_folder_${folder.key}"),
+                )
             }
-            when (messages.status) {
-                PrivateMessagesStatus.Idle, PrivateMessagesStatus.Loading -> Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+            Spacer(Modifier.weight(1f))
+            IconButton(
+                onClick = { actions.onRefresh(messages.folder, messages.page) },
+                modifier = Modifier.testTag("private_messages_refresh"),
+            ) {
+                Icon(Icons.Default.Refresh, contentDescription = "Refresh private messages")
+            }
+        }
+        when (messages.status) {
+            PrivateMessagesStatus.Idle, PrivateMessagesStatus.Loading ->
+                SkeletonList(rows = 5, contentPadding = PaddingValues(0.dp), description = "Loading messages")
+            PrivateMessagesStatus.SignInRequired -> Text(
+                "${station.shortName} asked for sign-in again. Sign in from the More tab to read your private messages.",
+                color = MaterialTheme.colorScheme.error,
+            )
+            PrivateMessagesStatus.Error -> Text(
+                "Your private messages could not be loaded right now.",
+                color = MaterialTheme.colorScheme.error,
+            )
+            PrivateMessagesStatus.Ready -> if (messages.messages.isEmpty()) {
+                Column(
+                    Modifier.fillMaxWidth().padding(vertical = 40.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    CircularProgressIndicator(Modifier.size(24.dp))
-                    Text("Loading messages…")
-                }
-                PrivateMessagesStatus.SignInRequired -> Text(
-                    "${station.shortName} asked for sign-in again. Sign in from the More tab to read your private messages.",
-                    color = MaterialTheme.colorScheme.error,
-                )
-                PrivateMessagesStatus.Error -> Text(
-                    "Your private messages could not be loaded right now.",
-                    color = MaterialTheme.colorScheme.error,
-                )
-                PrivateMessagesStatus.Ready -> if (messages.messages.isEmpty()) {
+                    Icon(
+                        Icons.Default.Mail,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(36.dp),
+                    )
                     Text("No messages in this folder.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                } else {
-                    messages.messages.forEach { summary ->
+                }
+            } else {
+                Card(Modifier.fillMaxWidth()) {
+                    messages.messages.forEachIndexed { index, summary ->
+                        if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                         PrivateMessageRow(summary, messages.folder) { actions.onOpen(summary.id) }
                     }
                 }
             }
-            if (messages.status == PrivateMessagesStatus.Ready && messages.pageCount > 1) {
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    TextButton(
-                        onClick = { actions.onRefresh(messages.folder, messages.page - 1) },
-                        enabled = messages.page > 1,
-                    ) { Text("Newer") }
-                    Text(
-                        "Page ${messages.page} of ${messages.pageCount}",
-                        modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                    TextButton(
-                        onClick = { actions.onRefresh(messages.folder, messages.page + 1) },
-                        enabled = messages.page < messages.pageCount,
-                    ) { Text("Older") }
-                }
-            }
-            if (station.capabilities.supportsPrivateMessageSending) {
-                Button(
-                    onClick = { askingRecipient = true },
-                    modifier = Modifier.testTag("private_messages_new"),
-                ) { Text("New message") }
+        }
+        if (messages.status == PrivateMessagesStatus.Ready && messages.pageCount > 1) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                TextButton(
+                    onClick = { actions.onRefresh(messages.folder, messages.page - 1) },
+                    enabled = messages.page > 1,
+                ) { Text("Newer") }
+                Text(
+                    "Page ${messages.page} of ${messages.pageCount}",
+                    modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
+                TextButton(
+                    onClick = { actions.onRefresh(messages.folder, messages.page + 1) },
+                    enabled = messages.page < messages.pageCount,
+                ) { Text("Older") }
             }
         }
     }
-    if (askingRecipient) {
-        var recipient by rememberSaveable { mutableStateOf("") }
-        AlertDialog(
-            onDismissRequest = { askingRecipient = false },
-            title = { Text("New message") },
-            text = {
-                OutlinedTextField(
-                    value = recipient,
-                    onValueChange = { recipient = it.take(MAX_RECIPIENT_CHARACTERS) },
-                    label = { Text("${station.shortName} member name") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth().testTag("private_message_recipient"),
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        askingRecipient = false
-                        actions.onNewMessage(recipient.trim())
-                    },
-                    enabled = recipient.isNotBlank(),
-                ) { Text("Continue") }
-            },
-            dismissButton = { TextButton(onClick = { askingRecipient = false }) { Text("Cancel") } },
-        )
-    }
 }
 
+/** One message the way a mail list shows it: who, when, and the subject, with unread ones in bold beside a dot. */
 @Composable
 private fun PrivateMessageRow(summary: PrivateMessageSummary, folder: PrivateMessageFolder, onOpen: () -> Unit) {
     val direction = if (folder == PrivateMessageFolder.Sent) "To" else "From"
-    Card(
-        onClick = onOpen,
-        modifier = Modifier
+    val weight = if (summary.isUnread) FontWeight.Bold else FontWeight.Normal
+    Row(
+        Modifier
             .fillMaxWidth()
+            .clickable(role = Role.Button, onClick = onOpen)
             .testTag("private_message_${summary.id}")
-            .semantics {
+            .semantics(mergeDescendants = true) {
                 contentDescription = listOfNotNull(
                     "Unread".takeIf { summary.isUnread },
                     summary.subject,
                     "$direction ${summary.correspondent}",
                     summary.dateLabel,
                 ).joinToString(", ")
-            },
+            }
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Box(
+            Modifier.size(40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)),
+            contentAlignment = Alignment.Center,
+        ) {
             Text(
-                if (summary.isUnread) "● ${summary.subject}" else summary.subject,
-                fontWeight = if (summary.isUnread) FontWeight.Bold else FontWeight.Normal,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
+                summary.correspondent.trim().take(1).uppercase().ifEmpty { "?" },
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
             )
+        }
+        Column(Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    if (folder == PrivateMessageFolder.Sent) "To ${summary.correspondent}" else summary.correspondent,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = weight,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    summary.dateLabel,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    modifier = Modifier.padding(start = 8.dp),
+                )
+            }
             Text(
-                "$direction ${summary.correspondent} • ${summary.dateLabel}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                summary.subject,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = weight,
+                color = if (summary.isUnread) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
+        }
+        if (summary.isUnread) {
+            Box(Modifier.size(10.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary))
         }
     }
 }

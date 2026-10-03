@@ -32,7 +32,10 @@ internal fun PrivacySection() {
         icon = Icons.Default.Lock,
         testTag = "more_privacy",
     ) {
-        Text("No ads or developer-operated analytics, tracking, or data server. Google Cast sends anonymous encrypted usage diagnostics to Google.")
+        Text(
+            "No ads or developer-operated analytics, tracking, or data server. Google Cast sends anonymous encrypted usage diagnostics to Google.",
+            style = MaterialTheme.typography.bodyMedium,
+        )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             TextButton(onClick = { showNotice = true }) { Text("Read privacy notice") }
             TextButton(onClick = { showThirdPartyNotices = true }) {

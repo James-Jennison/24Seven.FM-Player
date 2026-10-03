@@ -1,5 +1,18 @@
 package com.codeframe78.twentyfourseven.player.ui
 
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Switch
 import com.codeframe78.twentyfourseven.player.domain.RequestHistoryEntry
 import com.codeframe78.twentyfourseven.player.ui.theme.requestAvailableGreen
 import androidx.compose.material.icons.filled.HelpOutline
@@ -49,7 +62,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -111,7 +123,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.painterResource
@@ -331,6 +342,7 @@ private fun RadioAppContent(
     }
     if (showTerms) {
         CommunityTermsDialog(
+            alreadyAccepted = state.communitySafety.hasAcceptedCurrentTerms,
             onAgree = {
                 communitySafetyActions.onAcceptTerms()
                 showTerms = false
@@ -1063,48 +1075,6 @@ private fun AgeScreenFields(
 }
 
 @Composable
-private fun CommunityTermsDialog(
-    onAgree: () -> Unit,
-    onDecline: () -> Unit,
-) {
-    val resources = LocalResources.current
-    val terms = remember(resources) {
-        resources.openRawResource(R.raw.terms_of_participation)
-            .bufferedReader()
-            .use { it.readText() }
-    }
-    var agreed by rememberSaveable { mutableStateOf(false) }
-    AlertDialog(
-        onDismissRequest = onDecline,
-        title = { Text("Terms of Participation") },
-        text = {
-            Column(
-                Modifier.heightIn(max = 520.dp).verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                Text(terms, style = MaterialTheme.typography.bodySmall)
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(
-                        checked = agreed,
-                        onCheckedChange = { agreed = it },
-                        modifier = Modifier
-                            .testTag("agree_community_terms")
-                            .semantics { contentDescription = "I Agree" },
-                    )
-                    Text("I Agree")
-                }
-            }
-        },
-        confirmButton = {
-            Button(onClick = onAgree, enabled = agreed, modifier = Modifier.testTag("accept_community_terms")) {
-                Text("I Agree")
-            }
-        },
-        dismissButton = { TextButton(onClick = onDecline) { Text("I Decline") } },
-    )
-}
-
-@Composable
 private fun AbuseReportDialog(state: MainUiState, actions: CommunitySafetyActions) {
     val report = state.abuseReport
     if (report.status == AbuseReportStatus.Idle) return
@@ -1594,7 +1564,7 @@ private fun MoreScreen(
         SettingsGroup("App") {
             MoreDisclosure(
                 title = "Startup station",
-                summary = "Choose which station opens at startup.",
+                summary = startupStationSummary(state),
                 icon = Icons.Default.PlayCircle,
                 testTag = "more_device_preferences",
             ) {
@@ -1613,6 +1583,13 @@ private fun MoreScreen(
         }
         AboutFooter()
     }
+}
+
+private fun startupStationSummary(state: MainUiState): String {
+    val preferences = state.stationPreferences
+    if (preferences.startupMode == StartupStationMode.LastSelected) return "Resumes where you left off."
+    val fixed = state.stations.firstOrNull { it.id == preferences.defaultStationId }
+    return fixed?.let { "Always starts with ${it.name}." } ?: "Choose which station opens at startup."
 }
 
 /** A titled run of settings rows on one rounded surface, the way system settings group related items. */
@@ -1669,81 +1646,41 @@ private fun CommunityNotificationSection(
         testTag = "more_community_notifications",
     ) {
         Card(Modifier.fillMaxWidth().testTag("community_notification_controls")) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Row(
-                    Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Checkbox(
-                        checked = enabled,
-                        onCheckedChange = { onSetChatMentionsEnabled(station.id, it) },
-                        enabled = canChangeSetting,
-                        modifier = Modifier
-                            .testTag("chat_mention_notifications_toggle")
-                            .semantics {
-                                contentDescription = "Notify when my station name is mentioned"
-                            },
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text("Notify when my station name is mentioned", fontWeight = FontWeight.SemiBold)
-                        Text(
-                            "Uses your signed-in ${station.shortName} display name and ignores users blocked on this device.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                SettingSwitchRow(
+                    title = "Mention notifications",
+                    description = "Tells you when your ${station.shortName} name comes up in chat. Members you blocked are ignored.",
+                    checked = enabled,
+                    enabled = canChangeSetting,
+                    toggleTag = "chat_mention_notifications_toggle",
+                    toggleDescription = "Notify when my station name is mentioned",
+                    onCheckedChange = { onSetChatMentionsEnabled(station.id, it) },
+                )
                 if (!eligible) {
-                    Text(
+                    Footnote(
                         if (enabled) {
-                            "Alerts are paused until you sign in and enable community content for this station. You can still turn this setting off."
+                            "Paused until you sign in and show community content for this station. You can still turn it off."
                         } else {
-                            "Sign in and enable community content for this station before turning on mention notifications."
+                            "Sign in and show community content for this station to turn this on."
                         },
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                Row(
-                    Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Checkbox(
-                        checked = monitorEnabled,
-                        onCheckedChange = { onSetForegroundChatMentionMonitorEnabled(station.id, it) },
-                        enabled = canChangeMonitor,
-                        modifier = Modifier
-                            .testTag("foreground_chat_mention_monitor_toggle")
-                            .semantics {
-                                contentDescription = "Monitor chat mentions while the app is closed"
-                            },
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text("Monitor mentions while app is closed", fontWeight = FontWeight.SemiBold)
-                        Text(
-                            "Keeps one ${station.shortName} chat monitor active and checks about once a minute. Android shows a persistent monitoring notification with a Stop action.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-                if (!enabled && eligible) {
-                    Text(
-                        "Turn on mention notifications before enabling the closed-app monitor.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                Text(
+                SettingSwitchRow(
+                    title = "Keep watching when the app is closed",
+                    description = "Checks ${station.shortName} chat about once a minute. Android shows an ongoing notification with a Stop action.",
+                    checked = monitorEnabled,
+                    enabled = canChangeMonitor,
+                    toggleTag = "foreground_chat_mention_monitor_toggle",
+                    toggleDescription = "Monitor chat mentions while the app is closed",
+                    onCheckedChange = { onSetForegroundChatMentionMonitorEnabled(station.id, it) },
+                )
+                if (!enabled && eligible) Footnote("Turn on mention notifications first.")
+                Footnote(
                     if (monitorEnabled) {
-                        "The closed-app monitor is active for ${station.shortName}. It stops if you sign out or disable community content. Message text is not included in notifications."
+                        "Watching stops if you sign out or hide community content. Message text is never shown in notifications."
                     } else {
-                        "When the app is open, mentions are detected while Chat is actively refreshing. Message text is not included in notifications."
+                        "With the app open, mentions are noticed while Chat refreshes. Message text is never shown in notifications."
                     },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
@@ -1776,16 +1713,7 @@ private fun DiagnosticsSection(
     ) {
         Card(Modifier.fillMaxWidth().testTag("diagnostics_card")) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(
-                    "Review before sharing",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                Text(
-                    "The snapshot uses a fixed allowlist. It does not include account details, messages, report content, URLs, device identifiers, raw errors, or logs.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                Footnote("A fixed list of technical details. No account details, messages, addresses, device identifiers, or logs.")
                 Surface(
                     modifier = Modifier.fillMaxWidth().testTag("diagnostics_report"),
                     shape = RoundedCornerShape(12.dp),
@@ -1804,14 +1732,22 @@ private fun DiagnosticsSection(
                     Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Button(
+                    OutlinedButton(
                         onClick = { diagnosticUi.actions.onCopy(report) },
                         modifier = Modifier.weight(1f).testTag("diagnostics_copy"),
-                    ) { Text("Copy") }
+                    ) {
+                        Icon(Icons.Default.ContentCopy, contentDescription = null, Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Copy")
+                    }
                     Button(
                         onClick = { diagnosticUi.actions.onShare(report) },
                         modifier = Modifier.weight(1f).testTag("diagnostics_share"),
-                    ) { Text("Share") }
+                    ) {
+                        Icon(Icons.Default.Share, contentDescription = null, Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Share")
+                    }
                 }
             }
         }
@@ -1851,22 +1787,21 @@ private fun FeedbackSection(
         testTag = "more_feedback",
     ) {
         Card(Modifier.fillMaxWidth().testTag("feedback_card")) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(
-                    "Report a problem",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                Text(
-                    "Choose a category and add any details you want to share. Do not include passwords, security codes, private messages, or session information.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 Box {
-                    Button(
+                    OutlinedButton(
                         onClick = { categoryMenuOpen = true },
-                        modifier = Modifier.fillMaxWidth().testTag("feedback_category"),
-                    ) { Text("Category: ${category.label}") }
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("feedback_category")
+                            .semantics { contentDescription = "Category: ${category.label}" },
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text("About", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(category.label)
+                        }
+                        Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+                    }
                     DropdownMenu(
                         expanded = categoryMenuOpen,
                         onDismissRequest = { categoryMenuOpen = false },
@@ -1888,31 +1823,18 @@ private fun FeedbackSection(
                     onValueChange = { description = it.take(1_000) },
                     modifier = Modifier.fillMaxWidth().testTag("feedback_description"),
                     label = { Text("What happened? (optional)") },
-                    supportingText = { Text("Up to 1,000 characters") },
+                    supportingText = { Text("Leave out passwords, codes, and private messages. ${description.length}/1,000") },
                     minLines = 3,
                     maxLines = 6,
                 )
-                Row(
-                    Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Checkbox(
-                        checked = includeDiagnostics,
-                        onCheckedChange = { includeDiagnostics = it },
-                        modifier = Modifier
-                            .testTag("feedback_include_diagnostics")
-                            .semantics { contentDescription = "Include privacy-safe diagnostics" },
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text("Include privacy-safe diagnostics", fontWeight = FontWeight.SemiBold)
-                        Text(
-                            "Includes app and Android version, coarse device model, selected station, playback state, and recent non-sensitive transitions. It never includes account data, messages, URLs, identifiers, raw errors, or logs.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
+                SettingSwitchRow(
+                    title = "Attach diagnostics",
+                    description = "App and Android version, device model, station, and recent playback states. Never account data, messages, or logs.",
+                    checked = includeDiagnostics,
+                    toggleTag = "feedback_include_diagnostics",
+                    toggleDescription = "Include privacy-safe diagnostics",
+                    onCheckedChange = { includeDiagnostics = it },
+                )
                 Button(
                     onClick = {
                         feedbackUi.actions.onReviewEmail(
@@ -1925,11 +1847,7 @@ private fun FeedbackSection(
                     },
                     modifier = Modifier.fillMaxWidth().testTag("feedback_review_email"),
                 ) { Text("Review email draft") }
-                Text(
-                    "The Player opens a local email draft addressed to its monitored contact. You can review, edit, cancel, or send it there; the Player cannot send it or confirm delivery.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                Footnote("Opens a draft in your email app. Nothing is sent until you send it there, and the Player cannot confirm delivery.")
             }
         }
     }
@@ -1957,40 +1875,73 @@ private fun CommunitySafetySection(
         testTag = "more_community_safety",
     ) {
         Card(Modifier.fillMaxWidth().testTag("community_safety_controls")) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(status, fontWeight = FontWeight.SemiBold)
-                when (safety.ageGateStatus) {
-                    AgeGateStatus.NotCompleted -> {
-                        Text(
-                            "Enter your date of birth to determine community access. The date itself is not saved.",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                val canToggle = safety.ageGateStatus == AgeGateStatus.Adult && safety.hasAcceptedCurrentTerms
+                val shown = canToggle && safety.communityContentVisible
+                StatusTile(
+                    icon = if (shown) Icons.Default.Visibility else if (canToggle) Icons.Default.VisibilityOff else Icons.Default.Shield,
+                    tint = when {
+                        shown -> MaterialTheme.colorScheme.primary
+                        canToggle || safety.ageGateStatus == AgeGateStatus.Underage -> MaterialTheme.colorScheme.onSurfaceVariant
+                        else -> MaterialTheme.colorScheme.secondary
+                    },
+                    headline = if (canToggle) "Community content" else status,
+                    detail = when {
+                        safety.ageGateStatus == AgeGateStatus.Underage ->
+                            "Playback stays available. This adult network's chat and request credits are not."
+                        safety.ageGateStatus == AgeGateStatus.NotCompleted ->
+                            "Enter your date of birth to decide access. The date itself is not saved."
+                        !safety.hasAcceptedCurrentTerms -> "Accept the Terms of Participation to see chat and request credits."
+                        shown -> "Shown. Chat and request credits are visible."
+                        else -> "Hidden. Chat and request credits are not shown."
+                    },
+                ) {
+                    if (canToggle) {
+                        Switch(
+                            checked = safety.communityContentVisible,
+                            onCheckedChange = { actions.onSetCommunityContentVisible(!safety.communityContentVisible) },
+                            modifier = Modifier
+                                .testTag("toggle_community_content")
+                                .semantics { contentDescription = "Show community content" },
                         )
-                        AgeScreenFields(state, actions.onSubmitAgeScreen)
                     }
-                    AgeGateStatus.Underage -> Text(
-                        "Playback remains available, but this adult network's Chat and public request attribution are unavailable.",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    AgeGateStatus.Adult -> {
+                }
+                when (safety.ageGateStatus) {
+                    AgeGateStatus.NotCompleted -> AgeScreenFields(state, actions.onSubmitAgeScreen)
+                    AgeGateStatus.Underage -> Unit
+                    AgeGateStatus.Adult -> if (safety.hasAcceptedCurrentTerms) {
                         TextButton(onClick = onReviewTerms, modifier = Modifier.testTag("open_terms_from_more")) {
-                            Text(if (safety.hasAcceptedCurrentTerms) "Review Terms of Participation" else "Review and accept terms")
+                            Text("Terms of Participation")
                         }
-                        if (safety.hasAcceptedCurrentTerms) {
-                            Button(
-                                onClick = { actions.onSetCommunityContentVisible(!safety.communityContentVisible) },
-                                modifier = Modifier.testTag("toggle_community_content"),
-                            ) {
-                                Text(if (safety.communityContentVisible) "Hide community content" else "Show community content")
-                            }
+                    } else {
+                        Button(onClick = onReviewTerms, modifier = Modifier.testTag("open_terms_from_more")) {
+                            Text("Review and accept terms")
                         }
                     }
                 }
                 val blocked = selectedStation?.let { station ->
                     safety.blockedUsers.filter { it.stationId == station.id }
                 }.orEmpty()
-                Text("Blocked users — ${selectedStation?.shortName ?: "station"}", style = MaterialTheme.typography.titleSmall)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        "Blocked on ${selectedStation?.shortName ?: "this station"}",
+                        style = MaterialTheme.typography.titleSmall,
+                        modifier = Modifier.weight(1f),
+                    )
+                    if (blocked.isNotEmpty()) {
+                        Text(
+                            blocked.size.toString(),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
                 if (blocked.isEmpty()) {
-                    Text("No users are blocked on this device for this station.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        "Nobody is blocked.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 } else {
                     blocked.forEach { user ->
                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -2002,14 +1953,99 @@ private fun CommunitySafetySection(
                         }
                     }
                 }
-                Text(
-                    "Blocks are stored only on this device and hide that user's Chat messages and request attribution in the app.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                Footnote("Blocks stay on this device and hide that member's chat messages and request credits.")
             }
         }
     }
+}
+
+/** A tinted tile for the one state a card exists to show, with room for the control that changes it. */
+@Composable
+private fun StatusTile(
+    icon: ImageVector,
+    tint: Color,
+    headline: String,
+    detail: String,
+    modifier: Modifier = Modifier,
+    trailing: (@Composable () -> Unit)? = null,
+) {
+    Surface(shape = RoundedCornerShape(16.dp), color = tint.copy(alpha = 0.14f), modifier = modifier.fillMaxWidth()) {
+        Row(
+            Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(28.dp))
+            Column(Modifier.weight(1f)) {
+                Text(headline, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                Text(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            trailing?.invoke()
+        }
+    }
+}
+
+/** A setting that is on or off: what it does on the left, the switch on the right. */
+@Composable
+private fun SettingSwitchRow(
+    title: String,
+    description: String,
+    checked: Boolean,
+    toggleTag: String,
+    toggleDescription: String,
+    enabled: Boolean = true,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Row(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.titleSmall)
+            Text(description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            enabled = enabled,
+            modifier = Modifier.testTag(toggleTag).semantics { contentDescription = toggleDescription },
+        )
+    }
+}
+
+/** One of a set of choices where exactly one applies. */
+@Composable
+private fun SettingChoiceRow(
+    title: String,
+    description: String?,
+    selected: Boolean,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .selectable(selected = selected, enabled = enabled, role = Role.RadioButton, onClick = onClick)
+            .padding(vertical = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        RadioButton(selected = selected, onClick = null, enabled = enabled)
+        Column(Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.titleSmall)
+            description?.let {
+                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+    }
+}
+
+@Composable
+private fun Footnote(text: String) {
+    Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
 /** A More entry that opens a screen of its own. */
@@ -2148,30 +2184,39 @@ private fun DevicePreferencesSection(
     val preferences = state.stationPreferences
     val fixedStation = state.stations.firstOrNull { it.id == preferences.defaultStationId }
     val lastStation = state.stations.firstOrNull { it.id == preferences.lastStationId }
-    val summary = when (preferences.startupMode) {
-        StartupStationMode.LastSelected -> lastStation?.let { "Resume last station: ${it.name}" }
-            ?: "Resume the last station selected on this device"
-        StartupStationMode.Fixed -> fixedStation?.let { "Always start with ${it.name}" }
-            ?: "Saved startup station is unavailable; using the safe catalog fallback"
-    }
+    val current = state.selectedStation
+    val resumes = preferences.startupMode == StartupStationMode.LastSelected
 
     if (showTitle) Text("Device preferences", style = MaterialTheme.typography.titleMedium)
     Card(Modifier.fillMaxWidth().testTag("device_station_preferences")) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(
-                summary,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.semantics { contentDescription = "Startup station preference: $summary" },
-            )
-            Button(
-                onClick = onUseLastStationAtStartup,
+        Column(Modifier.padding(horizontal = 16.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            SettingChoiceRow(
+                title = "Resume where I left off",
+                description = lastStation?.let { "Last played: ${it.name}" } ?: "The last station selected on this device",
+                selected = resumes,
                 modifier = Modifier.testTag("startup_use_last_station"),
-            ) { Text("Resume last station") }
-            Button(
-                onClick = { state.selectedStation?.id?.let(onSetStartupStation) },
-                enabled = state.selectedStation != null,
+                onClick = onUseLastStationAtStartup,
+            )
+            // A startup station other than the one on screen stays listed, so choosing the current one is a visible change.
+            if (!resumes && fixedStation != null && fixedStation.id != current?.id) {
+                SettingChoiceRow(
+                    title = "Always start with ${fixedStation.name}",
+                    description = null,
+                    selected = true,
+                    onClick = {},
+                )
+            }
+            SettingChoiceRow(
+                title = "Always start with ${current?.name ?: "the selected station"}",
+                description = "The station selected now",
+                selected = !resumes && fixedStation != null && fixedStation.id == current?.id,
+                enabled = current != null,
                 modifier = Modifier.testTag("startup_use_current_station"),
-            ) { Text("Use current station at startup") }
+                onClick = { current?.id?.let(onSetStartupStation) },
+            )
+            if (!resumes && fixedStation == null) {
+                Footnote("Your saved startup station is no longer available, so the Player picks one for you.")
+            }
         }
     }
 }
@@ -2408,26 +2453,15 @@ private fun RequestClockTile(readiness: RequestReadiness, waitMinutes: Int?, des
         RequestReadiness.Waiting -> "Your request clock is counting down."
         RequestReadiness.Unknown -> "The station did not report it."
     }
-    Surface(
-        shape = RoundedCornerShape(16.dp),
-        color = tint.copy(alpha = 0.14f),
+    StatusTile(
+        icon = icon,
+        tint = tint,
+        headline = headline,
+        detail = detail,
         modifier = Modifier
-            .fillMaxWidth()
             .testTag("request_clock")
             .clearAndSetSemantics { contentDescription = "Request status: $description" },
-    ) {
-        Row(
-            Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(28.dp))
-            Column {
-                Text(headline, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                Text(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        }
-    }
+    )
 }
 
 @Composable
@@ -2799,7 +2833,6 @@ private fun SongRequestSection(
     val requests = state.requests
     var query by rememberSaveable(state.selectedStation?.id?.value) { mutableStateOf("") }
     var field by rememberSaveable(state.selectedStation?.id?.value) { mutableStateOf(RequestSearchField.Title) }
-    var fieldMenuOpen by remember { mutableStateOf(false) }
     var trackSortOrder by rememberSaveable(state.selectedStation?.id?.value) { mutableStateOf(TrackSortOrder.LibraryOrder) }
     var trackSortMenuOpen by remember { mutableStateOf(false) }
     val signedIn = state.auth?.status == AuthStatus.SignedIn
@@ -2811,61 +2844,54 @@ private fun SongRequestSection(
                 Text("Song requests have not been verified for this station.")
                 return@Column
             }
-            Text(
-                "Search the station library. A request is only sent after you review and confirm one available track.",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box {
-                    TextButton(onClick = { fieldMenuOpen = true }) {
-                        Text("Search by ${field.name.lowercase()}")
-                    }
-                    DropdownMenu(expanded = fieldMenuOpen, onDismissRequest = { fieldMenuOpen = false }) {
-                        RequestSearchField.entries.forEach { option ->
-                            DropdownMenuItem(
-                                text = { Text(option.name) },
-                                onClick = {
-                                    field = option
-                                    fieldMenuOpen = false
-                                },
-                            )
-                        }
-                    }
+            val busy = requests?.status == SongRequestLoadStatus.Loading ||
+                requests?.status == SongRequestLoadStatus.Submitting
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                OutlinedTextField(
+                    value = query,
+                    onValueChange = { query = it.take(100) },
+                    label = { Text("Search the library") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(onSearch = { if (!busy) onSearch(query, field) }),
+                    modifier = Modifier.weight(1f).testTag("library_search_query"),
+                )
+                FilledIconButton(
+                    onClick = { onSearch(query, field) },
+                    enabled = !busy,
+                    modifier = Modifier.padding(top = 8.dp).size(52.dp).testTag("library_search_submit"),
+                ) { Icon(Icons.Default.Search, contentDescription = "Search") }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                RequestSearchField.entries.forEach { option ->
+                    FilterChip(
+                        selected = field == option,
+                        onClick = { field = option },
+                        label = { Text(option.name) },
+                        modifier = Modifier.testTag("library_search_field_${option.name.lowercase()}"),
+                    )
                 }
             }
-            OutlinedTextField(
-                value = query,
-                onValueChange = { query = it.take(100) },
-                label = { Text("Library search") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            Button(
-                onClick = { onSearch(query, field) },
-                enabled = requests?.status != SongRequestLoadStatus.Loading &&
-                    requests?.status != SongRequestLoadStatus.Submitting,
-            ) { Text("Search") }
+            Text("Or let the station pick", style = MaterialTheme.typography.titleSmall)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(
+                    onClick = { onSuggest(RequestSuggestionMode.Random) },
+                    enabled = !busy,
+                    modifier = Modifier.weight(1f).testTag("suggest_random_track"),
+                ) { Text("Random track") }
+                OutlinedButton(
+                    onClick = { onSuggest(RequestSuggestionMode.LeastPlayed) },
+                    enabled = !busy,
+                    modifier = Modifier.weight(1f).testTag("suggest_least_played_track"),
+                ) { Text("Least played") }
+            }
+            Footnote("Nothing is sent until you review and confirm one track.")
 
-            Text(
-                "Or let the station choose one available track.",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Button(
-                onClick = { onSuggest(RequestSuggestionMode.Random) },
-                enabled = requests?.status != SongRequestLoadStatus.Loading &&
-                    requests?.status != SongRequestLoadStatus.Submitting,
-                modifier = Modifier.fillMaxWidth(),
-            ) { Text("Suggest a random track") }
-            Button(
-                onClick = { onSuggest(RequestSuggestionMode.LeastPlayed) },
-                enabled = requests?.status != SongRequestLoadStatus.Loading &&
-                    requests?.status != SongRequestLoadStatus.Submitting,
-                modifier = Modifier.fillMaxWidth(),
-            ) { Text("Suggest a least-played random track") }
-
-            if (requests?.status == SongRequestLoadStatus.Loading || requests?.status == SongRequestLoadStatus.Submitting) {
-                CircularProgressIndicator()
-                Text(if (requests.status == SongRequestLoadStatus.Submitting) "Sending one request…" else "Loading station library…")
+            if (busy) {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 3.dp)
+                    Text(if (requests?.status == SongRequestLoadStatus.Submitting) "Sending one request…" else "Loading station library…")
+                }
             }
             requests?.errorMessage?.let { error ->
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -2887,17 +2913,24 @@ private fun SongRequestSection(
                         shape = RoundedCornerShape(12.dp),
                         tonalElevation = 2.dp,
                     ) {
-                        Column(Modifier.padding(12.dp)) {
-                            Text(result.title, fontWeight = FontWeight.Medium)
-                            listOfNotNull(result.subtitle, result.year).takeIf { it.isNotEmpty() }?.let { details ->
-                                Text(
-                                    details.joinToString(" • "),
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
+                        Row(
+                            Modifier.padding(start = 14.dp, end = 8.dp, top = 10.dp, bottom = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(Modifier.weight(1f)) {
+                                Text(result.title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+                                listOfNotNull(result.subtitle, result.year).takeIf { it.isNotEmpty() }?.let { details ->
+                                    Text(
+                                        details.joinToString(" · "),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
                             }
-                            Text(
-                                if (result.target is RequestSearchTarget.Artist) "View albums" else "View album",
-                                color = MaterialTheme.colorScheme.primary,
+                            Icon(
+                                Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                     }
