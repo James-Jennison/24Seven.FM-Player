@@ -110,14 +110,4 @@ class MediaSessionControllerPolicyTest {
         assertEquals(ControllerAccess.Foreign, access)
         assertFalse(MediaSessionControllerPolicy.mayChangeMedia(access))
     }
-
-    @Test
-    fun theStreamPlaylistIsNotPublishedAsAQueue() {
-        val withTimeline = playerCommands.buildUpon().add(Player.COMMAND_GET_TIMELINE).build()
-        val commands = MediaSessionControllerPolicy.withoutPublishedQueue(withTimeline)
-
-        assertFalse(commands.contains(Player.COMMAND_GET_TIMELINE))
-        assertTrue(commands.contains(Player.COMMAND_PLAY_PAUSE))
-        assertTrue(commands.contains(Player.COMMAND_GET_CURRENT_MEDIA_ITEM))
-    }
 }

@@ -55,14 +55,6 @@ internal object MediaSessionControllerPolicy {
         }.build()
     }
 
-    /**
-     * The playlist holds one station's stream and its fallbacks, which is not a queue a listener can use. Media3
-     * publishes the platform session's queue, which a car display offers as a Queue button, only while its
-     * notification controller may read the timeline.
-     */
-    fun withoutPublishedQueue(commands: Player.Commands): Player.Commands =
-        commands.buildUpon().remove(Player.COMMAND_GET_TIMELINE).build()
-
     fun sessionCommands(base: SessionCommands, access: ControllerAccess): SessionCommands =
         base.buildUpon().apply {
             when (access) {

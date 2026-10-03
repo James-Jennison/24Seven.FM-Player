@@ -8,7 +8,6 @@ import android.os.Bundle
 import android.os.SystemClock
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
-import androidx.media3.common.ForwardingPlayer
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Metadata
@@ -73,17 +72,11 @@ class RadioPlaybackService : MediaLibraryService() {
             .setSlots(CommandButton.SLOT_OVERFLOW)
             .build()
     }
-    private val sessionPlayer by lazy {
-        object : ForwardingPlayer(player) {
-            override fun getAvailableCommands(): Player.Commands = super.getAvailableCommands()
-                .buildUpon()
-                .remove(Player.COMMAND_SEEK_TO_NEXT)
-                .remove(Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM)
-                .remove(Player.COMMAND_SEEK_TO_PREVIOUS)
-                .remove(Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM)
-                .build()
-        }
+    private val sessionPlayer by lazy { StationSessionPlayer(player) }
+    private val queueRepository by lazy {
+        (application as RadioApplication).appContainer.queueRepository
     }
+    private var upNextJob: Job? = null
     private val fallbackListener = object : Player.Listener {
         override fun onPlayerError(error: PlaybackException) {
             if (player.hasNextMediaItem()) {
@@ -101,6 +94,8 @@ class RadioPlaybackService : MediaLibraryService() {
             activeNowPlaying = null
             activeMediaId = incomingMediaId
             nowPlayingPublisher.clear(mediaItem?.stationId())
+            upNextJob?.cancel()
+            sessionPlayer.setUpNext(emptyList())
         }
 
         override fun onMetadata(metadata: Metadata) {
@@ -112,6 +107,7 @@ class RadioPlaybackService : MediaLibraryService() {
             activeNowPlaying = nowPlaying
             updateSessionMetadata(nowPlaying)
             nowPlayingPublisher.publish(nowPlaying)
+            refreshUpNext(stationId, nowPlaying.displayTitle)
             artworkJob = serviceScope.launch {
                 val details = runCatching { nowPlayingDetails.fetchNowPlaying(stationId) }.getOrNull() ?: return@launch
                 if (activeNowPlaying != nowPlaying || player.currentMediaItem?.stationId() != stationId) return@launch
@@ -130,14 +126,9 @@ class RadioPlaybackService : MediaLibraryService() {
             val access = MediaSessionControllerPolicy.access(controller, packageName)
             val base = super.onConnect(session, controller)
             if (!base.isAccepted) return base
-            val playerCommands = MediaSessionControllerPolicy.playerCommands(base.availablePlayerCommands, access)
             return MediaSession.ConnectionResult.accept(
                 MediaSessionControllerPolicy.sessionCommands(base.availableSessionCommands, access),
-                if (session.isMediaNotificationController(controller)) {
-                    MediaSessionControllerPolicy.withoutPublishedQueue(playerCommands)
-                } else {
-                    playerCommands
-                },
+                MediaSessionControllerPolicy.playerCommands(base.availablePlayerCommands, access),
             )
         }
 
@@ -293,6 +284,17 @@ class RadioPlaybackService : MediaLibraryService() {
     private fun persistAutomotiveStationSelection(mediaItems: List<MediaItem>) {
         val stationId = automotiveCatalog.stationIdFor(mediaItems) ?: return
         serviceScope.launch { stationRepository.selectStation(stationId) }
+    }
+
+    /** Reads the station's queue once per track, so a car display can list what is coming up. */
+    private fun refreshUpNext(stationId: StationId, onAirTitle: String?) {
+        upNextJob?.cancel()
+        upNextJob = serviceScope.launch {
+            runCatching { queueRepository.refresh(stationId) }
+            val queue = queueRepository.currentQueue(stationId)
+            if (player.currentMediaItem?.stationId() != stationId) return@launch
+            sessionPlayer.setUpNext(upNextMediaItems(stationId, queue.upcoming, onAirTitle))
+        }
     }
 
     private fun updateSessionMetadata(nowPlaying: NowPlayingState) {

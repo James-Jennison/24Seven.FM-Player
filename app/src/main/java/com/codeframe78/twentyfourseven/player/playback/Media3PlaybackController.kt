@@ -296,7 +296,7 @@ class Media3PlaybackController(
         val status = when {
             connected.playerError != null && networkRecovery.isWaitingForNetwork -> PlaybackStatus.WaitingForNetwork
             connected.playerError != null -> PlaybackStatus.Error
-            connected.playbackState == Player.STATE_BUFFERING && connected.currentMediaItemIndex > 0 -> PlaybackStatus.Retrying
+            connected.playbackState == Player.STATE_BUFFERING && isFallbackStream(connected.currentMediaItem?.mediaId, selectedStation) -> PlaybackStatus.Retrying
             connected.playbackState == Player.STATE_BUFFERING -> PlaybackStatus.Buffering
             connected.isPlaying -> PlaybackStatus.Playing
             connected.playbackState == Player.STATE_READY -> PlaybackStatus.Paused
@@ -421,6 +421,17 @@ class Media3PlaybackController(
             playbackStartRequestedAtElapsedRealtimeMillis = SystemClock.elapsedRealtime()
         }
     }
+}
+
+/**
+ * True when the stream on air is not the station's first choice. The session lists queued tracks after the stream
+ * on air, so the position in that list no longer says which stream is playing; the stream's own id does.
+ */
+internal fun isFallbackStream(mediaId: String?, station: Station?): Boolean {
+    val priority = mediaId?.substringAfter(':', "")?.toIntOrNull() ?: return false
+    val firstChoice = station?.takeIf { it.id.value == mediaId.substringBefore(':') }
+        ?.streams?.minOfOrNull { it.priority } ?: return false
+    return priority > firstChoice
 }
 
 /** The station whose streams are loaded, read from the `<stationId>:<priority>` media ID the Player assigns. */
