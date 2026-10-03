@@ -9,7 +9,11 @@ data class ChatMessage(
     val messageText: String,
     val postedAtLabel: String? = null,
     val parts: List<ChatMessagePart> = listOf(ChatMessagePart.Text(messageText)),
+    val authorRole: ChatRole = ChatRole.Member,
 )
+
+/** The station staff roles its chat colours by, as named in the station's own legend. */
+enum class ChatRole { Member, Proprietor, Administrator, Moderator, Ambassador, VisitorMod, Composer }
 
 sealed interface ChatMessagePart {
     data class Text(val value: String) : ChatMessagePart

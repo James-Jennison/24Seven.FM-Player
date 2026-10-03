@@ -4,6 +4,7 @@ import com.codeframe78.twentyfourseven.player.domain.MembershipTier
 import com.codeframe78.twentyfourseven.player.domain.NowPlayingState
 import com.codeframe78.twentyfourseven.player.domain.PlaybackStatus
 import com.codeframe78.twentyfourseven.player.domain.StationId
+import com.codeframe78.twentyfourseven.player.domain.ChatRole
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -108,9 +109,15 @@ class PlayerLinksTest {
 
     @Test
     fun `chat time drops the year and seconds and keeps anything it does not recognize`() {
-        assertEquals("02 Oct · 15:04", chatTimeLabel("02 Oct 26 - 15:04:41"))
-        assertEquals("2 Oct · 9:04", chatTimeLabel(" 2 Oct 26 - 9:04:00 "))
-        assertEquals("yesterday", chatTimeLabel("yesterday"))
+        assertEquals(ChatStamp("02 Oct", "15:04"), chatStamp("02 Oct 26 - 15:04:41"))
+        assertEquals(ChatStamp("2 Oct", "09:04"), chatStamp(" 2 Oct 26 - 9:04:00 "))
+        assertEquals(null, chatStamp("yesterday"))
+        assertEquals(null, chatStamp(null))
+        assertNull(chatRoleColor(ChatRole.Member, onDark = true))
+        assertEquals(androidx.compose.ui.graphics.Color(0xFFFFCC66), chatRoleColor(ChatRole.Administrator, onDark = true))
+        assertTrue(chatMentions("thanks, listener!", "Listener"))
+        assertFalse(chatMentions("many listeners tonight", "Listener"))
+        assertFalse(chatMentions("hello", null))
     }
 
     @Test

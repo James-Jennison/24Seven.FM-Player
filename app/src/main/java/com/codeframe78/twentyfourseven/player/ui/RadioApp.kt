@@ -66,6 +66,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
@@ -118,6 +119,8 @@ import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -734,6 +737,8 @@ private fun ChatMessages(
     var draft by rememberSaveable(state.selectedStation?.id?.value) { mutableStateOf("") }
     var awaitingSend by remember(state.selectedStation?.id) { mutableStateOf(false) }
     val messageKeys = remember(chat.messages) { chatMessageKeys(chat.messages) }
+    val signedIn = state.auth?.status == AuthStatus.SignedIn
+    val ownNick = state.auth?.displayName?.takeIf { signedIn }
     LaunchedEffect(chat.isSending, chat.sendErrorMessage, chat.messages) {
         if (awaitingSend && !chat.isSending) {
             if (chat.sendErrorMessage != null) {
@@ -745,11 +750,30 @@ private fun ChatMessages(
         }
     }
     Column(Modifier.fillMaxSize().padding(padding)) {
+        // The channel bar: the room and its station, as an IRC client titles a window.
         Row(
-            Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
+            Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                .padding(start = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("Station chat", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
+            Text("#", style = ChatLineStyle(), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.width(6.dp))
+            Text(
+                "Station chat",
+                style = ChatLineStyle(),
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+            )
+            Text(
+                state.selectedStation?.name?.let { " · $it" }.orEmpty(),
+                style = ChatLineStyle(),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
+            )
             IconButton(onClick = onRefresh) {
                 Icon(Icons.Default.Refresh, contentDescription = "Refresh chat")
             }
@@ -758,8 +782,7 @@ private fun ChatMessages(
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             reverseLayout = true,
-            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(vertical = 6.dp),
         ) {
             if (chat.messages.isEmpty()) {
                 item { EmptyTrackList("No recent chat messages are available.") }
@@ -767,35 +790,24 @@ private fun ChatMessages(
                 itemsIndexed(
                     chat.messages,
                     key = { index, _ -> messageKeys[index] },
-                ) { _, message ->
-                    Card(Modifier.fillMaxWidth()) {
-                        Row(Modifier.fillMaxWidth().padding(start = 14.dp, top = 4.dp, bottom = 10.dp)) {
-                            Column(Modifier.weight(1f).padding(top = 2.dp)) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(
-                                        message.authorDisplayName,
-                                        style = MaterialTheme.typography.titleSmall,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                        modifier = Modifier
-                                            .weight(1f, fill = false)
-                                            .opensMemberProfile(message.authorDisplayName)
-                                            .padding(vertical = 6.dp),
-                                    )
-                                    message.postedAtLabel?.let { timestamp ->
-                                        Text(
-                                            chatTimeLabel(timestamp),
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            maxLines = 1,
-                                            modifier = Modifier.padding(start = 10.dp),
-                                        )
-                                    }
-                                }
-                                ChatMessageText(message)
-                            }
-                            CommunityMessageActions(
+                ) { index, message ->
+                    // Newest first: a day opens above its oldest line, which is the one before an older day.
+                    val day = chatStamp(message.postedAtLabel)?.day
+                    val olderDay = chat.messages.getOrNull(index + 1)?.let { chatStamp(it.postedAtLabel)?.day }
+                    var menuOpen by remember(messageKeys[index]) { mutableStateOf(false) }
+                    Column {
+                        if (day != null && day != olderDay) ChatDayRule(day)
+                        Box {
+                            ChatLine(
+                                message,
+                                ownNick = ownNick,
+                                modifier = Modifier.clickable(
+                                    onClickLabel = "Safety actions for ${message.authorDisplayName}",
+                                ) { menuOpen = true },
+                            )
+                            CommunityMessageMenu(
+                                expanded = menuOpen,
+                                onDismiss = { menuOpen = false },
                                 author = message.authorDisplayName,
                                 onReportContent = {
                                     communitySafetyActions.onBeginReport(
@@ -830,8 +842,15 @@ private fun ChatMessages(
             }
         }
         }
-        if (state.auth?.status == AuthStatus.SignedIn) {
-            Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+        HorizontalDivider()
+        if (signedIn) {
+            val send = {
+                if (draft.isNotBlank() && !chat.isSending) {
+                    awaitingSend = true
+                    onSendMessage(draft)
+                }
+            }
+            Column(Modifier.fillMaxWidth().padding(start = 12.dp, end = 4.dp, top = 6.dp, bottom = 6.dp)) {
                 chat.sendErrorMessage?.let { error ->
                     Text(error, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                     Spacer(Modifier.height(4.dp))
@@ -840,64 +859,39 @@ private fun ChatMessages(
                     OutlinedTextField(
                         value = draft,
                         onValueChange = { if (it.length <= 255) draft = it },
-                        label = { Text("Message") },
-                        supportingText = { Text("${draft.length}/255") },
+                        placeholder = { Text("Message", style = ChatLineStyle()) },
+                        textStyle = ChatLineStyle(),
+                        // The limit only matters once it is close.
+                        supportingText = if (draft.length >= 200) {
+                            { Text("${draft.length}/255") }
+                        } else {
+                            null
+                        },
                         modifier = Modifier.weight(1f),
                         singleLine = true,
                         enabled = !chat.isSending,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                        keyboardActions = KeyboardActions(onSend = { send() }),
                     )
-                    Spacer(Modifier.width(8.dp))
-                    Button(
-                        onClick = {
-                            awaitingSend = true
-                            onSendMessage(draft)
-                        },
-                        enabled = draft.isNotBlank() && !chat.isSending,
-                    ) {
-                        Text(if (chat.isSending) "Sending" else "Send")
+                    IconButton(onClick = send, enabled = draft.isNotBlank() && !chat.isSending) {
+                        if (chat.isSending) {
+                            CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                        } else {
+                            Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Send")
+                        }
                     }
                 }
             }
         } else {
             Text(
                 "Sign in from More to send messages.",
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                style = ChatLineStyle(),
+                modifier = Modifier.fillMaxWidth().padding(12.dp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
         }
     }
-}
-
-@Composable
-private fun ChatMessageText(message: ChatMessage) {
-    val inlineContent = remember(message.parts) {
-        message.parts.mapIndexedNotNull { index, part ->
-            if (part !is ChatMessagePart.Emoticon) return@mapIndexedNotNull null
-            val id = "chat-emoticon-$index"
-            id to InlineTextContent(
-                placeholder = Placeholder(1.15.em, 1.15.em, PlaceholderVerticalAlign.TextCenter),
-            ) {
-                AsyncImage(
-                    model = part.imageUrl,
-                    contentDescription = "${part.altText} emoticon",
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier.fillMaxSize().testTag(id),
-                )
-            }
-        }.toMap()
-    }
-    val annotated = remember(message.parts) {
-        buildAnnotatedString {
-            message.parts.forEachIndexed { index, part ->
-                when (part) {
-                    is ChatMessagePart.Text -> append(part.value)
-                    is ChatMessagePart.Emoticon -> appendInlineContent("chat-emoticon-$index", part.altText)
-                }
-            }
-        }
-    }
-    Text(annotated, inlineContent = inlineContent)
 }
 
 @Composable
@@ -908,49 +902,61 @@ private fun CommunityMessageActions(
     onBlockUser: () -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val openProfile = LocalMemberProfileOpener.current
     Box {
         IconButton(onClick = { expanded = true }) {
             Icon(Icons.Default.MoreVert, contentDescription = "Safety actions for $author")
         }
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            openProfile?.let { viewProfile ->
-                DropdownMenuItem(
-                    text = { Text("View profile") },
-                    leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
-                    onClick = {
-                        expanded = false
-                        viewProfile(author)
-                    },
-                )
-            }
-            onReportContent?.let { reportContent ->
-                DropdownMenuItem(
-                    text = { Text("Report content") },
-                    leadingIcon = { Icon(Icons.Default.Flag, contentDescription = null) },
-                    onClick = {
-                        expanded = false
-                        reportContent()
-                    },
-                )
-            }
+        CommunityMessageMenu(expanded, { expanded = false }, author, onReportContent, onReportUser, onBlockUser)
+    }
+}
+
+@Composable
+private fun CommunityMessageMenu(
+    expanded: Boolean,
+    onDismiss: () -> Unit,
+    author: String,
+    onReportContent: (() -> Unit)?,
+    onReportUser: () -> Unit,
+    onBlockUser: () -> Unit,
+) {
+    val openProfile = LocalMemberProfileOpener.current
+    DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
+        openProfile?.let { viewProfile ->
             DropdownMenuItem(
-                text = { Text("Report user") },
-                leadingIcon = { Icon(Icons.Default.Flag, contentDescription = null) },
+                text = { Text("View profile") },
+                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
                 onClick = {
-                    expanded = false
-                    onReportUser()
-                },
-            )
-            DropdownMenuItem(
-                text = { Text("Block user") },
-                leadingIcon = { Icon(Icons.Default.Block, contentDescription = null) },
-                onClick = {
-                    expanded = false
-                    onBlockUser()
+                    onDismiss()
+                    viewProfile(author)
                 },
             )
         }
+        onReportContent?.let { reportContent ->
+            DropdownMenuItem(
+                text = { Text("Report content") },
+                leadingIcon = { Icon(Icons.Default.Flag, contentDescription = null) },
+                onClick = {
+                    onDismiss()
+                    reportContent()
+                },
+            )
+        }
+        DropdownMenuItem(
+            text = { Text("Report user") },
+            leadingIcon = { Icon(Icons.Default.Flag, contentDescription = null) },
+            onClick = {
+                onDismiss()
+                onReportUser()
+            },
+        )
+        DropdownMenuItem(
+            text = { Text("Block user") },
+            leadingIcon = { Icon(Icons.Default.Block, contentDescription = null) },
+            onClick = {
+                onDismiss()
+                onBlockUser()
+            },
+        )
     }
 }
 
@@ -2572,12 +2578,6 @@ internal fun queuedRequestLabel(seconds: Int): String {
         else -> "Plays in about ${minutes / 60} hr ${minutes % 60} min"
     }
 }
-
-/** A chat message's station time without its year and seconds: "02 Oct 26 - 15:04:41" reads as "02 Oct · 15:04". */
-internal fun chatTimeLabel(raw: String): String =
-    CHAT_TIMESTAMP.matchEntire(raw.trim())?.let { "${it.groupValues[1]} · ${it.groupValues[2]}" } ?: raw
-
-private val CHAT_TIMESTAMP = Regex("""(\d{1,2} \p{L}{3}) \d{2} - (\d{1,2}:\d{2}):\d{2}""")
 
 /**
  * "Oct 2 · 4:16 PM" for the station's "2026-10-02 16:16:02", with the year only when it is not this one; anything

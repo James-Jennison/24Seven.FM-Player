@@ -1452,10 +1452,10 @@ class RadioAppTest {
             }
         }
 
-        composeRule.onNodeWithText("Existing message").assertIsDisplayed()
+        composeRule.onNodeWithText("Existing message", substring = true).assertIsDisplayed()
         composeRule.onNodeWithContentDescription("heart emoticon").assertIsDisplayed()
         composeRule.onNodeWithText("Message").performTextInput("Hello chat")
-        composeRule.onNodeWithText("Send").performClick()
+        composeRule.onNodeWithContentDescription("Send").performClick()
         composeRule.runOnIdle { assertEquals(listOf("Hello chat"), sentMessages) }
     }
 
@@ -1794,7 +1794,7 @@ class RadioAppTest {
             }
         }
 
-        composeRule.onNodeWithText("Visible only after access").assertDoesNotExist()
+        composeRule.onNodeWithText("Visible only after access", substring = true).assertDoesNotExist()
         composeRule.onNodeWithTag("age_month").performTextInput("1")
         composeRule.onNodeWithTag("age_day").performTextInput("2")
         composeRule.onNodeWithTag("age_year").performTextInput("1990")
@@ -1806,7 +1806,7 @@ class RadioAppTest {
         composeRule.onNodeWithTag("accept_community_terms").performClick()
         composeRule.onNodeWithText("Mature community content is hidden").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithTag("show_community_content").performScrollTo().performClick()
-        composeRule.onNodeWithText("Visible only after access").assertIsDisplayed()
+        composeRule.onNodeWithText("Visible only after access", substring = true).assertIsDisplayed()
     }
 
     @Test
@@ -1896,11 +1896,11 @@ class RadioAppTest {
             }
         }
 
-        composeRule.onNodeWithContentDescription("Safety actions for Troublemaker").performClick()
+        composeRule.onNodeWithText("<Troublemaker> Reportable text", substring = true).performClick()
         composeRule.onNodeWithText("Report content").assertIsDisplayed()
         composeRule.onNodeWithText("Report user").assertIsDisplayed()
         composeRule.onNodeWithText("Block user").assertIsDisplayed().performClick()
-        composeRule.onNodeWithText("Reportable text").assertDoesNotExist()
+        composeRule.onNodeWithText("Reportable text", substring = true).assertDoesNotExist()
     }
 
     @Test

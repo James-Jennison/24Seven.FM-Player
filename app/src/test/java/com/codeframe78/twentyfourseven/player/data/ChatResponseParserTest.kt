@@ -4,6 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import com.codeframe78.twentyfourseven.player.domain.ChatMessagePart
+import com.codeframe78.twentyfourseven.player.domain.ChatRole
 
 class ChatResponseParserTest {
     private val parser = ChatResponseParser()
@@ -33,6 +34,30 @@ class ChatResponseParserTest {
                 ),
             ),
             result.single().parts,
+        )
+    }
+
+    @Test
+    fun `reads the role a nick is coloured by`() {
+        val result = parser.parse(
+            """
+                <div class="msg-row"><span class="nick">Listener: </span><span class="say">one</span></div>
+                <div class="msg-row"><span class="fleetadmiralnick">Owner: </span><span class="say">two</span></div>
+                <div class="msg-row"><span class="admiralnick">Admin: </span><span class="say">three</span></div>
+                <div class="msg-row"><span class="viceadmiralnick">Mod: </span><span class="say">four</span></div>
+                <div class="msg-row"><span class="rearadmiralnick">Envoy: </span><span class="say">five</span></div>
+                <div class="msg-row"><span class="visitormodnick">Guest Mod: </span><span class="say">six</span></div>
+                <div class="msg-row"><span class="composernick">Composer Two: </span><span class="say">seven</span></div>
+            """.trimIndent(),
+            "https://streamingsoundtracks.com/modules/ClearChat/block-files/view.php",
+        )
+
+        assertEquals(
+            listOf(
+                ChatRole.Member, ChatRole.Proprietor, ChatRole.Administrator, ChatRole.Moderator,
+                ChatRole.Ambassador, ChatRole.VisitorMod, ChatRole.Composer,
+            ),
+            result.map { it.authorRole },
         )
     }
 

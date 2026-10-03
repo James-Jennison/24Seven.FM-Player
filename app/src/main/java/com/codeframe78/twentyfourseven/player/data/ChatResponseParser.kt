@@ -2,6 +2,7 @@ package com.codeframe78.twentyfourseven.player.data
 
 import com.codeframe78.twentyfourseven.player.domain.ChatMessage
 import com.codeframe78.twentyfourseven.player.domain.ChatMessagePart
+import com.codeframe78.twentyfourseven.player.domain.ChatRole
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
@@ -41,6 +42,7 @@ internal class ChatResponseParser {
                     ?.removePrefix("Posted ")
                     ?.take(MAX_TIMESTAMP_CHARACTERS),
                 parts = parts,
+                authorRole = authorElement.classNames().firstNotNullOfOrNull(ROLE_CLASSES::get) ?: ChatRole.Member,
             )
         }
 
@@ -100,6 +102,16 @@ internal class ChatResponseParser {
         const val MAX_EMOTICON_ALT_CHARACTERS = 32
         const val EMOTICON_PATH_PREFIX = "/modules/ClearChat/common/smilies/"
         val WHITESPACE = Regex("\\s+")
+
+        /** The stations' shared stylesheet classes for the roles in their legend. */
+        val ROLE_CLASSES = mapOf(
+            "fleetadmiralnick" to ChatRole.Proprietor,
+            "admiralnick" to ChatRole.Administrator,
+            "viceadmiralnick" to ChatRole.Moderator,
+            "rearadmiralnick" to ChatRole.Ambassador,
+            "visitormodnick" to ChatRole.VisitorMod,
+            "composernick" to ChatRole.Composer,
+        )
     }
 }
 
