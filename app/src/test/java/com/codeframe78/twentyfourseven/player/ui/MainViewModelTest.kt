@@ -377,7 +377,7 @@ class MainViewModelTest {
     }
 
     @Test
-    fun `listener activity is refreshed and observed only for verified signed-in station`() = runTest(dispatcher) {
+    fun `listener activity is refreshed only for the signed-in station and observed for the selected one`() = runTest(dispatcher) {
         val auth = FakeAuthRepository().apply {
             emit(AuthState(StationId("sst"), AuthStatus.SignedIn, displayName = "Listener"))
         }
@@ -416,9 +416,12 @@ class MainViewModelTest {
         advanceUntilIdle()
         assertEquals(MembershipTier.Vip, viewModel.uiState.value.listenerActivity?.membershipTier)
 
+        // Every station carries request activity, so the More tab observes the newly selected station too, but a
+        // refresh is only ever sent for a station the listener is signed in to.
         viewModel.selectStation(StationId("afm"))
         advanceUntilIdle()
-        assertEquals(0, listenerActivity.activeObservations)
+        assertEquals(StationId("afm"), listenerActivity.observedStation)
+        assertEquals(1, listenerActivity.activeObservations)
         assertEquals(StationId("afm"), viewModel.uiState.value.listenerActivity?.stationId)
         assertEquals(listOf(StationId("sst")), listenerActivity.refreshedStations)
 

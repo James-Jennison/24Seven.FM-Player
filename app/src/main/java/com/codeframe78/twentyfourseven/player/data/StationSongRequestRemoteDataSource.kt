@@ -134,9 +134,6 @@ internal class StationSongRequestRemoteDataSource(
             "Track is not eligible for requests"
         }
         require(message.length <= MAX_REQUEST_MESSAGE_CHARACTERS) { "Request message is too long" }
-        require(message.isBlank() || stationId == StationId("sst")) {
-            "Request messages have not been verified for this station"
-        }
         val origin = origin(stationId)
         val manager = authenticatedCookieManager(stationId, origin)
         if (manager.cookieStore.cookies.isEmpty()) return@withContext RequestSubmissionResult.AuthenticationRequired
@@ -386,7 +383,7 @@ internal class StationSongRequestRemoteDataSource(
 
     private fun trustedRedirect(stationId: StationId, redirect: URI): URI {
         val expected = URI(origin(stationId))
-        val trustedHosts = REDIRECT_HOSTS[stationId.canonicalized()] ?: setOf(expected.host)
+        val trustedHosts = setOf(expected.host, "www.${expected.host}")
         if (trustedHosts.none { it.equals(redirect.host, ignoreCase = true) }) return redirect
         if (
             (redirect.scheme == "http" && effectivePort(redirect) == 80) ||
@@ -486,9 +483,6 @@ internal class StationSongRequestRemoteDataSource(
             StationId("afm") to "https://adagio.fm/",
             StationId("dfm") to "https://death.fm/",
             StationId("efm") to "https://entranced.fm/",
-        )
-        val REDIRECT_HOSTS = mapOf(
-            StationId("sst") to setOf("streamingsoundtracks.com", "www.streamingsoundtracks.com"),
         )
     }
 

@@ -125,10 +125,12 @@ class BootstrapStationRepositoryTest {
             assertEquals(true, station.capabilities.supportsHistory)
             assertEquals(true, station.capabilities.supportsRequests)
         }
-        assertEquals(
-            listOf("sst"),
-            stations.filter { it.capabilities.supportsRequestMessages }.map { it.id.value },
-        )
+        stations.forEach { station ->
+            assertEquals(true, station.capabilities.supportsRequestMessages)
+            assertEquals(true, station.capabilities.supportsListenerActivity)
+            assertEquals(true, station.capabilities.supportsNowPlayingFavorite)
+            assertEquals(true, station.capabilities.supportsAlbumRating)
+        }
     }
 
     @Test
@@ -152,7 +154,7 @@ class BootstrapStationRepositoryTest {
     }
 
     @Test
-    fun `1980s certification contract does not inherit SST only capabilities`() = runTest {
+    fun `1980s carries the full member capability set`() = runTest {
         val station = repository.observeStations().first().single { it.id == StationId("1980s") }
 
         with(station.capabilities) {
@@ -163,8 +165,10 @@ class BootstrapStationRepositoryTest {
             assertEquals(true, supportsHistory)
             assertEquals(true, supportsRequests)
             assertEquals(true, supportsSecondaryContent)
-            assertEquals(false, supportsRequestMessages)
-            assertEquals(false, supportsListenerActivity)
+            assertEquals(true, supportsRequestMessages)
+            assertEquals(true, supportsListenerActivity)
+            assertEquals(true, supportsNowPlayingFavorite)
+            assertEquals(true, supportsAlbumRating)
         }
         assertEquals("https://1980s.fm/", station.websiteUrl)
         assertEquals(
@@ -178,7 +182,7 @@ class BootstrapStationRepositoryTest {
     }
 
     @Test
-    fun `adagio certification contract does not inherit SST only capabilities`() = runTest {
+    fun `adagio carries the full member capability set`() = runTest {
         val station = repository.observeStations().first().single { it.id == StationId("afm") }
 
         with(station.capabilities) {
@@ -189,8 +193,10 @@ class BootstrapStationRepositoryTest {
             assertEquals(true, supportsHistory)
             assertEquals(true, supportsRequests)
             assertEquals(true, supportsSecondaryContent)
-            assertEquals(false, supportsRequestMessages)
-            assertEquals(false, supportsListenerActivity)
+            assertEquals(true, supportsRequestMessages)
+            assertEquals(true, supportsListenerActivity)
+            assertEquals(true, supportsNowPlayingFavorite)
+            assertEquals(true, supportsAlbumRating)
         }
         assertEquals("https://adagio.fm/", station.websiteUrl)
         assertEquals(
@@ -204,7 +210,7 @@ class BootstrapStationRepositoryTest {
     }
 
     @Test
-    fun `death certification contract uses verified RIP pages without SST only capabilities`() = runTest {
+    fun `death carries the full member capability set`() = runTest {
         val station = repository.observeStations().first().single { it.id == StationId("dfm") }
 
         with(station.capabilities) {
@@ -215,8 +221,10 @@ class BootstrapStationRepositoryTest {
             assertEquals(true, supportsHistory)
             assertEquals(true, supportsRequests)
             assertEquals(true, supportsSecondaryContent)
-            assertEquals(false, supportsRequestMessages)
-            assertEquals(false, supportsListenerActivity)
+            assertEquals(true, supportsRequestMessages)
+            assertEquals(true, supportsListenerActivity)
+            assertEquals(true, supportsNowPlayingFavorite)
+            assertEquals(true, supportsAlbumRating)
         }
         assertEquals("https://death.fm/", station.websiteUrl)
         assertEquals(
@@ -230,7 +238,7 @@ class BootstrapStationRepositoryTest {
     }
 
     @Test
-    fun `entranced certification contract does not inherit SST only capabilities`() = runTest {
+    fun `entranced carries the full member capability set`() = runTest {
         val station = repository.observeStations().first().single { it.id == StationId("efm") }
 
         with(station.capabilities) {
@@ -241,8 +249,10 @@ class BootstrapStationRepositoryTest {
             assertEquals(true, supportsHistory)
             assertEquals(true, supportsRequests)
             assertEquals(true, supportsSecondaryContent)
-            assertEquals(false, supportsRequestMessages)
-            assertEquals(false, supportsListenerActivity)
+            assertEquals(true, supportsRequestMessages)
+            assertEquals(true, supportsListenerActivity)
+            assertEquals(true, supportsNowPlayingFavorite)
+            assertEquals(true, supportsAlbumRating)
         }
         assertEquals("https://entranced.fm/", station.websiteUrl)
         assertEquals(

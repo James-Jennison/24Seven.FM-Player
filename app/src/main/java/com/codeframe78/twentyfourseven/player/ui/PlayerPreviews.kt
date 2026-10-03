@@ -101,7 +101,7 @@ private fun previewStation(id: String, name: String, shortName: String, descript
         supportsAuthentication = true,
         supportsChat = true,
         supportsRequests = true,
-        supportsRequestMessages = id == "sst",
+        supportsRequestMessages = true,
         supportsQueue = true,
         supportsHistory = true,
     ),

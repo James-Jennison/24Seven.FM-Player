@@ -151,8 +151,8 @@ internal class StationListenerActivityRemoteDataSource(
         }
     }
 
-    private fun origin(stationId: StationId): String = VERIFIED_ORIGINS[stationId.canonicalized()]
-        ?: throw IOException("Listener activity is not verified for this station")
+    private fun origin(stationId: StationId): String = ORIGINS[stationId.canonicalized()]
+        ?: throw IOException("Listener activity is not available for this station")
 
     private companion object {
         const val REQUEST_HISTORY_PATH = "/modules.php?name=Your_Requests"
@@ -165,8 +165,12 @@ internal class StationListenerActivityRemoteDataSource(
         const val TIMER_RESPONSE_LIMIT = 64_000
         const val MAX_REDIRECTS = 5
         val REDIRECT_STATUSES = setOf(301, 302, 303, 307, 308)
-        val VERIFIED_ORIGINS = mapOf(
+        val ORIGINS = mapOf(
             StationId("sst") to "https://streamingsoundtracks.com/",
+            StationId("1980s") to "https://1980s.fm/",
+            StationId("afm") to "https://adagio.fm/",
+            StationId("dfm") to "https://death.fm/",
+            StationId("efm") to "https://entranced.fm/",
         )
     }
 }
