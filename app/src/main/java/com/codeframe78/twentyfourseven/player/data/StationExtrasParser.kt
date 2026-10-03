@@ -1,5 +1,6 @@
 package com.codeframe78.twentyfourseven.player.data
 
+import com.codeframe78.twentyfourseven.player.domain.ChatRole
 import com.codeframe78.twentyfourseven.player.domain.MemberProfile
 import com.codeframe78.twentyfourseven.player.domain.PlayedHistoryEntry
 import com.codeframe78.twentyfourseven.player.domain.StationNewsStory
@@ -33,6 +34,12 @@ internal class StationExtrasParser {
             memberNumber = profile.text("id", MAX_LABEL_CHARACTERS)?.takeIf { it.matches(MEMBER_NUMBER) },
             publicFavoritesBadge = badgeEntries.firstOrNull { it.marksPublicFavorites() }
                 ?.let { it.text("label", MAX_LABEL_CHARACTERS) ?: PUBLIC_FAVORITES_LABEL },
+            role = profile.text("nameClass", MAX_LABEL_CHARACTERS)
+                ?.split(' ')?.firstNotNullOfOrNull(NICK_ROLE_CLASSES::get) ?: ChatRole.Member,
+            forumPosts = (profile.opt("posts") as? Number)?.toInt()?.takeIf { it >= 0 },
+            flagUrl = profile.text("flag", MAX_URL_CHARACTERS)
+                ?.takeUnless { it.substringBefore('?').endsWith(".svg", ignoreCase = true) }
+                ?.let { stationUrl(it, origin) },
         )
     }
 
@@ -130,7 +137,9 @@ internal class StationExtrasParser {
             text("image", MAX_URL_CHARACTERS)?.substringBefore('?') in PUBLIC_FAVORITES_IMAGES
 
     private fun JSONObject.text(name: String, maxCharacters: Int): String? =
-        if (isNull(name)) null else optString(name).trim().takeIf { it.isNotEmpty() && it.length <= maxCharacters }
+        // An unset field arrives as `false`, which is not the text "false".
+        if (isNull(name) || opt(name) is Boolean) null
+        else optString(name).trim().takeIf { it.isNotEmpty() && it.length <= maxCharacters }
 
     private companion object {
         const val MAX_NAME_CHARACTERS = 60

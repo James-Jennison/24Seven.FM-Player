@@ -1,5 +1,6 @@
 package com.codeframe78.twentyfourseven.player.data
 
+import com.codeframe78.twentyfourseven.player.domain.ChatRole
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -24,6 +25,21 @@ class StationExtrasParserTest {
         assertEquals(listOf("Public Favorites"), profile.badges)
         assertEquals("4821", profile.memberNumber)
         assertEquals("Public Favorites", profile.publicFavoritesBadge)
+        assertEquals(ChatRole.Member, profile.role)
+        assertEquals(12, profile.forumPosts)
+        assertEquals("https://streamingsoundtracks.com/modules/MS_Analysis/images/flags/us.gif", profile.flagUrl)
+    }
+
+    @Test
+    fun `reads the staff role and treats an unset field as missing`() {
+        val card = StationExtrasFixtures.profileCard()
+            .replace("\"nameClass\":\"\"", "\"nameClass\":\"admiralnick\"")
+            .replace("\"location\":\"Springfield\"", "\"location\":false")
+
+        val profile = parser.parseProfile(card, origin)!!
+
+        assertEquals(ChatRole.Administrator, profile.role)
+        assertNull(profile.location)
     }
 
     @Test

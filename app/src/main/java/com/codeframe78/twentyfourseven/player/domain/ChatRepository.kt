@@ -13,7 +13,15 @@ data class ChatMessage(
 )
 
 /** The station staff roles its chat colours by, as named in the station's own legend. */
-enum class ChatRole { Member, Proprietor, Administrator, Moderator, Ambassador, VisitorMod, Composer }
+enum class ChatRole(val label: String?) {
+    Member(null),
+    Proprietor("Proprietor"),
+    Administrator("Administrator"),
+    Moderator("Moderator"),
+    Ambassador("Ambassador"),
+    VisitorMod("Visitor Mod"),
+    Composer("Composer"),
+}
 
 sealed interface ChatMessagePart {
     data class Text(val value: String) : ChatMessagePart

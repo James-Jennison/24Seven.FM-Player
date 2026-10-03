@@ -20,6 +20,10 @@ data class MemberProfile(
     val memberNumber: String? = null,
     /** The label of the badge a member wears when they have made their favorites list public. */
     val publicFavoritesBadge: String? = null,
+    /** The staff role the station colours this member's name by. */
+    val role: ChatRole = ChatRole.Member,
+    val forumPosts: Int? = null,
+    val flagUrl: String? = null,
 )
 
 enum class MemberProfileStatus { Closed, Loading, Ready, NotFound, Error }

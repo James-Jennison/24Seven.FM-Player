@@ -17,6 +17,19 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Forum
+import androidx.compose.material.icons.filled.Mail
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -129,7 +142,13 @@ internal fun MemberProfileDialog(state: MainUiState, actions: StationExtrasActio
     AlertDialog(
         onDismissRequest = actions.onCloseProfile,
         modifier = Modifier.testTag("member_profile_dialog"),
-        title = { Text(profile?.username ?: card.requestedName, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        title = {
+            if (profile == null) {
+                Text(card.requestedName, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            } else {
+                MemberProfileHeader(profile)
+            }
+        },
         text = {
             when (card.status) {
                 MemberProfileStatus.Loading -> Row(
@@ -160,31 +179,32 @@ internal fun MemberProfileDialog(state: MainUiState, actions: StationExtrasActio
                         onSendMessage(profile.username)
                     },
                     modifier = Modifier.testTag("member_profile_message"),
-                ) { Text("Send message") }
+                ) {
+                    Icon(Icons.Default.Mail, contentDescription = null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Message")
+                }
             }
         },
         dismissButton = { TextButton(onClick = actions.onCloseProfile) { Text("Close") } },
     )
 }
 
+/** Who the card is about: the picture with its online light, the name in its role colour, and the rank. */
 @Composable
-private fun MemberProfileBody(
-    profile: MemberProfile,
-    stationName: String,
-    showsFavorites: Boolean,
-    signedIn: Boolean,
-    onOpenFavorites: () -> Unit,
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+private fun MemberProfileHeader(profile: MemberProfile) {
+    val scheme = MaterialTheme.colorScheme
+    val online = Color(0xFF3DDC84)
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        Box(Modifier.size(72.dp)) {
             Box(
-                Modifier.size(64.dp).clip(CircleShape).background(MaterialTheme.colorScheme.secondaryContainer),
+                Modifier.fillMaxSize().clip(CircleShape).background(scheme.secondaryContainer),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     profile.username.take(1).uppercase(),
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = scheme.onSecondaryContainer,
                 )
                 profile.avatarUrl?.let { avatar ->
                     AsyncImage(
@@ -195,27 +215,96 @@ private fun MemberProfileBody(
                     )
                 }
             }
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                profile.rankTitle?.let { Text(it, fontWeight = FontWeight.SemiBold) }
-                Text(
-                    if (profile.isOnline) "Online now" else "Offline",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = if (profile.isOnline) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+            if (profile.isOnline) {
+                Box(
+                    Modifier
+                        .align(Alignment.BottomEnd)
+                        .size(18.dp)
+                        .clip(CircleShape)
+                        .background(scheme.surfaceContainerHigh)
+                        .padding(3.dp)
+                        .clip(CircleShape)
+                        .background(online),
                 )
             }
         }
-        memberProfileLines(profile, stationName).forEach { line -> Text(line, style = MaterialTheme.typography.bodyMedium) }
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                profile.username,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = chatRoleColor(profile.role, onDark = scheme.surface.luminance() < 0.5f) ?: scheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            profile.rankTitle?.let {
+                Text(it, style = MaterialTheme.typography.bodyMedium, color = scheme.onSurfaceVariant)
+            }
+            Text(
+                if (profile.isOnline) "Online now" else "Offline",
+                style = MaterialTheme.typography.labelMedium,
+                color = if (profile.isOnline) online.takeIf { scheme.surface.luminance() < 0.5f } ?: Color(0xFF1B7F1B)
+                else scheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun MemberProfileBody(
+    profile: MemberProfile,
+    stationName: String,
+    showsFavorites: Boolean,
+    signedIn: Boolean,
+    onOpenFavorites: () -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            profile.membership?.let { ProfileFact(Icons.Default.Star, "$it member", tint = Color(0xFFFFC83D)) }
+            profile.memberSince?.let { ProfileFact(Icons.Default.CalendarMonth, "Joined $stationName $it") }
+            profile.location?.let { ProfileFact(Icons.Default.Place, it, flagUrl = profile.flagUrl) }
+            profile.forumPosts?.takeIf { it > 0 }?.let {
+                ProfileFact(Icons.Default.Forum, if (it == 1) "1 forum post" else "$it forum posts")
+            }
+        }
+        val badges = memberProfileBadges(profile)
+        if (badges.isNotEmpty()) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+                modifier = Modifier.semantics(mergeDescendants = true) {
+                    contentDescription = badges.joinToString(prefix = "Badges: ")
+                },
+            ) {
+                badges.forEach { badge ->
+                    Text(
+                        badge,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50))
+                            .background(MaterialTheme.colorScheme.secondaryContainer)
+                            .padding(horizontal = 10.dp, vertical = 5.dp)
+                            .clearAndSetSemantics {},
+                    )
+                }
+            }
+        }
         profile.publicFavoritesBadge?.let { badge ->
             // The badge opens the list it stands for. The stations show that list to signed-in members only.
-            AssistChip(
+            FilledTonalButton(
                 onClick = onOpenFavorites,
                 enabled = showsFavorites && signedIn,
-                label = { Text(badge) },
-                leadingIcon = { Icon(Icons.Default.Favorite, contentDescription = null, Modifier.size(18.dp)) },
                 modifier = Modifier
+                    .fillMaxWidth()
                     .testTag("member_profile_favorites")
                     .semantics { contentDescription = "$badge, view ${profile.username}'s favorites" },
-            )
+            ) {
+                Icon(Icons.Default.Favorite, contentDescription = null, Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("View favorites")
+            }
             if (showsFavorites && !signedIn) {
                 Text(
                     "Sign in to $stationName to see ${profile.username}'s favorites.",
@@ -223,6 +312,17 @@ private fun MemberProfileBody(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun ProfileFact(icon: ImageVector, text: String, tint: Color? = null, flagUrl: String? = null) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Icon(icon, contentDescription = null, Modifier.size(20.dp), tint = tint ?: MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f, fill = false))
+        flagUrl?.let {
+            AsyncImage(model = it, contentDescription = null, modifier = Modifier.height(12.dp))
         }
     }
 }
@@ -331,17 +431,9 @@ internal fun MemberFavoritesDialog(
     }
 }
 
-/**
- * The plain facts of a profile card, one per line, leaving out whatever the station did not supply. The public
- * favorites badge is left out because the card shows it as a button of its own.
- */
-internal fun memberProfileLines(profile: MemberProfile, stationName: String): List<String> = listOfNotNull(
-    profile.memberSince?.let { "$stationName member since $it" },
-    profile.location?.let { "Location: $it" },
-    profile.membership?.let { "Membership: $it" },
-    (profile.badges - listOfNotNull(profile.publicFavoritesBadge).toSet())
-        .takeIf(List<String>::isNotEmpty)?.joinToString(prefix = "Badges: "),
-)
+/** The badges a card shows as pills. The public favorites badge is left out because the card shows it as a button. */
+internal fun memberProfileBadges(profile: MemberProfile): List<String> =
+    profile.badges - listOfNotNull(profile.publicFavoritesBadge).toSet()
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

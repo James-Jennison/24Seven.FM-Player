@@ -44,27 +44,16 @@ class StationExtrasUiTest {
     }
 
     @Test
-    fun `profile lines leave out what the station did not supply`() {
-        val full = MemberProfile("Listener", "Apr 20, 2002", "Springfield", "Captain", "VIP", true, null, listOf("Public Favorites", "Donor"))
-        val bare = MemberProfile("Listener", null, null, null, null, false, null, emptyList())
-
-        assertEquals(
-            listOf("SST member since Apr 20, 2002", "Location: Springfield", "Membership: VIP", "Badges: Public Favorites, Donor"),
-            memberProfileLines(full, "SST"),
-        )
-        assertEquals(emptyList<String>(), memberProfileLines(bare, "SST"))
-    }
-
-    @Test
-    fun `the public favorites badge is left out of the badge line because the card shows it as a button`() {
+    fun `the public favorites badge is left out of the badge pills because the card shows it as a button`() {
         val member = MemberProfile(
             "Listener", null, null, null, null, false, null, listOf("Public Favorites", "Donor"),
             memberNumber = "4821",
             publicFavoritesBadge = "Public Favorites",
         )
 
-        assertEquals(listOf("Badges: Donor"), memberProfileLines(member, "SST"))
-        assertEquals(emptyList<String>(), memberProfileLines(member.copy(badges = listOf("Public Favorites")), "SST"))
+        assertEquals(listOf("Donor"), memberProfileBadges(member))
+        assertEquals(emptyList<String>(), memberProfileBadges(member.copy(badges = listOf("Public Favorites"))))
+        assertEquals(listOf("Public Favorites", "Donor"), memberProfileBadges(member.copy(publicFavoritesBadge = null)))
     }
 
     @Test

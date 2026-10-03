@@ -42,7 +42,7 @@ internal class ChatResponseParser {
                     ?.removePrefix("Posted ")
                     ?.take(MAX_TIMESTAMP_CHARACTERS),
                 parts = parts,
-                authorRole = authorElement.classNames().firstNotNullOfOrNull(ROLE_CLASSES::get) ?: ChatRole.Member,
+                authorRole = authorElement.classNames().firstNotNullOfOrNull(NICK_ROLE_CLASSES::get) ?: ChatRole.Member,
             )
         }
 
@@ -102,16 +102,6 @@ internal class ChatResponseParser {
         const val MAX_EMOTICON_ALT_CHARACTERS = 32
         const val EMOTICON_PATH_PREFIX = "/modules/ClearChat/common/smilies/"
         val WHITESPACE = Regex("\\s+")
-
-        /** The stations' shared stylesheet classes for the roles in their legend. */
-        val ROLE_CLASSES = mapOf(
-            "fleetadmiralnick" to ChatRole.Proprietor,
-            "admiralnick" to ChatRole.Administrator,
-            "viceadmiralnick" to ChatRole.Moderator,
-            "rearadmiralnick" to ChatRole.Ambassador,
-            "visitormodnick" to ChatRole.VisitorMod,
-            "composernick" to ChatRole.Composer,
-        )
     }
 }
 
@@ -137,3 +127,13 @@ private fun String.decodeChatNumericEntities(): String = replace(NUMERIC_ENTITY)
 private val SUBMITTED_WHITESPACE = Regex("\\s+")
 private val NUMERIC_ENTITY = Regex("&#(x([0-9A-Fa-f]{1,6})|([0-9]{1,7}));", RegexOption.IGNORE_CASE)
 private val PHPBB_EMOTICON_CODE = Regex("(?<![A-Za-z0-9])-([A-Za-z][A-Za-z0-9_]*)-(?![A-Za-z0-9])")
+
+/** The stations' shared stylesheet classes for the roles in their legend. */
+internal val NICK_ROLE_CLASSES = mapOf(
+    "fleetadmiralnick" to ChatRole.Proprietor,
+    "admiralnick" to ChatRole.Administrator,
+    "viceadmiralnick" to ChatRole.Moderator,
+    "rearadmiralnick" to ChatRole.Ambassador,
+    "visitormodnick" to ChatRole.VisitorMod,
+    "composernick" to ChatRole.Composer,
+)
