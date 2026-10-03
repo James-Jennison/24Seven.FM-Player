@@ -1,64 +1,67 @@
 package com.codeframe78.twentyfourseven.player.ui
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.codeframe78.twentyfourseven.player.domain.Station
+import com.codeframe78.twentyfourseven.player.domain.StationId
+import com.codeframe78.twentyfourseven.player.ui.theme.stationPalette
+import com.codeframe78.twentyfourseven.player.ui.theme.themedAccent
 
-private data class AppGuideStep(
-    val title: String,
-    val body: String,
-)
-
+/**
+ * The first-run screen, and the guide reopened from More: one sheet that names the five stations and lets the
+ * listener pick where to start. There are no steps to page through; everything else is discovered in use.
+ */
 @Composable
 internal fun AppGuideDialog(
+    stations: List<Station>,
+    selectedStationId: StationId?,
+    onSelectStation: (StationId) -> Unit,
     onDismiss: () -> Unit,
     onComplete: () -> Unit,
 ) {
-    val steps = listOf(
-        AppGuideStep(
-            "Pick a station and press Play",
-            "Start with any station card, then use Play to listen. The Player stays useful without a tutorial, and this quick tour is always optional.",
-        ),
-        AppGuideStep(
-            "Everything adapts to the station",
-            "Use the station selector or previous/next controls to switch. Queue, requests, and community options only appear when the selected station supports them.",
-        ),
-        AppGuideStep(
-            "Explore when you want",
-            "24Seven.FM brings the network together in one Player. Browse Player, Favorites, Chat, Queue, and More; each screen only shows network features that are supported. You can reopen this guide later from More whenever you need it.",
-        ),
-    )
-    var stepIndex by rememberSaveable { mutableIntStateOf(0) }
-    val step = steps[stepIndex]
-
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false),
@@ -67,7 +70,7 @@ internal fun AppGuideDialog(
             Modifier
                 .fillMaxSize()
                 // Dialog already applies a platform dim behind this window. Keep the in-app
-                // scrim subtle so the Player remains readable through the coach overlay.
+                // scrim subtle so the Player remains readable through the sheet.
                 .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.12f))
                 .padding(20.dp)
                 .testTag("app_guide"),
@@ -86,27 +89,15 @@ internal fun AppGuideDialog(
                     Modifier
                         .verticalScroll(rememberScrollState())
                         .padding(horizontal = 24.dp, vertical = 20.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            "Quick tour",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                        Text(
-                            "Step ${stepIndex + 1} of ${steps.size}",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.testTag("app_guide_progress"),
-                        )
-                    }
                     Text(
-                        step.title,
+                        "Welcome to 24Seven.FM",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                    Text(
+                        "Pick a station",
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
@@ -114,10 +105,21 @@ internal fun AppGuideDialog(
                             .semantics { heading() },
                     )
                     Text(
-                        step.body,
+                        "Five live stations, one player. Press Play on the station you choose; Queue, requests and " +
+                            "Chat appear when that station offers them, and you can change station any time from " +
+                            "the cards under the artwork or by swiping it.",
                         style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.testTag("app_guide_body"),
                     )
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        stations.forEach { station ->
+                            GuideStationRow(
+                                station = station,
+                                selected = station.id == selectedStationId,
+                                onClick = { onSelectStation(station.id) },
+                            )
+                        }
+                    }
                     Row(
                         Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -127,27 +129,70 @@ internal fun AppGuideDialog(
                             onClick = onDismiss,
                             modifier = Modifier.testTag("app_guide_skip"),
                         ) { Text("Skip") }
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            if (stepIndex > 0) {
-                                TextButton(
-                                    onClick = { stepIndex -= 1 },
-                                    modifier = Modifier.testTag("app_guide_back"),
-                                ) { Text("Back") }
-                            }
-                            if (stepIndex < steps.lastIndex) {
-                                Button(
-                                    onClick = { stepIndex += 1 },
-                                    modifier = Modifier.testTag("app_guide_next"),
-                                ) { Text("Next") }
-                            } else {
-                                Button(
-                                    onClick = onComplete,
-                                    modifier = Modifier.testTag("app_guide_complete"),
-                                ) { Text("Start listening") }
-                            }
-                        }
+                        Button(
+                            onClick = onComplete,
+                            modifier = Modifier.testTag("app_guide_complete"),
+                        ) { Text("Start listening") }
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GuideStationRow(station: Station, selected: Boolean, onClick: () -> Unit) {
+    val palette = stationPalette(station.id)
+    Card(
+        onClick = onClick,
+        colors = CardDefaults.cardColors(
+            containerColor = if (selected) palette.glow else MaterialTheme.colorScheme.surfaceContainer,
+        ),
+        border = BorderStroke(
+            if (selected) 2.dp else 1.dp,
+            if (selected) palette.accent else MaterialTheme.colorScheme.outlineVariant,
+        ),
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 64.dp)
+            .semantics {
+                this.selected = selected
+                role = Role.RadioButton
+                contentDescription = if (selected) "${station.name}, selected" else station.name
+            }
+            .testTag("app_guide_station_${station.id.value}"),
+    ) {
+        Row(
+            Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Image(
+                painter = painterResource(stationSelectorLogoResource(station.id)),
+                contentDescription = null,
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.size(44.dp).clip(RoundedCornerShape(10.dp)),
+            )
+            Spacer(Modifier.width(14.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    station.name,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = if (selected) palette.accent else MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    softWrap = false,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    station.description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (selected) palette.accent.copy(alpha = 0.9f) else MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            if (selected) {
+                Icon(Icons.Default.Check, contentDescription = null, tint = palette.themedAccent())
             }
         }
     }

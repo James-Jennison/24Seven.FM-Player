@@ -13,6 +13,23 @@ import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
 import com.codeframe78.twentyfourseven.player.ui.theme.onAccent
 import com.codeframe78.twentyfourseven.player.ui.theme.themedAccent
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import coil3.compose.LocalPlatformContext
+import coil3.request.ImageRequest
+import coil3.request.crossfade
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.text.KeyboardOptions
@@ -792,17 +809,15 @@ private fun NowPlayingArtwork(
             )
             .padding(ArtworkFramePadding),
     ) {
-        AsyncImage(
-            model = artworkUrl,
+        ArtworkImage(
+            url = artworkUrl,
+            fallback = painterResource(R.drawable.app_logo),
             contentDescription = if (hasAlbumArtwork) {
                 "Album artwork"
             } else {
                 "Selected station artwork"
             },
             contentScale = if (hasAlbumArtwork) ContentScale.Crop else ContentScale.Fit,
-            fallback = painterResource(R.drawable.app_logo),
-            error = painterResource(R.drawable.app_logo),
-            placeholder = painterResource(R.drawable.app_logo),
             modifier = Modifier
                 .fillMaxSize()
                 .clip(RoundedCornerShape(22.dp))
@@ -832,8 +847,14 @@ private fun Modifier.switchesStationOnSwipe(
     onSelectStation: (StationId) -> Unit,
 ): Modifier {
     val threshold = with(LocalDensity.current) { StationSwipeThreshold.toPx() }
+    val haptics = LocalHapticFeedback.current
     var dragged by remember { mutableFloatStateOf(0f) }
-    fun turn(offset: Int) { adjacentStationId(stations, selectedId, offset)?.let(onSelectStation) }
+    fun turn(offset: Int) {
+        adjacentStationId(stations, selectedId, offset)?.let {
+            haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
+            onSelectStation(it)
+        }
+    }
     return this
         .draggable(
             orientation = Orientation.Horizontal,
@@ -855,6 +876,11 @@ private fun Modifier.switchesStationOnSwipe(
             )
         }
 }
+
+/** A list cover that fades in when it arrives instead of popping. */
+@Composable
+internal fun crossfadingImage(url: String?): ImageRequest =
+    ImageRequest.Builder(LocalPlatformContext.current).data(url).crossfade(ARTWORK_CROSSFADE_MILLIS).build()
 
 /** Uses a station's verified identity when no track artwork has arrived yet. */
 internal fun preferredPlayerArtworkUrl(
@@ -886,16 +912,25 @@ private fun NowPlayingDetails(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-        // Until a track is known the station's own tagline fills the title's place.
-        Text(
-            if (hasTrack) metadata.title else stationTagline(state.selectedStation),
-            style = if (hasTrack) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            textAlign = textAlign,
-            maxLines = 3,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.testTag("now_playing_title"),
-        )
+        // Until a track is known the station's own tagline fills the title's place. A new title rises into place.
+        AnimatedContent(
+            targetState = if (hasTrack) metadata.title else stationTagline(state.selectedStation),
+            transitionSpec = {
+                (fadeIn(tween(260)) + slideInVertically(tween(260)) { it / 3 })
+                    .togetherWith(fadeOut(tween(140)))
+            },
+            label = "now_playing_title",
+        ) { title ->
+            Text(
+                title,
+                style = if (hasTrack) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                textAlign = textAlign,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.fillMaxWidth().testTag("now_playing_title"),
+            )
+        }
         metadata.artist?.let { artist ->
             Text(
                 artist,
@@ -987,6 +1022,10 @@ private fun PrimaryPlayerControls(
     val palette = stationPalette(state.selectedStation?.id)
     val supportingControlSize = if (isCompact) 48.dp else 56.dp
     val primaryControlSize = if (isCompact) 80.dp else 92.dp
+    val haptics = LocalHapticFeedback.current
+    val pressInteraction = remember { MutableInteractionSource() }
+    val pressed by pressInteraction.collectIsPressedAsState()
+    val pressScale by animateFloatAsState(if (pressed) 0.92f else 1f, label = "play_press")
     Row(
         Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Center,
@@ -996,23 +1035,38 @@ private fun PrimaryPlayerControls(
         Spacer(Modifier.width(24.dp))
         val playbackDescription = if (isActive) "Stop radio" else "Play live radio"
         FilledIconButton(
-            onClick = if (isActive) onStop else onPlay,
+            onClick = {
+                haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+                if (isActive) onStop() else onPlay()
+            },
             enabled = state.selectedStation?.streams?.isNotEmpty() == true,
             colors = IconButtonDefaults.filledIconButtonColors(
                 containerColor = palette.themedAccent(),
                 contentColor = palette.onAccent(),
             ),
+            interactionSource = pressInteraction,
             modifier = Modifier
                 .size(primaryControlSize)
+                .scale(pressScale)
                 .semantics { contentDescription = playbackDescription }
                 .testTag("primary_play_pause"),
             shape = CircleShape,
         ) {
-            Icon(
-                if (isActive) Icons.Default.Stop else Icons.Default.PlayArrow,
-                contentDescription = null,
-                modifier = Modifier.size(if (isCompact) 40.dp else 46.dp),
-            )
+            // The glyph turns over from Play to Stop rather than swapping.
+            AnimatedContent(
+                targetState = isActive,
+                transitionSpec = {
+                    (fadeIn(tween(180)) + scaleIn(tween(180), initialScale = 0.6f))
+                        .togetherWith(fadeOut(tween(120)) + scaleOut(tween(120), targetScale = 0.6f))
+                },
+                label = "play_glyph",
+            ) { active ->
+                Icon(
+                    if (active) Icons.Default.Stop else Icons.Default.PlayArrow,
+                    contentDescription = null,
+                    modifier = Modifier.size(if (isCompact) 40.dp else 46.dp),
+                )
+            }
         }
         Spacer(Modifier.width(24.dp))
         PlaybackAudioOutputControl(state, audioOutputActions, supportingControlSize)
@@ -1277,13 +1331,11 @@ internal fun PersistentMiniPlayer(
                 .padding(horizontal = 14.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            AsyncImage(
-                model = artworkUrl,
+            ArtworkImage(
+                url = artworkUrl,
+                fallback = painterResource(R.drawable.app_logo),
                 contentDescription = if (hasAlbumArtwork) "Now playing album artwork" else "Selected station artwork",
                 contentScale = if (hasAlbumArtwork) ContentScale.Crop else ContentScale.Fit,
-                fallback = painterResource(R.drawable.app_logo),
-                error = painterResource(R.drawable.app_logo),
-                placeholder = painterResource(R.drawable.app_logo),
                 modifier = Modifier.size(52.dp).clip(RoundedCornerShape(12.dp)),
             )
             Spacer(Modifier.width(12.dp))

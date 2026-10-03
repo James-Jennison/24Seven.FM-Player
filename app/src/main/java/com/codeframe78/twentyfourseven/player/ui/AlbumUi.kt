@@ -96,7 +96,7 @@ internal fun AlbumDialog(state: MainUiState, actions: AlbumActions) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     album.artworkUrl?.let { artwork ->
                         AsyncImage(
-                            model = artwork,
+                            model = crossfadingImage(artwork),
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.size(72.dp).clip(RoundedCornerShape(10.dp)),

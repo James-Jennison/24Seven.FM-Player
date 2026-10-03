@@ -36,6 +36,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
@@ -197,12 +199,16 @@ internal fun TrackActionButtons(
         )
     }
     val progressColor = if (onArtwork) Color.White else MaterialTheme.colorScheme.onSecondaryContainer
+    val haptics = LocalHapticFeedback.current
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         if (station.capabilities.supportsNowPlayingFavorite) {
             val isFavorite = favorite?.status in setOf(FavoriteActionStatus.Added, FavoriteActionStatus.AlreadyFavorite)
             val isWorking = favorite?.status == FavoriteActionStatus.Working
             FilledIconButton(
-                onClick = actions.onAddFavorite,
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.ToggleOn)
+                    actions.onAddFavorite()
+                },
                 enabled = !isWorking && !isFavorite,
                 colors = colors,
                 modifier = Modifier

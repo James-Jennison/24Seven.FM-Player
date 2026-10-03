@@ -468,7 +468,7 @@ private fun PlayedHistoryRow(entry: PlayedHistoryEntry) {
             Spacer(Modifier.width(12.dp))
             entry.artworkUrl?.let { artwork ->
                 AsyncImage(
-                    model = artwork,
+                    model = crossfadingImage(artwork),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.size(48.dp).clip(RoundedCornerShape(6.dp)),
@@ -626,7 +626,7 @@ private fun StationNewsCard(story: StationNewsStory) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     story.coverUrls.forEach { cover ->
                         AsyncImage(
-                            model = cover,
+                            model = crossfadingImage(cover),
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier

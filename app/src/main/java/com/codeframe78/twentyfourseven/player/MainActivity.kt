@@ -302,6 +302,9 @@ class MainActivity : AppCompatActivity() {
                 if (showAppGuide) {
                     val automatic = appGuideState.shouldShowAutomatically && !manualGuideOpen
                     AppGuideDialog(
+                        stations = state.stations,
+                        selectedStationId = state.selectedStation?.id,
+                        onSelectStation = viewModel::selectStation,
                         onDismiss = {
                             if (automatic) {
                                 lifecycleScope.launch { container.appGuideRepository.markCurrentVersionComplete() }

@@ -120,10 +120,12 @@ internal fun FavoriteTracksScreen(
 
             when (favorites?.status ?: FavoriteTracksLoadStatus.Idle) {
                 FavoriteTracksLoadStatus.Idle, FavoriteTracksLoadStatus.Loading -> item {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        CircularProgressIndicator(Modifier.size(28.dp))
-                        Text("Loading your favorite tracks…")
-                    }
+                    SkeletonList(
+                        rows = 6,
+                        showsArtwork = false,
+                        contentPadding = PaddingValues(vertical = 4.dp),
+                        description = "Loading your favorite tracks",
+                    )
                 }
                 FavoriteTracksLoadStatus.Error -> item {
                     Card(Modifier.fillMaxWidth()) {

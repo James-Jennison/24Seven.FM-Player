@@ -675,12 +675,12 @@ private fun ChatScreen(
             icon = Icons.AutoMirrored.Filled.Chat,
             padding = padding,
         )
-        chat.status == ChatLoadStatus.Loading -> Box(
+        chat.status == ChatLoadStatus.Loading -> SkeletonList(
             Modifier.fillMaxSize().padding(padding),
-            contentAlignment = Alignment.Center,
-        ) {
-            CircularProgressIndicator()
-        }
+            rows = 8,
+            showsArtwork = false,
+            description = "Loading chat",
+        )
         chat.status == ChatLoadStatus.Error -> Column(
             Modifier.fillMaxSize().padding(padding).padding(32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -1226,12 +1226,11 @@ private fun QueueScreen(
                 icon = Icons.AutoMirrored.Filled.QueueMusic,
                 padding = padding,
             )
-        queue.status == QueueLoadStatus.Loading -> Box(
+        queue.status == QueueLoadStatus.Loading -> SkeletonList(
             Modifier.fillMaxSize().padding(padding),
-            contentAlignment = Alignment.Center,
-        ) {
-            CircularProgressIndicator()
-        }
+            rows = 7,
+            description = "Loading queue",
+        )
         queue.status == QueueLoadStatus.Error -> Column(
             Modifier.fillMaxSize().padding(padding).padding(32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -1433,7 +1432,7 @@ private fun TrackCard(
             }
             artworkUrl?.let {
                 AsyncImage(
-                    model = it,
+                    model = crossfadingImage(it),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.size(56.dp).clip(RoundedCornerShape(6.dp)),
@@ -2105,7 +2104,11 @@ private fun SecondaryContentSection(
             val opensEmail = page.kind == StationPageKind.Contact
             MoreRow(
                 title = page.title,
-                summary = if (opensEmail) "${page.description} Opens a reviewed draft in your email app." else page.description,
+                summary = if (opensEmail) {
+                    "${page.description.trimEnd().trimEnd('.')}. Opens a reviewed draft in your email app."
+                } else {
+                    page.description
+                },
                 icon = if (opensEmail) Icons.Default.Email else Icons.AutoMirrored.Filled.OpenInNew,
                 modifier = Modifier
                     .testTag("secondary_content_${page.kind.name.lowercase()}")
