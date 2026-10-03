@@ -348,7 +348,11 @@ internal fun FavoriteTrackCard(
                     RequestStatusIndicator(track.availability, compact = true)
                 }
                 track.availability.detail?.let {
-                    Text(it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        availabilityDetailLabel(it),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
             if (available) {

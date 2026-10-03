@@ -53,6 +53,14 @@ class StationExtrasUiTest {
 
         assertEquals(listOf("Donor"), memberProfileBadges(member))
         assertEquals("example.org", websiteLabel("http://www.example.org/listener"))
+        assertEquals("1:14", shortDuration("01:14"))
+        assertEquals("12:05", shortDuration("12:05"))
+        assertEquals("0:36", shortDuration("0:36"))
+        assertEquals(
+            "Last played: Sep 20 · 1:56 AM\nRequest cooldown ends: Oct 5 · 1:56 AM",
+            availabilityDetailLabel("Last played: 2026-09-20 01:56:25; Request cooldown ends: 2026-10-05 01:56:25", 2026),
+        )
+        assertEquals("Requestable Again: 12 days", availabilityDetailLabel("Requestable Again: 12 days", 2026))
         assertEquals(emptyList<String>(), memberProfileBadges(member.copy(badges = listOf("Public Favorites"))))
         assertEquals(listOf("Public Favorites", "Donor"), memberProfileBadges(member.copy(publicFavoritesBadge = null)))
     }

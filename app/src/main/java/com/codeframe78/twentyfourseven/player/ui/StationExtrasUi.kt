@@ -494,6 +494,10 @@ internal fun MemberFavoritesDialog(
     }
 }
 
+/** The archive pads a track length to "01:14"; the queue beside it writes "1:14". */
+internal fun shortDuration(length: String): String =
+    length.trim().let { if (it.length > 4 && it.startsWith('0') && it[1].isDigit()) it.drop(1) else it }
+
 /** A website as its chip names it: the host without "www.", so the listener sees where the link leads. */
 internal fun websiteLabel(url: String): String =
     runCatching { java.net.URI(url).host }.getOrNull()?.removePrefix("www.")?.takeIf(String::isNotBlank) ?: "Website"
@@ -676,7 +680,11 @@ private fun PlayedHistoryRow(entry: PlayedHistoryEntry) {
             }
             entry.lengthLabel?.let { length ->
                 Spacer(Modifier.width(12.dp))
-                Text(length, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    shortDuration(length),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
     }

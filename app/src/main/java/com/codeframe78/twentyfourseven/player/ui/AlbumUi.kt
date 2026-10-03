@@ -187,23 +187,23 @@ internal fun RequestableTrackRow(track: RequestableTrack, canRequest: Boolean, o
         Modifier.fillMaxWidth().padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(Modifier.weight(1f)) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(track.title, fontWeight = FontWeight.Medium)
-            Text(
-                listOfNotNull(track.artist, track.duration).joinToString(" • "),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            RequestStatusIndicator(
-                availability = track.availability,
-                modifier = Modifier.padding(top = 4.dp),
-                compact = true,
-                showsLabel = !track.availability.canRequest,
-            )
+            val facts = listOfNotNull(track.artist, track.duration).joinToString(" • ")
+            if (track.availability.canRequest) {
+                // The button already says a track can be requested, so the light alone marks it.
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    RequestStatusIndicator(track.availability, compact = true, showsLabel = false)
+                    Text(facts, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            } else {
+                Text(facts, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                RequestStatusIndicator(track.availability, compact = true)
+            }
             track.availability.detail?.let { detail ->
                 Text(
-                    detail,
-                    style = MaterialTheme.typography.bodySmall,
+                    availabilityDetailLabel(detail),
+                    style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -216,3 +216,14 @@ internal fun RequestableTrackRow(track: RequestableTrack, canRequest: Boolean, o
         }
     }
 }
+
+/**
+ * A station's availability note with its clock times made readable and one fact per line:
+ * "Last played: 2026-09-20 01:56:25; Request cooldown ends: 2026-10-05 01:56:25" becomes
+ * "Last played: Sep 20 · 1:56 AM" over "Request cooldown ends: Oct 5 · 1:56 AM".
+ */
+internal fun availabilityDetailLabel(detail: String, currentYear: Int = java.time.Year.now().value): String =
+    detail.replace(AVAILABILITY_TIMESTAMP) { requestTimeLabel(it.value, currentYear) }
+        .split(';').map(String::trim).filter(String::isNotEmpty).joinToString("\n")
+
+private val AVAILABILITY_TIMESTAMP = Regex("""\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}""")

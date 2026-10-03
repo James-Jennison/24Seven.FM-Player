@@ -1666,7 +1666,7 @@ class RadioAppTest {
         composeRule.onNodeWithTag("request_status_green").assertIsDisplayed()
         favoritesList.performScrollToNode(hasContentDescription(unavailableDescription))
         composeRule.onNodeWithContentDescription(unavailableDescription).assertIsDisplayed()
-        composeRule.onNodeWithText("Last played today; requestable again tomorrow.")
+        composeRule.onNodeWithText("Last played today\nrequestable again tomorrow.")
             .performScrollTo()
             .assertIsDisplayed()
         favoritesList.performScrollToNode(hasContentDescription(queuedDescription))
