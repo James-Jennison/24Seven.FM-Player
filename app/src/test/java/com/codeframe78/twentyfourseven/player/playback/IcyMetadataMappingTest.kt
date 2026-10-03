@@ -85,7 +85,7 @@ class IcyMetadataMappingTest {
 
         val fromStream = stationMetadata.withNowPlayingTitle("Composer One - Final Confrontation")
         assertEquals("Final Confrontation", fromStream.title)
-        assertEquals("Composer One", fromStream.artist)
+        assertEquals("Composer One · StreamingSoundtracks.com", fromStream.artist)
         assertEquals("StreamingSoundtracks.com", fromStream.albumTitle)
 
         val withDetails = fromStream.withNowPlayingTitle(
@@ -99,7 +99,7 @@ class IcyMetadataMappingTest {
         // The album line no longer names the station, so the next track must not mistake it for one.
         val next = withDetails.withNowPlayingTitle("Composer Two - Opening")
         assertEquals("Opening", next.title)
-        assertEquals("Composer Two", next.artist)
+        assertEquals("Composer Two · StreamingSoundtracks.com", next.artist)
         assertEquals("StreamingSoundtracks.com", next.albumTitle)
         assertEquals("StreamingSoundtracks.com", next.station)
     }

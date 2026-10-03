@@ -130,9 +130,14 @@ class RadioPlaybackService : MediaLibraryService() {
             val access = MediaSessionControllerPolicy.access(controller, packageName)
             val base = super.onConnect(session, controller)
             if (!base.isAccepted) return base
+            val playerCommands = MediaSessionControllerPolicy.playerCommands(base.availablePlayerCommands, access)
             return MediaSession.ConnectionResult.accept(
                 MediaSessionControllerPolicy.sessionCommands(base.availableSessionCommands, access),
-                MediaSessionControllerPolicy.playerCommands(base.availablePlayerCommands, access),
+                if (session.isMediaNotificationController(controller)) {
+                    MediaSessionControllerPolicy.withoutPublishedQueue(playerCommands)
+                } else {
+                    playerCommands
+                },
             )
         }
 
@@ -478,7 +483,13 @@ internal fun MediaMetadata.withNowPlayingTitle(
         ?.substring(separator + ICY_ARTIST_SEPARATOR.length)?.trim()?.takeIf(String::isNotEmpty)
     return buildUpon()
         .setTitle(track?.takeIf(String::isNotBlank) ?: streamTitle ?: displayTitle)
-        .setArtist(artist?.takeIf(String::isNotBlank) ?: streamArtist?.takeIf { streamTitle != null } ?: stationName)
+        .setArtist(
+            // A car display has two lines, so the second names the artist and then the station.
+            listOfNotNull(
+                artist?.takeIf(String::isNotBlank) ?: streamArtist?.takeIf { streamTitle != null },
+                stationName,
+            ).distinct().joinToString(" · "),
+        )
         .setAlbumTitle(album?.takeIf(String::isNotBlank) ?: stationName)
         .setStation(stationName)
         .setSubtitle(stationName)
