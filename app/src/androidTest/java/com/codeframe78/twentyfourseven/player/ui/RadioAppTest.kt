@@ -1342,7 +1342,7 @@ class RadioAppTest {
             substring = true,
         ).performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText(
-            "The current Player does not link to station websites",
+            "The current Player does not link to VIP/RIP purchase or activation",
             substring = true,
         ).performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Open project privacy questions").assertDoesNotExist()

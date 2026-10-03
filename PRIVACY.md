@@ -1,6 +1,6 @@
 # Privacy notice for 24Seven.FM Player
 
-Last updated: October 2, 2026.
+Last updated: October 3, 2026.
 
 24Seven.FM Player is an unofficial, non-commercial native Android client for the five public 24Seven.FM radio stations. It is not affiliated with or endorsed by 24Seven.FM or its stations.
 
