@@ -25,6 +25,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.material.icons.automirrored.filled.Reply
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Mail
@@ -373,35 +380,73 @@ private fun PrivateMessageDialog(
 ) {
     if (messages.openStatus == PrivateMessageOpenStatus.Closed || messages.compose != null) return
     val message = messages.openMessage
-    AlertDialog(
-        onDismissRequest = actions.onClose,
-        modifier = Modifier.testTag("private_message_dialog"),
-        title = { Text(message?.subject ?: "Private message", maxLines = 3, overflow = TextOverflow.Ellipsis) },
-        text = {
-            when {
-                messages.openStatus == PrivateMessageOpenStatus.Loading -> Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    CircularProgressIndicator(Modifier.size(24.dp))
-                    Text("Loading message…")
+    Dialog(onDismissRequest = actions.onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Surface(Modifier.fillMaxSize().testTag("private_message_dialog")) {
+            Column(Modifier.fillMaxSize()) {
+                MessageTopBar(title = messages.folder.label, closeLabel = "Close message", onClose = actions.onClose)
+                when {
+                    messages.openStatus == PrivateMessageOpenStatus.Loading -> Box(
+                        Modifier.weight(1f).fillMaxWidth(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            CircularProgressIndicator(Modifier.size(24.dp))
+                            Text("Loading message…")
+                        }
+                    }
+                    message == null -> Box(Modifier.weight(1f).fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
+                        Text("This message could not be loaded right now.", color = MaterialTheme.colorScheme.error)
+                    }
+                    else -> {
+                        PrivateMessageBody(state, station, message, actions, communityActions, Modifier.weight(1f))
+                        if (message.canReply && station.capabilities.supportsPrivateMessageSending) {
+                            HorizontalDivider()
+                            Button(
+                                onClick = actions.onReply,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 20.dp, vertical = 12.dp)
+                                    .testTag("private_message_reply"),
+                            ) {
+                                Icon(Icons.AutoMirrored.Filled.Reply, contentDescription = null, Modifier.size(18.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text("Reply")
+                            }
+                        }
+                    }
                 }
-                message == null -> Text(
-                    "This message could not be loaded right now.",
-                    color = MaterialTheme.colorScheme.error,
-                )
-                else -> PrivateMessageBody(state, station, message, actions, communityActions)
             }
-        },
-        confirmButton = {
-            if (message?.canReply == true && station.capabilities.supportsPrivateMessageSending) {
-                Button(onClick = actions.onReply, modifier = Modifier.testTag("private_message_reply")) {
-                    Text("Reply")
-                }
-            }
-        },
-        dismissButton = { TextButton(onClick = actions.onClose) { Text("Close") } },
-    )
+        }
+    }
+}
+
+/** The bar a full-screen message view opens with: a close button and what the view is. */
+@Composable
+private fun MessageTopBar(title: String, closeLabel: String, onClose: () -> Unit, enabled: Boolean = true) {
+    Row(
+        Modifier.fillMaxWidth().padding(start = 4.dp, end = 16.dp, top = 4.dp, bottom = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        IconButton(onClick = onClose, enabled = enabled) { Icon(Icons.Default.Close, contentDescription = closeLabel) }
+        Text(title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+}
+
+@Composable
+private fun MemberInitial(name: String, modifier: Modifier = Modifier) {
+    Box(
+        modifier.size(44.dp).clip(CircleShape).background(MaterialTheme.colorScheme.secondaryContainer),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            name.take(1).uppercase(),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSecondaryContainer,
+        )
+    }
 }
 
 @Composable
@@ -411,27 +456,57 @@ private fun PrivateMessageBody(
     message: PrivateMessage,
     actions: PrivateMessageActions,
     communityActions: CommunitySafetyActions,
+    modifier: Modifier = Modifier,
 ) {
+    val fromAnotherMember = !message.sender.equals(state.auth?.displayName, ignoreCase = true)
+    val otherMember = if (message.folder == PrivateMessageFolder.Sent) message.recipient else message.sender
+    val openProfile = LocalMemberProfileOpener.current
+        ?.takeIf { !otherMember.equals(state.auth?.displayName, ignoreCase = true) }
     Column(
-        Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text(
-            "From ${message.sender} to ${message.recipient}\n${message.dateLabel}",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        SelectionContainer { Text(message.body, modifier = Modifier.testTag("private_message_body")) }
-        val fromAnotherMember = !message.sender.equals(state.auth?.displayName, ignoreCase = true)
-        val otherMember = if (message.folder == PrivateMessageFolder.Sent) message.recipient else message.sender
-        LocalMemberProfileOpener.current
-            ?.takeIf { !otherMember.equals(state.auth?.displayName, ignoreCase = true) }
-            ?.let { openProfile ->
-                TextButton(
-                    onClick = { openProfile(otherMember) },
-                    modifier = Modifier.testTag("private_message_profile"),
-                ) { Text("View $otherMember's profile") }
+        Text(message.subject, style = MaterialTheme.typography.headlineSmall)
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .then(
+                    if (openProfile == null) {
+                        Modifier
+                    } else {
+                        Modifier
+                            .clickable(onClickLabel = "View $otherMember's profile", role = Role.Button) {
+                                openProfile(otherMember)
+                            }
+                            .testTag("private_message_profile")
+                    },
+                ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            MemberInitial(otherMember)
+            Column(Modifier.weight(1f)) {
+                Text(message.sender, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(
+                    "to ${message.recipient}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
+            Text(
+                message.dateLabel,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.End,
+                modifier = Modifier.width(96.dp),
+            )
+        }
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        SelectionContainer {
+            MessageBlocks(message.body, Modifier.testTag("private_message_body"))
+        }
         if (fromAnotherMember && message.folder != PrivateMessageFolder.Sent) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 TextButton(
@@ -447,13 +522,73 @@ private fun PrivateMessageBody(
                         )
                         actions.onClose()
                     },
-                ) { Text("Report") }
+                ) {
+                    Icon(Icons.Default.Flag, contentDescription = null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("Report")
+                }
                 TextButton(
                     onClick = {
                         communityActions.onBlockUser(station.id, message.sender)
                         actions.onClose()
                     },
-                ) { Text("Block ${message.sender}") }
+                ) {
+                    Icon(Icons.Default.Block, contentDescription = null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("Block ${message.sender}")
+                }
+            }
+        }
+    }
+}
+
+/** A run of a message: the writer's own words at depth 0, or text quoted that many replies back. */
+internal data class MessageBlock(val text: String, val depth: Int) {
+    val quoted: Boolean get() = depth > 0
+}
+
+/**
+ * Splits a message at the station's `[quote]` tags, which nest once per reply, so quoted text can be set apart
+ * instead of shown with its tags. A closing tag with nothing open is dropped; an unclosed quote runs to the end.
+ */
+internal fun messageBodyBlocks(body: String): List<MessageBlock> {
+    val blocks = mutableListOf<MessageBlock>()
+    var position = 0
+    var depth = 0
+    QUOTE_TAG.findAll(body).forEach { tag ->
+        blocks += MessageBlock(body.substring(position, tag.range.first).trim(), depth)
+        depth = if (tag.value.startsWith("[/")) maxOf(0, depth - 1) else minOf(MAX_QUOTE_DEPTH, depth + 1)
+        position = tag.range.last + 1
+    }
+    blocks += MessageBlock(body.substring(position).trim(), depth)
+    return blocks.filter { it.text.isNotEmpty() }
+}
+
+private val QUOTE_TAG = Regex("""\[quote(?:=[^\]\n]*)?]|\[/quote]""", RegexOption.IGNORE_CASE)
+private const val MAX_QUOTE_DEPTH = 4
+
+/** A message's text with what it quotes set behind a bar, indented once per reply. */
+@Composable
+private fun MessageBlocks(body: String, modifier: Modifier = Modifier) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        messageBodyBlocks(body).forEach { block ->
+            if (block.quoted) {
+                Row(Modifier.padding(start = (12 * (block.depth - 1)).dp).height(IntrinsicSize.Min)) {
+                    Box(
+                        Modifier
+                            .width(3.dp)
+                            .fillMaxHeight()
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)),
+                    )
+                    Text(
+                        block.text,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(start = 12.dp, top = 2.dp, bottom = 2.dp),
+                    )
+                }
+            } else {
+                Text(block.text, style = MaterialTheme.typography.bodyLarge)
             }
         }
     }
@@ -476,78 +611,122 @@ internal fun PrivateMessageComposeDialog(compose: PrivateMessageCompose?, action
     val sending = compose.status == PrivateMessageComposeStatus.Sending
     val editable = compose.status == PrivateMessageComposeStatus.Ready
     val canSend = subject.isNotBlank() && body.isNotBlank()
-    AlertDialog(
+    Dialog(
         onDismissRequest = { if (!sending) actions.onCancelCompose() },
-        modifier = Modifier.testTag("private_message_compose"),
-        title = { Text(if (compose.isReply) "Reply to ${compose.recipient}" else "Message to ${compose.recipient}") },
-        text = {
-            Column(
-                Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                when {
-                    compose.status == PrivateMessageComposeStatus.Preparing || sending -> Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        CircularProgressIndicator(Modifier.size(24.dp))
-                        Text(if (sending) "Sending…" else "Preparing…")
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        Surface(Modifier.fillMaxSize().testTag("private_message_compose")) {
+            Column(Modifier.fillMaxSize().imePadding()) {
+                MessageTopBar(
+                    title = when {
+                        editable && reviewing -> "Review before sending"
+                        compose.isReply -> "Reply"
+                        else -> "New message"
+                    },
+                    closeLabel = "Discard message",
+                    onClose = actions.onCancelCompose,
+                    enabled = !sending,
+                )
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    MemberInitial(compose.recipient)
+                    Column {
+                        Text("To", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(compose.recipient, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
-                    !editable -> Text(
-                        privateMessageComposeResult(compose),
-                        color = if (compose.status == PrivateMessageComposeStatus.Sent) {
-                            MaterialTheme.colorScheme.onSurface
-                        } else {
-                            MaterialTheme.colorScheme.error
-                        },
-                    )
-                    reviewing -> {
-                        Text("Review before sending. The message is sent once and cannot be recalled.")
-                        Text(subject, fontWeight = FontWeight.SemiBold)
-                        Text(body)
+                }
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                Column(
+                    Modifier.weight(1f).fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    when {
+                        compose.status == PrivateMessageComposeStatus.Preparing || sending -> Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            CircularProgressIndicator(Modifier.size(24.dp))
+                            Text(if (sending) "Sending…" else "Preparing…")
+                        }
+                        !editable -> Text(
+                            privateMessageComposeResult(compose),
+                            color = if (compose.status == PrivateMessageComposeStatus.Sent) {
+                                MaterialTheme.colorScheme.onSurface
+                            } else {
+                                MaterialTheme.colorScheme.error
+                            },
+                        )
+                        reviewing -> Column(
+                            Modifier.verticalScroll(rememberScrollState()),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            Text(
+                                "The message is sent once and cannot be recalled.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Text(subject, style = MaterialTheme.typography.titleLarge)
+                            MessageBlocks(body)
+                        }
+                        else -> {
+                            OutlinedTextField(
+                                value = subject,
+                                onValueChange = { subject = it.take(MAX_PRIVATE_MESSAGE_SUBJECT_CHARACTERS) },
+                                label = { Text("Subject") },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth().testTag("private_message_subject"),
+                            )
+                            OutlinedTextField(
+                                value = body,
+                                onValueChange = { body = it.take(MAX_PRIVATE_MESSAGE_BODY_CHARACTERS) },
+                                label = { Text("Message") },
+                                // The limit only matters once it is close.
+                                supportingText = if (body.length >= MAX_PRIVATE_MESSAGE_BODY_CHARACTERS - 500) {
+                                    { Text("${body.length}/$MAX_PRIVATE_MESSAGE_BODY_CHARACTERS") }
+                                } else {
+                                    null
+                                },
+                                modifier = Modifier.fillMaxWidth().weight(1f).testTag("private_message_text"),
+                            )
+                        }
                     }
-                    else -> {
-                        OutlinedTextField(
-                            value = subject,
-                            onValueChange = { subject = it.take(MAX_PRIVATE_MESSAGE_SUBJECT_CHARACTERS) },
-                            label = { Text("Subject") },
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth().testTag("private_message_subject"),
-                        )
-                        OutlinedTextField(
-                            value = body,
-                            onValueChange = { body = it.take(MAX_PRIVATE_MESSAGE_BODY_CHARACTERS) },
-                            label = { Text("Message") },
-                            supportingText = { Text("${body.length}/$MAX_PRIVATE_MESSAGE_BODY_CHARACTERS") },
-                            minLines = 5,
-                            modifier = Modifier.fillMaxWidth().testTag("private_message_text"),
-                        )
+                }
+                HorizontalDivider()
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    when {
+                        editable && reviewing -> {
+                            TextButton(onClick = { reviewing = false }) { Text("Edit") }
+                            Button(
+                                onClick = { actions.onSend(subject.trim(), body.trim()) },
+                                enabled = canSend,
+                                modifier = Modifier.testTag("private_message_send"),
+                            ) {
+                                Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null, Modifier.size(18.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text("Send")
+                            }
+                        }
+                        editable -> {
+                            TextButton(onClick = actions.onCancelCompose) { Text("Discard") }
+                            Button(
+                                onClick = { reviewing = true },
+                                enabled = canSend,
+                                modifier = Modifier.testTag("private_message_review"),
+                            ) { Text("Review") }
+                        }
+                        else -> TextButton(onClick = actions.onCancelCompose, enabled = !sending) { Text("Close") }
                     }
                 }
             }
-        },
-        confirmButton = {
-            when {
-                editable && reviewing -> Button(
-                    onClick = { actions.onSend(subject.trim(), body.trim()) },
-                    enabled = canSend,
-                    modifier = Modifier.testTag("private_message_send"),
-                ) { Text("Send") }
-                editable -> Button(
-                    onClick = { reviewing = true },
-                    enabled = canSend,
-                    modifier = Modifier.testTag("private_message_review"),
-                ) { Text("Review") }
-                else -> TextButton(onClick = actions.onCancelCompose, enabled = !sending) { Text("Close") }
-            }
-        },
-        dismissButton = {
-            when {
-                editable && reviewing -> TextButton(onClick = { reviewing = false }) { Text("Edit") }
-                editable -> TextButton(onClick = actions.onCancelCompose) { Text("Discard") }
-            }
-        },
-    )
+        }
+    }
 }
 
 internal fun privateMessageComposeResult(compose: PrivateMessageCompose): String = when (compose.status) {

@@ -72,4 +72,19 @@ class StationExtrasUiTest {
         assertEquals("More, 3 unread private messages", navigationItemDescription(MainDestination.More, "More", 3))
         assertEquals("Chat", navigationItemDescription(MainDestination.Chat, "Chat", 3))
     }
+
+    @Test
+    fun `a private message is split at its quote tags, which nest once per reply`() {
+        assertEquals(
+            listOf(MessageBlock("Thanks!", 0), MessageBlock("Hey everyone", 1), MessageBlock("See you.", 0)),
+            messageBodyBlocks("Thanks!\n\n[quote=\"Listener\"]\nHey everyone\n[/QUOTE]\nSee you."),
+        )
+        assertEquals(
+            listOf(MessageBlock("third", 0), MessageBlock("second", 1), MessageBlock("first", 2)),
+            messageBodyBlocks("third\n[quote]\nsecond\n[quote]\nfirst\n[/quote]\n[/quote]"),
+        )
+        // A stray closing tag is dropped, and an unclosed quote runs to the end.
+        assertEquals(listOf(MessageBlock("a", 0), MessageBlock("b", 1)), messageBodyBlocks("a [/quote] [quote] b"))
+        assertEquals(emptyList<MessageBlock>(), messageBodyBlocks("  "))
+    }
 }
