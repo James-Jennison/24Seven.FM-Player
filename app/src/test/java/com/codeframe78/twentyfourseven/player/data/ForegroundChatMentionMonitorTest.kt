@@ -107,6 +107,8 @@ class ForegroundChatMentionMonitorTest {
 
         override suspend fun setCommunityContentVisible(visible: Boolean) = Unit
 
+        override suspend fun acknowledgeMessageActionsHint() = Unit
+
         override suspend fun blockUser(stationId: StationId, displayName: String) = Unit
 
         override suspend fun unblockUser(stationId: StationId, displayName: String) = Unit

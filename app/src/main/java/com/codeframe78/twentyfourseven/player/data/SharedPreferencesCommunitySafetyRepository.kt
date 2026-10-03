@@ -65,6 +65,10 @@ class SharedPreferencesCommunitySafetyRepository internal constructor(
         updateSafety(safety.value.copy(communityContentVisible = visible && allowed))
     }
 
+    override suspend fun acknowledgeMessageActionsHint() {
+        if (!safety.value.messageActionsHintSeen) updateSafety(safety.value.copy(messageActionsHintSeen = true))
+    }
+
     override suspend fun blockUser(stationId: StationId, displayName: String) {
         val boundedName = displayName.trim().take(MAX_REPORTED_USER_CHARACTERS)
         if (boundedName.isEmpty()) return
@@ -157,6 +161,7 @@ class SharedPreferencesCommunitySafetyRepository internal constructor(
                 else putString(KEY_TERMS_VERSION, updated.acceptedTermsVersion)
             }
             .putBoolean(KEY_COMMUNITY_VISIBLE, updated.communityContentVisible)
+            .putBoolean(KEY_MESSAGE_ACTIONS_HINT_SEEN, updated.messageActionsHintSeen)
             .putStringSet(KEY_BLOCKED_USERS, updated.blockedUsers.map(::encodeBlockedUser).toSet())
             .apply()
     }
@@ -171,6 +176,7 @@ class SharedPreferencesCommunitySafetyRepository internal constructor(
             ageGateStatus = ageStatus,
             acceptedTermsVersion = acceptedVersion,
             communityContentVisible = preferences.getBoolean(KEY_COMMUNITY_VISIBLE, false) && visibilityAllowed,
+            messageActionsHintSeen = preferences.getBoolean(KEY_MESSAGE_ACTIONS_HINT_SEEN, false),
             blockedUsers = preferences.getStringSet(KEY_BLOCKED_USERS, emptySet()).orEmpty()
                 .mapNotNull(::decodeBlockedUser)
                 .distinctBy { it.stationId to it.normalizedIdentity }
@@ -201,6 +207,7 @@ class SharedPreferencesCommunitySafetyRepository internal constructor(
         const val KEY_TERMS_VERSION = "terms_version"
         const val KEY_COMMUNITY_VISIBLE = "community_content_visible"
         const val KEY_BLOCKED_USERS = "blocked_users"
+        const val KEY_MESSAGE_ACTIONS_HINT_SEEN = "message_actions_hint_seen"
         const val MAX_REPORTED_USER_CHARACTERS = 80
     }
 }

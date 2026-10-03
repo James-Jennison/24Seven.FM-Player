@@ -250,6 +250,7 @@ class MainActivity : AppCompatActivity() {
                             onSubmitAgeScreen = viewModel::submitCommunityAgeScreen,
                             onAcceptTerms = viewModel::acceptCommunityTerms,
                             onSetCommunityContentVisible = viewModel::setCommunityContentVisible,
+                            onAcknowledgeMessageActionsHint = viewModel::acknowledgeMessageActionsHint,
                             onBlockUser = viewModel::blockCommunityUser,
                             onUnblockUser = viewModel::unblockCommunityUser,
                             onBeginReport = viewModel::beginAbuseReport,

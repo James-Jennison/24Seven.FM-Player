@@ -546,6 +546,10 @@ class MainViewModel(
         communitySafety.setCommunityContentVisible(visible)
     }
 
+    fun acknowledgeMessageActionsHint() = viewModelScope.launch {
+        communitySafety.acknowledgeMessageActionsHint()
+    }
+
     fun setChatMentionNotificationsEnabled(stationId: StationId, enabled: Boolean) = viewModelScope.launch {
         communityNotifications.setChatMentionsEnabled(stationId, enabled)
     }

@@ -19,6 +19,7 @@ import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -27,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import com.codeframe78.twentyfourseven.player.R
 import com.codeframe78.twentyfourseven.player.domain.ChatMessage
 import com.codeframe78.twentyfourseven.player.domain.ChatMessagePart
 import com.codeframe78.twentyfourseven.player.domain.ChatRole
@@ -123,4 +125,10 @@ internal fun ChatDayRule(day: String) {
 
 @Composable
 internal fun ChatLineStyle() =
-    MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace, fontSize = 13.sp, lineHeight = 19.sp)
+    MaterialTheme.typography.bodyMedium.copy(fontFamily = ChatFontFamily, fontSize = 13.sp, lineHeight = 19.sp)
+
+/** Bundled, because a phone's font theme can replace the system's fixed-width face with a proportional one. */
+private val ChatFontFamily = FontFamily(
+    Font(R.font.dejavu_sans_mono, FontWeight.Normal),
+    Font(R.font.dejavu_sans_mono_bold, FontWeight.Bold),
+)

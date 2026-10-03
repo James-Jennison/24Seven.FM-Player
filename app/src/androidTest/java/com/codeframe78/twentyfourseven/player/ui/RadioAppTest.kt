@@ -1453,6 +1453,7 @@ class RadioAppTest {
         }
 
         composeRule.onNodeWithText("Existing message", substring = true).assertIsDisplayed()
+        composeRule.onNodeWithTag("chat_actions_hint").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("heart emoticon").assertIsDisplayed()
         composeRule.onNodeWithText("Message").performTextInput("Hello chat")
         composeRule.onNodeWithContentDescription("Send").performClick()

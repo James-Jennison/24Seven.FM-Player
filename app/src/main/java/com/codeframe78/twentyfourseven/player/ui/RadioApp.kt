@@ -226,6 +226,7 @@ internal data class CommunitySafetyActions(
     val onSubmitAgeScreen: (Int, Int, Int) -> Unit = { _, _, _ -> },
     val onAcceptTerms: () -> Unit = {},
     val onSetCommunityContentVisible: (Boolean) -> Unit = {},
+    val onAcknowledgeMessageActionsHint: () -> Unit = {},
     val onBlockUser: (StationId, String) -> Unit = { _, _ -> },
     val onUnblockUser: (StationId, String) -> Unit = { _, _ -> },
     val onBeginReport: (AbuseReportTarget) -> Unit = {},
@@ -778,6 +779,24 @@ private fun ChatMessages(
                 Icon(Icons.Default.Refresh, contentDescription = "Refresh chat")
             }
         }
+        if (!state.communitySafety.messageActionsHintSeen && chat.messages.isNotEmpty()) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.secondaryContainer)
+                    .padding(start = 12.dp)
+                    .testTag("chat_actions_hint"),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    "Tap a message to view the profile, report, or block.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.weight(1f).padding(vertical = 8.dp),
+                )
+                TextButton(onClick = communitySafetyActions.onAcknowledgeMessageActionsHint) { Text("Got it") }
+            }
+        }
         RefreshableBox(onRefresh = onRefresh, modifier = Modifier.weight(1f).fillMaxWidth()) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -803,7 +822,11 @@ private fun ChatMessages(
                                 ownNick = ownNick,
                                 modifier = Modifier.clickable(
                                     onClickLabel = "Safety actions for ${message.authorDisplayName}",
-                                ) { menuOpen = true },
+                                ) {
+                                    menuOpen = true
+                                    // Finding the menu is the lesson the hint teaches.
+                                    communitySafetyActions.onAcknowledgeMessageActionsHint()
+                                },
                             )
                             CommunityMessageMenu(
                                 expanded = menuOpen,
