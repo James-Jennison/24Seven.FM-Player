@@ -30,6 +30,8 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.foundation.layout.height
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -107,6 +109,8 @@ internal data class StationExtrasActions(
     val onLoadHistory: (LocalDate, Int) -> Unit = { _, _ -> },
     val onCloseHistory: () -> Unit = {},
     val onRefreshNews: () -> Unit = {},
+    /** Opens a web address in the browser. */
+    val onOpenLink: (String) -> Unit = {},
 )
 
 /** Lets any screen open the history archive or news without threading callbacks through every layout. */
@@ -133,11 +137,11 @@ internal fun MemberProfileDialog(state: MainUiState, actions: StationExtrasActio
     if (card.status == MemberProfileStatus.Closed) return
     val station = state.selectedStation ?: return
     val profile = card.profile
-    val canMessage = profile != null &&
-        station.capabilities.supportsPrivateMessageSending &&
+    // The station's card carries the private message link for every member, the viewer's own card included.
+    val offersMessage = profile != null && station.capabilities.supportsPrivateMessageSending
+    val canMessage = offersMessage &&
         state.auth?.status == AuthStatus.SignedIn &&
-        state.communitySafety.canContributeCommunityContent &&
-        !profile.username.equals(state.auth.displayName, ignoreCase = true)
+        state.communitySafety.canContributeCommunityContent
     val signedIn = state.auth?.status == AuthStatus.SignedIn
     AlertDialog(
         onDismissRequest = actions.onCloseProfile,
@@ -166,27 +170,22 @@ internal fun MemberProfileDialog(state: MainUiState, actions: StationExtrasActio
                         showsFavorites = station.capabilities.supportsMemberFavorites && it.memberNumber != null,
                         signedIn = signedIn,
                         onOpenFavorites = actions.onOpenMemberFavorites,
+                        onMessage = if (offersMessage) {
+                            {
+                                actions.onCloseProfile()
+                                onSendMessage(it.username)
+                            }
+                        } else {
+                            null
+                        },
+                        canMessage = canMessage,
+                        onOpenLink = actions.onOpenLink,
                     )
                 }
                 else -> Text("This profile could not be loaded right now.", color = MaterialTheme.colorScheme.error)
             }
         },
-        confirmButton = {
-            if (canMessage && profile != null) {
-                Button(
-                    onClick = {
-                        actions.onCloseProfile()
-                        onSendMessage(profile.username)
-                    },
-                    modifier = Modifier.testTag("member_profile_message"),
-                ) {
-                    Icon(Icons.Default.Mail, contentDescription = null, Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text("Message")
-                }
-            }
-        },
-        dismissButton = { TextButton(onClick = actions.onCloseProfile) { Text("Close") } },
+        confirmButton = { TextButton(onClick = actions.onCloseProfile) { Text("Close") } },
     )
 }
 
@@ -229,14 +228,30 @@ private fun MemberProfileHeader(profile: MemberProfile) {
             }
         }
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(
-                profile.username,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold,
-                color = chatRoleColor(profile.role, onDark = scheme.surface.luminance() < 0.5f) ?: scheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(
+                    profile.username,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = chatRoleColor(profile.role, onDark = scheme.surface.luminance() < 0.5f) ?: scheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+                // The station's own mark for a paid membership, beside the name as on its card.
+                profile.membership?.let {
+                    Icon(Icons.Default.Star, contentDescription = "$it member", Modifier.size(20.dp), tint = Color(0xFFFFC83D))
+                }
+            }
+            profile.rankImageUrl?.let {
+                AsyncImage(
+                    model = it,
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit,
+                    alignment = Alignment.CenterStart,
+                    modifier = Modifier.height(22.dp).padding(vertical = 1.dp),
+                )
+            }
             profile.rankTitle?.let {
                 Text(it, style = MaterialTheme.typography.bodyMedium, color = scheme.onSurfaceVariant)
             }
@@ -258,14 +273,62 @@ private fun MemberProfileBody(
     showsFavorites: Boolean,
     signedIn: Boolean,
     onOpenFavorites: () -> Unit,
+    onMessage: (() -> Unit)?,
+    canMessage: Boolean,
+    onOpenLink: (String) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        // The card's contact links, as the station lists them: private message, email, website.
+        val emailPage = profile.emailPageUrl
+        val website = profile.websiteUrl
+        if (onMessage != null || emailPage != null || website != null) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(0.dp)) {
+                onMessage?.let {
+                    AssistChip(
+                        onClick = it,
+                        enabled = canMessage,
+                        label = { Text("Private message") },
+                        leadingIcon = { Icon(Icons.Default.Forum, contentDescription = null, Modifier.size(18.dp)) },
+                        modifier = Modifier
+                            .testTag("member_profile_message")
+                            .semantics { contentDescription = "Send ${profile.username} a private message" },
+                    )
+                }
+                emailPage?.let {
+                    AssistChip(
+                        onClick = { onOpenLink(it) },
+                        label = { Text("Email") },
+                        leadingIcon = { Icon(Icons.Default.Mail, contentDescription = null, Modifier.size(18.dp)) },
+                        modifier = Modifier
+                            .testTag("member_profile_email")
+                            .semantics { contentDescription = "Email ${profile.username} on the $stationName website" },
+                    )
+                }
+                website?.let {
+                    AssistChip(
+                        onClick = { onOpenLink(it) },
+                        label = { Text(websiteLabel(it), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                        leadingIcon = { Icon(Icons.Default.Language, contentDescription = null, Modifier.size(18.dp)) },
+                        modifier = Modifier
+                            .testTag("member_profile_website")
+                            .semantics { contentDescription = "Open ${profile.username}'s website, ${websiteLabel(it)}" },
+                    )
+                }
+            }
+            if (onMessage != null && !canMessage) {
+                Text(
+                    if (signedIn) "Turn on community content in More to send private messages."
+                    else "Sign in to $stationName to send a private message.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            profile.membership?.let { ProfileFact(Icons.Default.Star, "$it member", tint = Color(0xFFFFC83D)) }
             profile.memberSince?.let { ProfileFact(Icons.Default.CalendarMonth, "Joined $stationName $it") }
             profile.location?.let { ProfileFact(Icons.Default.Place, it, flagUrl = profile.flagUrl) }
             profile.forumPosts?.takeIf { it > 0 }?.let {
-                ProfileFact(Icons.Default.Forum, if (it == 1) "1 forum post" else "$it forum posts")
+                ProfileFact(Icons.Default.Edit, if (it == 1) "1 forum post" else "$it forum posts")
             }
         }
         val badges = memberProfileBadges(profile)
@@ -279,7 +342,7 @@ private fun MemberProfileBody(
             ) {
                 badges.forEach { badge ->
                     Text(
-                        badge,
+                        profile.badgeSymbols[badge]?.let { "$it $badge" } ?: badge,
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSecondaryContainer,
                         modifier = Modifier
@@ -430,6 +493,10 @@ internal fun MemberFavoritesDialog(
         }
     }
 }
+
+/** A website as its chip names it: the host without "www.", so the listener sees where the link leads. */
+internal fun websiteLabel(url: String): String =
+    runCatching { java.net.URI(url).host }.getOrNull()?.removePrefix("www.")?.takeIf(String::isNotBlank) ?: "Website"
 
 /** The badges a card shows as pills. The public favorites badge is left out because the card shows it as a button. */
 internal fun memberProfileBadges(profile: MemberProfile): List<String> =

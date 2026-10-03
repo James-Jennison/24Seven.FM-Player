@@ -52,6 +52,7 @@ class StationExtrasUiTest {
         )
 
         assertEquals(listOf("Donor"), memberProfileBadges(member))
+        assertEquals("example.org", websiteLabel("http://www.example.org/listener"))
         assertEquals(emptyList<String>(), memberProfileBadges(member.copy(badges = listOf("Public Favorites"))))
         assertEquals(listOf("Public Favorites", "Donor"), memberProfileBadges(member.copy(publicFavoritesBadge = null)))
     }

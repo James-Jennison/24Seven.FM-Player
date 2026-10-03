@@ -240,6 +240,7 @@ class MainActivity : AppCompatActivity() {
                             onLoadHistory = viewModel::loadPlayedHistory,
                             onCloseHistory = viewModel::closePlayedHistory,
                             onRefreshNews = viewModel::refreshStationNews,
+                            onOpenLink = ::openWebLink,
                         ),
                         onRefreshQueue = viewModel::refreshQueue,
                         onRefreshChat = viewModel::refreshChat,
@@ -416,6 +417,19 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent.createChooser(shareIntent, "Share diagnostics"))
         } catch (_: ActivityNotFoundException) {
             Toast.makeText(this, "No sharing app is available on this device.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /** Opens a member's website or a station page in the browser; the Player's station session is not shared with it. */
+    private fun openWebLink(url: String) {
+        val uri = android.net.Uri.parse(url)
+        if (uri.scheme != "https" && uri.scheme != "http") return
+        try {
+            CustomTabsIntent.Builder().setShowTitle(true).build().launchUrl(this, uri)
+        } catch (_: ActivityNotFoundException) {
+            Toast.makeText(this, "No browser is available on this device.", Toast.LENGTH_SHORT).show()
+        } catch (_: SecurityException) {
+            Toast.makeText(this, "This link could not be opened.", Toast.LENGTH_SHORT).show()
         }
     }
 

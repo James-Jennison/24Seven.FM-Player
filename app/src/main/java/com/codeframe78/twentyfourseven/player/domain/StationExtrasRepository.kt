@@ -24,6 +24,14 @@ data class MemberProfile(
     val role: ChatRole = ChatRole.Member,
     val forumPosts: Int? = null,
     val flagUrl: String? = null,
+    /** The station's insignia picture for the rank. */
+    val rankImageUrl: String? = null,
+    /** The symbol the station draws for a badge, by badge label. */
+    val badgeSymbols: Map<String, String> = emptyMap(),
+    /** The website the member lists on their card; it can be anywhere on the web. */
+    val websiteUrl: String? = null,
+    /** The station's own page for emailing this member, which the station shows to signed-in members. */
+    val emailPageUrl: String? = null,
 )
 
 enum class MemberProfileStatus { Closed, Loading, Ready, NotFound, Error }

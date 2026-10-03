@@ -19,6 +19,13 @@ internal class StationExtrasParser {
         val username = profile.text("username", MAX_NAME_CHARACTERS) ?: return null
         val badges = profile.optJSONArray("badges")
         val badgeEntries = (0 until (badges?.length() ?: 0)).mapNotNull { index -> badges?.optJSONObject(index) }
+        val contacts = profile.optJSONArray("contacts")
+        val contactLinks = (0 until minOf(contacts?.length() ?: 0, MAX_CONTACTS))
+            .mapNotNull { index -> contacts?.optJSONObject(index) }
+            .mapNotNull { contact ->
+                val kind = contact.text("kind", MAX_LABEL_CHARACTERS) ?: return@mapNotNull null
+                kind to (contact.text("href", MAX_URL_CHARACTERS) ?: return@mapNotNull null)
+            }.toMap()
         return MemberProfile(
             username = username,
             memberSince = profile.text("since", MAX_LABEL_CHARACTERS),
@@ -40,6 +47,20 @@ internal class StationExtrasParser {
             flagUrl = profile.text("flag", MAX_URL_CHARACTERS)
                 ?.takeUnless { it.substringBefore('?').endsWith(".svg", ignoreCase = true) }
                 ?.let { stationUrl(it, origin) },
+            rankImageUrl = profile.optJSONObject("rank")?.text("image", MAX_URL_CHARACTERS)
+                ?.takeUnless { it.substringBefore('?').endsWith(".svg", ignoreCase = true) }
+                ?.let { stationUrl(it, origin) },
+            badgeSymbols = badgeEntries.take(MAX_BADGES).mapNotNull { badge ->
+                val label = badge.text("label", MAX_LABEL_CHARACTERS) ?: return@mapNotNull null
+                // The symbol arrives as a character reference, such as &#128176;.
+                val symbol = badge.text("icon", MAX_SYMBOL_ENTITY_CHARACTERS)
+                    ?.let { org.jsoup.parser.Parser.unescapeEntities(it, false).trim() }
+                    ?.takeIf { it.isNotEmpty() && it.codePointCount(0, it.length) <= MAX_SYMBOL_CODE_POINTS && '&' !in it }
+                    ?: return@mapNotNull null
+                label to symbol
+            }.toMap(),
+            websiteUrl = contactLinks["website"]?.let(::webUrl),
+            emailPageUrl = contactLinks["email"]?.let { stationUrl(it, origin) }?.takeIf { it.matches(EMAIL_PAGE) },
         )
     }
 
@@ -122,6 +143,14 @@ internal class StationExtrasParser {
     }
 
     /** An absolute address on the station's own site, or null for anything else. */
+    /** A member's own link: any web address, but only a plain http or https one. */
+    private fun webUrl(value: String): String? = runCatching {
+        URI(value.trim()).takeIf {
+            (it.scheme.equals("https", ignoreCase = true) || it.scheme.equals("http", ignoreCase = true)) &&
+                it.userInfo == null && !it.host.isNullOrBlank() && '.' in it.host
+        }?.toASCIIString()
+    }.getOrNull()
+
     private fun stationUrl(value: String, origin: String): String? = runCatching {
         val base = URI(origin)
         val uri = base.resolve(value.trim())
@@ -146,6 +175,10 @@ internal class StationExtrasParser {
         const val MAX_LABEL_CHARACTERS = 200
         const val MAX_URL_CHARACTERS = 500
         const val MAX_BADGES = 12
+        const val MAX_CONTACTS = 8
+        val EMAIL_PAGE = Regex("""https://[^/?#]+/modules\.php\?name=Forums&file=profile&mode=email&u=\d{1,10}""")
+        const val MAX_SYMBOL_ENTITY_CHARACTERS = 24
+        const val MAX_SYMBOL_CODE_POINTS = 2
         const val MAX_HISTORY_ENTRIES = 120
         const val MAX_REQUEST_MESSAGE_CHARACTERS = 240
         const val MAX_STORIES = 10

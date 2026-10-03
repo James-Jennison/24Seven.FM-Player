@@ -27,7 +27,26 @@ class StationExtrasParserTest {
         assertEquals("Public Favorites", profile.publicFavoritesBadge)
         assertEquals(ChatRole.Member, profile.role)
         assertEquals(12, profile.forumPosts)
+        assertEquals("http://www.example.org/listener", profile.websiteUrl)
+        assertEquals(
+            "https://streamingsoundtracks.com/modules.php?name=Forums&file=profile&mode=email&u=4821",
+            profile.emailPageUrl,
+        )
+        assertEquals("https://streamingsoundtracks.com/images/ranks/rank.gif", profile.rankImageUrl)
+        assertEquals(mapOf("Public Favorites" to "\u2764"), profile.badgeSymbols)
         assertEquals("https://streamingsoundtracks.com/modules/MS_Analysis/images/flags/us.gif", profile.flagUrl)
+    }
+
+    @Test
+    fun `contact links that are not a plain web address or the station's email page are dropped`() {
+        val card = StationExtrasFixtures.profileCard()
+            .replace("http://www.example.org/listener", "javascript:alert(1)")
+            .replace("/modules.php?name=Forums&file=profile&mode=email&u=4821", "https://example.com/modules.php?name=Forums&file=profile&mode=email&u=4821")
+
+        val profile = parser.parseProfile(card, origin)!!
+
+        assertNull(profile.websiteUrl)
+        assertNull(profile.emailPageUrl)
     }
 
     @Test
@@ -139,7 +158,9 @@ internal object StationExtrasFixtures {
     fun profileCard(avatar: String = "/images/avatars/listener.png") = """
         {"profile":{"id":4821,"username":"Listener","avatar":"$avatar","flag":"/modules/MS_Analysis/images/flags/us.gif",
         "since":"Apr 20, 2002","location":"Springfield","posts":12,"nameClass":"",
-        "contacts":[{"kind":"pm","label":"Private message","href":"/modules.php?name=Forums&file=privmsg&mode=post&u=4821"}],
+        "contacts":[{"kind":"pm","label":"Private message","href":"/modules.php?name=Forums&file=privmsg&mode=post&u=4821"},
+        {"kind":"email","label":"Email","href":"/modules.php?name=Forums&file=profile&mode=email&u=4821"},
+        {"kind":"website","label":"Website","href":"http://www.example.org/listener"}],
         "online":true,"rank":{"title":"Captain","image":"/images/ranks/rank.gif"},
         "membershipIcon":"/images/vip-sst.svg","membership":"VIP",
         "badges":[{"icon":"&#10084;","label":"Public Favorites","image":"/images/favorites/heart.svg"}]}}
