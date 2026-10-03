@@ -91,14 +91,20 @@ class MainActivity : AppCompatActivity() {
         var stationRestored = false
         splash.setKeepOnScreenCondition { !stationRestored }
         splash.setOnExitAnimationListener { view ->
-            view.iconView.animate()
+            // A launch from a shortcut or a notification can show the launch screen without its icon; the
+            // library then throws on iconView instead of returning null.
+            runCatching { view.iconView }.getOrNull()
+                ?.animate()
+                ?.alpha(0f)
+                ?.scaleX(1.15f)
+                ?.scaleY(1.15f)
+                ?.setDuration(SPLASH_EXIT_MILLIS)
+                ?.start()
+            view.view.animate()
                 .alpha(0f)
-                .scaleX(1.15f)
-                .scaleY(1.15f)
                 .setDuration(SPLASH_EXIT_MILLIS)
                 .withEndAction { view.remove() }
                 .start()
-            view.view.animate().alpha(0f).setDuration(SPLASH_EXIT_MILLIS).start()
         }
         // A recreated Activity still holds the launching intent; its chat destination was already applied.
         if (savedInstanceState == null) {
