@@ -1507,7 +1507,7 @@ class RadioAppTest {
         composeRule.onNodeWithTag("library_track_sort").performScrollTo().performClick()
         composeRule.onNodeWithText("Play state").performClick()
         composeRule.onNodeWithText("Sort: Play state").assertIsDisplayed()
-        composeRule.onAllNodesWithText("Request Now").assertCountEquals(2)[1].performScrollTo().performClick()
+        composeRule.onNodeWithText("Request Now").performScrollTo().performClick()
         composeRule.onNodeWithText("Request this track?").assertIsDisplayed()
         composeRule.onNodeWithText("Station: StreamingSoundtracks.com", substring = true).assertIsDisplayed()
         composeRule.onNodeWithText("Signed in as: Listener", substring = true).assertIsDisplayed()
@@ -1671,7 +1671,7 @@ class RadioAppTest {
         favoritesList.performScrollToNode(hasContentDescription(queuedDescription))
         composeRule.onNodeWithContentDescription(queuedDescription).assertIsDisplayed()
         favoritesList.performScrollToNode(hasContentDescription(availableDescription))
-        composeRule.onAllNodesWithText("Request Now").assertCountEquals(2)[1].performScrollTo().performClick()
+        composeRule.onNodeWithText("Request Now").performScrollTo().performClick()
         composeRule.onNodeWithText("Request this track?").assertIsDisplayed()
         composeRule.runOnIdle { assertEquals(listOf(available), prepared) }
         composeRule.onNodeWithText("Send request").performClick()
@@ -1734,7 +1734,7 @@ class RadioAppTest {
         composeRule.onNodeWithTag("favorite_track_1500").assertIsDisplayed()
         composeRule.onNodeWithTag("favorite_tracks_list").performScrollToIndex(2)
         composeRule.onNodeWithTag("favorite_track_sort").performScrollTo().performClick()
-        listOf("#", "Track Name", "Album", "Artist", "Genre", "Year", "Length", "Play state").forEach {
+        listOf("Favorites order", "Track Name", "Album", "Artist", "Genre", "Year", "Length", "Play state").forEach {
             composeRule.onNodeWithText(it).assertExists()
         }
         composeRule.onNodeWithText("Track Name").performClick()

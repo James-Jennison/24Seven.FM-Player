@@ -313,6 +313,7 @@ internal fun MemberFavoritesDialog(
                                 canRequest = station.capabilities.supportsRequests &&
                                     state.requests?.status != SongRequestLoadStatus.Submitting,
                                 onPrepareRequest = onPrepareRequest,
+                                coverUrl = favoriteCoverUrl(station, track.albumId),
                             )
                         }
                     }

@@ -119,4 +119,14 @@ class PlayerLinksTest {
         assertEquals("One \u2014 Two" to "Composer Two", splitTrackSummary("One \u2014 Two \u2014 Composer Two"))
         assertEquals("Untitled track" to null, splitTrackSummary("Untitled track"))
     }
+
+    @Test
+    fun `a favorite's cover comes from the station's own image host and only for a plain album id`() {
+        val station = com.codeframe78.twentyfourseven.player.data.BootstrapStationRepository().availableStations()
+            .first { it.id.value == "dfm" }
+        assertEquals("https://death.fm/images/cover/040/B000000002.jpg", favoriteCoverUrl(station, "B000000002"))
+        assertEquals(null, favoriteCoverUrl(station, "../secret"))
+        assertEquals(null, favoriteCoverUrl(station, null))
+        assertEquals(null, favoriteCoverUrl(null, "B000000002"))
+    }
 }

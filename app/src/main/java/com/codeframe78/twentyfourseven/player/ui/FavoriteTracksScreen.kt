@@ -1,5 +1,16 @@
 package com.codeframe78.twentyfourseven.player.ui
 
+import com.codeframe78.twentyfourseven.player.domain.Station
+import coil3.compose.AsyncImage
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.background
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material.icons.automirrored.filled.Sort
+import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -78,20 +89,12 @@ internal fun FavoriteTracksScreen(
         ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize().testTag("favorite_tracks_list"),
-            contentPadding = PaddingValues(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Favorite, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                    Spacer(Modifier.width(12.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text("Favorite tracks", style = MaterialTheme.typography.headlineSmall)
-                        Text(
-                            state.selectedStation?.name.orEmpty(),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
+                    Text("Favorites", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
                     if (signedIn) {
                         IconButton(onClick = onRefresh, enabled = favorites?.status != FavoriteTracksLoadStatus.Loading) {
                             Icon(Icons.Default.Refresh, contentDescription = "Refresh favorite tracks")
@@ -107,12 +110,25 @@ internal fun FavoriteTracksScreen(
 
             if (!signedIn) {
                 item {
-                    Card(Modifier.fillMaxWidth()) {
-                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            Text("Station sign-in required", fontWeight = FontWeight.Bold)
-                            Text("Sign in to this station to discover and browse your own favorite-track list.")
-                            Button(onClick = onOpenAccount) { Text("Open account") }
-                        }
+                    Column(
+                        Modifier.fillMaxWidth().padding(top = 48.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Icon(
+                            Icons.Default.Favorite,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(40.dp),
+                        )
+                        Text("Sign in to see your favorites", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            "Your ${state.selectedStation?.shortName.orEmpty()} favorite tracks appear here once you sign in.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                        )
+                        Button(onClick = onOpenAccount) { Text("Sign in") }
                     }
                 }
                 return@LazyColumn
@@ -141,39 +157,59 @@ internal fun FavoriteTracksScreen(
                             value = filter,
                             onValueChange = { filter = it.take(100) },
                             label = { Text("Filter favorites") },
-                            supportingText = {
-                                Text(if (filter.isBlank()) "${visibleTracks.size} tracks" else "${visibleTracks.size} of ${favorites?.tracks?.size ?: 0} tracks")
+                            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                            trailingIcon = {
+                                if (filter.isNotEmpty()) {
+                                    IconButton(onClick = { filter = "" }) {
+                                        Icon(Icons.Default.Close, contentDescription = "Clear filter")
+                                    }
+                                }
                             },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                         )
                     }
                     item {
-                        Box {
-                            TextButton(
-                                onClick = { sortMenuOpen = true },
-                                modifier = Modifier.testTag("favorite_track_sort"),
-                            ) {
-                                Text("Sort: ${sortOrder.label}")
-                            }
-                            DropdownMenu(
-                                expanded = sortMenuOpen,
-                                onDismissRequest = { sortMenuOpen = false },
-                            ) {
-                                FavoriteTrackSortOrder.entries.forEach { option ->
-                                    DropdownMenuItem(
-                                        text = { Text(option.label) },
-                                        onClick = {
-                                            sortOrder = option
-                                            sortMenuOpen = false
-                                        },
-                                    )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                if (filter.isBlank()) "${visibleTracks.size} tracks" else "${visibleTracks.size} of ${favorites?.tracks?.size ?: 0} tracks",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.weight(1f),
+                            )
+                            Box {
+                                TextButton(
+                                    onClick = { sortMenuOpen = true },
+                                    modifier = Modifier.testTag("favorite_track_sort"),
+                                ) {
+                                    Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = null, Modifier.size(18.dp))
+                                    Spacer(Modifier.width(6.dp))
+                                    Text("Sort: ${sortOrder.label}")
+                                }
+                                DropdownMenu(
+                                    expanded = sortMenuOpen,
+                                    onDismissRequest = { sortMenuOpen = false },
+                                ) {
+                                    FavoriteTrackSortOrder.entries.forEach { option ->
+                                        DropdownMenuItem(
+                                            text = { Text(option.label) },
+                                            onClick = {
+                                                sortOrder = option
+                                                sortMenuOpen = false
+                                            },
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
                     if (visibleTracks.isEmpty()) {
-                        item { Text(if (filter.isBlank()) "No favorite tracks were found." else "No favorites match this filter.") }
+                        item {
+                            Text(
+                                if (filter.isBlank()) "No favorite tracks were found." else "No favorites match this filter.",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
                     items(
                         items = visibleTracks,
@@ -184,6 +220,7 @@ internal fun FavoriteTracksScreen(
                             canRequest = state.selectedStation?.capabilities?.supportsRequests == true &&
                                 state.requests?.status != SongRequestLoadStatus.Submitting,
                             onPrepareRequest = onPrepareRequest,
+                            coverUrl = favoriteCoverUrl(state.selectedStation, track.albumId),
                         )
                     }
                 }
@@ -236,62 +273,103 @@ private fun FavoriteRequestFeedback(
     }
 }
 
+/**
+ * The station's small cover for a favorite's album, from the station's own image host. The small size keeps a list
+ * of well over a thousand favorites light to scroll.
+ */
+internal fun favoriteCoverUrl(station: Station?, albumId: String?): String? {
+    val id = albumId?.takeIf { it.matches(COVER_ALBUM_ID) } ?: return null
+    val host = runCatching { java.net.URI(station?.logoUrl.orEmpty()).host }.getOrNull()?.takeIf(String::isNotBlank)
+        ?: return null
+    return "https://$host/images/cover/040/$id.jpg"
+}
+
+private val COVER_ALBUM_ID = Regex("[A-Za-z0-9_.-]{1,64}")
+
+/** One favorite as a row: its cover, what it is, whether it can be requested, and the request button when it can. */
 @Composable
 internal fun FavoriteTrackCard(
     track: FavoriteTrack,
     canRequest: Boolean,
     onPrepareRequest: (FavoriteTrack) -> Unit,
+    coverUrl: String? = null,
 ) {
     val available = track.availability.canRequest
     Card(Modifier.fillMaxWidth().testTag("favorite_track_${track.position}")) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .opensAlbum(track.albumId, track.album.takeIf(String::isNotBlank), null)
+                .padding(start = 12.dp, end = 8.dp, top = 10.dp, bottom = 10.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                contentAlignment = Alignment.Center,
             ) {
-                RequestStatusIndicator(
-                    availability = track.availability,
-                    modifier = Modifier.weight(1f),
-                )
-                Spacer(Modifier.width(12.dp))
-                Text(
-                    "#${track.position}",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.testTag("favorite_track_position_${track.position}"),
-                )
-            }
-            Text(track.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Text(
-                listOf(track.artist, track.album).filter(String::isNotBlank).joinToString(" • "),
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(
-                listOfNotNull(track.genre, track.year, track.duration).joinToString(" • "),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            track.availability.detail?.let {
-                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            val openAlbum = LocalAlbumOpener.current.takeIf { track.albumId != null }
-            if (available || openAlbum != null) {
-                Row(
-                    Modifier.align(Alignment.End),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    if (openAlbum != null) {
-                        TextButton(
-                            onClick = { track.albumId?.let { openAlbum(AlbumLink(it, track.album.takeIf(String::isNotBlank))) } },
-                        ) { Text("View album") }
-                    }
-                    if (available) {
-                        Button(onClick = { onPrepareRequest(track) }, enabled = canRequest) { Text("Request Now") }
-                    }
+                if (coverUrl == null) {
+                    Icon(Icons.Default.MusicNote, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                } else {
+                    AsyncImage(
+                        model = crossfadingImage(coverUrl),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize(),
+                    )
                 }
+            }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                Text(
+                    track.title,
+                    style = MaterialTheme.typography.titleSmall,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    listOf(track.artist, track.album).filter(String::isNotBlank).joinToString(" · "),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                val facts = listOfNotNull(track.genre, track.year, track.duration).joinToString(" · ")
+                if (available) {
+                    // The button already says a track can be requested, so the light alone marks it.
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        RequestStatusIndicator(track.availability, compact = true, showsLabel = false)
+                        FavoriteFacts(facts)
+                    }
+                } else {
+                    FavoriteFacts(facts)
+                    RequestStatusIndicator(track.availability, compact = true)
+                }
+                track.availability.detail?.let {
+                    Text(it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            if (available) {
+                FilledTonalButton(
+                    onClick = { onPrepareRequest(track) },
+                    enabled = canRequest,
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                ) { Text("Request Now") }
             }
         }
     }
+}
+
+@Composable
+private fun FavoriteFacts(text: String) {
+    if (text.isBlank()) return
+    Text(
+        text,
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+    )
 }

@@ -197,6 +197,8 @@ internal fun RequestableTrackRow(track: RequestableTrack, canRequest: Boolean, o
             RequestStatusIndicator(
                 availability = track.availability,
                 modifier = Modifier.padding(top = 4.dp),
+                compact = true,
+                showsLabel = !track.availability.canRequest,
             )
             track.availability.detail?.let { detail ->
                 Text(
