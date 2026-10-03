@@ -69,8 +69,8 @@ private val MinimumActionArtworkSize = 104.dp
 // Artwork often carries its own lettering near the bottom edge, so the scrim reaches full strength above the first line.
 private val OverlayScrim = Brush.verticalGradient(
     0f to Color.Transparent,
-    0.2f to Color.Black.copy(alpha = 0.8f),
-    1f to Color.Black.copy(alpha = 0.88f),
+    0.2f to Color.Black.copy(alpha = 0.86f),
+    1f to Color.Black.copy(alpha = 0.94f),
 )
 
 /**

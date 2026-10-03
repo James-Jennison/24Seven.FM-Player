@@ -94,7 +94,8 @@ class PlayerLinksTest {
 
     @Test
     fun `request times read naturally and unknown formats are left as the station wrote them`() {
-        assertEquals("Oct 2, 2026 · 4:16 PM", requestTimeLabel("2026-10-02 16:16:02"))
+        assertEquals("Oct 2 · 4:16 PM", requestTimeLabel("2026-10-02 16:16:02", currentYear = 2026))
+        assertEquals("Oct 2, 2026 · 4:16 PM", requestTimeLabel("2026-10-02 16:16:02", currentYear = 2027))
         assertEquals("14 Jul 26 - 17:01", requestTimeLabel("14 Jul 26 - 17:01"))
     }
 
@@ -103,5 +104,19 @@ class PlayerLinksTest {
         assertEquals("Private messages", messagesButtonDescription(0))
         assertEquals("Private messages, 1 unread", messagesButtonDescription(1))
         assertEquals("Private messages, 12 unread", messagesButtonDescription(12))
+    }
+
+    @Test
+    fun `chat time drops the year and seconds and keeps anything it does not recognize`() {
+        assertEquals("02 Oct · 15:04", chatTimeLabel("02 Oct 26 - 15:04:41"))
+        assertEquals("2 Oct · 9:04", chatTimeLabel(" 2 Oct 26 - 9:04:00 "))
+        assertEquals("yesterday", chatTimeLabel("yesterday"))
+    }
+
+    @Test
+    fun `a request splits into track and artist at the last dash`() {
+        assertEquals("Suite From Seven" to "Howard Shore", splitTrackSummary("Suite From Seven \u2014 Howard Shore"))
+        assertEquals("One \u2014 Two" to "Composer Two", splitTrackSummary("One \u2014 Two \u2014 Composer Two"))
+        assertEquals("Untitled track" to null, splitTrackSummary("Untitled track"))
     }
 }

@@ -1,5 +1,12 @@
 package com.codeframe78.twentyfourseven.player.ui
 
+import com.codeframe78.twentyfourseven.player.domain.RequestHistoryEntry
+import com.codeframe78.twentyfourseven.player.ui.theme.requestAvailableGreen
+import androidx.compose.material.icons.filled.HelpOutline
+import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -750,57 +757,61 @@ private fun ChatMessages(
                     key = { index, _ -> messageKeys[index] },
                 ) { _, message ->
                     Card(Modifier.fillMaxWidth()) {
-                        Column(Modifier.padding(12.dp)) {
-                            Row(Modifier.fillMaxWidth()) {
-                                Box(Modifier.weight(1f)) {
+                        Row(Modifier.fillMaxWidth().padding(start = 14.dp, top = 4.dp, bottom = 10.dp)) {
+                            Column(Modifier.weight(1f).padding(top = 2.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
                                         message.authorDisplayName,
                                         style = MaterialTheme.typography.titleSmall,
                                         color = MaterialTheme.colorScheme.primary,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
                                         modifier = Modifier
+                                            .weight(1f, fill = false)
                                             .opensMemberProfile(message.authorDisplayName)
                                             .padding(vertical = 6.dp),
                                     )
-                                }
-                                message.postedAtLabel?.let { timestamp ->
-                                    Text(
-                                        timestamp,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                }
-                                CommunityMessageActions(
-                                    author = message.authorDisplayName,
-                                    onReportContent = {
-                                        communitySafetyActions.onBeginReport(
-                                            AbuseReportTarget(
-                                                kind = AbuseReportKind.Content,
-                                                source = AbuseReportSource.Chat,
-                                                reportedUser = message.authorDisplayName,
-                                                displayedTimestamp = message.postedAtLabel,
-                                                contentSnapshot = message.messageText,
-                                            ),
+                                    message.postedAtLabel?.let { timestamp ->
+                                        Text(
+                                            chatTimeLabel(timestamp),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            maxLines = 1,
+                                            modifier = Modifier.padding(start = 10.dp),
                                         )
-                                    },
-                                    onReportUser = {
-                                        communitySafetyActions.onBeginReport(
-                                            AbuseReportTarget(
-                                                kind = AbuseReportKind.User,
-                                                source = AbuseReportSource.Chat,
-                                                reportedUser = message.authorDisplayName,
-                                                displayedTimestamp = message.postedAtLabel,
-                                            ),
-                                        )
-                                    },
-                                    onBlockUser = {
-                                        state.selectedStation?.id?.let { stationId ->
-                                            communitySafetyActions.onBlockUser(stationId, message.authorDisplayName)
-                                        }
-                                    },
-                                )
+                                    }
+                                }
+                                ChatMessageText(message)
                             }
-                            Spacer(Modifier.height(4.dp))
-                            ChatMessageText(message)
+                            CommunityMessageActions(
+                                author = message.authorDisplayName,
+                                onReportContent = {
+                                    communitySafetyActions.onBeginReport(
+                                        AbuseReportTarget(
+                                            kind = AbuseReportKind.Content,
+                                            source = AbuseReportSource.Chat,
+                                            reportedUser = message.authorDisplayName,
+                                            displayedTimestamp = message.postedAtLabel,
+                                            contentSnapshot = message.messageText,
+                                        ),
+                                    )
+                                },
+                                onReportUser = {
+                                    communitySafetyActions.onBeginReport(
+                                        AbuseReportTarget(
+                                            kind = AbuseReportKind.User,
+                                            source = AbuseReportSource.Chat,
+                                            reportedUser = message.authorDisplayName,
+                                            displayedTimestamp = message.postedAtLabel,
+                                        ),
+                                    )
+                                },
+                                onBlockUser = {
+                                    state.selectedStation?.id?.let { stationId ->
+                                        communitySafetyActions.onBlockUser(stationId, message.authorDisplayName)
+                                    }
+                                },
+                            )
                         }
                     }
                 }
@@ -1759,7 +1770,7 @@ private fun DiagnosticsSection(
     }
     MoreDisclosure(
         title = "In-app diagnostics",
-        summary = "Preview and explicitly copy or share a privacy-safe support snapshot.",
+        summary = "Technical details you can preview, copy, or share with support.",
         icon = Icons.Default.BugReport,
         testTag = "more_diagnostics",
     ) {
@@ -1835,7 +1846,7 @@ private fun FeedbackSection(
 
     MoreDisclosure(
         title = "Report a problem",
-        summary = "Prepare a reviewable feedback draft for the Player team.",
+        summary = "Tell the Player team what went wrong. You review the email before it is sent.",
         icon = Icons.Default.Feedback,
         testTag = "more_feedback",
     ) {
@@ -2249,14 +2260,19 @@ private fun ListenerActivitySection(
     if (showTitle) Text("Request activity", style = MaterialTheme.typography.titleMedium)
     Card(Modifier.fillMaxWidth().testTag("listener_activity_card")) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            val loaded = state.auth?.status == AuthStatus.SignedIn &&
+                activity?.status == ListenerActivityLoadStatus.Ready
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text(station.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                    Text(
-                        "Authenticated history and station-reported request status",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodySmall,
-                    )
+                Box(Modifier.weight(1f)) {
+                    if (loaded) {
+                        MembershipLine(activity?.membershipTier, activity?.rankTitle, membershipLabel, station.id)
+                    } else {
+                        Text(
+                            "As reported by ${station.shortName}",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
                 }
                 IconButton(
                     onClick = onRefresh,
@@ -2269,7 +2285,7 @@ private fun ListenerActivitySection(
             }
             when {
                 state.auth?.status != AuthStatus.SignedIn -> Text(
-                    "Sign in to ${station.shortName} from its account card above to load this private activity.",
+                    "Sign in to ${station.shortName} above to see your request activity.",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 activity == null || activity.status == ListenerActivityLoadStatus.Idle -> Text(
@@ -2288,12 +2304,24 @@ private fun ListenerActivitySection(
                     color = MaterialTheme.colorScheme.error,
                 )
                 else -> {
-                    ListenerStatusRow("Membership", membershipLabel)
-                    ListenerStatusRow("Request status", readinessLabel)
+                    RequestClockTile(activity.requestReadiness, activity.waitMinutes, readinessLabel)
                     activity.queuedRequestWaitSeconds?.let { seconds ->
                         ListenerStatusRow("Your queued request", queuedRequestLabel(seconds))
                     }
-                    Text("Your last requests", style = MaterialTheme.typography.titleSmall)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            "Recent requests",
+                            style = MaterialTheme.typography.titleSmall,
+                            modifier = Modifier.weight(1f),
+                        )
+                        if (activity.recentRequests.isNotEmpty()) {
+                            Text(
+                                activity.recentRequests.size.toString(),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
                     if (activity.recentRequests.isEmpty()) {
                         Text(
                             "No recent requests were reported by this station.",
@@ -2305,34 +2333,7 @@ private fun ListenerActivitySection(
                         } else {
                             activity.recentRequests.take(COLLAPSED_REQUEST_HISTORY_ROWS)
                         }
-                        shown.forEach { request ->
-                            val requestedAt = requestTimeLabel(request.requestedAtLabel)
-                            Row(
-                                Modifier
-                                    .fillMaxWidth()
-                                    .testTag("request_history_${request.position}")
-                                    .opensAlbum(request.albumId, request.albumTitle, request.artworkUrl)
-                                    .semantics {
-                                        contentDescription = "Request ${request.position}: ${request.trackSummary}; $requestedAt"
-                                    },
-                                verticalAlignment = Alignment.Top,
-                            ) {
-                                Text(
-                                    request.position.toString(),
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.width(28.dp),
-                                )
-                                Column(Modifier.weight(1f)) {
-                                    Text(request.trackSummary, style = MaterialTheme.typography.bodyMedium)
-                                    Text(
-                                        listOfNotNull(request.albumTitle, requestedAt).joinToString(" • "),
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                }
-                            }
-                        }
+                        shown.forEach { request -> RequestHistoryRow(request) }
                         if (activity.recentRequests.size > COLLAPSED_REQUEST_HISTORY_ROWS) {
                             TextButton(
                                 onClick = { showAllRequests = !showAllRequests },
@@ -2347,6 +2348,158 @@ private fun ListenerActivitySection(
         }
     }
 }
+
+/** The member's tier as a badge in the station's colour, then their rank as the station words it. */
+@Composable
+private fun MembershipLine(tier: MembershipTier?, rankTitle: String?, description: String, stationId: StationId) {
+    val accent = stationPalette(stationId).themedAccent()
+    val badge = when (tier) {
+        MembershipTier.Vip -> "VIP"
+        MembershipTier.Rip -> "RIP"
+        MembershipTier.Standard -> "Member"
+        MembershipTier.Unknown, null -> null
+    }
+    Row(
+        Modifier.clearAndSetSemantics { contentDescription = "Membership: $description" },
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        badge?.let { label ->
+            Surface(shape = RoundedCornerShape(50), color = accent.copy(alpha = 0.18f), contentColor = accent) {
+                Text(
+                    label,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                )
+            }
+        }
+        val rank = rankTitle?.takeIf(String::isNotBlank)
+        Text(
+            rank ?: if (badge == null) description else "",
+            style = MaterialTheme.typography.titleSmall,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+/** The request clock as the one thing to read at a glance: whether a request can be sent now, or how long is left. */
+@Composable
+private fun RequestClockTile(readiness: RequestReadiness, waitMinutes: Int?, description: String) {
+    val tint = when (readiness) {
+        RequestReadiness.Ready -> requestAvailableGreen()
+        RequestReadiness.Waiting -> MaterialTheme.colorScheme.secondary
+        RequestReadiness.Unknown -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    val icon = when (readiness) {
+        RequestReadiness.Ready -> Icons.Default.CheckCircle
+        RequestReadiness.Waiting -> Icons.Default.Schedule
+        RequestReadiness.Unknown -> Icons.Default.HelpOutline
+    }
+    val headline = when (readiness) {
+        RequestReadiness.Ready -> "Ready to request"
+        RequestReadiness.Waiting -> waitMinutes?.let { if (it == 1) "Next request in 1 minute" else "Next request in $it minutes" }
+            ?: "Request clock running"
+        RequestReadiness.Unknown -> "Request clock unavailable"
+    }
+    val detail = when (readiness) {
+        RequestReadiness.Ready -> "You can send a request now."
+        RequestReadiness.Waiting -> "Your request clock is counting down."
+        RequestReadiness.Unknown -> "The station did not report it."
+    }
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = tint.copy(alpha = 0.14f),
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("request_clock")
+            .clearAndSetSemantics { contentDescription = "Request status: $description" },
+    ) {
+        Row(
+            Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(28.dp))
+            Column {
+                Text(headline, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                Text(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+    }
+}
+
+@Composable
+private fun RequestHistoryRow(request: RequestHistoryEntry) {
+    val requestedAt = requestTimeLabel(request.requestedAtLabel)
+    val (title, artist) = splitTrackSummary(request.trackSummary)
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .testTag("request_history_${request.position}")
+            .opensAlbum(request.albumId, request.albumTitle, request.artworkUrl)
+            .semantics(mergeDescendants = true) {
+                contentDescription = "Request ${request.position}: ${request.trackSummary}; $requestedAt"
+            },
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            Modifier
+                .size(48.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (request.artworkUrl.isNullOrBlank()) {
+                Icon(Icons.Default.MusicNote, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            } else {
+                AsyncImage(
+                    model = crossfadingImage(request.artworkUrl),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
+        Column(Modifier.weight(1f)) {
+            Text(
+                title,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            artist?.let {
+                Text(
+                    it,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            Text(
+                listOfNotNull(request.albumTitle, requestedAt).joinToString(" · "),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+/** The station writes a request as "Track — Artist"; the track may itself contain a dash, so the last one divides. */
+internal fun splitTrackSummary(summary: String): Pair<String, String?> {
+    val divider = summary.lastIndexOf(TRACK_SUMMARY_DIVIDER)
+    if (divider <= 0) return summary to null
+    val artist = summary.substring(divider + TRACK_SUMMARY_DIVIDER.length).trim()
+    return summary.substring(0, divider).trim() to artist.ifEmpty { null }
+}
+
+private const val TRACK_SUMMARY_DIVIDER = " \u2014 "
 
 @Composable
 private fun ListenerStatusRow(label: String, value: String) {
@@ -2386,13 +2539,24 @@ internal fun queuedRequestLabel(seconds: Int): String {
     }
 }
 
-/** "Oct 2, 2026 · 4:16 PM" for the station's "2026-10-02 16:16:02"; anything else is shown as the station wrote it. */
-internal fun requestTimeLabel(raw: String): String = runCatching {
-    java.time.LocalDateTime.parse(raw.trim(), STATION_TIMESTAMP).format(REQUEST_TIME_LABEL)
+/** A chat message's station time without its year and seconds: "02 Oct 26 - 15:04:41" reads as "02 Oct · 15:04". */
+internal fun chatTimeLabel(raw: String): String =
+    CHAT_TIMESTAMP.matchEntire(raw.trim())?.let { "${it.groupValues[1]} · ${it.groupValues[2]}" } ?: raw
+
+private val CHAT_TIMESTAMP = Regex("""(\d{1,2} \p{L}{3}) \d{2} - (\d{1,2}:\d{2}):\d{2}""")
+
+/**
+ * "Oct 2 · 4:16 PM" for the station's "2026-10-02 16:16:02", with the year only when it is not this one; anything
+ * else is shown as the station wrote it.
+ */
+internal fun requestTimeLabel(raw: String, currentYear: Int = java.time.Year.now().value): String = runCatching {
+    val time = java.time.LocalDateTime.parse(raw.trim(), STATION_TIMESTAMP)
+    time.format(if (time.year == currentYear) REQUEST_TIME_THIS_YEAR else REQUEST_TIME_LABEL)
 }.getOrDefault(raw)
 
 private val STATION_TIMESTAMP = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", java.util.Locale.US)
 private val REQUEST_TIME_LABEL = java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy · h:mm a", java.util.Locale.US)
+private val REQUEST_TIME_THIS_YEAR = java.time.format.DateTimeFormatter.ofPattern("MMM d · h:mm a", java.util.Locale.US)
 
 @Composable
 private fun AccountCard(
@@ -2435,21 +2599,20 @@ private fun AccountCard(
                     Button(
                         onClick = { onSignOut(station.id) },
                         modifier = Modifier.testTag("account_sign_out_${station.id.value}"),
-                    ) { Text("Sign out of ${station.shortName}") }
+                    ) { Text("Sign out") }
                 }
                 AuthStatus.LoadingChallenge, AuthStatus.SigningIn -> {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         CircularProgressIndicator(Modifier.size(28.dp))
                         Spacer(Modifier.width(12.dp))
-                        Text(if (auth.status == AuthStatus.SigningIn) "Signing in…" else "Loading secure sign in…")
+                        Text(if (auth.status == AuthStatus.SigningIn) "Signing in…" else "Loading sign-in…")
                     }
                 }
                 AuthStatus.Unavailable -> {
-                    Text("Not signed in", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Button(
                         onClick = { onRefresh(station.id) },
                         modifier = Modifier.testTag("account_load_sign_in_${station.id.value}"),
-                    ) { Text("Load ${station.shortName} sign in") }
+                    ) { Text("Sign in") }
                 }
                 AuthStatus.Expired -> {
                     Text(
@@ -2459,7 +2622,7 @@ private fun AccountCard(
                     Button(
                         onClick = { onRefresh(station.id) },
                         modifier = Modifier.testTag("account_sign_in_again_${station.id.value}"),
-                    ) { Text("Sign in to ${station.shortName} again") }
+                    ) { Text("Sign in again") }
                 }
                 AuthStatus.SignedOut, AuthStatus.Error -> {
                     auth.errorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error) }
@@ -2467,7 +2630,7 @@ private fun AccountCard(
                         Button(
                             onClick = { onRefresh(station.id) },
                             modifier = Modifier.testTag("account_retry_sign_in_${station.id.value}"),
-                        ) { Text("Try loading ${station.shortName} sign in") }
+                        ) { Text("Try again") }
                     } else {
                         OutlinedTextField(
                             username,
@@ -2587,7 +2750,7 @@ private fun AccountStationIdentity(
             )
             if (isSelectedStation) {
                 Text(
-                    "Current playback station",
+                    "Selected station",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

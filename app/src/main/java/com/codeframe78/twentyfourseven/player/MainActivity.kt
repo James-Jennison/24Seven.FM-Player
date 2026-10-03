@@ -442,11 +442,7 @@ class MainActivity : AppCompatActivity() {
 private fun MainActivity.openShortcutStation(request: Pair<StationId, Boolean>) {
     val controls = (application as RadioApplication).appContainer.listenerControls
     val (stationId, startPlayback) = request
-    if (startPlayback) {
-        controls.playStation(stationId)
-    } else {
-        lifecycleScope.launch { (application as RadioApplication).appContainer.stationRepository.selectStation(stationId) }
-    }
+    if (startPlayback) controls.playStation(stationId) else controls.selectStation(stationId)
 }
 
 private fun Intent.shortcutStation(): Pair<StationId, Boolean>? {

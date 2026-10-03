@@ -36,6 +36,13 @@ class ListenerControls(
         start(station)
     }
 
+    /** Switches station without starting it; a station that is already playing changes over as it does in the Player. */
+    fun selectStation(id: StationId): Job = scope.launch {
+        val station = stations.availableStations().firstOrNull { it.id == id } ?: return@launch
+        stations.selectStation(id)
+        playback().selectStation(station)
+    }
+
     private fun start(station: Station) {
         val controller = playback()
         controller.selectStation(station)
