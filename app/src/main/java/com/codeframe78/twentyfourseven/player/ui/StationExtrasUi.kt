@@ -409,7 +409,7 @@ internal fun MemberFavoritesDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
         Surface(Modifier.fillMaxSize().testTag("member_favorites_dialog")) {
-            Column(Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 12.dp)) {
+            Column(Modifier.readablePane().padding(horizontal = 16.dp, vertical = 12.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Favorite, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.width(12.dp))
@@ -520,7 +520,7 @@ internal fun PlayedHistoryDialog(state: MainUiState, actions: StationExtrasActio
     val next = nextHistoryBlock(date, history.startHour).takeIf { it.first <= today }
     Dialog(onDismissRequest = actions.onCloseHistory, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(Modifier.fillMaxSize().testTag("played_history_dialog")) {
-            Column(Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 12.dp)) {
+            Column(Modifier.readablePane().padding(horizontal = 16.dp, vertical = 12.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text("${station.shortName} played history", style = MaterialTheme.typography.titleLarge)

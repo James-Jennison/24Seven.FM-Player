@@ -32,6 +32,11 @@ import androidx.compose.material.icons.automirrored.filled.Reply
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Block
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Mail
@@ -114,7 +119,7 @@ internal fun PrivateMessagesScreen(
         messages != null
     Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(Modifier.fillMaxSize().testTag("private_messages_screen")) {
-            Box(Modifier.fillMaxSize()) {
+            Box(Modifier.readablePane()) {
                 Column(Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 12.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Mail, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
@@ -175,6 +180,10 @@ internal fun PrivateMessagesScreen(
 @Composable
 private fun NewMessageRecipientDialog(station: Station, onDismiss: () -> Unit, onContinue: (String) -> Unit) {
     var recipient by rememberSaveable { mutableStateOf("") }
+    // The name is the only thing to do here, so the keyboard opens on it and its action continues.
+    val focus = remember { FocusRequester() }
+    LaunchedEffect(Unit) { focus.requestFocus() }
+    val proceed = { if (recipient.isNotBlank()) onContinue(recipient.trim()) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("New message") },
@@ -184,7 +193,9 @@ private fun NewMessageRecipientDialog(station: Station, onDismiss: () -> Unit, o
                 onValueChange = { recipient = it.take(MAX_RECIPIENT_CHARACTERS) },
                 label = { Text("${station.shortName} member name") },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth().testTag("private_message_recipient"),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = { proceed() }),
+                modifier = Modifier.fillMaxWidth().focusRequester(focus).testTag("private_message_recipient"),
             )
         },
         confirmButton = {
@@ -382,7 +393,7 @@ private fun PrivateMessageDialog(
     val message = messages.openMessage
     Dialog(onDismissRequest = actions.onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(Modifier.fillMaxSize().testTag("private_message_dialog")) {
-            Column(Modifier.fillMaxSize()) {
+            Column(Modifier.readablePane()) {
                 MessageTopBar(title = messages.folder.label, closeLabel = "Close message", onClose = actions.onClose)
                 when {
                     messages.openStatus == PrivateMessageOpenStatus.Loading -> Box(
@@ -616,7 +627,7 @@ internal fun PrivateMessageComposeDialog(compose: PrivateMessageCompose?, action
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
         Surface(Modifier.fillMaxSize().testTag("private_message_compose")) {
-            Column(Modifier.fillMaxSize().imePadding()) {
+            Column(Modifier.readablePane().imePadding()) {
                 MessageTopBar(
                     title = when {
                         editable && reviewing -> "Review before sending"

@@ -93,7 +93,7 @@ internal fun AlbumDialog(state: MainUiState, actions: AlbumActions) {
     val title = album.title ?: requests?.albumTitle?.takeIf { tracks.isNotEmpty() } ?: "Album"
     Dialog(onDismissRequest = actions.onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(Modifier.fillMaxSize().testTag("album_dialog")) {
-            Column(Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 12.dp)) {
+            Column(Modifier.readablePane().padding(horizontal = 16.dp, vertical = 12.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     album.artworkUrl?.let { artwork ->
                         AsyncImage(

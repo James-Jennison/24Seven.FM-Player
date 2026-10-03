@@ -80,7 +80,7 @@ internal fun CommunityTermsDialog(
     }
     Dialog(onDismissRequest = onDecline, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(Modifier.fillMaxSize().testTag("community_terms")) {
-            Column(Modifier.fillMaxSize()) {
+            Column(Modifier.readablePane()) {
                 Row(
                     Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp, top = 12.dp, bottom = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,

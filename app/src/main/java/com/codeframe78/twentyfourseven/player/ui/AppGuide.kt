@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -78,6 +79,7 @@ internal fun AppGuideDialog(
         ) {
             Surface(
                 modifier = Modifier
+                    .widthIn(max = 640.dp)
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(28.dp))
                     .testTag("app_guide_overlay"),
