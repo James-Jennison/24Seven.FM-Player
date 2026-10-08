@@ -1,5 +1,6 @@
 package com.codeframe78.twentyfourseven.player.data
 
+import com.codeframe78.twentyfourseven.player.domain.FavoriteChange
 import com.codeframe78.twentyfourseven.player.domain.FavoriteTrack
 import com.codeframe78.twentyfourseven.player.domain.StationId
 import com.codeframe78.twentyfourseven.player.domain.canonicalized
@@ -9,10 +10,14 @@ import java.io.IOException
 import java.net.CookieManager
 import java.net.HttpURLConnection
 import java.net.URI
+import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
 internal interface FavoriteTracksRemoteDataSource {
     suspend fun load(stationId: StationId): List<FavoriteTrack>
+
+    /** Sends one change for one track the way the station's own favorites controls do. Needs the station session. */
+    suspend fun change(stationId: StationId, songId: String, change: FavoriteChange)
 }
 
 internal class StationFavoriteTracksRemoteDataSource(
@@ -36,6 +41,28 @@ internal class StationFavoriteTracksRemoteDataSource(
         }
     }
 
+    override suspend fun change(stationId: StationId, songId: String, change: FavoriteChange) =
+        withContext(Dispatchers.IO) {
+            require(songId.matches(SONG_ID))
+            val origin = origin(stationId)
+            val manager = authenticatedCookieManager(stationId, origin)
+            val operation = when (change) {
+                FavoriteChange.MoveUp -> "movetrackup"
+                FavoriteChange.MoveDown -> "movetrackdown"
+                FavoriteChange.Remove -> "removetrackfromlist2"
+            }
+            // The station's own controls form posts these three fields; Yes2Remove is its confirmation flag.
+            val form = listOf("songid" to songId, "Yes2Remove" to "1", "op" to operation)
+                .joinToString("&") { (name, value) -> "${encode(name)}=${encode(value)}" }
+            val response = request(stationId, URI(origin).resolve(FAVORITES_PATH), origin, manager, CHANGE_LIMIT, form)
+            if (parser.showsSignedOutVisitor(response, origin)) {
+                sessions.expire(stationId)
+                throw FavoritesAuthenticationRequiredException()
+            }
+        }
+
+    private fun encode(value: String): String = URLEncoder.encode(value, StandardCharsets.UTF_8.name())
+
     private fun authenticatedCookieManager(stationId: StationId, origin: String): CookieManager {
         return sessions.cookieManager(stationId, origin).also { manager ->
             if (manager.cookieStore.cookies.isEmpty()) throw FavoritesAuthenticationRequiredException()
@@ -48,9 +75,11 @@ internal class StationFavoriteTracksRemoteDataSource(
         origin: String,
         manager: CookieManager,
         limit: Int,
+        form: String? = null,
     ): String {
         val expected = URI(origin)
         var uri = initialUri
+        var pendingForm = form
         repeat(MAX_REDIRECTS + 1) { redirectCount ->
             requireSameOrigin(uri, expected)
             val connection = connectionFactory(uri)
@@ -63,6 +92,12 @@ internal class StationFavoriteTracksRemoteDataSource(
                 manager.get(uri, emptyMap()).forEach { (name, values) ->
                     connection.setRequestProperty(name, values.joinToString("; "))
                 }
+                pendingForm?.let { body ->
+                    connection.requestMethod = "POST"
+                    connection.doOutput = true
+                    connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+                    connection.outputStream.use { it.write(body.toByteArray(StandardCharsets.US_ASCII)) }
+                }
                 val status = connection.responseCode
                 sessions.captureResponse(stationId, origin, uri, connection.headerFields)
                 if (status in REDIRECT_STATUSES) {
@@ -70,6 +105,8 @@ internal class StationFavoriteTracksRemoteDataSource(
                     val location = connection.getHeaderField("Location")
                         ?: throw IOException("Favorites redirect was invalid")
                     uri = uri.resolve(location)
+                    // A redirect after a post leads to the page that shows the result, which is read with GET.
+                    if (status != 307 && status != 308) pendingForm = null
                     return@repeat
                 }
                 if (status !in 200..299) throw IOException("Station returned HTTP $status")
@@ -103,6 +140,8 @@ internal class StationFavoriteTracksRemoteDataSource(
         const val READ_TIMEOUT_MILLIS = 30_000
         const val DISCOVERY_LIMIT = 512_000
         const val LIST_LIMIT = 5_000_000
+        const val CHANGE_LIMIT = 512_000
+        val SONG_ID = Regex("[0-9]{1,10}")
         const val MAX_REDIRECTS = 5
         val REDIRECT_STATUSES = setOf(301, 302, 303, 307, 308)
         val ORIGINS = mapOf(

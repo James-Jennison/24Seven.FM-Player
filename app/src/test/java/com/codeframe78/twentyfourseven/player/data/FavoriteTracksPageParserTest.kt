@@ -60,7 +60,7 @@ class FavoriteTracksPageParserTest {
                 <td>2</td>
                 <td><img src="/images/requestbutton_unavailable.gif" title="The artist is already in queue."></td>
                 <td><a href="#" onclick="return false"><img src="/images/heart-gray.png"></a></td>
-                <td><span><b>Unavailable Track</b></span><br><span>Example Album</span></td>
+                <td onclick="ViewInfoTrack(4821, 197908)"><span><b>Unavailable Track</b></span><br><span>Example Album</span></td>
                 <td><span><b>Example Artist</b></span><br><span>Game</span></td>
                 <td>2020</td><td>3:10</td><td></td><td></td>
               </tr>
@@ -80,6 +80,9 @@ class FavoriteTracksPageParserTest {
         assertEquals("The artist is already in queue.", tracks[1].availabilityMessage)
         assertEquals("B000KNB1IM", tracks[0].albumId)
         assertNull(tracks[1].albumId)
+        // The song number the favorites controls act on comes from the request link or the row's own handler.
+        assertEquals("197907", tracks[0].songId)
+        assertEquals("197908", tracks[1].songId)
     }
 
     @Test

@@ -47,6 +47,17 @@ data class StationCapabilities(
     val supportsMemberFavorites: Boolean = false,
     val supportsPlayedHistoryArchive: Boolean = false,
     val supportsStationNews: Boolean = false,
+    /** Moving and removing tracks in the signed-in member's own favorites list. */
+    val supportsFavoriteManagement: Boolean = false,
+    /** Reading an album's member reviews and, when signed in, writing one. */
+    val supportsAlbumReviews: Boolean = false,
+    val supportsRecentlyAdded: Boolean = false,
+    /** The members list and the station's Online Now block. */
+    val supportsMembersList: Boolean = false,
+    /** The station's events and birthdays calendar. */
+    val supportsCalendar: Boolean = false,
+    /** Editing the signed-in member's own station profile. */
+    val supportsProfileEditing: Boolean = false,
 )
 
 enum class StationPageKind {

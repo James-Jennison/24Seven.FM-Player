@@ -8,7 +8,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.background
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material.icons.automirrored.filled.Sort
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material3.AlertDialog
+import androidx.compose.runtime.Immutable
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.foundation.layout.Arrangement
@@ -52,6 +58,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.codeframe78.twentyfourseven.player.domain.AuthStatus
+import com.codeframe78.twentyfourseven.player.domain.FavoriteChange
+import com.codeframe78.twentyfourseven.player.domain.FavoriteChangeStatus
 import com.codeframe78.twentyfourseven.player.domain.FavoriteTrack
 import com.codeframe78.twentyfourseven.player.domain.FavoriteTracksLoadStatus
 import com.codeframe78.twentyfourseven.player.domain.SongRequestLoadStatus
@@ -152,6 +160,7 @@ internal fun FavoriteTracksScreen(
                     }
                 }
                 FavoriteTracksLoadStatus.Ready -> {
+                    item { FavoriteChangeNotice(state) }
                     item {
                         OutlinedTextField(
                             value = filter,
@@ -221,6 +230,7 @@ internal fun FavoriteTracksScreen(
                                 state.requests?.status != SongRequestLoadStatus.Submitting,
                             onPrepareRequest = onPrepareRequest,
                             coverUrl = favoriteCoverUrl(state.selectedStation, track.albumId),
+                            manage = favoriteManagement(state, track, allTracks),
                         )
                     }
                 }
@@ -286,6 +296,37 @@ internal fun favoriteCoverUrl(station: Station?, albumId: String?): String? {
 
 private val COVER_ALBUM_ID = Regex("[A-Za-z0-9_.-]{1,64}")
 
+/** What the member may do to one row of their own favorites list, and whether a change is on its way. */
+@Immutable
+internal data class FavoriteManagement(
+    val canMoveUp: Boolean,
+    val canMoveDown: Boolean,
+    val busy: Boolean,
+    val onChange: (FavoriteChange) -> Unit,
+)
+
+/** The controls for a row of the signed-in member's own list; null for another member's list or a visitor. */
+@Composable
+internal fun favoriteManagement(state: MainUiState, track: FavoriteTrack, allTracks: List<FavoriteTrack>): FavoriteManagement? {
+    val station = state.selectedStation ?: return null
+    val favorites = state.favorites ?: return null
+    val songId = track.songId ?: return null
+    if (
+        !station.capabilities.supportsFavoriteManagement || state.auth?.status != AuthStatus.SignedIn ||
+        favorites.status != FavoriteTracksLoadStatus.Ready
+    ) {
+        return null
+    }
+    val onChange = LocalStationExtrasActions.current.onChangeFavorite
+    val index = allTracks.indexOfFirst { it.songId == songId }
+    return FavoriteManagement(
+        canMoveUp = index > 0,
+        canMoveDown = index >= 0 && index < allTracks.lastIndex,
+        busy = favorites.change.status == FavoriteChangeStatus.Working,
+        onChange = { change -> onChange(track, change) },
+    )
+}
+
 /** One favorite as a row: its cover, what it is, whether it can be requested, and the request button when it can. */
 @Composable
 internal fun FavoriteTrackCard(
@@ -293,8 +334,11 @@ internal fun FavoriteTrackCard(
     canRequest: Boolean,
     onPrepareRequest: (FavoriteTrack) -> Unit,
     coverUrl: String? = null,
+    manage: FavoriteManagement? = null,
 ) {
     val available = track.availability.canRequest
+    var menuOpen by remember { mutableStateOf(false) }
+    var confirmRemove by remember { mutableStateOf(false) }
     Card(Modifier.fillMaxWidth().testTag("favorite_track_${track.position}")) {
         Row(
             Modifier
@@ -362,7 +406,63 @@ internal fun FavoriteTrackCard(
                     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
                 ) { Text("Request Now") }
             }
+            if (manage != null) {
+                Box {
+                    IconButton(
+                        onClick = { menuOpen = true },
+                        enabled = !manage.busy,
+                        modifier = Modifier.testTag("favorite_track_menu_${track.position}"),
+                    ) {
+                        Icon(Icons.Default.MoreVert, contentDescription = "More actions for ${track.title}")
+                    }
+                    DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                        DropdownMenuItem(
+                            text = { Text("Move up") },
+                            leadingIcon = { Icon(Icons.Default.ArrowUpward, contentDescription = null) },
+                            enabled = manage.canMoveUp,
+                            onClick = {
+                                menuOpen = false
+                                manage.onChange(FavoriteChange.MoveUp)
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Move down") },
+                            leadingIcon = { Icon(Icons.Default.ArrowDownward, contentDescription = null) },
+                            enabled = manage.canMoveDown,
+                            onClick = {
+                                menuOpen = false
+                                manage.onChange(FavoriteChange.MoveDown)
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Remove from favorites") },
+                            leadingIcon = { Icon(Icons.Default.DeleteOutline, contentDescription = null) },
+                            onClick = {
+                                menuOpen = false
+                                confirmRemove = true
+                            },
+                        )
+                    }
+                }
+            }
         }
+    }
+    if (confirmRemove && manage != null) {
+        AlertDialog(
+            onDismissRequest = { confirmRemove = false },
+            title = { Text("Remove from favorites?") },
+            text = { Text("\"${track.title}\" will be removed from your favorites on the station.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        confirmRemove = false
+                        manage.onChange(FavoriteChange.Remove)
+                    },
+                    modifier = Modifier.testTag("favorite_track_remove_confirm"),
+                ) { Text("Remove") }
+            },
+            dismissButton = { TextButton(onClick = { confirmRemove = false }) { Text("Keep") } },
+        )
     }
 }
 
