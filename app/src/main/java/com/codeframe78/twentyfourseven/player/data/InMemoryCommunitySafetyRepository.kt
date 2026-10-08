@@ -52,6 +52,10 @@ internal class InMemoryCommunitySafetyRepository(
         }
     }
 
+    override suspend fun acknowledgeMessageActionsHint() {
+        safety.value = safety.value.copy(messageActionsHintSeen = true)
+    }
+
     override suspend fun setCommunityContentVisible(visible: Boolean) {
         safety.value = safety.value.copy(
             communityContentVisible = visible && safety.value.ageGateStatus == AgeGateStatus.Adult &&

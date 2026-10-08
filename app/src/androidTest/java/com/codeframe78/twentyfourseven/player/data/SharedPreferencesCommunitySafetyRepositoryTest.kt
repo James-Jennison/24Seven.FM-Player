@@ -31,15 +31,18 @@ class SharedPreferencesCommunitySafetyRepositoryTest {
         val stored = context.getSharedPreferences(name, Context.MODE_PRIVATE)
         stored.edit().clear().commit()
         try {
+            assertFalse(repository(context, name).observeSafety().first().messageActionsHintSeen)
             repository(context, name).apply {
                 submitAgeScreen(1990, 4, 3)
                 acceptTerms()
                 setCommunityContentVisible(true)
+                acknowledgeMessageActionsHint()
                 blockUser(StationId("sst"), " MorG Hubby ")
             }
 
             val restored = repository(context, name).observeSafety().first()
             assertTrue(restored.canViewCommunityContent)
+            assertTrue(restored.messageActionsHintSeen)
             assertTrue(restored.isBlocked(StationId("sst"), "morg hubby"))
             assertFalse(restored.isBlocked(StationId("afm"), "morg hubby"))
         } finally {

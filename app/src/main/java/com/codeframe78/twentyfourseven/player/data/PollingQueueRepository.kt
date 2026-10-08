@@ -4,6 +4,7 @@ import com.codeframe78.twentyfourseven.player.domain.QueueLoadStatus
 import com.codeframe78.twentyfourseven.player.domain.QueueRepository
 import com.codeframe78.twentyfourseven.player.domain.QueueState
 import com.codeframe78.twentyfourseven.player.domain.StationId
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -14,6 +15,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import java.util.concurrent.ConcurrentHashMap
 
 class PollingQueueRepository internal constructor(
@@ -59,7 +61,9 @@ class PollingQueueRepository internal constructor(
             } else {
                 state.value = state.value.copy(isStale = true, errorMessage = null)
             }
-            runCatching { remote.fetch(stationId) }
+            // A started read always finishes, even when its observer goes away: the result reaches the next
+            // observer through the shared state, and the station still sees one read per interval.
+            runCatching { withContext(NonCancellable) { remote.fetch(stationId) } }
                 .onSuccess { payload ->
                     state.value = QueueState(
                         stationId = stationId,

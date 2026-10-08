@@ -4,11 +4,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.codeframe78.twentyfourseven.player.domain.Station
+import com.codeframe78.twentyfourseven.player.domain.StationCapabilities
 import com.codeframe78.twentyfourseven.player.domain.StationId
 import com.codeframe78.twentyfourseven.player.domain.StationRepository
 import com.codeframe78.twentyfourseven.player.domain.PlaybackController
 import com.codeframe78.twentyfourseven.player.domain.PlaybackState
+import com.codeframe78.twentyfourseven.player.domain.NowPlayingDetailsRepository
 import com.codeframe78.twentyfourseven.player.domain.NowPlayingRepository
+import com.codeframe78.twentyfourseven.player.domain.PlaybackStatus
 import com.codeframe78.twentyfourseven.player.domain.NowPlayingState
 import com.codeframe78.twentyfourseven.player.domain.QueueRepository
 import com.codeframe78.twentyfourseven.player.domain.QueueState
@@ -46,7 +49,25 @@ import com.codeframe78.twentyfourseven.player.domain.AbuseReportSubmission
 import com.codeframe78.twentyfourseven.player.domain.AbuseReportTarget
 import com.codeframe78.twentyfourseven.player.domain.CommunitySafetyRepository
 import com.codeframe78.twentyfourseven.player.domain.CommunitySafetyState
+import com.codeframe78.twentyfourseven.player.domain.TrackActionsRepository
+import com.codeframe78.twentyfourseven.player.domain.TrackActionsState
+import com.codeframe78.twentyfourseven.player.domain.UnavailableTrackActionsRepository
+import com.codeframe78.twentyfourseven.player.domain.PrivateMessageFolder
+import com.codeframe78.twentyfourseven.player.domain.PrivateMessagesRepository
+import com.codeframe78.twentyfourseven.player.domain.PrivateMessagesState
+import com.codeframe78.twentyfourseven.player.domain.UnavailablePrivateMessagesRepository
+import com.codeframe78.twentyfourseven.player.domain.MemberFavoritesState
+import com.codeframe78.twentyfourseven.player.domain.MemberProfileState
+import com.codeframe78.twentyfourseven.player.domain.StationExtrasRepository
+import com.codeframe78.twentyfourseven.player.domain.StationExtrasState
+import com.codeframe78.twentyfourseven.player.domain.UnavailableStationExtrasRepository
+import com.codeframe78.twentyfourseven.player.domain.currentPlayedHistoryBlock
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -60,6 +81,14 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 enum class MainDestination { Player, Favorites, Chat, Queue, More }
+
+/** The album whose page is open over the current screen, with what the tapped item already knew about it. */
+data class AlbumBrowserState(
+    val stationId: StationId,
+    val albumId: String,
+    val title: String? = null,
+    val artworkUrl: String? = null,
+)
 
 data class MainUiState(
     val stations: List<Station> = emptyList(),
@@ -79,6 +108,10 @@ data class MainUiState(
     val stationPreferences: LocalStationPreferences = LocalStationPreferences(),
     val diagnosticTransitions: List<DiagnosticTransition> = emptyList(),
     val destination: MainDestination = MainDestination.Player,
+    val trackActions: TrackActionsState? = null,
+    val privateMessages: PrivateMessagesState? = null,
+    val extras: StationExtrasState? = null,
+    val album: AlbumBrowserState? = null,
 )
 
 data class StationAccountUiState(
@@ -99,9 +132,54 @@ class MainViewModel(
     private val listenerActivity: ListenerActivityRepository,
     private val communitySafety: CommunitySafetyRepository,
     private val communityNotifications: CommunityNotificationRepository = UnavailableCommunityNotificationRepository,
+    private val trackActions: TrackActionsRepository = UnavailableTrackActionsRepository,
+    private val privateMessages: PrivateMessagesRepository = UnavailablePrivateMessagesRepository,
+    private val extras: StationExtrasRepository = UnavailableStationExtrasRepository,
+    private val nowPlayingDetails: NowPlayingDetailsRepository? = null,
+    private val elapsedRealtimeMillis: () -> Long = { android.os.SystemClock.elapsedRealtime() },
 ) : ViewModel() {
     private val observedSessionStations = mutableSetOf<StationId>()
     private val destination = MutableStateFlow(MainDestination.Player)
+    private val albumBrowser = MutableStateFlow<AlbumBrowserState?>(null)
+
+    @Volatile
+    private var latestOnAir: NowPlayingState? = null
+
+    /**
+     * What the selected station is playing while this device is not playing it, so the Player is never blank. It is
+     * read only while the screen is being shown, about once per track, and is never published to the media session.
+     */
+    private val onAirPreview: Flow<NowPlayingState?> = combine(
+        stations.observeSelectedStation().map { it.id }.distinctUntilChanged(),
+        playback.state.map { it.status.showsOnAirPreview }.distinctUntilChanged(),
+    ) { stationId, wanted -> stationId to wanted }
+        .transformLatest { (stationId, wanted) ->
+            val details = nowPlayingDetails ?: return@transformLatest
+            if (!wanted) {
+                // Once playback has had time to report its own track, the last reading is too old to fall back on.
+                delay(ON_AIR_STALE_AFTER_MILLIS)
+                latestOnAir = null
+                emit(null)
+                return@transformLatest
+            }
+            while (true) {
+                val current = try {
+                    details.fetchNowPlaying(stationId)
+                } catch (cancellation: CancellationException) {
+                    throw cancellation
+                } catch (_: Exception) {
+                    null
+                }
+                if (current != null) {
+                    latestOnAir = current
+                    emit(current)
+                }
+                delay(onAirRefreshDelayMillis(current, elapsedRealtimeMillis()))
+            }
+        }
+        .onStart { emit(null) }
+
+    private val screenContent = combine(destination, albumBrowser, onAirPreview, ::ScreenContent)
     private val diagnosticTransitions = MutableStateFlow<List<DiagnosticTransition>>(emptyList())
     private val playbackContent = combine(
         playback.state,
@@ -248,18 +326,34 @@ class MainViewModel(
         )
     }
 
+    private val selectedTrackActions = stations.observeSelectedStation()
+        .flatMapLatest { station -> trackActions.observeTrackActions(station.id) }
+
+    private val selectedPrivateMessages = stations.observeSelectedStation()
+        .flatMapLatest { station -> privateMessages.observeMessages(station.id) }
+
+    private val selectedExtras = stations.observeSelectedStation()
+        .flatMapLatest { station -> extras.observeExtras(station.id) }
+
+    private val listenerActions =
+        combine(selectedTrackActions, selectedPrivateMessages, selectedExtras, ::ListenerActionsContent)
+
     private val stationContent = combine(
         nowPlaying.observeNowPlaying(),
         accountContent,
         selectedChat,
         requestContent,
-    ) { nowPlayingState, accountState, chatState, requestsState ->
+        listenerActions,
+    ) { nowPlayingState, accountState, chatState, requestsState, listenerActionsState ->
         StationContent(
             nowPlaying = nowPlayingState,
             queue = requestsState.queue,
             account = accountState,
             chat = chatState,
             requestContent = requestsState,
+            trackActions = listenerActionsState.trackActions,
+            privateMessages = listenerActionsState.privateMessages,
+            extras = listenerActionsState.extras,
         )
     }
 
@@ -274,10 +368,11 @@ class MainViewModel(
         stationSelection,
         playbackContent,
         stationContent,
-        destination,
+        screenContent,
         safetyContent,
-    ) { selection, playbackContent, content, selectedDestination, safety ->
+    ) { selection, playbackContent, content, screen, safety ->
         val selected = selection.selected
+        val selectedDestination = screen.destination
         val selectedQueueState = content.queue.takeIf { it.stationId == selected.id }
             ?: QueueState(selected.id)
         val selectedAuthState = content.account.auth.selected.takeIf { it.stationId == selected.id }
@@ -295,8 +390,8 @@ class MainViewModel(
             stations = selection.all,
             selectedStation = selected,
             playback = playbackContent.state,
-            nowPlaying = content.nowPlaying.takeIf { it.stationId == selected.id }
-                ?: NowPlayingState(stationId = selected.id),
+            nowPlaying = shownNowPlaying(content.nowPlaying, screen.onAir, selected.id, playbackContent.state.status)
+                .withCommunityVisibility(selected.id, safety.safety),
             queue = selectedQueueState.withCommunityVisibility(selected.id, safety.safety),
             auth = selectedAuthState,
             accounts = content.account.auth.accounts,
@@ -310,6 +405,12 @@ class MainViewModel(
             stationPreferences = selection.preferences,
             diagnosticTransitions = playbackContent.transitions,
             destination = selectedDestination,
+            trackActions = content.trackActions.takeIf { it.stationId == selected.id },
+            privateMessages = content.privateMessages.takeIf { it.stationId == selected.id }
+                ?.withCommunityVisibility(selected.id, safety.safety),
+            extras = content.extras.takeIf { it.stationId == selected.id }
+                ?.withCommunityVisibility(selected.id, safety.safety),
+            album = screen.album?.takeIf { it.stationId == selected.id },
         )
     }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), MainUiState())
@@ -338,6 +439,13 @@ class MainViewModel(
             stations.observeSelectedStation().collect(playback::selectStation)
         }
         viewModelScope.launch {
+            // A sign-in, a restored session, or a station switch is a moment to learn the unread count.
+            selectedAuth
+                .map { state -> state.stationId to state.status }
+                .distinctUntilChanged()
+                .collect { (_, status) -> if (status == AuthStatus.SignedIn) refreshUnreadPrivateMessages() }
+        }
+        viewModelScope.launch {
             stations.observeStations().collect { all ->
                 all.forEach { station ->
                     auth.restoreSession(station.id)
@@ -351,6 +459,8 @@ class MainViewModel(
                                         favorites.clear(station.id)
                                         listenerActivity.clear(station.id)
                                         requests.clear(station.id)
+                                        trackActions.clear(station.id)
+                                        privateMessages.clear(station.id)
                                     }
                                 }
                         }
@@ -375,6 +485,7 @@ class MainViewModel(
     fun cancelSleepTimer() = playback.cancelSleepTimer()
     fun selectDestination(destination: MainDestination) {
         this.destination.value = destination
+        refreshUnreadPrivateMessages()
         if (destination == MainDestination.Favorites) {
             viewModelScope.launch {
                 val stationId = stations.observeSelectedStation().first().id
@@ -435,6 +546,10 @@ class MainViewModel(
         communitySafety.setCommunityContentVisible(visible)
     }
 
+    fun acknowledgeMessageActionsHint() = viewModelScope.launch {
+        communitySafety.acknowledgeMessageActionsHint()
+    }
+
     fun setChatMentionNotificationsEnabled(stationId: StationId, enabled: Boolean) = viewModelScope.launch {
         communityNotifications.setChatMentionsEnabled(stationId, enabled)
     }
@@ -487,6 +602,173 @@ class MainViewModel(
         favorites.clear(stationId)
         listenerActivity.clear(stationId)
         requests.clear(stationId)
+        trackActions.clear(stationId)
+        privateMessages.clear(stationId)
+    }
+
+    /** Keeps the unread badge current. The repository limits how often the station is actually asked. */
+    fun refreshUnreadPrivateMessages() = viewModelScope.launch {
+        val station = privateMessageStation() ?: return@launch
+        privateMessages.refreshUnreadCount(station.id)
+    }
+
+    fun openMemberProfile(username: String) = viewModelScope.launch {
+        val station = stations.observeSelectedStation().first()
+        val safety = communitySafety.observeSafety().first()
+        if (
+            !station.capabilities.supportsMemberProfiles ||
+            !safety.canViewCommunityContent ||
+            safety.isBlocked(station.id, username)
+        ) {
+            return@launch
+        }
+        extras.openProfile(station.id, username)
+    }
+
+    fun closeMemberProfile() = viewModelScope.launch {
+        extras.closeProfile(stations.observeSelectedStation().first().id)
+    }
+
+    /** Opens the public favorites list of the member whose profile card is showing. */
+    fun openMemberFavorites() = viewModelScope.launch {
+        val station = stations.observeSelectedStation().first()
+        val safety = communitySafety.observeSafety().first()
+        val profile = extras.observeExtras(station.id).first().profile.profile ?: return@launch
+        val memberNumber = profile.memberNumber ?: return@launch
+        if (
+            !station.capabilities.supportsMemberFavorites ||
+            profile.publicFavoritesBadge == null ||
+            !safety.canViewCommunityContent ||
+            safety.isBlocked(station.id, profile.username) ||
+            auth.observeAuth(station.id).first().status != AuthStatus.SignedIn
+        ) {
+            return@launch
+        }
+        extras.openMemberFavorites(station.id, profile.username, memberNumber)
+    }
+
+    fun closeMemberFavorites() = viewModelScope.launch {
+        extras.closeMemberFavorites(stations.observeSelectedStation().first().id)
+    }
+
+    fun openPlayedHistory() {
+        val (date, startHour) = currentPlayedHistoryBlock()
+        loadPlayedHistory(date, startHour)
+    }
+
+    fun loadPlayedHistory(date: java.time.LocalDate, startHour: Int) = viewModelScope.launch {
+        val station = stations.observeSelectedStation().first()
+        if (!station.capabilities.supportsPlayedHistoryArchive) return@launch
+        extras.loadHistory(station.id, date, startHour)
+    }
+
+    fun closePlayedHistory() = viewModelScope.launch {
+        extras.closeHistory(stations.observeSelectedStation().first().id)
+    }
+
+    fun refreshStationNews() = viewModelScope.launch {
+        val station = stations.observeSelectedStation().first()
+        if (!station.capabilities.supportsStationNews) return@launch
+        extras.refreshNews(station.id)
+    }
+
+    fun refreshPrivateMessages(folder: PrivateMessageFolder, page: Int) = viewModelScope.launch {
+        val station = privateMessageStation() ?: return@launch
+        privateMessages.refresh(station.id, folder, page)
+    }
+
+    fun openPrivateMessage(messageId: String) = viewModelScope.launch {
+        val station = privateMessageStation() ?: return@launch
+        privateMessages.openMessage(station.id, messageId)
+    }
+
+    fun closePrivateMessage() = viewModelScope.launch {
+        privateMessages.closeMessage(stations.observeSelectedStation().first().id)
+    }
+
+    fun replyToPrivateMessage() = viewModelScope.launch {
+        val station = privateMessageStation(sending = true) ?: return@launch
+        privateMessages.beginReply(station.id)
+    }
+
+    fun beginPrivateMessage(recipient: String) = viewModelScope.launch {
+        val station = privateMessageStation(sending = true) ?: return@launch
+        privateMessages.beginMessage(station.id, recipient)
+    }
+
+    fun sendPrivateMessage(subject: String, body: String) = viewModelScope.launch {
+        val station = privateMessageStation(sending = true) ?: return@launch
+        privateMessages.send(station.id, subject, body)
+    }
+
+    fun cancelPrivateMessage() = viewModelScope.launch {
+        privateMessages.cancelCompose(stations.observeSelectedStation().first().id)
+    }
+
+    /**
+     * The selected station when private messages may be used on it: the capability is certified, the listener is
+     * signed in, and community access allows viewing, or contributing when [sending].
+     */
+    private suspend fun privateMessageStation(sending: Boolean = false): Station? {
+        val safety = communitySafety.observeSafety().first()
+        if (!safety.canViewCommunityContent || (sending && !safety.canContributeCommunityContent)) return null
+        return signedInStation { capabilities ->
+            capabilities.supportsPrivateMessages && (!sending || capabilities.supportsPrivateMessageSending)
+        }
+    }
+
+    fun addCurrentTrackToFavorites() = viewModelScope.launch {
+        val station = signedInStation { it.supportsNowPlayingFavorite } ?: return@launch
+        val track = currentStationTrack(station.id)?.track ?: return@launch
+        trackActions.addCurrentTrackToFavorites(station.id, track)
+    }
+
+    fun openAlbumRating() = viewModelScope.launch {
+        val station = signedInStation { it.supportsAlbumRating } ?: return@launch
+        val albumId = currentStationTrack(station.id)?.albumId ?: return@launch
+        trackActions.openAlbumRating(station.id, albumId)
+    }
+
+    fun submitAlbumRating(value: String) = viewModelScope.launch {
+        val station = signedInStation { it.supportsAlbumRating } ?: return@launch
+        trackActions.submitAlbumRating(station.id, value)
+    }
+
+    fun closeAlbumRating() = viewModelScope.launch {
+        trackActions.closeAlbumRating(stations.observeSelectedStation().first().id)
+    }
+
+    /** The selected station when it has the capability and the listener is signed in to it. */
+    private suspend fun signedInStation(hasCapability: (StationCapabilities) -> Boolean): Station? {
+        val station = stations.observeSelectedStation().first()
+        val signedIn = auth.observeAuth(station.id).first().status == AuthStatus.SignedIn
+        return station.takeIf { hasCapability(it.capabilities) && signedIn }
+    }
+
+    /** The track the Player is showing for this station, which is what the favorite and rating buttons act on. */
+    private suspend fun currentStationTrack(stationId: StationId): NowPlayingState? = shownNowPlaying(
+        nowPlaying.observeNowPlaying().first(),
+        latestOnAir,
+        stationId,
+        playback.state.value.status,
+    ).takeIf { it.displayTitle != null }
+
+    /** Opens an album's page: its tracks, their request status, and the album rating. */
+    fun openAlbum(albumId: String, title: String?, artworkUrl: String?) = viewModelScope.launch {
+        val station = stations.observeSelectedStation().first()
+        if (!station.capabilities.supportsRequests || !albumId.matches(ALBUM_ID)) return@launch
+        albumBrowser.value = AlbumBrowserState(station.id, albumId, title, artworkUrl)
+        requests.openSearchResult(station.id, RequestSearchTarget.Album(albumId))
+    }
+
+    fun closeAlbum() {
+        albumBrowser.value = null
+    }
+
+    fun rateAlbum(albumId: String) = viewModelScope.launch {
+        val station = signedInStation { it.supportsAlbumRating } ?: return@launch
+        if (!albumId.matches(ALBUM_ID)) return@launch
+        trackActions.openAlbumRating(station.id, albumId)
     }
 
     fun searchRequests(query: String, field: RequestSearchField) = viewModelScope.launch {
@@ -528,6 +810,11 @@ class MainViewModel(
         // Queue is the confirmation surface. Navigate immediately; the result remains
         // station-authoritative and the refresh below renders the final queue state.
         destination.value = MainDestination.Queue
+        // A request made from an album page or a member's favorites list leaves it, so the Queue is what the
+        // listener sees.
+        albumBrowser.value = null
+        extras.closeMemberFavorites(stationId)
+        extras.closeProfile(stationId)
         requests.confirmRequest(
             stationId,
             RequestConfirmationContext(
@@ -553,6 +840,10 @@ class MainViewModel(
         private val listenerActivity: ListenerActivityRepository,
         private val communitySafety: CommunitySafetyRepository,
         private val communityNotifications: CommunityNotificationRepository,
+        private val trackActions: TrackActionsRepository,
+        private val privateMessages: PrivateMessagesRepository,
+        private val extras: StationExtrasRepository,
+        private val nowPlayingDetails: NowPlayingDetailsRepository,
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =
@@ -568,8 +859,55 @@ class MainViewModel(
                 listenerActivity,
                 communitySafety,
                 communityNotifications,
+                trackActions,
+                privateMessages,
+                extras,
+                nowPlayingDetails,
             ) as T
     }
+
+    private companion object {
+        const val ON_AIR_STALE_AFTER_MILLIS = 60_000L
+        val ALBUM_ID = Regex("[A-Za-z0-9_.-]{1,64}")
+    }
+}
+
+private data class ScreenContent(
+    val destination: MainDestination,
+    val album: AlbumBrowserState?,
+    val onAir: NowPlayingState?,
+)
+
+/** Playback states in which this device has no track of its own to show. */
+internal val PlaybackStatus.showsOnAirPreview: Boolean
+    get() = this == PlaybackStatus.Idle || this == PlaybackStatus.Paused || this == PlaybackStatus.Error
+
+/**
+ * The track to show for [stationId]. While this device is playing, that is the track playback reported; before it
+ * has reported one, and while the device is not playing, it is what the station says is on air.
+ */
+internal fun shownNowPlaying(
+    live: NowPlayingState,
+    onAir: NowPlayingState?,
+    stationId: StationId,
+    status: PlaybackStatus,
+): NowPlayingState {
+    val liveHere = live.takeIf { it.stationId == stationId }
+    val onAirHere = onAir?.takeIf { it.stationId == stationId }
+    val preferred = if (status.showsOnAirPreview) {
+        onAirHere ?: liveHere
+    } else {
+        liveHere?.takeIf { it.displayTitle != null } ?: onAirHere ?: liveHere
+    }
+    return preferred ?: NowPlayingState(stationId = stationId)
+}
+
+/** Asks again a few seconds after the current track should end, and never more often than every fifteen seconds. */
+internal fun onAirRefreshDelayMillis(current: NowPlayingState?, nowElapsedRealtimeMillis: Long): Long {
+    val length = current?.trackLengthMillis
+    val started = current?.trackStartedElapsedRealtimeMillis
+    if (length == null || started == null) return 30_000L
+    return (started + length - nowElapsedRealtimeMillis + 3_000L).coerceIn(15_000L, 60_000L)
 }
 
 private data class StationContent(
@@ -578,6 +916,15 @@ private data class StationContent(
     val account: AccountContent,
     val chat: ChatState,
     val requestContent: RequestContent,
+    val trackActions: TrackActionsState,
+    val privateMessages: PrivateMessagesState,
+    val extras: StationExtrasState,
+)
+
+private data class ListenerActionsContent(
+    val trackActions: TrackActionsState,
+    val privateMessages: PrivateMessagesState,
+    val extras: StationExtrasState,
 )
 
 private data class StationSelectionContent(
@@ -623,6 +970,52 @@ private data class SelectedChatContext(
 private data class PlaybackContent(
     val state: PlaybackState,
     val transitions: List<DiagnosticTransition>,
+)
+
+private fun NowPlayingState.withCommunityVisibility(
+    stationId: StationId,
+    safety: CommunitySafetyState,
+): NowPlayingState {
+    val hide = !safety.canViewCommunityContent || safety.isBlocked(stationId, requesterName)
+    return if (hide) copy(requesterName = null, requestMessage = null) else this
+}
+
+/** Private messages are community content: hidden without access, and never shown from a blocked member. */
+private fun PrivateMessagesState.withCommunityVisibility(
+    stationId: StationId,
+    safety: CommunitySafetyState,
+): PrivateMessagesState = when {
+    !safety.canViewCommunityContent -> PrivateMessagesState(stationId)
+    folder == PrivateMessageFolder.Sent -> this
+    else -> copy(
+        messages = messages.filterNot { safety.isBlocked(stationId, it.correspondent) },
+        openMessage = openMessage?.takeUnless { safety.isBlocked(stationId, it.sender) },
+    )
+}
+
+/** A profile card is community content, and a history row's requester follows the same rules as the Queue. */
+private fun StationExtrasState.withCommunityVisibility(
+    stationId: StationId,
+    safety: CommunitySafetyState,
+): StationExtrasState = copy(
+    profile = profile.takeIf {
+        safety.canViewCommunityContent && !safety.isBlocked(stationId, it.requestedName)
+    } ?: MemberProfileState(),
+    memberFavorites = memberFavorites.takeIf {
+        safety.canViewCommunityContent && !safety.isBlocked(stationId, it.memberName)
+    } ?: MemberFavoritesState(),
+    history = history.copy(
+        entries = history.entries.map { entry ->
+            val hide = !safety.canViewCommunityContent || safety.isBlocked(stationId, entry.requesterName)
+            if (hide) entry.copy(requesterName = null, requestMessage = null) else entry
+        },
+    ),
+    // A story's byline is a member name, so it follows the same rule as other member names.
+    news = if (safety.canViewCommunityContent) {
+        news
+    } else {
+        news.copy(stories = news.stories.map { it.copy(author = null) })
+    },
 )
 
 private fun QueueState.withCommunityVisibility(

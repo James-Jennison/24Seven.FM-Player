@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The dot lands first, then each arc sweeps out from it like a signal going on air. -->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/splash_icon">
+    <target android:name="dot" android:animation="@animator/splash_dot" />
+    <target android:name="arc_inner" android:animation="@animator/splash_arc_inner" />
+    <target android:name="arc_middle" android:animation="@animator/splash_arc_middle" />
+    <target android:name="arc_outer" android:animation="@animator/splash_arc_outer" />
+</animated-vector>

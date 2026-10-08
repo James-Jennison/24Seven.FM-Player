@@ -10,9 +10,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.test.platform.app.InstrumentationRegistry
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -27,6 +32,9 @@ import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import com.codeframe78.twentyfourseven.player.domain.Station
@@ -82,6 +90,7 @@ import com.codeframe78.twentyfourseven.player.domain.ListenerActivityState
 import com.codeframe78.twentyfourseven.player.domain.MembershipTier
 import com.codeframe78.twentyfourseven.player.domain.RequestHistoryEntry
 import com.codeframe78.twentyfourseven.player.domain.RequestReadiness
+import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
 import org.junit.Assert.assertEquals
@@ -121,7 +130,7 @@ class RadioAppTest {
         composeRule.onNodeWithText("Account").assertIsDisplayed()
 
         composeRule.onNodeWithContentDescription("Player").performClick()
-        composeRule.onNodeWithText("Not connected").assertIsDisplayed()
+        composeRule.onNodeWithText("Tap Play to listen").assertIsDisplayed()
     }
 
     @Test
@@ -484,6 +493,123 @@ class RadioAppTest {
     }
 
     @Test
+    fun roomyTabletLandscapeUsesImmersivePlayerAndStationDeck() {
+        composeRule.setContent {
+            MaterialTheme {
+                Box(Modifier.requiredSize(1200.dp, 800.dp)) {
+                    RadioApp(
+                        state = sampleState(),
+                        onSelectStation = {},
+                        onSelectDestination = {},
+                        onPlay = {},
+                        onPause = {},
+                        onStop = {},
+                        onRefreshQueue = {},
+                    )
+                }
+            }
+        }
+
+        composeRule.onNodeWithTag("expanded_landscape_player").assertExists()
+        composeRule.onNodeWithTag("tablet_player_hero").assertExists()
+        composeRule.onNodeWithTag("tablet_station_selector").assertExists()
+        composeRule.onNodeWithTag("tablet_station_sst").assertExists().assertHasClickAction()
+        composeRule.onNodeWithTag("landscape_player").assertDoesNotExist()
+    }
+
+    @Test
+    fun minimumExpandedTabletViewportKeepsPlayerAndEveryStationVisible() {
+        assumeDisplayHolds(1000.dp, 640.dp)
+        val stations = tabletStations()
+        composeRule.setContent {
+            val density = LocalDensity.current
+            CompositionLocalProvider(
+                LocalDensity provides Density(density.density, fontScale = 1.15f),
+            ) {
+                MaterialTheme {
+                    Box(Modifier.requiredSize(1000.dp, 640.dp)) {
+                        AdaptivePlayerScreen(
+                            state = sampleState().copy(
+                                stations = stations,
+                                selectedStation = stations.first(),
+                            ),
+                            padding = androidx.compose.foundation.layout.PaddingValues(0.dp),
+                            onSelectStation = {},
+                            onPlay = {},
+                            onStop = {},
+                        )
+                    }
+                }
+            }
+        }
+
+        composeRule.onNodeWithTag("expanded_landscape_player").assertIsDisplayed()
+        composeRule.onNodeWithTag("tablet_player_hero").assertIsDisplayed()
+        composeRule.onNodeWithTag("primary_play_pause").assertIsDisplayed()
+        composeRule.onNodeWithTag("tablet_station_selector").assertIsDisplayed()
+        stations.forEach { station ->
+            composeRule.onNodeWithTag("tablet_station_${station.id.value}").assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun formerExpandedMinimumKeepsEssentialControlsVisibleInCompactFallback() {
+        assertCompactLandscapeFallbackVisible(width = 840.dp, height = 600.dp, fontScale = 1.3f)
+    }
+
+    @Test
+    fun narrowExpandedBoundaryKeepsEssentialControlsVisibleInCompactFallback() {
+        assertCompactLandscapeFallbackVisible(width = 999.dp, height = 639.dp, fontScale = 1f)
+    }
+
+    @Test
+    fun expandedTabletStationAndPlaybackActionsRemainIndependentAndSemantic() {
+        val stations = tabletStations()
+        val selectedStations = mutableListOf<StationId>()
+        var playCount = 0
+        var timerDuration = 0L
+        var audioOutputCount = 0
+        composeRule.setContent {
+            MaterialTheme {
+                Box(Modifier.requiredSize(1200.dp, 800.dp)) {
+                    AdaptivePlayerScreen(
+                        state = sampleState().copy(
+                            stations = stations,
+                            selectedStation = stations.first(),
+                        ),
+                        padding = androidx.compose.foundation.layout.PaddingValues(0.dp),
+                        onSelectStation = { selectedStations += it },
+                        onPlay = { playCount++ },
+                        onStop = {},
+                        sleepTimerActions = SleepTimerActions(onSet = { timerDuration = it }),
+                        audioOutputActions = AudioOutputActions(onOpenChooser = { audioOutputCount++ }),
+                    )
+                }
+            }
+        }
+
+        val radioButtonRole = SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton)
+        stations.forEachIndexed { index, station ->
+            composeRule.onNodeWithTag("tablet_station_${station.id.value}")
+                .assertHasClickAction()
+                .assert(radioButtonRole)
+                .run { if (index == 0) assertIsSelected() else assertIsNotSelected() }
+                .performClick()
+        }
+        composeRule.onNodeWithTag("primary_play_pause").performClick()
+        composeRule.onNodeWithTag("audio_output_open").performClick()
+        composeRule.onNodeWithTag("sleep_timer_open").performClick()
+        composeRule.onNodeWithTag("sleep_timer_preset_15").performClick()
+
+        composeRule.runOnIdle {
+            assertEquals(stations.map(Station::id), selectedStations)
+            assertEquals(1, playCount)
+            assertEquals(15L * 60L * 1_000L, timerDuration)
+            assertEquals(1, audioOutputCount)
+        }
+    }
+
+    @Test
     fun playerControlsDispatchPlaybackAndWrappedStationActions() {
         val selectedStations = mutableListOf<StationId>()
         var playCount = 0
@@ -523,8 +649,8 @@ class RadioAppTest {
             }
         }
 
-        composeRule.onNodeWithContentDescription("Next station").performClick()
-        composeRule.onNodeWithContentDescription("Previous station").performClick()
+        performStationDialAction("Next station")
+        performStationDialAction("Previous station")
         composeRule.onNodeWithContentDescription("Play live radio").performClick()
         composeRule.onNodeWithContentDescription("Stop radio").performClick()
 
@@ -665,7 +791,7 @@ class RadioAppTest {
             }
         }
 
-        composeRule.onNodeWithText("No network · playback will resume automatically").assertIsDisplayed()
+        composeRule.onNodeWithText("Waiting for network · resumes by itself").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Stop radio").assertIsDisplayed().assertHasClickAction()
     }
 
@@ -1012,6 +1138,7 @@ class RadioAppTest {
             }
         }
 
+        composeRule.onNodeWithTag("more_privacy").performScrollTo().performClick()
         composeRule.onNodeWithText("Read privacy notice").performScrollTo().performClick()
         composeRule.onNodeWithText("Data handled by the Player").assertIsDisplayed()
         composeRule.onNodeWithText("Close").assertIsDisplayed()
@@ -1185,6 +1312,7 @@ class RadioAppTest {
             }
         }
 
+        composeRule.onNodeWithTag("more_privacy").performScrollTo().performClick()
         composeRule.onNodeWithText("Open-source licenses").performScrollTo().performClick()
         composeRule.onNodeWithText("third-party software notices", substring = true).assertIsDisplayed()
         composeRule.onNodeWithText("jsoup 1.22.2", substring = true, ignoreCase = true).assertIsDisplayed()
@@ -1207,13 +1335,14 @@ class RadioAppTest {
             }
         }
 
+        composeRule.onNodeWithTag("more_privacy").performScrollTo().performClick()
         composeRule.onNodeWithText("Read privacy notice").performScrollTo().performClick()
         composeRule.onNodeWithText(
             "For privacy questions, close this notice and use Contact Us in More.",
             substring = true,
         ).performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText(
-            "The current Player does not link to station websites",
+            "The current Player does not link to VIP/RIP purchase or activation",
             substring = true,
         ).performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Open project privacy questions").assertDoesNotExist()
@@ -1323,10 +1452,11 @@ class RadioAppTest {
             }
         }
 
-        composeRule.onNodeWithText("Existing message").assertIsDisplayed()
+        composeRule.onNodeWithText("Existing message", substring = true).assertIsDisplayed()
+        composeRule.onNodeWithTag("chat_actions_hint").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("heart emoticon").assertIsDisplayed()
         composeRule.onNodeWithText("Message").performTextInput("Hello chat")
-        composeRule.onNodeWithText("Send").performClick()
+        composeRule.onNodeWithContentDescription("Send").performClick()
         composeRule.runOnIdle { assertEquals(listOf("Hello chat"), sentMessages) }
     }
 
@@ -1378,7 +1508,7 @@ class RadioAppTest {
         composeRule.onNodeWithTag("library_track_sort").performScrollTo().performClick()
         composeRule.onNodeWithText("Play state").performClick()
         composeRule.onNodeWithText("Sort: Play state").assertIsDisplayed()
-        composeRule.onAllNodesWithText("Request Now").assertCountEquals(2)[1].performScrollTo().performClick()
+        composeRule.onNodeWithText("Request Now").performScrollTo().performClick()
         composeRule.onNodeWithText("Request this track?").assertIsDisplayed()
         composeRule.onNodeWithText("Station: StreamingSoundtracks.com", substring = true).assertIsDisplayed()
         composeRule.onNodeWithText("Signed in as: Listener", substring = true).assertIsDisplayed()
@@ -1536,13 +1666,13 @@ class RadioAppTest {
         composeRule.onNodeWithTag("request_status_green").assertIsDisplayed()
         favoritesList.performScrollToNode(hasContentDescription(unavailableDescription))
         composeRule.onNodeWithContentDescription(unavailableDescription).assertIsDisplayed()
-        composeRule.onNodeWithText("Last played today; requestable again tomorrow.")
+        composeRule.onNodeWithText("Last played today\nrequestable again tomorrow.")
             .performScrollTo()
             .assertIsDisplayed()
         favoritesList.performScrollToNode(hasContentDescription(queuedDescription))
         composeRule.onNodeWithContentDescription(queuedDescription).assertIsDisplayed()
         favoritesList.performScrollToNode(hasContentDescription(availableDescription))
-        composeRule.onAllNodesWithText("Request Now").assertCountEquals(2)[1].performScrollTo().performClick()
+        composeRule.onNodeWithText("Request Now").performScrollTo().performClick()
         composeRule.onNodeWithText("Request this track?").assertIsDisplayed()
         composeRule.runOnIdle { assertEquals(listOf(available), prepared) }
         composeRule.onNodeWithText("Send request").performClick()
@@ -1605,7 +1735,7 @@ class RadioAppTest {
         composeRule.onNodeWithTag("favorite_track_1500").assertIsDisplayed()
         composeRule.onNodeWithTag("favorite_tracks_list").performScrollToIndex(2)
         composeRule.onNodeWithTag("favorite_track_sort").performScrollTo().performClick()
-        listOf("#", "Track Name", "Album", "Artist", "Genre", "Year", "Length", "Play state").forEach {
+        listOf("Favorites order", "Track Name", "Album", "Artist", "Genre", "Year", "Length", "Play state").forEach {
             composeRule.onNodeWithText(it).assertExists()
         }
         composeRule.onNodeWithText("Track Name").performClick()
@@ -1665,19 +1795,19 @@ class RadioAppTest {
             }
         }
 
-        composeRule.onNodeWithText("Visible only after access").assertDoesNotExist()
+        composeRule.onNodeWithText("Visible only after access", substring = true).assertDoesNotExist()
         composeRule.onNodeWithTag("age_month").performTextInput("1")
         composeRule.onNodeWithTag("age_day").performTextInput("2")
         composeRule.onNodeWithTag("age_year").performTextInput("1990")
         composeRule.onNodeWithTag("submit_age_screen").performClick()
         composeRule.onNodeWithText("Terms required").assertIsDisplayed()
         composeRule.onNodeWithTag("review_community_terms").performClick()
-        composeRule.onNodeWithContentDescription("I Agree").assertHasClickAction()
-        composeRule.onNodeWithTag("agree_community_terms").performScrollTo().performClick()
+        // The terms offer one "I Agree"; the document's own form lines are not repeated on screen.
+        composeRule.onAllNodesWithText("I Agree").assertCountEquals(1)
         composeRule.onNodeWithTag("accept_community_terms").performClick()
         composeRule.onNodeWithText("Mature community content is hidden").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithTag("show_community_content").performScrollTo().performClick()
-        composeRule.onNodeWithText("Visible only after access").assertIsDisplayed()
+        composeRule.onNodeWithText("Visible only after access", substring = true).assertIsDisplayed()
     }
 
     @Test
@@ -1767,11 +1897,11 @@ class RadioAppTest {
             }
         }
 
-        composeRule.onNodeWithContentDescription("Safety actions for Troublemaker").performClick()
+        composeRule.onNodeWithText("<Troublemaker> Reportable text", substring = true).performClick()
         composeRule.onNodeWithText("Report content").assertIsDisplayed()
         composeRule.onNodeWithText("Report user").assertIsDisplayed()
         composeRule.onNodeWithText("Block user").assertIsDisplayed().performClick()
-        composeRule.onNodeWithText("Reportable text").assertDoesNotExist()
+        composeRule.onNodeWithText("Reportable text", substring = true).assertDoesNotExist()
     }
 
     @Test
@@ -1866,6 +1996,77 @@ class RadioAppTest {
         websiteUrl = "https://$id.example/",
         capabilities = StationCapabilities(supportsAuthentication = true),
     )
+
+    private fun tabletStations() = listOf(
+        accountStation("sst", "StreamingSoundtracks.com", "SST"),
+        accountStation("1980s", "1980s.FM", "1980s"),
+        accountStation("afm", "Adagio.FM", "Adagio"),
+        accountStation("dfm", "Death.FM", "Death"),
+        accountStation("efm", "Entranced.FM", "Entranced"),
+    ).map { station ->
+        station.copy(
+            streams = listOf(
+                StreamVariant("https://example.invalid/${station.id.value}", "Test", 0),
+            ),
+        )
+    }
+
+    /** The artwork offers "Next station" and "Previous station" as accessibility actions in place of the old arrows. */
+    private fun performStationDialAction(label: String) {
+        val actions = composeRule.onNodeWithTag("station_dial").fetchSemanticsNode().config[SemanticsActions.CustomActions]
+        val action = actions.first { it.label == label }
+        composeRule.runOnUiThread { action.action() }
+        composeRule.waitForIdle()
+    }
+
+    /** A pinned viewport wider than the display is centred and clipped, so the test needs a tablet-sized display. */
+    private fun assumeDisplayHolds(width: androidx.compose.ui.unit.Dp, height: androidx.compose.ui.unit.Dp) {
+        val configuration = InstrumentationRegistry.getInstrumentation().targetContext.resources.configuration
+        val longest = maxOf(configuration.screenWidthDp, configuration.screenHeightDp)
+        val shortest = minOf(configuration.screenWidthDp, configuration.screenHeightDp)
+        Assume.assumeTrue(
+            "needs a ${width.value.toInt()}x${height.value.toInt()} dp display, this one is ${longest}x$shortest dp",
+            longest >= width.value && shortest >= height.value,
+        )
+    }
+
+    private fun assertCompactLandscapeFallbackVisible(
+        width: androidx.compose.ui.unit.Dp,
+        height: androidx.compose.ui.unit.Dp,
+        fontScale: Float,
+    ) {
+        assumeDisplayHolds(width, height)
+        val stations = tabletStations()
+        composeRule.setContent {
+            val density = LocalDensity.current
+            CompositionLocalProvider(
+                LocalDensity provides Density(density.density, fontScale = fontScale),
+            ) {
+                MaterialTheme {
+                    Box(Modifier.requiredSize(width, height)) {
+                        AdaptivePlayerScreen(
+                            state = sampleState().copy(
+                                stations = stations,
+                                selectedStation = stations.first(),
+                            ),
+                            padding = androidx.compose.foundation.layout.PaddingValues(0.dp),
+                            onSelectStation = {},
+                            onPlay = {},
+                            onStop = {},
+                        )
+                    }
+                }
+            }
+        }
+
+        composeRule.onNodeWithTag("expanded_landscape_player").assertDoesNotExist()
+        composeRule.onNodeWithTag("landscape_player").assertIsDisplayed()
+        composeRule.onNodeWithTag("primary_play_pause").assertIsDisplayed()
+        composeRule.onNodeWithTag("landscape_station_selector").assertIsDisplayed()
+        stations.forEach { station ->
+            composeRule.onNodeWithTag("landscape_station_${station.id.value}").assertIsDisplayed()
+        }
+    }
 
     private companion object {
         val station = Station(

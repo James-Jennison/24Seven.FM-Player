@@ -2,6 +2,7 @@
 
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const PUBLISHED = "RELEASE_LIFECYCLE_STATE_PUBLISHED";
 
@@ -69,6 +70,8 @@ export function trackLabel(track) {
 }
 
 export function messageFor(release, releaseNotes = []) {
+  // Array.prototype.map passes an index here; only a list of notes is ever rendered.
+  if (!Array.isArray(releaseNotes)) releaseNotes = [];
   const versionCodes = (release.activeArtifacts ?? [])
     .map(({ versionCode }) => `\`${versionCode}\``)
     .join(", ");
@@ -141,15 +144,15 @@ async function main(environment) {
 
   await writeFile(statePath, `${JSON.stringify(nextState, null, 2)}\n`);
 
+  const messages = await Promise.all(announcements.map(async (release) => (
+    messageFor(release, await releaseNotesFor(release))
+  )));
   if (environment.GITHUB_OUTPUT) {
-    const messages = (await Promise.all(announcements.map(async (release) => (
-      messageFor(release, await releaseNotesFor(release))
-    )))).join("\n\n");
     await writeFile(environment.GITHUB_OUTPUT, [
       `count=${announcements.length}`,
       `state_changed=${newlyPublishedReleases.length !== 0}`,
       "message<<PLAY_RELEASE_ANNOUNCEMENT",
-      messages,
+      messages.join("\n\n"),
       "PLAY_RELEASE_ANNOUNCEMENT",
     ].join("\n") + "\n", { flag: "a" });
   } else {
@@ -157,12 +160,13 @@ async function main(environment) {
       bootstrap,
       count: announcements.length,
       stateChanged: newlyPublishedReleases.length !== 0,
-      messages: announcements.map(messageFor),
+      messages,
     }, null, 2)}\n`);
   }
 }
 
-if (process.argv[1] === new URL(import.meta.url).pathname) {
+// fileURLToPath decodes the module URL, so a checkout path with spaces still runs the script.
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   main(process.env).catch((error) => {
     console.error(error.message);
     process.exitCode = 1;

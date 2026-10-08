@@ -156,6 +156,8 @@ internal class AndroidKeystoreAuthSessionStore(
                     secure = value.getBoolean("secure")
                     isHttpOnly = value.getBoolean("httpOnly")
                     maxAge = expiresAt?.let { remainingSeconds(it, now) } ?: -1L
+                    // A rebuilt cookie defaults to version 1, which java.net sends quoted with a $Version prefix.
+                    version = 0
                 }
                 if (cookie.matchesDomain(expectedDomain) && !cookie.hasExpired()) {
                     add(StoredAuthCookie(cookie, expiresAt))

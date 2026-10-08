@@ -4,6 +4,7 @@ import com.codeframe78.twentyfourseven.player.domain.HistoryTrack
 import com.codeframe78.twentyfourseven.player.domain.QueueLoadStatus
 import com.codeframe78.twentyfourseven.player.domain.QueueTrack
 import com.codeframe78.twentyfourseven.player.domain.StationId
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
@@ -96,11 +97,42 @@ class PollingQueueRepositoryTest {
         assertEquals("Cached Queue data could not be refreshed.", state.errorMessage)
     }
 
-    private class FakeRemote(var failure: Throwable? = null) : QueueRemoteDataSource {
+    @Test
+    fun `read that outlives its observer still reaches the next observer without an error`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val remote = FakeRemote(fetchGate = gate)
+        val repository = PollingQueueRepository(
+            remote = remote,
+            elapsedRealtimeMillis = { testScheduler.currentTime },
+        )
+        val first = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            repository.observeQueue(stationId).collect()
+        }
+        runCurrent()
+        first.cancel()
+        val states = mutableListOf<QueueLoadStatus>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            repository.observeQueue(stationId).collect { states += it.status }
+        }
+        runCurrent()
+
+        gate.complete(Unit)
+        runCurrent()
+
+        assertEquals(1, remote.calls)
+        assertTrue(QueueLoadStatus.Error !in states)
+        assertEquals(QueueLoadStatus.Ready, states.last())
+    }
+
+    private class FakeRemote(
+        var failure: Throwable? = null,
+        private val fetchGate: CompletableDeferred<Unit>? = null,
+    ) : QueueRemoteDataSource {
         var calls = 0
 
         override suspend fun fetch(stationId: StationId): QueuePayload {
             calls++
+            fetchGate?.await()
             failure?.let { throw it }
             return QueuePayload(
                 upcoming = listOf(QueueTrack(1, "Upcoming")),

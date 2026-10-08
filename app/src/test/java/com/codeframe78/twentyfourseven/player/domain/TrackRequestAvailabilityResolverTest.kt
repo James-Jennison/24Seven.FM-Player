@@ -91,6 +91,19 @@ class TrackRequestAvailabilityResolverTest {
             TrackRequestStatus.RequestsUnavailable,
             classifyStationRequestAvailability("The artist is already in queue.").status,
         )
+        // The stations append the last play to every reason; the queue reason is the one that applies.
+        assertEquals(
+            TrackRequestStatus.RequestsUnavailable,
+            classifyStationRequestAvailability("The artist is already in queue. Last played: 2022-11-22 04:15:13").status,
+        )
+        assertEquals(
+            TrackRequestStatus.InCurrentQueue,
+            classifyStationRequestAvailability("Track is already in queue. Last played: 2026-10-02 09:57:13").status,
+        )
+        assertEquals(
+            TrackRequestStatus.RecentlyPlayed,
+            classifyStationRequestAvailability("Last played: 2026-09-18 03:58:54; Request cooldown ends: 2026-10-03 03:58:54").status,
+        )
     }
 
     @Test

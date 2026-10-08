@@ -134,9 +134,6 @@ internal class StationSongRequestRemoteDataSource(
             "Track is not eligible for requests"
         }
         require(message.length <= MAX_REQUEST_MESSAGE_CHARACTERS) { "Request message is too long" }
-        require(message.isBlank() || stationId == StationId("sst")) {
-            "Request messages have not been verified for this station"
-        }
         val origin = origin(stationId)
         val manager = authenticatedCookieManager(stationId, origin)
         if (manager.cookieStore.cookies.isEmpty()) return@withContext RequestSubmissionResult.AuthenticationRequired
@@ -283,13 +280,15 @@ internal class StationSongRequestRemoteDataSource(
         hasAuthenticatedMessageForm: Boolean,
     ): RequestSubmissionResult {
         val text = Jsoup.parse(html).text().replace(Regex("\\s+"), " ").trim()
-        if (text.contains("log in", true) || text.contains("login", true) && text.contains("request", true)) {
-            return RequestSubmissionResult.AuthenticationRequired
-        }
+        // The acknowledgement with its member-only message form is the strongest signal, so unrelated sign-in
+        // wording elsewhere on the page must not turn a delivered request into an expired session.
         if (hasAuthenticatedMessageForm && ACCEPTANCE_PATTERNS.any { it.containsMatchIn(text) }) {
             return RequestSubmissionResult.Submitted(
                 "The station acknowledged the request. Confirm it in Queue before requesting again.",
             )
+        }
+        if (text.contains("log in", true) || text.contains("login", true) && text.contains("request", true)) {
+            return RequestSubmissionResult.AuthenticationRequired
         }
         val rejection = REJECTION_PATTERNS.firstOrNull { it.containsMatchIn(text) }
         if (rejection != null) {
@@ -384,7 +383,7 @@ internal class StationSongRequestRemoteDataSource(
 
     private fun trustedRedirect(stationId: StationId, redirect: URI): URI {
         val expected = URI(origin(stationId))
-        val trustedHosts = REDIRECT_HOSTS[stationId.canonicalized()] ?: setOf(expected.host)
+        val trustedHosts = setOf(expected.host, "www.${expected.host}")
         if (trustedHosts.none { it.equals(redirect.host, ignoreCase = true) }) return redirect
         if (
             (redirect.scheme == "http" && effectivePort(redirect) == 80) ||
@@ -414,10 +413,8 @@ internal class StationSongRequestRemoteDataSource(
         else -> -1
     }
 
-    private fun responseCharset(contentType: String?): Charset {
-        val declared = contentType?.substringAfter("charset=", "")?.substringBefore(';')?.trim()?.trim('"')
-        return runCatching { Charset.forName(declared.orEmpty()) }.getOrDefault(StandardCharsets.ISO_8859_1)
-    }
+    private fun responseCharset(contentType: String?): Charset =
+        declaredCharset(contentType, StandardCharsets.ISO_8859_1)
 
     private fun containsCompleteMessageForm(html: String, albumId: String): Boolean {
         val form = Jsoup.parse(html).selectFirst(
@@ -486,9 +483,6 @@ internal class StationSongRequestRemoteDataSource(
             StationId("afm") to "https://adagio.fm/",
             StationId("dfm") to "https://death.fm/",
             StationId("efm") to "https://entranced.fm/",
-        )
-        val REDIRECT_HOSTS = mapOf(
-            StationId("sst") to setOf("streamingsoundtracks.com", "www.streamingsoundtracks.com"),
         )
     }
 

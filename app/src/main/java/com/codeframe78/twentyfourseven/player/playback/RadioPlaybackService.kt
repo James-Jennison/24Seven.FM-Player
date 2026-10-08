@@ -8,7 +8,6 @@ import android.os.Bundle
 import android.os.SystemClock
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
-import androidx.media3.common.ForwardingPlayer
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Metadata
@@ -27,7 +26,7 @@ import androidx.media3.session.SessionResult
 import com.codeframe78.twentyfourseven.player.MainActivity
 import com.codeframe78.twentyfourseven.player.RadioApplication
 import com.codeframe78.twentyfourseven.player.domain.NowPlayingPublisher
-import com.codeframe78.twentyfourseven.player.domain.NowPlayingArtworkRepository
+import com.codeframe78.twentyfourseven.player.domain.NowPlayingDetailsRepository
 import com.codeframe78.twentyfourseven.player.domain.NowPlayingState
 import com.codeframe78.twentyfourseven.player.domain.StationId
 import com.codeframe78.twentyfourseven.player.domain.normalizeTrailingTheArticle
@@ -48,8 +47,8 @@ class RadioPlaybackService : MediaLibraryService() {
     private val nowPlayingPublisher: NowPlayingPublisher by lazy {
         (application as RadioApplication).appContainer.nowPlayingPublisher
     }
-    private val artworkRepository: NowPlayingArtworkRepository by lazy {
-        (application as RadioApplication).appContainer.nowPlayingArtworkRepository
+    private val nowPlayingDetails: NowPlayingDetailsRepository by lazy {
+        (application as RadioApplication).appContainer.nowPlayingDetailsRepository
     }
     private val stationRepository by lazy {
         (application as RadioApplication).appContainer.stationRepository
@@ -73,17 +72,11 @@ class RadioPlaybackService : MediaLibraryService() {
             .setSlots(CommandButton.SLOT_OVERFLOW)
             .build()
     }
-    private val sessionPlayer by lazy {
-        object : ForwardingPlayer(player) {
-            override fun getAvailableCommands(): Player.Commands = super.getAvailableCommands()
-                .buildUpon()
-                .remove(Player.COMMAND_SEEK_TO_NEXT)
-                .remove(Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM)
-                .remove(Player.COMMAND_SEEK_TO_PREVIOUS)
-                .remove(Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM)
-                .build()
-        }
+    private val sessionPlayer by lazy { StationSessionPlayer(player) }
+    private val queueRepository by lazy {
+        (application as RadioApplication).appContainer.queueRepository
     }
+    private var upNextJob: Job? = null
     private val fallbackListener = object : Player.Listener {
         override fun onPlayerError(error: PlaybackException) {
             if (player.hasNextMediaItem()) {
@@ -101,6 +94,8 @@ class RadioPlaybackService : MediaLibraryService() {
             activeNowPlaying = null
             activeMediaId = incomingMediaId
             nowPlayingPublisher.clear(mediaItem?.stationId())
+            upNextJob?.cancel()
+            sessionPlayer.setUpNext(emptyList())
         }
 
         override fun onMetadata(metadata: Metadata) {
@@ -112,10 +107,11 @@ class RadioPlaybackService : MediaLibraryService() {
             activeNowPlaying = nowPlaying
             updateSessionMetadata(nowPlaying)
             nowPlayingPublisher.publish(nowPlaying)
+            refreshUpNext(stationId, nowPlaying.displayTitle)
             artworkJob = serviceScope.launch {
-                val artworkUrl = runCatching { artworkRepository.fetchArtwork(stationId) }.getOrNull() ?: return@launch
+                val details = runCatching { nowPlayingDetails.fetchNowPlaying(stationId) }.getOrNull() ?: return@launch
                 if (activeNowPlaying != nowPlaying || player.currentMediaItem?.stationId() != stationId) return@launch
-                val enriched = nowPlaying.copy(artworkUrl = artworkUrl)
+                val enriched = nowPlaying.withStationDetails(details)
                 activeNowPlaying = enriched
                 updateSessionMetadata(enriched)
                 nowPlayingPublisher.publish(enriched)
@@ -148,7 +144,7 @@ class RadioPlaybackService : MediaLibraryService() {
             session: MediaLibrarySession,
             browser: MediaSession.ControllerInfo,
             params: LibraryParams?,
-        ) = Futures.immediateFuture(LibraryResult.ofItem(automotiveCatalog.rootItem(), params))
+        ) = Futures.immediateFuture(LibraryResult.ofItem(automotiveCatalog.rootItem(), automotiveCatalog.rootParams()))
 
         override fun onGetItem(
             session: MediaLibrarySession,
@@ -218,6 +214,17 @@ class RadioPlaybackService : MediaLibraryService() {
                 }
             }
 
+            CastHandoffSessionContract.stopLocalPlaybackCommand -> {
+                val access = MediaSessionControllerPolicy.access(controller, packageName)
+                if (!MediaSessionControllerPolicy.mayHandOffToCast(access)) {
+                    Futures.immediateFuture(SessionResult(SessionError.ERROR_NOT_SUPPORTED))
+                } else {
+                    // The audio continues on the Cast device, so an active sleep timer keeps running.
+                    player.stop()
+                    Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+                }
+            }
+
             else -> super.onCustomCommand(session, controller, customCommand, args)
         }
 
@@ -279,6 +286,17 @@ class RadioPlaybackService : MediaLibraryService() {
         serviceScope.launch { stationRepository.selectStation(stationId) }
     }
 
+    /** Reads the station's queue once per track, so a car display can list what is coming up. */
+    private fun refreshUpNext(stationId: StationId, onAirTitle: String?) {
+        upNextJob?.cancel()
+        upNextJob = serviceScope.launch {
+            runCatching { queueRepository.refresh(stationId) }
+            val queue = queueRepository.currentQueue(stationId)
+            if (player.currentMediaItem?.stationId() != stationId) return@launch
+            sessionPlayer.setUpNext(upNextMediaItems(stationId, queue.upcoming, onAirTitle))
+        }
+    }
+
     private fun updateSessionMetadata(nowPlaying: NowPlayingState) {
         val index = player.currentMediaItemIndex
         val currentItem = player.currentMediaItem ?: return
@@ -287,18 +305,13 @@ class RadioPlaybackService : MediaLibraryService() {
             nowPlaying.artworkUrl,
             currentItem.mediaMetadata.artworkUri?.toString(),
         )?.let(Uri::parse)
-        if (currentItem.mediaMetadata.title == displayTitle && currentItem.mediaMetadata.artworkUri == artworkUri) return
-        player.replaceMediaItem(
-            index,
-            currentItem.buildUpon()
-                .setMediaMetadata(
-                    currentItem.mediaMetadata.withNowPlayingTitle(displayTitle)
-                        .buildUpon()
-                        .setArtworkUri(artworkUri)
-                        .build(),
-                )
-                .build(),
-        )
+        val metadata = currentItem.mediaMetadata
+            .withNowPlayingTitle(displayTitle, nowPlaying.track, nowPlaying.artist, nowPlaying.album)
+            .buildUpon()
+            .setArtworkUri(artworkUri)
+            .build()
+        if (currentItem.mediaMetadata == metadata) return
+        player.replaceMediaItem(index, currentItem.buildUpon().setMediaMetadata(metadata).build())
     }
 
     private fun startSleepTimer(durationMillis: Long) {
@@ -453,15 +466,39 @@ internal fun String.normalizeLegacyIcyPunctuation(): String = map { character ->
     }
 }.joinToString("")
 
-internal fun MediaMetadata.withNowPlayingTitle(displayTitle: String): MediaMetadata {
-    val stationName = albumTitle ?: title
+/**
+ * The track on air, as a car display, the notification, and the lock screen name it: the title on the first line
+ * and the artist on the second, with the album when the station supplies one. A stream's own title is
+ * "Artist - Title"; the station's details, when they describe the same track, are preferred over splitting it.
+ */
+internal fun MediaMetadata.withNowPlayingTitle(
+    displayTitle: String,
+    track: String? = null,
+    artist: String? = null,
+    album: String? = null,
+): MediaMetadata {
+    // Once a track has been shown the album line holds its album, so the station is carried in its own field.
+    val stationName = station ?: albumTitle ?: title
+    val separator = displayTitle.indexOf(ICY_ARTIST_SEPARATOR)
+    val streamArtist = displayTitle.takeIf { separator > 0 }?.substring(0, separator)?.trim()
+    val streamTitle = displayTitle.takeIf { separator > 0 }
+        ?.substring(separator + ICY_ARTIST_SEPARATOR.length)?.trim()?.takeIf(String::isNotEmpty)
     return buildUpon()
-        .setTitle(displayTitle)
-        .setArtist(stationName)
-        .setAlbumTitle(stationName)
-        .setSubtitle("24seven.FM")
+        .setTitle(track?.takeIf(String::isNotBlank) ?: streamTitle ?: displayTitle)
+        .setArtist(
+            // A car display has two lines, so the second names the artist and then the station.
+            listOfNotNull(
+                artist?.takeIf(String::isNotBlank) ?: streamArtist?.takeIf { streamTitle != null },
+                stationName,
+            ).distinct().joinToString(" · "),
+        )
+        .setAlbumTitle(album?.takeIf(String::isNotBlank) ?: stationName)
+        .setStation(stationName)
+        .setSubtitle(stationName)
         .build()
 }
+
+private const val ICY_ARTIST_SEPARATOR = " - "
 
 internal fun String.normalizeIcyArtistSortArticle(): String {
     val separator = indexOf(" - ")

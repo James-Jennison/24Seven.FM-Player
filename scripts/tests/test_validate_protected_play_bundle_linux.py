@@ -171,6 +171,60 @@ class LinuxPlaySigningTest(unittest.TestCase):
         with self.assertRaisesRegex(signing.SigningError, "could not be located"):
             signing.resolve_android_sdk(environment={}, home=self.root / "missing-home")
 
+    def _git_repository(self) -> Path:
+        repository = Path(tempfile.mkdtemp(prefix="source-", dir=self.root))
+        (repository / "app").mkdir()
+        (repository / "docs").mkdir()
+        (repository / "app/Main.kt").write_text("class Main\n", encoding="utf-8")
+        for command in (
+            ["init", "--quiet"],
+            ["add", "."],
+            [
+                "-c", "user.name=Synthetic", "-c", "user.email=synthetic@example.invalid",
+                "commit", "--quiet", "-m", "Synthetic source",
+            ],
+        ):
+            subprocess.run(["git", "-C", str(repository), *command], check=True)
+        return repository
+
+    def test_clean_worktree_reports_its_head_revision(self) -> None:
+        repository = self._git_repository()
+        head = subprocess.run(
+            ["git", "-C", str(repository), "rev-parse", "HEAD"],
+            check=True, text=True, stdout=subprocess.PIPE,
+        ).stdout.strip()
+
+        (repository / "docs/notes.md").write_text("Not a build input.\n", encoding="utf-8")
+
+        self.assertEqual(head, signing.resolve_source_revision(repository))
+
+    def test_tracked_changes_and_untracked_build_inputs_are_rejected(self) -> None:
+        modified = self._git_repository()
+        (modified / "app/Main.kt").write_text("class Changed\n", encoding="utf-8")
+        with self.assertRaisesRegex(signing.SigningError, "uncommitted changes"):
+            signing.resolve_source_revision(modified)
+
+        untracked = self._git_repository()
+        (untracked / "app/Extra.kt").write_text("class Extra\n", encoding="utf-8")
+        with self.assertRaisesRegex(signing.SigningError, "untracked build inputs"):
+            signing.resolve_source_revision(untracked)
+
+        with self.assertRaisesRegex(signing.SigningError, "could not be determined"):
+            signing.resolve_source_revision(Path(tempfile.mkdtemp(prefix="plain-", dir=self.root)))
+
+    def test_release_bundle_path_follows_the_redirected_build_directory(self) -> None:
+        repository = self.root / "checkout"
+        self.assertEqual(
+            repository / "app/build/outputs/bundle/release/app-release.aab",
+            signing.release_bundle_path(repository, {}),
+        )
+        self.assertEqual(
+            Path("/var/tmp/player-build/outputs/bundle/release/app-release.aab"),
+            signing.release_bundle_path(
+                repository, {"TWENTYFOURSEVEN_ANDROID_BUILD_DIR": "/var/tmp/player-build"}
+            ),
+        )
+
     def test_self_signed_upload_certificate_passes_jar_verification(self) -> None:
         bundle = self.root / "self-signed-test.aab"
         with zipfile.ZipFile(bundle, "w") as archive:

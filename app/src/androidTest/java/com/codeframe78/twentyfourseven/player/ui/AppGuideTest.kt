@@ -6,11 +6,15 @@ import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import com.codeframe78.twentyfourseven.player.domain.Station
+import com.codeframe78.twentyfourseven.player.domain.StationId
 import com.codeframe78.twentyfourseven.player.ui.theme.TwentyFourSevenTheme
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -20,12 +24,20 @@ class AppGuideTest {
     @get:Rule
     val composeRule = createComposeRule()
 
+    private val guideStations = listOf(
+        Station(StationId("one"), "Station One", "One", "First test station", websiteUrl = "https://one.example"),
+        Station(StationId("two"), "Station Two", "Two", "Second test station", websiteUrl = "https://two.example"),
+    )
+
     @Test
     fun guideCanBeSkippedFromFirstStep() {
         var dismissed = false
         composeRule.setContent {
             TwentyFourSevenTheme {
                 AppGuideDialog(
+                    stations = guideStations,
+                    selectedStationId = null,
+                    onSelectStation = {},
                     onDismiss = { dismissed = true },
                     onComplete = {},
                 )
@@ -39,25 +51,26 @@ class AppGuideTest {
     }
 
     @Test
-    fun guideAdvancesBacksAndCompletes() {
+    fun guideListsStationsAndCompletesWithTheChosenOne() {
         var completed = false
+        var chosen: StationId? = null
         composeRule.setContent {
             TwentyFourSevenTheme {
                 AppGuideDialog(
+                    stations = guideStations,
+                    selectedStationId = guideStations.first().id,
+                    onSelectStation = { chosen = it },
                     onDismiss = {},
                     onComplete = { completed = true },
                 )
             }
         }
 
-        composeRule.onNodeWithTag("app_guide_next").performClick()
-        composeRule.onNodeWithTag("app_guide_back").assertIsDisplayed().performClick()
-        composeRule.onNodeWithTag("app_guide_skip").assertIsDisplayed()
+        composeRule.onNodeWithTag("app_guide_station_one").assertIsDisplayed().assertIsSelected()
+        composeRule.onNodeWithTag("app_guide_station_two").assertIsDisplayed().performClick()
+        assertEquals(guideStations[1].id, chosen)
         assertFalse(completed)
 
-        repeat(2) {
-            composeRule.onNodeWithTag("app_guide_next").performClick()
-        }
         composeRule.onNodeWithTag("app_guide_complete").assertIsDisplayed().performClick()
         assertTrue(completed)
     }
@@ -80,6 +93,9 @@ class AppGuideTest {
                 expectedTextColor = MaterialTheme.colorScheme.onSurface
                 expectedSurfaceColor = MaterialTheme.colorScheme.surfaceContainerHigh
                 AppGuideDialog(
+                    stations = guideStations,
+                    selectedStationId = null,
+                    onSelectStation = {},
                     onDismiss = {},
                     onComplete = {},
                 )

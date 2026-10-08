@@ -83,21 +83,25 @@ class NetworkAuthRepository internal constructor(
         val canonical = stationId.canonicalized()
         lock(canonical).withLock {
             val challenge = challenges[canonical]
-            if (username.isBlank() || password.isBlank() || securityCode.isBlank() || challenge == null) {
+            val accountName = username.trim()
+            if (accountName.isEmpty() || password.isBlank() || securityCode.isBlank() || challenge == null) {
                 loadChallenge(canonical, "Enter your username, password, and anti-spam answer.")
                 return@withLock
             }
             state(canonical).value = AuthState(canonical, AuthStatus.SigningIn)
             runCatching {
-                val page = remote.signIn(canonical, challenge, username, password, securityCode)
+                val page = remote.signIn(canonical, challenge, accountName, password, securityCode)
                 val action = URI(challenge.actionUrl)
                 val origin = "${action.scheme}://${action.authority}/"
-                resultParser.parseSignedInDisplayName(page.html, origin, username)
+                resultParser.parseSignedInDisplayName(page.html, origin, accountName)
             }.onSuccess { displayName ->
                 remote.persistSession(canonical, displayName)
                 challenges.remove(canonical)
                 state(canonical).value = AuthState(canonical, AuthStatus.SignedIn, displayName = displayName)
             }.onFailure {
+                // The station may have accepted a sign-in the Player did not confirm. Its cookies would hide the
+                // login form from the next challenge request, so they are dropped first.
+                remote.discardUnconfirmedSession(canonical)
                 loadChallenge(canonical, "Sign in failed. Check your details and the new anti-spam check.")
             }
         }

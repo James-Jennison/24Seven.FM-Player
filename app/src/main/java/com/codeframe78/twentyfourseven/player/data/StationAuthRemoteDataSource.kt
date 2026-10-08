@@ -34,6 +34,7 @@ internal interface AuthRemoteDataSource {
     ): AuthenticatedPage
     suspend fun restoredSession(stationId: StationId): RestoredAuthSession
     fun persistSession(stationId: StationId, displayName: String)
+    fun discardUnconfirmedSession(stationId: StationId) = Unit
     suspend fun signOut(stationId: StationId)
 }
 
@@ -48,8 +49,9 @@ internal class StationAuthRemoteDataSource(
 
     override suspend fun fetchChallenge(stationId: StationId): LoginChallenge = withContext(Dispatchers.IO) {
         val origin = origin(stationId)
-        val accountPage = URI(origin).resolve("/modules.php?name=Your_Account")
-        parser.parse(request(stationId, accountPage, method = "GET").html, origin)
+        // The stations' dedicated sign-in page offers the form even when a session already exists.
+        val signInPage = URI(origin).resolve(SIGN_IN_PATH)
+        parser.parse(request(stationId, signInPage, method = "GET").html, origin)
     }
 
     override suspend fun signIn(
@@ -95,18 +97,22 @@ internal class StationAuthRemoteDataSource(
         val origin = origin(stationId)
         val page = runCatching { request(stationId, URI(origin), method = "GET") }
             .getOrNull() ?: return@withContext RestoredAuthSession.SignedIn(displayName)
-        runCatching { resultParser.parseSignedInDisplayName(page.html, origin, displayName) }
-            .fold(
-                onSuccess = RestoredAuthSession::SignedIn,
-                onFailure = {
-                    sessions.expire(stationId)
-                    RestoredAuthSession.Expired
-                },
-            )
+        when (resultParser.signedInEvidence(page.html, origin, displayName)) {
+            SignedInEvidence.SignedOut -> {
+                sessions.expire(stationId)
+                RestoredAuthSession.Expired
+            }
+            // A maintenance or unrecognized page says nothing about the session, so the saved sign-in is kept.
+            SignedInEvidence.Confirmed, SignedInEvidence.Unknown -> RestoredAuthSession.SignedIn(displayName)
+        }
     }
 
     override fun persistSession(stationId: StationId, displayName: String) {
         sessions.persistAuthenticated(stationId, origin(stationId), displayName)
+    }
+
+    override fun discardUnconfirmedSession(stationId: StationId) {
+        sessions.clear(stationId)
     }
 
     private fun request(stationId: StationId, initialUri: URI, method: String, body: String? = null): AuthenticatedPage {
@@ -177,6 +183,7 @@ internal class StationAuthRemoteDataSource(
 
     private companion object {
         const val USER_AGENT = "24Seven.FM-Player/0.1 (Android; unofficial non-commercial client)"
+        const val SIGN_IN_PATH = "/signin.php"
         const val CONNECT_TIMEOUT_MILLIS = 15_000
         const val READ_TIMEOUT_MILLIS = 30_000
         const val MAX_RESPONSE_CHARACTERS = 512_000

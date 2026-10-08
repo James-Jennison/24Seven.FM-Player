@@ -29,16 +29,43 @@ import com.codeframe78.twentyfourseven.player.domain.NowPlayingRepository
 import com.codeframe78.twentyfourseven.player.domain.SongRequestRepository
 import com.codeframe78.twentyfourseven.player.domain.FavoriteTracksRepository
 import com.codeframe78.twentyfourseven.player.domain.ListenerActivityRepository
+import com.codeframe78.twentyfourseven.player.domain.TrackActionsRepository
+import com.codeframe78.twentyfourseven.player.data.HttpStationPages
+import com.codeframe78.twentyfourseven.player.data.NetworkTrackActionsRepository
+import com.codeframe78.twentyfourseven.player.data.StationTrackActionsRemoteDataSource
+import com.codeframe78.twentyfourseven.player.data.NetworkPrivateMessagesRepository
+import com.codeframe78.twentyfourseven.player.data.StationPrivateMessagesRemoteDataSource
+import com.codeframe78.twentyfourseven.player.domain.PrivateMessagesRepository
+import com.codeframe78.twentyfourseven.player.data.NetworkStationExtrasRepository
+import com.codeframe78.twentyfourseven.player.data.StationExtrasRemoteDataSource
+import com.codeframe78.twentyfourseven.player.domain.StationExtrasRepository
+import com.codeframe78.twentyfourseven.player.domain.PlaybackController
+import com.codeframe78.twentyfourseven.player.domain.PlaybackState
+import com.codeframe78.twentyfourseven.player.playback.ListenerControls
 import com.codeframe78.twentyfourseven.player.playback.Media3PlaybackController
+import com.codeframe78.twentyfourseven.player.shortcuts.StationShortcuts
+import com.codeframe78.twentyfourseven.player.widget.NowPlayingWidget
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 
 class RadioApplication : Application() {
     val appContainer by lazy { AppContainer(this) }
+
+    override fun onCreate() {
+        super.onCreate()
+        NowPlayingWidget.observe(this, appContainer)
+        StationShortcuts.observe(this, appContainer)
+    }
 }
 
 class AppContainer(application: Application) {
     private val nowPlayingStore = InMemoryNowPlayingRepository()
     private val authSessionStore = AndroidKeystoreAuthSessionStore(application)
     private val authSessions = StationAuthSessionCoordinator(authSessionStore)
+    private val stationPages = HttpStationPages(authSessions)
     private val stationPreferences = SharedPreferencesStationPreferencesRepository(application)
     val appGuideRepository = SharedPreferencesAppGuideRepository(
         application,
@@ -53,9 +80,22 @@ class AppContainer(application: Application) {
     private val stationNowPlayingRepository = StationNowPlayingArtworkRepository()
     val nowPlayingArtworkRepository: NowPlayingArtworkRepository = stationNowPlayingRepository
     val nowPlayingDetailsRepository: NowPlayingDetailsRepository = stationNowPlayingRepository
-    val playbackController by lazy {
+    private val createdPlaybackController = MutableStateFlow<PlaybackController?>(null)
+    val playbackController: PlaybackController by lazy {
         Media3PlaybackController(application, nowPlayingDetailsRepository, nowPlayingPublisher)
+            .also { createdPlaybackController.value = it }
     }
+
+    /**
+     * Playback state for surfaces that must not start the playback service just to read it: idle until something
+     * else has created the controller.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun observePlaybackState(): Flow<PlaybackState> =
+        createdPlaybackController.flatMapLatest { it?.state ?: flowOf(PlaybackState()) }
+
+    /** Play, stop and station changes for the widget, the Quick Settings tile and the launcher shortcuts. */
+    val listenerControls = ListenerControls(stationRepository, playback = { playbackController })
     val queueRepository = PollingQueueRepository()
     val authRepository = NetworkAuthRepository(
         StationAuthRemoteDataSource(sessionStore = authSessionStore, sessions = authSessions),
@@ -75,5 +115,14 @@ class AppContainer(application: Application) {
     )
     val listenerActivityRepository: ListenerActivityRepository = NetworkListenerActivityRepository(
         StationListenerActivityRemoteDataSource(sessionStore = authSessionStore, sessions = authSessions),
+    )
+    val trackActionsRepository: TrackActionsRepository = NetworkTrackActionsRepository(
+        StationTrackActionsRemoteDataSource(stationPages),
+    )
+    val privateMessagesRepository: PrivateMessagesRepository = NetworkPrivateMessagesRepository(
+        StationPrivateMessagesRemoteDataSource(stationPages),
+    )
+    val stationExtrasRepository: StationExtrasRepository = NetworkStationExtrasRepository(
+        StationExtrasRemoteDataSource(stationPages),
     )
 }

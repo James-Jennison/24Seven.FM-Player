@@ -59,7 +59,7 @@ jobs:
         run: node scripts/announce-google-play-releases.mjs
 
       - name: Post release announcement to Discord thread
-        if: ${{ steps.releases.outputs.count != '0' }}
+        if: ${{ steps.releases.outputs.count != '' && steps.releases.outputs.count != '0' }}
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           DISCORD_THREAD_ID: ${{ vars.DISCORD_THREAD_ID }}

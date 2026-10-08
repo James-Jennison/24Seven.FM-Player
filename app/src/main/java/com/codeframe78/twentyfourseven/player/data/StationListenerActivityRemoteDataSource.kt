@@ -1,5 +1,6 @@
 package com.codeframe78.twentyfourseven.player.data
 
+import com.codeframe78.twentyfourseven.player.domain.MemberProfile
 import com.codeframe78.twentyfourseven.player.domain.MembershipTier
 import com.codeframe78.twentyfourseven.player.domain.RequestHistoryEntry
 import com.codeframe78.twentyfourseven.player.domain.RequestReadiness
@@ -13,6 +14,7 @@ import java.io.IOException
 import java.net.CookieManager
 import java.net.HttpURLConnection
 import java.net.URI
+import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
 internal data class ListenerActivitySnapshot(
@@ -20,6 +22,8 @@ internal data class ListenerActivitySnapshot(
     val requestReadiness: RequestReadiness,
     val waitMinutes: Int?,
     val recentRequests: List<RequestHistoryEntry>,
+    val rankTitle: String? = null,
+    val queuedRequestWaitSeconds: Int? = null,
 )
 
 internal interface ListenerActivityRemoteDataSource {
@@ -29,6 +33,7 @@ internal interface ListenerActivityRemoteDataSource {
 internal class StationListenerActivityRemoteDataSource(
     private val sessionStore: AuthSessionStore = InMemoryAuthSessionStore(),
     private val parser: ListenerActivityPageParser = ListenerActivityPageParser(),
+    private val profileParser: StationExtrasParser = StationExtrasParser(),
     private val sessions: StationAuthSessionCoordinator = StationAuthSessionCoordinator(sessionStore),
     private val connectionFactory: (URI) -> HttpURLConnection = {
         it.toURL().openConnection() as HttpURLConnection
@@ -44,28 +49,49 @@ internal class StationListenerActivityRemoteDataSource(
             val discovery = parser.parseDiscovery(historyPage, origin, displayName)
             val (cooldown, membership) = coroutineScope {
                 val cooldown = async {
-                    discovery.requestTimerUrl
-                        ?.let { parser.parseCooldown(request(stationId, URI(it), origin, manager, TIMER_RESPONSE_LIMIT)) }
+                    // The stations now print the request clock on the page; older pages framed a separate timer.
+                    discovery.cooldown
+                        ?: discovery.requestTimerUrl
+                            ?.let { parser.parseCooldown(request(stationId, URI(it), origin, manager, TIMER_RESPONSE_LIMIT)) }
                         ?: RequestCooldownEvidence(RequestReadiness.Unknown, null)
                 }
                 val membership = async {
-                    discovery.memberProfileUrl
-                        ?.let { parser.parseMembership(request(stationId, URI(it), origin, manager), origin, displayName) }
-                        ?: MembershipTier.Unknown
+                    ownProfileCard(stationId, origin, manager, displayName)
+                        ?.let { card -> parser.membershipTier(card.membership) to card.rankTitle }
+                        ?: discovery.memberProfileUrl
+                            ?.let { parser.parseMembership(request(stationId, URI(it), origin, manager), origin, displayName) to null }
+                        ?: (MembershipTier.Unknown to null)
                 }
                 cooldown.await() to membership.await()
             }
             ListenerActivitySnapshot(
-                membershipTier = membership,
+                membershipTier = membership.first,
                 requestReadiness = cooldown.readiness,
                 waitMinutes = cooldown.waitMinutes,
                 recentRequests = discovery.recentRequests,
+                rankTitle = membership.second,
+                queuedRequestWaitSeconds = cooldown.queuedRequestWaitSeconds,
             )
         } catch (failure: ListenerActivityAuthenticationRequiredException) {
             sessions.expire(stationId)
             throw failure
         }
     }
+
+    /**
+     * The signed-in member's own public profile card, which names their membership and rank. Null when the station
+     * has no card under that name or the card could not be read, so membership falls back to the older profile page.
+     */
+    private fun ownProfileCard(
+        stationId: StationId,
+        origin: String,
+        manager: CookieManager,
+        displayName: String,
+    ): MemberProfile? = runCatching {
+        val path = PROFILE_CARD_PATH + URLEncoder.encode(displayName, StandardCharsets.UTF_8.name())
+        profileParser.parseProfile(request(stationId, URI(origin).resolve(path), origin, manager, PROFILE_CARD_LIMIT), origin)
+            ?.takeIf { it.username.equals(displayName, ignoreCase = true) }
+    }.getOrNull()
 
     private fun authenticatedCookieManager(stationId: StationId, origin: String): CookieManager {
         return sessions.cookieManager(stationId, origin).also { manager ->
@@ -105,7 +131,8 @@ internal class StationListenerActivityRemoteDataSource(
                     return@repeat
                 }
                 if (status !in 200..299) throw IOException("Station returned HTTP $status")
-                return connection.inputStream.bufferedReader(StandardCharsets.ISO_8859_1).use {
+                val charset = declaredCharset(connection.contentType, StandardCharsets.ISO_8859_1)
+                return connection.inputStream.bufferedReader(charset).use {
                     it.readBounded(responseLimit)
                 }
             } finally {
@@ -124,11 +151,13 @@ internal class StationListenerActivityRemoteDataSource(
         }
     }
 
-    private fun origin(stationId: StationId): String = VERIFIED_ORIGINS[stationId.canonicalized()]
-        ?: throw IOException("Listener activity is not verified for this station")
+    private fun origin(stationId: StationId): String = ORIGINS[stationId.canonicalized()]
+        ?: throw IOException("Listener activity is not available for this station")
 
     private companion object {
         const val REQUEST_HISTORY_PATH = "/modules.php?name=Your_Requests"
+        const val PROFILE_CARD_PATH = "/modules/Your_Profile/hoverCardAJAX.php?username="
+        const val PROFILE_CARD_LIMIT = 50_000
         const val USER_AGENT = "24Seven.FM-Player/0.1 (Android; unofficial non-commercial client)"
         const val CONNECT_TIMEOUT_MILLIS = 15_000
         const val READ_TIMEOUT_MILLIS = 30_000
@@ -136,8 +165,12 @@ internal class StationListenerActivityRemoteDataSource(
         const val TIMER_RESPONSE_LIMIT = 64_000
         const val MAX_REDIRECTS = 5
         val REDIRECT_STATUSES = setOf(301, 302, 303, 307, 308)
-        val VERIFIED_ORIGINS = mapOf(
+        val ORIGINS = mapOf(
             StationId("sst") to "https://streamingsoundtracks.com/",
+            StationId("1980s") to "https://1980s.fm/",
+            StationId("afm") to "https://adagio.fm/",
+            StationId("dfm") to "https://death.fm/",
+            StationId("efm") to "https://entranced.fm/",
         )
     }
 }

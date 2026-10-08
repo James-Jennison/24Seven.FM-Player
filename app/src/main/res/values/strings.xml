@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_now_playing_label">Now playing</string>
+    <string name="widget_now_playing_description">What the station is playing, with Play and Stop.</string>
+    <string name="tile_label">24Seven.FM</string>
+</resources>

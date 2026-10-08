@@ -64,6 +64,20 @@ class MediaSessionControllerPolicyTest {
         assertTrue(commands.contains(Player.COMMAND_CHANGE_MEDIA_ITEMS))
         assertTrue(sessionCommands.contains(SleepTimerSessionContract.setCommand))
         assertTrue(sessionCommands.contains(SleepTimerSessionContract.cancelCommand))
+        assertTrue(sessionCommands.contains(CastHandoffSessionContract.stopLocalPlaybackCommand))
+    }
+
+    @Test
+    fun onlyTheLocalAppMayHandPlaybackToCast() {
+        for (access in listOf(ControllerAccess.Automotive, ControllerAccess.TrustedSystem, ControllerAccess.Foreign)) {
+            val sessionCommands = MediaSessionControllerPolicy.sessionCommands(
+                MediaSession.ConnectionResult.DEFAULT_SESSION_COMMANDS,
+                access,
+            )
+            assertFalse(sessionCommands.contains(CastHandoffSessionContract.stopLocalPlaybackCommand))
+            assertFalse(MediaSessionControllerPolicy.mayHandOffToCast(access))
+        }
+        assertTrue(MediaSessionControllerPolicy.mayHandOffToCast(ControllerAccess.LocalApp))
     }
 
     @Test

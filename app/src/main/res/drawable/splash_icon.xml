@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The signal arcs from the app logo, kept inside the splash icon's inner circle. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group android:name="dot" android:pivotX="38" android:pivotY="70">
+        <path
+            android:fillColor="#C9A8FF"
+            android:pathData="M32,70 A6,6 0 1 1 44,70 A6,6 0 1 1 32,70 Z" />
+    </group>
+    <path
+        android:name="arc_inner"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="7"
+        android:strokeLineCap="round"
+        android:pathData="M38,54 A16,16 0 0 1 54,70" />
+    <path
+        android:name="arc_middle"
+        android:strokeColor="#C9A8FF"
+        android:strokeWidth="7"
+        android:strokeLineCap="round"
+        android:pathData="M38,44 A26,26 0 0 1 64,70" />
+    <path
+        android:name="arc_outer"
+        android:strokeColor="#EEE4FF"
+        android:strokeWidth="7"
+        android:strokeLineCap="round"
+        android:pathData="M38,34 A36,36 0 0 1 74,70" />
+</vector>

@@ -30,11 +30,7 @@ class BootstrapStationRepository(
             domain = "streamingsoundtracks.com",
             logoUrl = "https://streamingsoundtracks.com/images/logos/logo-sst-v200x200.png",
             websiteDomain = "www.streamingsoundtracks.com",
-            capabilities = queueCapabilities.copy(
-                supportsRequestMessages = true,
-                supportsListenerActivity = true,
-                supportsSecondaryContent = true,
-            ),
+            capabilities = queueCapabilities,
         ),
         station(
             id = "1980s",
@@ -43,7 +39,7 @@ class BootstrapStationRepository(
             description = "Music from the 1980s",
             domain = "1980s.fm",
             logoUrl = "https://1980s.fm/images/logos/1980s_logo-200x200.png",
-            capabilities = queueCapabilities.copy(supportsSecondaryContent = true),
+            capabilities = queueCapabilities,
         ),
         station(
             id = "afm",
@@ -52,7 +48,7 @@ class BootstrapStationRepository(
             description = "Classical and light music",
             domain = "adagio.fm",
             logoUrl = "https://adagio.fm/images/logos/logo-afm-200x200.png",
-            capabilities = queueCapabilities.copy(supportsSecondaryContent = true),
+            capabilities = queueCapabilities,
         ),
         station(
             id = "dfm",
@@ -61,7 +57,7 @@ class BootstrapStationRepository(
             description = "Extreme metal",
             domain = "death.fm",
             logoUrl = "https://death.fm/images/logos/logo-dfm-200x200.png",
-            capabilities = queueCapabilities.copy(supportsSecondaryContent = true),
+            capabilities = queueCapabilities,
         ),
         station(
             id = "efm",
@@ -70,7 +66,7 @@ class BootstrapStationRepository(
             description = "Trance and electronic music",
             domain = "entranced.fm",
             logoUrl = "https://entranced.fm/images/logos/logo-efm-g200x200.png",
-            capabilities = queueCapabilities.copy(supportsSecondaryContent = true),
+            capabilities = queueCapabilities,
         ),
     )
     private val alphabeticallyOrderedStations = stations.sortedBy { it.name }
@@ -116,6 +112,24 @@ class BootstrapStationRepository(
             supportsQueue = true,
             supportsHistory = true,
             supportsRequests = true,
+            // The network administrator confirmed on October 2, 2026 that private messages work on all five stations.
+            supportsPrivateMessages = true,
+            supportsPrivateMessageSending = true,
+            // Public profile cards, the history archive, and the news page use one format on all five stations,
+            // checked against each on October 2, 2026.
+            supportsMemberProfiles = true,
+            // A member's public favorites list uses the page the Player already reads for the listener's own list.
+            supportsMemberFavorites = true,
+            supportsPlayedHistoryArchive = true,
+            supportsStationNews = true,
+            supportsSecondaryContent = true,
+            // Request messages, request activity, add-to-favorites, and album rating were verified on
+            // StreamingSoundtracks.com; the owner extended them to the other four stations on October 2, 2026, since
+            // the five sites are one platform.
+            supportsRequestMessages = true,
+            supportsListenerActivity = true,
+            supportsNowPlayingFavorite = true,
+            supportsAlbumRating = true,
         )
 
         fun streams(domain: String) = listOf(

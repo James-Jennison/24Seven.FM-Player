@@ -2,7 +2,6 @@ package com.codeframe78.twentyfourseven.player.data
 
 import com.codeframe78.twentyfourseven.player.domain.HistoryTrack
 import com.codeframe78.twentyfourseven.player.domain.QueueTrack
-import org.json.JSONObject
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import java.net.URI
@@ -13,41 +12,6 @@ internal data class QueuePayload(
 )
 
 internal class PlayerQueueResponseParser {
-    fun parse(json: String, baseUrl: String): QueuePayload {
-        val response = JSONObject(json)
-        return QueuePayload(
-            upcoming = rows(response.getString("queue_html"), baseUrl).mapIndexedNotNull { index, row ->
-                val track = parseRow(row, baseUrl) ?: return@mapIndexedNotNull null
-                QueueTrack(
-                    position = index + 1,
-                    displayTitle = track.displayTitle,
-                    songId = track.songId,
-                    albumId = track.albumId,
-                    artistName = track.artistName,
-                    albumTitle = track.albumTitle,
-                    durationLabel = track.durationLabel,
-                    artworkUrl = track.artworkUrl,
-                    requesterName = track.requesterName,
-                    requestMessage = track.requestMessage,
-                )
-            },
-            recentlyPlayed = rows(response.getString("played_html"), baseUrl).mapNotNull { row ->
-                val track = parseRow(row, baseUrl) ?: return@mapNotNull null
-                HistoryTrack(
-                    displayTitle = track.displayTitle,
-                    songId = track.songId,
-                    albumId = track.albumId,
-                    artistName = track.artistName,
-                    albumTitle = track.albumTitle,
-                    durationLabel = track.durationLabel,
-                    artworkUrl = track.artworkUrl,
-                    requesterName = track.requesterName,
-                    requestMessage = track.requestMessage,
-                )
-            },
-        )
-    }
-
     fun parseExtended(html: String, baseUrl: String, maxTracks: Int = DEFAULT_VISIBLE_TRACKS): QueuePayload {
         require(maxTracks in 1..MAX_EXTENDED_TRACKS)
         val document = Jsoup.parse(html, baseUrl)
@@ -65,9 +29,11 @@ internal class PlayerQueueResponseParser {
                 }
             }
         }
+        val queueAlbumFirst = queueTable?.let(::listsAlbumFirst) == true
+        val playedAlbumFirst = playedTable?.let(::listsAlbumFirst) == true
         return QueuePayload(
             upcoming = queueTable?.let(::directRows).orEmpty().mapNotNull { row ->
-                val track = parseExtendedRow(row, baseUrl) ?: return@mapNotNull null
+                val track = parseExtendedRow(row, baseUrl, queueAlbumFirst) ?: return@mapNotNull null
                 QueueTrack(
                     position = track.position,
                     displayTitle = track.displayTitle,
@@ -82,7 +48,7 @@ internal class PlayerQueueResponseParser {
                 )
             }.take(maxTracks),
             recentlyPlayed = playedTable?.let(::directRows).orEmpty().mapNotNull { row ->
-                val track = parseExtendedRow(row, baseUrl) ?: return@mapNotNull null
+                val track = parseExtendedRow(row, baseUrl, playedAlbumFirst) ?: return@mapNotNull null
                 HistoryTrack(
                     displayTitle = track.displayTitle,
                     songId = track.songId,
@@ -106,29 +72,16 @@ internal class PlayerQueueResponseParser {
         }
     }
 
-    private fun rows(html: String, baseUrl: String): List<Element> =
-        Jsoup.parse("<table><tbody>$html</tbody></table>", baseUrl).select("tr")
-
-    private fun parseRow(row: Element, baseUrl: String): ParsedTrack? {
+    /**
+     * Each table's own heading row names the order of its bold and plain labels. StreamingSoundtracks.com lists the
+     * album first; the other stations list the artist first.
+     */
+    private fun listsAlbumFirst(table: Element): Boolean = directRows(table).any { row ->
         val cells = row.select("td")
-        if (cells.size < 3) return null
-        val artistName = cells[2].selectFirst("strong")?.text()?.trim()?.takeIf(String::isNotEmpty)
-        val displayTitle = cells[2].selectFirst("span")?.text()?.trim().orEmpty()
-        if (displayTitle.isEmpty()) return null
-        return ParsedTrack(
-            displayTitle = displayTitle,
-            songId = requestIdentifier(cells[2], "songID"),
-            albumId = requestIdentifier(cells[2], "asin"),
-            artistName = artistName,
-            albumTitle = null,
-            durationLabel = null,
-            artworkUrl = cells[1].selectFirst("img[src]")
-                ?.absUrl("src")
-                ?.takeIf { isSafeWebUrl(it, baseUrl) },
-        )
+        cells.size == 3 && cells[2].selectFirst("b")?.text()?.trim().equals("Album", ignoreCase = true)
     }
 
-    private fun parseExtendedRow(row: Element, baseUrl: String): ExtendedTrack? {
+    private fun parseExtendedRow(row: Element, baseUrl: String, albumFirst: Boolean): ExtendedTrack? {
         val cells = row.select("td")
         if (cells.size != 3) return null
         val position = cells[0].selectFirst("b, .glowing-rank")?.text()?.trim()?.toIntOrNull() ?: return null
@@ -138,14 +91,18 @@ internal class PlayerQueueResponseParser {
             .firstOrNull { !it.hasClass("req-text") && it.text().trim().isNotEmpty() }
         val usesCurrentStationMarkup = titleSpan != null && details.selectFirst("i") == null
         val (album, artist, title) = if (usesCurrentStationMarkup) {
-            val parsedArtist = details.selectFirst("b")?.text()?.trim()?.takeIf(String::isNotEmpty) ?: return null
-            val parsedAlbum = details.clone().apply { select("b, span, br").remove() }
+            val boldLabel = details.selectFirst("b")?.text()?.trim()?.takeIf(String::isNotEmpty) ?: return null
+            val plainLabel = details.clone().apply { select("b, span, br").remove() }
                 .text()
                 .trim()
                 .removePrefix("-")
                 .trim()
                 .takeIf(String::isNotEmpty) ?: return null
-            Triple(parsedAlbum, parsedArtist, titleSpan.text().trim())
+            if (albumFirst) {
+                Triple(boldLabel, plainLabel, titleSpan.text().trim())
+            } else {
+                Triple(plainLabel, boldLabel, titleSpan.text().trim())
+            }
         } else {
             val parsedAlbum = details.selectFirst("b")?.text()?.trim()?.takeIf(String::isNotEmpty) ?: return null
             val parsedArtist = details.selectFirst("i")?.text()?.trim()?.takeIf(String::isNotEmpty)
@@ -210,18 +167,6 @@ internal class PlayerQueueResponseParser {
         .firstOrNull { it[0].equals(name, ignoreCase = true) }
         ?.get(1)
         ?.takeIf { it.matches(SAFE_IDENTIFIER) }
-
-    private data class ParsedTrack(
-        val displayTitle: String,
-        val songId: String?,
-        val albumId: String?,
-        val artistName: String?,
-        val albumTitle: String?,
-        val durationLabel: String?,
-        val artworkUrl: String?,
-        val requesterName: String? = null,
-        val requestMessage: String? = null,
-    )
 
     private data class ExtendedTrack(
         val position: Int,

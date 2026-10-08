@@ -4,6 +4,7 @@ import com.codeframe78.twentyfourseven.player.domain.ChatLoadStatus
 import com.codeframe78.twentyfourseven.player.domain.ChatRepository
 import com.codeframe78.twentyfourseven.player.domain.ChatState
 import com.codeframe78.twentyfourseven.player.domain.StationId
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -11,10 +12,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.getAndUpdate
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.ConcurrentHashMap
 
@@ -59,49 +63,64 @@ class PollingChatRepository internal constructor(
             if (state.value.status != ChatLoadStatus.Ready) {
                 state.value = state.value.copy(status = ChatLoadStatus.Loading, errorMessage = null)
             }
-            runCatching { remote.fetch(stationId) }
+            // A started read always finishes, even when its observer goes away: the result reaches the next
+            // observer through the shared state, and the station still sees one read per interval.
+            runCatching { withContext(NonCancellable) { remote.fetch(stationId) } }
+                // A read never touches the send fields: a message may be waiting for this read to finish.
                 .onSuccess { messages ->
-                    state.value = ChatState(stationId, ChatLoadStatus.Ready, messages)
+                    state.update { it.copy(status = ChatLoadStatus.Ready, messages = messages, errorMessage = null) }
                 }
                 .onFailure {
                     if (state.value.status != ChatLoadStatus.Ready) {
-                        state.value = ChatState(
-                            stationId,
-                            ChatLoadStatus.Error,
-                            errorMessage = "Chat could not be refreshed.",
-                        )
+                        state.update {
+                            it.copy(
+                                status = ChatLoadStatus.Error,
+                                messages = emptyList(),
+                                errorMessage = "Chat could not be refreshed.",
+                            )
+                        }
                     }
                 }
         }
     }
 
     override suspend fun sendMessage(stationId: StationId, message: String) {
-        lock(stationId).withLock {
-            val value = message.trim()
-            val state = state(stationId)
-            val validationError = when {
-                value.isEmpty() -> "Enter a message."
-                value.length > MAX_MESSAGE_CHARACTERS -> "Messages can be up to 255 characters."
-                !StandardCharsets.ISO_8859_1.newEncoder().canEncode(value) ->
-                    "This station cannot send one or more characters in that message."
-                else -> null
+        val value = message.trim()
+        val state = state(stationId)
+        val validationError = when {
+            value.isEmpty() -> "Enter a message."
+            value.length > MAX_MESSAGE_CHARACTERS -> "Messages can be up to 255 characters."
+            !StandardCharsets.ISO_8859_1.newEncoder().canEncode(value) ->
+                "This station cannot send one or more characters in that message."
+            else -> null
+        }
+        if (validationError != null) {
+            state.update { it.copy(sendErrorMessage = validationError) }
+            return
+        }
+        // The send is marked before it waits for a read in flight, so the composer shows it at once and a second
+        // tap cannot post the message twice.
+        if (state.getAndUpdate { it.copy(isSending = true, sendErrorMessage = null) }.isSending) return
+        try {
+            lock(stationId).withLock {
+                runCatching { remote.send(stationId, value) }
+                    .onSuccess { messages ->
+                        lastAttempts[stationId] = elapsedRealtimeMillis()
+                        state.value = ChatState(stationId, ChatLoadStatus.Ready, messages)
+                    }
+                    .onFailure {
+                        state.update {
+                            it.copy(
+                                isSending = false,
+                                sendErrorMessage =
+                                    "Message could not be sent. Confirm that you are signed in to this station.",
+                            )
+                        }
+                    }
             }
-            if (validationError != null) {
-                state.value = state.value.copy(sendErrorMessage = validationError)
-                return
-            }
-            state.value = state.value.copy(isSending = true, sendErrorMessage = null)
-            runCatching { remote.send(stationId, value) }
-                .onSuccess { messages ->
-                    lastAttempts[stationId] = elapsedRealtimeMillis()
-                    state.value = ChatState(stationId, ChatLoadStatus.Ready, messages)
-                }
-                .onFailure {
-                    state.value = state.value.copy(
-                        isSending = false,
-                        sendErrorMessage = "Message could not be sent. Confirm that you are signed in to this station.",
-                    )
-                }
+        } finally {
+            // Reached with the flag still set only when the caller was cancelled while waiting.
+            state.update { if (it.isSending) it.copy(isSending = false) else it }
         }
     }
 

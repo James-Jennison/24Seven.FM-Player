@@ -3,7 +3,7 @@ package com.codeframe78.twentyfourseven.player.ui
 import com.codeframe78.twentyfourseven.player.domain.FavoriteTrack
 
 internal enum class FavoriteTrackSortOrder(val label: String) {
-    Position("#"),
+    Position("Favorites order"),
     TrackName("Track Name"),
     Album("Album"),
     Artist("Artist"),

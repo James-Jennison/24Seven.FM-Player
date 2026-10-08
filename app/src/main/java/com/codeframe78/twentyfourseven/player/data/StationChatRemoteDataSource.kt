@@ -91,7 +91,8 @@ internal class StationChatRemoteDataSource(
             }
             if (status in 300..399) throw IOException("Unexpected station redirect")
             if (status !in 200..299) throw IOException("Station returned HTTP $status")
-            connection.inputStream.bufferedReader(StandardCharsets.ISO_8859_1).use { reader ->
+            val charset = declaredCharset(connection.contentType, StandardCharsets.ISO_8859_1)
+            connection.inputStream.bufferedReader(charset).use { reader ->
                 reader.readBounded(MAX_RESPONSE_CHARACTERS)
             }
         } finally {

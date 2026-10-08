@@ -2,6 +2,7 @@ package com.codeframe78.twentyfourseven.player.data
 
 import com.codeframe78.twentyfourseven.player.domain.ChatMessage
 import com.codeframe78.twentyfourseven.player.domain.ChatMessagePart
+import com.codeframe78.twentyfourseven.player.domain.ChatRole
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
@@ -41,6 +42,7 @@ internal class ChatResponseParser {
                     ?.removePrefix("Posted ")
                     ?.take(MAX_TIMESTAMP_CHARACTERS),
                 parts = parts,
+                authorRole = authorElement.classNames().firstNotNullOfOrNull(NICK_ROLE_CLASSES::get) ?: ChatRole.Member,
             )
         }
 
@@ -103,8 +105,11 @@ internal class ChatResponseParser {
     }
 }
 
-internal fun String.toSubmittedChatVisibleText(): String = decodeChatNumericEntities()
+/** The text a submitted message reads back as: the parser collapses whitespace, so the comparison must too. */
+internal fun String.toSubmittedChatVisibleText(): String = replace(SUBMITTED_WHITESPACE, " ")
+    .decodeChatNumericEntities()
     .replace(PHPBB_EMOTICON_CODE) { match -> match.groupValues[1] }
+    .trim()
 
 private fun String.decodeChatNumericEntities(): String = replace(NUMERIC_ENTITY) { match ->
     val digits = match.groups[2]?.value ?: match.groups[3]?.value.orEmpty()
@@ -119,5 +124,16 @@ private fun String.decodeChatNumericEntities(): String = replace(NUMERIC_ENTITY)
     }
 }
 
+private val SUBMITTED_WHITESPACE = Regex("\\s+")
 private val NUMERIC_ENTITY = Regex("&#(x([0-9A-Fa-f]{1,6})|([0-9]{1,7}));", RegexOption.IGNORE_CASE)
 private val PHPBB_EMOTICON_CODE = Regex("(?<![A-Za-z0-9])-([A-Za-z][A-Za-z0-9_]*)-(?![A-Za-z0-9])")
+
+/** The stations' shared stylesheet classes for the roles in their legend. */
+internal val NICK_ROLE_CLASSES = mapOf(
+    "fleetadmiralnick" to ChatRole.Proprietor,
+    "admiralnick" to ChatRole.Administrator,
+    "viceadmiralnick" to ChatRole.Moderator,
+    "rearadmiralnick" to ChatRole.Ambassador,
+    "visitormodnick" to ChatRole.VisitorMod,
+    "composernick" to ChatRole.Composer,
+)

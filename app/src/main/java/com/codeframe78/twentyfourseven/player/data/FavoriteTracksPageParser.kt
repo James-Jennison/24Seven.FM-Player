@@ -11,13 +11,20 @@ import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 
 internal class FavoriteTracksPageParser {
+    private val sessionEvidence = AuthLoginResultParser()
+
     fun parseListUrl(html: String, origin: String): String {
         val originUri = trustedOrigin(origin)
         val source = Jsoup.parse(html, origin)
             .selectFirst("iframe#thelist[src]")
             ?.absUrl("src")
             ?.takeIf(String::isNotBlank)
-            ?: throw FavoritesAuthenticationRequiredException()
+            // Only a page that shows a signed-out visitor ends the session; any other page is a load failure.
+            ?: throw if (sessionEvidence.showsSignedOutVisitor(html, origin)) {
+                FavoritesAuthenticationRequiredException()
+            } else {
+                IOException("Favorites list was not found")
+            }
         val uri = runCatching { URI(source) }.getOrNull()
             ?: throw IOException("Favorites list URL was invalid")
         requireSameOrigin(uri, originUri)
@@ -27,6 +34,9 @@ internal class FavoriteTracksPageParser {
         return uri.toASCIIString()
     }
 
+    /** The member number a list address from [parseListUrl] belongs to. */
+    fun listMemberNumber(listUrl: String): String? = queryValue(URI(listUrl).rawQuery, "user2view")
+
     fun parseTracks(html: String, origin: String): List<FavoriteTrack> {
         val originUri = trustedOrigin(origin)
         val document = Jsoup.parse(html, origin)
@@ -35,16 +45,19 @@ internal class FavoriteTracksPageParser {
                 val cells = row.children().filter { it.tagName() == "td" }
                 val position = cells.getOrNull(0)?.text()?.trim()?.toIntOrNull() ?: return@mapNotNull null
                 if (cells.size < 8) return@mapNotNull null
+                // Another member's list carries one more cell after the request button, saying whether the track
+                // is also in the listener's own favorites.
+                val shift = if (cells.size > 8 && cells[2].children().none { it.tagName() == "span" }) 1 else 0
 
-                val titleParts = cells[2].children().filter { it.tagName() == "span" }.map { it.text().trim() }
-                val artistParts = cells[3].children().filter { it.tagName() == "span" }.map { it.text().trim() }
+                val titleParts = cells[2 + shift].children().filter { it.tagName() == "span" }.map { it.text().trim() }
+                val artistParts = cells[3 + shift].children().filter { it.tagName() == "span" }.map { it.text().trim() }
                 val title = titleParts.getOrNull(0)?.takeIf(String::isNotBlank) ?: return@mapNotNull null
                 val album = titleParts.getOrNull(1).orEmpty()
                 val artist = artistParts.getOrNull(0).orEmpty()
                 val genre = artistParts.getOrNull(1)?.takeIf(String::isNotBlank)
                 val requestCell = cells[1]
                 val requestTrack = requestCell.selectFirst("a[href]")?.absUrl("href")
-                    ?.let { parseRequestTrack(it, originUri, title, album, artist, cells[5].text().trim()) }
+                    ?.let { parseRequestTrack(it, originUri, title, album, artist, cells[5 + shift].text().trim()) }
                 val availability = if (requestTrack == null) {
                     requestCell.selectFirst("img[src*=requestbutton]")?.let { image ->
                         image.attr("title").ifBlank { image.attr("alt") }.trim().takeIf(String::isNotBlank)
@@ -58,16 +71,23 @@ internal class FavoriteTracksPageParser {
                     album = album,
                     artist = artist,
                     genre = genre,
-                    year = cells[4].text().trim().takeIf(String::isNotBlank),
-                    duration = cells[5].text().trim().takeIf(String::isNotBlank),
+                    year = cells[4 + shift].text().trim().takeIf(String::isNotBlank),
+                    duration = cells[5 + shift].text().trim().takeIf(String::isNotBlank),
                     requestTrack = requestTrack,
                     availabilityMessage = availability,
                     availability = requestTrack?.availability
                         ?: classifyStationRequestAvailability(availability),
+                    albumId = requestTrack?.albumId ?: rowAlbumId(row),
                 )
             }
             .take(MAX_TRACKS)
             .toList()
+    }
+
+    /** A row that cannot be requested still names its album in the links beside the track. */
+    private fun rowAlbumId(row: org.jsoup.nodes.Element): String? = row.select("a[href]").firstNotNullOfOrNull { link ->
+        val href = link.attr("href")
+        (ALBUM_QUERY.find(href) ?: ALBUM_STORE_PATH.find(href))?.groupValues?.get(1)?.takeIf { it.matches(SAFE_ALBUM_ID) }
     }
 
     private fun parseRequestTrack(
@@ -120,6 +140,8 @@ internal class FavoriteTracksPageParser {
         const val MAX_TRACKS = 5_000
         val NUMERIC_ID = Regex("^[0-9]{1,10}$")
         val SAFE_ALBUM_ID = Regex("^[A-Za-z0-9_.-]{1,64}$")
+        val ALBUM_QUERY = Regex("[?&]asin=([^&#]+)")
+        val ALBUM_STORE_PATH = Regex("/dp/ASIN/([^/?#]+)")
     }
 }
 

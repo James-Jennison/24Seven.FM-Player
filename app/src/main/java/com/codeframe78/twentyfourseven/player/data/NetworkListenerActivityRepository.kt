@@ -32,6 +32,8 @@ internal class NetworkListenerActivityRepository(
                         requestReadiness = snapshot.requestReadiness,
                         waitMinutes = snapshot.waitMinutes,
                         recentRequests = snapshot.recentRequests,
+                        rankTitle = snapshot.rankTitle,
+                        queuedRequestWaitSeconds = snapshot.queuedRequestWaitSeconds,
                     )
                 }
             }

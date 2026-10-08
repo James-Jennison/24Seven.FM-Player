@@ -27,7 +27,7 @@ private fun CoverDisplayPlayingPreview() = PlayerPreview(PlaybackStatus.Playing,
 @Composable
 private fun LandscapePausedPreview() = PlayerPreview(PlaybackStatus.Paused)
 
-@Preview(name = "Expanded · buffering", widthDp = 1200, heightDp = 800, showBackground = true)
+@Preview(name = "Tablet landscape · immersive player", widthDp = 1200, heightDp = 800, showBackground = true)
 @Composable
 private fun ExpandedBufferingPreview() = PlayerPreview(PlaybackStatus.Buffering)
 
@@ -101,7 +101,7 @@ private fun previewStation(id: String, name: String, shortName: String, descript
         supportsAuthentication = true,
         supportsChat = true,
         supportsRequests = true,
-        supportsRequestMessages = id == "sst",
+        supportsRequestMessages = true,
         supportsQueue = true,
         supportsHistory = true,
     ),

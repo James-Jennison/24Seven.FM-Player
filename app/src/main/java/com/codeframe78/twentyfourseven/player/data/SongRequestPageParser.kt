@@ -61,7 +61,9 @@ internal class SongRequestPageParser {
     fun parseAlbum(html: String, origin: String, expectedAlbumId: String): RequestAlbum {
         val expected = URI(origin)
         val document = Jsoup.parse(html, origin)
-        val albumTitle = document.selectFirst("meta[property=\"og:title\"]")?.attr("content")?.clean()
+        // The stations end the shared title with their own name, as in "Album - Artist | Station".
+        val albumTitle = document.selectFirst("meta[property=\"og:title\"]")?.attr("content")
+            ?.substringBeforeLast(" | ")?.clean()?.takeIf(String::isNotBlank)
             ?: document.title().substringAfter(" - ", "").clean().ifBlank { null }
         val tracks = document.select("tr").mapNotNull { row ->
             val requestImage = row.selectFirst("img[src*=requestbutton]") ?: return@mapNotNull null
@@ -83,9 +85,14 @@ internal class SongRequestPageParser {
                 cell.ownText().clean().isNotBlank() && cell.text().clean().length > 2 &&
                     !cell.text().clean().matches(DURATION) && !cell.text().clean().matches(NUMERIC_ID)
             } ?: return@mapNotNull null
-            val title = titleCell.ownText().clean().ifBlank {
-                titleCell.textNodes().joinToString(" ") { it.text() }.clean()
-            }
+            // The stations now mark the track title up as a named element of the cell; older pages left it as the
+            // cell's own text.
+            val title = titleCell.children()
+                .firstOrNull { it.attr("itemprop") == "name" }
+                ?.text()?.clean()?.takeIf(String::isNotBlank)
+                ?: titleCell.ownText().clean().ifBlank {
+                    titleCell.textNodes().joinToString(" ") { it.text() }.clean()
+                }
             if (title.isBlank()) return@mapNotNull null
             val artist = titleCell.select("a[href*=postartistsearch]").joinToString(", ") { it.text().clean() }
                 .ifBlank { null }

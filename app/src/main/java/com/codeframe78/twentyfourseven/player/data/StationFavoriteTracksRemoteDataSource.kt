@@ -73,7 +73,8 @@ internal class StationFavoriteTracksRemoteDataSource(
                     return@repeat
                 }
                 if (status !in 200..299) throw IOException("Station returned HTTP $status")
-                return connection.inputStream.bufferedReader(StandardCharsets.ISO_8859_1).use {
+                val charset = declaredCharset(connection.contentType, StandardCharsets.ISO_8859_1)
+                return connection.inputStream.bufferedReader(charset).use {
                     it.readBounded(limit)
                 }
             } finally {

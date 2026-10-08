@@ -15,10 +15,13 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.content.pm.PackageInfoCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -34,6 +37,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import com.codeframe78.twentyfourseven.player.domain.StationPageTrustPolicy
 import com.codeframe78.twentyfourseven.player.domain.StationId
+import com.codeframe78.twentyfourseven.player.shortcuts.StationShortcuts
 import com.codeframe78.twentyfourseven.player.domain.toSupportedStationIdOrNull
 import com.codeframe78.twentyfourseven.player.domain.PlayerEmailDraft
 import com.codeframe78.twentyfourseven.player.domain.feedbackEmailDraft
@@ -51,7 +55,11 @@ import com.codeframe78.twentyfourseven.player.ui.FeedbackUi
 import com.codeframe78.twentyfourseven.player.ui.MainDestination
 import com.codeframe78.twentyfourseven.player.ui.MainViewModel
 import com.codeframe78.twentyfourseven.player.ui.RadioApp
+import com.codeframe78.twentyfourseven.player.ui.PrivateMessageActions
+import com.codeframe78.twentyfourseven.player.ui.AlbumActions
+import com.codeframe78.twentyfourseven.player.ui.StationExtrasActions
 import com.codeframe78.twentyfourseven.player.ui.SleepTimerActions
+import com.codeframe78.twentyfourseven.player.ui.TrackActions
 import com.codeframe78.twentyfourseven.player.ui.theme.TwentyFourSevenTheme
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -66,14 +74,42 @@ class MainActivity : AppCompatActivity() {
         ActivityResultContracts.RequestPermission(),
     ) { }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        requestedChatStationId.value = intent.chatStationId()
+    private fun requestNotificationPermissionIfMissing() {
         if (
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
         ) {
             notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        val splash = installSplashScreen()
+        super.onCreate(savedInstanceState)
+        // The launch screen stays until the station list and the remembered station are back, so the first frame
+        // the listener sees is their station rather than an empty player.
+        var stationRestored = false
+        splash.setKeepOnScreenCondition { !stationRestored }
+        splash.setOnExitAnimationListener { view ->
+            // A launch from a shortcut or a notification can show the launch screen without its icon; the
+            // library then throws on iconView instead of returning null.
+            runCatching { view.iconView }.getOrNull()
+                ?.animate()
+                ?.alpha(0f)
+                ?.scaleX(1.15f)
+                ?.scaleY(1.15f)
+                ?.setDuration(SPLASH_EXIT_MILLIS)
+                ?.start()
+            view.view.animate()
+                .alpha(0f)
+                .setDuration(SPLASH_EXIT_MILLIS)
+                .withEndAction { view.remove() }
+                .start()
+        }
+        // A recreated Activity still holds the launching intent; its chat destination was already applied.
+        if (savedInstanceState == null) {
+            requestedChatStationId.value = intent.chatStationId()
+            intent.shortcutStation()?.let(::openShortcutStation)
         }
         enableEdgeToEdge()
         val container = (application as RadioApplication).appContainer
@@ -91,9 +127,16 @@ class MainActivity : AppCompatActivity() {
                     container.listenerActivityRepository,
                     container.communitySafetyRepository,
                     container.communityNotificationRepository,
+                    container.trackActionsRepository,
+                    container.privateMessagesRepository,
+                    container.stationExtrasRepository,
+                    container.nowPlayingDetailsRepository,
                 ),
             )
             val state = viewModel.uiState.collectAsStateWithLifecycle().value
+            if (state.selectedStation != null) stationRestored = true
+            // Returning to the app is a moment to learn about new private messages.
+            LifecycleEventEffect(Lifecycle.Event.ON_START) { viewModel.refreshUnreadPrivateMessages() }
             val chatStationId = requestedChatStationId.collectAsStateWithLifecycle().value
             val appGuideState = container.appGuideRepository.state.collectAsStateWithLifecycle().value
             var manualGuideOpen by rememberSaveable { mutableStateOf(false) }
@@ -130,7 +173,12 @@ class MainActivity : AppCompatActivity() {
                         state = state,
                         onSelectStation = viewModel::selectStation,
                         onSelectDestination = viewModel::selectDestination,
-                        onPlay = viewModel::play,
+                        onPlay = {
+                            // The playback notification is the first thing that needs the permission, so the
+                            // question is asked when the listener presses Play rather than over the launch screen.
+                            requestNotificationPermissionIfMissing()
+                            viewModel.play()
+                        },
                         onPause = viewModel::pause,
                         onStop = viewModel::stop,
                         sleepTimerActions = SleepTimerActions(
@@ -168,6 +216,38 @@ class MainActivity : AppCompatActivity() {
                                 },
                             ),
                         ),
+                        trackActions = TrackActions(
+                            onAddFavorite = viewModel::addCurrentTrackToFavorites,
+                            onOpenRating = viewModel::openAlbumRating,
+                            onSubmitRating = viewModel::submitAlbumRating,
+                            onCloseRating = viewModel::closeAlbumRating,
+                        ),
+                        privateMessageActions = PrivateMessageActions(
+                            onRefresh = viewModel::refreshPrivateMessages,
+                            onOpen = viewModel::openPrivateMessage,
+                            onClose = viewModel::closePrivateMessage,
+                            onReply = viewModel::replyToPrivateMessage,
+                            onNewMessage = viewModel::beginPrivateMessage,
+                            onSend = viewModel::sendPrivateMessage,
+                            onCancelCompose = viewModel::cancelPrivateMessage,
+                        ),
+                        albumActions = AlbumActions(
+                            onOpen = { album -> viewModel.openAlbum(album.albumId, album.title, album.artworkUrl) },
+                            onClose = viewModel::closeAlbum,
+                            onRate = viewModel::rateAlbum,
+                            onPrepareRequest = viewModel::prepareSongRequest,
+                        ),
+                        stationExtrasActions = StationExtrasActions(
+                            onOpenProfile = viewModel::openMemberProfile,
+                            onCloseProfile = viewModel::closeMemberProfile,
+                            onOpenMemberFavorites = viewModel::openMemberFavorites,
+                            onCloseMemberFavorites = viewModel::closeMemberFavorites,
+                            onOpenHistory = viewModel::openPlayedHistory,
+                            onLoadHistory = viewModel::loadPlayedHistory,
+                            onCloseHistory = viewModel::closePlayedHistory,
+                            onRefreshNews = viewModel::refreshStationNews,
+                            onOpenLink = ::openWebLink,
+                        ),
                         onRefreshQueue = viewModel::refreshQueue,
                         onRefreshChat = viewModel::refreshChat,
                         onRefreshFavorites = viewModel::refreshFavorites,
@@ -177,6 +257,7 @@ class MainActivity : AppCompatActivity() {
                             onSubmitAgeScreen = viewModel::submitCommunityAgeScreen,
                             onAcceptTerms = viewModel::acceptCommunityTerms,
                             onSetCommunityContentVisible = viewModel::setCommunityContentVisible,
+                            onAcknowledgeMessageActionsHint = viewModel::acknowledgeMessageActionsHint,
                             onBlockUser = viewModel::blockCommunityUser,
                             onUnblockUser = viewModel::unblockCommunityUser,
                             onBeginReport = viewModel::beginAbuseReport,
@@ -233,6 +314,9 @@ class MainActivity : AppCompatActivity() {
                 if (showAppGuide) {
                     val automatic = appGuideState.shouldShowAutomatically && !manualGuideOpen
                     AppGuideDialog(
+                        stations = state.stations,
+                        selectedStationId = state.selectedStation?.id,
+                        onSelectStation = viewModel::selectStation,
                         onDismiss = {
                             if (automatic) {
                                 lifecycleScope.launch { container.appGuideRepository.markCurrentVersionComplete() }
@@ -281,6 +365,7 @@ class MainActivity : AppCompatActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         requestedChatStationId.value = intent.chatStationId()
+        intent.shortcutStation()?.let(::openShortcutStation)
     }
 
     private fun showAudioOutputSwitcher(refreshAudioOutput: () -> Unit) {
@@ -341,6 +426,19 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /** Opens a member's website or a station page in the browser; the Player's station session is not shared with it. */
+    private fun openWebLink(url: String) {
+        val uri = android.net.Uri.parse(url)
+        if (uri.scheme != "https" && uri.scheme != "http") return
+        try {
+            CustomTabsIntent.Builder().setShowTitle(true).build().launchUrl(this, uri)
+        } catch (_: ActivityNotFoundException) {
+            Toast.makeText(this, "No browser is available on this device.", Toast.LENGTH_SHORT).show()
+        } catch (_: SecurityException) {
+            Toast.makeText(this, "This link could not be opened.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun openEmailComposer(draft: PlayerEmailDraft): Boolean {
         val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
             data = Uri.parse(
@@ -361,6 +459,20 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
+/** A launcher shortcut names a station and asks for it to play straight away. */
+private fun MainActivity.openShortcutStation(request: Pair<StationId, Boolean>) {
+    val controls = (application as RadioApplication).appContainer.listenerControls
+    val (stationId, startPlayback) = request
+    if (startPlayback) controls.playStation(stationId) else controls.selectStation(stationId)
+}
+
+private fun Intent.shortcutStation(): Pair<StationId, Boolean>? {
+    val id = getStringExtra(StationShortcuts.EXTRA_STATION_ID)?.takeIf(String::isNotBlank) ?: return null
+    return StationId(id) to getBooleanExtra(StationShortcuts.EXTRA_START_PLAYBACK, false)
+}
+
 private fun Intent.chatStationId(): String? =
     getStringExtra(AndroidCommunityNotificationRepository.EXTRA_CHAT_STATION_ID)
         ?.takeIf(String::isNotBlank)
+
+private const val SPLASH_EXIT_MILLIS = 220L

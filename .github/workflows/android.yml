@@ -4,6 +4,10 @@ on:
   pull_request:
   push:
     branches: [main]
+  # Merges made by automation do not start a push run, so main is also checked on a schedule and on request.
+  schedule:
+    - cron: "23 9 * * 1"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -12,6 +16,7 @@ jobs:
   build:
     name: Android build, test, and lint
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
@@ -38,10 +43,17 @@ jobs:
           bash ./gradlew test lint --no-daemon --console=plain
           bash scripts/build-debug-candidate.sh
 
+      # The release build shrinks with R8 and no project keep rules; only this step would notice a breaking rule.
+      - name: Shrink the release build
+        run: bash ./gradlew :app:minifyReleaseWithR8 --no-daemon --console=plain
+
+      - name: Test release scripts
+        run: node --test scripts/tests/test_announce_google_play_releases.mjs
+
   notify-discord:
     name: Post milestone update to Discord
     needs: build
-    if: ${{ always() && vars.DISCORD_PROJECT_UPDATE != '' }}
+    if: ${{ vars.DISCORD_PROJECT_UPDATE != '' && github.event_name != 'schedule' }}
     runs-on: ubuntu-latest
     steps:
       - name: Post configured milestone update

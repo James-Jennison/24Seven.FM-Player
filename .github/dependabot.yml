@@ -5,15 +5,12 @@ updates:
     schedule:
       interval: weekly
       day: monday
+    # Give a bad upstream release time to be noticed and withdrawn before it is proposed here.
+    cooldown:
+      default-days: 7
     labels:
       - dependencies
     open-pull-requests-limit: 5
 
-  - package-ecosystem: gradle
-    directory: /
-    schedule:
-      interval: weekly
-      day: monday
-    labels:
-      - dependencies
-    open-pull-requests-limit: 5
+  # Gradle updates are made by hand: each one must regenerate gradle/verification-metadata.xml, which Dependabot
+  # cannot do, so its Gradle pull requests could never pass dependency verification.

@@ -29,6 +29,13 @@ test("formats the closed Alpha announcement without mentions", () => {
   );
 });
 
+test("formats a list of releases when used directly as a map callback", () => {
+  assert.deepEqual([publishedAlpha, publishedAlpha].map(messageFor), [
+    messageFor(publishedAlpha),
+    messageFor(publishedAlpha),
+  ]);
+});
+
 test("includes the authoritative What's new entries when supplied", () => {
   const notes = releaseNotesFromMarkdown([
     "# 24Seven.FM Player 0.1.0-alpha08",

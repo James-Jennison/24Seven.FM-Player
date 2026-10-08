@@ -22,6 +22,8 @@ data class CommunitySafetyState(
     val communityContentVisible: Boolean = false,
     val blockedUsers: List<BlockedCommunityUser> = emptyList(),
     val ageGateErrorMessage: String? = null,
+    /** True once the listener has been told, or found out, that tapping a chat line opens report and block. */
+    val messageActionsHintSeen: Boolean = false,
 ) {
     val hasAcceptedCurrentTerms: Boolean
         get() = acceptedTermsVersion == CURRENT_COMMUNITY_TERMS_VERSION
@@ -46,6 +48,7 @@ enum class AbuseReportKind(val label: String) {
 enum class AbuseReportSource(val label: String) {
     Chat("Chat"),
     Request("request attribution"),
+    PrivateMessage("private message"),
 }
 
 enum class AbuseReportCategory(val label: String) {
@@ -94,6 +97,8 @@ interface CommunitySafetyRepository {
     suspend fun acceptTerms()
 
     suspend fun setCommunityContentVisible(visible: Boolean)
+
+    suspend fun acknowledgeMessageActionsHint()
 
     suspend fun blockUser(stationId: StationId, displayName: String)
 

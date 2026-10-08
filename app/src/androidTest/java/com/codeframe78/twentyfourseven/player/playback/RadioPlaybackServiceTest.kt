@@ -113,6 +113,44 @@ class RadioPlaybackServiceTest {
     }
 
     @Test
+    fun castHandoffStopsLocalPlaybackWithoutCancellingTheTimer() {
+        context.getSharedPreferences(SLEEP_TIMER_PREFERENCES_NAME, Context.MODE_PRIVATE).edit().clear().commit()
+        val controller = connectController()
+        try {
+            lateinit var timerResult: ListenableFuture<SessionResult>
+            InstrumentationRegistry.getInstrumentation().runOnMainSync {
+                timerResult = controller.sendCustomCommand(
+                    SleepTimerSessionContract.setCommand,
+                    SleepTimerSessionContract.setArguments(60_000L),
+                )
+            }
+            assertTrue(timerResult.get(CONNECTION_TIMEOUT_SECONDS, TimeUnit.SECONDS).resultCode == SessionResult.RESULT_SUCCESS)
+            assertTrue(awaitTimerState(controller) { it.isActive })
+
+            lateinit var handoffResult: ListenableFuture<SessionResult>
+            InstrumentationRegistry.getInstrumentation().runOnMainSync {
+                handoffResult = controller.sendCustomCommand(
+                    CastHandoffSessionContract.stopLocalPlaybackCommand,
+                    Bundle.EMPTY,
+                )
+            }
+            assertTrue(handoffResult.get(CONNECTION_TIMEOUT_SECONDS, TimeUnit.SECONDS).resultCode == SessionResult.RESULT_SUCCESS)
+            InstrumentationRegistry.getInstrumentation().waitForIdleSync()
+            var timerStillActive = false
+            InstrumentationRegistry.getInstrumentation().runOnMainSync {
+                timerStillActive = SleepTimerSessionContract.state(controller.sessionExtras).isActive
+            }
+            assertTrue(timerStillActive)
+        } finally {
+            InstrumentationRegistry.getInstrumentation().runOnMainSync {
+                controller.sendCustomCommand(SleepTimerSessionContract.cancelCommand, Bundle.EMPTY)
+                controller.release()
+            }
+            context.getSharedPreferences(SLEEP_TIMER_PREFERENCES_NAME, Context.MODE_PRIVATE).edit().clear().commit()
+        }
+    }
+
+    @Test
     fun activeTimerRestoresWhenPlaybackServiceIsRecreated() {
         val serviceIntent = Intent(context, RadioPlaybackService::class.java)
         val preferences = context.getSharedPreferences(SLEEP_TIMER_PREFERENCES_NAME, Context.MODE_PRIVATE)

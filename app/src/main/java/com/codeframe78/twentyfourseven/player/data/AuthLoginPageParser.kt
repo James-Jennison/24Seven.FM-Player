@@ -105,8 +105,9 @@ internal class AuthLoginPageParser {
         val SIX_DIGIT_CHALLENGE = Regex("^[0-9]{6}$")
         val FIELD_NAME = Regex("^[A-Za-z][A-Za-z0-9_-]{0,63}$")
         val ANTI_SPAM_FIELD_NAME = Regex("(?i).*(anti|spam|check|answer|code).*")
+        // The sign-in page says "type <word>"; the older account page said "Type the word <word> below".
         val ANTI_SPAM_PROMPT = Regex(
-            "(?i)anti[- ]?spam check\\s*:\\s*type the word\\s+([A-Za-z0-9]{1,32})\\s+below",
+            "(?i)anti[- ]?spam check\\s*:\\s*type\\s+(?:the word\\s+)?([A-Za-z0-9]{1,32})\\b",
         )
         const val MAX_HIDDEN_FIELD_VALUE_LENGTH = 4_096
     }

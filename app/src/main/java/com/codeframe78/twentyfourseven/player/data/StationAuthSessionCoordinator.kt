@@ -52,7 +52,7 @@ internal class StationAuthSessionCoordinator(
                     manager = CookieManager(null, CookiePolicy.ACCEPT_ORIGINAL_SERVER).also { manager ->
                         val restoredCookies = store.load(canonical, expectedOrigin.host)
                         restoredCookies.forEach {
-                            manager.cookieStore.add(expectedOrigin, it)
+                            manager.cookieStore.add(expectedOrigin, it.asPlainCookie())
                         }
                         when {
                             restoredCookies.isNotEmpty() && store.loadDisplayName(canonical) != null ->
@@ -83,6 +83,7 @@ internal class StationAuthSessionCoordinator(
         synchronized(manager) {
             val wasAuthenticated = store.loadDisplayName(canonical) != null
             manager.put(requestUri, headers)
+            manager.cookieStore.cookies.forEach { it.asPlainCookie() }
             store.updateCookies(
                 canonical,
                 expectedOrigin.host,
@@ -146,6 +147,13 @@ internal class StationAuthSessionCoordinator(
                 if (cookie.domain.isNullOrBlank()) cookie.domain = requestUri.host
                 if (cookie.path.isNullOrBlank()) cookie.path = "/"
             }
+
+    /**
+     * java.net sends a version-1 cookie in RFC 2965 form, with a `$Version` prefix and a quoted value. A cookie
+     * rebuilt from storage, or received with only Max-Age, is version 1, and the stations read the quoted value as
+     * a different session. Every cookie is therefore kept in the plain `name=value` form.
+     */
+    private fun HttpCookie.asPlainCookie(): HttpCookie = apply { version = 0 }
 
     private fun URI.sameOrigin(other: URI): Boolean =
         scheme.equals("https", ignoreCase = true) &&

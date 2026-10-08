@@ -3,6 +3,33 @@ package com.codeframe78.twentyfourseven.player.ui
 import android.view.ContextThemeWrapper
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
+import com.codeframe78.twentyfourseven.player.ui.theme.onAccent
+import com.codeframe78.twentyfourseven.player.ui.theme.themedAccent
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import coil3.compose.LocalPlatformContext
+import coil3.request.ImageRequest
+import coil3.request.crossfade
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.text.KeyboardOptions
@@ -29,8 +56,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.BluetoothAudio
 import androidx.compose.material.icons.filled.CastConnected
@@ -46,6 +71,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -61,6 +87,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
@@ -103,6 +130,11 @@ private val LandscapePlayerMinimumHeight = 300.dp
 private val LandscapeArtworkMinimumSize = 120.dp
 private val LandscapeArtworkMaximumSize = 200.dp
 private val LandscapeStationSelectorWidth = 56.dp
+private val ExpandedLandscapeMinimumWidth = 1000.dp
+private val ExpandedLandscapeMinimumHeight = 640.dp
+private const val ExpandedLandscapeMaximumFontScale = 1.15f
+private val ArtworkFramePadding = 8.dp
+private val StationSwipeThreshold = 64.dp
 private val SleepTimerPresetsMinutes = listOf(15, 30, 45, 60, 90)
 
 @Immutable
@@ -126,6 +158,7 @@ internal fun AdaptivePlayerScreen(
     sleepTimerActions: SleepTimerActions = SleepTimerActions(),
     audioOutputActions: AudioOutputActions = AudioOutputActions(),
     isCoverDisplay: Boolean = false,
+    trackActions: TrackActions = TrackActions(),
 ) {
     val palette = stationPalette(state.selectedStation?.id)
     BoxWithConstraints(
@@ -144,10 +177,21 @@ internal fun AdaptivePlayerScreen(
     ) {
         if (isCoverDisplay) {
             CoverPlayerContent(state, palette, onSelectStation, onPlay, onStop, sleepTimerActions, audioOutputActions)
+        } else if (usesExpandedLandscapePlayerLayout(maxWidth, maxHeight, LocalDensity.current.fontScale)) {
+            ExpandedLandscapePlayerContent(
+                state,
+                palette,
+                onSelectStation,
+                onPlay,
+                onStop,
+                sleepTimerActions,
+                audioOutputActions,
+                trackActions,
+            )
         } else if (usesLandscapePlayerLayout(maxWidth, maxHeight)) {
-            LandscapePlayerContent(state, palette, maxWidth, maxHeight, onSelectStation, onPlay, onStop, sleepTimerActions, audioOutputActions)
+            LandscapePlayerContent(state, palette, maxWidth, maxHeight, onSelectStation, onPlay, onStop, sleepTimerActions, audioOutputActions, trackActions)
         } else if (maxWidth >= ExpandedPlayerBreakpoint) {
-            ExpandedPlayerContent(state, palette, onSelectStation, onPlay, onStop, sleepTimerActions, audioOutputActions)
+            ExpandedPlayerContent(state, palette, onSelectStation, onPlay, onStop, sleepTimerActions, audioOutputActions, trackActions)
         } else {
             val compactPlayerCanFitWithoutScroll =
                 maxHeight >= CompactPlayerNoScrollHeight && LocalDensity.current.fontScale <= 1.3f
@@ -159,13 +203,19 @@ internal fun AdaptivePlayerScreen(
                 availableArtworkHeight,
                 MaximumCompactArtworkSize,
             )
-            CompactPlayerContent(state, palette, artworkSize, onSelectStation, onPlay, onStop, sleepTimerActions, audioOutputActions, isScrollable = !compactPlayerCanFitWithoutScroll)
+            CompactPlayerContent(state, palette, artworkSize, onSelectStation, onPlay, onStop, sleepTimerActions, audioOutputActions, trackActions, isScrollable = !compactPlayerCanFitWithoutScroll)
         }
     }
 }
 
 internal fun usesLandscapePlayerLayout(width: Dp, height: Dp): Boolean =
     width > height && height >= LandscapePlayerMinimumHeight
+
+internal fun usesExpandedLandscapePlayerLayout(width: Dp, height: Dp, fontScale: Float): Boolean =
+    width >= ExpandedLandscapeMinimumWidth &&
+        width > height &&
+        height >= ExpandedLandscapeMinimumHeight &&
+        fontScale <= ExpandedLandscapeMaximumFontScale
 
 @Composable
 private fun CoverPlayerContent(
@@ -190,14 +240,13 @@ private fun CoverPlayerContent(
         ) {
             // The folded cover window is height-constrained by the camera cutout. Keep the
             // station controls in the visible window instead of allowing the selector to clip.
-            NowPlayingArtwork(state, palette, Modifier.size(112.dp))
+            NowPlayingArtwork(state, palette, Modifier.size(112.dp), onSelectStation = onSelectStation)
             Column(Modifier.weight(1f)) {
                 CoverNowPlayingDetails(state, palette)
             }
         }
         PrimaryPlayerControls(
             state,
-            onSelectStation,
             onPlay,
             onStop,
             sleepTimerActions,
@@ -263,7 +312,7 @@ private fun CoverNowPlayingDetails(
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Text(
             state.selectedStation?.shortName ?: "24Seven.FM",
-            color = palette.accent,
+            color = palette.themedAccent(),
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
@@ -279,7 +328,7 @@ private fun CoverNowPlayingDetails(
         )
         if (state.playback.status != PlaybackStatus.Playing) {
             Text(
-                state.playback.status.userMessage,
+                playbackStatusMessage(state.playback.status, hasTrack = state.nowPlaying.displayTitle != null),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
@@ -300,6 +349,7 @@ private fun CompactPlayerContent(
     onStop: () -> Unit,
     sleepTimerActions: SleepTimerActions,
     audioOutputActions: AudioOutputActions,
+    trackActions: TrackActions,
     isScrollable: Boolean,
 ) {
     val scrollModifier = if (isScrollable) Modifier.verticalScroll(rememberScrollState()) else Modifier
@@ -312,12 +362,218 @@ private fun CompactPlayerContent(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        NowPlayingArtwork(state, palette, Modifier.size(artworkSize))
-        NowPlayingDetails(state, palette)
-        PrimaryPlayerControls(state, onSelectStation, onPlay, onStop, sleepTimerActions, audioOutputActions, isCompact = true)
+        NowPlayingArtwork(state, palette, Modifier.size(artworkSize), trackActions, onSelectStation = onSelectStation)
+        NowPlayingDetails(state, palette, trackActions = trackActions)
+        PrimaryPlayerControls(state, onPlay, onStop, sleepTimerActions, audioOutputActions, isCompact = true)
         if (!isScrollable) Spacer(Modifier.weight(1f))
         StationSelector(state, onSelectStation, isCompact = true)
         if (!isScrollable) Spacer(Modifier.weight(1f))
+    }
+}
+
+@Composable
+private fun ExpandedLandscapePlayerContent(
+    state: MainUiState,
+    palette: StationPalette,
+    onSelectStation: (StationId) -> Unit,
+    onPlay: () -> Unit,
+    onStop: () -> Unit,
+    sleepTimerActions: SleepTimerActions,
+    audioOutputActions: AudioOutputActions,
+    trackActions: TrackActions,
+) {
+    Box(
+        Modifier
+            .fillMaxSize()
+            .background(
+                Brush.radialGradient(
+                    colors = listOf(
+                        palette.secondary.copy(alpha = 0.26f),
+                        palette.glow.copy(alpha = 0.12f),
+                        Color.Transparent,
+                    ),
+                ),
+            )
+            .testTag("expanded_landscape_player"),
+    ) {
+        Column(
+            Modifier
+                .fillMaxSize()
+                .padding(horizontal = 28.dp, vertical = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
+        ) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .testTag("tablet_player_hero"),
+                shape = RoundedCornerShape(36.dp),
+                color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.84f),
+                border = BorderStroke(1.dp, palette.secondary.copy(alpha = 0.52f)),
+                tonalElevation = 8.dp,
+            ) {
+                BoxWithConstraints(Modifier.fillMaxSize().padding(28.dp)) {
+                    val artworkSize = minOf(maxHeight, maxWidth * 0.34f, 320.dp)
+                    // Artwork too small for the caption shows it with the track details instead.
+                    val captionOverArtwork = artworkSize - (ArtworkFramePadding * 2) >= MinimumOverlayArtworkSize
+                    Row(
+                        Modifier.fillMaxSize(),
+                        horizontalArrangement = Arrangement.spacedBy(36.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        NowPlayingArtwork(state, palette, Modifier.size(artworkSize), trackActions, captionOverArtwork, onSelectStation)
+                        Column(
+                            Modifier.weight(1f).fillMaxHeight(),
+                            verticalArrangement = Arrangement.Center,
+                        ) {
+                            Text(
+                                "YOUR LIVE RADIO NETWORK",
+                                color = palette.themedAccent(),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Spacer(Modifier.height(10.dp))
+                            NowPlayingDetails(state, palette, Alignment.Start, trackActions)
+                            if (!captionOverArtwork) NowPlayingInlineExtras(state, Modifier.padding(top = 8.dp))
+                            // The tagline stands in for the title until a track is known, so it is not repeated then.
+                            state.selectedStation?.description
+                                ?.takeIf { it.isNotBlank() && !state.nowPlaying.displayTitle.isNullOrBlank() }
+                                ?.let { description ->
+                                Spacer(Modifier.height(10.dp))
+                                Text(
+                                    description,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
+                            Spacer(Modifier.height(24.dp))
+                            Surface(
+                                color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.9f),
+                                shape = RoundedCornerShape(28.dp),
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)),
+                            ) {
+                                PrimaryPlayerControls(
+                                    state,
+                                    onPlay,
+                                    onStop,
+                                    sleepTimerActions,
+                                    audioOutputActions,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            ExpandedLandscapeStationSelector(state, onSelectStation)
+        }
+    }
+}
+
+@Composable
+private fun ExpandedLandscapeStationSelector(
+    state: MainUiState,
+    onSelectStation: (StationId) -> Unit,
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 138.dp)
+            .testTag("tablet_station_selector"),
+        shape = RoundedCornerShape(28.dp),
+        color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.9f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)),
+        tonalElevation = 4.dp,
+    ) {
+        Column(
+            Modifier.padding(horizontal = 18.dp, vertical = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    "Explore the network",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                )
+                Text(
+                    "${state.stations.size} live stations",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                state.stations.forEach { station ->
+                    val selected = station.id == state.selectedStation?.id
+                    val stationPalette = stationPalette(station.id)
+                    Card(
+                        onClick = { onSelectStation(station.id) },
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (selected) {
+                                stationPalette.glow.copy(alpha = 0.94f)
+                            } else {
+                                MaterialTheme.colorScheme.surfaceContainerHigh
+                            },
+                        ),
+                        border = BorderStroke(
+                            if (selected) 2.dp else 1.dp,
+                            if (selected) stationPalette.accent else MaterialTheme.colorScheme.outlineVariant,
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(78.dp)
+                            .semantics {
+                                this.selected = selected
+                                role = Role.RadioButton
+                                contentDescription = if (selected) "${station.name}, selected" else station.name
+                            }
+                            .testTag("tablet_station_${station.id.value}"),
+                    ) {
+                        Row(
+                            Modifier.fillMaxSize().padding(10.dp),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Image(
+                                painter = painterResource(stationSelectorLogoResource(station.id)),
+                                contentDescription = null,
+                                contentScale = ContentScale.Fit,
+                                modifier = Modifier.size(54.dp).clip(RoundedCornerShape(12.dp)),
+                            )
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    station.shortName,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = if (selected) stationPalette.accent else MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                                Text(
+                                    station.description,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = if (selected) {
+                                        Color.White.copy(alpha = 0.88f)
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                    },
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -332,6 +588,7 @@ private fun LandscapePlayerContent(
     onStop: () -> Unit,
     sleepTimerActions: SleepTimerActions,
     audioOutputActions: AudioOutputActions,
+    trackActions: TrackActions,
 ) {
     val artworkSize = minOf(
         LandscapeArtworkMaximumSize,
@@ -346,18 +603,19 @@ private fun LandscapePlayerContent(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        NowPlayingArtwork(state, palette, Modifier.size(artworkSize))
+        // The landscape artwork is too small for the caption, so it sits with the track details instead.
+        NowPlayingArtwork(state, palette, Modifier.size(artworkSize), trackActions, showsOverlayCaption = false, onSelectStation = onSelectStation)
         Column(
             Modifier
                 .weight(1f)
                 .fillMaxHeight(),
             verticalArrangement = Arrangement.Center,
         ) {
-            LandscapeNowPlayingDetails(state, palette)
+            LandscapeNowPlayingDetails(state, palette, trackActions)
+            NowPlayingInlineExtras(state, Modifier.padding(top = 8.dp))
             Spacer(Modifier.height(14.dp))
             PrimaryPlayerControls(
                 state,
-                onSelectStation,
                 onPlay,
                 onStop,
                 sleepTimerActions,
@@ -373,20 +631,22 @@ private fun LandscapePlayerContent(
 private fun LandscapeNowPlayingDetails(
     state: MainUiState,
     palette: StationPalette,
+    trackActions: TrackActions,
 ) {
     val metadata = parseNowPlayingMetadata(state.nowPlaying.displayTitle)
+    val hasTrack = !state.nowPlaying.displayTitle.isNullOrBlank()
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(
             state.selectedStation?.name ?: "24Seven.FM",
-            color = palette.accent,
+            color = palette.themedAccent(),
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
         Text(
-            metadata.title,
-            style = MaterialTheme.typography.headlineMedium,
+            if (hasTrack) metadata.title else stationTagline(state.selectedStation),
+            style = if (hasTrack) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
@@ -401,7 +661,10 @@ private fun LandscapeNowPlayingDetails(
                 overflow = TextOverflow.Ellipsis,
             )
         }
-        PlaybackStatusPill(state, palette)
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+            PlaybackStatusPill(state, palette)
+            TrackActionButtons(state, trackActions, onArtwork = false)
+        }
     }
 }
 
@@ -471,6 +734,7 @@ private fun ExpandedPlayerContent(
     onStop: () -> Unit,
     sleepTimerActions: SleepTimerActions,
     audioOutputActions: AudioOutputActions,
+    trackActions: TrackActions,
 ) {
     Row(
         Modifier.fillMaxSize().padding(32.dp),
@@ -482,15 +746,15 @@ private fun ExpandedPlayerContent(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            NowPlayingArtwork(state, palette, Modifier.fillMaxWidth().aspectRatio(1f))
+            NowPlayingArtwork(state, palette, Modifier.fillMaxWidth().aspectRatio(1f), trackActions, onSelectStation = onSelectStation)
         }
         Column(
             Modifier.weight(1.15f).fillMaxHeight().verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.Center,
         ) {
-            NowPlayingDetails(state, palette, Alignment.Start)
+            NowPlayingDetails(state, palette, Alignment.Start, trackActions)
             Spacer(Modifier.height(28.dp))
-            PrimaryPlayerControls(state, onSelectStation, onPlay, onStop, sleepTimerActions, audioOutputActions)
+            PrimaryPlayerControls(state, onPlay, onStop, sleepTimerActions, audioOutputActions)
             Spacer(Modifier.height(32.dp))
             Text("Choose a station", style = MaterialTheme.typography.titleMedium)
             Spacer(Modifier.height(12.dp))
@@ -520,37 +784,105 @@ private fun NowPlayingArtwork(
     state: MainUiState,
     palette: StationPalette,
     modifier: Modifier = Modifier,
+    trackActions: TrackActions? = null,
+    showsOverlayCaption: Boolean = true,
+    onSelectStation: ((StationId) -> Unit)? = null,
 ) {
     val artworkUrl = preferredPlayerArtworkUrl(
         nowPlayingArtworkUrl = state.nowPlaying.artworkUrl,
         station = state.selectedStation,
     )
     val hasAlbumArtwork = !state.nowPlaying.artworkUrl.isNullOrBlank()
+    val swipe = if (onSelectStation != null && state.stations.size > 1) {
+        Modifier
+            .testTag("station_dial")
+            .switchesStationOnSwipe(state.stations, state.selectedStation?.id, onSelectStation)
+    } else {
+        Modifier
+    }
     Box(
         modifier
+            .then(swipe)
             .clip(RoundedCornerShape(28.dp))
             .background(
                 Brush.linearGradient(
                     listOf(palette.glow, palette.secondary.copy(alpha = 0.48f)),
                 ),
             )
-            .padding(8.dp),
+            .padding(ArtworkFramePadding),
     ) {
-        AsyncImage(
-            model = artworkUrl,
+        ArtworkImage(
+            url = artworkUrl,
+            fallback = painterResource(R.drawable.app_logo),
             contentDescription = if (hasAlbumArtwork) {
                 "Album artwork"
             } else {
                 "Selected station artwork"
             },
             contentScale = if (hasAlbumArtwork) ContentScale.Crop else ContentScale.Fit,
-            fallback = painterResource(R.drawable.app_logo),
-            error = painterResource(R.drawable.app_logo),
-            placeholder = painterResource(R.drawable.app_logo),
-            modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(22.dp)).testTag("now_playing_artwork"),
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(RoundedCornerShape(22.dp))
+                .testTag("now_playing_artwork")
+                .opensAlbum(state.nowPlaying.albumId, state.nowPlaying.album, state.nowPlaying.artworkUrl),
         )
+        // The favorite and rating buttons sit with the track details, so the cover stays uncovered.
+        if (trackActions != null) {
+            NowPlayingArtworkOverlay(
+                state,
+                actions = null,
+                Modifier.matchParentSize().clip(RoundedCornerShape(22.dp)),
+                showsOverlayCaption,
+            )
+        }
     }
 }
+
+/**
+ * Dragging the artwork sideways turns the dial to the next or previous station, the way the removed arrows did.
+ * The same two moves are offered as accessibility actions.
+ */
+@Composable
+private fun Modifier.switchesStationOnSwipe(
+    stations: List<Station>,
+    selectedId: StationId?,
+    onSelectStation: (StationId) -> Unit,
+): Modifier {
+    val threshold = with(LocalDensity.current) { StationSwipeThreshold.toPx() }
+    val haptics = LocalHapticFeedback.current
+    var dragged by remember { mutableFloatStateOf(0f) }
+    fun turn(offset: Int) {
+        adjacentStationId(stations, selectedId, offset)?.let {
+            haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
+            onSelectStation(it)
+        }
+    }
+    return this
+        .draggable(
+            orientation = Orientation.Horizontal,
+            state = rememberDraggableState { delta -> dragged += delta },
+            onDragStarted = { dragged = 0f },
+            onDragStopped = {
+                // Dragging left pulls the next station in from the right.
+                when {
+                    dragged <= -threshold -> turn(1)
+                    dragged >= threshold -> turn(-1)
+                }
+                dragged = 0f
+            },
+        )
+        .semantics {
+            customActions = listOf(
+                CustomAccessibilityAction("Next station") { turn(1); true },
+                CustomAccessibilityAction("Previous station") { turn(-1); true },
+            )
+        }
+}
+
+/** A list cover that fades in when it arrives instead of popping. */
+@Composable
+internal fun crossfadingImage(url: String?): ImageRequest =
+    ImageRequest.Builder(LocalPlatformContext.current).data(url).crossfade(ARTWORK_CROSSFADE_MILLIS).build()
 
 /** Uses a station's verified identity when no track artwork has arrived yet. */
 internal fun preferredPlayerArtworkUrl(
@@ -568,40 +900,60 @@ private fun NowPlayingDetails(
     state: MainUiState,
     palette: StationPalette,
     alignment: Alignment.Horizontal = Alignment.CenterHorizontally,
+    trackActions: TrackActions? = null,
 ) {
     val metadata = parseNowPlayingMetadata(state.nowPlaying.displayTitle)
+    val hasTrack = !state.nowPlaying.displayTitle.isNullOrBlank()
+    val textAlign = if (alignment == Alignment.CenterHorizontally) TextAlign.Center else TextAlign.Start
     Column(horizontalAlignment = alignment, verticalArrangement = Arrangement.spacedBy(7.dp)) {
         Text(
             state.selectedStation?.name ?: "24Seven.FM",
-            color = palette.accent,
+            color = palette.themedAccent(),
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-        Text(
-            metadata.title,
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            textAlign = if (alignment == Alignment.CenterHorizontally) TextAlign.Center else TextAlign.Start,
-            maxLines = 3,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.testTag("now_playing_title"),
-        )
+        // Until a track is known the station's own tagline fills the title's place. A new title rises into place.
+        AnimatedContent(
+            targetState = if (hasTrack) metadata.title else stationTagline(state.selectedStation),
+            transitionSpec = {
+                (fadeIn(tween(260)) + slideInVertically(tween(260)) { it / 3 })
+                    .togetherWith(fadeOut(tween(140)))
+            },
+            label = "now_playing_title",
+        ) { title ->
+            Text(
+                title,
+                style = if (hasTrack) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                textAlign = textAlign,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.fillMaxWidth().testTag("now_playing_title"),
+            )
+        }
         metadata.artist?.let { artist ->
             Text(
                 artist,
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = if (alignment == Alignment.CenterHorizontally) TextAlign.Center else TextAlign.Start,
+                textAlign = textAlign,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
         }
-        PlaybackStatusPill(state, palette)
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+            PlaybackStatusPill(state, palette)
+            trackActions?.let { TrackActionButtons(state, it, onArtwork = false) }
+        }
         CastRouteLabel(state)
     }
 }
+
+/** What the player says about a station before it knows the track. */
+internal fun stationTagline(station: Station?): String =
+    station?.description?.trim()?.takeIf(String::isNotEmpty) ?: "Live radio"
 
 @Composable
 internal fun CastRouteButton() {
@@ -646,7 +998,7 @@ private fun PlaybackStatusPill(state: MainUiState, palette: StationPalette) {
             .testTag("playback_status"),
     ) {
         Text(
-            state.playback.status.userMessage,
+            playbackStatusMessage(state.playback.status, hasTrack = state.nowPlaying.displayTitle != null),
             Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
             style = MaterialTheme.typography.labelLarge,
             maxLines = 2,
@@ -655,10 +1007,13 @@ private fun PlaybackStatusPill(state: MainUiState, palette: StationPalette) {
     }
 }
 
+/**
+ * Playback only: the sleep timer, Play in the station's colour, and the audio output. Stations are changed from the
+ * station cards or by swiping the artwork, so the controls row no longer mixes the two.
+ */
 @Composable
 private fun PrimaryPlayerControls(
     state: MainUiState,
-    onSelectStation: (StationId) -> Unit,
     onPlay: () -> Unit,
     onStop: () -> Unit,
     sleepTimerActions: SleepTimerActions,
@@ -666,55 +1021,57 @@ private fun PrimaryPlayerControls(
     isCompact: Boolean = false,
 ) {
     val isActive = state.playback.status.isActive
+    val palette = stationPalette(state.selectedStation?.id)
     val supportingControlSize = if (isCompact) 48.dp else 56.dp
-    val primaryControlSize = if (isCompact) 64.dp else 76.dp
+    val primaryControlSize = if (isCompact) 80.dp else 92.dp
+    val haptics = LocalHapticFeedback.current
+    val pressInteraction = remember { MutableInteractionSource() }
+    val pressed by pressInteraction.collectIsPressedAsState()
+    val pressScale by animateFloatAsState(if (pressed) 0.92f else 1f, label = "play_press")
     Row(
         Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        IconButton(
-            onClick = { adjacentStationId(state.stations, state.selectedStation?.id, -1)?.let(onSelectStation) },
-            enabled = state.stations.size > 1,
-            modifier = Modifier
-                .size(supportingControlSize)
-                .semantics { contentDescription = "Previous station" }
-                .testTag("previous_station"),
-        ) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
-        }
-        Spacer(Modifier.width(10.dp))
         SleepTimerControl(state, sleepTimerActions)
-        Spacer(Modifier.width(10.dp))
+        Spacer(Modifier.width(24.dp))
         val playbackDescription = if (isActive) "Stop radio" else "Play live radio"
         FilledIconButton(
-            onClick = if (isActive) onStop else onPlay,
+            onClick = {
+                haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+                if (isActive) onStop() else onPlay()
+            },
             enabled = state.selectedStation?.streams?.isNotEmpty() == true,
+            colors = IconButtonDefaults.filledIconButtonColors(
+                containerColor = palette.themedAccent(),
+                contentColor = palette.onAccent(),
+            ),
+            interactionSource = pressInteraction,
             modifier = Modifier
                 .size(primaryControlSize)
+                .scale(pressScale)
                 .semantics { contentDescription = playbackDescription }
                 .testTag("primary_play_pause"),
             shape = CircleShape,
         ) {
-            Icon(
-                if (isActive) Icons.Default.Stop else Icons.Default.PlayArrow,
-                contentDescription = null,
-                modifier = Modifier.size(36.dp),
-            )
+            // The glyph turns over from Play to Stop rather than swapping.
+            AnimatedContent(
+                targetState = isActive,
+                transitionSpec = {
+                    (fadeIn(tween(180)) + scaleIn(tween(180), initialScale = 0.6f))
+                        .togetherWith(fadeOut(tween(120)) + scaleOut(tween(120), targetScale = 0.6f))
+                },
+                label = "play_glyph",
+            ) { active ->
+                Icon(
+                    if (active) Icons.Default.Stop else Icons.Default.PlayArrow,
+                    contentDescription = null,
+                    modifier = Modifier.size(if (isCompact) 40.dp else 46.dp),
+                )
+            }
         }
-        Spacer(Modifier.width(10.dp))
+        Spacer(Modifier.width(24.dp))
         PlaybackAudioOutputControl(state, audioOutputActions, supportingControlSize)
-        Spacer(Modifier.width(10.dp))
-        IconButton(
-            onClick = { adjacentStationId(state.stations, state.selectedStation?.id, 1)?.let(onSelectStation) },
-            enabled = state.stations.size > 1,
-            modifier = Modifier
-                .size(supportingControlSize)
-                .semantics { contentDescription = "Next station" }
-                .testTag("next_station"),
-        ) {
-            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
-        }
     }
 }
 
@@ -930,7 +1287,7 @@ private fun StationSelector(
                 ) {
                     Text(
                         station.shortName,
-                        color = palette.accent,
+                        color = palette.themedAccent(),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
@@ -963,6 +1320,7 @@ internal fun PersistentMiniPlayer(
         station = state.selectedStation,
     )
     val hasAlbumArtwork = !state.nowPlaying.artworkUrl.isNullOrBlank()
+    val tint = palette.glow.copy(alpha = if (isSystemInDarkTheme()) 0.55f else 0.14f)
     Surface(
         onClick = { onSelectDestination(MainDestination.Player) },
         modifier = Modifier.fillMaxWidth().testTag("persistent_mini_player"),
@@ -970,22 +1328,22 @@ internal fun PersistentMiniPlayer(
         tonalElevation = 5.dp,
     ) {
         Row(
-            Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+            Modifier
+                .background(Brush.horizontalGradient(listOf(tint, Color.Transparent)))
+                .padding(horizontal = 14.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            AsyncImage(
-                model = artworkUrl,
+            ArtworkImage(
+                url = artworkUrl,
+                fallback = painterResource(R.drawable.app_logo),
                 contentDescription = if (hasAlbumArtwork) "Now playing album artwork" else "Selected station artwork",
                 contentScale = if (hasAlbumArtwork) ContentScale.Crop else ContentScale.Fit,
-                fallback = painterResource(R.drawable.app_logo),
-                error = painterResource(R.drawable.app_logo),
-                placeholder = painterResource(R.drawable.app_logo),
                 modifier = Modifier.size(52.dp).clip(RoundedCornerShape(12.dp)),
             )
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(
-                    state.nowPlaying.displayTitle ?: "Live radio",
+                    state.nowPlaying.displayTitle ?: stationTagline(state.selectedStation),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     fontWeight = FontWeight.SemiBold,
@@ -993,16 +1351,20 @@ internal fun PersistentMiniPlayer(
                 Text(
                     state.selectedStation?.shortName.orEmpty(),
                     style = MaterialTheme.typography.bodySmall,
-                    color = palette.accent,
+                    color = palette.themedAccent(),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            IconButton(
+            FilledIconButton(
                 onClick = if (state.playback.status.isActive) onPause else onPlay,
                 enabled = state.selectedStation?.streams?.isNotEmpty() == true,
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = palette.themedAccent(),
+                    contentColor = palette.onAccent(),
+                ),
                 modifier = Modifier
-                    .size(52.dp)
+                    .size(44.dp)
                     .semantics {
                         contentDescription = if (state.playback.status.isActive) {
                             "Pause live radio"
@@ -1069,14 +1431,18 @@ private val PlaybackStatus.accessibleName: String
         PlaybackStatus.Error -> "Playback error"
     }
 
+/** Before Play is pressed the Player already shows the station's current track, so it says so instead of "Not connected". */
+internal fun playbackStatusMessage(status: PlaybackStatus, hasTrack: Boolean): String =
+    if (status == PlaybackStatus.Idle && hasTrack) "On air now" else status.userMessage
+
 private val PlaybackStatus.userMessage: String
     get() = when (this) {
-        PlaybackStatus.Idle -> "Not connected"
+        PlaybackStatus.Idle -> "Tap Play to listen"
         PlaybackStatus.Connecting -> "Connecting…"
         PlaybackStatus.Buffering -> "Buffering…"
-        PlaybackStatus.Playing -> "Playing"
-        PlaybackStatus.Paused -> "Playback paused"
-        PlaybackStatus.Retrying -> "Primary stream unavailable · trying fallback"
-        PlaybackStatus.WaitingForNetwork -> "No network · playback will resume automatically"
-        PlaybackStatus.Error -> "Unable to play this station · try again"
+        PlaybackStatus.Playing -> "Live"
+        PlaybackStatus.Paused -> "Paused"
+        PlaybackStatus.Retrying -> "Trying the backup stream…"
+        PlaybackStatus.WaitingForNetwork -> "Waiting for network · resumes by itself"
+        PlaybackStatus.Error -> "Couldn't play this station · try again"
     }

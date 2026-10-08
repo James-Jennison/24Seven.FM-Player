@@ -49,7 +49,7 @@ class AndroidCommunityNotificationRepository internal constructor(
             ),
         )
         if (stopMonitor) monitorController.stop(canonicalStationId)
-        if (!enabled) trackers.remove(canonicalStationId)
+        if (!enabled) synchronized(trackers) { trackers.remove(canonicalStationId) }
     }
 
     override suspend fun setForegroundChatMonitorEnabled(stationId: StationId, enabled: Boolean) {
@@ -67,8 +67,11 @@ class AndroidCommunityNotificationRepository internal constructor(
 
     override fun processChatSnapshot(snapshot: ChatMentionSnapshot) {
         if (!settings.value.chatMentionsEnabled(snapshot.stationId)) return
-        val tracker = trackers.getOrPut(snapshot.stationId, ::ChatMentionTracker)
-        tracker.accept(snapshot).forEach(notifier::show)
+        // The Player UI and the foreground monitor both deliver snapshots, from different threads.
+        val mentions = synchronized(trackers) {
+            trackers.getOrPut(snapshot.stationId, ::ChatMentionTracker).accept(snapshot)
+        }
+        mentions.forEach(notifier::show)
     }
 
     private fun readSettings(): CommunityNotificationState {

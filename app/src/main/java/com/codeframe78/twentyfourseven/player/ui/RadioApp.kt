@@ -1,5 +1,25 @@
 package com.codeframe78.twentyfourseven.player.ui
 
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Switch
+import com.codeframe78.twentyfourseven.player.domain.RequestHistoryEntry
+import com.codeframe78.twentyfourseven.player.ui.theme.requestAvailableGreen
+import androidx.compose.material.icons.filled.HelpOutline
+import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -31,25 +51,30 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Policy
-import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Radio
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
@@ -68,18 +93,39 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Feedback
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Newspaper
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.NavigationRailItemDefaults
+import androidx.compose.material3.TopAppBar
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.ui.unit.sp
+import com.codeframe78.twentyfourseven.player.ui.theme.themedAccent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.painterResource
@@ -144,10 +190,43 @@ private data class NavigationItem(
     val icon: ImageVector,
 )
 
+/** The More tab carries the unread private message count, since that is where messages are read. */
+@Composable
+private fun NavigationItemIcon(item: NavigationItem, unreadMessages: Int) {
+    if (item.destination == MainDestination.More && unreadMessages > 0) {
+        BadgedBox(
+            badge = {
+                Badge(Modifier.testTag("unread_messages_badge")) {
+                    Text(if (unreadMessages > 99) "99+" else unreadMessages.toString())
+                }
+            },
+        ) { Icon(item.icon, contentDescription = null) }
+    } else {
+        Icon(item.icon, contentDescription = null)
+    }
+}
+
+internal fun messagesButtonDescription(unreadMessages: Int): String = when {
+    unreadMessages <= 0 -> "Private messages"
+    unreadMessages == 1 -> "Private messages, 1 unread"
+    else -> "Private messages, $unreadMessages unread"
+}
+
+internal fun navigationItemDescription(destination: MainDestination, label: String, unreadMessages: Int): String =
+    when {
+        destination != MainDestination.More || unreadMessages <= 0 -> label
+        unreadMessages == 1 -> "$label, 1 unread private message"
+        else -> "$label, $unreadMessages unread private messages"
+    }
+
+private fun navigationItemDescription(item: NavigationItem, unreadMessages: Int): String =
+    navigationItemDescription(item.destination, item.label, unreadMessages)
+
 internal data class CommunitySafetyActions(
     val onSubmitAgeScreen: (Int, Int, Int) -> Unit = { _, _, _ -> },
     val onAcceptTerms: () -> Unit = {},
     val onSetCommunityContentVisible: (Boolean) -> Unit = {},
+    val onAcknowledgeMessageActionsHint: () -> Unit = {},
     val onBlockUser: (StationId, String) -> Unit = { _, _ -> },
     val onUnblockUser: (StationId, String) -> Unit = { _, _ -> },
     val onBeginReport: (AbuseReportTarget) -> Unit = {},
@@ -190,17 +269,84 @@ internal fun RadioApp(
     diagnosticUi: DiagnosticUi = DiagnosticUi(),
     feedbackUi: FeedbackUi = FeedbackUi(),
     onOpenAppGuide: () -> Unit = {},
+    trackActions: TrackActions = TrackActions(),
+    privateMessageActions: PrivateMessageActions = PrivateMessageActions(),
+    stationExtrasActions: StationExtrasActions = StationExtrasActions(),
+    albumActions: AlbumActions = AlbumActions(),
+) {
+    val profileOpener = stationExtrasActions.onOpenProfile.takeIf {
+        state.selectedStation?.capabilities?.supportsMemberProfiles == true &&
+            state.communitySafety.canViewCommunityContent
+    }
+    val albumOpener = albumActions.onOpen.takeIf { state.selectedStation?.capabilities?.supportsRequests == true }
+    var showMessages by rememberSaveable(state.selectedStation?.id?.value) { mutableStateOf(false) }
+    val messagesOpener: (() -> Unit)? = if (state.selectedStation?.capabilities?.supportsPrivateMessages == true) {
+        { showMessages = true }
+    } else {
+        null
+    }
+    CompositionLocalProvider(
+        LocalStationExtrasActions provides stationExtrasActions,
+        LocalMemberProfileOpener provides profileOpener,
+        LocalAlbumOpener provides albumOpener,
+        LocalMessagesOpener provides messagesOpener,
+    ) {
+        RadioAppContent(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, trackActions)
+        if (showMessages && messagesOpener != null) {
+            PrivateMessagesScreen(state, privateMessageActions, communitySafetyActions) { showMessages = false }
+        }
+        PlayedHistoryDialog(state, stationExtrasActions)
+        AlbumDialog(state, albumActions)
+        MemberProfileDialog(state, stationExtrasActions, privateMessageActions.onNewMessage)
+        PrivateMessageComposeDialog(state.privateMessages?.compose, privateMessageActions)
+    }
+}
+
+@Composable
+private fun RadioAppContent(
+    state: MainUiState,
+    onSelectStation: (StationId) -> Unit,
+    onSelectDestination: (MainDestination) -> Unit,
+    onPlay: () -> Unit,
+    onPause: () -> Unit,
+    onStop: () -> Unit,
+    sleepTimerActions: SleepTimerActions,
+    audioOutputActions: AudioOutputActions,
+    diagnosticUi: DiagnosticUi,
+    feedbackUi: FeedbackUi,
+    onRefreshQueue: () -> Unit,
+    onRefreshFavorites: () -> Unit,
+    onRefreshListenerActivity: () -> Unit,
+    onRefreshChat: () -> Unit,
+    onSendChatMessage: (String) -> Unit,
+    onRefreshAuth: (StationId) -> Unit,
+    onSignIn: (StationId, String, String, String) -> Unit,
+    onSignOut: (StationId) -> Unit,
+    onSearchRequests: (String, RequestSearchField) -> Unit,
+    onSuggestRequest: (RequestSuggestionMode) -> Unit,
+    onOpenRequestAlbum: (RequestSearchTarget) -> Unit,
+    onPrepareRequest: (String) -> Unit,
+    onPrepareFavoriteRequest: (FavoriteTrack) -> Unit,
+    onCancelRequest: () -> Unit,
+    onConfirmRequest: (String) -> Unit,
+    onUseLastStationAtStartup: () -> Unit,
+    onSetStartupStation: (StationId) -> Unit,
+    onOpenStationPage: (StationPage) -> Unit,
+    communitySafetyActions: CommunitySafetyActions,
+    onOpenAppGuide: () -> Unit,
+    trackActions: TrackActions,
 ) {
     var showTerms by rememberSaveable { mutableStateOf(false) }
     BoxWithConstraints(Modifier.fillMaxSize()) {
         if (usesNavigationRail(maxWidth, maxHeight)) {
-            TabletShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide) { showTerms = true }
+            TabletShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, trackActions = trackActions) { showTerms = true }
         } else {
-            PhoneShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, isCoverDisplay = isCoverDisplayWindow(maxWidth, maxHeight), onOpenAppGuide = onOpenAppGuide) { showTerms = true }
+            PhoneShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, isCoverDisplay = isCoverDisplayWindow(maxWidth, maxHeight), onOpenAppGuide = onOpenAppGuide, trackActions = trackActions) { showTerms = true }
         }
     }
     if (showTerms) {
         CommunityTermsDialog(
+            alreadyAccepted = state.communitySafety.hasAcceptedCurrentTerms,
             onAgree = {
                 communitySafetyActions.onAcceptTerms()
                 showTerms = false
@@ -209,6 +355,7 @@ internal fun RadioApp(
         )
     }
     AbuseReportDialog(state, communitySafetyActions)
+    AlbumRatingDialog(state, trackActions)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -245,13 +392,14 @@ private fun PhoneShell(
     communitySafetyActions: CommunitySafetyActions,
     isCoverDisplay: Boolean,
     onOpenAppGuide: () -> Unit,
+    trackActions: TrackActions,
     onReviewTerms: () -> Unit,
 ) {
     val showNavigationLabels = LocalDensity.current.fontScale <= 1.5f
     Scaffold(
         topBar = {
             if (!isCoverDisplay) {
-                StationTopBar(onSelectDestination)
+                StationTopBar(state)
             }
         },
         bottomBar = {
@@ -264,11 +412,18 @@ private fun PhoneShell(
                     PersistentMiniPlayer(state, onSelectDestination, onPlay, onPause)
                 }
                 NavigationBar(Modifier.testTag("phone_navigation_bar")) {
+                    val unreadMessages = state.privateMessages?.unreadCount ?: 0
+                    val accent = stationPalette(state.selectedStation?.id).themedAccent()
                     navigationItems.forEach { item ->
                         NavigationBarItem(
                             selected = state.destination == item.destination,
                             onClick = { onSelectDestination(item.destination) },
-                            icon = { Icon(item.icon, contentDescription = null) },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = MaterialTheme.colorScheme.onSurface,
+                                selectedTextColor = accent,
+                                indicatorColor = accent.copy(alpha = 0.22f),
+                            ),
+                            icon = { NavigationItemIcon(item, unreadMessages) },
                             label = if (showNavigationLabels) {
                                 {
                                     Text(
@@ -280,18 +435,21 @@ private fun PhoneShell(
                             } else {
                                 null
                             },
-                            modifier = Modifier.semantics { contentDescription = item.label },
+                            modifier = Modifier.semantics { contentDescription = navigationItemDescription(item, unreadMessages) },
                         )
                     }
                 }
             }
         },
     ) { padding ->
-        DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, onReviewTerms, isCoverDisplay)
+        DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, onReviewTerms, isCoverDisplay, trackActions)
     }
-    if (state.destination != MainDestination.Favorites) {
+    if (state.destination != MainDestination.Favorites && state.album == null) {
         RequestResultDialog(state, onCancelRequest)
     }
+    MemberFavoritesDialog(state, LocalStationExtrasActions.current, onPrepareFavoriteRequest)
+    // One confirmation for every place a request can start from; it opens last, so it sits above those screens.
+    RequestConfirmationDialog(state, onCancelRequest, onConfirmRequest, onReviewTerms)
 }
 
 /**
@@ -344,17 +502,25 @@ private fun TabletShell(
     onOpenStationPage: (StationPage) -> Unit,
     communitySafetyActions: CommunitySafetyActions,
     onOpenAppGuide: () -> Unit,
+    trackActions: TrackActions,
     onReviewTerms: () -> Unit,
 ) {
     val showNavigationLabels = LocalDensity.current.fontScale <= 1.5f
     Row(Modifier.fillMaxSize()) {
         NavigationRail(Modifier.fillMaxHeight().testTag("tablet_navigation_rail")) {
             Spacer(Modifier.height(12.dp))
+            val unreadMessages = state.privateMessages?.unreadCount ?: 0
+            val accent = stationPalette(state.selectedStation?.id).themedAccent()
             navigationItems.forEach { item ->
                 NavigationRailItem(
                     selected = state.destination == item.destination,
                     onClick = { onSelectDestination(item.destination) },
-                    icon = { Icon(item.icon, contentDescription = null) },
+                    colors = NavigationRailItemDefaults.colors(
+                        selectedIconColor = MaterialTheme.colorScheme.onSurface,
+                        selectedTextColor = accent,
+                        indicatorColor = accent.copy(alpha = 0.22f),
+                    ),
+                    icon = { NavigationItemIcon(item, unreadMessages) },
                     label = if (showNavigationLabels) {
                         {
                             Text(
@@ -366,47 +532,77 @@ private fun TabletShell(
                     } else {
                         null
                     },
-                    modifier = Modifier.semantics { contentDescription = item.label },
+                    modifier = Modifier.semantics { contentDescription = navigationItemDescription(item, unreadMessages) },
                 )
             }
         }
         VerticalDivider(Modifier.fillMaxHeight())
         Scaffold(
             modifier = Modifier.weight(1f),
-            topBar = { StationTopBar(onSelectDestination) },
+            topBar = { StationTopBar(state) },
             bottomBar = {
                 if (state.destination != MainDestination.Player) {
                     PersistentMiniPlayer(state, onSelectDestination, onPlay, onPause)
                 }
             },
         ) { padding ->
-            DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, onReviewTerms)
+            DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, onReviewTerms, trackActions = trackActions)
         }
-        if (state.destination != MainDestination.Favorites) {
+        if (state.destination != MainDestination.Favorites && state.album == null) {
             RequestResultDialog(state, onCancelRequest)
         }
+        MemberFavoritesDialog(state, LocalStationExtrasActions.current, onPrepareFavoriteRequest)
+        RequestConfirmationDialog(state, onCancelRequest, onConfirmRequest, onReviewTerms)
     }
 }
 
+/** The station is the headline: its logo and its full name, which always stays on one line and is never broken up. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun StationTopBar(
-    onSelectDestination: (MainDestination) -> Unit,
-) {
-    CenterAlignedTopAppBar(
+private fun StationTopBar(state: MainUiState) {
+    val station = state.selectedStation
+    val openMessages = LocalMessagesOpener.current.takeIf { state.auth?.status == AuthStatus.SignedIn }
+    TopAppBar(
         navigationIcon = {
             Image(
-                painter = painterResource(R.drawable.app_logo),
-                contentDescription = "24Seven.FM logo",
-                modifier = Modifier.padding(start = 12.dp).size(40.dp).clip(RoundedCornerShape(10.dp)),
+                painter = painterResource(station?.let { stationSelectorLogoResource(it.id) } ?: R.drawable.app_logo),
+                contentDescription = if (station == null) "24Seven.FM logo" else "${station.name} logo",
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.padding(start = 12.dp).size(38.dp).clip(RoundedCornerShape(10.dp)),
             )
         },
-        title = { Text("24Seven.FM", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) },
+        title = {
+            Text(
+                station?.name ?: "24Seven.FM",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                softWrap = false,
+                autoSize = TextAutoSize.StepBased(minFontSize = 13.sp, maxFontSize = 20.sp, stepSize = 1.sp),
+                modifier = Modifier.padding(start = 4.dp).testTag("top_bar_station_name"),
+            )
+        },
         actions = {
-            CastRouteButton()
-            IconButton(onClick = { onSelectDestination(MainDestination.More) }) {
-                Icon(Icons.Default.MoreVert, contentDescription = "Account and station options")
+            openMessages?.let { open ->
+                val unread = state.privateMessages?.unreadCount ?: 0
+                IconButton(
+                    onClick = open,
+                    modifier = Modifier.testTag("open_private_messages").semantics {
+                        contentDescription = messagesButtonDescription(unread)
+                    },
+                ) {
+                    BadgedBox(
+                        badge = {
+                            if (unread > 0) {
+                                Badge(Modifier.testTag("unread_messages_top_badge")) {
+                                    Text(if (unread > 99) "99+" else unread.toString())
+                                }
+                            }
+                        },
+                    ) { Icon(Icons.Default.Mail, contentDescription = null) }
+                }
             }
+            CastRouteButton()
         },
     )
 }
@@ -438,7 +634,6 @@ private fun DestinationContent(
     onPrepareRequest: (String) -> Unit,
     onPrepareFavoriteRequest: (FavoriteTrack) -> Unit,
     onCancelRequest: () -> Unit,
-    onConfirmRequest: (String) -> Unit,
     onUseLastStationAtStartup: () -> Unit,
     onSetStartupStation: (StationId) -> Unit,
     onOpenStationPage: (StationPage) -> Unit,
@@ -446,6 +641,7 @@ private fun DestinationContent(
     onOpenAppGuide: () -> Unit,
     onReviewTerms: () -> Unit,
     isCoverDisplay: Boolean = false,
+    trackActions: TrackActions = TrackActions(),
 ) {
     when (state.destination) {
         MainDestination.Player -> AdaptivePlayerScreen(
@@ -457,6 +653,7 @@ private fun DestinationContent(
             sleepTimerActions,
             audioOutputActions,
             isCoverDisplay,
+            trackActions,
         )
         MainDestination.Favorites -> FavoriteTracksScreen(
             state = state,
@@ -464,13 +661,11 @@ private fun DestinationContent(
             onRefresh = onRefreshFavorites,
             onPrepareRequest = onPrepareFavoriteRequest,
             onCancelRequest = onCancelRequest,
-            onConfirmRequest = onConfirmRequest,
             onOpenAccount = { onSelectDestination(MainDestination.More) },
-            onReviewTerms = onReviewTerms,
         )
         MainDestination.Chat -> ChatScreen(state, padding, onRefreshChat, onSendChatMessage, communitySafetyActions, onReviewTerms)
         MainDestination.Queue -> QueueScreen(state, padding, onRefreshQueue, communitySafetyActions)
-        MainDestination.More -> MoreScreen(state, padding, onRefreshAuth, onSignIn, onSignOut, onRefreshListenerActivity, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, diagnosticUi, feedbackUi, onOpenAppGuide, onReviewTerms)
+        MainDestination.More -> MoreScreen(state, padding, onRefreshAuth, onSignIn, onSignOut, onRefreshListenerActivity, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, diagnosticUi, feedbackUi, onOpenAppGuide, onReviewTerms)
     }
 }
 
@@ -503,12 +698,12 @@ private fun ChatScreen(
             icon = Icons.AutoMirrored.Filled.Chat,
             padding = padding,
         )
-        chat.status == ChatLoadStatus.Loading -> Box(
+        chat.status == ChatLoadStatus.Loading -> SkeletonList(
             Modifier.fillMaxSize().padding(padding),
-            contentAlignment = Alignment.Center,
-        ) {
-            CircularProgressIndicator()
-        }
+            rows = 8,
+            showsArtwork = false,
+            description = "Loading chat",
+        )
         chat.status == ChatLoadStatus.Error -> Column(
             Modifier.fillMaxSize().padding(padding).padding(32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -540,8 +735,11 @@ private fun ChatMessages(
     communitySafetyActions: CommunitySafetyActions,
 ) {
     val chat = checkNotNull(state.chat)
-    var draft by remember(state.selectedStation?.id) { mutableStateOf("") }
+    var draft by rememberSaveable(state.selectedStation?.id?.value) { mutableStateOf("") }
     var awaitingSend by remember(state.selectedStation?.id) { mutableStateOf(false) }
+    val messageKeys = remember(chat.messages) { chatMessageKeys(chat.messages) }
+    val signedIn = state.auth?.status == AuthStatus.SignedIn
+    val ownNick = state.auth?.displayName?.takeIf { signedIn }
     LaunchedEffect(chat.isSending, chat.sendErrorMessage, chat.messages) {
         if (awaitingSend && !chat.isSending) {
             if (chat.sendErrorMessage != null) {
@@ -553,85 +751,129 @@ private fun ChatMessages(
         }
     }
     Column(Modifier.fillMaxSize().padding(padding)) {
+        // The channel bar: the room and its station, as an IRC client titles a window.
         Row(
-            Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
+            Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                .padding(start = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("Station chat", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
+            Text("#", style = ChatLineStyle(), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.width(6.dp))
+            Text(
+                "Station chat",
+                style = ChatLineStyle(),
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+            )
+            Text(
+                state.selectedStation?.name?.let { " · $it" }.orEmpty(),
+                style = ChatLineStyle(),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
+            )
             IconButton(onClick = onRefresh) {
                 Icon(Icons.Default.Refresh, contentDescription = "Refresh chat")
             }
         }
+        if (!state.communitySafety.messageActionsHintSeen && chat.messages.isNotEmpty()) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.secondaryContainer)
+                    .padding(start = 12.dp)
+                    .testTag("chat_actions_hint"),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    "Tap a message to view the profile, report, or block.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.weight(1f).padding(vertical = 8.dp),
+                )
+                TextButton(onClick = communitySafetyActions.onAcknowledgeMessageActionsHint) { Text("Got it") }
+            }
+        }
+        RefreshableBox(onRefresh = onRefresh, modifier = Modifier.weight(1f).fillMaxWidth()) {
         LazyColumn(
-            modifier = Modifier.weight(1f).fillMaxWidth(),
+            modifier = Modifier.fillMaxSize(),
             reverseLayout = true,
-            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(vertical = 6.dp),
         ) {
             if (chat.messages.isEmpty()) {
                 item { EmptyTrackList("No recent chat messages are available.") }
             } else {
                 itemsIndexed(
                     chat.messages,
-                    key = { index, message ->
-                        "$index-${message.postedAtLabel}-${message.authorDisplayName}-${message.messageText}"
-                    },
-                ) { _, message ->
-                    Card(Modifier.fillMaxWidth()) {
-                        Column(Modifier.padding(12.dp)) {
-                            Row(Modifier.fillMaxWidth()) {
-                                Text(
-                                    message.authorDisplayName,
-                                    style = MaterialTheme.typography.titleSmall,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.weight(1f),
-                                )
-                                message.postedAtLabel?.let { timestamp ->
-                                    Text(
-                                        timestamp,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    key = { index, _ -> messageKeys[index] },
+                ) { index, message ->
+                    // Newest first: a day opens above its oldest line, which is the one before an older day.
+                    val day = chatStamp(message.postedAtLabel)?.day
+                    val olderDay = chat.messages.getOrNull(index + 1)?.let { chatStamp(it.postedAtLabel)?.day }
+                    var menuOpen by remember(messageKeys[index]) { mutableStateOf(false) }
+                    Column {
+                        if (day != null && day != olderDay) ChatDayRule(day)
+                        Box {
+                            ChatLine(
+                                message,
+                                ownNick = ownNick,
+                                modifier = Modifier.clickable(
+                                    onClickLabel = "Safety actions for ${message.authorDisplayName}",
+                                ) {
+                                    menuOpen = true
+                                    // Finding the menu is the lesson the hint teaches.
+                                    communitySafetyActions.onAcknowledgeMessageActionsHint()
+                                },
+                            )
+                            CommunityMessageMenu(
+                                expanded = menuOpen,
+                                onDismiss = { menuOpen = false },
+                                author = message.authorDisplayName,
+                                onReportContent = {
+                                    communitySafetyActions.onBeginReport(
+                                        AbuseReportTarget(
+                                            kind = AbuseReportKind.Content,
+                                            source = AbuseReportSource.Chat,
+                                            reportedUser = message.authorDisplayName,
+                                            displayedTimestamp = message.postedAtLabel,
+                                            contentSnapshot = message.messageText,
+                                        ),
                                     )
-                                }
-                                CommunityMessageActions(
-                                    author = message.authorDisplayName,
-                                    onReportContent = {
-                                        communitySafetyActions.onBeginReport(
-                                            AbuseReportTarget(
-                                                kind = AbuseReportKind.Content,
-                                                source = AbuseReportSource.Chat,
-                                                reportedUser = message.authorDisplayName,
-                                                displayedTimestamp = message.postedAtLabel,
-                                                contentSnapshot = message.messageText,
-                                            ),
-                                        )
-                                    },
-                                    onReportUser = {
-                                        communitySafetyActions.onBeginReport(
-                                            AbuseReportTarget(
-                                                kind = AbuseReportKind.User,
-                                                source = AbuseReportSource.Chat,
-                                                reportedUser = message.authorDisplayName,
-                                                displayedTimestamp = message.postedAtLabel,
-                                            ),
-                                        )
-                                    },
-                                    onBlockUser = {
-                                        state.selectedStation?.id?.let { stationId ->
-                                            communitySafetyActions.onBlockUser(stationId, message.authorDisplayName)
-                                        }
-                                    },
-                                )
-                            }
-                            Spacer(Modifier.height(4.dp))
-                            ChatMessageText(message)
+                                },
+                                onReportUser = {
+                                    communitySafetyActions.onBeginReport(
+                                        AbuseReportTarget(
+                                            kind = AbuseReportKind.User,
+                                            source = AbuseReportSource.Chat,
+                                            reportedUser = message.authorDisplayName,
+                                            displayedTimestamp = message.postedAtLabel,
+                                        ),
+                                    )
+                                },
+                                onBlockUser = {
+                                    state.selectedStation?.id?.let { stationId ->
+                                        communitySafetyActions.onBlockUser(stationId, message.authorDisplayName)
+                                    }
+                                },
+                            )
                         }
                     }
                 }
             }
         }
-        if (state.auth?.status == AuthStatus.SignedIn) {
-            Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+        }
+        HorizontalDivider()
+        if (signedIn) {
+            val send = {
+                if (draft.isNotBlank() && !chat.isSending) {
+                    awaitingSend = true
+                    onSendMessage(draft)
+                }
+            }
+            Column(Modifier.fillMaxWidth().padding(start = 12.dp, end = 4.dp, top = 6.dp, bottom = 6.dp)) {
                 chat.sendErrorMessage?.let { error ->
                     Text(error, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                     Spacer(Modifier.height(4.dp))
@@ -640,64 +882,39 @@ private fun ChatMessages(
                     OutlinedTextField(
                         value = draft,
                         onValueChange = { if (it.length <= 255) draft = it },
-                        label = { Text("Message") },
-                        supportingText = { Text("${draft.length}/255") },
+                        placeholder = { Text("Message", style = ChatLineStyle()) },
+                        textStyle = ChatLineStyle(),
+                        // The limit only matters once it is close.
+                        supportingText = if (draft.length >= 200) {
+                            { Text("${draft.length}/255") }
+                        } else {
+                            null
+                        },
                         modifier = Modifier.weight(1f),
                         singleLine = true,
                         enabled = !chat.isSending,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                        keyboardActions = KeyboardActions(onSend = { send() }),
                     )
-                    Spacer(Modifier.width(8.dp))
-                    Button(
-                        onClick = {
-                            awaitingSend = true
-                            onSendMessage(draft)
-                        },
-                        enabled = draft.isNotBlank() && !chat.isSending,
-                    ) {
-                        Text(if (chat.isSending) "Sending" else "Send")
+                    IconButton(onClick = send, enabled = draft.isNotBlank() && !chat.isSending) {
+                        if (chat.isSending) {
+                            CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                        } else {
+                            Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Send")
+                        }
                     }
                 }
             }
         } else {
             Text(
                 "Sign in from More to send messages.",
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                style = ChatLineStyle(),
+                modifier = Modifier.fillMaxWidth().padding(12.dp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
         }
     }
-}
-
-@Composable
-private fun ChatMessageText(message: ChatMessage) {
-    val inlineContent = remember(message.parts) {
-        message.parts.mapIndexedNotNull { index, part ->
-            if (part !is ChatMessagePart.Emoticon) return@mapIndexedNotNull null
-            val id = "chat-emoticon-$index"
-            id to InlineTextContent(
-                placeholder = Placeholder(1.15.em, 1.15.em, PlaceholderVerticalAlign.TextCenter),
-            ) {
-                AsyncImage(
-                    model = part.imageUrl,
-                    contentDescription = "${part.altText} emoticon",
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier.fillMaxSize().testTag(id),
-                )
-            }
-        }.toMap()
-    }
-    val annotated = remember(message.parts) {
-        buildAnnotatedString {
-            message.parts.forEachIndexed { index, part ->
-                when (part) {
-                    is ChatMessagePart.Text -> append(part.value)
-                    is ChatMessagePart.Emoticon -> appendInlineContent("chat-emoticon-$index", part.altText)
-                }
-            }
-        }
-    }
-    Text(annotated, inlineContent = inlineContent)
 }
 
 @Composable
@@ -712,34 +929,57 @@ private fun CommunityMessageActions(
         IconButton(onClick = { expanded = true }) {
             Icon(Icons.Default.MoreVert, contentDescription = "Safety actions for $author")
         }
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            onReportContent?.let { reportContent ->
-                DropdownMenuItem(
-                    text = { Text("Report content") },
-                    leadingIcon = { Icon(Icons.Default.Flag, contentDescription = null) },
-                    onClick = {
-                        expanded = false
-                        reportContent()
-                    },
-                )
-            }
+        CommunityMessageMenu(expanded, { expanded = false }, author, onReportContent, onReportUser, onBlockUser)
+    }
+}
+
+@Composable
+private fun CommunityMessageMenu(
+    expanded: Boolean,
+    onDismiss: () -> Unit,
+    author: String,
+    onReportContent: (() -> Unit)?,
+    onReportUser: () -> Unit,
+    onBlockUser: () -> Unit,
+) {
+    val openProfile = LocalMemberProfileOpener.current
+    DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
+        openProfile?.let { viewProfile ->
             DropdownMenuItem(
-                text = { Text("Report user") },
-                leadingIcon = { Icon(Icons.Default.Flag, contentDescription = null) },
+                text = { Text("View profile") },
+                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
                 onClick = {
-                    expanded = false
-                    onReportUser()
-                },
-            )
-            DropdownMenuItem(
-                text = { Text("Block user") },
-                leadingIcon = { Icon(Icons.Default.Block, contentDescription = null) },
-                onClick = {
-                    expanded = false
-                    onBlockUser()
+                    onDismiss()
+                    viewProfile(author)
                 },
             )
         }
+        onReportContent?.let { reportContent ->
+            DropdownMenuItem(
+                text = { Text("Report content") },
+                leadingIcon = { Icon(Icons.Default.Flag, contentDescription = null) },
+                onClick = {
+                    onDismiss()
+                    reportContent()
+                },
+            )
+        }
+        DropdownMenuItem(
+            text = { Text("Report user") },
+            leadingIcon = { Icon(Icons.Default.Flag, contentDescription = null) },
+            onClick = {
+                onDismiss()
+                onReportUser()
+            },
+        )
+        DropdownMenuItem(
+            text = { Text("Block user") },
+            leadingIcon = { Icon(Icons.Default.Block, contentDescription = null) },
+            onClick = {
+                onDismiss()
+                onBlockUser()
+            },
+        )
     }
 }
 
@@ -864,56 +1104,14 @@ private fun AgeScreenFields(
 }
 
 @Composable
-private fun CommunityTermsDialog(
-    onAgree: () -> Unit,
-    onDecline: () -> Unit,
-) {
-    val resources = LocalResources.current
-    val terms = remember(resources) {
-        resources.openRawResource(R.raw.terms_of_participation)
-            .bufferedReader()
-            .use { it.readText() }
-    }
-    var agreed by rememberSaveable { mutableStateOf(false) }
-    AlertDialog(
-        onDismissRequest = onDecline,
-        title = { Text("Terms of Participation") },
-        text = {
-            Column(
-                Modifier.heightIn(max = 520.dp).verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                Text(terms, style = MaterialTheme.typography.bodySmall)
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(
-                        checked = agreed,
-                        onCheckedChange = { agreed = it },
-                        modifier = Modifier
-                            .testTag("agree_community_terms")
-                            .semantics { contentDescription = "I Agree" },
-                    )
-                    Text("I Agree")
-                }
-            }
-        },
-        confirmButton = {
-            Button(onClick = onAgree, enabled = agreed, modifier = Modifier.testTag("accept_community_terms")) {
-                Text("I Agree")
-            }
-        },
-        dismissButton = { TextButton(onClick = onDecline) { Text("I Decline") } },
-    )
-}
-
-@Composable
 private fun AbuseReportDialog(state: MainUiState, actions: CommunitySafetyActions) {
     val report = state.abuseReport
     if (report.status == AbuseReportStatus.Idle) return
     val target = report.target ?: return
-    var reporterName by remember(target) { mutableStateOf(state.auth?.displayName.orEmpty()) }
-    var category by remember(target) { mutableStateOf(AbuseReportCategory.Harassment) }
+    var reporterName by rememberSaveable(target) { mutableStateOf(state.auth?.displayName.orEmpty()) }
+    var category by rememberSaveable(target) { mutableStateOf(AbuseReportCategory.Harassment) }
     var categoryMenuOpen by remember { mutableStateOf(false) }
-    var details by remember(target) { mutableStateOf("") }
+    var details by rememberSaveable(target) { mutableStateOf("") }
     val canDismiss = report.status !in setOf(
         AbuseReportStatus.PreparingEmail,
         AbuseReportStatus.EmailReady,
@@ -1038,12 +1236,11 @@ private fun QueueScreen(
                 icon = Icons.AutoMirrored.Filled.QueueMusic,
                 padding = padding,
             )
-        queue.status == QueueLoadStatus.Loading -> Box(
+        queue.status == QueueLoadStatus.Loading -> SkeletonList(
             Modifier.fillMaxSize().padding(padding),
-            contentAlignment = Alignment.Center,
-        ) {
-            CircularProgressIndicator()
-        }
+            rows = 7,
+            description = "Loading queue",
+        )
         queue.status == QueueLoadStatus.Error -> Column(
             Modifier.fillMaxSize().padding(padding).padding(32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -1071,6 +1268,9 @@ private fun QueueScreen(
             onRefresh,
             state.selectedStation?.id,
             communitySafetyActions,
+            LocalStationExtrasActions.current.onOpenHistory.takeIf {
+                state.selectedStation?.capabilities?.supportsPlayedHistoryArchive == true
+            },
         )
     }
 }
@@ -1085,9 +1285,11 @@ private fun QueueLists(
     onRefresh: () -> Unit,
     stationId: StationId?,
     communitySafetyActions: CommunitySafetyActions,
+    onOpenHistory: (() -> Unit)? = null,
 ) {
+    RefreshableBox(onRefresh = onRefresh, modifier = Modifier.fillMaxSize().padding(padding)) {
     LazyColumn(
-        Modifier.fillMaxSize().padding(padding),
+        Modifier.fillMaxSize().testTag("queue_lists"),
         contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
@@ -1149,12 +1351,20 @@ private fun QueueLists(
                             )
                         }
                     },
+                    albumId = track.albumId,
                 )
             }
         }
         item {
             Spacer(Modifier.height(8.dp))
-            Text("Recently played", style = MaterialTheme.typography.headlineSmall)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Recently played", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
+                onOpenHistory?.let { openHistory ->
+                    TextButton(onClick = openHistory, modifier = Modifier.testTag("open_played_history")) {
+                        Text("Browse earlier")
+                    }
+                }
+            }
         }
         if (history.isEmpty()) {
             item { EmptyTrackList("No recent history is available.") }
@@ -1198,9 +1408,11 @@ private fun QueueLists(
                             )
                         }
                     },
+                    albumId = track.albumId,
                 )
             }
         }
+    }
     }
 }
 
@@ -1220,8 +1432,9 @@ private fun TrackCard(
     requesterName: String? = null,
     requestMessage: String? = null,
     communityActions: (@Composable () -> Unit)? = null,
+    albumId: String? = null,
 ) {
-    Card(Modifier.fillMaxWidth()) {
+    Card(Modifier.fillMaxWidth().clip(CardDefaults.shape).opensAlbum(albumId, album, artworkUrl)) {
         Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
             position?.let {
                 Text(it, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
@@ -1229,7 +1442,7 @@ private fun TrackCard(
             }
             artworkUrl?.let {
                 AsyncImage(
-                    model = it,
+                    model = crossfadingImage(it),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.size(56.dp).clip(RoundedCornerShape(6.dp)),
@@ -1253,6 +1466,7 @@ private fun TrackCard(
                         color = MaterialTheme.colorScheme.primary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.opensMemberProfile(it).padding(vertical = 6.dp),
                     )
                 }
                 requestMessage?.let {
@@ -1307,7 +1521,6 @@ private fun MoreScreen(
     onOpenRequestAlbum: (RequestSearchTarget) -> Unit,
     onPrepareRequest: (String) -> Unit,
     onCancelRequest: () -> Unit,
-    onConfirmRequest: (String) -> Unit,
     onUseLastStationAtStartup: () -> Unit,
     onSetStartupStation: (StationId) -> Unit,
     onOpenStationPage: (StationPage) -> Unit,
@@ -1317,49 +1530,130 @@ private fun MoreScreen(
     onOpenAppGuide: () -> Unit,
     onReviewTerms: () -> Unit,
 ) {
+    val station = state.selectedStation
     Column(
-        Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        Modifier
+            .fillMaxSize()
+            .padding(padding)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp, vertical = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
-        AccountSection(state, onRefreshAuth, onSignIn, onSignOut)
-        CommunitySafetySection(state, communitySafetyActions, onReviewTerms)
-        CommunityNotificationSection(
-            state,
-            communitySafetyActions.onSetChatMentionsEnabled,
-            communitySafetyActions.onSetForegroundChatMentionMonitorEnabled,
-        )
-        MoreDisclosure(
-            title = "Song requests",
-            summary = "Search or ask the station for an available track.",
-            testTag = "more_song_requests",
-        ) {
-            SongRequestSection(state, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onConfirmRequest, onReviewTerms, showTitle = false)
+        SettingsGroup("Account") {
+            AccountSection(state, onRefreshAuth, onSignIn, onSignOut)
         }
-        if (state.selectedStation?.capabilities?.supportsListenerActivity == true) {
+        SettingsGroup(station?.shortName ?: "Station") {
             MoreDisclosure(
-                title = "Request activity",
-                summary = "View membership, cooldown, and recent requests.",
-                testTag = "more_request_activity",
+                title = "Song requests",
+                summary = "Search the library or ask the station for a track.",
+                icon = Icons.AutoMirrored.Filled.QueueMusic,
+                testTag = "more_song_requests",
             ) {
-                ListenerActivitySection(state, onRefreshListenerActivity, showTitle = false)
+                SongRequestSection(state, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, showTitle = false)
             }
+            if (station?.capabilities?.supportsListenerActivity == true) {
+                MoreDisclosure(
+                    title = "Request activity",
+                    summary = "Membership, request status, and your recent requests.",
+                    icon = Icons.Default.History,
+                    testTag = "more_request_activity",
+                ) {
+                    ListenerActivitySection(state, onRefreshListenerActivity, showTitle = false)
+                }
+            }
+            if (station?.capabilities?.supportsStationNews == true) {
+                MoreDisclosure(
+                    title = "Station news",
+                    summary = "Playlist updates and announcements.",
+                    icon = Icons.Default.Newspaper,
+                    testTag = "more_station_news",
+                ) {
+                    StationNewsSection(state, LocalStationExtrasActions.current)
+                }
+            }
+            LocalMessagesOpener.current?.let { openMessages ->
+                MoreLink(
+                    title = "Private messages",
+                    summary = privateMessagesSummary(state.privateMessages),
+                    icon = Icons.Default.Mail,
+                    testTag = "more_private_messages",
+                    onClick = openMessages,
+                )
+            }
+            SecondaryContentSection(state, onOpenStationPage)
         }
-        MoreDisclosure(
-            title = "Device preferences",
-            summary = "Choose which station opens at startup.",
-            testTag = "more_device_preferences",
-        ) {
-            DevicePreferencesSection(state, onUseLastStationAtStartup, onSetStartupStation, showTitle = false)
+        SettingsGroup("Community") {
+            CommunitySafetySection(state, communitySafetyActions, onReviewTerms)
+            CommunityNotificationSection(
+                state,
+                communitySafetyActions.onSetChatMentionsEnabled,
+                communitySafetyActions.onSetForegroundChatMentionMonitorEnabled,
+            )
         }
-        Button(
-            onClick = onOpenAppGuide,
-            modifier = Modifier.fillMaxWidth().testTag("open_app_guide"),
-        ) { Text("App guide") }
-        FeedbackSection(state, diagnosticUi, feedbackUi)
-        DiagnosticsSection(state, diagnosticUi)
-        SecondaryContentSection(state, onOpenStationPage)
-        PrivacySection()
+        SettingsGroup("App") {
+            MoreDisclosure(
+                title = "Startup station",
+                summary = startupStationSummary(state),
+                icon = Icons.Default.PlayCircle,
+                testTag = "more_device_preferences",
+            ) {
+                DevicePreferencesSection(state, onUseLastStationAtStartup, onSetStartupStation, showTitle = false)
+            }
+            MoreLink(
+                title = "App guide",
+                summary = "A short tour of the Player.",
+                icon = Icons.AutoMirrored.Filled.HelpOutline,
+                testTag = "open_app_guide",
+                onClick = onOpenAppGuide,
+            )
+            FeedbackSection(state, diagnosticUi, feedbackUi)
+            DiagnosticsSection(state, diagnosticUi)
+            PrivacySection()
+        }
+        AboutFooter()
     }
+}
+
+private fun startupStationSummary(state: MainUiState): String {
+    val preferences = state.stationPreferences
+    if (preferences.startupMode == StartupStationMode.LastSelected) return "Resumes where you left off."
+    val fixed = state.stations.firstOrNull { it.id == preferences.defaultStationId }
+    return fixed?.let { "Always starts with ${it.name}." } ?: "Choose which station opens at startup."
+}
+
+/** A titled run of settings rows on one rounded surface, the way system settings group related items. */
+@Composable
+private fun SettingsGroup(title: String, content: @Composable ColumnScope.() -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            title,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(start = 6.dp),
+        )
+        Surface(shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.surfaceContainerLow) {
+            Column(
+                Modifier.clip(RoundedCornerShape(20.dp)),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+                content = content,
+            )
+        }
+    }
+}
+
+@Composable
+private fun AboutFooter() {
+    val context = LocalContext.current
+    val version = remember(context) {
+        runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull()
+    }
+    Text(
+        listOfNotNull("24Seven.FM Player", version).joinToString(" ") + "\nAn unofficial listener app for the 24Seven.FM stations",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+    )
 }
 
 @Composable
@@ -1377,84 +1671,45 @@ private fun CommunityNotificationSection(
     MoreDisclosure(
         title = "Community notifications",
         summary = if (enabled) "Chat mentions enabled for ${station.shortName}" else "Off for ${station.shortName}",
+        icon = Icons.Default.Notifications,
         testTag = "more_community_notifications",
     ) {
         Card(Modifier.fillMaxWidth().testTag("community_notification_controls")) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Row(
-                    Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Checkbox(
-                        checked = enabled,
-                        onCheckedChange = { onSetChatMentionsEnabled(station.id, it) },
-                        enabled = canChangeSetting,
-                        modifier = Modifier
-                            .testTag("chat_mention_notifications_toggle")
-                            .semantics {
-                                contentDescription = "Notify when my station name is mentioned"
-                            },
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text("Notify when my station name is mentioned", fontWeight = FontWeight.SemiBold)
-                        Text(
-                            "Uses your signed-in ${station.shortName} display name and ignores users blocked on this device.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                SettingSwitchRow(
+                    title = "Mention notifications",
+                    description = "Tells you when your ${station.shortName} name comes up in chat. Members you blocked are ignored.",
+                    checked = enabled,
+                    enabled = canChangeSetting,
+                    toggleTag = "chat_mention_notifications_toggle",
+                    toggleDescription = "Notify when my station name is mentioned",
+                    onCheckedChange = { onSetChatMentionsEnabled(station.id, it) },
+                )
                 if (!eligible) {
-                    Text(
+                    Footnote(
                         if (enabled) {
-                            "Alerts are paused until you sign in and enable community content for this station. You can still turn this setting off."
+                            "Paused until you sign in and show community content for this station. You can still turn it off."
                         } else {
-                            "Sign in and enable community content for this station before turning on mention notifications."
+                            "Sign in and show community content for this station to turn this on."
                         },
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                Row(
-                    Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Checkbox(
-                        checked = monitorEnabled,
-                        onCheckedChange = { onSetForegroundChatMentionMonitorEnabled(station.id, it) },
-                        enabled = canChangeMonitor,
-                        modifier = Modifier
-                            .testTag("foreground_chat_mention_monitor_toggle")
-                            .semantics {
-                                contentDescription = "Monitor chat mentions while the app is closed"
-                            },
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text("Monitor mentions while app is closed", fontWeight = FontWeight.SemiBold)
-                        Text(
-                            "Keeps one ${station.shortName} chat monitor active and checks about once a minute. Android shows a persistent monitoring notification with a Stop action.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-                if (!enabled && eligible) {
-                    Text(
-                        "Turn on mention notifications before enabling the closed-app monitor.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                Text(
+                SettingSwitchRow(
+                    title = "Keep watching when the app is closed",
+                    description = "Checks ${station.shortName} chat about once a minute. Android shows an ongoing notification with a Stop action.",
+                    checked = monitorEnabled,
+                    enabled = canChangeMonitor,
+                    toggleTag = "foreground_chat_mention_monitor_toggle",
+                    toggleDescription = "Monitor chat mentions while the app is closed",
+                    onCheckedChange = { onSetForegroundChatMentionMonitorEnabled(station.id, it) },
+                )
+                if (!enabled && eligible) Footnote("Turn on mention notifications first.")
+                Footnote(
                     if (monitorEnabled) {
-                        "The closed-app monitor is active for ${station.shortName}. It stops if you sign out or disable community content. Message text is not included in notifications."
+                        "Watching stops if you sign out or hide community content. Message text is never shown in notifications."
                     } else {
-                        "When the app is open, mentions are detected while Chat is actively refreshing. Message text is not included in notifications."
+                        "With the app open, mentions are noticed while Chat refreshes. Message text is never shown in notifications."
                     },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
@@ -1481,21 +1736,13 @@ private fun DiagnosticsSection(
     }
     MoreDisclosure(
         title = "In-app diagnostics",
-        summary = "Preview and explicitly copy or share a privacy-safe support snapshot.",
+        summary = "Technical details you can preview, copy, or share with support.",
+        icon = Icons.Default.BugReport,
         testTag = "more_diagnostics",
     ) {
         Card(Modifier.fillMaxWidth().testTag("diagnostics_card")) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(
-                    "Review before sharing",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                Text(
-                    "The snapshot uses a fixed allowlist. It does not include account details, messages, report content, URLs, device identifiers, raw errors, or logs.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                Footnote("A fixed list of technical details. No account details, messages, addresses, device identifiers, or logs.")
                 Surface(
                     modifier = Modifier.fillMaxWidth().testTag("diagnostics_report"),
                     shape = RoundedCornerShape(12.dp),
@@ -1514,14 +1761,22 @@ private fun DiagnosticsSection(
                     Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Button(
+                    OutlinedButton(
                         onClick = { diagnosticUi.actions.onCopy(report) },
                         modifier = Modifier.weight(1f).testTag("diagnostics_copy"),
-                    ) { Text("Copy") }
+                    ) {
+                        Icon(Icons.Default.ContentCopy, contentDescription = null, Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Copy")
+                    }
                     Button(
                         onClick = { diagnosticUi.actions.onShare(report) },
                         modifier = Modifier.weight(1f).testTag("diagnostics_share"),
-                    ) { Text("Share") }
+                    ) {
+                        Icon(Icons.Default.Share, contentDescription = null, Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Share")
+                    }
                 }
             }
         }
@@ -1556,26 +1811,26 @@ private fun FeedbackSection(
 
     MoreDisclosure(
         title = "Report a problem",
-        summary = "Prepare a reviewable feedback draft for the Player team.",
+        summary = "Tell the Player team what went wrong. You review the email before it is sent.",
+        icon = Icons.Default.Feedback,
         testTag = "more_feedback",
     ) {
         Card(Modifier.fillMaxWidth().testTag("feedback_card")) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(
-                    "Report a problem",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                Text(
-                    "Choose a category and add any details you want to share. Do not include passwords, security codes, private messages, or session information.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 Box {
-                    Button(
+                    OutlinedButton(
                         onClick = { categoryMenuOpen = true },
-                        modifier = Modifier.fillMaxWidth().testTag("feedback_category"),
-                    ) { Text("Category: ${category.label}") }
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("feedback_category")
+                            .semantics { contentDescription = "Category: ${category.label}" },
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text("About", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(category.label)
+                        }
+                        Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+                    }
                     DropdownMenu(
                         expanded = categoryMenuOpen,
                         onDismissRequest = { categoryMenuOpen = false },
@@ -1597,31 +1852,18 @@ private fun FeedbackSection(
                     onValueChange = { description = it.take(1_000) },
                     modifier = Modifier.fillMaxWidth().testTag("feedback_description"),
                     label = { Text("What happened? (optional)") },
-                    supportingText = { Text("Up to 1,000 characters") },
+                    supportingText = { Text("Leave out passwords, codes, and private messages. ${description.length}/1,000") },
                     minLines = 3,
                     maxLines = 6,
                 )
-                Row(
-                    Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Checkbox(
-                        checked = includeDiagnostics,
-                        onCheckedChange = { includeDiagnostics = it },
-                        modifier = Modifier
-                            .testTag("feedback_include_diagnostics")
-                            .semantics { contentDescription = "Include privacy-safe diagnostics" },
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text("Include privacy-safe diagnostics", fontWeight = FontWeight.SemiBold)
-                        Text(
-                            "Includes app and Android version, coarse device model, selected station, playback state, and recent non-sensitive transitions. It never includes account data, messages, URLs, identifiers, raw errors, or logs.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
+                SettingSwitchRow(
+                    title = "Attach diagnostics",
+                    description = "App and Android version, device model, station, and recent playback states. Never account data, messages, or logs.",
+                    checked = includeDiagnostics,
+                    toggleTag = "feedback_include_diagnostics",
+                    toggleDescription = "Include privacy-safe diagnostics",
+                    onCheckedChange = { includeDiagnostics = it },
+                )
                 Button(
                     onClick = {
                         feedbackUi.actions.onReviewEmail(
@@ -1634,11 +1876,7 @@ private fun FeedbackSection(
                     },
                     modifier = Modifier.fillMaxWidth().testTag("feedback_review_email"),
                 ) { Text("Review email draft") }
-                Text(
-                    "The Player opens a local email draft addressed to its monitored contact. You can review, edit, cancel, or send it there; the Player cannot send it or confirm delivery.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                Footnote("Opens a draft in your email app. Nothing is sent until you send it there, and the Player cannot confirm delivery.")
             }
         }
     }
@@ -1662,43 +1900,77 @@ private fun CommunitySafetySection(
     MoreDisclosure(
         title = "Community safety",
         summary = status,
+        icon = Icons.Default.Shield,
         testTag = "more_community_safety",
     ) {
         Card(Modifier.fillMaxWidth().testTag("community_safety_controls")) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(status, fontWeight = FontWeight.SemiBold)
-                when (safety.ageGateStatus) {
-                    AgeGateStatus.NotCompleted -> {
-                        Text(
-                            "Enter your date of birth to determine community access. The date itself is not saved.",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                val canToggle = safety.ageGateStatus == AgeGateStatus.Adult && safety.hasAcceptedCurrentTerms
+                val shown = canToggle && safety.communityContentVisible
+                StatusTile(
+                    icon = if (shown) Icons.Default.Visibility else if (canToggle) Icons.Default.VisibilityOff else Icons.Default.Shield,
+                    tint = when {
+                        shown -> MaterialTheme.colorScheme.primary
+                        canToggle || safety.ageGateStatus == AgeGateStatus.Underage -> MaterialTheme.colorScheme.onSurfaceVariant
+                        else -> MaterialTheme.colorScheme.secondary
+                    },
+                    headline = if (canToggle) "Community content" else status,
+                    detail = when {
+                        safety.ageGateStatus == AgeGateStatus.Underage ->
+                            "Playback stays available. This adult network's chat and request credits are not."
+                        safety.ageGateStatus == AgeGateStatus.NotCompleted ->
+                            "Enter your date of birth to decide access. The date itself is not saved."
+                        !safety.hasAcceptedCurrentTerms -> "Accept the Terms of Participation to see chat and request credits."
+                        shown -> "Shown. Chat and request credits are visible."
+                        else -> "Hidden. Chat and request credits are not shown."
+                    },
+                ) {
+                    if (canToggle) {
+                        Switch(
+                            checked = safety.communityContentVisible,
+                            onCheckedChange = { actions.onSetCommunityContentVisible(!safety.communityContentVisible) },
+                            modifier = Modifier
+                                .testTag("toggle_community_content")
+                                .semantics { contentDescription = "Show community content" },
                         )
-                        AgeScreenFields(state, actions.onSubmitAgeScreen)
                     }
-                    AgeGateStatus.Underage -> Text(
-                        "Playback remains available, but this adult network's Chat and public request attribution are unavailable.",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    AgeGateStatus.Adult -> {
+                }
+                when (safety.ageGateStatus) {
+                    AgeGateStatus.NotCompleted -> AgeScreenFields(state, actions.onSubmitAgeScreen)
+                    AgeGateStatus.Underage -> Unit
+                    AgeGateStatus.Adult -> if (safety.hasAcceptedCurrentTerms) {
                         TextButton(onClick = onReviewTerms, modifier = Modifier.testTag("open_terms_from_more")) {
-                            Text(if (safety.hasAcceptedCurrentTerms) "Review Terms of Participation" else "Review and accept terms")
+                            Text("Terms of Participation")
                         }
-                        if (safety.hasAcceptedCurrentTerms) {
-                            Button(
-                                onClick = { actions.onSetCommunityContentVisible(!safety.communityContentVisible) },
-                                modifier = Modifier.testTag("toggle_community_content"),
-                            ) {
-                                Text(if (safety.communityContentVisible) "Hide community content" else "Show community content")
-                            }
+                    } else {
+                        Button(onClick = onReviewTerms, modifier = Modifier.testTag("open_terms_from_more")) {
+                            Text("Review and accept terms")
                         }
                     }
                 }
                 val blocked = selectedStation?.let { station ->
                     safety.blockedUsers.filter { it.stationId == station.id }
                 }.orEmpty()
-                Text("Blocked users — ${selectedStation?.shortName ?: "station"}", style = MaterialTheme.typography.titleSmall)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        "Blocked on ${selectedStation?.shortName ?: "this station"}",
+                        style = MaterialTheme.typography.titleSmall,
+                        modifier = Modifier.weight(1f),
+                    )
+                    if (blocked.isNotEmpty()) {
+                        Text(
+                            blocked.size.toString(),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
                 if (blocked.isEmpty()) {
-                    Text("No users are blocked on this device for this station.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        "Nobody is blocked.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 } else {
                     blocked.forEach { user ->
                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -1710,37 +1982,121 @@ private fun CommunitySafetySection(
                         }
                     }
                 }
-                Text(
-                    "Blocks are stored only on this device and hide that user's Chat messages and request attribution in the app.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                Footnote("Blocks stay on this device and hide that member's chat messages and request credits.")
+            }
+        }
+    }
+}
+
+/** A tinted tile for the one state a card exists to show, with room for the control that changes it. */
+@Composable
+private fun StatusTile(
+    icon: ImageVector,
+    tint: Color,
+    headline: String,
+    detail: String,
+    modifier: Modifier = Modifier,
+    trailing: (@Composable () -> Unit)? = null,
+) {
+    Surface(shape = RoundedCornerShape(16.dp), color = tint.copy(alpha = 0.14f), modifier = modifier.fillMaxWidth()) {
+        Row(
+            Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(28.dp))
+            Column(Modifier.weight(1f)) {
+                Text(headline, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                Text(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            trailing?.invoke()
+        }
+    }
+}
+
+/** A setting that is on or off: what it does on the left, the switch on the right. */
+@Composable
+private fun SettingSwitchRow(
+    title: String,
+    description: String,
+    checked: Boolean,
+    toggleTag: String,
+    toggleDescription: String,
+    enabled: Boolean = true,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Row(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.titleSmall)
+            Text(description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            enabled = enabled,
+            modifier = Modifier.testTag(toggleTag).semantics { contentDescription = toggleDescription },
+        )
+    }
+}
+
+/** One of a set of choices where exactly one applies. */
+@Composable
+private fun SettingChoiceRow(
+    title: String,
+    description: String?,
+    selected: Boolean,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .selectable(selected = selected, enabled = enabled, role = Role.RadioButton, onClick = onClick)
+            .padding(vertical = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        RadioButton(selected = selected, onClick = null, enabled = enabled)
+        Column(Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.titleSmall)
+            description?.let {
+                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
 }
 
 @Composable
-private fun MoreDisclosure(
+private fun Footnote(text: String) {
+    Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+}
+
+/** A More entry that opens a screen of its own. */
+/** One settings row: an optional leading icon, a title, a one-line summary, and whatever sits at the end. */
+@Composable
+private fun MoreRow(
     title: String,
     summary: String,
-    testTag: String,
-    content: @Composable () -> Unit,
+    icon: ImageVector?,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+    trailing: @Composable () -> Unit,
 ) {
-    var expanded by rememberSaveable(testTag) { mutableStateOf(false) }
-    Card(
-        onClick = { expanded = !expanded },
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag(testTag)
-            .semantics {
-                contentDescription = "$title, ${if (expanded) "expanded" else "collapsed"}"
-            },
-    ) {
+    Surface(onClick = onClick, color = MaterialTheme.colorScheme.surfaceContainer, modifier = modifier.fillMaxWidth()) {
         Row(
-            Modifier.fillMaxWidth().padding(16.dp),
+            Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
+            icon?.let {
+                Icon(it, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(24.dp))
+            }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                 Text(
@@ -1749,15 +2105,62 @@ private fun MoreDisclosure(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            Spacer(Modifier.width(12.dp))
-            Text(
-                if (expanded) "Hide" else "Open",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-            )
+            trailing()
         }
     }
-    if (expanded) content()
+}
+
+@Composable
+internal fun MoreLink(
+    title: String,
+    summary: String,
+    testTag: String,
+    icon: ImageVector? = null,
+    trailingIcon: ImageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+    onClick: () -> Unit,
+) {
+    MoreRow(title, summary, icon, Modifier.testTag(testTag), onClick) {
+        Icon(trailingIcon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+/** A settings row that opens in place; its content sits directly under it on the same surface. */
+@Composable
+internal fun MoreDisclosure(
+    title: String,
+    summary: String,
+    testTag: String,
+    icon: ImageVector? = null,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    var expanded by rememberSaveable(testTag) { mutableStateOf(false) }
+    val chevron by animateFloatAsState(if (expanded) 180f else 0f, label = "disclosure")
+    MoreRow(
+        title,
+        summary,
+        icon,
+        Modifier
+            .testTag(testTag)
+            .semantics { contentDescription = "$title, ${if (expanded) "expanded" else "collapsed"}" },
+        onClick = { expanded = !expanded },
+    ) {
+        Icon(
+            Icons.Default.ExpandMore,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.rotate(chevron),
+        )
+    }
+    if (expanded) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surfaceContainer)
+                .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            content = content,
+        )
+    }
 }
 
 @Composable
@@ -1769,22 +2172,21 @@ private fun SecondaryContentSection(
     if (!station.capabilities.supportsSecondaryContent || station.secondaryPages.isEmpty()) {
         return
     }
-    Text("Station links", style = MaterialTheme.typography.titleMedium)
-    Text(
-        "Contact Us opens a reviewed draft in your email app.",
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
     Column(
         Modifier.fillMaxWidth().testTag("secondary_content_directory"),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         station.secondaryPages.forEach { page ->
             val opensEmail = page.kind == StationPageKind.Contact
-            Card(
-                onClick = { onOpenStationPage(page) },
+            MoreRow(
+                title = page.title,
+                summary = if (opensEmail) {
+                    "${page.description.trimEnd().trimEnd('.')}. Opens a reviewed draft in your email app."
+                } else {
+                    page.description
+                },
+                icon = if (opensEmail) Icons.Default.Email else Icons.AutoMirrored.Filled.OpenInNew,
                 modifier = Modifier
-                    .fillMaxWidth()
                     .testTag("secondary_content_${page.kind.name.lowercase()}")
                     .semantics {
                         contentDescription = if (opensEmail) {
@@ -1793,25 +2195,9 @@ private fun SecondaryContentSection(
                             "Open ${page.title} for ${station.name} in browser"
                         }
                     },
+                onClick = { onOpenStationPage(page) },
             ) {
-                Row(
-                    Modifier.fillMaxWidth().padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text(page.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-                        Text(
-                            page.description,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    Spacer(Modifier.width(12.dp))
-                    Icon(
-                        if (opensEmail) Icons.Default.Email else Icons.AutoMirrored.Filled.OpenInNew,
-                        contentDescription = null,
-                    )
-                }
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -1827,30 +2213,39 @@ private fun DevicePreferencesSection(
     val preferences = state.stationPreferences
     val fixedStation = state.stations.firstOrNull { it.id == preferences.defaultStationId }
     val lastStation = state.stations.firstOrNull { it.id == preferences.lastStationId }
-    val summary = when (preferences.startupMode) {
-        StartupStationMode.LastSelected -> lastStation?.let { "Resume last station: ${it.name}" }
-            ?: "Resume the last station selected on this device"
-        StartupStationMode.Fixed -> fixedStation?.let { "Always start with ${it.name}" }
-            ?: "Saved startup station is unavailable; using the safe catalog fallback"
-    }
+    val current = state.selectedStation
+    val resumes = preferences.startupMode == StartupStationMode.LastSelected
 
     if (showTitle) Text("Device preferences", style = MaterialTheme.typography.titleMedium)
     Card(Modifier.fillMaxWidth().testTag("device_station_preferences")) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(
-                summary,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.semantics { contentDescription = "Startup station preference: $summary" },
-            )
-            Button(
-                onClick = onUseLastStationAtStartup,
+        Column(Modifier.padding(horizontal = 16.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            SettingChoiceRow(
+                title = "Resume where I left off",
+                description = lastStation?.let { "Last played: ${it.name}" } ?: "The last station selected on this device",
+                selected = resumes,
                 modifier = Modifier.testTag("startup_use_last_station"),
-            ) { Text("Resume last station") }
-            Button(
-                onClick = { state.selectedStation?.id?.let(onSetStartupStation) },
-                enabled = state.selectedStation != null,
+                onClick = onUseLastStationAtStartup,
+            )
+            // A startup station other than the one on screen stays listed, so choosing the current one is a visible change.
+            if (!resumes && fixedStation != null && fixedStation.id != current?.id) {
+                SettingChoiceRow(
+                    title = "Always start with ${fixedStation.name}",
+                    description = null,
+                    selected = true,
+                    onClick = {},
+                )
+            }
+            SettingChoiceRow(
+                title = "Always start with ${current?.name ?: "the selected station"}",
+                description = "The station selected now",
+                selected = !resumes && fixedStation != null && fixedStation.id == current?.id,
+                enabled = current != null,
                 modifier = Modifier.testTag("startup_use_current_station"),
-            ) { Text("Use current station at startup") }
+                onClick = { current?.id?.let(onSetStartupStation) },
+            )
+            if (!resumes && fixedStation == null) {
+                Footnote("Your saved startup station is no longer available, so the Player picks one for you.")
+            }
         }
     }
 }
@@ -1873,12 +2268,7 @@ private fun AccountSection(
     var showOtherAccounts by remember(state.selectedStation?.id) { mutableStateOf(false) }
     val visibleAccounts = listOfNotNull(selectedAccount) + if (showOtherAccounts) otherAccounts else emptyList()
 
-    Text("Account", style = MaterialTheme.typography.titleMedium)
-    Text(
-        "Accounts and sign-in sessions are station-specific.",
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
+    Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         if (maxWidth >= 720.dp) {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -1920,6 +2310,7 @@ private fun AccountSection(
             Text(if (showOtherAccounts) "Hide other station accounts" else "Manage other station accounts")
         }
     }
+    }
 }
 
 @Composable
@@ -1931,30 +2322,31 @@ private fun ListenerActivitySection(
     val station = state.selectedStation ?: return
     if (!station.capabilities.supportsListenerActivity) return
     val activity = state.listenerActivity
-    val membershipLabel = when (activity?.membershipTier) {
-        MembershipTier.Standard -> "Standard member"
-        MembershipTier.Vip -> "VIP member"
-        MembershipTier.Rip -> "RIP member"
-        MembershipTier.Unknown, null -> "Not reported by station"
-    }
+    val membershipLabel = membershipLabel(activity?.membershipTier, activity?.rankTitle)
     val readinessLabel = when (activity?.requestReadiness) {
         RequestReadiness.Ready -> "Ready to request"
-        RequestReadiness.Waiting -> activity.waitMinutes?.let { "Wait $it minutes" }
+        RequestReadiness.Waiting -> activity.waitMinutes?.let { if (it == 1) "Wait 1 minute" else "Wait $it minutes" }
             ?: "Request cooldown active"
         RequestReadiness.Unknown, null -> "Not reported by station"
     }
+    var showAllRequests by rememberSaveable(station.id.value) { mutableStateOf(false) }
 
     if (showTitle) Text("Request activity", style = MaterialTheme.typography.titleMedium)
     Card(Modifier.fillMaxWidth().testTag("listener_activity_card")) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            val loaded = state.auth?.status == AuthStatus.SignedIn &&
+                activity?.status == ListenerActivityLoadStatus.Ready
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text(station.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                    Text(
-                        "Authenticated history and station-reported request status",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodySmall,
-                    )
+                Box(Modifier.weight(1f)) {
+                    if (loaded) {
+                        MembershipLine(activity?.membershipTier, activity?.rankTitle, membershipLabel, station.id)
+                    } else {
+                        Text(
+                            "As reported by ${station.shortName}",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
                 }
                 IconButton(
                     onClick = onRefresh,
@@ -1967,7 +2359,7 @@ private fun ListenerActivitySection(
             }
             when {
                 state.auth?.status != AuthStatus.SignedIn -> Text(
-                    "Sign in to ${station.shortName} from its account card above to load this private activity.",
+                    "Sign in to ${station.shortName} above to see your request activity.",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 activity == null || activity.status == ListenerActivityLoadStatus.Idle -> Text(
@@ -1986,39 +2378,42 @@ private fun ListenerActivitySection(
                     color = MaterialTheme.colorScheme.error,
                 )
                 else -> {
-                    ListenerStatusRow("Membership", membershipLabel)
-                    ListenerStatusRow("Request status", readinessLabel)
-                    Text("Your last requests", style = MaterialTheme.typography.titleSmall)
+                    RequestClockTile(activity.requestReadiness, activity.waitMinutes, readinessLabel)
+                    activity.queuedRequestWaitSeconds?.let { seconds ->
+                        ListenerStatusRow("Your queued request", queuedRequestLabel(seconds))
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            "Recent requests",
+                            style = MaterialTheme.typography.titleSmall,
+                            modifier = Modifier.weight(1f),
+                        )
+                        if (activity.recentRequests.isNotEmpty()) {
+                            Text(
+                                activity.recentRequests.size.toString(),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
                     if (activity.recentRequests.isEmpty()) {
                         Text(
                             "No recent requests were reported by this station.",
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     } else {
-                        activity.recentRequests.forEach { request ->
-                            Row(
-                                Modifier
-                                    .fillMaxWidth()
-                                    .testTag("request_history_${request.position}")
-                                    .semantics {
-                                        contentDescription = "Request ${request.position}: ${request.trackSummary}; ${request.requestedAtLabel}"
-                                    },
-                                verticalAlignment = Alignment.Top,
+                        val shown = if (showAllRequests) {
+                            activity.recentRequests
+                        } else {
+                            activity.recentRequests.take(COLLAPSED_REQUEST_HISTORY_ROWS)
+                        }
+                        shown.forEach { request -> RequestHistoryRow(request) }
+                        if (activity.recentRequests.size > COLLAPSED_REQUEST_HISTORY_ROWS) {
+                            TextButton(
+                                onClick = { showAllRequests = !showAllRequests },
+                                modifier = Modifier.testTag("request_history_toggle"),
                             ) {
-                                Text(
-                                    request.position.toString(),
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.width(28.dp),
-                                )
-                                Column(Modifier.weight(1f)) {
-                                    Text(request.trackSummary, style = MaterialTheme.typography.bodyMedium)
-                                    Text(
-                                        request.requestedAtLabel,
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                }
+                                Text(if (showAllRequests) "Show fewer" else "Show all ${activity.recentRequests.size}")
                             }
                         }
                     }
@@ -2028,6 +2423,147 @@ private fun ListenerActivitySection(
     }
 }
 
+/** The member's tier as a badge in the station's colour, then their rank as the station words it. */
+@Composable
+private fun MembershipLine(tier: MembershipTier?, rankTitle: String?, description: String, stationId: StationId) {
+    val accent = stationPalette(stationId).themedAccent()
+    val badge = when (tier) {
+        MembershipTier.Vip -> "VIP"
+        MembershipTier.Rip -> "RIP"
+        MembershipTier.Standard -> "Member"
+        MembershipTier.Unknown, null -> null
+    }
+    Row(
+        Modifier.clearAndSetSemantics { contentDescription = "Membership: $description" },
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        badge?.let { label ->
+            Surface(shape = RoundedCornerShape(50), color = accent.copy(alpha = 0.18f), contentColor = accent) {
+                Text(
+                    label,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                )
+            }
+        }
+        val rank = rankTitle?.takeIf(String::isNotBlank)
+        Text(
+            rank ?: if (badge == null) description else "",
+            style = MaterialTheme.typography.titleSmall,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+/** The request clock as the one thing to read at a glance: whether a request can be sent now, or how long is left. */
+@Composable
+private fun RequestClockTile(readiness: RequestReadiness, waitMinutes: Int?, description: String) {
+    val tint = when (readiness) {
+        RequestReadiness.Ready -> requestAvailableGreen()
+        RequestReadiness.Waiting -> MaterialTheme.colorScheme.secondary
+        RequestReadiness.Unknown -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    val icon = when (readiness) {
+        RequestReadiness.Ready -> Icons.Default.CheckCircle
+        RequestReadiness.Waiting -> Icons.Default.Schedule
+        RequestReadiness.Unknown -> Icons.Default.HelpOutline
+    }
+    val headline = when (readiness) {
+        RequestReadiness.Ready -> "Ready to request"
+        RequestReadiness.Waiting -> waitMinutes?.let { if (it == 1) "Next request in 1 minute" else "Next request in $it minutes" }
+            ?: "Request clock running"
+        RequestReadiness.Unknown -> "Request clock unavailable"
+    }
+    val detail = when (readiness) {
+        RequestReadiness.Ready -> "You can send a request now."
+        RequestReadiness.Waiting -> "Your request clock is counting down."
+        RequestReadiness.Unknown -> "The station did not report it."
+    }
+    StatusTile(
+        icon = icon,
+        tint = tint,
+        headline = headline,
+        detail = detail,
+        modifier = Modifier
+            .testTag("request_clock")
+            .clearAndSetSemantics { contentDescription = "Request status: $description" },
+    )
+}
+
+@Composable
+private fun RequestHistoryRow(request: RequestHistoryEntry) {
+    val requestedAt = requestTimeLabel(request.requestedAtLabel)
+    val (title, artist) = splitTrackSummary(request.trackSummary)
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .testTag("request_history_${request.position}")
+            .opensAlbum(request.albumId, request.albumTitle, request.artworkUrl)
+            .semantics(mergeDescendants = true) {
+                contentDescription = "Request ${request.position}: ${request.trackSummary}; $requestedAt"
+            },
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            Modifier
+                .size(48.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (request.artworkUrl.isNullOrBlank()) {
+                Icon(Icons.Default.MusicNote, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            } else {
+                AsyncImage(
+                    model = crossfadingImage(request.artworkUrl),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
+        Column(Modifier.weight(1f)) {
+            Text(
+                title,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            artist?.let {
+                Text(
+                    it,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            Text(
+                listOfNotNull(request.albumTitle, requestedAt).joinToString(" · "),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+/** The station writes a request as "Track — Artist"; the track may itself contain a dash, so the last one divides. */
+internal fun splitTrackSummary(summary: String): Pair<String, String?> {
+    val divider = summary.lastIndexOf(TRACK_SUMMARY_DIVIDER)
+    if (divider <= 0) return summary to null
+    val artist = summary.substring(divider + TRACK_SUMMARY_DIVIDER.length).trim()
+    return summary.substring(0, divider).trim() to artist.ifEmpty { null }
+}
+
+private const val TRACK_SUMMARY_DIVIDER = " \u2014 "
+
 @Composable
 private fun ListenerStatusRow(label: String, value: String) {
     Row(
@@ -2036,10 +2572,48 @@ private fun ListenerStatusRow(label: String, value: String) {
             .semantics { contentDescription = "$label: $value" },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
-        Text(value, fontWeight = FontWeight.SemiBold)
+        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Spacer(Modifier.width(16.dp))
+        Text(value, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.End, modifier = Modifier.weight(1f))
     }
 }
+
+private const val COLLAPSED_REQUEST_HISTORY_ROWS = 10
+
+/** "VIP member · Admiral (Administrator)": the membership the station reports, then the member's rank when it has one. */
+internal fun membershipLabel(tier: MembershipTier?, rankTitle: String?): String {
+    val membership = when (tier) {
+        MembershipTier.Standard -> "Standard member"
+        MembershipTier.Vip -> "VIP member"
+        MembershipTier.Rip -> "RIP member"
+        MembershipTier.Unknown, null -> null
+    }
+    return listOfNotNull(membership, rankTitle?.takeIf(String::isNotBlank)).joinToString(" · ")
+        .ifEmpty { "Not reported by station" }
+}
+
+/** How long until the listener's earliest queued request should start, as the station estimates it. */
+internal fun queuedRequestLabel(seconds: Int): String {
+    val minutes = (seconds + 30) / 60
+    return when {
+        seconds < 60 -> "Due shortly"
+        minutes < 60 -> if (minutes == 1) "Plays in about 1 minute" else "Plays in about $minutes minutes"
+        else -> "Plays in about ${minutes / 60} hr ${minutes % 60} min"
+    }
+}
+
+/**
+ * "Oct 2 · 4:16 PM" for the station's "2026-10-02 16:16:02", with the year only when it is not this one; anything
+ * else is shown as the station wrote it.
+ */
+internal fun requestTimeLabel(raw: String, currentYear: Int = java.time.Year.now().value): String = runCatching {
+    val time = java.time.LocalDateTime.parse(raw.trim(), STATION_TIMESTAMP)
+    time.format(if (time.year == currentYear) REQUEST_TIME_THIS_YEAR else REQUEST_TIME_LABEL)
+}.getOrDefault(raw)
+
+private val STATION_TIMESTAMP = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", java.util.Locale.US)
+private val REQUEST_TIME_LABEL = java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy · h:mm a", java.util.Locale.US)
+private val REQUEST_TIME_THIS_YEAR = java.time.format.DateTimeFormatter.ofPattern("MMM d · h:mm a", java.util.Locale.US)
 
 @Composable
 private fun AccountCard(
@@ -2053,10 +2627,11 @@ private fun AccountCard(
     val station = account.station
     val auth = account.auth
     val palette = stationPalette(station.id)
-    var username by remember(station.id) { mutableStateOf("") }
+    var username by rememberSaveable(station.id.value) { mutableStateOf("") }
+    // The password is deliberately not saved: saved state can be written to disk.
     var password by remember(station.id) { mutableStateOf("") }
     var passwordVisible by remember(station.id) { mutableStateOf(false) }
-    var securityCode by remember(station.id) { mutableStateOf("") }
+    var securityCode by rememberSaveable(station.id.value) { mutableStateOf("") }
     val useStackedHeader = LocalDensity.current.fontScale > 1.5f
     Card(modifier.fillMaxWidth().testTag("account_card_${station.id.value}")) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -2081,21 +2656,20 @@ private fun AccountCard(
                     Button(
                         onClick = { onSignOut(station.id) },
                         modifier = Modifier.testTag("account_sign_out_${station.id.value}"),
-                    ) { Text("Sign out of ${station.shortName}") }
+                    ) { Text("Sign out") }
                 }
                 AuthStatus.LoadingChallenge, AuthStatus.SigningIn -> {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         CircularProgressIndicator(Modifier.size(28.dp))
                         Spacer(Modifier.width(12.dp))
-                        Text(if (auth.status == AuthStatus.SigningIn) "Signing in…" else "Loading secure sign in…")
+                        Text(if (auth.status == AuthStatus.SigningIn) "Signing in…" else "Loading sign-in…")
                     }
                 }
                 AuthStatus.Unavailable -> {
-                    Text("Not signed in", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Button(
                         onClick = { onRefresh(station.id) },
                         modifier = Modifier.testTag("account_load_sign_in_${station.id.value}"),
-                    ) { Text("Load ${station.shortName} sign in") }
+                    ) { Text("Sign in") }
                 }
                 AuthStatus.Expired -> {
                     Text(
@@ -2105,7 +2679,7 @@ private fun AccountCard(
                     Button(
                         onClick = { onRefresh(station.id) },
                         modifier = Modifier.testTag("account_sign_in_again_${station.id.value}"),
-                    ) { Text("Sign in to ${station.shortName} again") }
+                    ) { Text("Sign in again") }
                 }
                 AuthStatus.SignedOut, AuthStatus.Error -> {
                     auth.errorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error) }
@@ -2113,7 +2687,7 @@ private fun AccountCard(
                         Button(
                             onClick = { onRefresh(station.id) },
                             modifier = Modifier.testTag("account_retry_sign_in_${station.id.value}"),
-                        ) { Text("Try loading ${station.shortName} sign in") }
+                        ) { Text("Try again") }
                     } else {
                         OutlinedTextField(
                             username,
@@ -2130,6 +2704,7 @@ private fun AccountCard(
                             { password = it },
                             label = { Text("Password") },
                             singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                             visualTransformation = if (passwordVisible) {
                                 VisualTransformation.None
                             } else {
@@ -2232,7 +2807,7 @@ private fun AccountStationIdentity(
             )
             if (isSelectedStation) {
                 Text(
-                    "Current playback station",
+                    "Selected station",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -2276,19 +2851,14 @@ private fun SongRequestSection(
     onOpenAlbum: (RequestSearchTarget) -> Unit,
     onPrepareRequest: (String) -> Unit,
     onCancelRequest: () -> Unit,
-    onConfirmRequest: (String) -> Unit,
-    onReviewTerms: () -> Unit,
     showTitle: Boolean = true,
 ) {
     val requests = state.requests
-    var query by remember(state.selectedStation?.id) { mutableStateOf("") }
-    var field by remember(state.selectedStation?.id) { mutableStateOf(RequestSearchField.Title) }
-    var fieldMenuOpen by remember { mutableStateOf(false) }
-    var trackSortOrder by remember(state.selectedStation?.id) { mutableStateOf(TrackSortOrder.LibraryOrder) }
+    var query by rememberSaveable(state.selectedStation?.id?.value) { mutableStateOf("") }
+    var field by rememberSaveable(state.selectedStation?.id?.value) { mutableStateOf(RequestSearchField.Title) }
+    var trackSortOrder by rememberSaveable(state.selectedStation?.id?.value) { mutableStateOf(TrackSortOrder.LibraryOrder) }
     var trackSortMenuOpen by remember { mutableStateOf(false) }
     val signedIn = state.auth?.status == AuthStatus.SignedIn
-
-    RequestConfirmationDialog(state, onCancelRequest, onConfirmRequest, onReviewTerms)
 
     if (showTitle) Text("Song requests", style = MaterialTheme.typography.titleMedium)
     Card(Modifier.fillMaxWidth()) {
@@ -2297,61 +2867,54 @@ private fun SongRequestSection(
                 Text("Song requests have not been verified for this station.")
                 return@Column
             }
-            Text(
-                "Search the station library. A request is only sent after you review and confirm one available track.",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box {
-                    TextButton(onClick = { fieldMenuOpen = true }) {
-                        Text("Search by ${field.name.lowercase()}")
-                    }
-                    DropdownMenu(expanded = fieldMenuOpen, onDismissRequest = { fieldMenuOpen = false }) {
-                        RequestSearchField.entries.forEach { option ->
-                            DropdownMenuItem(
-                                text = { Text(option.name) },
-                                onClick = {
-                                    field = option
-                                    fieldMenuOpen = false
-                                },
-                            )
-                        }
-                    }
+            val busy = requests?.status == SongRequestLoadStatus.Loading ||
+                requests?.status == SongRequestLoadStatus.Submitting
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                OutlinedTextField(
+                    value = query,
+                    onValueChange = { query = it.take(100) },
+                    label = { Text("Search the library") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(onSearch = { if (!busy) onSearch(query, field) }),
+                    modifier = Modifier.weight(1f).testTag("library_search_query"),
+                )
+                FilledIconButton(
+                    onClick = { onSearch(query, field) },
+                    enabled = !busy,
+                    modifier = Modifier.padding(top = 8.dp).size(52.dp).testTag("library_search_submit"),
+                ) { Icon(Icons.Default.Search, contentDescription = "Search") }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                RequestSearchField.entries.forEach { option ->
+                    FilterChip(
+                        selected = field == option,
+                        onClick = { field = option },
+                        label = { Text(option.name) },
+                        modifier = Modifier.testTag("library_search_field_${option.name.lowercase()}"),
+                    )
                 }
             }
-            OutlinedTextField(
-                value = query,
-                onValueChange = { query = it.take(100) },
-                label = { Text("Library search") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            Button(
-                onClick = { onSearch(query, field) },
-                enabled = requests?.status != SongRequestLoadStatus.Loading &&
-                    requests?.status != SongRequestLoadStatus.Submitting,
-            ) { Text("Search") }
+            Text("Or let the station pick", style = MaterialTheme.typography.titleSmall)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(
+                    onClick = { onSuggest(RequestSuggestionMode.Random) },
+                    enabled = !busy,
+                    modifier = Modifier.weight(1f).testTag("suggest_random_track"),
+                ) { Text("Random track") }
+                OutlinedButton(
+                    onClick = { onSuggest(RequestSuggestionMode.LeastPlayed) },
+                    enabled = !busy,
+                    modifier = Modifier.weight(1f).testTag("suggest_least_played_track"),
+                ) { Text("Least played") }
+            }
+            Footnote("Nothing is sent until you review and confirm one track.")
 
-            Text(
-                "Or let the station choose one available track.",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Button(
-                onClick = { onSuggest(RequestSuggestionMode.Random) },
-                enabled = requests?.status != SongRequestLoadStatus.Loading &&
-                    requests?.status != SongRequestLoadStatus.Submitting,
-                modifier = Modifier.fillMaxWidth(),
-            ) { Text("Suggest a random track") }
-            Button(
-                onClick = { onSuggest(RequestSuggestionMode.LeastPlayed) },
-                enabled = requests?.status != SongRequestLoadStatus.Loading &&
-                    requests?.status != SongRequestLoadStatus.Submitting,
-                modifier = Modifier.fillMaxWidth(),
-            ) { Text("Suggest a least-played random track") }
-
-            if (requests?.status == SongRequestLoadStatus.Loading || requests?.status == SongRequestLoadStatus.Submitting) {
-                CircularProgressIndicator()
-                Text(if (requests.status == SongRequestLoadStatus.Submitting) "Sending one request…" else "Loading station library…")
+            if (busy) {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 3.dp)
+                    Text(if (requests?.status == SongRequestLoadStatus.Submitting) "Sending one request…" else "Loading station library…")
+                }
             }
             requests?.errorMessage?.let { error ->
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -2373,17 +2936,24 @@ private fun SongRequestSection(
                         shape = RoundedCornerShape(12.dp),
                         tonalElevation = 2.dp,
                     ) {
-                        Column(Modifier.padding(12.dp)) {
-                            Text(result.title, fontWeight = FontWeight.Medium)
-                            listOfNotNull(result.subtitle, result.year).takeIf { it.isNotEmpty() }?.let { details ->
-                                Text(
-                                    details.joinToString(" • "),
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
+                        Row(
+                            Modifier.padding(start = 14.dp, end = 8.dp, top = 10.dp, bottom = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(Modifier.weight(1f)) {
+                                Text(result.title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+                                listOfNotNull(result.subtitle, result.year).takeIf { it.isNotEmpty() }?.let { details ->
+                                    Text(
+                                        details.joinToString(" · "),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
                             }
-                            Text(
-                                if (result.target is RequestSearchTarget.Artist) "View albums" else "View album",
-                                color = MaterialTheme.colorScheme.primary,
+                            Icon(
+                                Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                     }
@@ -2418,36 +2988,11 @@ private fun SongRequestSection(
                     }
                 }
                 tracks.sortedForDisplay(trackSortOrder) { it.availability }.forEach { track ->
-                    Row(
-                        Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Column(Modifier.weight(1f)) {
-                            Text(track.title, fontWeight = FontWeight.Medium)
-                            Text(
-                                listOfNotNull(track.artist, track.duration).joinToString(" • "),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                            RequestStatusIndicator(
-                                availability = track.availability,
-                                modifier = Modifier.padding(top = 4.dp),
-                            )
-                            track.availability.detail?.let { detail ->
-                                Text(
-                                    detail,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                        }
-                        if (track.availability.canRequest) {
-                            TextButton(
-                                onClick = { onPrepareRequest(track.songId) },
-                                enabled = requests.status == SongRequestLoadStatus.Ready,
-                            ) { Text("Request Now") }
-                        }
-                    }
+                    RequestableTrackRow(
+                        track = track,
+                        canRequest = requests.status == SongRequestLoadStatus.Ready,
+                        onPrepareRequest = onPrepareRequest,
+                    )
                 }
             }
         }

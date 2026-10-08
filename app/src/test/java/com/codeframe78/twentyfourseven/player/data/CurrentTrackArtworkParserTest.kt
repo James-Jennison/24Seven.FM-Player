@@ -62,6 +62,55 @@ class CurrentTrackArtworkParserTest {
     }
 
     @Test
+    fun `parses who requested the track, the audience, and how far it has played`() {
+        val response = JSONObject()
+            .put("Artist", "Max Richter")
+            .put("Album", "Black Mirror: Nosedive")
+            .put("Track", "The Journey, Not The Destination")
+            .put("Length", "276812")
+            .put("PlayStart", "2026-10-02T06:37:17")
+            .put("SystemTime", "2026-10-02T06:41:15")
+            .put("CoverLink", "https://streamingsoundtracks.com/images/cover/B01M9B4IUW.jpg")
+            .put("RequestedBy", "Listener")
+            .put("ListenerCount", "92")
+            .put("Message", JSONObject.NULL)
+            .toString()
+
+        val details = parser.parseNowPlaying(
+            response,
+            "https://streamingsoundtracks.com/",
+            StationId("sst"),
+            receivedAtElapsedRealtimeMillis = 1_000_000L,
+        )
+
+        assertEquals("Listener", details?.requesterName)
+        assertNull(details?.requestMessage)
+        assertEquals(92, details?.listenerCount)
+        assertEquals("B01M9B4IUW", details?.albumId)
+        assertEquals(276_812L, details?.trackLengthMillis)
+        assertEquals(1_000_000L - 238_000L, details?.trackStartedElapsedRealtimeMillis)
+    }
+
+    @Test
+    fun `leaves progress unknown when the station times are missing or impossible`() {
+        val response = JSONObject()
+            .put("Artist", "Don Davis")
+            .put("Track", "Bone Man Ben")
+            .put("Length", "0")
+            .put("PlayStart", "2026-10-02T06:41:15")
+            .put("SystemTime", "2026-10-02T06:37:17")
+            .put("ListenerCount", "many")
+            .toString()
+
+        val details = parser.parseNowPlaying(response, "https://death.fm/", StationId("dfm"), 5_000L)
+
+        assertNull(details?.trackLengthMillis)
+        assertNull(details?.trackStartedElapsedRealtimeMillis)
+        assertNull(details?.listenerCount)
+        assertNull(details?.requesterName)
+    }
+
+    @Test
     fun `decodes HTML entities in station metadata before publishing it`() {
         val response = JSONObject()
             .put("Artist", "Billy Joel")

@@ -11,9 +11,11 @@ permissions:
 jobs:
   enable-auto-merge:
     name: Enable auto-merge
+    # Dependency updates wait for a maintainer: a compromised upstream release must not merge itself.
     if: >-
       !github.event.pull_request.draft &&
-      github.event.pull_request.head.repo.full_name == github.repository
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.user.login != 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Enable merge after required checks pass

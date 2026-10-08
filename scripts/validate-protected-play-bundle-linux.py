@@ -466,6 +466,58 @@ def resolve_android_sdk(
     )
 
 
+BUILD_INPUT_PATHS = (
+    "app",
+    "gradle",
+    "security-harness",
+    "build.gradle.kts",
+    "settings.gradle.kts",
+    "gradle.properties",
+)
+
+
+def resolve_source_revision(repository_root: Path) -> str:
+    """Return HEAD only when the build inputs match it exactly.
+
+    The revision is embedded in the release manifest, so a bundle must not be built from
+    tracked changes or untracked build inputs that the named commit does not contain.
+    """
+    git = ["git", "-C", str(repository_root)]
+    tracked_changes = subprocess.run(
+        [*git, "diff", "--quiet", "HEAD", "--"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+    if tracked_changes.returncode == 1:
+        raise SigningError("The source worktree has uncommitted changes; build from a clean commit.")
+    if tracked_changes.returncode != 0:
+        raise SigningError("The source revision could not be determined; run from a Git worktree.")
+    untracked = _run_captured(
+        [*git, "ls-files", "--others", "--exclude-standard", "--", *BUILD_INPUT_PATHS]
+    )
+    if untracked.strip():
+        raise SigningError(
+            "The source worktree has untracked build inputs; commit or remove them before building."
+        )
+    revision = _run_captured([*git, "rev-parse", "HEAD"]).strip()
+    if not re.fullmatch(r"[0-9a-f]{40}", revision):
+        raise SigningError("The source revision could not be determined; run from a Git worktree.")
+    return revision
+
+
+def release_bundle_path(
+    repository_root: Path, environment: Mapping[str, str] | None = None
+) -> Path:
+    """Locate the bundle where Gradle writes it, honoring the redirected build directory."""
+    values = environment if environment is not None else os.environ
+    redirected = values.get("TWENTYFOURSEVEN_ANDROID_BUILD_DIR")
+    build_root = Path(redirected) if redirected else repository_root / "app/build"
+    if not build_root.is_absolute():
+        build_root = repository_root / "app" / build_root
+    return build_root / "outputs/bundle/release/app-release.aab"
+
+
 def check_environment(repository_root: Path) -> Path:
     if sys.platform != "linux":
         raise SigningError("This protected signing helper supports Linux only.")
@@ -473,7 +525,7 @@ def check_environment(repository_root: Path) -> Path:
         raise SigningError("Run the helper from the 24Seven.FM Player repository checkout.")
     if not Path("/dev/shm").is_dir():
         raise SigningError("Memory-backed /dev/shm storage is unavailable.")
-    for command in ("findmnt", "java", "keytool", "jarsigner"):
+    for command in ("findmnt", "git", "java", "keytool", "jarsigner"):
         if shutil.which(command) is None:
             raise SigningError(f"Required command '{command}' is unavailable.")
     memory_filesystem = _run_captured(["findmnt", "-n", "-o", "FSTYPE", "/dev/shm"]).strip()
@@ -488,11 +540,15 @@ def _build_signed_artifacts(
     keystore_path: Path,
     payload: RecoveryPayload,
     build_apk: bool,
+    source_revision: str,
 ) -> None:
+    # A bundle left by an earlier build must never be mistaken for this build's output.
+    release_bundle_path(repository_root).unlink(missing_ok=True)
     environment = os.environ.copy()
     environment.update(
         {
             "ANDROID_HOME": str(android_sdk),
+            "TWENTYFOURSEVEN_SOURCE_REVISION": source_revision,
             "ANDROID_SDK_ROOT": str(android_sdk),
             "TWENTYFOURSEVEN_UPLOAD_STORE_FILE": str(keystore_path),
             "TWENTYFOURSEVEN_UPLOAD_STORE_PASSWORD": payload.store_password,
@@ -516,7 +572,7 @@ def _build_signed_artifacts(
 def _verify_signed_bundle(
     repository_root: Path, expected_certificate_sha256: str
 ) -> tuple[str, str]:
-    bundle = repository_root / "app/build/outputs/bundle/release/app-release.aab"
+    bundle = release_bundle_path(repository_root)
     if not bundle.is_file():
         raise SigningError("The release bundle was not produced at the expected path.")
     _verify_jar_signature(bundle)
@@ -605,6 +661,7 @@ def main() -> int:
                 "--create-replacement-recovery-package is used."
             )
         _assert_external_package(arguments.recovery_package, repository_root)
+        source_revision = resolve_source_revision(repository_root)
         if arguments.accept_first_upload_identity and arguments.recovery_package.name != (
             "24seven-upload-replacement-20260811.24seven-recovery"
         ):
@@ -628,6 +685,7 @@ def main() -> int:
                     keystore_path,
                     payload,
                     arguments.build_apk,
+                    source_revision,
                 )
             bundle_sha256, bundle_certificate_sha256 = _verify_signed_bundle(
                 repository_root, certificate_sha256
@@ -637,6 +695,7 @@ def main() -> int:
             if payload is not None:
                 payload.clear()
         print("Play bundle verified from memory-backed Linux signing material.")
+        print(f"Source revision: {source_revision}")
         print(f"SHA-256: {bundle_sha256}")
         print(f"Upload certificate SHA-256: {bundle_certificate_sha256}")
         return 0

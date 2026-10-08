@@ -37,10 +37,16 @@ The [Player site](https://24sevenfmplayer.com/) introduces the product and its f
 | --- | :---: | --- | --- |
 | [1.0.0](docs/releases/1.0.0.md) | 18 | Published to Production, United States only | `v1.0.0` |
 | [1.0.1](docs/releases/1.0.1.md) | 19 | Submitted to Production review on September 20, 2026 under Managed Publishing | `v1.0.1` |
+| [1.0.2](docs/releases/1.0.2.md) | 20 | Candidate in development; not yet submitted | `v1.0.2` (pending) |
 
 Version 1.0.1 is an onboarding-contrast maintenance update. Its candidate passed 203 unit tests, lint, and 75 connected
 tests on the Android 16 Razr. Gates, evidence, and the controlled first-launch plan are recorded in the
 [production release readiness record](docs/PRODUCTION_RELEASE_READINESS.md).
+
+Version 1.0.2 is the station-features and Player redesign update: station sign-in, chat, requests, favourites,
+private messages, member profiles and news, a branded launch screen, the station-as-hero Player, swipe-to-switch, a
+home-screen widget, a Quick Settings tile, station shortcuts, and a grouped More tab. Its scope and release gates are in
+the [1.0.2 release notes](docs/releases/1.0.2.md).
 
 ## Alpha status
 
@@ -120,7 +126,7 @@ notes remain in [MILESTONE_FORECAST.md](docs/MILESTONE_FORECAST.md).
 - **Authorization-gated:** M36–M38 require an approved station-side event source or privacy-compatible relay before implementation.
 - **Publication:** M39–M41 deliberately separate candidate freeze, Play delivery, and the final user-authorized Alpha action.
 - **Production:** M43 production access is granted and M44 is in progress with 1.0.0 published and 1.0.1 in review. M42 closed-test evidence is being reconciled, and M45 operational recertification is planned.
-- **Deferred/future:** Private Messages remain excluded until M47 repairs and verifies server delivery. M51–M54 are retired by project decision: the Player will not expose, retrieve, or participate in station Forums; the historical research remains retained as evidence. Google Cast is an optional deferred M55 scope, and native VIP/RIP commerce is authorization-gated across M58–M60.
+- **Deferred/future:** Private Messages (M47–M49) are enabled on all five stations after the site owner repaired delivery, and are not yet in a released build; M50 device certification of the other four stations remains. M51–M54 are retired by project decision: the Player will not expose, retrieve, or participate in station Forums; the historical research remains retained as evidence. Google Cast is an optional deferred M55 scope, and native VIP/RIP commerce is authorization-gated across M58–M60.
 - **Testing:** the Product Testing catalog now contains 35 stable test cases covering the current product, Alpha gates, release campaigns, and capability-gated future slices. PT-29–PT-31 were retired with the permanent removal of Forum scope. PT-35 is the exact-artifact M29 Play declaration/privacy/reviewer-access case; PT-36–PT-38 define the future authorized VIP/RIP purchase, activation, and lifecycle evidence.
 
 Use these sources as the current planning authority:
@@ -211,7 +217,7 @@ Most captures are from the physical Razr and use live station data, so track and
 
 Audio stream addresses come from station-provided playlists and remain subject to device verification. Remote interfaces are added only after source verification and permission review. See the milestone research and validation documents under [docs](docs) for authorization, protocol evidence, limits, and device results.
 
-M17 tracks the native Private Messages experience, which remains deferred until the website's underlying server issues and production behavior are settled. See [docs/future-scope.md](docs/future-scope.md).
+Native Private Messages (M47–M49) are enabled on all five stations and are not yet in a released build. See [docs/future-scope.md](docs/future-scope.md).
 
 Alpha testers and distributors should read [the privacy notice](PRIVACY.md), [Alpha testing guide](docs/alpha-testing.md), [Alpha release notes](docs/releases/0.1.0-alpha01.md), [1.0.0](docs/releases/1.0.0.md) and [1.0.1](docs/releases/1.0.1.md) release notes, [Play Console checklist](docs/play-console-checklist.md), and [M23 signing handoff](docs/m23-alpha-readiness.md). Development debug APKs are not intended for external distribution.
 

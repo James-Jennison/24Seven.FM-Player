@@ -12,6 +12,9 @@ data class RequestHistoryEntry(
     val position: Int,
     val trackSummary: String,
     val requestedAtLabel: String,
+    val albumTitle: String? = null,
+    val albumId: String? = null,
+    val artworkUrl: String? = null,
 )
 
 data class ListenerActivityState(
@@ -22,6 +25,10 @@ data class ListenerActivityState(
     val waitMinutes: Int? = null,
     val recentRequests: List<RequestHistoryEntry> = emptyList(),
     val errorMessage: String? = null,
+    /** The member's station rank as the station words it, such as an administrator's title. */
+    val rankTitle: String? = null,
+    /** Seconds until the listener's earliest queued request should start, when one is queued. */
+    val queuedRequestWaitSeconds: Int? = null,
 )
 
 interface ListenerActivityRepository {

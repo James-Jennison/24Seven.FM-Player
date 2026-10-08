@@ -10,6 +10,8 @@ import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URI
 import java.nio.charset.StandardCharsets
+import java.time.Duration
+import java.time.LocalDateTime
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -20,6 +22,7 @@ class StationNowPlayingArtworkRepository internal constructor(
     private val connectionFactory: (URI) -> HttpURLConnection = {
         it.toURL().openConnection() as HttpURLConnection
     },
+    private val elapsedRealtimeMillis: () -> Long = { android.os.SystemClock.elapsedRealtime() },
 ) : NowPlayingArtworkRepository, NowPlayingDetailsRepository {
     override suspend fun fetchArtwork(stationId: StationId): String? =
         fetchNowPlaying(stationId)?.artworkUrl
@@ -53,7 +56,7 @@ class StationNowPlayingArtworkRepository internal constructor(
                 val response = connection.inputStream.bufferedReader(StandardCharsets.UTF_8).use { reader ->
                     reader.readBounded(MAX_RESPONSE_CHARACTERS)
                 }
-                return@withContext parser.parseNowPlaying(response, origin, stationId)
+                return@withContext parser.parseNowPlaying(response, origin, stationId, elapsedRealtimeMillis())
             } finally {
                 connection.disconnect()
             }
@@ -82,7 +85,12 @@ internal class CurrentTrackArtworkParser {
         return parseNowPlaying(json, baseUrl, StationId("unknown"))?.artworkUrl
     }
 
-    fun parseNowPlaying(json: String, baseUrl: String, stationId: StationId): NowPlayingState? {
+    fun parseNowPlaying(
+        json: String,
+        baseUrl: String,
+        stationId: StationId,
+        receivedAtElapsedRealtimeMillis: Long? = null,
+    ): NowPlayingState? {
         val response = JSONObject(json)
         val origin = URI(baseUrl)
         val explicitAsin = response.optString("ASIN", "")
@@ -119,9 +127,29 @@ internal class CurrentTrackArtworkParser {
                 artist = artist,
                 album = album,
                 track = track,
+                albumId = asin,
+                requesterName = response.optText("RequestedBy"),
+                requestMessage = response.optText("Message"),
+                listenerCount = response.optText("ListenerCount")?.toIntOrNull()?.takeIf { it >= 0 },
+                trackLengthMillis = response.optText("Length")?.toLongOrNull()?.takeIf { it > 0 },
+                trackStartedElapsedRealtimeMillis = receivedAtElapsedRealtimeMillis?.let { receivedAt ->
+                    playedMillis(response)?.let { played -> receivedAt - played }
+                },
             )
         }
     }
+
+    /** How long the station says the track has been playing, from its own start and current times. */
+    private fun playedMillis(response: JSONObject): Long? {
+        val started = response.optText("PlayStart")?.toStationTime() ?: return null
+        val now = response.optText("SystemTime")?.toStationTime() ?: return null
+        return Duration.between(started, now).toMillis().takeIf { it in 0..MAX_PLAYED_MILLIS }
+    }
+
+    private fun String.toStationTime(): LocalDateTime? = runCatching { LocalDateTime.parse(this) }.getOrNull()
+
+    private fun JSONObject.optText(name: String): String? =
+        if (isNull(name)) null else optString(name, "").decodeHtmlEntities()
 
     private fun isSafeStationUrl(candidate: URI, origin: URI): Boolean =
         candidate.scheme.equals("https", ignoreCase = true) &&
@@ -131,6 +159,7 @@ internal class CurrentTrackArtworkParser {
 
     private companion object {
         val ASIN = Regex("[A-Za-z0-9]{10}")
+        const val MAX_PLAYED_MILLIS = 6L * 60 * 60 * 1_000
     }
 }
 

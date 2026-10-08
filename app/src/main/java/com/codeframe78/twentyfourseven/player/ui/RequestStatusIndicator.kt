@@ -2,11 +2,13 @@ package com.codeframe78.twentyfourseven.player.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,6 +30,8 @@ import com.codeframe78.twentyfourseven.player.ui.theme.requestUnavailableRed
 internal fun RequestStatusIndicator(
     availability: TrackRequestAvailability,
     modifier: Modifier = Modifier,
+    compact: Boolean = false,
+    showsLabel: Boolean = true,
 ) {
     val presentation = availability.presentation()
     val color = when (presentation.colorRole) {
@@ -48,7 +52,7 @@ internal fun RequestStatusIndicator(
             .semantics(mergeDescendants = true) {
                 contentDescription = presentation.description
             },
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(if (compact) 6.dp else 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
@@ -59,14 +63,18 @@ internal fun RequestStatusIndicator(
             },
             contentDescription = null,
             tint = color,
+            modifier = if (compact) Modifier.size(12.dp) else Modifier,
         )
-        Text(
-            presentation.label,
-            color = color,
-            fontWeight = FontWeight.Bold,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        if (showsLabel) {
+            Text(
+                presentation.label,
+                color = color,
+                style = if (compact) MaterialTheme.typography.labelMedium else LocalTextStyle.current,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
     }
 }
 
