@@ -4,6 +4,7 @@ import android.net.Uri
 import android.os.Bundle
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaConstants
 import androidx.media3.session.MediaLibraryService.LibraryParams
 import com.codeframe78.twentyfourseven.player.domain.Station
@@ -15,6 +16,7 @@ import com.codeframe78.twentyfourseven.player.domain.StationId
  * It contains only the five approved live-radio stations. Account state, community content, and
  * URLs supplied by a controller never enter the playback queue.
  */
+@androidx.annotation.OptIn(markerClass = [UnstableApi::class])
 internal class AutomotiveMediaCatalog(stations: List<Station>) {
     private val stationsById = stations.associateBy { it.id }
     private val stationItems = stations.map(::stationItem)
