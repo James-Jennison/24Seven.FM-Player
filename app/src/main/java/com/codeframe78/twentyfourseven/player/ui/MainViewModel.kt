@@ -829,6 +829,16 @@ class MainViewModel(
         extras.closeProfileEditor(stations.observeSelectedStation().first().id)
     }
 
+    fun refreshRankedFavorites() = viewModelScope.launch {
+        val station = signedInStation { it.supportsFavorites && it.supportsFavoriteManagement } ?: return@launch
+        favorites.refreshRanked(station.id)
+    }
+
+    fun loadMoreRankedFavorites() = viewModelScope.launch {
+        val station = signedInStation { it.supportsFavorites && it.supportsFavoriteManagement } ?: return@launch
+        favorites.loadMoreRanked(station.id)
+    }
+
     /** Moves or removes one of the signed-in member's own favorites; the list is read again afterwards. */
     fun changeFavorite(track: FavoriteTrack, change: FavoriteChange) = viewModelScope.launch {
         val station = signedInStation { it.supportsFavorites && it.supportsFavoriteManagement } ?: return@launch

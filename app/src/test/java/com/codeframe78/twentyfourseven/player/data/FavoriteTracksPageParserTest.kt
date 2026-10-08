@@ -167,4 +167,47 @@ class FavoriteTracksPageParserTest {
         assertNull(tracks.single().availabilityMessage)
         assertEquals(TrackRequestStatus.Unknown, tracks.single().availability.status)
     }
+
+    @Test
+    fun `parses a page of the member's ranked favorites from the profile feed`() {
+        val html = """
+            <div class="profile-favorites"><table class="table01">
+            <tr><th class="th01" colspan="4">Listener's Favorite Tracks</th></tr>
+            <tr>
+              <td class="td01"><div><a href="/modules.php?name=Album&amp;asin=B000AYI8YQ"><img src="/images/cover/040/B000AYI8YQ.jpg" alt="" title="Example Album (1997 TV)"></a></div></td>
+              <td class="td01"><a href="/modules.php?name=Req&amp;asin=B000AYI8YQ&amp;songID=190659"><img title="Last played: 2026-09-03 10:17:50" src="/modules/SAM/images/requestbutton_request.png"></a></td>
+              <td class="td02"><span style="font-weight:bold;">Opening Fanfare</span><br>Example Album (1997 TV) by <b>Composer One</b><br><span>1997, Soundtrack</span></td>
+              <td class="td01"><form class="favorite-controls-form" method="post" action="/modules.php?name=Favorites"><input type="hidden" name="songid" value="190659"><input type="hidden" name="Yes2Remove" value="1"><button type="submit" name="op" value="movetrackup">▲</button></form></td>
+            </tr>
+            <tr>
+              <td class="td01"><div><a href="/modules.php?name=Album&amp;asin=B000000002"><img src="/images/cover/040/B000000002.jpg" alt="" title="Second Album"></a></div></td>
+              <td class="td01"><img title="The artist is already in queue." src="/modules/SAM/images/requestbutton_unavailable.gif"></td>
+              <td class="td02"><span style="font-weight:bold;">Finale</span><br>Second Album by <b>Composer Two</b><br><span>2003, Game</span></td>
+              <td class="td01"><form class="favorite-controls-form" method="post" action="/modules.php?name=Favorites"><input type="hidden" name="songid" value="235578"><input type="hidden" name="Yes2Remove" value="1"></form></td>
+            </tr>
+            </table>
+            <nav><button type="button" class="profile-tab-btn favorite-page" data-page-url="/modules/Your_Profile/favsTabAJAX.php?tracks_page=1&amp;albums_page=1&amp;kind=tracks">Previous</button><button type="button" class="profile-tab-btn favorite-page" data-page-url="/modules/Your_Profile/favsTabAJAX.php?tracks_page=3&amp;albums_page=1&amp;kind=tracks">Next</button><span>Page 2 &middot; up to 50 per page</span></nav></div>
+        """.trimIndent()
+        val json = org.json.JSONObject().put("result", 0).put("HTML", html).toString()
+
+        val page = parser.parseRankedPage(json, origin, firstPosition = 51)
+
+        assertEquals(listOf(51, 52), page.tracks.map { it.position })
+        assertEquals(listOf("190659", "235578"), page.tracks.map { it.songId })
+        assertEquals("Opening Fanfare", page.tracks[0].title)
+        assertEquals("Example Album (1997 TV)", page.tracks[0].album)
+        assertEquals("Composer One", page.tracks[0].artist)
+        assertEquals("1997", page.tracks[0].year)
+        assertEquals("Soundtrack", page.tracks[0].genre)
+        assertEquals("B000AYI8YQ", page.tracks[0].albumId)
+        assertEquals("190659", page.tracks[0].requestTrack?.songId)
+        assertNull(page.tracks[1].requestTrack)
+        assertEquals("The artist is already in queue.", page.tracks[1].availabilityMessage)
+        assertEquals("B000000002", page.tracks[1].albumId)
+        assertEquals(3, page.nextPage)
+
+        val lastPage = parser.parseRankedPage(org.json.JSONObject().put("HTML", html.replace(">Next<", ">Last<")).toString(), origin)
+        assertNull(lastPage.nextPage)
+        assertEquals(1, lastPage.tracks.first().position)
+    }
 }

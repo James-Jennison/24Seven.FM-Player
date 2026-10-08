@@ -1023,6 +1023,8 @@ class MainViewModelTest {
         val clearedStations = mutableListOf<StationId>()
         override fun observeFavorites(stationId: StationId): Flow<FavoriteTracksState> = state
         override suspend fun refresh(stationId: StationId) = Unit
+        override suspend fun refreshRanked(stationId: StationId) = Unit
+        override suspend fun loadMoreRanked(stationId: StationId) = Unit
         override suspend fun changeFavorite(
             stationId: StationId,
             songId: String,

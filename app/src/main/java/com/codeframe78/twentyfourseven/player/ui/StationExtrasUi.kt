@@ -128,6 +128,8 @@ internal data class StationExtrasActions(
     val onCloseProfileEditor: () -> Unit = {},
     /** Moves or removes one of the signed-in member's own favorites. */
     val onChangeFavorite: (FavoriteTrack, FavoriteChange) -> Unit = { _, _ -> },
+    val onRefreshRankedFavorites: () -> Unit = {},
+    val onLoadMoreRankedFavorites: () -> Unit = {},
 )
 
 /** Lets any screen open the history archive or news without threading callbacks through every layout. */

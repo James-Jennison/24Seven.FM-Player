@@ -259,6 +259,8 @@ class MainActivity : AppCompatActivity() {
                             onSaveProfile = viewModel::saveProfile,
                             onCloseProfileEditor = viewModel::closeProfileEditor,
                             onChangeFavorite = viewModel::changeFavorite,
+                            onRefreshRankedFavorites = viewModel::refreshRankedFavorites,
+                            onLoadMoreRankedFavorites = viewModel::loadMoreRankedFavorites,
                         ),
                         onRefreshQueue = viewModel::refreshQueue,
                         onRefreshChat = viewModel::refreshChat,
