@@ -34,6 +34,9 @@ internal class FavoriteTracksPageParser {
         return uri.toASCIIString()
     }
 
+    /** Whether a page answers as it would to a visitor, which is how an ended session shows itself. */
+    fun showsSignedOutVisitor(html: String, origin: String): Boolean = sessionEvidence.showsSignedOutVisitor(html, origin)
+
     /** The member number a list address from [parseListUrl] belongs to. */
     fun listMemberNumber(listUrl: String): String? = queryValue(URI(listUrl).rawQuery, "user2view")
 
@@ -78,10 +81,16 @@ internal class FavoriteTracksPageParser {
                     availability = requestTrack?.availability
                         ?: classifyStationRequestAvailability(availability),
                     albumId = requestTrack?.albumId ?: rowAlbumId(row),
+                    songId = requestTrack?.songId ?: rowSongId(row),
                 )
             }
             .take(MAX_TRACKS)
             .toList()
+    }
+
+    /** Every row of the member's own list opens its track information with the station's song number. */
+    private fun rowSongId(row: org.jsoup.nodes.Element): String? = row.select("[onclick]").firstNotNullOfOrNull { element ->
+        VIEW_INFO_TRACK.find(element.attr("onclick"))?.groupValues?.get(1)
     }
 
     /** A row that cannot be requested still names its album in the links beside the track. */
@@ -137,6 +146,7 @@ internal class FavoriteTracksPageParser {
 
     private companion object {
         const val LIST_PATH = "/modules/Favorites/thelist.php"
+        val VIEW_INFO_TRACK = Regex("ViewInfoTrack\\(\\s*[0-9]{1,10}\\s*,\\s*([0-9]{1,10})\\s*\\)")
         const val MAX_TRACKS = 5_000
         val NUMERIC_ID = Regex("^[0-9]{1,10}$")
         val SAFE_ALBUM_ID = Regex("^[A-Za-z0-9_.-]{1,64}$")

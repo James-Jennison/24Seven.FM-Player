@@ -1023,6 +1023,11 @@ class MainViewModelTest {
         val clearedStations = mutableListOf<StationId>()
         override fun observeFavorites(stationId: StationId): Flow<FavoriteTracksState> = state
         override suspend fun refresh(stationId: StationId) = Unit
+        override suspend fun changeFavorite(
+            stationId: StationId,
+            songId: String,
+            change: com.codeframe78.twentyfourseven.player.domain.FavoriteChange,
+        ) = Unit
         override suspend fun clear(stationId: StationId) {
             clearedStations += stationId
             state.value = FavoriteTracksState(stationId)

@@ -87,6 +87,9 @@ import com.codeframe78.twentyfourseven.player.domain.MemberProfileStatus
 import com.codeframe78.twentyfourseven.player.domain.PLAYED_HISTORY_ARCHIVE_DAYS
 import com.codeframe78.twentyfourseven.player.domain.PLAYED_HISTORY_BLOCK_HOURS
 import com.codeframe78.twentyfourseven.player.domain.PlayedHistoryEntry
+import com.codeframe78.twentyfourseven.player.domain.EditableProfile
+import com.codeframe78.twentyfourseven.player.domain.FavoriteChange
+import com.codeframe78.twentyfourseven.player.domain.MemberListSort
 import com.codeframe78.twentyfourseven.player.domain.PlayedHistoryState
 import com.codeframe78.twentyfourseven.player.domain.PlayedHistoryStatus
 import com.codeframe78.twentyfourseven.player.domain.STATION_CLOCK_ZONE
@@ -111,6 +114,20 @@ internal data class StationExtrasActions(
     val onRefreshNews: () -> Unit = {},
     /** Opens a web address in the browser. */
     val onOpenLink: (String) -> Unit = {},
+    val onRefreshRecentlyAdded: () -> Unit = {},
+    val onReloadAlbumReviews: () -> Unit = {},
+    /** Sends a review as title, body, and rating value after the composer's review step. */
+    val onSubmitAlbumReview: (String, String, String) -> Unit = { _, _, _ -> },
+    val onOpenMembers: () -> Unit = {},
+    val onSearchMembers: (String, MemberListSort) -> Unit = { _, _ -> },
+    val onLoadMoreMembers: () -> Unit = {},
+    val onCloseMembers: () -> Unit = {},
+    val onRefreshCalendar: () -> Unit = {},
+    val onOpenProfileEditor: () -> Unit = {},
+    val onSaveProfile: (EditableProfile) -> Unit = {},
+    val onCloseProfileEditor: () -> Unit = {},
+    /** Moves or removes one of the signed-in member's own favorites. */
+    val onChangeFavorite: (FavoriteTrack, FavoriteChange) -> Unit = { _, _ -> },
 )
 
 /** Lets any screen open the history archive or news without threading callbacks through every layout. */

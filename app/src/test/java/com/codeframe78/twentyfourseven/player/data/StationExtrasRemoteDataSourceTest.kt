@@ -119,4 +119,94 @@ class StationExtrasRemoteDataSourceTest {
             </tr></table>
         """.trimIndent()
     }
+
+    @Test
+    fun `a review is posted to the address the station's own form names, for the same album`() = runTest {
+        val pages = FakeStationPages { _, path, _ ->
+            if ("action=newreview" in path) StationCatalogFixtures.reviewForm() else StationCatalogFixtures.albumPage(canWrite = false)
+        }
+        val remote = StationExtrasRemoteDataSource(pages)
+
+        val page = remote.submitAlbumReview(station, "B000000001", "Title", "Body", "4.5")
+
+        assertEquals(
+            listOf(
+                "GET /modules.php?name=Album&action=newreview&asin=B000000001",
+                "POST /modules.php?name=Album&action=submitnewreview&asin=B000000001",
+                "GET /modules.php?name=Album&asin=B000000001",
+            ),
+            pages.requests,
+        )
+        assertEquals(listOf("title" to "Title", "content" to "Body", "reviewrating" to "4.5"), pages.posted.single())
+        assertFalse(page.canWrite)
+    }
+
+    @Test
+    fun `a review is refused when the form posts for another album, offers no such rating, or needs sign-in`() = runTest {
+        val otherAlbum = FakeStationPages { _, _, _ ->
+            StationCatalogFixtures.reviewForm("https://streamingsoundtracks.com/modules.php?name=Album&action=submitnewreview&asin=B000000002")
+        }
+        assertTrue(runCatching { StationExtrasRemoteDataSource(otherAlbum).submitAlbumReview(station, "B000000001", "T", "B", "5") }.isFailure)
+        assertTrue(otherAlbum.posted.isEmpty())
+
+        val badRating = FakeStationPages { _, _, _ -> StationCatalogFixtures.reviewForm() }
+        assertTrue(runCatching { StationExtrasRemoteDataSource(badRating).submitAlbumReview(station, "B000000001", "T", "B", "7") }.isFailure)
+        assertTrue(badRating.posted.isEmpty())
+
+        val signedOut = FakeStationPages(signedIn = false) { _, _, _ -> StationCatalogFixtures.reviewForm() }
+        val refused = runCatching { StationExtrasRemoteDataSource(signedOut).submitAlbumReview(station, "B000000001", "T", "B", "5") }
+        assertTrue(refused.exceptionOrNull() is FavoritesAuthenticationRequiredException)
+        assertTrue(signedOut.requests.isEmpty())
+    }
+
+    @Test
+    fun `the members list is asked for with the sort, order, query, and offset the station expects`() = runTest {
+        val pages = FakeStationPages { _, _, _ -> StationCommunityFixtures.membersPage() }
+        val remote = StationExtrasRemoteDataSource(pages)
+
+        remote.members(station, "pat l", com.codeframe78.twentyfourseven.player.domain.MemberListSort.Posts, 100)
+        remote.members(station, "", com.codeframe78.twentyfourseven.player.domain.MemberListSort.Name, 0)
+
+        assertEquals(
+            listOf(
+                "GET /modules.php?name=Members_List&file=index&mode=posts&order=DESC&namepart=pat+l&start=100",
+                "GET /modules.php?name=Members_List&file=index&mode=username&order=ASC&namepart=&start=0",
+            ),
+            pages.requests,
+        )
+    }
+
+    @Test
+    fun `the profile form is read with the session and posted back whole with the edits and blank passwords`() = runTest {
+        val pages = FakeStationPages { _, _, _ -> StationCatalogFixtures.profileEditPage() }
+        val remote = StationExtrasRemoteDataSource(pages)
+
+        val form = remote.profileEditForm(station)
+        remote.saveProfile(station, form, form.profile.copy(realName = "Pat L.", hideOnlineStatus = true))
+
+        assertEquals("GET /modules.php?name=Your_Account&op=edituser", pages.requests.first())
+        assertEquals("POST /modules.php?name=Your_Account", pages.requests[1])
+        val posted = pages.posted.single().toMap()
+        assertEquals("Pat L.", posted["realname"])
+        assertEquals("0", posted["user_allow_viewonline"])
+        assertEquals("saveuser", posted["op"])
+        assertEquals("", posted["user_password"])
+        assertEquals("", posted["vpass"])
+
+        val signedOut = FakeStationPages(signedIn = false) { _, _, _ -> StationCatalogFixtures.profileEditPage() }
+        assertTrue(runCatching { StationExtrasRemoteDataSource(signedOut).profileEditForm(station) }.exceptionOrNull() is FavoritesAuthenticationRequiredException)
+        assertTrue(signedOut.requests.isEmpty())
+    }
+
+    @Test
+    fun `a profile form the station no longer shows ends the session only when it answers with the sign-in page`() = runTest {
+        val loginPage = FakeStationPages { _, _, _ -> "<form><input name=user_password></form>" }
+        val remote = StationExtrasRemoteDataSource(loginPage)
+        assertTrue(runCatching { remote.profileEditForm(station) }.exceptionOrNull() is FavoritesAuthenticationRequiredException)
+        assertTrue(loginPage.expired)
+
+        val oddPage = FakeStationPages { _, _, _ -> "<html><body><p>Maintenance</p></body></html>" }
+        assertTrue(runCatching { StationExtrasRemoteDataSource(oddPage).profileEditForm(station) }.exceptionOrNull() is StationFormUnavailableException)
+        assertFalse(oddPage.expired)
+    }
 }
