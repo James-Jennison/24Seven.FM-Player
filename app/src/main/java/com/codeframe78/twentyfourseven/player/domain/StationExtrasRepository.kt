@@ -96,6 +96,11 @@ data class StationExtrasState(
     val memberFavorites: MemberFavoritesState = MemberFavoritesState(),
     val history: PlayedHistoryState = PlayedHistoryState(),
     val news: StationNewsState = StationNewsState(),
+    val recentlyAdded: RecentlyAddedState = RecentlyAddedState(),
+    val albumReviews: AlbumReviewsState = AlbumReviewsState(),
+    val members: MembersState = MembersState(),
+    val calendar: CalendarState = CalendarState(),
+    val profileEdit: ProfileEditState = ProfileEditState(),
 )
 
 /** The stations answer a history request with the two hours around the requested time. */
@@ -114,8 +119,10 @@ fun currentPlayedHistoryBlock(now: ZonedDateTime = ZonedDateTime.now(STATION_CLO
 }
 
 /**
- * Read-only station information that sits beside the core player: member profile cards, a member's public favorites
- * list, the played-history archive, and station news. Everything is fetched on request and held in memory only.
+ * Station information that sits beside the core player: member profile cards, a member's public favorites list, the
+ * played-history archive, station news, Recently Added, album reviews, the members list, the calendar, and the
+ * member's own Edit Profile form. Everything is fetched on request and held in memory only. The only writes are a
+ * review and a profile edit, each sent once after an explicit confirmation.
  */
 interface StationExtrasRepository {
     fun observeExtras(stationId: StationId): Flow<StationExtrasState>
@@ -126,6 +133,28 @@ interface StationExtrasRepository {
     suspend fun loadHistory(stationId: StationId, date: LocalDate, startHour: Int)
     suspend fun closeHistory(stationId: StationId)
     suspend fun refreshNews(stationId: StationId)
+    suspend fun refreshRecentlyAdded(stationId: StationId)
+
+    /** Loads the reviews on this album's page; they sit beside the album browser until [closeAlbumReviews]. */
+    suspend fun openAlbumReviews(stationId: StationId, albumId: String)
+    suspend fun closeAlbumReviews(stationId: StationId)
+
+    /** Sends one review for the album whose reviews are open. The station's form is read again first. */
+    suspend fun submitAlbumReview(stationId: StationId, title: String, body: String, rating: String)
+
+    /** Loads the Online Now block and the first page of the members list with the current query and sort. */
+    suspend fun openMembers(stationId: StationId)
+    suspend fun searchMembers(stationId: StationId, query: String, sort: MemberListSort)
+    suspend fun loadMoreMembers(stationId: StationId)
+    suspend fun closeMembers(stationId: StationId)
+    suspend fun refreshCalendar(stationId: StationId)
+
+    /** Loads the signed-in member's own Edit Profile form. Needs the station session. */
+    suspend fun openProfileEditor(stationId: StationId)
+
+    /** Sends the whole form back with these fields changed, then reads it again to confirm what the station kept. */
+    suspend fun saveProfile(stationId: StationId, profile: EditableProfile)
+    suspend fun closeProfileEditor(stationId: StationId)
 }
 
 object UnavailableStationExtrasRepository : StationExtrasRepository {
@@ -137,4 +166,16 @@ object UnavailableStationExtrasRepository : StationExtrasRepository {
     override suspend fun loadHistory(stationId: StationId, date: LocalDate, startHour: Int) = Unit
     override suspend fun closeHistory(stationId: StationId) = Unit
     override suspend fun refreshNews(stationId: StationId) = Unit
+    override suspend fun refreshRecentlyAdded(stationId: StationId) = Unit
+    override suspend fun openAlbumReviews(stationId: StationId, albumId: String) = Unit
+    override suspend fun closeAlbumReviews(stationId: StationId) = Unit
+    override suspend fun submitAlbumReview(stationId: StationId, title: String, body: String, rating: String) = Unit
+    override suspend fun openMembers(stationId: StationId) = Unit
+    override suspend fun searchMembers(stationId: StationId, query: String, sort: MemberListSort) = Unit
+    override suspend fun loadMoreMembers(stationId: StationId) = Unit
+    override suspend fun closeMembers(stationId: StationId) = Unit
+    override suspend fun refreshCalendar(stationId: StationId) = Unit
+    override suspend fun openProfileEditor(stationId: StationId) = Unit
+    override suspend fun saveProfile(stationId: StationId, profile: EditableProfile) = Unit
+    override suspend fun closeProfileEditor(stationId: StationId) = Unit
 }

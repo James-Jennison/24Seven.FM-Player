@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -135,9 +137,8 @@ internal fun AlbumDialog(state: MainUiState, actions: AlbumActions) {
                         CircularProgressIndicator()
                     }
                     tracks.isEmpty() -> Column(
-                        Modifier.fillMaxSize(),
+                        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = 24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center,
                     ) {
                         val failed = requests.errorMessage != null
                         Text(
@@ -149,6 +150,7 @@ internal fun AlbumDialog(state: MainUiState, actions: AlbumActions) {
                                 Text("Try again")
                             }
                         }
+                        AlbumReviewsSection(state, album.albumId, LocalStationExtrasActions.current)
                     }
                     else -> LazyColumn(
                         Modifier.fillMaxSize().padding(top = 8.dp).testTag("album_tracks"),
@@ -173,6 +175,7 @@ internal fun AlbumDialog(state: MainUiState, actions: AlbumActions) {
                                 onPrepareRequest = actions.onPrepareRequest,
                             )
                         }
+                        item { AlbumReviewsSection(state, album.albumId, LocalStationExtrasActions.current) }
                     }
                 }
             }

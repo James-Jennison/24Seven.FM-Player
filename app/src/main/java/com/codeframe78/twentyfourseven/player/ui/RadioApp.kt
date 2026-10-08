@@ -101,6 +101,10 @@ import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Feedback
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Cake
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.NewReleases
 import androidx.compose.material.icons.filled.Newspaper
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PlayCircle
@@ -296,6 +300,8 @@ internal fun RadioApp(
             PrivateMessagesScreen(state, privateMessageActions, communitySafetyActions) { showMessages = false }
         }
         PlayedHistoryDialog(state, stationExtrasActions)
+        MembersDialog(state, stationExtrasActions)
+        ProfileEditDialog(state, stationExtrasActions)
         AlbumDialog(state, albumActions)
         MemberProfileDialog(state, stationExtrasActions, privateMessageActions.onNewMessage)
         PrivateMessageComposeDialog(state.privateMessages?.compose, privateMessageActions)
@@ -1541,6 +1547,15 @@ private fun MoreScreen(
     ) {
         SettingsGroup("Account") {
             AccountSection(state, onRefreshAuth, onSignIn, onSignOut)
+            if (station?.capabilities?.supportsProfileEditing == true && state.auth?.status == AuthStatus.SignedIn) {
+                MoreLink(
+                    title = "Edit profile",
+                    summary = "Your name, location, website, and signature on ${station.shortName}.",
+                    icon = Icons.Default.Edit,
+                    testTag = "more_edit_profile",
+                    onClick = LocalStationExtrasActions.current.onOpenProfileEditor,
+                )
+            }
         }
         SettingsGroup(station?.shortName ?: "Station") {
             MoreDisclosure(
@@ -1569,6 +1584,35 @@ private fun MoreScreen(
                     testTag = "more_station_news",
                 ) {
                     StationNewsSection(state, LocalStationExtrasActions.current)
+                }
+            }
+            if (station?.capabilities?.supportsRecentlyAdded == true) {
+                MoreDisclosure(
+                    title = "Recently added",
+                    summary = "Albums new to the ${station.shortName} playlist.",
+                    icon = Icons.Default.NewReleases,
+                    testTag = "more_recently_added",
+                ) {
+                    RecentlyAddedSection(state, LocalStationExtrasActions.current)
+                }
+            }
+            if (station?.capabilities?.supportsMembersList == true && state.communitySafety.canViewCommunityContent) {
+                MoreLink(
+                    title = "Members",
+                    summary = "Who is online now, and the members list.",
+                    icon = Icons.Default.Groups,
+                    testTag = "more_members",
+                    onClick = LocalStationExtrasActions.current.onOpenMembers,
+                )
+            }
+            if (station?.capabilities?.supportsCalendar == true) {
+                MoreDisclosure(
+                    title = "Events & birthdays",
+                    summary = "Theme days, composer birthdays, and member birthdays.",
+                    icon = Icons.Default.Cake,
+                    testTag = "more_calendar",
+                ) {
+                    CalendarSection(state, LocalStationExtrasActions.current)
                 }
             }
             LocalMessagesOpener.current?.let { openMessages ->

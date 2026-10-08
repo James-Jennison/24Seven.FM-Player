@@ -32,7 +32,10 @@ import com.codeframe78.twentyfourseven.player.domain.SongRequestRepository
 import com.codeframe78.twentyfourseven.player.domain.SongRequestState
 import com.codeframe78.twentyfourseven.player.domain.FavoriteTrack
 import com.codeframe78.twentyfourseven.player.domain.FavoriteTracksLoadStatus
+import com.codeframe78.twentyfourseven.player.domain.EditableProfile
+import com.codeframe78.twentyfourseven.player.domain.FavoriteChange
 import com.codeframe78.twentyfourseven.player.domain.FavoriteTracksRepository
+import com.codeframe78.twentyfourseven.player.domain.MemberListSort
 import com.codeframe78.twentyfourseven.player.domain.FavoriteTracksState
 import com.codeframe78.twentyfourseven.player.domain.TrackRequestAvailability
 import com.codeframe78.twentyfourseven.player.domain.TrackRequestAvailabilityResolver
@@ -758,11 +761,86 @@ class MainViewModel(
         val station = stations.observeSelectedStation().first()
         if (!station.capabilities.supportsRequests || !albumId.matches(ALBUM_ID)) return@launch
         albumBrowser.value = AlbumBrowserState(station.id, albumId, title, artworkUrl)
+        if (station.capabilities.supportsAlbumReviews) launch { extras.openAlbumReviews(station.id, albumId) }
         requests.openSearchResult(station.id, RequestSearchTarget.Album(albumId))
     }
 
     fun closeAlbum() {
         albumBrowser.value = null
+        viewModelScope.launch { extras.closeAlbumReviews(stations.observeSelectedStation().first().id) }
+    }
+
+    fun reloadAlbumReviews() = viewModelScope.launch {
+        val station = stations.observeSelectedStation().first()
+        val albumId = albumBrowser.value?.albumId ?: return@launch
+        if (!station.capabilities.supportsAlbumReviews) return@launch
+        extras.openAlbumReviews(station.id, albumId)
+    }
+
+    /** Sends one album review after the composer's review step. The station's own form is read again first. */
+    fun submitAlbumReview(title: String, body: String, rating: String) = viewModelScope.launch {
+        val station = signedInStation { it.supportsAlbumReviews } ?: return@launch
+        if (!communitySafety.observeSafety().first().canContributeCommunityContent) return@launch
+        extras.submitAlbumReview(station.id, title, body, rating)
+    }
+
+    fun refreshRecentlyAdded() = viewModelScope.launch {
+        val station = stations.observeSelectedStation().first()
+        if (!station.capabilities.supportsRecentlyAdded) return@launch
+        extras.refreshRecentlyAdded(station.id)
+    }
+
+    fun openMembers() = viewModelScope.launch {
+        val station = communityStation { it.supportsMembersList } ?: return@launch
+        extras.openMembers(station.id)
+    }
+
+    fun searchMembers(query: String, sort: MemberListSort) = viewModelScope.launch {
+        val station = communityStation { it.supportsMembersList } ?: return@launch
+        extras.searchMembers(station.id, query, sort)
+    }
+
+    fun loadMoreMembers() = viewModelScope.launch {
+        val station = communityStation { it.supportsMembersList } ?: return@launch
+        extras.loadMoreMembers(station.id)
+    }
+
+    fun closeMembers() = viewModelScope.launch {
+        extras.closeMembers(stations.observeSelectedStation().first().id)
+    }
+
+    fun refreshCalendar() = viewModelScope.launch {
+        val station = stations.observeSelectedStation().first()
+        if (!station.capabilities.supportsCalendar) return@launch
+        extras.refreshCalendar(station.id)
+    }
+
+    fun openProfileEditor() = viewModelScope.launch {
+        val station = signedInStation { it.supportsProfileEditing } ?: return@launch
+        extras.openProfileEditor(station.id)
+    }
+
+    fun saveProfile(profile: EditableProfile) = viewModelScope.launch {
+        val station = signedInStation { it.supportsProfileEditing } ?: return@launch
+        extras.saveProfile(station.id, profile)
+    }
+
+    fun closeProfileEditor() = viewModelScope.launch {
+        extras.closeProfileEditor(stations.observeSelectedStation().first().id)
+    }
+
+    /** Moves or removes one of the signed-in member's own favorites; the list is read again afterwards. */
+    fun changeFavorite(track: FavoriteTrack, change: FavoriteChange) = viewModelScope.launch {
+        val station = signedInStation { it.supportsFavorites && it.supportsFavoriteManagement } ?: return@launch
+        val songId = track.songId ?: return@launch
+        favorites.changeFavorite(station.id, songId, change)
+    }
+
+    /** The selected station when it has the capability and community content may be shown. */
+    private suspend fun communityStation(hasCapability: (StationCapabilities) -> Boolean): Station? {
+        val station = stations.observeSelectedStation().first()
+        val safety = communitySafety.observeSafety().first()
+        return station.takeIf { hasCapability(it.capabilities) && safety.canViewCommunityContent }
     }
 
     fun rateAlbum(albumId: String) = viewModelScope.launch {

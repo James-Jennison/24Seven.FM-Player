@@ -130,6 +130,14 @@ class BootstrapStationRepository(
             supportsListenerActivity = true,
             supportsNowPlayingFavorite = true,
             supportsAlbumRating = true,
+            // The favorites controls, album reviews, Recently Added, the members list, the calendar, and Edit Profile
+            // use one module on all five stations; their public pages were checked on each on October 8, 2026.
+            supportsFavoriteManagement = true,
+            supportsAlbumReviews = true,
+            supportsRecentlyAdded = true,
+            supportsMembersList = true,
+            supportsCalendar = true,
+            supportsProfileEditing = true,
         )
 
         fun streams(domain: String) = listOf(
