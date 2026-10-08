@@ -4,9 +4,12 @@ This observer announces only releases that the Google Play Developer API reports
 `RELEASE_LIFECYCLE_STATE_PUBLISHED`—available to users on the selected track. It does not
 announce uploads, drafts, or releases that are merely in review or approved for manual publication.
 
-The initial configured track is `alpha`, the current **Closed testing – Alpha** track. Do not add
-`production` to `GOOGLE_PLAY_RELEASE_TRACKS` until the first production release has been approved
-and is ready for announcement.
+The tracks it watches come from the repository variable `GOOGLE_PLAY_RELEASE_TRACKS`, a
+comma-separated list that defaults to `alpha` (the **Closed testing – Alpha** track) when unset.
+Production releases are announced only when the variable includes `production`; that step was
+left for after the first production approval, so 1.0.0 and 1.0.1 were not announced by the bot.
+A production announcement names the track **Production** and ends with the Play Store link instead
+of the tester line.
 
 Each announcement reads the matching `docs/releases/<release-name>.md` record and includes its
 authoritative **What's new** bullets. A published release without that record is treated as a

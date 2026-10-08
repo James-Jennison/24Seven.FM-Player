@@ -55,19 +55,36 @@ async function releaseNotesFor(release) {
   return notes;
 }
 
+const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.codeframe78.twentyfourseven.player";
+
+const TRACK_LABELS = {
+  production: "Production",
+  alpha: "Closed testing – Alpha",
+  beta: "Open testing – Beta",
+  internal: "Internal testing",
+};
+
+export function trackLabel(track) {
+  return TRACK_LABELS[track] ?? track;
+}
+
 export function messageFor(release, releaseNotes = []) {
   const versionCodes = (release.activeArtifacts ?? [])
     .map(({ versionCode }) => `\`${versionCode}\``)
     .join(", ");
   const releaseName = release.releaseName ? `Release: \`${release.releaseName}\`` : "";
 
+  const production = release.track === "production";
+
   return [
-    "🚀 **24Seven.FM Player update published**",
-    `Track: **${release.track === "alpha" ? "Closed testing – Alpha" : release.track}**`,
+    production
+      ? "🚀 **24Seven.FM Player update is live on Google Play**"
+      : "🚀 **24Seven.FM Player update published**",
+    `Track: **${trackLabel(release.track)}**`,
     `Version code${(release.activeArtifacts ?? []).length === 1 ? "" : "s"}: ${versionCodes}`,
     releaseName,
     ...(releaseNotes.length === 0 ? [] : ["**What's new**", ...releaseNotes.map((note) => `- ${note}`)]),
-    "Available to testers on Google Play.",
+    production ? `Get it on Google Play: ${PLAY_STORE_URL}` : "Available to testers on Google Play.",
   ].filter(Boolean).join("\n");
 }
 
