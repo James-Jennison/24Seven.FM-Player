@@ -29,7 +29,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.FilterChip
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
@@ -62,6 +66,7 @@ import com.codeframe78.twentyfourseven.player.domain.FavoriteChange
 import com.codeframe78.twentyfourseven.player.domain.FavoriteChangeStatus
 import com.codeframe78.twentyfourseven.player.domain.FavoriteTrack
 import com.codeframe78.twentyfourseven.player.domain.FavoriteTracksLoadStatus
+import com.codeframe78.twentyfourseven.player.domain.RankedFavoritesStatus
 import com.codeframe78.twentyfourseven.player.domain.SongRequestLoadStatus
 
 @Composable
@@ -78,6 +83,8 @@ internal fun FavoriteTracksScreen(
     var filter by rememberSaveable(state.selectedStation?.id?.value) { mutableStateOf("") }
     var sortOrder by remember(state.selectedStation?.id) { mutableStateOf(FavoriteTrackSortOrder.Position) }
     var sortMenuOpen by remember { mutableStateOf(false) }
+    var showRanking by rememberSaveable(state.selectedStation?.id?.value) { mutableStateOf(false) }
+    val canRank = signedIn && state.selectedStation?.capabilities?.supportsFavoriteManagement == true
     val allTracks = favorites?.tracks.orEmpty()
     val visibleTracks = remember(allTracks, filter, sortOrder) {
         val query = filter.trim()
@@ -161,6 +168,28 @@ internal fun FavoriteTracksScreen(
                 }
                 FavoriteTracksLoadStatus.Ready -> {
                     item { FavoriteChangeNotice(state) }
+                    if (canRank) {
+                        item {
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                FilterChip(
+                                    selected = !showRanking,
+                                    onClick = { showRanking = false },
+                                    label = { Text("All tracks") },
+                                    modifier = Modifier.testTag("favorites_view_all"),
+                                )
+                                FilterChip(
+                                    selected = showRanking,
+                                    onClick = { showRanking = true },
+                                    label = { Text("My ranking") },
+                                    modifier = Modifier.testTag("favorites_view_ranking"),
+                                )
+                            }
+                        }
+                    }
+                    if (canRank && showRanking) {
+                        rankedFavoriteItems(state, onPrepareRequest)
+                        return@LazyColumn
+                    }
                     item {
                         OutlinedTextField(
                             value = filter,
@@ -230,7 +259,7 @@ internal fun FavoriteTracksScreen(
                                 state.requests?.status != SongRequestLoadStatus.Submitting,
                             onPrepareRequest = onPrepareRequest,
                             coverUrl = favoriteCoverUrl(state.selectedStation, track.albumId),
-                            manage = favoriteManagement(state, track, allTracks),
+                            manage = favoriteManagement(state, track, rankedTracks = null),
                         )
                     }
                 }
@@ -299,6 +328,8 @@ private val COVER_ALBUM_ID = Regex("[A-Za-z0-9_.-]{1,64}")
 /** What the member may do to one row of their own favorites list, and whether a change is on its way. */
 @Immutable
 internal data class FavoriteManagement(
+    /** Moves only make sense in the member's ranked order, which the full list does not follow. */
+    val showsMoves: Boolean,
     val canMoveUp: Boolean,
     val canMoveDown: Boolean,
     val busy: Boolean,
@@ -307,24 +338,86 @@ internal data class FavoriteManagement(
 
 /** The controls for a row of the signed-in member's own list; null for another member's list or a visitor. */
 @Composable
-internal fun favoriteManagement(state: MainUiState, track: FavoriteTrack, allTracks: List<FavoriteTrack>): FavoriteManagement? {
+internal fun favoriteManagement(
+    state: MainUiState,
+    track: FavoriteTrack,
+    rankedTracks: List<FavoriteTrack>?,
+): FavoriteManagement? {
     val station = state.selectedStation ?: return null
     val favorites = state.favorites ?: return null
     val songId = track.songId ?: return null
-    if (
-        !station.capabilities.supportsFavoriteManagement || state.auth?.status != AuthStatus.SignedIn ||
-        favorites.status != FavoriteTracksLoadStatus.Ready
-    ) {
-        return null
-    }
+    if (!station.capabilities.supportsFavoriteManagement || state.auth?.status != AuthStatus.SignedIn) return null
     val onChange = LocalStationExtrasActions.current.onChangeFavorite
-    val index = allTracks.indexOfFirst { it.songId == songId }
+    val index = rankedTracks?.indexOfFirst { it.songId == songId } ?: -1
     return FavoriteManagement(
+        showsMoves = rankedTracks != null,
         canMoveUp = index > 0,
-        canMoveDown = index >= 0 && index < allTracks.lastIndex,
+        canMoveDown = rankedTracks != null && index >= 0 && index < rankedTracks.lastIndex,
         busy = favorites.change.status == FavoriteChangeStatus.Working,
         onChange = { change -> onChange(track, change) },
     )
+}
+
+/** The member's favorites in their own ranked order, as the station's profile page lists them, 50 at a time. */
+private fun LazyListScope.rankedFavoriteItems(state: MainUiState, onPrepareRequest: (FavoriteTrack) -> Unit) {
+    val ranked = state.favorites?.ranked ?: return
+    val station = state.selectedStation ?: return
+    item {
+        val actions = LocalStationExtrasActions.current
+        LaunchedEffect(station.id) {
+            if (ranked.status == RankedFavoritesStatus.Idle) actions.onRefreshRankedFavorites()
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(
+                "This is the order on your ${station.shortName} profile. Move up and Move down change it; the station keeps the full list sorted its own way.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            when {
+                ranked.status == RankedFavoritesStatus.Error && ranked.tracks.isEmpty() -> Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Your ranking could not be loaded right now.", color = MaterialTheme.colorScheme.error, modifier = Modifier.weight(1f))
+                    TextButton(onClick = actions.onRefreshRankedFavorites) { Text("Try again") }
+                }
+                ranked.status == RankedFavoritesStatus.Ready && ranked.tracks.isEmpty() ->
+                    Text("Your ranking is empty.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                ranked.tracks.isEmpty() -> SkeletonList(
+                    rows = 6,
+                    showsArtwork = false,
+                    contentPadding = PaddingValues(vertical = 4.dp),
+                    description = "Loading your ranked favorites",
+                )
+                else -> Text(
+                    "${ranked.tracks.size} ranked tracks loaded",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+    items(items = ranked.tracks, key = { track -> "ranked-${track.songId ?: track.position}" }) { track ->
+        FavoriteTrackCard(
+            track = track,
+            canRequest = station.capabilities.supportsRequests && state.requests?.status != SongRequestLoadStatus.Submitting,
+            onPrepareRequest = onPrepareRequest,
+            coverUrl = favoriteCoverUrl(station, track.albumId),
+            manage = favoriteManagement(state, track, ranked.tracks),
+            showsPosition = true,
+        )
+    }
+    if (ranked.tracks.isNotEmpty() && (ranked.hasMore || ranked.status == RankedFavoritesStatus.Loading)) {
+        item {
+            val actions = LocalStationExtrasActions.current
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                if (ranked.status == RankedFavoritesStatus.Loading) {
+                    CircularProgressIndicator(Modifier.size(28.dp))
+                } else {
+                    TextButton(onClick = actions.onLoadMoreRankedFavorites, modifier = Modifier.testTag("favorites_ranking_more")) {
+                        Text("Show the next 50")
+                    }
+                }
+            }
+        }
+    }
 }
 
 /** One favorite as a row: its cover, what it is, whether it can be requested, and the request button when it can. */
@@ -335,6 +428,7 @@ internal fun FavoriteTrackCard(
     onPrepareRequest: (FavoriteTrack) -> Unit,
     coverUrl: String? = null,
     manage: FavoriteManagement? = null,
+    showsPosition: Boolean = false,
 ) {
     val available = track.availability.canRequest
     var menuOpen by remember { mutableStateOf(false) }
@@ -348,6 +442,14 @@ internal fun FavoriteTrackCard(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            if (showsPosition) {
+                Text(
+                    "${track.position}",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.widthIn(min = 24.dp),
+                )
+            }
             Box(
                 Modifier
                     .size(48.dp)
@@ -416,24 +518,26 @@ internal fun FavoriteTrackCard(
                         Icon(Icons.Default.MoreVert, contentDescription = "More actions for ${track.title}")
                     }
                     DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                        DropdownMenuItem(
-                            text = { Text("Move up") },
-                            leadingIcon = { Icon(Icons.Default.ArrowUpward, contentDescription = null) },
-                            enabled = manage.canMoveUp,
-                            onClick = {
-                                menuOpen = false
-                                manage.onChange(FavoriteChange.MoveUp)
-                            },
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Move down") },
-                            leadingIcon = { Icon(Icons.Default.ArrowDownward, contentDescription = null) },
-                            enabled = manage.canMoveDown,
-                            onClick = {
-                                menuOpen = false
-                                manage.onChange(FavoriteChange.MoveDown)
-                            },
-                        )
+                        if (manage.showsMoves) {
+                            DropdownMenuItem(
+                                text = { Text("Move up") },
+                                leadingIcon = { Icon(Icons.Default.ArrowUpward, contentDescription = null) },
+                                enabled = manage.canMoveUp,
+                                onClick = {
+                                    menuOpen = false
+                                    manage.onChange(FavoriteChange.MoveUp)
+                                },
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Move down") },
+                                leadingIcon = { Icon(Icons.Default.ArrowDownward, contentDescription = null) },
+                                enabled = manage.canMoveDown,
+                                onClick = {
+                                    menuOpen = false
+                                    manage.onChange(FavoriteChange.MoveDown)
+                                },
+                            )
+                        }
                         DropdownMenuItem(
                             text = { Text("Remove from favorites") },
                             leadingIcon = { Icon(Icons.Default.DeleteOutline, contentDescription = null) },

@@ -4,14 +4,77 @@ import com.codeframe78.twentyfourseven.player.domain.FavoriteTrack
 import com.codeframe78.twentyfourseven.player.domain.RequestableTrack
 import com.codeframe78.twentyfourseven.player.domain.TrackRequestAvailability
 import com.codeframe78.twentyfourseven.player.domain.classifyStationRequestAvailability
+import org.json.JSONObject
 import org.jsoup.Jsoup
 import java.io.IOException
 import java.net.URI
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 
+/** One page of the member's ranked favorites and, when the station offers one, the number of the page after it. */
+internal data class RankedFavoritesPage(val tracks: List<FavoriteTrack>, val nextPage: Int?)
+
 internal class FavoriteTracksPageParser {
     private val sessionEvidence = AuthLoginResultParser()
+
+    /**
+     * The ranked favorites the station's profile feed answers with: a JSON wrapper whose HTML holds one row per
+     * track with the station's own move/remove form. Positions count from [firstPosition].
+     */
+    fun parseRankedPage(json: String, origin: String, firstPosition: Int = 1): RankedFavoritesPage {
+        val originUri = trustedOrigin(origin)
+        val html = runCatching { JSONObject(json).optString("HTML") }.getOrNull().orEmpty()
+        if (html.isBlank()) throw IOException("Ranked favorites feed was not recognized")
+        val document = Jsoup.parse(html, origin)
+        val tracks = document.select("tr").asSequence()
+            .filter { row -> row.selectFirst("form.favorite-controls-form input[name=songid]") != null }
+            .mapNotNull { row ->
+                val songId = row.selectFirst("form.favorite-controls-form input[name=songid]")?.attr("value")?.trim()
+                    ?.takeIf { it.matches(NUMERIC_ID) } ?: return@mapNotNull null
+                val details = row.selectFirst("td.td02") ?: return@mapNotNull null
+                val title = details.selectFirst("span")?.text()?.trim()?.takeIf(String::isNotBlank) ?: return@mapNotNull null
+                val artist = details.selectFirst("b")?.text()?.trim().orEmpty()
+                // The second line reads "Album by Artist"; the album is what comes before the artist's name.
+                val lines = details.html().split(Regex("<br\\s*/?>", RegexOption.IGNORE_CASE))
+                val albumLine = lines.getOrNull(1)?.let { Jsoup.parse(it).text().trim() }.orEmpty()
+                val album = albumLine.removeSuffix(artist).trim().removeSuffix("by").trim()
+                    .ifBlank { row.selectFirst("td a[href*=asin=] img[title]")?.attr("title")?.trim().orEmpty() }
+                val facts = lines.getOrNull(2)?.let { Jsoup.parse(it).text().trim() }.orEmpty().split(',', limit = 2)
+                val requestCell = row.selectFirst("a[href*=name=Req]")
+                val requestTrack = requestCell?.absUrl("href")?.let { parseRequestTrack(it, originUri, title, album, artist, "") }
+                val availability = if (requestTrack == null) {
+                    row.selectFirst("img[src*=requestbutton]")?.let { image ->
+                        image.attr("title").ifBlank { image.attr("alt") }.trim().takeIf(String::isNotBlank)
+                    }
+                } else {
+                    null
+                }
+                FavoriteTrack(
+                    position = 0,
+                    title = title,
+                    album = album,
+                    artist = artist,
+                    genre = facts.getOrNull(1)?.trim()?.takeIf(String::isNotBlank),
+                    year = facts.getOrNull(0)?.trim()?.takeIf { it.matches(YEAR) },
+                    requestTrack = requestTrack,
+                    availabilityMessage = availability,
+                    availability = requestTrack?.availability ?: classifyStationRequestAvailability(availability),
+                    albumId = requestTrack?.albumId ?: rowAlbumId(row),
+                    songId = songId,
+                )
+            }
+            .take(MAX_RANKED_PER_PAGE)
+            .mapIndexed { index, track -> track.copy(position = firstPosition + index) }
+            .toList()
+        val nextPage = document.select("button.favorite-page[data-page-url]")
+            .firstOrNull { it.text().trim().equals("Next", ignoreCase = true) }
+            ?.attr("data-page-url")
+            ?.let { url -> runCatching { URI(originUri.resolve(url).toString()) }.getOrNull() }
+            ?.takeIf { it.path == RANKED_PATH }
+            ?.let { queryValue(it.rawQuery, "tracks_page")?.toIntOrNull() }
+            ?.takeIf { it > 0 }
+        return RankedFavoritesPage(tracks, nextPage)
+    }
 
     fun parseListUrl(html: String, origin: String): String {
         val originUri = trustedOrigin(origin)
@@ -146,6 +209,9 @@ internal class FavoriteTracksPageParser {
 
     private companion object {
         const val LIST_PATH = "/modules/Favorites/thelist.php"
+        const val RANKED_PATH = "/modules/Your_Profile/favsTabAJAX.php"
+        const val MAX_RANKED_PER_PAGE = 200
+        val YEAR = Regex("[0-9]{4}")
         val VIEW_INFO_TRACK = Regex("ViewInfoTrack\\(\\s*[0-9]{1,10}\\s*,\\s*([0-9]{1,10})\\s*\\)")
         const val MAX_TRACKS = 5_000
         val NUMERIC_ID = Regex("^[0-9]{1,10}$")

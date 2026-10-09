@@ -96,6 +96,27 @@ class AuthLoginPageParserTest {
         )
     }
 
+    @Test
+    fun `text anti-spam form is preferred over the restored image-code form wherever it sits`() {
+        val page = """
+            <div class="block">${loginPage(token = "288673")}</div>
+            ${signInPage()}
+        """.trimIndent()
+
+        val challenge = parser.parse(page, "https://streamingsoundtracks.com/") as LoginChallenge.Text
+
+        assertEquals("Anti-spam check: Type the word “stream” below.", challenge.prompt)
+        assertEquals("gfx_check", challenge.answerFieldName)
+        assertEquals(LoginFormField("random_num", "stream"), challenge.hiddenFields.first())
+    }
+
+    @Test
+    fun `image-code form is still used when it is the only one offered`() {
+        val challenge = parser.parse(loginPage(token = "288673"), "https://streamingsoundtracks.com/") as LoginChallenge.Image
+
+        assertEquals("https://streamingsoundtracks.com/modules.php?name=Your_Account&gfx=gfx&random_num=288673", challenge.imageUrl)
+    }
+
     private fun signInPage() = """
         <main>
           <h1>Sign In</h1>

@@ -31,10 +31,16 @@ internal class AuthLoginPageParser {
         val originUri = URI(origin)
         require(originUri.scheme == "https" && originUri.path == "/")
         val document = Jsoup.parse(html, origin)
-        val form = document.select("form").firstOrNull { candidate ->
+        val loginForms = document.select("form").filter { candidate ->
             candidate.selectFirst("input[name=username]") != null &&
                 candidate.selectFirst("input[name=user_password]") != null
-        } ?: throw IOException("Login form was not found")
+        }
+        // While the stations offer the restored image-code form beside the text anti-spam form, the text form is the
+        // one the administrator asked the Player to use, wherever it sits on the page.
+        val form = loginForms.firstOrNull { candidate ->
+            candidate.selectFirst(SECURITY_IMAGE) == null &&
+                ANTI_SPAM_PROMPT.containsMatchIn(candidate.text().replace(Regex("\\s+"), " "))
+        } ?: loginForms.firstOrNull() ?: throw IOException("Login form was not found")
 
         val operation = form.selectFirst("input[name=op]")?.attr("value")
         if (operation != "login") throw IOException("Login operation was not recognized")
@@ -56,7 +62,7 @@ internal class AuthLoginPageParser {
         }
 
         val imageAnswerField = form.selectFirst("input[name=gfx_check]")
-        val imageElement = form.selectFirst("img[alt=Security Code], img[alt=Security Check]")
+        val imageElement = form.selectFirst(SECURITY_IMAGE)
         if (imageAnswerField != null && imageElement != null) {
             val token = form.selectFirst("input[name=random_num]")?.attr("value").orEmpty()
             if (!token.matches(SIX_DIGIT_CHALLENGE)) throw IOException("Login challenge was not recognized")
@@ -102,6 +108,7 @@ internal class AuthLoginPageParser {
     }
 
     private companion object {
+        const val SECURITY_IMAGE = "img[alt=Security Code], img[alt=Security Check]"
         val SIX_DIGIT_CHALLENGE = Regex("^[0-9]{6}$")
         val FIELD_NAME = Regex("^[A-Za-z][A-Za-z0-9_-]{0,63}$")
         val ANTI_SPAM_FIELD_NAME = Regex("(?i).*(anti|spam|check|answer|code).*")

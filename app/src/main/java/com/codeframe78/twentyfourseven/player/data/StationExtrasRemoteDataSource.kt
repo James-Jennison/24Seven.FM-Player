@@ -29,18 +29,6 @@ internal interface ExtrasRemoteDataSource {
     suspend fun news(stationId: StationId): List<StationNewsStory>
     suspend fun recentlyAdded(stationId: StationId): List<RecentlyAddedBatch>
     suspend fun albumReviews(stationId: StationId, albumId: String): AlbumReviewsPage
-
-    /**
-     * Sends one review through the station's own form, which is read first so the post goes where the station says
-     * and carries a rating it offers. Returns the album page as it is after the post.
-     */
-    suspend fun submitAlbumReview(
-        stationId: StationId,
-        albumId: String,
-        title: String,
-        body: String,
-        rating: String,
-    ): AlbumReviewsPage
     suspend fun onlineNow(stationId: StationId): OnlineBlock
     suspend fun members(stationId: StationId, query: String, sort: MemberListSort, start: Int): MembersPage
     suspend fun calendar(stationId: StationId): List<CalendarDay>
@@ -126,33 +114,6 @@ internal class StationExtrasRemoteDataSource(
             )
         }
 
-    override suspend fun submitAlbumReview(
-        stationId: StationId,
-        albumId: String,
-        title: String,
-        body: String,
-        rating: String,
-    ): AlbumReviewsPage = withContext(Dispatchers.IO) {
-        require(albumId.matches(ALBUM_ID))
-        if (!pages.hasSession(stationId)) throw FavoritesAuthenticationRequiredException()
-        val origin = pages.origin(stationId)
-        val formPage = pages.get(stationId, REVIEW_FORM_PATH + encode(albumId), ALBUM_LIMIT)
-        val form = catalogParser.parseReviewForm(formPage.body, origin) ?: throw signedOutOrUnavailable(formPage.body, origin, stationId)
-        // Only an address the form names, for this album, is posted to.
-        val action = URI(form.actionPath)
-        if (action.path != "/modules.php" || queryValue(action.rawQuery, "asin") != albumId) {
-            throw IOException("Review form posts elsewhere")
-        }
-        if (form.ratings.none { it.value == rating }) throw StationFormUnavailableException()
-        pages.postForm(
-            stationId,
-            form.actionPath,
-            listOf("title" to title, "content" to body, "reviewrating" to rating),
-            ALBUM_LIMIT,
-        )
-        albumReviews(stationId, albumId)
-    }
-
     override suspend fun onlineNow(stationId: StationId): OnlineBlock = withContext(Dispatchers.IO) {
         communityParser.parseOnlineBlock(pages.get(stationId, HOME_PATH, HOME_LIMIT).body, pages.origin(stationId))
     }
@@ -211,7 +172,6 @@ internal class StationExtrasRemoteDataSource(
         const val MEMBER_FAVORITES_PATH = "/modules.php?name=Favorites&user2view="
         const val RECENTLY_ADDED_PATH = "/modules.php?name=News&view=recent"
         const val ALBUM_PATH = "/modules.php?name=Album&asin="
-        const val REVIEW_FORM_PATH = "/modules.php?name=Album&action=newreview&asin="
         const val HOME_PATH = "/"
         const val MEMBERS_PATH = "/modules.php?name=Members_List&file=index"
         const val CALENDAR_PATH = "/modules.php?name=Birthdays"

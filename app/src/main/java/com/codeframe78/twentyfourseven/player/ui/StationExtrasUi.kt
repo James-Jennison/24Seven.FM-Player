@@ -116,8 +116,6 @@ internal data class StationExtrasActions(
     val onOpenLink: (String) -> Unit = {},
     val onRefreshRecentlyAdded: () -> Unit = {},
     val onReloadAlbumReviews: () -> Unit = {},
-    /** Sends a review as title, body, and rating value after the composer's review step. */
-    val onSubmitAlbumReview: (String, String, String) -> Unit = { _, _, _ -> },
     val onOpenMembers: () -> Unit = {},
     val onSearchMembers: (String, MemberListSort) -> Unit = { _, _ -> },
     val onLoadMoreMembers: () -> Unit = {},
@@ -128,6 +126,8 @@ internal data class StationExtrasActions(
     val onCloseProfileEditor: () -> Unit = {},
     /** Moves or removes one of the signed-in member's own favorites. */
     val onChangeFavorite: (FavoriteTrack, FavoriteChange) -> Unit = { _, _ -> },
+    val onRefreshRankedFavorites: () -> Unit = {},
+    val onLoadMoreRankedFavorites: () -> Unit = {},
 )
 
 /** Lets any screen open the history archive or news without threading callbacks through every layout. */

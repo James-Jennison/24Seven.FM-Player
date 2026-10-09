@@ -1,12 +1,9 @@
 package com.codeframe78.twentyfourseven.player.data
 
-import com.codeframe78.twentyfourseven.player.domain.AlbumReviewSendStatus
 import com.codeframe78.twentyfourseven.player.domain.AlbumReviewsState
 import com.codeframe78.twentyfourseven.player.domain.AlbumReviewsStatus
 import com.codeframe78.twentyfourseven.player.domain.CalendarStatus
 import com.codeframe78.twentyfourseven.player.domain.EditableProfile
-import com.codeframe78.twentyfourseven.player.domain.MAX_ALBUM_REVIEW_BODY_CHARACTERS
-import com.codeframe78.twentyfourseven.player.domain.MAX_ALBUM_REVIEW_TITLE_CHARACTERS
 import com.codeframe78.twentyfourseven.player.domain.MemberFavoritesState
 import com.codeframe78.twentyfourseven.player.domain.MemberListSort
 import com.codeframe78.twentyfourseven.player.domain.MembersState
@@ -159,7 +156,7 @@ internal class NetworkStationExtrasRepository(
         state.update { it.copy(albumReviews = AlbumReviewsState(albumId, AlbumReviewsStatus.Loading)) }
         val loaded = try {
             val page = remote.albumReviews(state.value.stationId, albumId)
-            AlbumReviewsState(albumId, AlbumReviewsStatus.Ready, page.reviews, page.canWrite)
+            AlbumReviewsState(albumId, AlbumReviewsStatus.Ready, page.reviews)
         } catch (cancellation: CancellationException) {
             state.update { if (it.albumReviews.isLoading(albumId)) it.copy(albumReviews = AlbumReviewsState()) else it }
             throw cancellation
@@ -170,50 +167,7 @@ internal class NetworkStationExtrasRepository(
     }
 
     override suspend fun closeAlbumReviews(stationId: StationId) {
-        state(stationId.canonicalized()).update { current ->
-            // A review on its way keeps its state, so its result is still reported.
-            if (current.albumReviews.sendStatus == AlbumReviewSendStatus.Sending) current else current.copy(albumReviews = AlbumReviewsState())
-        }
-    }
-
-    override suspend fun submitAlbumReview(stationId: StationId, title: String, body: String, rating: String) {
-        val canonical = stationId.canonicalized()
-        val state = state(canonical)
-        writeLock(canonical).withLock {
-            val current = state.value.albumReviews
-            val albumId = current.albumId ?: return
-            val trimmedTitle = title.trim().take(MAX_ALBUM_REVIEW_TITLE_CHARACTERS)
-            val trimmedBody = body.trim().take(MAX_ALBUM_REVIEW_BODY_CHARACTERS)
-            if (
-                current.status != AlbumReviewsStatus.Ready || !current.canWrite ||
-                current.sendStatus == AlbumReviewSendStatus.Sending ||
-                trimmedTitle.isEmpty() || trimmedBody.isEmpty()
-            ) {
-                return
-            }
-            state.update { it.copy(albumReviews = current.copy(sendStatus = AlbumReviewSendStatus.Sending, sendMessage = null)) }
-            val sent = try {
-                val page = remote.submitAlbumReview(canonical, albumId, trimmedTitle, trimmedBody, rating)
-                val shown = page.reviews.any { it.title.equals(trimmedTitle, ignoreCase = true) }
-                current.copy(
-                    reviews = page.reviews,
-                    canWrite = page.canWrite,
-                    sendStatus = if (shown) AlbumReviewSendStatus.Sent else AlbumReviewSendStatus.Unconfirmed,
-                    sendMessage = if (shown) "Your review is on the album page." else "The review was sent, but the station does not show it yet.",
-                )
-            } catch (cancellation: CancellationException) {
-                state.update { it.copy(albumReviews = current.copy(sendStatus = AlbumReviewSendStatus.Unconfirmed)) }
-                throw cancellation
-            } catch (_: FavoritesAuthenticationRequiredException) {
-                current.copy(sendStatus = AlbumReviewSendStatus.SignInRequired, sendMessage = "Sign in to the station again to write a review.")
-            } catch (_: StationFormUnavailableException) {
-                current.copy(canWrite = false, sendStatus = AlbumReviewSendStatus.Rejected, sendMessage = "The station is not taking a review from you for this album.")
-            } catch (_: Exception) {
-                // The request may have reached the station, so the outcome is unknown rather than failed.
-                current.copy(sendStatus = AlbumReviewSendStatus.Error, sendMessage = "The review could not be sent. Check the album page before trying again.")
-            }
-            state.update { it.copy(albumReviews = sent) }
-        }
+        state(stationId.canonicalized()).update { it.copy(albumReviews = AlbumReviewsState()) }
     }
 
     override suspend fun openMembers(stationId: StationId) {

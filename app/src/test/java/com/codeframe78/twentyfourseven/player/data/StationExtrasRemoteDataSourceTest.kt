@@ -121,45 +121,6 @@ class StationExtrasRemoteDataSourceTest {
     }
 
     @Test
-    fun `a review is posted to the address the station's own form names, for the same album`() = runTest {
-        val pages = FakeStationPages { _, path, _ ->
-            if ("action=newreview" in path) StationCatalogFixtures.reviewForm() else StationCatalogFixtures.albumPage(canWrite = false)
-        }
-        val remote = StationExtrasRemoteDataSource(pages)
-
-        val page = remote.submitAlbumReview(station, "B000000001", "Title", "Body", "4.5")
-
-        assertEquals(
-            listOf(
-                "GET /modules.php?name=Album&action=newreview&asin=B000000001",
-                "POST /modules.php?name=Album&action=submitnewreview&asin=B000000001",
-                "GET /modules.php?name=Album&asin=B000000001",
-            ),
-            pages.requests,
-        )
-        assertEquals(listOf("title" to "Title", "content" to "Body", "reviewrating" to "4.5"), pages.posted.single())
-        assertFalse(page.canWrite)
-    }
-
-    @Test
-    fun `a review is refused when the form posts for another album, offers no such rating, or needs sign-in`() = runTest {
-        val otherAlbum = FakeStationPages { _, _, _ ->
-            StationCatalogFixtures.reviewForm("https://streamingsoundtracks.com/modules.php?name=Album&action=submitnewreview&asin=B000000002")
-        }
-        assertTrue(runCatching { StationExtrasRemoteDataSource(otherAlbum).submitAlbumReview(station, "B000000001", "T", "B", "5") }.isFailure)
-        assertTrue(otherAlbum.posted.isEmpty())
-
-        val badRating = FakeStationPages { _, _, _ -> StationCatalogFixtures.reviewForm() }
-        assertTrue(runCatching { StationExtrasRemoteDataSource(badRating).submitAlbumReview(station, "B000000001", "T", "B", "7") }.isFailure)
-        assertTrue(badRating.posted.isEmpty())
-
-        val signedOut = FakeStationPages(signedIn = false) { _, _, _ -> StationCatalogFixtures.reviewForm() }
-        val refused = runCatching { StationExtrasRemoteDataSource(signedOut).submitAlbumReview(station, "B000000001", "T", "B", "5") }
-        assertTrue(refused.exceptionOrNull() is FavoritesAuthenticationRequiredException)
-        assertTrue(signedOut.requests.isEmpty())
-    }
-
-    @Test
     fun `the members list is asked for with the sort, order, query, and offset the station expects`() = runTest {
         val pages = FakeStationPages { _, _, _ -> StationCommunityFixtures.membersPage() }
         val remote = StationExtrasRemoteDataSource(pages)

@@ -121,8 +121,8 @@ fun currentPlayedHistoryBlock(now: ZonedDateTime = ZonedDateTime.now(STATION_CLO
 /**
  * Station information that sits beside the core player: member profile cards, a member's public favorites list, the
  * played-history archive, station news, Recently Added, album reviews, the members list, the calendar, and the
- * member's own Edit Profile form. Everything is fetched on request and held in memory only. The only writes are a
- * review and a profile edit, each sent once after an explicit confirmation.
+ * member's own Edit Profile form. Everything is fetched on request and held in memory only. The only write is a
+ * profile edit, sent once after an explicit confirmation.
  */
 interface StationExtrasRepository {
     fun observeExtras(stationId: StationId): Flow<StationExtrasState>
@@ -138,9 +138,6 @@ interface StationExtrasRepository {
     /** Loads the reviews on this album's page; they sit beside the album browser until [closeAlbumReviews]. */
     suspend fun openAlbumReviews(stationId: StationId, albumId: String)
     suspend fun closeAlbumReviews(stationId: StationId)
-
-    /** Sends one review for the album whose reviews are open. The station's form is read again first. */
-    suspend fun submitAlbumReview(stationId: StationId, title: String, body: String, rating: String)
 
     /** Loads the Online Now block and the first page of the members list with the current query and sort. */
     suspend fun openMembers(stationId: StationId)
@@ -169,7 +166,6 @@ object UnavailableStationExtrasRepository : StationExtrasRepository {
     override suspend fun refreshRecentlyAdded(stationId: StationId) = Unit
     override suspend fun openAlbumReviews(stationId: StationId, albumId: String) = Unit
     override suspend fun closeAlbumReviews(stationId: StationId) = Unit
-    override suspend fun submitAlbumReview(stationId: StationId, title: String, body: String, rating: String) = Unit
     override suspend fun openMembers(stationId: StationId) = Unit
     override suspend fun searchMembers(stationId: StationId, query: String, sort: MemberListSort) = Unit
     override suspend fun loadMoreMembers(stationId: StationId) = Unit

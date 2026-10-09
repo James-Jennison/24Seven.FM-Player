@@ -1,7 +1,6 @@
 package com.codeframe78.twentyfourseven.player.data
 
 import com.codeframe78.twentyfourseven.player.domain.AlbumReview
-import com.codeframe78.twentyfourseven.player.domain.AlbumReviewSendStatus
 import com.codeframe78.twentyfourseven.player.domain.AlbumReviewsStatus
 import com.codeframe78.twentyfourseven.player.domain.CalendarDay
 import com.codeframe78.twentyfourseven.player.domain.CalendarEntry
@@ -155,66 +154,22 @@ class NetworkStationExtrasRepositoryTest {
     }
 
     @Test
-    fun `album reviews open for one album and a sent review is confirmed from the album page`() = runTest {
-        val remote = FakeRemote()
-        val repository = NetworkStationExtrasRepository(remote)
+    fun `album reviews open for one album and close`() = runTest {
+        val repository = NetworkStationExtrasRepository(FakeRemote())
 
         repository.openAlbumReviews(station, "B000000001")
         with(repository.observeExtras(station).first().albumReviews) {
             assertEquals(AlbumReviewsStatus.Ready, status)
             assertEquals("B000000001", albumId)
-            assertTrue(canWrite)
             assertEquals(listOf("Great Score"), reviews.map { it.title })
         }
 
-        repository.submitAlbumReview(station, "  My take ", "Loved it", "4.5")
-        assertEquals(listOf(Triple("My take", "Loved it", "4.5")), remote.sentReviews)
-        with(repository.observeExtras(station).first().albumReviews) {
-            assertEquals(AlbumReviewSendStatus.Sent, sendStatus)
-            assertEquals(listOf("Great Score", "My take"), reviews.map { it.title })
-            assertFalse(canWrite)
-        }
-    }
+        repository.closeAlbumReviews(station)
+        assertEquals(AlbumReviewsStatus.Closed, repository.observeExtras(station).first().albumReviews.status)
 
-    @Test
-    fun `a review is not sent without a title, body, or the station's offer to write one`() = runTest {
-        val remote = FakeRemote(canWrite = false)
-        val repository = NetworkStationExtrasRepository(remote)
-        repository.openAlbumReviews(station, "B000000001")
-
-        repository.submitAlbumReview(station, "Title", "Body", "5")
-        assertTrue(remote.sentReviews.isEmpty())
-
-        val offered = FakeRemote()
-        val writable = NetworkStationExtrasRepository(offered)
-        writable.openAlbumReviews(station, "B000000001")
-        writable.submitAlbumReview(station, " ", "Body", "5")
-        writable.submitAlbumReview(station, "Title", "", "5")
-        assertTrue(offered.sentReviews.isEmpty())
-        assertEquals(AlbumReviewSendStatus.Idle, writable.observeExtras(station).first().albumReviews.sendStatus)
-    }
-
-    @Test
-    fun `a review the station does not show yet, a lost session, and a withdrawn form are each reported`() = runTest {
-        val hidden = FakeRemote(showsSentReview = false)
-        val repository = NetworkStationExtrasRepository(hidden)
-        repository.openAlbumReviews(station, "B000000001")
-        repository.submitAlbumReview(station, "Title", "Body", "5")
-        assertEquals(AlbumReviewSendStatus.Unconfirmed, repository.observeExtras(station).first().albumReviews.sendStatus)
-
-        val signedOut = FakeRemote(sendFailure = FavoritesAuthenticationRequiredException())
-        val lost = NetworkStationExtrasRepository(signedOut)
-        lost.openAlbumReviews(station, "B000000001")
-        lost.submitAlbumReview(station, "Title", "Body", "5")
-        assertEquals(AlbumReviewSendStatus.SignInRequired, lost.observeExtras(station).first().albumReviews.sendStatus)
-
-        val withdrawn = NetworkStationExtrasRepository(FakeRemote(sendFailure = StationFormUnavailableException()))
-        withdrawn.openAlbumReviews(station, "B000000001")
-        withdrawn.submitAlbumReview(station, "Title", "Body", "5")
-        with(withdrawn.observeExtras(station).first().albumReviews) {
-            assertEquals(AlbumReviewSendStatus.Rejected, sendStatus)
-            assertFalse(canWrite)
-        }
+        val offline = NetworkStationExtrasRepository(FakeRemote(failure = IOException("offline")))
+        offline.openAlbumReviews(station, "B000000001")
+        assertEquals(AlbumReviewsStatus.Error, offline.observeExtras(station).first().albumReviews.status)
     }
 
     @Test
@@ -287,13 +242,9 @@ class NetworkStationExtrasRepositoryTest {
 
     private class FakeRemote(
         private val failure: Exception? = null,
-        private val canWrite: Boolean = true,
-        private val showsSentReview: Boolean = true,
-        private val sendFailure: Exception? = null,
         private val keepsEdits: Boolean = true,
     ) : ExtrasRemoteDataSource {
         val historyRequests = mutableListOf<Pair<LocalDate, Int>>()
-        val sentReviews = mutableListOf<Triple<String, String, String>>()
         val memberRequests = mutableListOf<Triple<String, MemberListSort, Int>>()
         val savedProfiles = mutableListOf<EditableProfile>()
         private var kept = EditableProfile(realName = "Pat Listener", location = "Springfield", flag = "us.gif")
@@ -305,24 +256,7 @@ class NetworkStationExtrasRepositoryTest {
 
         override suspend fun albumReviews(stationId: StationId, albumId: String): AlbumReviewsPage {
             failure?.let { throw it }
-            return AlbumReviewsPage(listOf(AlbumReview("Great Score", "Reviewer", "23 Sep 2022", "4.5", "Warm themes.", null)), canWrite)
-        }
-
-        override suspend fun submitAlbumReview(
-            stationId: StationId,
-            albumId: String,
-            title: String,
-            body: String,
-            rating: String,
-        ): AlbumReviewsPage {
-            sendFailure?.let { throw it }
-            sentReviews += Triple(title, body, rating)
-            val page = albumReviews(stationId, albumId)
-            return if (showsSentReview) {
-                page.copy(reviews = page.reviews + AlbumReview(title, "Me", "today", rating, body, null), canWrite = false)
-            } else {
-                page
-            }
+            return AlbumReviewsPage(listOf(AlbumReview("Great Score", "Reviewer", "23 Sep 2022", "4.5", "Warm themes.", null)))
         }
 
         override suspend fun onlineNow(stationId: StationId): OnlineBlock {
