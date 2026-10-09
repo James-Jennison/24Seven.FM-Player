@@ -37,7 +37,7 @@ The [Player site](https://24sevenfmplayer.com/) introduces the product and its f
 | --- | :---: | --- | --- |
 | [1.0.0](docs/releases/1.0.0.md) | 18 | Published to Production, United States only | `v1.0.0` |
 | [1.0.1](docs/releases/1.0.1.md) | 19 | Submitted to Production review on September 20, 2026 under Managed Publishing | `v1.0.1` |
-| [1.0.2](docs/releases/1.0.2.md) | 20 | Candidate in development; not yet submitted | `v1.0.2` (pending) |
+| [1.0.2](docs/releases/1.0.2.md) | 21 | Candidate rebuilt with the favourites ranking fix; not yet submitted | `v1.0.2` (pending) |
 
 Version 1.0.1 is an onboarding-contrast maintenance update. Its candidate passed 203 unit tests, lint, and 75 connected
 tests on the Android 16 Razr. Gates, evidence, and the controlled first-launch plan are recorded in the
