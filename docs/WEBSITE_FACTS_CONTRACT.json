@@ -3,7 +3,7 @@
   "repository": "James-Jennison/24Seven.FM-Player",
   "app_behavior": {
     "authority_branch": "main",
-    "pinned_commit": "04d0af5666d9f37f00fd8a2ceab05a973ad2d920",
+    "pinned_commit": "ea69c9dff41f7005c064da367762db108016d773",
     "canonical_files": [
       "app/build.gradle.kts",
       "app/src/main/"
@@ -12,10 +12,10 @@
   },
   "privacy_claims": {
     "canonical_file": "PRIVACY.md",
-    "pinned_commit": "04d0af5666d9f37f00fd8a2ceab05a973ad2d920",
+    "pinned_commit": "2a16681033b1634d7996e75aafd5493e51c59891",
     "content_review_status": "reviewed",
-    "content_sha256": "20bf3457c7962099fdc8d67326635b8a0fdadea62ccaa8a421a6df279f80516f",
-    "content_review_record": "docs/privacy-reviews/native-privacy-04d0af5.md",
+    "content_sha256": "a69b01016c50ffde686427089e7e9e668cead616c280601dc55a82f0d10d5ce2",
+    "content_review_record": "docs/privacy-reviews/native-privacy-2a16681.md",
     "reconciliation_record": "docs/PRIVACY_RECONCILIATION.md",
     "legacy_surface_inventory": "docs/PRIVACY_LEGACY_SURFACE_INVENTORY.md",
     "portal_program_addendum": {
