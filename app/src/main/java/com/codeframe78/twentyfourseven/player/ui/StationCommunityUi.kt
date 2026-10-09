@@ -71,18 +71,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import com.codeframe78.twentyfourseven.player.domain.ALBUM_REVIEW_RATINGS
 import com.codeframe78.twentyfourseven.player.domain.AlbumReview
-import com.codeframe78.twentyfourseven.player.domain.AlbumReviewSendStatus
 import com.codeframe78.twentyfourseven.player.domain.AlbumReviewsStatus
-import com.codeframe78.twentyfourseven.player.domain.AuthStatus
 import com.codeframe78.twentyfourseven.player.domain.CalendarDay
 import com.codeframe78.twentyfourseven.player.domain.CalendarEntryKind
 import com.codeframe78.twentyfourseven.player.domain.CalendarStatus
 import com.codeframe78.twentyfourseven.player.domain.EditableProfile
 import com.codeframe78.twentyfourseven.player.domain.FavoriteChangeStatus
-import com.codeframe78.twentyfourseven.player.domain.MAX_ALBUM_REVIEW_BODY_CHARACTERS
-import com.codeframe78.twentyfourseven.player.domain.MAX_ALBUM_REVIEW_TITLE_CHARACTERS
 import com.codeframe78.twentyfourseven.player.domain.MemberListSort
 import com.codeframe78.twentyfourseven.player.domain.MemberSummary
 import com.codeframe78.twentyfourseven.player.domain.MembersStatus
@@ -104,15 +99,12 @@ internal fun FavoriteChangeNotice(state: MainUiState) {
     Text(message, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
 }
 
-/** The reviews on the album page, with the write-a-review control the station offers a signed-in member. */
+/** The reviews the station shows on the album's page. Reviews are written on the station itself. */
 @Composable
 internal fun AlbumReviewsSection(state: MainUiState, albumId: String, actions: StationExtrasActions) {
     val station = state.selectedStation ?: return
     if (!station.capabilities.supportsAlbumReviews) return
     val reviews = state.extras?.albumReviews?.takeIf { it.albumId == albumId } ?: return
-    val signedIn = state.auth?.status == AuthStatus.SignedIn
-    val canContribute = state.communitySafety.canContributeCommunityContent
-    var composing by rememberSaveable(albumId) { mutableStateOf(false) }
     Column(
         Modifier.fillMaxWidth().padding(top = 16.dp).testTag("album_reviews"),
         verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -122,13 +114,6 @@ internal fun AlbumReviewsSection(state: MainUiState, albumId: String, actions: S
             Icon(Icons.Default.RateReview, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.width(10.dp))
             Text("Member reviews", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-            if (reviews.status == AlbumReviewsStatus.Ready && reviews.canWrite && signedIn) {
-                TextButton(
-                    onClick = { composing = true },
-                    enabled = reviews.sendStatus != AlbumReviewSendStatus.Sending,
-                    modifier = Modifier.testTag("album_write_review"),
-                ) { Text("Write a review") }
-            }
         }
         when (reviews.status) {
             AlbumReviewsStatus.Loading -> Row(
@@ -151,40 +136,9 @@ internal fun AlbumReviewsSection(state: MainUiState, albumId: String, actions: S
                     Text("No member has reviewed this album yet.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 reviews.reviews.forEach { review -> AlbumReviewCard(review) }
-                if (reviews.canWrite && !signedIn) {
-                    Text(
-                        "Sign in to ${station.shortName} from the More tab to write a review.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
             }
             AlbumReviewsStatus.Closed -> Unit
         }
-        reviews.sendMessage?.let { message ->
-            Text(
-                message,
-                style = MaterialTheme.typography.bodySmall,
-                color = when (reviews.sendStatus) {
-                    AlbumReviewSendStatus.Sent -> MaterialTheme.colorScheme.primary
-                    AlbumReviewSendStatus.Unconfirmed -> MaterialTheme.colorScheme.onSurfaceVariant
-                    else -> MaterialTheme.colorScheme.error
-                },
-                modifier = Modifier.testTag("album_review_result"),
-            )
-        }
-    }
-    if (composing) {
-        AlbumReviewComposer(
-            stationName = station.shortName,
-            canContribute = canContribute,
-            sending = reviews.sendStatus == AlbumReviewSendStatus.Sending,
-            onSend = { title, body, rating ->
-                actions.onSubmitAlbumReview(title, body, rating)
-                composing = false
-            },
-            onDismiss = { composing = false },
-        )
     }
 }
 
@@ -234,109 +188,6 @@ private fun AlbumReviewCard(review: AlbumReview) {
             review.helpfulLabel?.let {
                 Text(it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-        }
-    }
-}
-
-/** Writes one review, then shows it once more before it is sent. */
-@Composable
-private fun AlbumReviewComposer(
-    stationName: String,
-    canContribute: Boolean,
-    sending: Boolean,
-    onSend: (String, String, String) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    var title by rememberSaveable { mutableStateOf("") }
-    var body by rememberSaveable { mutableStateOf("") }
-    var rating by rememberSaveable { mutableStateOf(ALBUM_REVIEW_RATINGS.first().value) }
-    var reviewing by rememberSaveable { mutableStateOf(false) }
-    val ready = title.isNotBlank() && body.isNotBlank()
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        modifier = Modifier.testTag("album_review_composer"),
-        title = { Text(if (reviewing) "Send this review?" else "Write a review") },
-        text = {
-            Column(
-                Modifier.verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                if (!canContribute) {
-                    Text(
-                        "Turn on community content in More to write reviews.",
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                } else if (reviewing) {
-                    Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-                    Text(
-                        ALBUM_REVIEW_RATINGS.first { it.value == rating }.label,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                    Text(body.trim(), style = MaterialTheme.typography.bodyMedium)
-                    Text(
-                        "It is posted on $stationName under your member name and cannot be edited from the Player.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                } else {
-                    OutlinedTextField(
-                        value = title,
-                        onValueChange = { title = it.take(MAX_ALBUM_REVIEW_TITLE_CHARACTERS) },
-                        label = { Text("Title") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth().testTag("album_review_title"),
-                    )
-                    OutlinedTextField(
-                        value = body,
-                        onValueChange = { body = it.take(MAX_ALBUM_REVIEW_BODY_CHARACTERS) },
-                        label = { Text("Your review") },
-                        minLines = 4,
-                        modifier = Modifier.fillMaxWidth().testTag("album_review_body"),
-                    )
-                    Text("Rating", style = MaterialTheme.typography.labelLarge)
-                    RatingChips(selected = rating, onSelect = { rating = it })
-                }
-            }
-        },
-        confirmButton = {
-            if (!canContribute) {
-                TextButton(onClick = onDismiss) { Text("Close") }
-            } else if (reviewing) {
-                Button(
-                    onClick = { onSend(title.trim(), body.trim(), rating) },
-                    enabled = !sending,
-                    modifier = Modifier.testTag("album_review_send"),
-                ) { Text("Send review") }
-            } else {
-                Button(
-                    onClick = { reviewing = true },
-                    enabled = ready,
-                    modifier = Modifier.testTag("album_review_next"),
-                ) { Text("Review") }
-            }
-        },
-        dismissButton = {
-            if (reviewing) {
-                TextButton(onClick = { reviewing = false }) { Text("Edit") }
-            } else {
-                TextButton(onClick = onDismiss) { Text("Cancel") }
-            }
-        },
-    )
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun RatingChips(selected: String, onSelect: (String) -> Unit) {
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(0.dp)) {
-        ALBUM_REVIEW_RATINGS.forEach { option ->
-            FilterChip(
-                selected = option.value == selected,
-                onClick = { onSelect(option.value) },
-                label = { Text(option.label.substringBefore(" - ")) },
-                modifier = Modifier.semantics { contentDescription = option.label },
-            )
         }
     }
 }

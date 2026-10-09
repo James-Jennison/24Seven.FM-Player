@@ -50,15 +50,6 @@ internal object StationCatalogFixtures {
         """.trimIndent()
     }
 
-    fun reviewForm(action: String = "https://streamingsoundtracks.com/modules.php?name=Album&action=submitnewreview&asin=B000000001") = """
-        <html><body><form name="reviewform" action="$action" method="post" onSubmit="return checkReviewRating()">
-        <input type="text" name="title" maxlength="200">
-        <textarea name="content"></textarea>
-        <select name="reviewrating"><option value="0">Select</option><option value="5">5.0 - Perfect</option><option value="4.5">4.5 - Excellent</option><option value="4">4.0 - Very Good</option><option value="3.5">3.5 - Good</option><option value="3">3.0 - Fair</option><option value="2.5">2.5 - Below Average</option><option value="2">2.0 - Poor</option><option value="1.5">1.5 - Very Poor</option><option value="1">1.0 - Not Listenable</option></select>
-        <input type="submit" value="Submit Review">
-        </form></body></html>
-    """.trimIndent()
-
     fun profileEditPage() = """
         <html><body>
         <form action="modules.php?name=SearchGeneral" method="post"><input type="text" name="query"><input type="hidden" name="op" value="search"><input type="submit" value="Search"></form>

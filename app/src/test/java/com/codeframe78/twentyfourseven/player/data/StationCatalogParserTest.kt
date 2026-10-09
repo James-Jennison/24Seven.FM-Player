@@ -76,45 +76,10 @@ class StationCatalogParserTest {
     }
 
     @Test
-    fun `an album page offers writing only when it carries the new review link`() {
-        assertTrue(parser.parseAlbumReviews(StationCatalogFixtures.albumPage(canWrite = true), origin).canWrite)
-        assertFalse(parser.parseAlbumReviews(StationCatalogFixtures.albumPage(canWrite = false), origin).canWrite)
-        val none = parser.parseAlbumReviews("<html><body><p>No reviews yet</p></body></html>", origin)
-        assertEquals(emptyList<Any>(), none.reviews)
-        assertFalse(none.canWrite)
-    }
-
-    @Test
     fun `a long review body is cut to the limit`() {
         val html = StationCatalogFixtures.albumPage(canWrite = false).replace("Worth a listen.", "x".repeat(5_000))
 
         assertEquals(4_000, parser.parseAlbumReviews(html, origin).reviews.single().body.length)
-    }
-
-    @Test
-    fun `reads the review form action as a path and leaves out the select choice`() {
-        val form = parser.parseReviewForm(StationCatalogFixtures.reviewForm(), origin)!!
-
-        assertEquals("/modules.php?name=Album&action=submitnewreview&asin=B000000001", form.actionPath)
-        assertEquals(
-            listOf("5", "4.5", "4", "3.5", "3", "2.5", "2", "1.5", "1"),
-            form.ratings.map { it.value },
-        )
-        assertEquals("5.0 - Perfect", form.ratings.first().label)
-        assertEquals("1.0 - Not Listenable", form.ratings.last().label)
-    }
-
-    @Test
-    fun `the station's own www spelling of its address is accepted but other sites are not`() {
-        val www = parser.parseReviewForm(
-            StationCatalogFixtures.reviewForm("https://www.streamingsoundtracks.com/modules.php?name=Album&action=submitnewreview&asin=B000000001"),
-            origin,
-        )
-
-        assertEquals("/modules.php?name=Album&action=submitnewreview&asin=B000000001", www?.actionPath)
-        assertNull(parser.parseReviewForm(StationCatalogFixtures.reviewForm("https://example.com/modules.php?name=Album"), origin))
-        assertNull(parser.parseReviewForm(StationCatalogFixtures.reviewForm("http://streamingsoundtracks.com/modules.php"), origin))
-        assertNull(parser.parseReviewForm("<html><body>Please log in.</body></html>", origin))
     }
 
     @Test

@@ -777,13 +777,6 @@ class MainViewModel(
         extras.openAlbumReviews(station.id, albumId)
     }
 
-    /** Sends one album review after the composer's review step. The station's own form is read again first. */
-    fun submitAlbumReview(title: String, body: String, rating: String) = viewModelScope.launch {
-        val station = signedInStation { it.supportsAlbumReviews } ?: return@launch
-        if (!communitySafety.observeSafety().first().canContributeCommunityContent) return@launch
-        extras.submitAlbumReview(station.id, title, body, rating)
-    }
-
     fun refreshRecentlyAdded() = viewModelScope.launch {
         val station = stations.observeSelectedStation().first()
         if (!station.capabilities.supportsRecentlyAdded) return@launch

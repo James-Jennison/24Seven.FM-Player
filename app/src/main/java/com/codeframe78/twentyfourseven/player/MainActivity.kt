@@ -249,7 +249,6 @@ class MainActivity : AppCompatActivity() {
                             onOpenLink = ::openWebLink,
                             onRefreshRecentlyAdded = viewModel::refreshRecentlyAdded,
                             onReloadAlbumReviews = viewModel::reloadAlbumReviews,
-                            onSubmitAlbumReview = viewModel::submitAlbumReview,
                             onOpenMembers = viewModel::openMembers,
                             onSearchMembers = viewModel::searchMembers,
                             onLoadMoreMembers = viewModel::loadMoreMembers,

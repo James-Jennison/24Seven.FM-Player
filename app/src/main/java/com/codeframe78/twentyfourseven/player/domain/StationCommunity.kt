@@ -36,50 +36,12 @@ data class AlbumReview(
 
 enum class AlbumReviewsStatus { Closed, Loading, Ready, Error }
 
-enum class AlbumReviewSendStatus {
-    Idle,
-    Sending,
-
-    /** The station shows the review on the album page. */
-    Sent,
-
-    /** The review was accepted for sending, but the station does not show it yet. */
-    Unconfirmed,
-
-    /** The station did not offer the review form, so nothing was sent. */
-    Rejected,
-    SignInRequired,
-    Error,
-}
-
+/** The reviews the station shows for one album. The Player reads them only; reviews are written on the station. */
 data class AlbumReviewsState(
     val albumId: String? = null,
     val status: AlbumReviewsStatus = AlbumReviewsStatus.Closed,
     val reviews: List<AlbumReview> = emptyList(),
-    /** True when the signed-in member may add a review; the station offers the form only once per member. */
-    val canWrite: Boolean = false,
-    val sendStatus: AlbumReviewSendStatus = AlbumReviewSendStatus.Idle,
-    val sendMessage: String? = null,
 )
-
-/** The station's rating choices for a review, highest first, as value and label ("5" to "5.0 - Perfect"). */
-data class AlbumReviewRatingOption(val value: String, val label: String)
-
-/** The rating choices the stations' review form offers. The form is read again before a review is sent. */
-val ALBUM_REVIEW_RATINGS = listOf(
-    AlbumReviewRatingOption("5", "5.0 - Perfect"),
-    AlbumReviewRatingOption("4.5", "4.5 - Excellent"),
-    AlbumReviewRatingOption("4", "4.0 - Very Good"),
-    AlbumReviewRatingOption("3.5", "3.5 - Good"),
-    AlbumReviewRatingOption("3", "3.0 - Fair"),
-    AlbumReviewRatingOption("2.5", "2.5 - Below Average"),
-    AlbumReviewRatingOption("2", "2.0 - Poor"),
-    AlbumReviewRatingOption("1.5", "1.5 - Very Poor"),
-    AlbumReviewRatingOption("1", "1.0 - Not Listenable"),
-)
-
-const val MAX_ALBUM_REVIEW_TITLE_CHARACTERS = 200
-const val MAX_ALBUM_REVIEW_BODY_CHARACTERS = 4_000
 
 /** A member who is on the station right now, from the station's Online Now block. */
 data class OnlineMember(

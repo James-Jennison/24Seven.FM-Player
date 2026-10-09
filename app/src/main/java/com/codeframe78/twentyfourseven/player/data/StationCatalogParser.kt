@@ -1,7 +1,6 @@
 package com.codeframe78.twentyfourseven.player.data
 
 import com.codeframe78.twentyfourseven.player.domain.AlbumReview
-import com.codeframe78.twentyfourseven.player.domain.AlbumReviewRatingOption
 import com.codeframe78.twentyfourseven.player.domain.EditableProfile
 import com.codeframe78.twentyfourseven.player.domain.FlagOption
 import com.codeframe78.twentyfourseven.player.domain.ProfileEditForm
@@ -13,13 +12,10 @@ import org.jsoup.nodes.Node
 import org.jsoup.nodes.TextNode
 import java.net.URI
 
-/** The reviews an album page shows, and whether the signed-in member is offered the write-a-review control. */
-internal data class AlbumReviewsPage(val reviews: List<AlbumReview>, val canWrite: Boolean)
+/** The reviews an album page shows. */
+internal data class AlbumReviewsPage(val reviews: List<AlbumReview>)
 
-/** The station's write-a-review form: where it posts and the rating choices it offers. */
-internal data class ReviewForm(val actionPath: String, val ratings: List<AlbumReviewRatingOption>)
-
-/** Reads the stations' Recently Added page, an album page's reviews, the review form, and the Edit Profile form. */
+/** Reads the stations' Recently Added page, an album page's reviews, and the Edit Profile form. */
 internal class StationCatalogParser {
     /** The batches on the Recently Added page, newest first as the station lists them. */
     fun parseRecentlyAdded(html: String, origin: String): List<RecentlyAddedBatch> =
@@ -49,13 +45,10 @@ internal class StationCatalogParser {
         )
     }
 
-    /** The reviews on an album page; the page offers a write control through a link that opens the review form. */
+    /** The reviews on an album page. */
     fun parseAlbumReviews(html: String, origin: String): AlbumReviewsPage {
         val document = Jsoup.parse(html, origin)
-        return AlbumReviewsPage(
-            reviews = document.select("table.album-review-table").mapNotNull(::albumReview).take(MAX_REVIEWS),
-            canWrite = document.selectFirst("a[href*='action=newreview'], [onclick*='action=newreview']") != null,
-        )
+        return AlbumReviewsPage(reviews = document.select("table.album-review-table").mapNotNull(::albumReview).take(MAX_REVIEWS))
     }
 
     private fun albumReview(table: Element): AlbumReview? {
@@ -91,24 +84,6 @@ internal class StationCatalogParser {
             body = body,
             helpfulLabel = helpful?.text()?.trim()?.takeIf(String::isNotEmpty)?.take(MAX_LABEL_CHARACTERS),
         )
-    }
-
-    /** The write-a-review form, or null when the page has none or it would post away from the station. */
-    fun parseReviewForm(html: String, origin: String): ReviewForm? {
-        val document = Jsoup.parse(html, origin)
-        val form = document.selectFirst("form[name=reviewform]")
-            ?: document.select("form").firstOrNull { it.selectFirst("select[name=reviewrating]") != null }
-            ?: return null
-        val actionPath = stationPath(form.attr("action"), origin) ?: return null
-        val ratings = form.select("select[name=reviewrating] option").mapNotNull { option ->
-            val value = option.attr("value").trim()
-            // The leading "Select" choice has value 0 and is not a rating.
-            if (value.isEmpty() || value == "0") return@mapNotNull null
-            val label = option.text().trim().takeIf(String::isNotEmpty) ?: return@mapNotNull null
-            AlbumReviewRatingOption(value = value.take(MAX_NAME_CHARACTERS), label = label.take(MAX_LABEL_CHARACTERS))
-        }
-        if (ratings.isEmpty()) return null
-        return ReviewForm(actionPath = actionPath, ratings = ratings)
     }
 
     /**
