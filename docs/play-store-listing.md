@@ -9,11 +9,14 @@ the August screenshots with 1.0.2 captures.
 
 **App name (unchanged, 30 max):** 24Seven.FM: Internet Radio App
 
-**Short description options (80 max; owner to pick one):**
+**Short description (77/80; chosen by the owner on October 11, 2026):**
 
-- Option A (77/80): 1980s.FM, StreamingSoundtracks.com, Adagio, Death.FM, Entranced.FM live radio
-- Option B (77/80): Live internet radio: 80s hits, film soundtracks, classical, metal and trance.
-- Option C (76/80): 24Seven.FM stations in one native player: 80s, soundtracks, classical, metal
+```text
+1980s.FM, StreamingSoundtracks.com, Adagio, Death.FM, Entranced.FM live radio
+```
+
+Rejected alternatives, kept for reference: "Live internet radio: 80s hits, film soundtracks, classical, metal and
+trance." (77) and "24Seven.FM stations in one native player: 80s, soundtracks, classical, metal" (76).
 
 **Full description (2890/4000):**
 
@@ -85,7 +88,7 @@ No account identities, request messages or private content appear.
 
 **Not changed by this refresh:** category, contact details, feature graphic, icon, content rating, Data safety.
 
-**Submission note:** enter the chosen short description, the full description and the new screenshots in Play Console
+**Submission note:** enter the short description, the full description and the new screenshots in Play Console
 only together with the 1.0.3 release under managed publishing, so the store page and the installed app change on the
 same day. Listing text and graphics also go through Play review.
 
