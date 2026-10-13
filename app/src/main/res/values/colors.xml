@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="launcher_background">#160A23</color>
-    <!-- The 24seven.FM brand: the site's page background, the white mark and the official signal green. -->
+    <!-- The 24seven.FM brand: the site's page background, the white mark and the signal lavender the site adopted on October 13, 2026. -->
     <color name="splash_background">#202428</color>
     <color name="splash_mark">#FFFFFF</color>
-    <color name="splash_accent">#00C853</color>
+    <color name="splash_accent">#AD8DFF</color>
     <!-- Matches the Compose light background so the first frame does not flash. -->
     <color name="window_background">#FFF8FC</color>
 </resources>
