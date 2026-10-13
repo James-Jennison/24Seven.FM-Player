@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="launcher_background">#160A23</color>
-    <!-- The 24seven.FM brand: the site's page background, the white mark and the official signal green. -->
-    <color name="splash_background">#202428</color>
+    <!-- The launch screen: the network's antenna mark drawn in the Player's own palette. The owner kept the app's
+         colour scheme when 24seven.fm went lavender (#AD8DFF) in October 2026, so the background is the app's dark
+         purple and the signal its lavender. -->
+    <color name="splash_background">#160A23</color>
     <color name="splash_mark">#FFFFFF</color>
-    <color name="splash_accent">#00C853</color>
+    <color name="splash_accent">#C9A8FF</color>
     <!-- Matches the Compose light background so the first frame does not flash. -->
     <color name="window_background">#FFF8FC</color>
 </resources>
