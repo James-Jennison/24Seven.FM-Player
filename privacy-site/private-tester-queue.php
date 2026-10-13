@@ -1941,7 +1941,7 @@ function saveOnboarding(PDO $database, int $testerId, string $status, string $no
 function onboardingMessage(array $tester): string
 {
     return 'Hi ' . $tester['display_name'] . ",\n\n"
-        . "Welcome to the 24Seven.FM Player Google Play Closed Test. The Player is an independently developed, unofficial player for the 24Seven.FM network of internet radio stations. Your tester profile is complete, and you are ready for the next step.\n\n"
+        . "Welcome to the 24Seven.FM Player Google Play Closed Test. The Player is the official Android app of the 24seven.FM network of internet radio stations. Your tester profile is complete, and you are ready for the next step.\n\n"
         . "1. Join the Android test from the project’s Google Play testing link when your Play access is granted.\n"
         . "2. Open your tester portal at https://24sevenfmplayer.com/tester-portal.php to keep your device profile current and submit focused task reports.\n"
         . "3. Install or update 24Seven.FM Player, then complete the first-run checklist at https://24sevenfmplayer.com/product-testing/.\n"

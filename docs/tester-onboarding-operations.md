@@ -6,7 +6,7 @@ This document matures the existing tester system. It does not establish a second
 
 ## Product identity
 
-24Seven.FM Player is an independently developed, unofficial player for the 24Seven.FM network of internet radio stations. The developer may be an authorized network/station administrator, but the Player is not represented as published, owned, sponsored, or endorsed by the network or an individual station.
+24Seven.FM Player is the official Android app of the 24seven.FM internet radio network. It is developed and published by James Jennison, an early network member, with the network's approval. It is non-commercial: no ads and no paid features. The Player was described as independent and unofficial until October 13, 2026; it is not represented as published, owned, sponsored, or endorsed by the network or an individual station.
 
 ## Existing-system inventory
 
@@ -165,7 +165,7 @@ Sources: [test tracks](https://support.google.com/googleplay/android-developer/a
 
 Use this baseline for Testers Community, Betabound, or BetaFamily. Do not submit it externally without the owner’s approval.
 
-> Help test 24Seven.FM Player, an independently developed, unofficial Android player for the 24Seven.FM network of internet radio stations. Testers join one Google Play Closed Test, use their own Google account to opt in, complete a short first-use smoke test, and use the app normally for about two weeks. Feedback on playback, station switching, media controls, device compatibility, accessibility, and usability is especially useful. No station account is required for guest testing, and you must never share credentials. Apply at the tagged program link supplied for this recruitment source.
+> Help test 24Seven.FM Player, the official Android app of the 24seven.FM network of internet radio stations. Testers join one Google Play Closed Test, use their own Google account to opt in, complete a short first-use smoke test, and use the app normally for about two weeks. Feedback on playback, station switching, media controls, device compatibility, accessibility, and usability is especially useful. No station account is required for guest testing, and you must never share credentials. Apply at the tagged program link supplied for this recruitment source.
 
 For BetaFamily, request only a specific manufacturer/form factor/Android-version gap shown by the private coverage view. Do not buy testers or promise rewards without explicit owner authorization.
 
@@ -173,7 +173,7 @@ For BetaFamily, request only a specific manufacturer/form factor/Android-version
 
 - exact tested build and relevant automated validation pass;
 - public application, private portal, opt-in instructions, and feedback path work;
-- independent/unofficial disclosure and privacy notice are accurate;
+- the official-app statement and privacy notice are accurate;
 - Data Safety and Console feedback configuration are reconciled for the selected track;
 - no known blocker playback issue; all five stations have planned coverage;
 - operator preserves evidence without recording secrets or tester identities in Git.

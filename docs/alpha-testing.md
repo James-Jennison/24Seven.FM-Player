@@ -1,6 +1,6 @@
 # 24Seven.FM Player closed-testing guide
 
-24Seven.FM Player is an independently developed, unofficial player for the 24Seven.FM network of internet radio stations.
+24Seven.FM Player is the official Android app of the 24seven.FM internet radio network. It is developed and published by James Jennison, an early network member, with the network's approval. It is non-commercial: no ads and no paid features.
 
 ## Supported devices
 

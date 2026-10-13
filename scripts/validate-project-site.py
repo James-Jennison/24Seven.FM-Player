@@ -106,11 +106,13 @@ PUBLIC_GOOGLE_PLAY_PAGES = {
     "platforms/index.html",
 }
 PUBLIC_GOOGLE_PLAY_URL = "https://play.google.com/store/apps/details?id=com.codeframe78.twentyfourseven.player"
-PLAYER_RELATIONSHIP = "A non-commercial Player created by an early 24Seven.FM member. It is independently developed and not published or sponsored by 24Seven.FM or its individual stations."
+PLAYER_RELATIONSHIP = "24Seven.FM Player is the official Android app of the 24seven.FM internet radio network. It is developed and published by James Jennison, an early network member, with the network's approval. It is non-commercial: no ads and no paid features."
 STALE_PUBLIC_RELEASE_COPY = {
     "The first production release is under review by Google Play",
     "not yet available for public installation",
     "independently developed, unofficial",
+    "independently developed and not published or sponsored",
+    "not published or sponsored by 24Seven.FM",
     "Not affiliated with or endorsed by 24seven.FM or its stations",
 }
 TESTER_PROGRAM_COPY = {
