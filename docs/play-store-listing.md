@@ -7,7 +7,7 @@ October 5 it had 42 visitors, 23 install clicks (55% click-through) and 48.6% in
 the reach is the problem. The refresh puts the station names and genre words into the searchable text and replaces
 the August screenshots with 1.0.2 captures.
 
-**App name (unchanged, 30 max):** 24Seven.FM: Internet Radio App
+**App name (unchanged, 30/30):** 24Seven.FM: Internet Radio App. The description refers to the app by this store title, not by the project name 24Seven.FM Player.
 
 **Short description (77/80; chosen by the owner on October 11, 2026):**
 
@@ -18,10 +18,10 @@ the August screenshots with 1.0.2 captures.
 Rejected alternatives, kept for reference: "Live internet radio: 80s hits, film soundtracks, classical, metal and
 trance." (77) and "24Seven.FM stations in one native player: 80s, soundtracks, classical, metal" (76).
 
-**Full description (2890/4000):**
+**Full description (2915/4000):**
 
 ```text
-24Seven.FM Player is a native Android radio app for the five 24Seven.FM internet radio stations: 1980s.FM, Adagio.FM, Death.FM, Entranced.FM and StreamingSoundtracks.com. Pick a station, press Play, and keep listening while you use other apps, lock the screen, or drive.
+24Seven.FM: Internet Radio App is the native Android player for the five 24Seven.FM internet radio stations: 1980s.FM, Adagio.FM, Death.FM, Entranced.FM and StreamingSoundtracks.com. Pick a station, press Play, and keep listening while you use other apps, lock the screen, or drive.
 
 FIVE STATIONS, ONE PLAYER
 • 1980s.FM: 80s hits, synth-pop, new wave and the decade's big anthems
@@ -61,7 +61,7 @@ Layouts adapt from compact phones to large tablets and desktop windows. A persis
 PRIVATE BY DESIGN
 No ads, no analytics, no tracking SDKs, no developer-operated server. The app talks only to the station you choose. Community content is shown only after an age screen and your explicit choice, and there are report and block controls.
 
-24Seven.FM Player is an unofficial, non-commercial community client. It is not affiliated with or endorsed by 24Seven.FM or its individual stations. Feature availability depends on each station's public pages and your station account.
+24Seven.FM: Internet Radio App is an unofficial, non-commercial community client. It is not affiliated with or endorsed by 24Seven.FM or its individual stations. Feature availability depends on each station's public pages and your station account.
 ```
 
 **Screenshots (captured October 11, 2026 from the 1.0.2 release build, signed out, dark theme, on the API 35 phone
@@ -97,9 +97,11 @@ Prepared for the `24Seven.FM Player` application created in Play Console on July
 
 ## Default listing — English (United States)
 
-**App name (17/30)**
+**App name (30/30)**
 
-24Seven.FM Player
+24Seven.FM: Internet Radio App
+
+(The store title was changed from `24Seven.FM Player` to `24Seven.FM: Internet Radio App` before the 1.0.1 listing; the Play Console app record still carries the original name.)
 
 **Short description (79/80)**
 
