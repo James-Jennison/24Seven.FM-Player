@@ -20,3 +20,20 @@ ErrorDocument 404 /404.html
     Header set Cache-Control "public, max-age=0, must-revalidate, no-transform"
   </FilesMatch>
 </IfModule>
+
+# Test builds published under /downloads/ are overlaid onto the document root
+# at deployment time from the account's site-downloads directory. They are not
+# part of the reviewed artifact. Serve APKs as attachments with the Android
+# package type, never cache them at the edge, and keep them out of indexes.
+<IfModule mod_mime.c>
+  AddType application/vnd.android.package-archive .apk
+</IfModule>
+<IfModule mod_headers.c>
+  <FilesMatch "\.(apk|sha256)$">
+    Header set X-Robots-Tag "noindex, nofollow"
+    Header set Cache-Control "no-store"
+  </FilesMatch>
+  <FilesMatch "\.apk$">
+    Header set Content-Disposition "attachment"
+  </FilesMatch>
+</IfModule>
