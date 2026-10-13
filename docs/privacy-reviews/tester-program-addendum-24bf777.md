@@ -1,4 +1,4 @@
-# Tester-program privacy addendum extraction — f207a53
+# Tester-program privacy addendum extraction — 24bf777
 
 This non-public record re-pins the tester-program section after the
 relationship statement changed on October 13, 2026. It is an exact-source
@@ -7,13 +7,13 @@ retention attestation.
 
 ## Exact source
 
-- **Commit:** `f207a53d12e752ddbcfc25328a2c5ae515204e34`.
+- **Commit:** `24bf777da4d1e3ac200e3abfab7d82c5ae02d8e0`.
 - **File and range:** `PRIVACY.md`, lines 61–71, headed `Closed-test
   tester-interest form`.
 - **SHA-256 of the exact source-line bytes:**
   `162c971df4d94dba30a475c51649a0db25bfd77a99120cf76144a5463ad81b2c`.
 - **Verification command:**
-  `git show f207a53d12e752ddbcfc25328a2c5ae515204e34:PRIVACY.md | sed -n '61,71p' | sha256sum`.
+  `git show 24bf777da4d1e3ac200e3abfab7d82c5ae02d8e0:PRIVACY.md | sed -n '61,71p' | sha256sum`.
 
 ## Reviewed addendum boundaries
 

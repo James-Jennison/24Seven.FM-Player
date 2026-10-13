@@ -1,4 +1,4 @@
-# Native privacy notice review — f207a53
+# Native privacy notice review — 24bf777
 
 This non-public review records the exact privacy notice designated as the
 authority for the public privacy page after 24seven.FM made the Player its
@@ -6,18 +6,18 @@ official Android app on October 13, 2026. It does not alter station policy.
 
 ## Exact source
 
-- **Commit:** `f207a53d12e752ddbcfc25328a2c5ae515204e34` on `codex/site-official-app`
-  (for `codex/site-c2-redesign`).
+- **Commit:** `24bf777da4d1e3ac200e3abfab7d82c5ae02d8e0` on `codex/site-c2-redesign` (the squash merge of pull request #127; the
+  notice bytes are identical to the branch commit `f207a53`).
 - **File:** `PRIVACY.md`.
 - **SHA-256 of exact Git file bytes:**
   `ffa0746094fe5cf89b31a144123a73b7c2a83ba7d8bd1cfb5c7a3d25b5b16c67`.
 - **Verification command:**
-  `git show f207a53d12e752ddbcfc25328a2c5ae515204e34:PRIVACY.md | sha256sum`.
+  `git show 24bf777da4d1e3ac200e3abfab7d82c5ae02d8e0:PRIVACY.md | sha256sum`.
 - **App text it carries:** `PRIVACY.md` from the app repository's pull
   request James-Jennison/24Seven.FM-Player#126, commit
   `5713bca` ("Last updated: October 13, 2026"), plus the site-only
   "Closed-test tester-interest form" section pinned by the tester-program
-  addendum record `tester-program-addendum-f207a53.md`.
+  addendum record `tester-program-addendum-24bf777.md`.
 
 ## Reviewed boundaries
 
