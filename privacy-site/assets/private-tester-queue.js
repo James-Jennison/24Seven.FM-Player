@@ -167,7 +167,7 @@
     welcome: {
       subject: 'Welcome to the 24Seven.FM Player Google Play Closed Test',
       html: '<p>Hi {{tester_name}},</p>' +
-        '<p>Welcome to the Google Play Closed Test for 24Seven.FM Player, an independently developed, unofficial player for the 24Seven.FM network of internet radio stations. Thank you for helping validate the app before wider release.</p>' +
+        '<p>Welcome to the Google Play Closed Test for 24Seven.FM Player, the official Android app of the 24seven.FM network of internet radio stations. Thank you for helping validate the app before wider release.</p>' +
         '<p><strong>Join on Android:</strong><br><a href="https://play.google.com/store/apps/details?id=com.codeframe78.twentyfourseven.player">https://play.google.com/store/apps/details?id=com.codeframe78.twentyfourseven.player</a></p>' +
         '<p><strong>Join on the web:</strong><br><a href="https://play.google.com/apps/testing/com.codeframe78.twentyfourseven.player">https://play.google.com/apps/testing/com.codeframe78.twentyfourseven.player</a></p>' +
         '<p>Open the link while signed in to Google Play with the Google account added to the tester list. Updates will arrive through Google Play during the test.</p>' +

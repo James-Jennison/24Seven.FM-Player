@@ -1,8 +1,8 @@
 # Privacy notice for 24Seven.FM Player
 
-Last updated: October 3, 2026.
+Last updated: October 13, 2026.
 
-24Seven.FM Player is an unofficial, non-commercial native Android client for the five public 24Seven.FM radio stations. It is not affiliated with or endorsed by 24Seven.FM or its stations.
+24Seven.FM Player is the official native Android app of the 24seven.FM internet radio network. It is developed and published by James Jennison, an early network member, with the network's approval. It is non-commercial: no ads and no paid features.
 
 ## Data the app handles
 
@@ -60,7 +60,7 @@ When reporting a problem, do not include credentials, private messages, session 
 
 ## Closed-test tester-interest form
 
-The project website offers an optional closed-test tester-interest form for an independently developed, unofficial player for the 24Seven.FM network of internet radio stations. It collects the applicant's display name, Google Play account email, Android device model and version, a validated recruitment-source label, and any optional country, testing-interest, or experience details the applicant chooses to provide. The same-origin server validates the submission and applies a rate limit. A validated application creates one private, email-deduplicated, review-pending coordinator record in a server-side database outside the public website directory before the same application is sent to the project coordinator's dedicated mailbox. This private record is not a grant of Google Play access, an opt-in, installation, acceptance, or an assignment, and it is not a public record.
+The project website offers an optional closed-test tester-interest form for the official Android app of the 24seven.FM network of internet radio stations. It collects the applicant's display name, Google Play account email, Android device model and version, a validated recruitment-source label, and any optional country, testing-interest, or experience details the applicant chooses to provide. The same-origin server validates the submission and applies a rate limit. A validated application creates one private, email-deduplicated, review-pending coordinator record in a server-side database outside the public website directory before the same application is sent to the project coordinator's dedicated mailbox. This private record is not a grant of Google Play access, an opt-in, installation, acceptance, or an assignment, and it is not a public record.
 
 These details are used only to assess device coverage and manage closed-test recruitment, eligibility, assignments, and feedback. The coordinator may use the queue to send individual program messages to selected testers; other testers' addresses are not exposed to recipients. The queue records whether the server's mail transport accepted or rejected a send attempt, not whether an email reached or was read in an inbox. A tester may also self-confirm a completed Google Play opt-in and short initial smoke test, then label private task feedback by broad category. These confirmations are not installation, usage, analytics, or crash telemetry. The authenticated tester portal also provides a per-tester Onboarding Live Chat with the assigned coordinator for tester-program support. Its messages, sender role, timestamps, and read status are visible only to that tester and authorized coordinators; this is separate from any Player or station private-message feature. Participants can remove a message from their own view, and chat records follow the same 90-day tester-program retention period.
 
