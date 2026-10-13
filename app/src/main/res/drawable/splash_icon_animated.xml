@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The dot lands first, then each arc sweeps out from it like a signal going on air. -->
+<!-- The V settles first, then the signal goes on air from the dot outwards: dot, inner arc, outer arc. Everything
+     has landed by 700 ms, inside the 800 ms splash window, and the base drawable is the finished mark so a device
+     that only shows the still image (API 30 and below) gets the whole logo. -->
 <animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:drawable="@drawable/splash_icon">
+    <target android:name="v" android:animation="@animator/splash_v_scale" />
+    <target android:name="v_fill" android:animation="@animator/splash_v_alpha" />
     <target android:name="dot" android:animation="@animator/splash_dot" />
+    <target android:name="dot_fill" android:animation="@animator/splash_dot_alpha" />
     <target android:name="arc_inner" android:animation="@animator/splash_arc_inner" />
-    <target android:name="arc_middle" android:animation="@animator/splash_arc_middle" />
+    <target android:name="arc_inner_fill" android:animation="@animator/splash_arc_inner_alpha" />
     <target android:name="arc_outer" android:animation="@animator/splash_arc_outer" />
+    <target android:name="arc_outer_fill" android:animation="@animator/splash_arc_outer_alpha" />
 </animated-vector>

@@ -14,7 +14,7 @@
         <item name="colorPrimaryDark">#10131A</item>
         <item name="colorAccent">#E6E1E5</item>
     </style>
-    <!-- The launch screen: the logo's dark purple, its arcs sweeping in, and the wordmark. The system swaps to the
+    <!-- The launch screen: the 24seven.FM antenna mark on the network's dark grey, its signal going on air, and the wordmark. The system swaps to the
          app theme once the splash is dismissed. -->
     <style name="Theme.TwentyFourSevenPlayer.Starting.Base" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/splash_background</item>
