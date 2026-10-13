@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<objectAnimator xmlns:android="http://schemas.android.com/apk/res/android"
-    android:propertyName="fillAlpha"
-    android:valueFrom="0"
-    android:valueTo="1"
-    android:startOffset="240"
-    android:duration="80"
-    android:interpolator="@android:interpolator/fast_out_slow_in" />
+<!-- The dot lands with the pop, then blinks once like an on-air light after the arcs are up. Offsets in a
+     sequential set count from the end of the previous step. -->
+<set xmlns:android="http://schemas.android.com/apk/res/android" android:ordering="sequentially">
+    <objectAnimator android:propertyName="fillAlpha" android:valueFrom="0" android:valueTo="1" android:startOffset="240" android:duration="80" android:interpolator="@android:interpolator/fast_out_slow_in" />
+    <objectAnimator android:propertyName="fillAlpha" android:valueFrom="1" android:valueTo="0.3" android:startOffset="320" android:duration="90" android:interpolator="@android:interpolator/fast_out_linear_in" />
+    <objectAnimator android:propertyName="fillAlpha" android:valueFrom="0.3" android:valueTo="1" android:duration="150" android:interpolator="@android:interpolator/linear_out_slow_in" />
+</set>

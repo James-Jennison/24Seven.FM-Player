@@ -1,6 +1,16 @@
 package com.codeframe78.twentyfourseven.player
 
 import android.Manifest
+import android.animation.ValueAnimator
+import android.graphics.Color
+import android.graphics.ColorMatrix
+import android.graphics.ColorMatrixColorFilter
+import android.view.animation.PathInterpolator
+import android.widget.ImageView
+import androidx.compose.ui.graphics.toArgb
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import com.codeframe78.twentyfourseven.player.ui.theme.stationPalette
 import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -89,17 +99,44 @@ class MainActivity : AppCompatActivity() {
         // The launch screen stays until the station list and the remembered station are back, so the first frame
         // the listener sees is their station rather than an empty player.
         var stationRestored = false
+        var restoredStation: StationId? = null
         splash.setKeepOnScreenCondition { !stationRestored }
         splash.setOnExitAnimationListener { view ->
+            // The mark hands over to the station: its signal takes the station's colour while it shrinks toward the
+            // station logo in the top bar, and the launch screen fades to reveal the Player underneath.
+            val stationAccent = stationPalette(restoredStation).accent.toArgb()
             // A launch from a shortcut or a notification can show the launch screen without its icon; the
             // library then throws on iconView instead of returning null.
-            runCatching { view.iconView }.getOrNull()
-                ?.animate()
-                ?.alpha(0f)
-                ?.scaleX(1.15f)
-                ?.scaleY(1.15f)
-                ?.setDuration(SPLASH_EXIT_MILLIS)
-                ?.start()
+            val icon = runCatching { view.iconView }.getOrNull()
+            if (icon != null) {
+                val density = resources.displayMetrics.density
+                val statusBarTop = ViewCompat.getRootWindowInsets(view.view)
+                    ?.getInsets(WindowInsetsCompat.Type.statusBars())?.top ?: 0
+                val targetCenterX = SPLASH_HANDOFF_LOGO_CENTER_X_DP * density
+                val targetCenterY = statusBarTop + SPLASH_HANDOFF_LOGO_CENTER_Y_DP * density
+                val iconCenterX = icon.left + icon.width / 2f
+                val iconCenterY = icon.top + icon.height / 2f
+                (icon as? ImageView)?.let { image ->
+                    val signal = getColor(R.color.splash_accent)
+                    ValueAnimator.ofFloat(0f, 1f).apply {
+                        duration = SPLASH_EXIT_MILLIS
+                        addUpdateListener { animator ->
+                            image.colorFilter = splashSignalFilter(signal, stationAccent, animator.animatedFraction)
+                        }
+                    }.start()
+                }
+                icon.animate()
+                    .translationX(targetCenterX - iconCenterX)
+                    .translationY(targetCenterY - iconCenterY)
+                    .scaleX(SPLASH_HANDOFF_SCALE)
+                    .scaleY(SPLASH_HANDOFF_SCALE)
+                    .setInterpolator(PathInterpolator(0.4f, 0f, 0.2f, 1f))
+                    .setDuration(SPLASH_EXIT_MILLIS)
+                    .start()
+                icon.animate().alpha(0f)
+                    .setStartDelay(SPLASH_EXIT_MILLIS - SPLASH_HANDOFF_FADE_MILLIS)
+                    .setDuration(SPLASH_HANDOFF_FADE_MILLIS)
+            }
             view.view.animate()
                 .alpha(0f)
                 .setDuration(SPLASH_EXIT_MILLIS)
@@ -134,7 +171,10 @@ class MainActivity : AppCompatActivity() {
                 ),
             )
             val state = viewModel.uiState.collectAsStateWithLifecycle().value
-            if (state.selectedStation != null) stationRestored = true
+            state.selectedStation?.let { station ->
+                restoredStation = station.id
+                stationRestored = true
+            }
             // Returning to the app is a moment to learn about new private messages.
             LifecycleEventEffect(Lifecycle.Event.ON_START) { viewModel.refreshUnreadPrivateMessages() }
             val chatStationId = requestedChatStationId.collectAsStateWithLifecycle().value
@@ -488,4 +528,39 @@ private fun Intent.chatStationId(): String? =
     getStringExtra(AndroidCommunityNotificationRepository.EXTRA_CHAT_STATION_ID)
         ?.takeIf(String::isNotBlank)
 
-private const val SPLASH_EXIT_MILLIS = 220L
+private const val SPLASH_EXIT_MILLIS = 420L
+private const val SPLASH_HANDOFF_FADE_MILLIS = 160L
+
+/** The hand-off shrinks the launch mark to about the size of the station logo in the top bar. */
+private const val SPLASH_HANDOFF_SCALE = 0.33f
+
+/** Centre of the station logo in the top bar, in dp from the window's left edge and from below the status bar. */
+private const val SPLASH_HANDOFF_LOGO_CENTER_X_DP = 36f
+private const val SPLASH_HANDOFF_LOGO_CENTER_Y_DP = 32f
+
+/**
+ * A colour filter that moves the mark's signal colour toward the station accent while leaving white (the V) and
+ * neutral greys unchanged. It is the linear map M = I + (target - signal) ⊗ w with w · (1,1,1) = 0 and
+ * w · signal = 1, so white maps to white and the signal maps exactly to the blended target.
+ */
+private fun splashSignalFilter(signal: Int, stationAccent: Int, fraction: Float): ColorMatrixColorFilter {
+    val from = floatArrayOf(Color.red(signal) / 255f, Color.green(signal) / 255f, Color.blue(signal) / 255f)
+    val to = floatArrayOf(
+        Color.red(stationAccent) / 255f,
+        Color.green(stationAccent) / 255f,
+        Color.blue(stationAccent) / 255f,
+    )
+    val target = FloatArray(3) { from[it] + (to[it] - from[it]) * fraction }
+    val mean = (from[0] + from[1] + from[2]) / 3f
+    val weight = FloatArray(3) { from[it] - mean }
+    val norm = from[0] * from[0] + from[1] * from[1] + from[2] * from[2] - mean * (from[0] + from[1] + from[2])
+    val matrix = FloatArray(20)
+    for (row in 0 until 3) {
+        for (column in 0 until 3) {
+            val identity = if (row == column) 1f else 0f
+            matrix[row * 5 + column] = identity + (target[row] - from[row]) * weight[column] / norm
+        }
+    }
+    matrix[18] = 1f
+    return ColorMatrixColorFilter(ColorMatrix(matrix))
+}
