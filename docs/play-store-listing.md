@@ -61,7 +61,7 @@ Layouts adapt from compact phones to large tablets and desktop windows. A persis
 PRIVATE BY DESIGN
 No ads, no analytics, no tracking SDKs, no developer-operated server. The app talks only to the station you choose. Community content is shown only after an age screen and your explicit choice, and there are report and block controls.
 
-24Seven.FM Player is an unofficial, non-commercial community client. It is not affiliated with or endorsed by 24Seven.FM or its individual stations. Feature availability depends on each station's public pages and your station account.
+24Seven.FM Player is the official Android app of the 24seven.FM internet radio network, developed and published by James Jennison with the network's approval. It is non-commercial: no ads and no paid features. Feature availability depends on each station's public pages and your station account.
 ```
 
 **Screenshots (captured October 11, 2026 from the 1.0.2 release build, signed out, dark theme, on the API 35 phone
@@ -125,7 +125,7 @@ Device-local startup preferences can resume the last station or use a chosen sta
 
 Public listening does not require an account. The app contains no ads, analytics, tracking SDKs, or developer-operated data server.
 
-24Seven.FM Player is an unofficial, non-commercial community client. It is not affiliated with or endorsed by 24Seven.FM or its individual stations. Feature availability depends on each station's public interfaces and account eligibility rules.
+(Superseded October 13, 2026: the app is now the network's official app; see the 1.0.3 listing refresh above.) 24Seven.FM Player is an unofficial, non-commercial community client. It is not affiliated with or endorsed by 24Seven.FM or its individual stations. Feature availability depends on each station's public interfaces and account eligibility rules.
 
 ## Classification and contact proposal
 

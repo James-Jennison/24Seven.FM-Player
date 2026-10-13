@@ -158,7 +158,7 @@ internal class StationListenerActivityRemoteDataSource(
         const val REQUEST_HISTORY_PATH = "/modules.php?name=Your_Requests"
         const val PROFILE_CARD_PATH = "/modules/Your_Profile/hoverCardAJAX.php?username="
         const val PROFILE_CARD_LIMIT = 50_000
-        const val USER_AGENT = "24Seven.FM-Player/0.1 (Android; unofficial non-commercial client)"
+        const val USER_AGENT = "24Seven.FM-Player/0.1 (Android; official non-commercial client)"
         const val CONNECT_TIMEOUT_MILLIS = 15_000
         const val READ_TIMEOUT_MILLIS = 30_000
         const val PAGE_RESPONSE_LIMIT = 1_000_000

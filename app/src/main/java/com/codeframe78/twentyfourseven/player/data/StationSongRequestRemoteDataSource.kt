@@ -449,7 +449,7 @@ internal class StationSongRequestRemoteDataSource(
     private fun encode(value: String) = URLEncoder.encode(value, StandardCharsets.UTF_8.name())
 
     private companion object {
-        const val USER_AGENT = "24Seven.FM-Player/0.1 (Android; unofficial non-commercial client)"
+        const val USER_AGENT = "24Seven.FM-Player/0.1 (Android; official non-commercial client)"
         const val CONNECT_TIMEOUT_MILLIS = 15_000
         const val READ_TIMEOUT_MILLIS = 60_000
         const val MAX_RESPONSE_CHARACTERS = 1_000_000

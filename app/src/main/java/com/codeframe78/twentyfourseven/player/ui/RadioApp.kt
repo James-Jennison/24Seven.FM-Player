@@ -1692,7 +1692,7 @@ private fun AboutFooter() {
         runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull()
     }
     Text(
-        listOfNotNull("24Seven.FM Player", version).joinToString(" ") + "\nAn unofficial listener app for the 24Seven.FM stations",
+        listOfNotNull("24Seven.FM Player", version).joinToString(" ") + "\nThe official Android app of the 24seven.FM network",
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         textAlign = TextAlign.Center,
