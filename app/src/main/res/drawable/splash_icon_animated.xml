@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The V settles first, then the signal goes on air from the dot outwards: dot, inner arc, outer arc. Everything
-     has landed by 700 ms, inside the 800 ms splash window, and the base drawable is the finished mark so a device
-     that only shows the still image (API 30 and below) gets the whole logo. -->
+<!-- The V settles first, then the signal goes on air from the dot outwards: dot, inner arc, outer arc. Once the
+     arcs have landed the dot blinks like an on-air light and a thin ping rolls out past the outer arc. Everything is
+     over by 950 ms, and the base drawable is the finished mark so a device that only shows the still image (API 30
+     and below) gets the whole logo. -->
 <animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:drawable="@drawable/splash_icon">
     <target android:name="v" android:animation="@animator/splash_v_scale" />
@@ -12,4 +13,6 @@
     <target android:name="arc_inner_fill" android:animation="@animator/splash_arc_inner_alpha" />
     <target android:name="arc_outer" android:animation="@animator/splash_arc_outer" />
     <target android:name="arc_outer_fill" android:animation="@animator/splash_arc_outer_alpha" />
+    <target android:name="ping" android:animation="@animator/splash_ping_scale" />
+    <target android:name="ping_stroke" android:animation="@animator/splash_ping_alpha" />
 </animated-vector>
