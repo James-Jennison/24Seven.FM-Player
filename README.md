@@ -17,7 +17,7 @@
 </div>
 
 > [!NOTE]
-> This is an unofficial, non-commercial community project. It is not affiliated with or endorsed by 24seven.FM or its stations. The application is fully native and does not use a WebView.
+> 24Seven.FM Player is the official Android app of the 24seven.FM internet radio network. It is developed and published by James Jennison, an early network member, with the network's approval. It is non-commercial: no ads and no paid features. The application is fully native and does not use a WebView.
 
 ## At a glance
 

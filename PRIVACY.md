@@ -1,8 +1,8 @@
 # Privacy notice for 24Seven.FM Player
 
-Last updated: October 3, 2026.
+Last updated: October 13, 2026.
 
-24Seven.FM Player is an unofficial, non-commercial native Android client for the five public 24Seven.FM radio stations. It is not affiliated with or endorsed by 24Seven.FM or its stations.
+24Seven.FM Player is the official native Android app of the 24seven.FM internet radio network. It is developed and published by James Jennison, an early network member, with the network's approval. It is non-commercial: no ads and no paid features.
 
 ## Data the app handles
 

@@ -118,7 +118,7 @@ internal class HttpStationPages(
     private class FormBody(val bytes: ByteArray, val charset: Charset)
 
     private companion object {
-        const val USER_AGENT = "24Seven.FM-Player/0.1 (Android; unofficial non-commercial client)"
+        const val USER_AGENT = "24Seven.FM-Player/0.1 (Android; official non-commercial client)"
         const val CONNECT_TIMEOUT_MILLIS = 15_000
         const val READ_TIMEOUT_MILLIS = 30_000
         const val MAX_REDIRECTS = 5

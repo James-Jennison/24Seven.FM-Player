@@ -182,7 +182,7 @@ internal class StationAuthRemoteDataSource(
     private fun encode(value: String): String = URLEncoder.encode(value, StandardCharsets.UTF_8.name())
 
     private companion object {
-        const val USER_AGENT = "24Seven.FM-Player/0.1 (Android; unofficial non-commercial client)"
+        const val USER_AGENT = "24Seven.FM-Player/0.1 (Android; official non-commercial client)"
         const val SIGN_IN_PATH = "/signin.php"
         const val CONNECT_TIMEOUT_MILLIS = 15_000
         const val READ_TIMEOUT_MILLIS = 30_000

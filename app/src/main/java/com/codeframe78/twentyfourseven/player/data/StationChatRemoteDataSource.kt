@@ -117,7 +117,7 @@ internal class StationChatRemoteDataSource(
 
     private companion object {
         const val VIEW_PATH = "/modules/ClearChat/block-files/view.php?username=&sort=desc"
-        const val USER_AGENT = "24Seven.FM-Player/0.1 (Android; unofficial non-commercial client)"
+        const val USER_AGENT = "24Seven.FM-Player/0.1 (Android; official non-commercial client)"
         const val REQUEST_TIMEOUT_MILLIS = 10_000
         const val MAX_RESPONSE_CHARACTERS = 128_000
         const val MAX_MESSAGE_CHARACTERS = 255

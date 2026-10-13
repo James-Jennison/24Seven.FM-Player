@@ -173,7 +173,7 @@ internal class StationFavoriteTracksRemoteDataSource(
 
     private companion object {
         const val FAVORITES_PATH = "/modules.php?name=Favorites"
-        const val USER_AGENT = "24Seven.FM-Player/0.1 (Android; unofficial non-commercial client)"
+        const val USER_AGENT = "24Seven.FM-Player/0.1 (Android; official non-commercial client)"
         const val CONNECT_TIMEOUT_MILLIS = 15_000
         const val READ_TIMEOUT_MILLIS = 30_000
         const val DISCOVERY_LIMIT = 512_000

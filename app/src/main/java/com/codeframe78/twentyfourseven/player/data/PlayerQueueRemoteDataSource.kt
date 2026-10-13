@@ -87,7 +87,7 @@ internal class PlayerQueueRemoteDataSource(
     }
 
     private companion object {
-        const val USER_AGENT = "24Seven.FM-Player/0.1 (Android; unofficial non-commercial client)"
+        const val USER_AGENT = "24Seven.FM-Player/0.1 (Android; official non-commercial client)"
         const val REQUEST_TIMEOUT_MILLIS = 10_000
         const val MAX_RESPONSE_CHARACTERS = 512_000
         const val MAX_REDIRECTS = 5
