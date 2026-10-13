@@ -6,6 +6,9 @@ import android.graphics.Color
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.view.animation.PathInterpolator
+import android.view.View
+import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.view.ViewCompat
@@ -116,16 +119,33 @@ class MainActivity : AppCompatActivity() {
                 val targetCenterY = statusBarTop + SPLASH_HANDOFF_LOGO_CENTER_Y_DP * density
                 val iconCenterX = icon.left + icon.width / 2f
                 val iconCenterY = icon.top + icon.height / 2f
-                (icon as? ImageView)?.let { image ->
-                    val signal = getColor(R.color.splash_accent)
-                    ValueAnimator.ofFloat(0f, 1f).apply {
-                        duration = SPLASH_EXIT_MILLIS
-                        addUpdateListener { animator ->
-                            image.colorFilter = splashSignalFilter(signal, stationAccent, animator.animatedFraction)
-                        }
-                    }.start()
+                // Android 12 and later draw an animated launch icon on a SurfaceView, which cannot be tinted, so the
+                // hand-off runs on a plain ImageView of the finished mark laid exactly over the system icon.
+                val host = view.view as? ViewGroup
+                val mark: View = if (host != null) {
+                    ImageView(this).apply {
+                        setImageResource(R.drawable.splash_icon)
+                        scaleType = ImageView.ScaleType.FIT_CENTER
+                        host.addView(
+                            this,
+                            FrameLayout.LayoutParams(icon.width, icon.height).apply {
+                                leftMargin = icon.left
+                                topMargin = icon.top
+                            },
+                        )
+                        icon.visibility = View.INVISIBLE
+                        val signal = getColor(R.color.splash_accent)
+                        ValueAnimator.ofFloat(0f, 1f).apply {
+                            duration = SPLASH_EXIT_MILLIS
+                            addUpdateListener { animator ->
+                                colorFilter = splashSignalFilter(signal, stationAccent, animator.animatedFraction)
+                            }
+                        }.start()
+                    }
+                } else {
+                    icon
                 }
-                icon.animate()
+                mark.animate()
                     .translationX(targetCenterX - iconCenterX)
                     .translationY(targetCenterY - iconCenterY)
                     .scaleX(SPLASH_HANDOFF_SCALE)
@@ -133,7 +153,7 @@ class MainActivity : AppCompatActivity() {
                     .setInterpolator(PathInterpolator(0.4f, 0f, 0.2f, 1f))
                     .setDuration(SPLASH_EXIT_MILLIS)
                     .start()
-                icon.animate().alpha(0f)
+                mark.animate().alpha(0f)
                     .setStartDelay(SPLASH_EXIT_MILLIS - SPLASH_HANDOFF_FADE_MILLIS)
                     .setDuration(SPLASH_HANDOFF_FADE_MILLIS)
             }
