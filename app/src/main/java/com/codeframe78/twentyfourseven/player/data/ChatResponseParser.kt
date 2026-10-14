@@ -67,10 +67,19 @@ internal class ChatResponseParser {
             resolved.scheme != "https" ||
             !resolved.host.equals(base.host, ignoreCase = true) ||
             resolved.port != base.port ||
-            !resolved.path.startsWith(EMOTICON_PATH_PREFIX)
+            EMOTICON_PATH_PREFIXES.none { resolved.path.startsWith(it) }
         ) return null
-        return ChatMessagePart.Emoticon(alt, resolved.toString())
+        val width = declaredSize("width")
+        val height = declaredSize("height")
+        return if (width != null && height != null) {
+            ChatMessagePart.Emoticon(alt, resolved.toString(), width, height)
+        } else {
+            ChatMessagePart.Emoticon(alt, resolved.toString())
+        }
     }
+
+    private fun Element.declaredSize(attribute: String): Int? =
+        attr(attribute).trim().toIntOrNull()?.takeIf { it in 1..MAX_EMOTICON_SIZE_PX }
 
     private fun List<ChatMessagePart>.mergeTextParts(): List<ChatMessagePart> = buildList {
         this@mergeTextParts.forEach { part ->
@@ -100,7 +109,13 @@ internal class ChatResponseParser {
         const val MAX_MESSAGE_CHARACTERS = 255
         const val MAX_TIMESTAMP_CHARACTERS = 64
         const val MAX_EMOTICON_ALT_CHARACTERS = 32
-        const val EMOTICON_PATH_PREFIX = "/modules/ClearChat/common/smilies/"
+        const val MAX_EMOTICON_SIZE_PX = 256
+
+        /** The station's classic smiley set and the station-smilies module it added in October 2026. */
+        val EMOTICON_PATH_PREFIXES = listOf(
+            "/modules/ClearChat/common/smilies/",
+            "/modules/ClearChat/common/station-smilies/",
+        )
         val WHITESPACE = Regex("\\s+")
     }
 }
