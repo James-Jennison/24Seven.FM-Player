@@ -1,6 +1,12 @@
 package com.codeframe78.twentyfourseven.player
 
 import android.app.Application
+import android.os.Build
+import coil3.ImageLoader
+import coil3.PlatformContext
+import coil3.SingletonImageLoader
+import coil3.gif.AnimatedImageDecoder
+import coil3.gif.GifDecoder
 import com.codeframe78.twentyfourseven.player.data.BootstrapStationRepository
 import com.codeframe78.twentyfourseven.player.data.InMemoryNowPlayingRepository
 import com.codeframe78.twentyfourseven.player.data.PollingQueueRepository
@@ -51,8 +57,19 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 
-class RadioApplication : Application() {
+class RadioApplication : Application(), SingletonImageLoader.Factory {
     val appContainer by lazy { AppContainer(this) }
+
+    /** Station chat emoticons are animated GIFs; decode them as the station's own page plays them. */
+    override fun newImageLoader(context: PlatformContext): ImageLoader = ImageLoader.Builder(context)
+        .components {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                add(AnimatedImageDecoder.Factory())
+            } else {
+                add(GifDecoder.Factory())
+            }
+        }
+        .build()
 
     override fun onCreate() {
         super.onCreate()

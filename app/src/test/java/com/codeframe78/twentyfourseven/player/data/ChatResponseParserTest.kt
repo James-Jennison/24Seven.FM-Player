@@ -87,6 +87,44 @@ class ChatResponseParserTest {
     }
 
     @Test
+    fun `keeps station-smilies module pictures with their declared shape`() {
+        val result = parser.parse(
+            """
+                <div class="msg-row">
+                  <span class="admiralnick" title="Posted 14 Oct 26 - 08:25:44">MorG: </span>
+                  <span class="say" title="Posted 14 Oct 26 - 08:25:44"><picture class="station-smiley station-smiley-wide" data-smiley="Moto01" data-regular="/modules/ClearChat/common/station-smilies/originals/Moto01.gif"><source media="(prefers-reduced-motion: reduce)" srcset="/modules/ClearChat/common/station-smilies/originals/Moto01.png"><img src="/modules/ClearChat/common/station-smilies/originals/Moto01.gif" alt="-Moto01-" width="72" height="32"></picture> <picture class="station-smiley"><img src="/modules/ClearChat/common/station-smilies/assets/sst/regular/heart.gif" alt="-heart-" width="20" height="20"></picture><img src="/modules/ClearChat/common/station-smilies/station/stationafm.ico" alt="-stationafm-" width="0" height="abc"></span>
+                </div>
+            """.trimIndent(),
+            "https://streamingsoundtracks.com/modules/ClearChat/block-files/view.php",
+        )
+
+        val message = result.single()
+        assertEquals("-Moto01- -heart--stationafm-", message.messageText)
+        assertEquals("14 Oct 26 - 08:25:44", message.postedAtLabel)
+        assertEquals(
+            listOf(
+                ChatMessagePart.Emoticon(
+                    "-Moto01-",
+                    "https://streamingsoundtracks.com/modules/ClearChat/common/station-smilies/originals/Moto01.gif",
+                    widthPx = 72,
+                    heightPx = 32,
+                ),
+                ChatMessagePart.Text(" "),
+                ChatMessagePart.Emoticon(
+                    "-heart-",
+                    "https://streamingsoundtracks.com/modules/ClearChat/common/station-smilies/assets/sst/regular/heart.gif",
+                ),
+                ChatMessagePart.Emoticon(
+                    "-stationafm-",
+                    "https://streamingsoundtracks.com/modules/ClearChat/common/station-smilies/station/stationafm.ico",
+                ),
+            ),
+            message.parts,
+        )
+        assertEquals(2.25f, message.parts.filterIsInstance<ChatMessagePart.Emoticon>().first().aspectRatio)
+    }
+
+    @Test
     fun `ignores unrelated markup and incomplete rows`() {
         val result = parser.parse(
             """

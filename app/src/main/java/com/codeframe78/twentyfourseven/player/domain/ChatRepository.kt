@@ -26,10 +26,22 @@ enum class ChatRole(val label: String?) {
 sealed interface ChatMessagePart {
     data class Text(val value: String) : ChatMessagePart
 
+    /**
+     * A station emoticon image. [widthPx] and [heightPx] are the sizes the station declares for it, so wide
+     * animated ones keep their shape when drawn inline; both default to the classic square smiley.
+     */
     data class Emoticon(
         val altText: String,
         val imageUrl: String,
-    ) : ChatMessagePart
+        val widthPx: Int = DEFAULT_SIZE_PX,
+        val heightPx: Int = DEFAULT_SIZE_PX,
+    ) : ChatMessagePart {
+        val aspectRatio: Float get() = widthPx.toFloat() / heightPx.toFloat()
+
+        companion object {
+            const val DEFAULT_SIZE_PX = 20
+        }
+    }
 }
 
 data class ChatState(

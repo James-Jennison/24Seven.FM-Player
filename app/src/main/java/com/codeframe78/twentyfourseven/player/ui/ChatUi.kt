@@ -62,6 +62,11 @@ internal fun chatRoleColor(role: ChatRole, onDark: Boolean): Color? = when (role
     ChatRole.Composer -> if (onDark) Color(0xFFFFFF00) else Color(0xFF6E6A00)
 }
 
+private const val CHAT_EMOTICON_HEIGHT_EM = 1.15f
+
+/** Wide station emoticons keep their declared shape up to this width, so one cannot span the row. */
+private const val CHAT_EMOTICON_MAX_WIDTH_EM = 4f
+
 /** One chat line the way an IRC client writes it: `[15:04] <Nick> message`, in a fixed-width face. */
 @Composable
 internal fun ChatLine(message: ChatMessage, ownNick: String?, modifier: Modifier = Modifier) {
@@ -72,8 +77,10 @@ internal fun ChatLine(message: ChatMessage, ownNick: String?, modifier: Modifier
         message.parts.mapIndexedNotNull { index, part ->
             if (part !is ChatMessagePart.Emoticon) return@mapIndexedNotNull null
             val id = "chat-emoticon-$index"
+            val width = (CHAT_EMOTICON_HEIGHT_EM * part.aspectRatio)
+                .coerceIn(CHAT_EMOTICON_HEIGHT_EM, CHAT_EMOTICON_MAX_WIDTH_EM)
             id to InlineTextContent(
-                placeholder = Placeholder(1.15.em, 1.15.em, PlaceholderVerticalAlign.TextCenter),
+                placeholder = Placeholder(width.em, CHAT_EMOTICON_HEIGHT_EM.em, PlaceholderVerticalAlign.TextCenter),
             ) {
                 AsyncImage(
                     model = part.imageUrl,
