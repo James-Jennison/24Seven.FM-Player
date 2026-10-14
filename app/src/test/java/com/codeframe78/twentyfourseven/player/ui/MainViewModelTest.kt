@@ -1137,6 +1137,12 @@ class MainViewModelTest {
             sentMessage = message
         }
 
+        override suspend fun loadEmoticons(stationId: StationId) {
+            emoticonsStation = stationId
+        }
+
+        var emoticonsStation: StationId? = null
+
         fun emit(chat: ChatState) {
             state(chat.stationId).value = chat
         }

@@ -44,6 +44,20 @@ sealed interface ChatMessagePart {
     }
 }
 
+/** The station's smiley catalog as its own chat picker page lists it: tabs of grouped choices. */
+data class ChatEmoticonCatalog(val tabs: List<ChatEmoticonTab>)
+
+data class ChatEmoticonTab(val id: String, val label: String, val groups: List<ChatEmoticonGroup>)
+
+data class ChatEmoticonGroup(val label: String, val choices: List<ChatEmoticonChoice>)
+
+/** One pickable entry. [code] goes into the draft; [image] is null when the code is itself the glyph (an emoji). */
+data class ChatEmoticonChoice(
+    val code: String,
+    val label: String,
+    val image: ChatMessagePart.Emoticon? = null,
+)
+
 data class ChatState(
     val stationId: StationId,
     val status: ChatLoadStatus = ChatLoadStatus.Unavailable,
@@ -51,6 +65,9 @@ data class ChatState(
     val errorMessage: String? = null,
     val isSending: Boolean = false,
     val sendErrorMessage: String? = null,
+    val emoticons: ChatEmoticonCatalog? = null,
+    val isLoadingEmoticons: Boolean = false,
+    val emoticonsErrorMessage: String? = null,
 )
 
 interface ChatRepository {
@@ -62,4 +79,7 @@ interface ChatRepository {
     suspend fun refresh(stationId: StationId)
 
     suspend fun sendMessage(stationId: StationId, message: String)
+
+    /** Loads the station's smiley catalog into the state; a no-op while a catalog is cached or loading. */
+    suspend fun loadEmoticons(stationId: StationId)
 }

@@ -78,6 +78,8 @@ class ForegroundChatMentionMonitorTest {
         }
 
         override suspend fun sendMessage(stationId: StationId, message: String) = Unit
+
+        override suspend fun loadEmoticons(stationId: StationId) = Unit
     }
 
     private class FakeAuthRepository(private val state: AuthState) : AuthRepository {

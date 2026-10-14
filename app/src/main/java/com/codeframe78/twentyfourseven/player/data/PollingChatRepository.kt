@@ -19,7 +19,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import java.nio.charset.StandardCharsets
 import java.util.concurrent.ConcurrentHashMap
 
 class PollingChatRepository internal constructor(
@@ -86,12 +85,13 @@ class PollingChatRepository internal constructor(
 
     override suspend fun sendMessage(stationId: StationId, message: String) {
         val value = message.trim()
+        val wire = value.toStationChatWire()
         val state = state(stationId)
         val validationError = when {
             value.isEmpty() -> "Enter a message."
             value.length > MAX_MESSAGE_CHARACTERS -> "Messages can be up to 255 characters."
-            !StandardCharsets.ISO_8859_1.newEncoder().canEncode(value) ->
-                "This station cannot send one or more characters in that message."
+            wire.length > MAX_MESSAGE_CHARACTERS ->
+                "This message is too long for the station: each emoji counts as several characters."
             else -> null
         }
         if (validationError != null) {
@@ -103,10 +103,10 @@ class PollingChatRepository internal constructor(
         if (state.getAndUpdate { it.copy(isSending = true, sendErrorMessage = null) }.isSending) return
         try {
             lock(stationId).withLock {
-                runCatching { remote.send(stationId, value) }
+                runCatching { remote.send(stationId, wire) }
                     .onSuccess { messages ->
                         lastAttempts[stationId] = elapsedRealtimeMillis()
-                        state.value = ChatState(stationId, ChatLoadStatus.Ready, messages)
+                        state.update { ChatState(stationId, ChatLoadStatus.Ready, messages, emoticons = it.emoticons) }
                     }
                     .onFailure {
                         state.update {
@@ -122,6 +122,23 @@ class PollingChatRepository internal constructor(
             // Reached with the flag still set only when the caller was cancelled while waiting.
             state.update { if (it.isSending) it.copy(isSending = false) else it }
         }
+    }
+
+    override suspend fun loadEmoticons(stationId: StationId) {
+        val state = state(stationId)
+        val previous = state.getAndUpdate {
+            if (it.emoticons != null || it.isLoadingEmoticons) it else it.copy(isLoadingEmoticons = true, emoticonsErrorMessage = null)
+        }
+        if (previous.emoticons != null || previous.isLoadingEmoticons) return
+        runCatching { withContext(NonCancellable) { remote.fetchEmoticons(stationId) } }
+            .onSuccess { catalog ->
+                state.update { it.copy(emoticons = catalog, isLoadingEmoticons = false, emoticonsErrorMessage = null) }
+            }
+            .onFailure {
+                state.update {
+                    it.copy(isLoadingEmoticons = false, emoticonsErrorMessage = "The station's smilies could not be loaded.")
+                }
+            }
     }
 
     private fun state(stationId: StationId): MutableStateFlow<ChatState> =

@@ -326,6 +326,7 @@ class MainActivity : AppCompatActivity() {
                         onRefreshFavorites = viewModel::refreshFavorites,
                         onRefreshListenerActivity = viewModel::refreshListenerActivity,
                         onSendChatMessage = viewModel::sendChatMessage,
+                        onLoadChatEmoticons = viewModel::loadChatEmoticons,
                         communitySafetyActions = com.codeframe78.twentyfourseven.player.ui.CommunitySafetyActions(
                             onSubmitAgeScreen = viewModel::submitCommunityAgeScreen,
                             onAcceptTerms = viewModel::acceptCommunityTerms,
