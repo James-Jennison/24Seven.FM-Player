@@ -14,4 +14,6 @@ class UnavailableChatRepository : ChatRepository {
     override suspend fun refresh(stationId: StationId) = Unit
 
     override suspend fun sendMessage(stationId: StationId, message: String) = Unit
+
+    override suspend fun loadEmoticons(stationId: StationId) = Unit
 }

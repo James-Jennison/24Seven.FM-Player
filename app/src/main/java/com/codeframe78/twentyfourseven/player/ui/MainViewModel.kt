@@ -537,6 +537,11 @@ class MainViewModel(
         chat.sendMessage(stations.observeSelectedStation().first().id, message)
     }
 
+    fun loadChatEmoticons() = viewModelScope.launch {
+        if (!communitySafety.observeSafety().first().canContributeCommunityContent) return@launch
+        chat.loadEmoticons(stations.observeSelectedStation().first().id)
+    }
+
     fun submitCommunityAgeScreen(year: Int, month: Int, day: Int) = viewModelScope.launch {
         communitySafety.submitAgeScreen(year, month, day)
     }

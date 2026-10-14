@@ -1,5 +1,6 @@
 package com.codeframe78.twentyfourseven.player.data
 
+import com.codeframe78.twentyfourseven.player.domain.ChatEmoticonCatalog
 import com.codeframe78.twentyfourseven.player.domain.ChatMessage
 import com.codeframe78.twentyfourseven.player.domain.StationId
 import com.codeframe78.twentyfourseven.player.domain.canonicalized
@@ -15,12 +16,14 @@ import java.nio.charset.StandardCharsets
 internal interface ChatRemoteDataSource {
     suspend fun fetch(stationId: StationId): List<ChatMessage>
     suspend fun send(stationId: StationId, message: String): List<ChatMessage>
+    suspend fun fetchEmoticons(stationId: StationId): ChatEmoticonCatalog
 }
 
 internal class StationChatRemoteDataSource(
     private val sessionStore: AuthSessionStore = InMemoryAuthSessionStore(),
     private val responseParser: ChatResponseParser = ChatResponseParser(),
     private val postFormParser: ChatPostFormParser = ChatPostFormParser(),
+    private val catalogParser: ChatEmoticonCatalogParser = ChatEmoticonCatalogParser(),
     private val sessions: StationAuthSessionCoordinator = StationAuthSessionCoordinator(sessionStore),
 ) : ChatRemoteDataSource {
     override suspend fun fetch(stationId: StationId): List<ChatMessage> = withContext(Dispatchers.IO) {
@@ -59,7 +62,7 @@ internal class StationChatRemoteDataSource(
             )
             if (messages.none {
                     it.authorDisplayName.equals(credentials.username, ignoreCase = true) &&
-                        it.messageText == message.toSubmittedChatVisibleText()
+                        it.confirmsSubmission(message)
                 }
             ) {
                 throw IOException("Station did not confirm the message")
@@ -67,13 +70,26 @@ internal class StationChatRemoteDataSource(
             messages
         }
 
+    override suspend fun fetchEmoticons(stationId: StationId): ChatEmoticonCatalog = withContext(Dispatchers.IO) {
+        val uri = URI(origin(stationId)).resolve(EMOTICON_CATALOG_PATH)
+        catalogParser.parse(
+            request(stationId, uri, cookieManager = null, maxCharacters = MAX_CATALOG_CHARACTERS),
+            uri.toString(),
+        )
+    }
+
     private fun authenticatedCookieManager(stationId: StationId, origin: String): CookieManager {
         return sessions.cookieManager(stationId, origin).also { manager ->
             if (manager.cookieStore.cookies.isEmpty()) throw IOException("Station sign-in is required")
         }
     }
 
-    private fun request(stationId: StationId, uri: URI, cookieManager: CookieManager?): String {
+    private fun request(
+        stationId: StationId,
+        uri: URI,
+        cookieManager: CookieManager?,
+        maxCharacters: Int = MAX_RESPONSE_CHARACTERS,
+    ): String {
         requireSameOrigin(stationId, uri)
         val connection = uri.toURL().openConnection() as HttpURLConnection
         return try {
@@ -93,7 +109,7 @@ internal class StationChatRemoteDataSource(
             if (status !in 200..299) throw IOException("Station returned HTTP $status")
             val charset = declaredCharset(connection.contentType, StandardCharsets.ISO_8859_1)
             connection.inputStream.bufferedReader(charset).use { reader ->
-                reader.readBounded(MAX_RESPONSE_CHARACTERS)
+                reader.readBounded(maxCharacters)
             }
         } finally {
             connection.disconnect()
@@ -117,6 +133,8 @@ internal class StationChatRemoteDataSource(
 
     private companion object {
         const val VIEW_PATH = "/modules/ClearChat/block-files/view.php?username=&sort=desc"
+        const val EMOTICON_CATALOG_PATH = "/modules/ClearChat/common/smilies.php"
+        const val MAX_CATALOG_CHARACTERS = 512_000
         const val USER_AGENT = "24Seven.FM-Player/0.1 (Android; official non-commercial client)"
         const val REQUEST_TIMEOUT_MILLIS = 10_000
         const val MAX_RESPONSE_CHARACTERS = 128_000
