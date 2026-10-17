@@ -133,4 +133,40 @@ class CurrentTrackArtworkParserTest {
 
         assertEquals("The Passions - The Story", details?.displayTitle)
     }
+
+    @Test
+    fun `parses the official v1 feed and keeps the artwork version query`() {
+        val response = """{"schema_version":1,"status":"playing","generated_at":"2026-10-17T18:03:52+00:00",
+            "track":{"id":"1","play_id":"2","title":"Power Play","artist":"Eddie And The Tide",
+            "album":"Lost Boys, The","started_at":"2026-10-17T18:00:53+00:00","duration_seconds":240.7},
+            "artwork_url":"https://1980s.fm/images/cover/500/B000002ILE.jpg?v=1784914957"}"""
+
+        val details = parser.parseOfficialFeed(response, "https://1980s.fm/", StationId("1980s"))
+
+        assertEquals("Eddie And The Tide - Power Play", details?.displayTitle)
+        assertEquals("Lost Boys, The", details?.album)
+        assertEquals("https://1980s.fm/images/cover/500/B000002ILE.jpg?v=1784914957", details?.artworkUrl)
+    }
+
+    @Test
+    fun `official feed reports nothing when unavailable or off-domain artwork`() {
+        val unavailable = """{"schema_version":1,"status":"unavailable","track":null}"""
+        assertNull(parser.parseOfficialFeed(unavailable, "https://1980s.fm/", StationId("1980s")))
+
+        val offDomain = """{"schema_version":1,"status":"playing","track":{"title":"A","artist":"B"},
+            "artwork_url":"https://example.com/x.jpg"}"""
+        assertNull(parser.parseOfficialFeed(offDomain, "https://1980s.fm/", StationId("1980s"))?.artworkUrl)
+    }
+
+    @Test
+    fun `registry parsing keeps valid https feeds and skips the rest`() {
+        val registry = """{"schema_version":1,"stations":[
+            {"id":"80s","now_playing_json":"https://1980s.fm/now-playing.php","extra":1},
+            {"id":"bad","now_playing_json":"http://bad.example/x"},{"id":"","now_playing_json":"https://a.b/c"}]}"""
+
+        assertEquals(
+            mapOf("80s" to "https://1980s.fm/now-playing.php"),
+            StationNowPlayingArtworkRepository.parseRegistry(registry),
+        )
+    }
 }
