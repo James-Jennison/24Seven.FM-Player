@@ -75,10 +75,10 @@ class TrustedStationNavigationTest {
     fun `artwork follows bounded same-origin redirect and rejects downgrade`() = runTest {
         val acceptedConnections = mutableListOf<FakeConnection>()
         val accepted = StationNowPlayingArtworkRepository(elapsedRealtimeMillis = { 0L }, connectionFactory = { uri ->
-            val connection = if (acceptedConnections.isEmpty()) {
-                FakeConnection(uri.toURL(), status = 307, location = "/soap/current.json")
-            } else {
-                FakeConnection(uri.toURL(), response = "{\"ASIN\":\"B00Q5M2SYS\"}")
+            val connection = when {
+                uri.path == "/now-playing.php" || uri.host == "24seven.fm" -> FakeConnection(uri.toURL(), status = 503)
+                uri.path == "/soap/FM24sevenJSON.php" -> FakeConnection(uri.toURL(), status = 307, location = "/soap/current.json")
+                else -> FakeConnection(uri.toURL(), response = "{\"ASIN\":\"B00Q5M2SYS\"}")
             }
             connection.also(acceptedConnections::add)
         })
@@ -87,7 +87,8 @@ class TrustedStationNavigationTest {
             "https://streamingsoundtracks.com/images/cover/500/B00Q5M2SYS.jpg",
             accepted.fetchArtwork(StationId("sst")),
         )
-        assertEquals(2, acceptedConnections.size)
+        // Registry and official feed fail, so the legacy endpoint and its redirect answer.
+        assertEquals(2, acceptedConnections.count { it.url.path.startsWith("/soap/") })
 
         val rejectedConnections = mutableListOf<FakeConnection>()
         val rejected = StationNowPlayingArtworkRepository(connectionFactory = { uri ->
@@ -95,7 +96,8 @@ class TrustedStationNavigationTest {
                 .also(rejectedConnections::add)
         })
         assertTrue(runCatching { rejected.fetchArtwork(StationId("sst")) }.exceptionOrNull() is IOException)
-        assertEquals(1, rejectedConnections.size)
+        // The official feed and the legacy fallback each stop at the first downgrading redirect.
+        assertEquals(2, rejectedConnections.count { it.url.host == "streamingsoundtracks.com" })
     }
 
     private class FakeConnection(

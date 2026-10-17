@@ -16,7 +16,7 @@ membership/request-activity differences remain pending.
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Live playback | Yes | Yes | Yes | Yes | Yes | Yes | No | No | PLS/ICY | No | Implemented/verified | Two ordered AAC relays per station |
 | Now-playing title | Yes | Yes | Yes | Yes | Yes | Yes | No | No | ICY | No | Implemented/verified | Composite ICY title preserved |
-| Current artwork | Yes | Yes | Yes | Yes | Yes | Yes | No | No | JSON + station image | No | Implemented/verified | Event-driven, station-hosted only |
+| Current artwork | Yes | Yes | Yes | Yes | Yes | Yes | No | No | Official v1 feed via station-feeds.json (legacy JSON fallback) + station image | No | Implemented/verified | Event-driven, station-hosted only |
 | Upcoming queue | Extended | Extended | Extended | Extended | Extended | Yes | No | No | HTML | No | Implemented/verified | 60-second shared minimum; up to 30 rows; Death.FM moved to the extended page October 2, 2026 |
 | Played history | Extended | Extended | Extended | Extended | Extended | Yes | No | No | HTML | No | Implemented/verified | Recent rows on the Queue screen; the archive opens from Browse earlier (two hours per request, up to a year back), added October 2, 2026 and unreleased |
 | Request attribution/message display | Yes | Observed structure not message-verified | Same | Attribution shown; message not verified | Same | Yes | No | No | Extended queue HTML | No | Implemented where supplied | SST message verified end to end |
