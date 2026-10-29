@@ -40,6 +40,14 @@
       "versionCodes": [
         "19"
       ]
+    },
+    "production:1.0.2 (21):21": {
+      "announcedAt": "2026-10-29T11:43:26.714Z",
+      "track": "production",
+      "releaseName": "1.0.2 (21)",
+      "versionCodes": [
+        "21"
+      ]
     }
   }
 }
