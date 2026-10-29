@@ -5,6 +5,11 @@ the authorized network-administrator response on August 11, 2026. This is a cons
 implementation worksheet, not the final owner declaration. Reconcile it with the exact signed candidate and active
 Console form immediately before submission.
 
+**1.0.3 (code 22) review, prepared October 29, 2026:** the release adds reads of `https://24seven.fm/station-feeds.json`
+and the stations' public smiley catalogue and images, and a smiley picker. None sends listener data, identifiers or
+account data off the device, and none adds collection, sharing or an SDK. No change to the declaration is expected;
+the owner confirms this against the signed candidate and the active Console form before submission.
+
 ## Scope and decision rules
 
 - Google Play defines collection as transmitting user data from the app off the device, including transmission directly
