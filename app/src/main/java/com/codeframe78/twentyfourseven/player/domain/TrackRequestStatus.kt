@@ -100,8 +100,11 @@ object TrackRequestAvailabilityResolver {
 
     private fun bothPresent(first: String?, second: String?): Boolean = comparable(first, second)
 
-    private fun sameText(first: String?, second: String?): Boolean =
-        !first.isNullOrBlank() && !second.isNullOrBlank() && normalizeText(first) == normalizeText(second)
+    private fun sameText(first: String?, second: String?): Boolean {
+        if (first.isNullOrBlank() || second.isNullOrBlank()) return false
+        val normalizedFirst = normalizeText(first)
+        return normalizedFirst.isNotEmpty() && normalizedFirst == normalizeText(second)
+    }
 
     private fun normalizeText(value: String): String = Normalizer.normalize(value, Normalizer.Form.NFKD)
         .lowercase(Locale.ROOT)

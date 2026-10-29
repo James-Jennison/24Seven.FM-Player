@@ -7,6 +7,34 @@ import org.junit.Test
 
 class TrackRequestAvailabilityResolverTest {
     @Test
+    fun `punctuation only titles do not establish a match`() {
+        assertFalse(TrackRequestAvailabilityResolver.matches(
+            RequestTrackIdentity(title = "!!!", albumId = "album"),
+            RequestTrackIdentity(title = "???", albumId = "album"),
+        ))
+        assertFalse(TrackRequestAvailabilityResolver.matches(
+            RequestTrackIdentity(title = "!!!", artist = "Artist"),
+            RequestTrackIdentity(title = "???", artist = "Artist"),
+        ))
+    }
+
+    @Test
+    fun `normalization preserves meaningful text and authoritative song identifiers`() {
+        assertTrue(TrackRequestAvailabilityResolver.matches(
+            RequestTrackIdentity(title = "Café!", artist = "Artist"),
+            RequestTrackIdentity(title = "cafe", artist = "Artist"),
+        ))
+        assertTrue(TrackRequestAvailabilityResolver.matches(
+            RequestTrackIdentity(title = "!!!", songId = "song"),
+            RequestTrackIdentity(title = "???", songId = "song"),
+        ))
+        assertFalse(TrackRequestAvailabilityResolver.matches(
+            RequestTrackIdentity(title = "Same", artist = "!!!"),
+            RequestTrackIdentity(title = "Same", artist = "???"),
+        ))
+    }
+
+    @Test
     fun `queue observations do not override station-provided requestability`() {
         val queued = readyQueue(
             upcoming = listOf(
