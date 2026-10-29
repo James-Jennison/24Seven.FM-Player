@@ -42,6 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.TextRange
@@ -322,7 +323,7 @@ private fun ChatEmoticonChoiceCell(choice: ChatEmoticonChoice, onPick: (String) 
             .aspectRatio(1f)
             .padding(2.dp)
             .clip(RoundedCornerShape(10.dp))
-            .clickable(onClickLabel = "Insert ${choice.label}") { onPick(choice.code) }
+            .clickable(onClickLabel = "Insert ${choice.label}", role = Role.Button) { onPick(choice.code) }
             .semantics { contentDescription = choice.label }
             .testTag("chat_emoticon_choice"),
         contentAlignment = Alignment.Center,

@@ -280,8 +280,8 @@ internal class NetworkStationExtrasRepository(
                 throw cancellation
             } catch (_: FavoritesAuthenticationRequiredException) {
                 ProfileEditState(ProfileEditStatus.SignInRequired)
-            } catch (_: Exception) {
-                ProfileEditState(ProfileEditStatus.Error, message = "Your profile could not be loaded right now.")
+            } catch (failure: Exception) {
+                ProfileEditState(ProfileEditStatus.Error, message = failure.profileLoadMessage())
             }
             state.update { if (it.profileEdit.status == ProfileEditStatus.Loading) it.copy(profileEdit = loaded) else it }
         }
@@ -328,6 +328,13 @@ internal class NetworkStationExtrasRepository(
             interests.trim() == other.interests.trim() && website.trim() == other.website.trim() &&
             signature.trim() == other.signature.trim() && bio.trim() == other.bio.trim() &&
             newsletter == other.newsletter && hideOnlineStatus == other.hideOnlineStatus
+
+    private fun Exception.profileLoadMessage(): String =
+        if (isStationSideFailure()) {
+            "The station's profile page is not responding. This is a problem on the station, not with your account. Try again later."
+        } else {
+            "Your profile could not be loaded right now."
+        }
 
     private fun AlbumReviewsState.isLoading(id: String) = status == AlbumReviewsStatus.Loading && albumId == id
 

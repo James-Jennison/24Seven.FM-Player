@@ -135,8 +135,14 @@ internal fun ChatMessage.confirmsSubmission(submitted: String): Boolean {
     val expected = submitted.toSubmittedChatVisibleText()
     if (messageText == expected || messageText.toSubmittedChatVisibleText() == expected) return true
     val feedWords = parts.filterIsInstance<ChatMessagePart.Text>().joinToString(" ") { it.value }.chatWords()
-    val submittedWords = submitted.decodeChatNumericEntities().replace(PHPBB_EMOTICON_CODE, " ").chatWords()
-    return feedWords == submittedWords
+    val decoded = submitted.decodeChatNumericEntities()
+    val submittedWords = decoded.replace(PHPBB_EMOTICON_CODE, " ").chatWords()
+    if (submittedWords.isNotEmpty()) return feedWords == submittedWords
+    // A message of pictures alone has no words to compare, so the same pictures must appear in the same order.
+    val codes = PHPBB_EMOTICON_CODE.findAll(decoded).map { it.groupValues[1] }.toList()
+    val pictures = parts.filterIsInstance<ChatMessagePart.Emoticon>().map { it.altText.trim('-', ' ') }
+    return codes.isNotEmpty() && feedWords.isEmpty() && pictures.size == codes.size &&
+        pictures.zip(codes).all { (picture, code) -> picture.equals(code, ignoreCase = true) }
 }
 
 private fun String.chatWords(): List<String> = split(Regex("\\s+")).filter(String::isNotEmpty)

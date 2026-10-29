@@ -77,4 +77,29 @@ class ChatEmoticonCatalogParserTest {
     fun `fails when the page holds no catalog`() {
         assertThrows(IOException::class.java) { parser.parse("<html><body><p>Sign in</p></body></html>", baseUrl) }
     }
+
+    @Test
+    fun `repeated codes, group headings and tab ids cannot produce duplicate picker keys`() {
+        val catalog = parser.parse(
+            """
+                <nav>
+                  <button data-smiley-tab="faces" aria-controls="panel-faces">Common</button>
+                  <button data-smiley-tab="faces" aria-controls="panel-faces">Again</button>
+                </nav>
+                <section id="panel-faces"><h2>Common</h2>
+                  <h3>Everyday</h3>
+                  <button data-smiley-code="a" aria-label="A"></button>
+                  <button data-smiley-code="a" aria-label="A again"></button>
+                  <h3>Everyday</h3>
+                  <button data-smiley-code="a" aria-label="A third"></button>
+                  <button data-smiley-code="b" aria-label="B"></button>
+                </section>
+            """.trimIndent(),
+            baseUrl,
+        )
+
+        assertEquals(listOf("faces"), catalog.tabs.map { it.id })
+        assertEquals(listOf("Everyday"), catalog.tabs.single().groups.map { it.label })
+        assertEquals(listOf("a", "b"), catalog.tabs.single().groups.single().choices.map { it.code })
+    }
 }

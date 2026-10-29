@@ -126,6 +126,21 @@ class ChatResponseParserTest {
     }
 
     @Test
+    fun `a picture only message is confirmed by its own pictures, not by any picture only row`() {
+        val rows = parser.parse(
+            """
+                <div class="msg-row"><span class="nick">MorG: </span><span class="say"><img src="/modules/ClearChat/common/station-smilies/originals/Moto01.gif" alt="-Moto01-" width="72" height="32"></span></div>
+            """.trimIndent(),
+            "https://streamingsoundtracks.com/modules/ClearChat/block-files/view.php",
+        )
+
+        assertTrue(rows[0].confirmsSubmission("-Moto01-"))
+        assertFalse(rows[0].confirmsSubmission("-Other-"))
+        assertFalse(rows[0].confirmsSubmission("-Moto01- -Moto01-"))
+        assertFalse(rows[0].confirmsSubmission("   "))
+    }
+
+    @Test
     fun `confirms the station's rendering of a submitted message`() {
         val rows = parser.parse(
             """

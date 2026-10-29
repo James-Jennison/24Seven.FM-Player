@@ -17,7 +17,7 @@ internal class ChatEmoticonCatalogParser {
     fun parse(html: String, baseUrl: String): ChatEmoticonCatalog {
         val document = Jsoup.parse(html, baseUrl)
         var remaining = MAX_CHOICES
-        val tabs = document.select("[data-smiley-tab]").take(MAX_TABS).mapNotNull { tab ->
+        val tabs = document.select("[data-smiley-tab]").distinctBy { it.attr("data-smiley-tab").trim() }.take(MAX_TABS).mapNotNull { tab ->
             val id = tab.attr("data-smiley-tab").trim().takeIf { TAB_ID.matches(it) } ?: return@mapNotNull null
             val label = tab.text().trim().take(MAX_LABEL_CHARACTERS).ifEmpty { id }
             val panelId = tab.attr("aria-controls").trim().ifEmpty { "panel-$id" }
@@ -46,7 +46,10 @@ internal class ChatEmoticonCatalogParser {
                 if (label.isNotEmpty()) groups += label to mutableListOf()
             }
         }
-        return groups.filter { it.second.isNotEmpty() }.map { (label, choices) -> ChatEmoticonGroup(label, choices) }
+        // The picker keys its rows by tab, group and code, so repeats from the station page must not survive.
+        return groups.filter { it.second.isNotEmpty() }
+            .groupBy({ it.first }, { it.second })
+            .map { (label, lists) -> ChatEmoticonGroup(label, lists.flatten().distinctBy { it.code }) }
     }
 
     private fun Element.choice(baseUrl: String): ChatEmoticonChoice? {
