@@ -1,5 +1,9 @@
 package com.codeframe78.twentyfourseven.player.data
 
+import com.codeframe78.twentyfourseven.player.domain.ChatEmoticonCatalog
+import com.codeframe78.twentyfourseven.player.domain.ChatEmoticonChoice
+import com.codeframe78.twentyfourseven.player.domain.ChatEmoticonGroup
+import com.codeframe78.twentyfourseven.player.domain.ChatEmoticonTab
 import com.codeframe78.twentyfourseven.player.domain.ChatLoadStatus
 import com.codeframe78.twentyfourseven.player.domain.ChatMessage
 import com.codeframe78.twentyfourseven.player.domain.StationId
@@ -116,7 +120,7 @@ class PollingChatRepositoryTest {
     }
 
     @Test
-    fun `rejects unsupported characters before transport`() = runTest {
+    fun `sends characters outside Latin-1 as numeric references`() = runTest {
         val remote = FakeRemote()
         val repository = repository(remote) { testScheduler.currentTime }
         val states = mutableListOf<com.codeframe78.twentyfourseven.player.domain.ChatState>()
@@ -125,12 +129,74 @@ class PollingChatRepositoryTest {
         }
         runCurrent()
 
-        repository.sendMessage(stationId, "Unsupported — dash")
+        repository.sendMessage(stationId, "Dash — and 💫 ok")
+        runCurrent()
+        job.cancel()
+
+        assertEquals(listOf("Dash &#8212; and &#128171; ok"), remote.sentMessages)
+        assertEquals(null, states.last().sendErrorMessage)
+    }
+
+    @Test
+    fun `rejects a message whose encoded form passes the station limit`() = runTest {
+        val remote = FakeRemote()
+        val repository = repository(remote) { testScheduler.currentTime }
+        val states = mutableListOf<com.codeframe78.twentyfourseven.player.domain.ChatState>()
+        val job = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            repository.observeChat(stationId).collect { states += it }
+        }
+        runCurrent()
+
+        repository.sendMessage(stationId, "💫".repeat(30))
         runCurrent()
         job.cancel()
 
         assertEquals(0, remote.sendCalls)
-        assertEquals("This station cannot send one or more characters in that message.", states.last().sendErrorMessage)
+        assertEquals(
+            "This message is too long for the station: each emoji counts as several characters.",
+            states.last().sendErrorMessage,
+        )
+    }
+
+    @Test
+    fun `loads the smiley catalog once and keeps it across a send`() = runTest {
+        val remote = FakeRemote()
+        val repository = repository(remote) { testScheduler.currentTime }
+        val states = mutableListOf<com.codeframe78.twentyfourseven.player.domain.ChatState>()
+        val job = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            repository.observeChat(stationId).collect { states += it }
+        }
+        runCurrent()
+
+        repository.loadEmoticons(stationId)
+        repository.loadEmoticons(stationId)
+        runCurrent()
+        assertEquals(1, remote.catalogCalls)
+        assertEquals(catalog, states.last().emoticons)
+        assertTrue(states.any { it.isLoadingEmoticons })
+
+        repository.sendMessage(stationId, "Hello")
+        runCurrent()
+        job.cancel()
+        assertEquals(catalog, states.last().emoticons)
+        assertFalse(states.last().isLoadingEmoticons)
+    }
+
+    @Test
+    fun `reports a catalog failure and allows a retry`() = runTest {
+        val remote = FakeRemote(catalogFails = true)
+        val repository = repository(remote) { testScheduler.currentTime }
+
+        repository.loadEmoticons(stationId)
+        var state = repository.observeCachedChat(stationId).first()
+        assertEquals("The station's smilies could not be loaded.", state.emoticonsErrorMessage)
+        assertFalse(state.isLoadingEmoticons)
+
+        remote.catalogFails = false
+        repository.loadEmoticons(stationId)
+        state = repository.observeCachedChat(stationId).first()
+        assertEquals(catalog, state.emoticons)
+        assertEquals(null, state.emoticonsErrorMessage)
     }
 
     @Test
@@ -162,10 +228,20 @@ class PollingChatRepositoryTest {
         elapsedRealtimeMillis = now,
     )
 
-    private class FakeRemote(private val fetchGate: CompletableDeferred<Unit>? = null) : ChatRemoteDataSource {
+    private class FakeRemote(
+        private val fetchGate: CompletableDeferred<Unit>? = null,
+        var catalogFails: Boolean = false,
+    ) : ChatRemoteDataSource {
         var fetchCalls = 0
         var sendCalls = 0
+        var catalogCalls = 0
         val sentMessages = mutableListOf<String>()
+
+        override suspend fun fetchEmoticons(stationId: StationId): ChatEmoticonCatalog {
+            catalogCalls++
+            if (catalogFails) throw java.io.IOException("offline")
+            return catalog
+        }
 
         override suspend fun fetch(stationId: StationId): List<ChatMessage> {
             fetchCalls++
@@ -182,5 +258,8 @@ class PollingChatRepositoryTest {
 
     private companion object {
         val stationId = StationId("sst")
+        val catalog = ChatEmoticonCatalog(
+            listOf(ChatEmoticonTab("faces", "Common", listOf(ChatEmoticonGroup("Everyday", listOf(ChatEmoticonChoice("-smile-", "Smile")))))),
+        )
     }
 }

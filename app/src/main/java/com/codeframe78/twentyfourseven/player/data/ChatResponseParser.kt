@@ -51,35 +51,12 @@ internal class ChatResponseParser {
             ChatMessagePart.Text(wholeText.replace(WHITESPACE, " ").decodeChatNumericEntities()),
         )
         is Element -> if (tagName() == "img") {
-            safeEmoticon(baseUrl)?.let(::listOf).orEmpty()
+            chatEmoticonImage(baseUrl)?.let(::listOf).orEmpty()
         } else {
             childNodes().flatMap { it.toChatParts(baseUrl) }
         }
         else -> emptyList()
     }
-
-    private fun Element.safeEmoticon(baseUrl: String): ChatMessagePart.Emoticon? {
-        val alt = attr("alt").trim().takeIf { it.isNotEmpty() && it.length <= MAX_EMOTICON_ALT_CHARACTERS }
-            ?: return null
-        val resolved = runCatching { URI(absUrl("src")) }.getOrNull() ?: return null
-        val base = runCatching { URI(baseUrl) }.getOrNull() ?: return null
-        if (
-            resolved.scheme != "https" ||
-            !resolved.host.equals(base.host, ignoreCase = true) ||
-            resolved.port != base.port ||
-            EMOTICON_PATH_PREFIXES.none { resolved.path.startsWith(it) }
-        ) return null
-        val width = declaredSize("width")
-        val height = declaredSize("height")
-        return if (width != null && height != null) {
-            ChatMessagePart.Emoticon(alt, resolved.toString(), width, height)
-        } else {
-            ChatMessagePart.Emoticon(alt, resolved.toString())
-        }
-    }
-
-    private fun Element.declaredSize(attribute: String): Int? =
-        attr(attribute).trim().toIntOrNull()?.takeIf { it in 1..MAX_EMOTICON_SIZE_PX }
 
     private fun List<ChatMessagePart>.mergeTextParts(): List<ChatMessagePart> = buildList {
         this@mergeTextParts.forEach { part ->
@@ -108,17 +85,83 @@ internal class ChatResponseParser {
         const val MAX_AUTHOR_CHARACTERS = 64
         const val MAX_MESSAGE_CHARACTERS = 255
         const val MAX_TIMESTAMP_CHARACTERS = 64
-        const val MAX_EMOTICON_ALT_CHARACTERS = 32
-        const val MAX_EMOTICON_SIZE_PX = 256
-
-        /** The station's classic smiley set and the station-smilies module it added in October 2026. */
-        val EMOTICON_PATH_PREFIXES = listOf(
-            "/modules/ClearChat/common/smilies/",
-            "/modules/ClearChat/common/station-smilies/",
-        )
         val WHITESPACE = Regex("\\s+")
     }
 }
+
+/**
+ * An `<img>` the station chat may show inline: same origin over HTTPS under one of its ClearChat smiley
+ * directories, with bounded alt text (or [fallbackAlt] when the station leaves alt empty, as its picker does).
+ */
+internal fun Element.chatEmoticonImage(baseUrl: String, fallbackAlt: String? = null): ChatMessagePart.Emoticon? {
+    val alt = attr("alt").trim().ifEmpty { fallbackAlt.orEmpty().trim() }
+        .takeIf { it.isNotEmpty() && it.length <= MAX_EMOTICON_ALT_CHARACTERS }
+        ?: return null
+    val resolved = runCatching { URI(absUrl("src")) }.getOrNull() ?: return null
+    val base = runCatching { URI(baseUrl) }.getOrNull() ?: return null
+    if (
+        resolved.scheme != "https" ||
+        !resolved.host.equals(base.host, ignoreCase = true) ||
+        resolved.port != base.port ||
+        EMOTICON_PATH_PREFIXES.none { resolved.path.startsWith(it) }
+    ) return null
+    val width = declaredEmoticonSize("width")
+    val height = declaredEmoticonSize("height")
+    return if (width != null && height != null) {
+        ChatMessagePart.Emoticon(alt, resolved.toString(), width, height)
+    } else {
+        ChatMessagePart.Emoticon(alt, resolved.toString())
+    }
+}
+
+private fun Element.declaredEmoticonSize(attribute: String): Int? =
+    attr(attribute).trim().toIntOrNull()?.takeIf { it in 1..MAX_EMOTICON_SIZE_PX }
+
+private const val MAX_EMOTICON_ALT_CHARACTERS = 32
+private const val MAX_EMOTICON_SIZE_PX = 256
+
+/** The station's classic smiley set and the station-smilies module it added in October 2026. */
+internal val EMOTICON_PATH_PREFIXES = listOf(
+    "/modules/ClearChat/common/smilies/",
+    "/modules/ClearChat/common/station-smilies/",
+)
+
+/**
+ * Whether this feed row is the station's rendering of [submitted]. The exact comparison covers plain text and
+ * the classic smileys, whose alt text equals what was typed. When the station replaced `-codes-` with pictures
+ * (whose alt text the module sets to the code itself) or decoded `&#...;` emoji, the words around them must match.
+ */
+internal fun ChatMessage.confirmsSubmission(submitted: String): Boolean {
+    val expected = submitted.toSubmittedChatVisibleText()
+    if (messageText == expected || messageText.toSubmittedChatVisibleText() == expected) return true
+    val feedWords = parts.filterIsInstance<ChatMessagePart.Text>().joinToString(" ") { it.value }.chatWords()
+    val decoded = submitted.decodeChatNumericEntities()
+    val submittedWords = decoded.replace(PHPBB_EMOTICON_CODE, " ").chatWords()
+    if (submittedWords.isNotEmpty()) return feedWords == submittedWords
+    // A message of pictures alone has no words to compare, so the same pictures must appear in the same order.
+    val codes = PHPBB_EMOTICON_CODE.findAll(decoded).map { it.groupValues[1] }.toList()
+    val pictures = parts.filterIsInstance<ChatMessagePart.Emoticon>().map { it.altText.trim('-', ' ') }
+    return codes.isNotEmpty() && feedWords.isEmpty() && pictures.size == codes.size &&
+        pictures.zip(codes).all { (picture, code) -> picture.equals(code, ignoreCase = true) }
+}
+
+private fun String.chatWords(): List<String> = split(Regex("\\s+")).filter(String::isNotEmpty)
+
+/**
+ * The text the station receives for [this] draft: characters outside its Latin-1 form are sent as numeric
+ * character references, which the station stores and renders as the characters themselves (its feed carries
+ * both `&#128171;` and raw emoji today).
+ */
+internal fun String.toStationChatWire(): String = buildString {
+    var index = 0
+    while (index < this@toStationChatWire.length) {
+        val codePoint = this@toStationChatWire.codePointAt(index)
+        if (codePoint <= LATIN_1_MAX) append(codePoint.toChar()) else append("&#").append(codePoint).append(';')
+        index += Character.charCount(codePoint)
+    }
+}
+
+private const val LATIN_1_MAX = 0xFF
 
 /** The text a submitted message reads back as: the parser collapses whitespace, so the comparison must too. */
 internal fun String.toSubmittedChatVisibleText(): String = replace(SUBMITTED_WHITESPACE, " ")

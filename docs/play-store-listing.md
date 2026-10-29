@@ -93,7 +93,7 @@ only together with the 1.0.3 release under managed publishing, so the store page
 same day. Listing text and graphics also go through Play review.
 
 
-Prepared for the `24Seven.FM Player` application created in Play Console on July 15, 2026. Keep the listing accurate to the artifact being submitted and do not imply official endorsement.
+Prepared for the `24Seven.FM Player` application created in Play Console on July 15, 2026. Keep the listing accurate to the artifact being submitted. The app has been the network's official app since October 13, 2026; use the exact owner-chosen statement and never reintroduce "unofficial" or "not affiliated" wording.
 
 ## Default listing — English (United States)
 

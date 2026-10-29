@@ -100,6 +100,24 @@ class TrustedStationNavigationTest {
         assertEquals(2, rejectedConnections.count { it.url.host == "streamingsoundtracks.com" })
     }
 
+    @Test
+    fun `a failed registry is not requested again on the next poll`() = runTest {
+        val connections = mutableListOf<FakeConnection>()
+        val repository = StationNowPlayingArtworkRepository(elapsedRealtimeMillis = { 0L }, connectionFactory = { uri ->
+            val connection = when {
+                uri.host == "24seven.fm" -> FakeConnection(uri.toURL(), status = 503)
+                uri.path == "/now-playing.php" -> FakeConnection(uri.toURL(), status = 503)
+                else -> FakeConnection(uri.toURL(), response = "{\"ASIN\":\"B00Q5M2SYS\"}")
+            }
+            connection.also(connections::add)
+        })
+
+        repository.fetchArtwork(StationId("sst"))
+        repository.fetchArtwork(StationId("sst"))
+
+        assertEquals(1, connections.count { it.url.host == "24seven.fm" })
+    }
+
     private class FakeConnection(
         url: URL,
         private val response: String = "",

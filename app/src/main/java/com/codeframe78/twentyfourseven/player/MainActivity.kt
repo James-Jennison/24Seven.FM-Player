@@ -1,6 +1,7 @@
 package com.codeframe78.twentyfourseven.player
 
 import android.Manifest
+import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
 import android.graphics.Color
 import android.graphics.ColorMatrix
@@ -153,9 +154,11 @@ class MainActivity : AppCompatActivity() {
                     .setInterpolator(PathInterpolator(0.4f, 0f, 0.2f, 1f))
                     .setDuration(SPLASH_EXIT_MILLIS)
                     .start()
-                mark.animate().alpha(0f)
-                    .setStartDelay(SPLASH_EXIT_MILLIS - SPLASH_HANDOFF_FADE_MILLIS)
-                    .setDuration(SPLASH_HANDOFF_FADE_MILLIS)
+                // A second animate() call returns the same animator, so the fade needs its own to keep its timing.
+                ObjectAnimator.ofFloat(mark, View.ALPHA, 1f, 0f).apply {
+                    startDelay = SPLASH_EXIT_MILLIS - SPLASH_HANDOFF_FADE_MILLIS
+                    duration = SPLASH_HANDOFF_FADE_MILLIS
+                }.start()
             }
             view.view.animate()
                 .alpha(0f)
@@ -326,6 +329,7 @@ class MainActivity : AppCompatActivity() {
                         onRefreshFavorites = viewModel::refreshFavorites,
                         onRefreshListenerActivity = viewModel::refreshListenerActivity,
                         onSendChatMessage = viewModel::sendChatMessage,
+                        onLoadChatEmoticons = viewModel::loadChatEmoticons,
                         communitySafetyActions = com.codeframe78.twentyfourseven.player.ui.CommunitySafetyActions(
                             onSubmitAgeScreen = viewModel::submitCommunityAgeScreen,
                             onAcceptTerms = viewModel::acceptCommunityTerms,

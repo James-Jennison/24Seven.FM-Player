@@ -53,6 +53,7 @@ import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Policy
 import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Mood
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Radio
 import androidx.compose.material.icons.filled.Refresh
@@ -143,6 +144,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
@@ -254,6 +256,7 @@ internal fun RadioApp(
     onRefreshListenerActivity: () -> Unit = {},
     onRefreshChat: () -> Unit = {},
     onSendChatMessage: (String) -> Unit = {},
+    onLoadChatEmoticons: () -> Unit = {},
     onRefreshAuth: (StationId) -> Unit = {},
     onSignIn: (StationId, String, String, String) -> Unit = { _, _, _, _ -> },
     onSignOut: (StationId) -> Unit = {},
@@ -295,7 +298,7 @@ internal fun RadioApp(
         LocalAlbumOpener provides albumOpener,
         LocalMessagesOpener provides messagesOpener,
     ) {
-        RadioAppContent(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, trackActions)
+        RadioAppContent(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onLoadChatEmoticons, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, trackActions)
         if (showMessages && messagesOpener != null) {
             PrivateMessagesScreen(state, privateMessageActions, communitySafetyActions) { showMessages = false }
         }
@@ -325,6 +328,7 @@ private fun RadioAppContent(
     onRefreshListenerActivity: () -> Unit,
     onRefreshChat: () -> Unit,
     onSendChatMessage: (String) -> Unit,
+    onLoadChatEmoticons: () -> Unit,
     onRefreshAuth: (StationId) -> Unit,
     onSignIn: (StationId, String, String, String) -> Unit,
     onSignOut: (StationId) -> Unit,
@@ -345,9 +349,9 @@ private fun RadioAppContent(
     var showTerms by rememberSaveable { mutableStateOf(false) }
     BoxWithConstraints(Modifier.fillMaxSize()) {
         if (usesNavigationRail(maxWidth, maxHeight)) {
-            TabletShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, trackActions = trackActions) { showTerms = true }
+            TabletShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onLoadChatEmoticons, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, trackActions = trackActions) { showTerms = true }
         } else {
-            PhoneShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, isCoverDisplay = isCoverDisplayWindow(maxWidth, maxHeight), onOpenAppGuide = onOpenAppGuide, trackActions = trackActions) { showTerms = true }
+            PhoneShell(state, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onLoadChatEmoticons, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onConfirmRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, isCoverDisplay = isCoverDisplayWindow(maxWidth, maxHeight), onOpenAppGuide = onOpenAppGuide, trackActions = trackActions) { showTerms = true }
         }
     }
     if (showTerms) {
@@ -382,6 +386,7 @@ private fun PhoneShell(
     onRefreshListenerActivity: () -> Unit,
     onRefreshChat: () -> Unit,
     onSendChatMessage: (String) -> Unit,
+    onLoadChatEmoticons: () -> Unit,
     onRefreshAuth: (StationId) -> Unit,
     onSignIn: (StationId, String, String, String) -> Unit,
     onSignOut: (StationId) -> Unit,
@@ -448,7 +453,7 @@ private fun PhoneShell(
             }
         },
     ) { padding ->
-        DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, onReviewTerms, isCoverDisplay, trackActions)
+        DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onLoadChatEmoticons, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, onReviewTerms, isCoverDisplay, trackActions)
     }
     if (state.destination != MainDestination.Favorites && state.album == null) {
         RequestResultDialog(state, onCancelRequest)
@@ -493,6 +498,7 @@ private fun TabletShell(
     onRefreshListenerActivity: () -> Unit,
     onRefreshChat: () -> Unit,
     onSendChatMessage: (String) -> Unit,
+    onLoadChatEmoticons: () -> Unit,
     onRefreshAuth: (StationId) -> Unit,
     onSignIn: (StationId, String, String, String) -> Unit,
     onSignOut: (StationId) -> Unit,
@@ -552,7 +558,7 @@ private fun TabletShell(
                 }
             },
         ) { padding ->
-            DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, onReviewTerms, trackActions = trackActions)
+            DestinationContent(state, padding, onSelectStation, onSelectDestination, onPlay, onPause, onStop, sleepTimerActions, audioOutputActions, diagnosticUi, feedbackUi, onRefreshQueue, onRefreshFavorites, onRefreshListenerActivity, onRefreshChat, onSendChatMessage, onLoadChatEmoticons, onRefreshAuth, onSignIn, onSignOut, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onPrepareFavoriteRequest, onCancelRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, onOpenAppGuide, onReviewTerms, trackActions = trackActions)
         }
         if (state.destination != MainDestination.Favorites && state.album == null) {
             RequestResultDialog(state, onCancelRequest)
@@ -631,6 +637,7 @@ private fun DestinationContent(
     onRefreshListenerActivity: () -> Unit,
     onRefreshChat: () -> Unit,
     onSendChatMessage: (String) -> Unit,
+    onLoadChatEmoticons: () -> Unit,
     onRefreshAuth: (StationId) -> Unit,
     onSignIn: (StationId, String, String, String) -> Unit,
     onSignOut: (StationId) -> Unit,
@@ -669,7 +676,7 @@ private fun DestinationContent(
             onCancelRequest = onCancelRequest,
             onOpenAccount = { onSelectDestination(MainDestination.More) },
         )
-        MainDestination.Chat -> ChatScreen(state, padding, onRefreshChat, onSendChatMessage, communitySafetyActions, onReviewTerms)
+        MainDestination.Chat -> ChatScreen(state, padding, onRefreshChat, onSendChatMessage, onLoadChatEmoticons, communitySafetyActions, onReviewTerms)
         MainDestination.Queue -> QueueScreen(state, padding, onRefreshQueue, communitySafetyActions)
         MainDestination.More -> MoreScreen(state, padding, onRefreshAuth, onSignIn, onSignOut, onRefreshListenerActivity, onSearchRequests, onSuggestRequest, onOpenRequestAlbum, onPrepareRequest, onCancelRequest, onUseLastStationAtStartup, onSetStartupStation, onOpenStationPage, communitySafetyActions, diagnosticUi, feedbackUi, onOpenAppGuide, onReviewTerms)
     }
@@ -681,6 +688,7 @@ private fun ChatScreen(
     padding: PaddingValues,
     onRefresh: () -> Unit,
     onSendMessage: (String) -> Unit,
+    onLoadEmoticons: () -> Unit,
     communitySafetyActions: CommunitySafetyActions,
     onReviewTerms: () -> Unit,
 ) {
@@ -728,7 +736,7 @@ private fun ChatScreen(
                 Text("Try again")
             }
         }
-        else -> ChatMessages(state, padding, onRefresh, onSendMessage, communitySafetyActions)
+        else -> ChatMessages(state, padding, onRefresh, onSendMessage, onLoadEmoticons, communitySafetyActions)
     }
 }
 
@@ -738,11 +746,16 @@ private fun ChatMessages(
     padding: PaddingValues,
     onRefresh: () -> Unit,
     onSendMessage: (String) -> Unit,
+    onLoadEmoticons: () -> Unit,
     communitySafetyActions: CommunitySafetyActions,
 ) {
     val chat = checkNotNull(state.chat)
-    var draft by rememberSaveable(state.selectedStation?.id?.value) { mutableStateOf("") }
+    var draft by rememberSaveable(state.selectedStation?.id?.value, stateSaver = TextFieldValue.Saver) {
+        mutableStateOf(TextFieldValue())
+    }
     var awaitingSend by remember(state.selectedStation?.id) { mutableStateOf(false) }
+    var pickerOpen by rememberSaveable(state.selectedStation?.id?.value) { mutableStateOf(false) }
+    var pickerNotice by remember { mutableStateOf<String?>(null) }
     val messageKeys = remember(chat.messages) { chatMessageKeys(chat.messages) }
     val signedIn = state.auth?.status == AuthStatus.SignedIn
     val ownNick = state.auth?.displayName?.takeIf { signedIn }
@@ -751,7 +764,7 @@ private fun ChatMessages(
             if (chat.sendErrorMessage != null) {
                 awaitingSend = false
             } else {
-                draft = ""
+                draft = TextFieldValue()
                 awaitingSend = false
             }
         }
@@ -874,25 +887,57 @@ private fun ChatMessages(
         HorizontalDivider()
         if (signedIn) {
             val send = {
-                if (draft.isNotBlank() && !chat.isSending) {
+                if (draft.text.isNotBlank() && !chat.isSending) {
                     awaitingSend = true
-                    onSendMessage(draft)
+                    onSendMessage(draft.text)
                 }
             }
-            Column(Modifier.fillMaxWidth().padding(start = 12.dp, end = 4.dp, top = 6.dp, bottom = 6.dp)) {
+            if (pickerOpen) {
+                ChatEmoticonPicker(
+                    stationName = state.selectedStation?.name,
+                    catalog = chat.emoticons,
+                    isLoading = chat.isLoadingEmoticons,
+                    errorMessage = chat.emoticonsErrorMessage,
+                    draft = draft.text,
+                    notice = pickerNotice,
+                    onRetry = onLoadEmoticons,
+                    onPick = { code ->
+                        val next = insertChatEmoticon(draft, code)
+                        if (next == null) {
+                            pickerNotice = "This smiley would pass the 255-character limit."
+                        } else {
+                            draft = next
+                            pickerNotice = null
+                        }
+                    },
+                    onDismiss = { pickerOpen = false },
+                )
+            }
+            Column(Modifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp, top = 6.dp, bottom = 6.dp)) {
                 chat.sendErrorMessage?.let { error ->
                     Text(error, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                     Spacer(Modifier.height(4.dp))
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(
+                        onClick = {
+                            pickerNotice = null
+                            onLoadEmoticons()
+                            pickerOpen = true
+                        },
+                        enabled = !chat.isSending,
+                        modifier = Modifier.testTag("chat_emoticon_button"),
+                    ) {
+                        Icon(Icons.Default.Mood, contentDescription = "Smilies")
+                    }
                     OutlinedTextField(
                         value = draft,
-                        onValueChange = { if (it.length <= 255) draft = it },
+                        onValueChange = { if (it.text.length <= 255) draft = it },
                         placeholder = { Text("Message", style = ChatLineStyle()) },
                         textStyle = ChatLineStyle(),
                         // The limit only matters once it is close.
-                        supportingText = if (draft.length >= 200) {
-                            { Text("${draft.length}/255") }
+                        supportingText = if (draft.text.length >= 200) {
+                            { Text("${draft.text.length}/255") }
                         } else {
                             null
                         },
@@ -902,7 +947,7 @@ private fun ChatMessages(
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                         keyboardActions = KeyboardActions(onSend = { send() }),
                     )
-                    IconButton(onClick = send, enabled = draft.isNotBlank() && !chat.isSending) {
+                    IconButton(onClick = send, enabled = draft.text.isNotBlank() && !chat.isSending) {
                         if (chat.isSending) {
                             CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
                         } else {

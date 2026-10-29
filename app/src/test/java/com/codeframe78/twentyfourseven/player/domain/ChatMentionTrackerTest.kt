@@ -9,6 +9,47 @@ class ChatMentionTrackerTest {
     private val stationId = StationId("sst")
 
     @Test
+    fun `embedded separators cannot alias distinct message field tuples`() {
+        val tracker = ChatMentionTracker()
+        tracker.accept(snapshot())
+        val first = ChatMessage("Listener\u0000part", "Hello MorG", "12:05")
+        val second = ChatMessage("Listener", "Hello MorG", "part\u000012:05")
+        assertEquals(1, tracker.accept(snapshot(first)).size)
+        assertEquals(1, tracker.accept(snapshot(second)).size)
+        assertTrue(tracker.accept(snapshot(first, second)).isEmpty())
+    }
+
+    @Test
+    fun `separator safe fingerprints preserve exact replay and distinct ordinary rows`() {
+        val tracker = ChatMentionTracker()
+        tracker.accept(snapshot())
+        val first = ChatMessage("Listener", "Hello MorG", "12:05")
+        val second = first.copy(postedAtLabel = "12:06")
+        assertEquals(1, tracker.accept(snapshot(first)).size)
+        assertEquals(1, tracker.accept(snapshot(first, second)).size)
+        assertTrue(tracker.accept(snapshot(first, second)).isEmpty())
+    }
+
+    @Test
+    fun `identical rows in one new snapshot emit only one mention`() {
+        val tracker = ChatMentionTracker()
+        tracker.accept(snapshot())
+        val message = ChatMessage("Listener", "Hello MorG", "12:05")
+        assertEquals(1, tracker.accept(snapshot(message, message)).size)
+        assertTrue(tracker.accept(snapshot(message, message)).isEmpty())
+    }
+
+    @Test
+    fun `duplicate suppression preserves distinct messages and retention bound`() {
+        val tracker = ChatMentionTracker(maximumRememberedMessagesPerStation = 1)
+        tracker.accept(snapshot())
+        val first = ChatMessage("Listener", "Hello MorG", "12:05")
+        val second = ChatMessage("Listener", "Hi MorG", "12:06")
+        assertEquals(2, tracker.accept(snapshot(first, first, second, second)).size)
+        assertTrue(tracker.accept(snapshot(second)).isEmpty())
+    }
+
+    @Test
     fun `exact display name matching is case insensitive and requires identity boundaries`() {
         assertTrue("Hello, MorG!".containsExactDisplayName("morg"))
         assertTrue("@MorG are you listening?".containsExactDisplayName("MorG"))

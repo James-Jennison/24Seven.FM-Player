@@ -43,6 +43,10 @@ internal interface ExtrasRemoteDataSource {
 /** The station offered no form to a page that needs one; the response was not a sign-in page either. */
 internal class StationFormUnavailableException : IOException("Station form was not offered")
 
+/** The station answered with a server error or an empty page, as opposed to the device being offline. */
+internal fun Throwable.isStationSideFailure(): Boolean =
+    (this is StationHttpException && status >= 500) || this is StationFormUnavailableException
+
 /** Reads station information with plain GET requests. Nothing here changes anything on the station. */
 internal class StationExtrasRemoteDataSource(
     private val pages: StationPages,

@@ -1,6 +1,7 @@
 package com.codeframe78.twentyfourseven.player.data
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import com.codeframe78.twentyfourseven.player.domain.ChatMessagePart
@@ -122,6 +123,45 @@ class ChatResponseParserTest {
             message.parts,
         )
         assertEquals(2.25f, message.parts.filterIsInstance<ChatMessagePart.Emoticon>().first().aspectRatio)
+    }
+
+    @Test
+    fun `a picture only message is confirmed by its own pictures, not by any picture only row`() {
+        val rows = parser.parse(
+            """
+                <div class="msg-row"><span class="nick">MorG: </span><span class="say"><img src="/modules/ClearChat/common/station-smilies/originals/Moto01.gif" alt="-Moto01-" width="72" height="32"></span></div>
+            """.trimIndent(),
+            "https://streamingsoundtracks.com/modules/ClearChat/block-files/view.php",
+        )
+
+        assertTrue(rows[0].confirmsSubmission("-Moto01-"))
+        assertFalse(rows[0].confirmsSubmission("-Other-"))
+        assertFalse(rows[0].confirmsSubmission("-Moto01- -Moto01-"))
+        assertFalse(rows[0].confirmsSubmission("   "))
+    }
+
+    @Test
+    fun `confirms the station's rendering of a submitted message`() {
+        val rows = parser.parse(
+            """
+                <div class="msg-row"><span class="nick">MorG: </span><span class="say"><picture><img src="/modules/ClearChat/common/station-smilies/originals/Moto01.gif" alt="-Moto01-" width="72" height="32"></picture> vroom <img src="/modules/ClearChat/common/station-smilies/assets/sst/regular/smile.gif" alt=":)" width="20" height="20"></span></div>
+                <div class="msg-row"><span class="nick">MorG: </span><span class="say">Dash &amp;#8212; and &amp;#128171; ok</span></div>
+                <div class="msg-row"><span class="nick">MorG: </span><span class="say">plain words</span></div>
+            """.trimIndent(),
+            "https://streamingsoundtracks.com/modules/ClearChat/block-files/view.php",
+        )
+
+        assertTrue(rows[0].confirmsSubmission("-Moto01- vroom :)"))
+        assertTrue(rows[1].confirmsSubmission("Dash &#8212; and &#128171; ok"))
+        assertTrue(rows[2].confirmsSubmission("plain words"))
+        assertFalse(rows[2].confirmsSubmission("other words"))
+        assertFalse(rows[0].confirmsSubmission("-Moto01- vroom and more"))
+    }
+
+    @Test
+    fun `encodes characters outside Latin-1 for the station`() {
+        assertEquals("Dash &#8212; and &#128171; caf\u00e9", "Dash — and 💫 café".toStationChatWire())
+        assertEquals("plain -smile-", "plain -smile-".toStationChatWire())
     }
 
     @Test

@@ -29,7 +29,7 @@ class StationNowPlayingArtworkRepository internal constructor(
         fetchNowPlaying(stationId)?.artworkUrl
 
     override suspend fun fetchNowPlaying(stationId: StationId): NowPlayingState? {
-        val official = runCatching {
+        val official = attempt {
             fetch(stationId, registryFeedUrl(stationId) ?: OFFICIAL_FEED_PATH) { json, origin, receivedAt ->
                 parser.parseOfficialFeed(json, origin, stationId, receivedAt)
             }
@@ -38,7 +38,7 @@ class StationNowPlayingArtworkRepository internal constructor(
         if (official.isFailure) return fetchLegacy(stationId)
         val state = official.getOrNull() ?: return null
         // The public feed leaves out requester and listener data; the station endpoint still supplies it.
-        val extras = runCatching { fetchLegacy(stationId) }.getOrNull()
+        val extras = attempt { fetchLegacy(stationId) }.getOrNull()
             ?.takeIf { it.track != null && it.track == state.track }
             ?: return state
         return state.copy(
@@ -61,12 +61,24 @@ class StationNowPlayingArtworkRepository internal constructor(
         val cached = registryCache
         val feeds = if (cached != null && now - cached.fetchedAt < REGISTRY_TTL_MILLIS) {
             cached.feeds
+        } else if (now - registryFailedAt < REGISTRY_RETRY_MILLIS) {
+            // A registry that just failed is not retried at once, so its timeout is not added to every poll.
+            cached?.feeds
         } else {
-            val fetched = runCatching { fetchRegistry() }.getOrNull()
-            if (fetched != null) registryCache = RegistryCache(now, fetched)
+            val fetched = attempt { fetchRegistry() }.getOrNull()
+            if (fetched != null) registryCache = RegistryCache(now, fetched) else registryFailedAt = now
             fetched ?: cached?.feeds
         }
         return feeds?.get(registryIds[stationId.canonicalized()] ?: stationId.canonicalized().value)
+    }
+
+    /** Like runCatching, but a cancelled caller stays cancelled instead of reading as a failed fetch. */
+    private inline fun <T> attempt(block: () -> T): Result<T> = try {
+        Result.success(block())
+    } catch (cancellation: kotlinx.coroutines.CancellationException) {
+        throw cancellation
+    } catch (failure: Exception) {
+        Result.failure(failure)
     }
 
     private suspend fun fetchRegistry(): Map<String, String> = withContext(Dispatchers.IO) {
@@ -132,6 +144,7 @@ class StationNowPlayingArtworkRepository internal constructor(
 
     @Volatile
     private var registryCache: RegistryCache? = null
+    private var registryFailedAt = Long.MIN_VALUE / 2
 
     internal companion object {
         /** Maps registry station id -> now_playing_json URL; ignores unknown fields and invalid entries. */
@@ -151,6 +164,7 @@ class StationNowPlayingArtworkRepository internal constructor(
 
         const val REGISTRY_URL = "https://24seven.fm/station-feeds.json"
         const val REGISTRY_TTL_MILLIS = 6 * 60 * 60 * 1000L
+        const val REGISTRY_RETRY_MILLIS = 60_000L
         val registryIds = mapOf(StationId("1980s") to "80s")
         const val OFFICIAL_FEED_PATH = "now-playing.php"
         const val LEGACY_FEED_PATH = "soap/FM24sevenJSON.php?action=GetCurrentlyPlaying"

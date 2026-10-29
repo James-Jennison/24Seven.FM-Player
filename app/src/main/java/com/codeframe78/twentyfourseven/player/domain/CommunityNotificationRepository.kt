@@ -74,7 +74,7 @@ class ChatMentionTracker(
             .toSet()
         val events = snapshot.messages.mapIndexedNotNull { index, message ->
             val fingerprint = fingerprints[index]
-            if (fingerprint in seen) return@mapIndexedNotNull null
+            if (!seen.add(fingerprint)) return@mapIndexedNotNull null
             val authoredBySignedInUser = message.authorDisplayName.normalizedCommunityIdentity() == signedInIdentity
             val authoredByBlockedUser = message.authorDisplayName.normalizedCommunityIdentity() in blockedIdentities
             if (
@@ -113,7 +113,7 @@ private fun ChatMessage.mentionFingerprint(): String =
     MessageDigest.getInstance("SHA-256")
         .digest(
             listOf(authorDisplayName, postedAtLabel.orEmpty(), messageText)
-                .joinToString(separator = "\u0000")
+                .joinToString(separator = "") { "${it.length}:$it" }
                 .toByteArray(StandardCharsets.UTF_8),
         )
         .joinToString(separator = "") { byte -> "%02x".format(byte) }

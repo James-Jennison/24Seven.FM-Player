@@ -240,6 +240,23 @@ class NetworkStationExtrasRepositoryTest {
         assertEquals(ProfileEditStatus.SignInRequired, signedOut.observeExtras(station).first().profileEdit.status)
     }
 
+    @Test
+    fun `a station error page is reported as the station's problem, not the member's`() = runTest {
+        val broken = NetworkStationExtrasRepository(FakeRemote(failure = StationHttpException(500)))
+        broken.openProfileEditor(station)
+        with(broken.observeExtras(station).first().profileEdit) {
+            assertEquals(ProfileEditStatus.Error, status)
+            assertTrue(message.orEmpty().contains("problem on the station"))
+        }
+
+        val offline = NetworkStationExtrasRepository(FakeRemote(failure = java.io.IOException("offline")))
+        offline.openProfileEditor(station)
+        assertEquals(
+            "Your profile could not be loaded right now.",
+            offline.observeExtras(station).first().profileEdit.message,
+        )
+    }
+
     private class FakeRemote(
         private val failure: Exception? = null,
         private val keepsEdits: Boolean = true,
