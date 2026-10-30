@@ -257,9 +257,21 @@ class NetworkStationExtrasRepositoryTest {
         )
     }
 
+    @Test
+    fun `a refused profile save names the station's answer`() = runTest {
+        val repository = NetworkStationExtrasRepository(FakeRemote(saveFailure = StationHttpException(403)))
+        repository.openProfileEditor(station)
+        repository.saveProfile(station, EditableProfile(realName = "Pat L."))
+        with(repository.observeExtras(station).first().profileEdit) {
+            assertEquals(ProfileEditStatus.Ready, status)
+            assertTrue(message.orEmpty().contains("HTTP 403"))
+        }
+    }
+
     private class FakeRemote(
         private val failure: Exception? = null,
         private val keepsEdits: Boolean = true,
+        private val saveFailure: Exception? = null,
     ) : ExtrasRemoteDataSource {
         val historyRequests = mutableListOf<Pair<LocalDate, Int>>()
         val memberRequests = mutableListOf<Triple<String, MemberListSort, Int>>()
@@ -304,6 +316,7 @@ class NetworkStationExtrasRepositoryTest {
 
         override suspend fun saveProfile(stationId: StationId, form: ProfileEditForm, edited: EditableProfile): ProfileEditForm {
             failure?.let { throw it }
+            saveFailure?.let { throw it }
             savedProfiles += edited
             if (keepsEdits) kept = edited
             return profileEditForm(stationId)
