@@ -40,6 +40,8 @@ data class MemberProfileState(
     val status: MemberProfileStatus = MemberProfileStatus.Closed,
     val requestedName: String = "",
     val profile: MemberProfile? = null,
+    /** The station answered with a server error or an empty page, so the fault is its own. */
+    val stationSide: Boolean = false,
 )
 
 enum class MemberFavoritesStatus { Closed, Loading, Ready, SignInRequired, Error }
@@ -49,6 +51,7 @@ data class MemberFavoritesState(
     val status: MemberFavoritesStatus = MemberFavoritesStatus.Closed,
     val memberName: String = "",
     val tracks: List<FavoriteTrack> = emptyList(),
+    val stationSide: Boolean = false,
 )
 
 /** One track from the station's played-history archive. Times are on the station's own clock. */
@@ -72,6 +75,7 @@ data class PlayedHistoryState(
     /** The first hour of the two-hour block being shown, on the station's clock. */
     val startHour: Int = 0,
     val entries: List<PlayedHistoryEntry> = emptyList(),
+    val stationSide: Boolean = false,
 )
 
 data class StationNewsStory(
@@ -88,6 +92,7 @@ enum class StationNewsStatus { Idle, Loading, Ready, Error }
 data class StationNewsState(
     val status: StationNewsStatus = StationNewsStatus.Idle,
     val stories: List<StationNewsStory> = emptyList(),
+    val stationSide: Boolean = false,
 )
 
 data class StationExtrasState(
