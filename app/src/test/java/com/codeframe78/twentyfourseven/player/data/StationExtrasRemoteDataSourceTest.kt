@@ -147,6 +147,7 @@ class StationExtrasRemoteDataSourceTest {
 
         assertEquals("GET /modules.php?name=Your_Account&op=edituser", pages.requests.first())
         assertEquals("POST /modules.php?name=Your_Account", pages.requests[1])
+        assertEquals(listOf<String?>("/modules.php?name=Your_Account&op=edituser"), pages.referers)
         val posted = pages.posted.single().toMap()
         assertEquals("Pat L.", posted["realname"])
         assertEquals("0", posted["user_allow_viewonline"])

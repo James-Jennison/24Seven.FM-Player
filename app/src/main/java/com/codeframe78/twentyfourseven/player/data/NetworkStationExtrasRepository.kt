@@ -308,9 +308,13 @@ internal class NetworkStationExtrasRepository(
                 throw cancellation
             } catch (_: FavoritesAuthenticationRequiredException) {
                 ProfileEditState(ProfileEditStatus.SignInRequired)
-            } catch (_: Exception) {
+            } catch (failure: Exception) {
                 // The post may have reached the station; the form is shown again so the member can check it.
-                current.copy(status = ProfileEditStatus.Ready, message = "Saving did not complete. Reopen Edit profile to see what the station kept.")
+                val refused = (failure as? StationHttpException)?.let { " The station answered HTTP ${it.status}." }.orEmpty()
+                current.copy(
+                    status = ProfileEditStatus.Ready,
+                    message = "Saving did not complete.$refused Reopen Edit profile to see what the station kept.",
+                )
             }
             state.update { it.copy(profileEdit = saved) }
         }
