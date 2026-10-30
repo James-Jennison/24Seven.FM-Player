@@ -1461,6 +1461,49 @@ class RadioAppTest {
     }
 
     @Test
+    fun chatOffersAnOnlineNowShortcutOnlyWhereTheStationListsMembers() {
+        var opened = 0
+        var withMembers by mutableStateOf(true)
+        composeRule.setContent {
+            MaterialTheme {
+                RadioApp(
+                    state = sampleState().copy(
+                        destination = MainDestination.Chat,
+                        selectedStation = station.copy(
+                            capabilities = StationCapabilities(
+                                supportsAuthentication = true,
+                                supportsChat = true,
+                                supportsMembersList = withMembers,
+                            ),
+                        ),
+                        auth = AuthState(station.id, AuthStatus.SignedIn, displayName = "Listener"),
+                        chat = ChatState(
+                            station.id,
+                            ChatLoadStatus.Ready,
+                            messages = listOf(ChatMessage("Other listener", "Existing message", "13 Jul 26 - 19:04:56")),
+                        ),
+                    ),
+                    onSelectStation = {},
+                    onSelectDestination = {},
+                    onPlay = {},
+                    onPause = {},
+                    onStop = {},
+                    onRefreshQueue = {},
+                    stationExtrasActions = StationExtrasActions(onOpenMembers = { opened++ }),
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag("chat_online_now").assertIsDisplayed().assertHasClickAction()
+        composeRule.onNodeWithContentDescription("Who is online now").performClick()
+        composeRule.runOnIdle { assertEquals(1, opened) }
+
+        composeRule.runOnUiThread { withMembers = false }
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("chat_online_now").assertDoesNotExist()
+    }
+
+    @Test
     fun songRequestRequiresExplicitConfirmation() {
         val prepared = mutableListOf<String>()
         val confirmedMessages = mutableListOf<String>()
