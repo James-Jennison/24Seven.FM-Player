@@ -84,6 +84,7 @@ import com.codeframe78.twentyfourseven.player.domain.FavoriteTrack
 import com.codeframe78.twentyfourseven.player.domain.MemberFavoritesStatus
 import com.codeframe78.twentyfourseven.player.domain.MemberProfile
 import com.codeframe78.twentyfourseven.player.domain.MemberProfileStatus
+import com.codeframe78.twentyfourseven.player.domain.loadFailureText
 import com.codeframe78.twentyfourseven.player.domain.PLAYED_HISTORY_ARCHIVE_DAYS
 import com.codeframe78.twentyfourseven.player.domain.PLAYED_HISTORY_BLOCK_HOURS
 import com.codeframe78.twentyfourseven.player.domain.PlayedHistoryEntry
@@ -199,7 +200,7 @@ internal fun MemberProfileDialog(state: MainUiState, actions: StationExtrasActio
                         onOpenLink = actions.onOpenLink,
                     )
                 }
-                else -> Text("This profile could not be loaded right now.", color = MaterialTheme.colorScheme.error)
+                else -> Text(loadFailureText("This profile could not be loaded right now.", "profile page", card.stationSide), color = MaterialTheme.colorScheme.error)
             }
         },
         confirmButton = { TextButton(onClick = actions.onCloseProfile) { Text("Close") } },
@@ -502,7 +503,7 @@ internal fun MemberFavoritesDialog(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center,
                     ) {
-                        Text("This list could not be loaded right now.", color = MaterialTheme.colorScheme.error)
+                        Text(loadFailureText("This list could not be loaded right now.", "favorites page", favorites.stationSide), color = MaterialTheme.colorScheme.error)
                         TextButton(onClick = actions.onOpenMemberFavorites) { Text("Try again") }
                     }
                 }
@@ -616,7 +617,7 @@ private fun PlayedHistoryList(history: PlayedHistoryState, onRetry: () -> Unit) 
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            Text("The history could not be loaded right now.", color = MaterialTheme.colorScheme.error)
+            Text(loadFailureText("The history could not be loaded right now.", "history page", history.stationSide), color = MaterialTheme.colorScheme.error)
             TextButton(onClick = onRetry) { Text("Try again") }
         }
         history.entries.isEmpty() -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -754,7 +755,7 @@ internal fun StationNewsSection(state: MainUiState, actions: StationExtrasAction
         when {
             news.stories.isEmpty() && news.status == StationNewsStatus.Error -> Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    "${station.shortName} news could not be loaded right now.",
+                    loadFailureText("${station.shortName} news could not be loaded right now.", "news page", news.stationSide),
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.weight(1f),
                 )
