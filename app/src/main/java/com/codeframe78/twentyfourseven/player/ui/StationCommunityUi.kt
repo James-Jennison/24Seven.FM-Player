@@ -390,7 +390,7 @@ private fun CalendarDayCard(day: CalendarDay, isToday: Boolean, showsMembers: Bo
     }
 }
 
-/** The members list with the Online Now block above it, opened over the More tab. */
+/** The members list with the Online Now block above it, opened over the current tab from More or the chat bar. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun MembersDialog(state: MainUiState, actions: StationExtrasActions) {

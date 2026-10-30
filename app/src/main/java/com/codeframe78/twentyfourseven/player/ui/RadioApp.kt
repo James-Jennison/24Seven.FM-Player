@@ -794,6 +794,15 @@ private fun ChatMessages(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),
             )
+            // The members screen already opens over any tab; this is a shortcut to its Online now list.
+            if (state.selectedStation?.capabilities?.supportsMembersList == true) {
+                IconButton(
+                    onClick = LocalStationExtrasActions.current.onOpenMembers,
+                    modifier = Modifier.testTag("chat_online_now"),
+                ) {
+                    Icon(Icons.Default.Groups, contentDescription = "Who is online now")
+                }
+            }
             IconButton(onClick = onRefresh) {
                 Icon(Icons.Default.Refresh, contentDescription = "Refresh chat")
             }
