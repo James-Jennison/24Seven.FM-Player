@@ -35,6 +35,12 @@
 - Build the reviewed `_site/` artifact on the GTHost build server (`gthost-build01`), never on the workstation, and record its source commit and file-hash manifest. Copy it to the web host, stage it as a sibling directory, compare file hashes using relative paths, then atomically swap the verified staging directory into place. Retain the previous live directory as the rollback point and run public HTTPS verification before reporting success.
 - Directories beside the document root are publicly served by the parent site. After verification, move the rollback into `site-rollbacks/24sevenfmplayer.com/` in the account's home directory and confirm its former address returns 404.
 
+## Ownership
+
+- The Owner is codeframe78. Claude Code is the delegated writer for Player work the Owner assigns; assignment is explicit delegation, recorded 2026-11-01. Other sessions and agents (including the Android TV project) read this repository read-only and send change requests to the Owner or the delegated writer.
+- Release, signing, Play Console, production stream settings, and other external steps stay with the Owner's approval.
+- Uncommitted edits in the Owner's working tree belong to the Owner unless a commit or task says otherwise. Do not edit, reset, or commit over them; use a separate worktree.
+
 ## Milestones
 
 Keep `docs/MILESTONE_TIME_LEDGER.md` accurate during authorized milestone work. Update roadmap, evidence, and approved Discord milestone communication only after the relevant acceptance gate is complete; never include sensitive details.
