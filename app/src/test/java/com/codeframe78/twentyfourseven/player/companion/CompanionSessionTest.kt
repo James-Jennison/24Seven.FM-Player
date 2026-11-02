@@ -3,7 +3,6 @@ package com.codeframe78.twentyfourseven.player.companion
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -91,7 +90,7 @@ class CompanionSessionTest {
         runCurrent()
         assertEquals(listOf<CompanionFrame>(CompanionFrame.Awaiting(op)), rig.sent)
         rig.handler.approval.complete(true)
-        advanceUntilIdle()
+        runCurrent()
         assertEquals(
             listOf(
                 CompanionFrame.Awaiting(op),
@@ -111,7 +110,7 @@ class CompanionSessionTest {
         rig.pairedSession(qr)
         rig.session.onFrame(propose(op))
         rig.handler.approval.complete(false)
-        advanceUntilIdle()
+        runCurrent()
         assertEquals(CompanionFrame.Declined(op), rig.sent.last())
         assertEquals(0, rig.handler.submits)
     }
@@ -123,7 +122,7 @@ class CompanionSessionTest {
         rig.pairedSession(qr)
         rig.session.onFrame(propose(op))
         rig.handler.approval.complete(true)
-        advanceUntilIdle()
+        runCurrent()
         assertEquals(CompanionFrame.Declined(op), rig.sent.last())
         assertEquals(0, rig.handler.submits)
     }
@@ -134,7 +133,7 @@ class CompanionSessionTest {
         rig.handler.resolves = false
         rig.pairedSession(qr)
         rig.session.onFrame(propose(op))
-        advanceUntilIdle()
+        runCurrent()
         assertEquals(listOf<CompanionFrame>(CompanionFrame.Declined(op)), rig.sent)
         assertTrue("approve" !in rig.handler.calls)
     }
@@ -160,7 +159,7 @@ class CompanionSessionTest {
         rig.session.onFrame(propose(op2))
         assertEquals(CompanionFrame.Declined(op2), rig.sent.last())
         rig.handler.approval.complete(true)
-        advanceUntilIdle()
+        runCurrent()
         assertEquals(1, rig.handler.submits)
     }
 
@@ -170,7 +169,7 @@ class CompanionSessionTest {
         rig.pairedSession(qr)
         rig.session.onFrame(propose(op))
         rig.handler.approval.complete(true)
-        advanceUntilIdle()
+        runCurrent()
         rig.sent.clear()
         rig.session.onFrame(propose(op))
         assertEquals(listOf<CompanionFrame>(CompanionFrame.Result(op, CompanionResultCode.Accepted)), rig.sent)
@@ -184,7 +183,7 @@ class CompanionSessionTest {
         rig.pairedSession(qr)
         rig.session.onFrame(propose(op))
         rig.handler.approval.complete(true)
-        advanceUntilIdle()
+        runCurrent()
         assertEquals(CompanionFrame.Result(op, CompanionResultCode.Refused, "Request limit reached"), rig.sent.last())
 
         val rig2 = Rig(this)
@@ -192,7 +191,7 @@ class CompanionSessionTest {
         rig2.pairedSession(qr)
         rig2.session.onFrame(propose(op))
         rig2.handler.approval.complete(true)
-        advanceUntilIdle()
+        runCurrent()
         assertEquals(CompanionFrame.Result(op, CompanionResultCode.Uncertain), rig2.sent.last())
         assertEquals(1, rig2.handler.submits)
     }
@@ -205,7 +204,7 @@ class CompanionSessionTest {
         runCurrent()
         rig.session.onStationOrAccountChanged("1980s", "James")
         rig.handler.approval.complete(true)
-        advanceUntilIdle()
+        runCurrent()
         assertEquals(CompanionState.Closed(CloseReason.StationOrAccountChanged), rig.session.state.value)
         assertEquals(0, rig.handler.submits)
         assertTrue(rig.sent.any { it is CompanionFrame.StateChanged })
@@ -234,7 +233,7 @@ class CompanionSessionTest {
         session.onStationOrAccountChanged("afm", "James")
         assertEquals(CompanionState.Submitting(op), session.state.value)
         gate.complete(Unit)
-        advanceUntilIdle()
+        runCurrent()
         assertEquals(CompanionFrame.Result(op, CompanionResultCode.Accepted), sent.last())
         assertEquals(CompanionState.Closed(CloseReason.StationOrAccountChanged), session.state.value)
     }
