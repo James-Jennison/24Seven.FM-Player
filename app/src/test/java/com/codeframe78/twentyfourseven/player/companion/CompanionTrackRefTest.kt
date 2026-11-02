@@ -7,9 +7,9 @@ import org.junit.Test
 
 class CompanionTrackRefTest {
     @Test
-    fun `a reference splits at the last colon`() {
+    fun `a reference splits at the last colon and album ids cannot contain one`() {
         assertEquals(CompanionTrackRef("B000ABC123", "4567"), CompanionTrackRef.parse("B000ABC123:4567"))
-        assertEquals(CompanionTrackRef("a:b", "9"), CompanionTrackRef.parse("a:b:9").let { it?.copy(albumId = "a:b") })
+        assertNull(CompanionTrackRef.parse("a:b:9"))
     }
 
     @Test
