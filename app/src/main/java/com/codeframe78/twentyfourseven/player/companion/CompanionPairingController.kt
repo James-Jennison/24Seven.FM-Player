@@ -96,6 +96,15 @@ class CompanionPairingController(
         }
     }
 
+    fun showMessage(text: String) {
+        mutableState.value = PairingUiState.Message(text)
+    }
+
+    /** Back to the start screen after a [PairingUiState.Message]. */
+    fun dismissMessage() {
+        if (mutableState.value is PairingUiState.Message) mutableState.value = PairingUiState.Idle
+    }
+
     fun confirmFingerprint(matches: Boolean) {
         fingerprintDecision?.complete(matches)
         fingerprintDecision = null
