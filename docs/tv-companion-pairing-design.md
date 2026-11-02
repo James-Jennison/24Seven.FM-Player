@@ -58,8 +58,8 @@ Reviewed by the TV writer session; review only, no TV code written, and TV pairi
 
 ## Open decisions for the Owner
 
-1. **Transport.** LAN discovery with a direct channel (reachable Ethernet TV and Wi-Fi phone, but guest networks and VPNs break it), or a relay (needs hosting and new privacy obligations). Recommendation: LAN only for the first version.
-2. **Phone availability.** Foreground-only first, or a background service. Recommendation: foreground-only; a sleeping phone shows a clear "open the Player on your phone" error.
+1. **Transport. Settled by the Owner 2026-11-02: LAN only.** LAN discovery with a direct channel (reachable Ethernet TV and Wi-Fi phone, but guest networks and VPNs break it), or a relay (needs hosting and new privacy obligations). Recommendation: LAN only for the first version.
+2. **Phone availability. Settled by the Owner 2026-11-02: foreground only.** Foreground-only first, or a background service. Recommendation: foreground-only; a sleeping phone shows a clear "open the Player on your phone" error.
 3. **Which stations and accounts.** Recommendation: all five stations, only the account currently signed in on the phone, each request approved on the phone.
 4. **Release.** See below.
 
