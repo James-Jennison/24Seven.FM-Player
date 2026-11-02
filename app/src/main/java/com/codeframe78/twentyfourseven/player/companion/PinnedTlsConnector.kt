@@ -1,6 +1,8 @@
 package com.codeframe78.twentyfourseven.player.companion
 
 import java.io.InputStream
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.OutputStream
 import java.net.InetSocketAddress
 import java.security.MessageDigest
@@ -35,18 +37,28 @@ class PinnedTrustManager(private val keyHashHex: String) : X509TrustManager {
     }
 }
 
+/** A frame channel to the TV; the TLS socket in production, an in-memory pair in tests. */
+interface CompanionChannel : AutoCloseable {
+    /** Suspends until the next frame; throws [java.io.IOException] or [MalformedFrameException] when the link is lost. */
+    suspend fun readFrame(): DecodedFrame
+    suspend fun writeFrame(frame: CompanionFrame)
+}
+
 /** One TLS 1.3 connection to the TV carrying length-prefixed JSON frames. */
-class CompanionConnection internal constructor(private val socket: SSLSocket) : AutoCloseable {
+class CompanionConnection internal constructor(private val socket: SSLSocket) : CompanionChannel {
     private val input: InputStream = socket.getInputStream()
     private val output: OutputStream = socket.getOutputStream()
+    private val writeLock = Any()
 
-    /** Blocking; run off the main thread. */
-    fun readFrame(): DecodedFrame = CompanionFrameCodec.decode(CompanionFrameCodec.readPayload(input))
+    override suspend fun readFrame(): DecodedFrame = withContext(Dispatchers.IO) {
+        CompanionFrameCodec.decode(CompanionFrameCodec.readPayload(input))
+    }
 
-    @Synchronized
-    fun writeFrame(frame: CompanionFrame) {
-        output.write(CompanionFrameCodec.encode(frame))
-        output.flush()
+    override suspend fun writeFrame(frame: CompanionFrame) = withContext(Dispatchers.IO) {
+        synchronized(writeLock) {
+            output.write(CompanionFrameCodec.encode(frame))
+            output.flush()
+        }
     }
 
     override fun close() {
@@ -72,7 +84,7 @@ class CapturingTrustManager : X509TrustManager {
 }
 
 /** A connection whose TV key is not yet trusted: nothing may be sent until the listener confirms [keyHashHex]. */
-class ProbedConnection internal constructor(val connection: CompanionConnection, val keyHashHex: String)
+class ProbedConnection internal constructor(val connection: CompanionChannel, val keyHashHex: String)
 
 class PinnedTlsConnector(private val timeoutMillis: Int = 5_000) {
     /** Connects to a LAN host from a parsed QR payload; never to anything else. */
