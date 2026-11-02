@@ -1701,7 +1701,7 @@ private fun MoreScreen(
                 DevicePreferencesSection(state, onUseLastStationAtStartup, onSetStartupStation, showTitle = false)
             }
             if (TvCompanionFeature.ENABLED) {
-                var showTvPairing by remember { mutableStateOf(false) }
+                var showTvPairing by rememberSaveable { mutableStateOf(false) }
                 MoreLink(
                     title = "Pair with a TV",
                     summary = "Choose songs on the 24Seven.FM TV app and request them from this phone.",

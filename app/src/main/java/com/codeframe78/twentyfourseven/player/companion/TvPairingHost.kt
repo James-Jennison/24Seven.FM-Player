@@ -1,5 +1,6 @@
 package com.codeframe78.twentyfourseven.player.companion
 
+import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,16 +18,16 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.codeframe78.twentyfourseven.player.RadioApplication
 import com.codeframe78.twentyfourseven.player.domain.AuthStatus
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 /**
  * Opens the TV pairing screen over the current one and owns its [CompanionPairingController]. Closing it, or leaving
@@ -36,7 +37,6 @@ import kotlinx.coroutines.withContext
 fun TvPairingHost(onDismiss: () -> Unit) {
     val context = LocalContext.current
     val container = (context.applicationContext as RadioApplication).appContainer
-    val scope = rememberCoroutineScope()
     val station by container.stationRepository.observeSelectedStation().collectAsState(initial = null)
     val stationId = station?.id
     val auth by remember(stationId) {
@@ -44,26 +44,19 @@ fun TvPairingHost(onDismiss: () -> Unit) {
     }.collectAsState(initial = null)
     val account = auth?.takeIf { it.status == AuthStatus.SignedIn }?.displayName?.trim().orEmpty()
 
-    val controller = remember {
-        CompanionPairingController(
-            scope = scope,
-            clockMillis = System::currentTimeMillis,
-            connect = { qr -> withContext(Dispatchers.IO) { PinnedTlsConnector().connect(qr) } },
-            probe = { host, port -> withContext(Dispatchers.IO) { PinnedTlsConnector().probe(host, port) } },
-            handlerFor = { approve ->
-                PlayerCompanionRequestHandler(
-                    stations = container.stationRepository,
-                    requests = container.songRequestRepository,
-                    auth = container.authRepository,
-                    queue = container.queueRepository,
-                    listenerActivity = container.listenerActivityRepository,
-                    communitySafety = container.communitySafetyRepository,
-                    approveOnPhone = approve,
-                )
-            },
-        )
+    // Held by the activity's ViewModel so rotating the phone keeps the TV connection; it is closed when the screen is
+    // closed or the Player leaves the foreground, never on a configuration change.
+    val controller = viewModel<TvPairingViewModel>(factory = TvPairingViewModel.Factory(container)).controller
+    val changingConfigurations = { (context as? Activity)?.isChangingConfigurations == true }
+    DisposableEffect(controller) {
+        onDispose { if (!changingConfigurations()) controller.close() }
     }
-    DisposableEffect(controller) { onDispose { controller.close() } }
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
+        if (!changingConfigurations()) {
+            controller.close()
+            onDismiss()
+        }
+    }
     LaunchedEffect(stationId, account) {
         if (stationId != null) controller.onStationOrAccountChanged(stationId.value, account)
     }
