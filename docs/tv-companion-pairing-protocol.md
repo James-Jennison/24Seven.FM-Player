@@ -45,6 +45,8 @@ Status: draft 2026-11-02. The Owner settled on 2026-11-02: LAN-only transport an
 
 ## Open items
 
-- How the TV obtains `trackRef` from the public Requests page and what the phone needs to re-resolve it (to specify with the TV session against the existing `SongRequestPageParser`).
+- ~~trackRef~~ **Settled 2026-11-02:** `trackRef` = `"<albumId>:<songId>"`, split at the last `:`. `albumId` is the station's `asin` value for the album and `songId` is the numeric `songID` from the track's request link, both as `SongRequestPageParser` reads them. The TV never sends request URLs. The phone loads the album page for `albumId` itself, runs `parseAlbum`, finds the track with that `songId`, and requires it to be currently eligible. It shows the listener the title, artist and album it read from the station, not the text the TV sent (the TV's text is only for the TV's own screen). Any pair that does not resolve on the paired station is answered with `declined`. No track number or other field is needed.
+- **TV requirement from the Streamer spike:** the per-pairing AndroidKeyStore key must allow `DIGEST_NONE` as well as `SHA256`, or the TLS handshake fails.
+- **Gap in the typed fallback:** the 6-digit code plus IP carries no key hash, so the phone cannot pin the TLS key from it. Proposed fix: the TV also shows a short fingerprint (the first 12 hex characters of the key hash, in groups of four) under the typed code, and the phone shows the fingerprint it received over the connection and asks the listener to confirm they match before any request is ever accepted. If the Owner prefers, typed pairing can be dropped and the QR kept as the only route.
 - Optional request messages (only SST supports them): not in v1.
 - Key storage on the TV and QR encoder dependency: TV side.
