@@ -66,9 +66,14 @@ class PlayerCompanionRequestHandler(
         val ref = CompanionTrackRef.parse(trackRef) ?: return null
         requests.openSearchResult(stationId, RequestSearchTarget.Album(ref.albumId))
         val state: SongRequestState = requests.observeRequests(stationId).first()
-        if (state.status != SongRequestLoadStatus.Ready) return null
         val track = state.tracks.firstOrNull { it.songId == ref.songId && it.albumId == ref.albumId && it.eligible }
-            ?: return null
+            .takeIf { state.status == SongRequestLoadStatus.Ready }
+        if (track == null) {
+            // The shared request state drives the Player's own request dialog; do not leave a TV-triggered failure in it.
+            requests.clear(stationId)
+            CompanionLog.d("resolve: track not available (status=${state.status})")
+            return null
+        }
         resolved = track
         return CompanionTrack(station, trackRef, track.title, track.artist.orEmpty(), track.albumTitle ?: state.albumTitle.orEmpty())
     }
