@@ -50,19 +50,41 @@ class CompanionConnection internal constructor(private val socket: SSLSocket) : 
     private val output: OutputStream = socket.getOutputStream()
     private val writeLock = Any()
 
+    private val openedAt = System.nanoTime()
+    private fun elapsedMs() = (System.nanoTime() - openedAt) / 1_000_000
+
     override suspend fun readFrame(): DecodedFrame = withContext(Dispatchers.IO) {
-        CompanionFrameCodec.decode(CompanionFrameCodec.readPayload(input))
+        try {
+            CompanionFrameCodec.decode(CompanionFrameCodec.readPayload(input)).also {
+                CompanionLog.d("read +${elapsedMs()}ms ${describe(it)}")
+            }
+        } catch (failure: Exception) {
+            CompanionLog.e("read failed +${elapsedMs()}ms closed=${socket.isClosed} ${failure.javaClass.name}: ${failure.message}", failure)
+            throw failure
+        }
     }
 
     override suspend fun writeFrame(frame: CompanionFrame) = withContext(Dispatchers.IO) {
-        synchronized(writeLock) {
-            output.write(CompanionFrameCodec.encode(frame))
-            output.flush()
+        try {
+            synchronized(writeLock) {
+                output.write(CompanionFrameCodec.encode(frame))
+                output.flush()
+            }
+            CompanionLog.d("wrote +${elapsedMs()}ms ${frame.javaClass.simpleName}")
+        } catch (failure: Exception) {
+            CompanionLog.e("write failed +${elapsedMs()}ms ${frame.javaClass.simpleName} ${failure.javaClass.name}: ${failure.message}", failure)
+            throw failure
         }
     }
 
     override fun close() {
+        CompanionLog.d("close +${elapsedMs()}ms closed=${socket.isClosed} from ${Throwable().stackTrace.drop(1).take(4).joinToString(" < ") { "${it.className.substringAfterLast('.')}.${it.methodName}" }}")
         runCatching { socket.close() }
+    }
+
+    private fun describe(decoded: DecodedFrame): String = when (decoded) {
+        is DecodedFrame.Frame -> decoded.frame.javaClass.simpleName
+        else -> decoded.toString()
     }
 }
 
@@ -99,9 +121,11 @@ class PinnedTlsConnector(private val timeoutMillis: Int = 5_000) {
             socket.connect(InetSocketAddress(qr.host.trim('[', ']'), qr.port), timeoutMillis)
             socket.startHandshake()
         } catch (failure: Exception) {
+            CompanionLog.e("connect failed ${failure.javaClass.name}: ${failure.message}", failure)
             runCatching { socket.close() }
             throw failure
         }
+        CompanionLog.d("connected ${socket.session.protocol} ${socket.session.cipherSuite}")
         return CompanionConnection(socket)
     }
 
@@ -119,9 +143,11 @@ class PinnedTlsConnector(private val timeoutMillis: Int = 5_000) {
             socket.connect(InetSocketAddress(host.trim('[', ']'), port), timeoutMillis)
             socket.startHandshake()
         } catch (failure: Exception) {
+            CompanionLog.e("probe failed ${failure.javaClass.name}: ${failure.message}", failure)
             runCatching { socket.close() }
             throw failure
         }
+        CompanionLog.d("probe handshake ok ${socket.session.protocol} ${socket.session.cipherSuite}")
         val hash = capture.keyHashHex
         if (hash == null) {
             runCatching { socket.close() }

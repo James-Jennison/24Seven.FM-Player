@@ -179,6 +179,7 @@ class CompanionSession(
     }
 
     private fun close(reason: CloseReason) {
+        CompanionLog.d("session closed: $reason")
         if (mutableState.value is CompanionState.Approving) operation?.cancel()
         mutableState.value = CompanionState.Closed(reason)
     }

@@ -61,7 +61,8 @@ class CompanionPairingController(
         launch {
             val live = try {
                 connect(qr)
-            } catch (_: Exception) {
+            } catch (failure: Exception) {
+                CompanionLog.e("pairWithQr: ${failure.javaClass.name}: ${failure.message}")
                 return@launch fail("Could not reach the TV. Check that both devices are on the same network.")
             }
             val newSession = start(live, stationId)
@@ -82,7 +83,8 @@ class CompanionPairingController(
         launch {
             val probed = try {
                 probe(host, port)
-            } catch (_: Exception) {
+            } catch (failure: Exception) {
+                CompanionLog.e("pairWithCode: ${failure.javaClass.name}: ${failure.message}")
                 return@launch fail("Could not reach the TV. Check the address and that both devices are on the same network.")
             }
             val decision = CompletableDeferred<Boolean>().also { fingerprintDecision = it }
@@ -91,6 +93,7 @@ class CompanionPairingController(
                 runCatching { probed.connection.close() }
                 return@launch fail("Pairing cancelled. The code was not sent.")
             }
+            CompanionLog.d("fingerprint confirmed, sending pair")
             val newSession = start(probed.connection, stationId)
             newSession.startTypedPairing(code, probed.keyHashHex, phoneLabel, accountLabel, stationId)
         }
@@ -188,9 +191,11 @@ class CompanionPairingController(
                     }
                 }
             }
-        } catch (_: IOException) {
+        } catch (failure: IOException) {
+            CompanionLog.e("read loop ended: ${failure.javaClass.name}: ${failure.message}")
             activeSession.onProtocolError()
-        } catch (_: MalformedFrameException) {
+        } catch (failure: MalformedFrameException) {
+            CompanionLog.e("read loop ended: malformed frame: ${failure.message}")
             activeSession.onProtocolError()
         }
     }
