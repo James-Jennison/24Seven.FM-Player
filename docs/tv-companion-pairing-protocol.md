@@ -27,6 +27,11 @@ Status: draft 2026-11-02. The Owner settled on 2026-11-02: LAN-only transport an
 | `result` | phone to TV | `op`, `code`: `accepted`, `refused`, `uncertain`; `reason` (station text for `refused`) | `uncertain` tells the listener to check the Queue. Never retried. |
 | `state_changed` | phone to TV | `station`, `account` | Phone's station or account changed; any pending `op` is invalid and the TV returns to unpaired. |
 | `revoke` | either | none | Ends the pairing; both sides discard the session and key. |
+| `session` | phone to TV | `station`, `account` (label, at most 64), `cookies` (1 to 16 of `name` (at most 128), `value` (at most 4096), `maxAge` (seconds, `-1` for a session cookie), `secure`, `path`) | Session handoff, sent only after the listener approved "Sign this TV in to <station> as <account>?" on the phone. Only cookies of the signed-in station's own origin. The whole frame must stay within the 16 KiB limit; the phone refuses to send a larger one. Values must never be logged by either side (names and counts only). |
+| `session_ok` | TV to phone | `station` | The TV stored the session. |
+| `session_refused` | TV to phone | `reason` (at most 300) | The TV did not accept it; the phone shows the reason. |
+
+Session handoff notes: protocol version stays 1 (an older peer ignores the unknown types). Decline sends nothing. The handed-over session lives on the TV after the pairing ends and the phone does not revoke it; signing out of the station on the phone does not reach the TV, and the approval text says so. The phone reads the cookies through a domain-level exporter, never from a view model or controller.
 | `ping` / `pong` | either | none | Keep-alive every 15 s while connected; two missed means disconnected. |
 
 ## Outcome rules the TV must apply
