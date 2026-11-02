@@ -60,10 +60,8 @@ fun TvPairingScreen(
             }
             is PairingUiState.HandoffOffer -> {
                 Text("Paired with ${state.tvName}.")
-                Text(
-                    "Sign this TV in to ${state.station.uppercase()} as ${state.account}?",
-                    style = MaterialTheme.typography.titleMedium,
-                )
+                Text("Sign this TV in to these accounts?", style = MaterialTheme.typography.titleMedium)
+                state.accounts.forEach { Text("${it.stationName} as ${it.account}") }
                 Text(
                     "The TV could then search and request songs by itself with your account, without asking here. It keeps " +
                         "your sign-in after this pairing ends, until you remove it on the TV. Signing out here does not sign " +

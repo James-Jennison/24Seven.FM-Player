@@ -53,7 +53,7 @@ sealed interface CompanionFrame {
         override fun toString(): String = "Session(station=$station, cookies=${cookies.map { it.name }})"
     }
     data class SessionOk(val station: String) : CompanionFrame
-    data class SessionRefused(val reason: String) : CompanionFrame
+    data class SessionRefused(val reason: String, val station: String? = null) : CompanionFrame
     data object Revoke : CompanionFrame
     data object Ping : CompanionFrame
     data object Pong : CompanionFrame
@@ -170,6 +170,7 @@ object CompanionFrameCodec {
                 )
             is CompanionFrame.SessionOk -> json.put("type", "session_ok").put("station", frame.station)
             is CompanionFrame.SessionRefused -> json.put("type", "session_refused").put("reason", frame.reason)
+                .also { json -> frame.station?.let { json.put("station", it) } }
             CompanionFrame.Revoke -> json.put("type", "revoke")
             CompanionFrame.Ping -> json.put("type", "ping")
             CompanionFrame.Pong -> json.put("type", "pong")
@@ -231,7 +232,10 @@ object CompanionFrameCodec {
             },
         )
         "session_ok" -> CompanionFrame.SessionOk(station = station(json))
-        "session_refused" -> CompanionFrame.SessionRefused(reason = text(json, "reason", MAX_REASON))
+        "session_refused" -> CompanionFrame.SessionRefused(
+            reason = text(json, "reason", MAX_REASON),
+            station = (json.opt("station") as? String)?.takeIf { STATION.matches(it) },
+        )
         "revoke" -> CompanionFrame.Revoke
         "ping" -> CompanionFrame.Ping
         "pong" -> CompanionFrame.Pong

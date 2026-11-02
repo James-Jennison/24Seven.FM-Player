@@ -74,6 +74,27 @@ class StoredStationSessionExporterTest {
     }
 
     @Test
+    fun `exportAll returns every signed-in station and skips the others`() = runBlocking {
+        val sst = station.copy(shortName = "SST")
+        val other = station.copy(id = StationId("1980s"), shortName = "1980s.FM", websiteUrl = "https://1980s.example/")
+        val two = object : StationRepository by stations {
+            override fun availableStations() = listOf(sst, other, station.copy(id = StationId("afm"), websiteUrl = "https://afm.example/"))
+        }
+        val store = object : AuthSessionStore {
+            override fun load(stationId: StationId, expectedDomain: String) =
+                if (stationId.value == "afm") emptyList() else listOf(cookie("c-${stationId.value}", -1))
+            override fun loadDisplayName(stationId: StationId) = if (stationId.value == "afm") null else "user-${stationId.value}"
+            override fun save(stationId: StationId, expectedDomain: String, cookies: List<HttpCookie>, displayName: String) = Unit
+            override fun updateCookies(stationId: StationId, expectedDomain: String, cookies: List<HttpCookie>, refreshedCookies: List<HttpCookie>) = Unit
+            override fun clear(stationId: StationId) = Unit
+        }
+        val all = StoredStationSessionExporter(store, two).exportAll()
+        assertEquals(listOf("sst", "1980s"), all.map { it.station })
+        assertEquals(listOf("SST", "1980s.FM"), all.map { it.stationName })
+        assertEquals(listOf("user-sst", "user-1980s"), all.map { it.account })
+    }
+
+    @Test
     fun `an unknown station returns nothing`() = runBlocking {
         assertNull(StoredStationSessionExporter(FakeStore("James", listOf(cookie("a", -1))), stations).export(StationId("other")))
     }

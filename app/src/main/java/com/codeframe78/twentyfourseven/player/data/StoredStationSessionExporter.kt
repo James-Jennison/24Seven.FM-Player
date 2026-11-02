@@ -33,6 +33,9 @@ internal class StoredStationSessionExporter(
             )
         }
         if (cookies.isEmpty()) return null.also { CompanionLog.d("session export: no cookies for ${stationId.value}") }
-        return ExportedStationSession(stationId.value, account, cookies)
+        return ExportedStationSession(stationId.value, account, cookies, station.shortName)
     }
+
+    override suspend fun exportAll(): List<ExportedStationSession> =
+        stations.availableStations().mapNotNull { export(it.id) }
 }

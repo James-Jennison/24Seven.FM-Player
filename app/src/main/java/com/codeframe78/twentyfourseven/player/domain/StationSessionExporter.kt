@@ -19,6 +19,8 @@ data class ExportedStationSession(
     val station: String,
     val account: String,
     val cookies: List<SessionCookie>,
+    /** Short display name of the station for the approval text. */
+    val stationName: String = station.uppercase(),
 ) {
     override fun toString(): String = "ExportedStationSession(station=$station, cookies=${cookies.map { it.name }})"
 }
@@ -29,4 +31,7 @@ data class ExportedStationSession(
  */
 interface StationSessionExporter {
     suspend fun export(stationId: StationId): ExportedStationSession?
+
+    /** Every station the listener is signed in to on this phone. */
+    suspend fun exportAll(): List<ExportedStationSession>
 }

@@ -66,8 +66,11 @@ class CompanionSessionHandoffTest {
         communityGate = { voucher?.let { CommunityGateCheck(blockedReason == null, it, blockedReason) } },
     )
 
-    private fun exporter(session: ExportedStationSession?) = object : StationSessionExporter {
-        override suspend fun export(stationId: StationId) = session
+    private fun exporter(session: ExportedStationSession?) = exporterOf(listOfNotNull(session))
+
+    private fun exporterOf(sessions: List<ExportedStationSession>) = object : StationSessionExporter {
+        override suspend fun export(stationId: StationId) = sessions.firstOrNull { it.station == stationId.value }
+        override suspend fun exportAll() = sessions
     }
 
     private suspend fun TestScope.pair(channel: FakeChannel, controller: CompanionPairingController) {
@@ -104,7 +107,7 @@ class CompanionSessionHandoffTest {
         val channel = FakeChannel()
         val controller = controller(channel, exporter(ExportedStationSession("sst", "James", cookies())))
         pair(channel, controller)
-        assertEquals(PairingUiState.HandoffOffer("Living room", "sst", "James"), controller.uiState.value)
+        assertEquals(PairingUiState.HandoffOffer("Living room", listOf(HandoffAccount("SST", "James"))), controller.uiState.value)
         controller.decideHandoff(true)
         runCurrent()
         val sent = channel.sent.single() as CompanionFrame.Session
@@ -261,5 +264,56 @@ class CompanionSessionHandoffTest {
         assertTrue(logged.any { it.contains("gate passed") })
         assertTrue(logged.none { it.contains("2026-07-18") })
         assertTrue(logged.none { it.contains(secret) })
+    }
+
+    private fun twoStations() = listOf(
+        ExportedStationSession("sst", "James", cookies(), "SST"),
+        ExportedStationSession("1980s", "Jim", cookies(count = 3, value = secret + "b"), "1980s.FM"),
+    )
+
+    @Test
+    fun `one approval offers every signed-in station and sends a frame for each`() = runTest {
+        val channel = FakeChannel()
+        val controller = controller(channel, exporterOf(twoStations()))
+        pair(channel, controller)
+        assertEquals(
+            PairingUiState.HandoffOffer("Living room", listOf(HandoffAccount("SST", "James"), HandoffAccount("1980s.FM", "Jim"))),
+            controller.uiState.value,
+        )
+        controller.decideHandoff(true)
+        runCurrent()
+        val sent = channel.sent.filterIsInstance<CompanionFrame.Session>()
+        assertEquals(listOf("sst", "1980s"), sent.map { it.station })
+        assertEquals(listOf("James", "Jim"), sent.map { it.account })
+        assertEquals(listOf(2, 3), sent.map { it.cookies.size })
+        assertTrue(sent.all { it.voucher == passingVoucher })
+        assertTrue(logged.none { it.contains(secret) })
+    }
+
+    @Test
+    fun `each station's answer is shown and a refusal for one does not hide the other`() = runTest {
+        val channel = FakeChannel()
+        val controller = controller(channel, exporterOf(twoStations()))
+        pair(channel, controller)
+        controller.decideHandoff(true)
+        runCurrent()
+        channel.incoming.send(DecodedFrame.Frame(CompanionFrame.SessionOk("sst")))
+        channel.incoming.send(DecodedFrame.Frame(CompanionFrame.SessionRefused("already_handed_over", "1980s")))
+        runCurrent()
+        val active = controller.uiState.value as PairingUiState.Active
+        assertTrue(active.handedOver)
+        assertTrue(active.notice!!.contains("The TV is signed in to SST."))
+        assertTrue(active.notice!!.contains("sign-in to 1980s.FM"))
+        assertTrue(active.notice!!.contains("already has a sign-in"))
+    }
+
+    @Test
+    fun `declining sends nothing for any station`() = runTest {
+        val channel = FakeChannel()
+        val controller = controller(channel, exporterOf(twoStations()))
+        pair(channel, controller)
+        controller.decideHandoff(false)
+        runCurrent()
+        assertTrue(channel.sent.isEmpty())
     }
 }
