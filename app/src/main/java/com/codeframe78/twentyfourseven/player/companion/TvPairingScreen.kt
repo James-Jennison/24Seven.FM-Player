@@ -88,7 +88,7 @@ fun TvPairingScreen(
                 Text("Paired with ${state.tvName}.")
                 Text(
                     if (state.handedOver) {
-                        "The TV is signed in to ${state.station.uppercase()} and can search and request songs by itself. " +
+                        "The TV is signed in and can search and request songs by itself, for each station listed below. " +
                             "Remove its sign-in on the TV when you no longer want that."
                     } else if (state.trusted) {
                         "Songs you choose on the TV are requested from this phone on ${state.station.uppercase()} without asking, until you end the pairing."
