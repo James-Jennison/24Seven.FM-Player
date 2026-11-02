@@ -1,6 +1,6 @@
 # TV companion pairing protocol v1 (provisional)
 
-Status: draft 2026-11-02. The Owner settled on 2026-11-02: LAN-only transport and a foreground-only phone. Still provisional: participants (default: all five stations, only the account signed in on the phone, each request approved on the phone) and the `trackRef` shape (see `docs/tv-companion-pairing-design.md`). The mobile repository holds the single copy of this document; the TV side implements it. Nothing is approved or implemented.
+Status: draft 2026-11-02. The Owner settled on 2026-11-02: LAN-only transport and a foreground-only phone. Participants settled by the Owner 2026-11-02: all five stations, only the account signed in on the phone, each request approved on the phone. Still provisional: the `trackRef` shape (see `docs/tv-companion-pairing-design.md`). The mobile repository holds the single copy of this document; the TV side implements it. Nothing is approved or implemented.
 
 ## Transport
 
