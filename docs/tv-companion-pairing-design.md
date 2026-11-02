@@ -61,7 +61,8 @@ Reviewed by the TV writer session; review only, no TV code written, and TV pairi
 1. **Transport. Settled by the Owner 2026-11-02: LAN only.** LAN discovery with a direct channel (reachable Ethernet TV and Wi-Fi phone, but guest networks and VPNs break it), or a relay (needs hosting and new privacy obligations). Recommendation: LAN only for the first version.
 2. **Phone availability. Settled by the Owner 2026-11-02: foreground only.** Foreground-only first, or a background service. Recommendation: foreground-only; a sleeping phone shows a clear "open the Player on your phone" error.
 3. **Which stations and accounts. Settled by the Owner 2026-11-02 (recommendation accepted).** Recommendation: all five stations, only the account currently signed in on the phone, each request approved on the phone.
-4. **Release.** See below.
+4. **Pairing entry. Settled by the Owner 2026-11-02: camera QR scan, with the typed code as the fallback.** Implemented with Google Play services' on-device code scanner, so the Player is not granted camera access and requests no camera permission.
+5. **Release.** See below.
 
 ## 1.0.3 impact (the part to decide first)
 
