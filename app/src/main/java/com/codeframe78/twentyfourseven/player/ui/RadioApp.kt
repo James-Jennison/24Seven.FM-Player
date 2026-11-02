@@ -1704,7 +1704,7 @@ private fun MoreScreen(
                 var showTvPairing by rememberSaveable { mutableStateOf(false) }
                 MoreLink(
                     title = "Pair with a TV",
-                    summary = "Choose songs on the 24Seven.FM TV app and request them from this phone.",
+                    summary = "Link the 24Seven.FM TV app to your account so you can request songs from the TV.",
                     icon = Icons.Default.Tv,
                     testTag = "more_pair_tv",
                     onClick = { showTvPairing = true },

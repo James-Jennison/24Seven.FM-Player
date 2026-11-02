@@ -76,7 +76,7 @@ fun TvPairingScreen(
                 Text("Paired with ${state.tvName}.")
                 Text("Let this TV request songs without asking each time?", style = MaterialTheme.typography.titleMedium)
                 Text(
-                    "Until you end the pairing it can request songs with your account. The phone still checks each song " +
+                    "Until you end the pairing, songs you choose on the TV are requested from this phone, with your account, without asking you each time. The phone still checks each song " +
                         "and the community rules first. Nothing is saved.",
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -91,9 +91,9 @@ fun TvPairingScreen(
                         "The TV is signed in to ${state.station.uppercase()} and can search and request songs by itself. " +
                             "Remove its sign-in on the TV when you no longer want that."
                     } else if (state.trusted) {
-                        "Songs you choose on the TV are requested on ${state.station.uppercase()} without asking, until you end the pairing."
+                        "Songs you choose on the TV are requested from this phone on ${state.station.uppercase()} without asking, until you end the pairing."
                     } else {
-                        "Songs you choose on the TV are requested on ${state.station.uppercase()}. You approve each one here."
+                        "Songs you choose on the TV are sent to this phone to request on ${state.station.uppercase()}. You approve each one here."
                     },
                 )
                 state.notice?.let { Text(it, style = MaterialTheme.typography.titleMedium) }
@@ -122,7 +122,7 @@ private fun IdleContent(onScanQr: () -> Unit, onPairWithCode: (String, Int, Stri
     var host by rememberSaveable { mutableStateOf("") }
     var port by rememberSaveable { mutableStateOf("") }
     var code by rememberSaveable { mutableStateOf("") }
-    Text("Open Pair with phone on the TV app, then scan the code it shows.")
+    Text("On the TV app, open Pair a Phone, then scan the code it shows.")
     Button(onClick = onScanQr) { Text("Scan the TV's code") }
     Text("Or enter the details shown on the TV:", style = MaterialTheme.typography.titleSmall)
     OutlinedTextField(host, { host = it.trim() }, label = { Text("TV address") }, singleLine = true)
