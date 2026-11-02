@@ -33,6 +33,7 @@ fun TvPairingScreen(
     onDecideRequest: (Boolean) -> Unit,
     onChooseTrust: (Boolean) -> Unit,
     onDecideHandoff: (Boolean) -> Unit,
+    onAcknowledgeHandoffBlocked: () -> Unit,
     onRevoke: () -> Unit,
     onDismissMessage: () -> Unit,
     modifier: Modifier = Modifier,
@@ -50,6 +51,12 @@ fun TvPairingScreen(
                     Button(onClick = { onConfirmFingerprint(true) }) { Text("They match") }
                     OutlinedButton(onClick = { onConfirmFingerprint(false) }) { Text("They differ") }
                 }
+            }
+            is PairingUiState.HandoffBlocked -> {
+                Text("Paired with ${state.tvName}.")
+                Text("The TV can't be signed in yet.", style = MaterialTheme.typography.titleMedium)
+                Text(state.reason)
+                Button(onClick = onAcknowledgeHandoffBlocked) { Text("OK") }
             }
             is PairingUiState.HandoffOffer -> {
                 Text("Paired with ${state.tvName}.")

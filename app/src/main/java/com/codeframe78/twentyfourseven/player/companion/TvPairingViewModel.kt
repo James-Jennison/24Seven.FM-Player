@@ -17,12 +17,21 @@ class TvPairingViewModel(container: AppContainer) : ViewModel() {
         connect = { qr -> withContext(Dispatchers.IO) { PinnedTlsConnector().connect(qr) } },
         probe = { host, port -> withContext(Dispatchers.IO) { PinnedTlsConnector().probe(host, port) } },
         sessionExporter = container.stationSessionExporter,
-        communityVoucher = {
+        communityGate = {
             container.communitySafetyRepository.observeSafety().first().let {
-                CommunityVoucher(
-                    adultAgeGate = it.ageGateStatus == AgeGateStatus.Adult,
-                    termsVersion = it.acceptedTermsVersion.orEmpty(),
-                    communityVisible = it.communityContentVisible,
+                CommunityGateCheck(
+                    passes = it.canContributeCommunityContent,
+                    voucher = CommunityVoucher(
+                        adultAgeGate = it.ageGateStatus == AgeGateStatus.Adult,
+                        termsVersion = it.acceptedTermsVersion.orEmpty(),
+                        communityVisible = it.communityContentVisible,
+                    ),
+                    blockedReason = when {
+                        it.ageGateStatus != AgeGateStatus.Adult -> "Complete the age check on this phone first."
+                        !it.hasAcceptedCurrentTerms -> "Accept the community terms on this phone first."
+                        !it.communityContentVisible -> "Turn on community content on this phone first."
+                        else -> null
+                    },
                 )
             }
         },

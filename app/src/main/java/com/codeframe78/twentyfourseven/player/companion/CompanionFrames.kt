@@ -150,8 +150,11 @@ object CompanionFrameCodec {
                 .put("account", frame.account)
                 .also { json ->
                     frame.voucher?.let {
-                        json.put("adultAgeGate", it.adultAgeGate).put("termsVersion", it.termsVersion)
-                            .put("communityVisible", it.communityVisible)
+                        json.put(
+                            "gate",
+                            JSONObject().put("adultAgeGate", it.adultAgeGate).put("termsVersion", it.termsVersion)
+                                .put("communityVisible", it.communityVisible),
+                        )
                     }
                 }
                 .put(
@@ -206,14 +209,12 @@ object CompanionFrameCodec {
         "session" -> CompanionFrame.Session(
             station = station(json),
             account = text(json, "account", MAX_LABEL),
-            voucher = if (json.has("adultAgeGate")) {
+            voucher = json.optJSONObject("gate")?.let { gate ->
                 CommunityVoucher(
-                    adultAgeGate = json.optBoolean("adultAgeGate", false),
-                    termsVersion = text(json, "termsVersion", MAX_LABEL),
-                    communityVisible = json.optBoolean("communityVisible", false),
+                    adultAgeGate = gate.optBoolean("adultAgeGate", false),
+                    termsVersion = text(gate, "termsVersion", MAX_LABEL),
+                    communityVisible = gate.optBoolean("communityVisible", false),
                 )
-            } else {
-                null
             },
             cookies = (json.optJSONArray("cookies") ?: throw IllegalArgumentException("cookies")).let { array ->
                 require(array.length() in 1..MAX_COOKIES) { "cookies" }

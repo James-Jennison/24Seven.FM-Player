@@ -25,6 +25,8 @@ class CompanionSessionHandoffTest {
     @Before fun captureLog() { CompanionLog.sink = { logged += it } }
     @After fun releaseLog() { CompanionLog.sink = null }
 
+    private val passingVoucher = CommunityVoucher(adultAgeGate = true, termsVersion = "2026-07-18", communityVisible = true)
+
     private fun cookies(count: Int = 2, value: String = secret) =
         (1..count).map { SessionCookie("c$it", value, if (it == 1) -1L else 3600L, true, "/") }
 
@@ -49,7 +51,8 @@ class CompanionSessionHandoffTest {
     private fun TestScope.controller(
         channel: FakeChannel,
         exporter: StationSessionExporter?,
-        voucher: CommunityVoucher? = null,
+        voucher: CommunityVoucher? = passingVoucher,
+        blockedReason: String? = null,
     ) = CompanionPairingController(
         scope = backgroundScope,
         clockMillis = { 1_000_000L },
@@ -60,7 +63,7 @@ class CompanionSessionHandoffTest {
         } },
         keepAliveMillis = 1_000_000L,
         sessionExporter = exporter,
-        communityVoucher = { voucher },
+        communityGate = { voucher?.let { CommunityGateCheck(blockedReason == null, it, blockedReason) } },
     )
 
     private fun exporter(session: ExportedStationSession?) = object : StationSessionExporter {
@@ -184,45 +187,76 @@ class CompanionSessionHandoffTest {
     }
 
     @Test
-    fun `the frame carries the voucher the phone read when the listener approved`() = runTest {
+    fun `the frame carries the gate the phone read, nested under gate`() = runTest {
         val channel = FakeChannel()
-        val voucher = CommunityVoucher(adultAgeGate = true, termsVersion = "2026-07-18", communityVisible = true)
-        val controller = controller(channel, exporter(ExportedStationSession("sst", "James", cookies())), voucher)
+        val controller = controller(channel, exporter(ExportedStationSession("sst", "James", cookies())))
         pair(channel, controller)
         controller.decideHandoff(true)
         runCurrent()
         val sent = channel.sent.single() as CompanionFrame.Session
-        assertEquals(voucher, sent.voucher)
+        assertEquals(passingVoucher, sent.voucher)
         val bytes = CompanionFrameCodec.encode(sent)
         val decoded = (CompanionFrameCodec.decode(bytes.copyOfRange(4, bytes.size)) as DecodedFrame.Frame).frame
         assertEquals(sent, decoded)
-        val json = org.json.JSONObject(String(bytes.copyOfRange(4, bytes.size)))
-        assertEquals(true, json.getBoolean("adultAgeGate"))
-        assertEquals("2026-07-18", json.getString("termsVersion"))
-        assertEquals(true, json.getBoolean("communityVisible"))
+        val gate = org.json.JSONObject(String(bytes.copyOfRange(4, bytes.size))).getJSONObject("gate")
+        assertEquals(true, gate.getBoolean("adultAgeGate"))
+        assertEquals("2026-07-18", gate.getString("termsVersion"))
+        assertEquals(true, gate.getBoolean("communityVisible"))
     }
 
     @Test
-    fun `without a voucher the fields are omitted so the TV treats the gate as not vouched`() = runTest {
+    fun `a failing community gate blocks the offer and sends no session frame`() = runTest {
+        val channel = FakeChannel()
+        val failing = CommunityVoucher(adultAgeGate = true, termsVersion = "", communityVisible = true)
+        val controller = controller(
+            channel, exporter(ExportedStationSession("sst", "James", cookies())), failing,
+            blockedReason = "Accept the community terms on this phone first.",
+        )
+        pair(channel, controller)
+        assertEquals(
+            PairingUiState.HandoffBlocked("Living room", "Accept the community terms on this phone first."),
+            controller.uiState.value,
+        )
+        controller.decideHandoff(true)
+        runCurrent()
+        assertTrue(channel.sent.isEmpty())
+        controller.acknowledgeHandoffBlocked()
+        assertEquals(PairingUiState.TrustChoice("Living room"), controller.uiState.value)
+    }
+
+    @Test
+    fun `an unreadable gate is treated as failed`() = runTest {
         val channel = FakeChannel()
         val controller = controller(channel, exporter(ExportedStationSession("sst", "James", cookies())), voucher = null)
         pair(channel, controller)
-        controller.decideHandoff(true)
-        runCurrent()
-        val bytes = CompanionFrameCodec.encode(channel.sent.single() as CompanionFrame.Session)
-        val json = org.json.JSONObject(String(bytes.copyOfRange(4, bytes.size)))
-        assertFalse(json.has("adultAgeGate"))
+        assertTrue(controller.uiState.value is PairingUiState.HandoffBlocked)
+        assertTrue(channel.sent.isEmpty())
     }
 
     @Test
-    fun `a not-vouched listener sends false values rather than omitting them`() = runTest {
+    fun `the TV's refusal reasons for the gate are explained to the listener`() = runTest {
         val channel = FakeChannel()
-        val voucher = CommunityVoucher(adultAgeGate = false, termsVersion = "", communityVisible = false)
-        val controller = controller(channel, exporter(ExportedStationSession("sst", "James", cookies())), voucher)
+        val controller = controller(channel, exporter(ExportedStationSession("sst", "James", cookies())))
         pair(channel, controller)
         controller.decideHandoff(true)
         runCurrent()
-        val sent = channel.sent.single() as CompanionFrame.Session
-        assertEquals(voucher, sent.voucher)
+        channel.incoming.send(DecodedFrame.Frame(CompanionFrame.SessionRefused("terms_out_of_date")))
+        runCurrent()
+        assertTrue((controller.uiState.value as PairingUiState.Active).notice!!.contains("Update the TV app or this app"))
+        channel.incoming.send(DecodedFrame.Frame(CompanionFrame.SessionRefused("gate_not_passed")))
+        runCurrent()
+        assertTrue((controller.uiState.value as PairingUiState.Active).notice!!.contains("community settings"))
+    }
+
+    @Test
+    fun `the log records only that the gate passed and never the terms version`() = runTest {
+        val channel = FakeChannel()
+        val controller = controller(channel, exporter(ExportedStationSession("sst", "James", cookies())))
+        pair(channel, controller)
+        controller.decideHandoff(true)
+        runCurrent()
+        assertTrue(logged.any { it.contains("gate passed") })
+        assertTrue(logged.none { it.contains("2026-07-18") })
+        assertTrue(logged.none { it.contains(secret) })
     }
 }

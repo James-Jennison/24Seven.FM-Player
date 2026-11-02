@@ -12,11 +12,16 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
+/** The phone's community gate: [passes] is `canContributeCommunityContent`; [voucher] is what is attested to the TV. */
+data class CommunityGateCheck(val passes: Boolean, val voucher: CommunityVoucher, val blockedReason: String?)
+
 sealed interface PairingUiState {
     data object Idle : PairingUiState
     data object Connecting : PairingUiState
     /** Typed pairing: the listener compares [fingerprint] with the TV screen before anything is sent. */
     data class ConfirmFingerprint(val fingerprint: String) : PairingUiState
+    /** The handoff is not offered because the phone's own community gate does not pass; [reason] says what to do. */
+    data class HandoffBlocked(val tvName: String, val reason: String) : PairingUiState
     /** Asked once after pairing: hand the phone's station session to the TV so it can search and request by itself? */
     data class HandoffOffer(val tvName: String, val station: String, val account: String) : PairingUiState
     /** Asked once after pairing: may this TV request songs without the listener approving each one? */
@@ -45,8 +50,8 @@ class CompanionPairingController(
     private val handlerFor: (approve: suspend (CompanionTrack) -> Boolean) -> CompanionRequestHandler,
     private val keepAliveMillis: Long = 15_000L,
     private val sessionExporter: StationSessionExporter? = null,
-    /** The listener's community settings at the moment they approve the handoff, vouched for to the TV. */
-    private val communityVoucher: suspend () -> CommunityVoucher? = { null },
+    /** The phone's community gate at this moment, from the same state the request safety check uses. */
+    private val communityGate: suspend () -> CommunityGateCheck? = { null },
 ) {
     private val mutableState = MutableStateFlow<PairingUiState>(PairingUiState.Idle)
     val uiState: StateFlow<PairingUiState> = mutableState
@@ -161,12 +166,14 @@ class CompanionPairingController(
         notice = "Sending the sign-in to the TV…"
         mutableState.value = PairingUiState.Active(tvName, station, trusted, notice)
         launch {
-            val voucher = try {
-                communityVoucher()
-            } catch (failure: Exception) {
-                CompanionLog.e("session handoff: community voucher unavailable ${failure.javaClass.name}")
-                null
+            val gate = readGate()
+            if (gate == null || !gate.passes) {
+                CompanionLog.d("session handoff: not sent, community gate failed at approval")
+                notice = gate?.blockedReason ?: "The community settings on this phone could not be read."
+                mutableState.value = PairingUiState.Active(tvName, station, trusted, notice)
+                return@launch
             }
+            val voucher = gate.voucher
             val frame = CompanionFrame.Session(exported.station, exported.account.take(64), exported.cookies, voucher)
             if (runCatching { CompanionFrameCodec.encode(frame) }.isFailure) {
                 CompanionLog.e("session handoff: not sent, frame too large or invalid (${exported.cookies.size} cookies)")
@@ -175,8 +182,7 @@ class CompanionPairingController(
                 return@launch
             }
             CompanionLog.d(
-                "session handoff: sending ${exported.cookies.size} cookies ${exported.cookies.map { it.name }}, " +
-                    "voucher adult=${voucher?.adultAgeGate} terms=${voucher?.termsVersion} visible=${voucher?.communityVisible}",
+                "session handoff: sending ${exported.cookies.size} cookies ${exported.cookies.map { it.name }}, gate passed",
             )
             try {
                 live.writeFrame(frame)
@@ -191,12 +197,28 @@ class CompanionPairingController(
     private fun onHandoffResult(frame: CompanionFrame) {
         notice = when (frame) {
             is CompanionFrame.SessionOk -> "The TV is signed in to ${frame.station.uppercase()}."
-            is CompanionFrame.SessionRefused -> "The TV did not accept the sign-in: ${frame.reason.take(100)}"
+            is CompanionFrame.SessionRefused -> when (frame.reason) {
+                "terms_out_of_date" -> "The TV did not accept the sign-in: the community terms differ. Update the TV app or this app."
+                "gate_not_passed" -> "The TV did not accept the sign-in: it does not consider the community settings on this phone sufficient."
+                else -> "The TV did not accept the sign-in: ${frame.reason.take(100)}"
+            }
             else -> return
         }
         CompanionLog.d("session handoff: TV answered ${frame.javaClass.simpleName}")
         val current = mutableState.value
         if (current is PairingUiState.Active) mutableState.value = current.copy(notice = notice)
+    }
+
+    private suspend fun readGate(): CommunityGateCheck? = try {
+        communityGate()
+    } catch (failure: Exception) {
+        CompanionLog.e("session handoff: community gate unreadable ${failure.javaClass.name}")
+        null
+    }
+
+    /** The listener has read why the handoff was not offered; carry on to the trust question. */
+    fun acknowledgeHandoffBlocked() {
+        if (mutableState.value is PairingUiState.HandoffBlocked) mutableState.value = afterHandoffStep()
     }
 
     private fun afterHandoffStep(): PairingUiState =
@@ -213,6 +235,14 @@ class CompanionPairingController(
                 null
             }
             if (exported != null && exported.cookies.isNotEmpty() && exported.account.isNotBlank()) {
+                val gate = readGate()
+                if (gate == null || !gate.passes) {
+                    CompanionLog.d("session handoff: not offered, community gate failed")
+                    return PairingUiState.HandoffBlocked(
+                        tvName,
+                        gate?.blockedReason ?: "The community settings on this phone could not be read.",
+                    )
+                }
                 offered = exported
                 CompanionLog.d("session handoff: offered, ${exported.cookies.size} cookies ${exported.cookies.map { it.name }}")
                 return PairingUiState.HandoffOffer(tvName, station, exported.account.take(64))

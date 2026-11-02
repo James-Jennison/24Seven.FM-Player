@@ -92,6 +92,7 @@ fun TvPairingHost(onDismiss: () -> Unit) {
                         onDecideRequest = controller::decideRequest,
                         onChooseTrust = controller::setTrust,
                         onDecideHandoff = controller::decideHandoff,
+                        onAcknowledgeHandoffBlocked = controller::acknowledgeHandoffBlocked,
                         onRevoke = controller::revoke,
                         onDismissMessage = controller::dismissMessage,
                     )
