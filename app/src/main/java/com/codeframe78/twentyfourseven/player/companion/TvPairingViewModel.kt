@@ -4,7 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.codeframe78.twentyfourseven.player.AppContainer
+import com.codeframe78.twentyfourseven.player.domain.AgeGateStatus
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 
 /** Keeps the pairing controller across configuration changes such as rotation; ends any pairing when the activity ends. */
@@ -15,6 +17,15 @@ class TvPairingViewModel(container: AppContainer) : ViewModel() {
         connect = { qr -> withContext(Dispatchers.IO) { PinnedTlsConnector().connect(qr) } },
         probe = { host, port -> withContext(Dispatchers.IO) { PinnedTlsConnector().probe(host, port) } },
         sessionExporter = container.stationSessionExporter,
+        communityVoucher = {
+            container.communitySafetyRepository.observeSafety().first().let {
+                CommunityVoucher(
+                    adultAgeGate = it.ageGateStatus == AgeGateStatus.Adult,
+                    termsVersion = it.acceptedTermsVersion.orEmpty(),
+                    communityVisible = it.communityContentVisible,
+                )
+            }
+        },
         handlerFor = { approve ->
             PlayerCompanionRequestHandler(
                 stations = container.stationRepository,

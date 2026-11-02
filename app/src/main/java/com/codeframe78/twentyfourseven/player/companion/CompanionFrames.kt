@@ -23,6 +23,9 @@ enum class PairRefusal(val wire: String) {
     AlreadyPaired("already_paired"),
 }
 
+/** What the phone vouches for about the listener's community settings; the TV re-checks it against its own constants. */
+data class CommunityVoucher(val adultAgeGate: Boolean, val termsVersion: String, val communityVisible: Boolean)
+
 sealed interface CompanionFrame {
     data class Pair(val proof: String, val phone: String, val account: String, val station: String) : CompanionFrame
     data class PairOk(val session: String) : CompanionFrame
@@ -41,7 +44,12 @@ sealed interface CompanionFrame {
     data class Result(val op: String, val code: CompanionResultCode, val reason: String? = null) : CompanionFrame
     data class StateChanged(val station: String, val account: String) : CompanionFrame
     /** Hands the phone's station session to the TV after the listener approved it. [toString] never shows cookie values. */
-    data class Session(val station: String, val account: String, val cookies: List<SessionCookie>) : CompanionFrame {
+    data class Session(
+        val station: String,
+        val account: String,
+        val cookies: List<SessionCookie>,
+        val voucher: CommunityVoucher? = null,
+    ) : CompanionFrame {
         override fun toString(): String = "Session(station=$station, cookies=${cookies.map { it.name }})"
     }
     data class SessionOk(val station: String) : CompanionFrame
@@ -140,6 +148,12 @@ object CompanionFrameCodec {
                 .put("account", frame.account)
             is CompanionFrame.Session -> json.put("type", "session").put("station", frame.station)
                 .put("account", frame.account)
+                .also { json ->
+                    frame.voucher?.let {
+                        json.put("adultAgeGate", it.adultAgeGate).put("termsVersion", it.termsVersion)
+                            .put("communityVisible", it.communityVisible)
+                    }
+                }
                 .put(
                     "cookies",
                     org.json.JSONArray().also { array ->
@@ -192,6 +206,15 @@ object CompanionFrameCodec {
         "session" -> CompanionFrame.Session(
             station = station(json),
             account = text(json, "account", MAX_LABEL),
+            voucher = if (json.has("adultAgeGate")) {
+                CommunityVoucher(
+                    adultAgeGate = json.optBoolean("adultAgeGate", false),
+                    termsVersion = text(json, "termsVersion", MAX_LABEL),
+                    communityVisible = json.optBoolean("communityVisible", false),
+                )
+            } else {
+                null
+            },
             cookies = (json.optJSONArray("cookies") ?: throw IllegalArgumentException("cookies")).let { array ->
                 require(array.length() in 1..MAX_COOKIES) { "cookies" }
                 (0 until array.length()).map {

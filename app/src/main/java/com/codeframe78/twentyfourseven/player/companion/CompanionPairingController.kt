@@ -45,6 +45,8 @@ class CompanionPairingController(
     private val handlerFor: (approve: suspend (CompanionTrack) -> Boolean) -> CompanionRequestHandler,
     private val keepAliveMillis: Long = 15_000L,
     private val sessionExporter: StationSessionExporter? = null,
+    /** The listener's community settings at the moment they approve the handoff, vouched for to the TV. */
+    private val communityVoucher: suspend () -> CommunityVoucher? = { null },
 ) {
     private val mutableState = MutableStateFlow<PairingUiState>(PairingUiState.Idle)
     val uiState: StateFlow<PairingUiState> = mutableState
@@ -156,18 +158,26 @@ class CompanionPairingController(
             mutableState.value = afterHandoffStep()
             return
         }
-        val frame = CompanionFrame.Session(exported.station, exported.account.take(64), exported.cookies)
-        val encodable = runCatching { CompanionFrameCodec.encode(frame) }.isSuccess
-        if (!encodable) {
-            CompanionLog.e("session handoff: not sent, frame too large or invalid (${exported.cookies.size} cookies)")
-            notice = "The sign-in is too large to send to the TV."
-            mutableState.value = PairingUiState.Active(tvName, station, trusted, notice)
-            return
-        }
-        CompanionLog.d("session handoff: sending ${exported.cookies.size} cookies ${exported.cookies.map { it.name }}")
         notice = "Sending the sign-in to the TV…"
         mutableState.value = PairingUiState.Active(tvName, station, trusted, notice)
         launch {
+            val voucher = try {
+                communityVoucher()
+            } catch (failure: Exception) {
+                CompanionLog.e("session handoff: community voucher unavailable ${failure.javaClass.name}")
+                null
+            }
+            val frame = CompanionFrame.Session(exported.station, exported.account.take(64), exported.cookies, voucher)
+            if (runCatching { CompanionFrameCodec.encode(frame) }.isFailure) {
+                CompanionLog.e("session handoff: not sent, frame too large or invalid (${exported.cookies.size} cookies)")
+                notice = "The sign-in is too large to send to the TV."
+                mutableState.value = PairingUiState.Active(tvName, station, trusted, notice)
+                return@launch
+            }
+            CompanionLog.d(
+                "session handoff: sending ${exported.cookies.size} cookies ${exported.cookies.map { it.name }}, " +
+                    "voucher adult=${voucher?.adultAgeGate} terms=${voucher?.termsVersion} visible=${voucher?.communityVisible}",
+            )
             try {
                 live.writeFrame(frame)
             } catch (failure: IOException) {
@@ -196,13 +206,18 @@ class CompanionPairingController(
         if (handoffAsked) offered = null
         if (!handoffAsked) {
             handoffAsked = true
-            val exported = runCatching { sessionExporter?.export(StationId(station)) }.getOrNull()
+            val exported = try {
+                sessionExporter?.export(StationId(station))
+            } catch (failure: Exception) {
+                CompanionLog.e("session handoff: export failed ${failure.javaClass.name}: ${failure.message}")
+                null
+            }
             if (exported != null && exported.cookies.isNotEmpty() && exported.account.isNotBlank()) {
                 offered = exported
                 CompanionLog.d("session handoff: offered, ${exported.cookies.size} cookies ${exported.cookies.map { it.name }}")
                 return PairingUiState.HandoffOffer(tvName, station, exported.account.take(64))
             }
-            CompanionLog.d("session handoff: not offered (no signed-in session)")
+            CompanionLog.d("session handoff: not offered (exporter=${if (sessionExporter == null) "none" else "returned nothing"}, station=$station)")
         }
         return afterHandoffStep()
     }

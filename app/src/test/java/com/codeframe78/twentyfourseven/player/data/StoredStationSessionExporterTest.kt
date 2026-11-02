@@ -64,6 +64,16 @@ class StoredStationSessionExporterTest {
     }
 
     @Test
+    fun `a www website host still reads the cookies stored for the bare origin`() = runBlocking {
+        val wwwStations = object : StationRepository by stations {
+            override fun availableStations() = listOf(station.copy(websiteUrl = "https://www.sst.example/"))
+        }
+        val store = FakeStore("James", listOf(cookie("PHPSESSID", -1)))
+        StoredStationSessionExporter(store, wwwStations).export(id)!!
+        assertEquals("sst.example", store.askedDomain)
+    }
+
+    @Test
     fun `an unknown station returns nothing`() = runBlocking {
         assertNull(StoredStationSessionExporter(FakeStore("James", listOf(cookie("a", -1))), stations).export(StationId("other")))
     }

@@ -46,7 +46,11 @@ class CompanionSessionHandoffTest {
     private fun qr() =
         """{"v":1,"name":"Living room","host":"192.168.1.20","port":8443,"secret":"${"ab".repeat(16)}","exp":2000,"kh":"$keyHash"}"""
 
-    private fun TestScope.controller(channel: FakeChannel, exporter: StationSessionExporter?) = CompanionPairingController(
+    private fun TestScope.controller(
+        channel: FakeChannel,
+        exporter: StationSessionExporter?,
+        voucher: CommunityVoucher? = null,
+    ) = CompanionPairingController(
         scope = backgroundScope,
         clockMillis = { 1_000_000L },
         connect = { channel },
@@ -56,6 +60,7 @@ class CompanionSessionHandoffTest {
         } },
         keepAliveMillis = 1_000_000L,
         sessionExporter = exporter,
+        communityVoucher = { voucher },
     )
 
     private fun exporter(session: ExportedStationSession?) = object : StationSessionExporter {
@@ -176,5 +181,48 @@ class CompanionSessionHandoffTest {
         runCurrent()
         assertTrue(channel.sent.none { it is CompanionFrame.Revoke })
         assertEquals(1, channel.sent.count { it is CompanionFrame.Session })
+    }
+
+    @Test
+    fun `the frame carries the voucher the phone read when the listener approved`() = runTest {
+        val channel = FakeChannel()
+        val voucher = CommunityVoucher(adultAgeGate = true, termsVersion = "2026-07-18", communityVisible = true)
+        val controller = controller(channel, exporter(ExportedStationSession("sst", "James", cookies())), voucher)
+        pair(channel, controller)
+        controller.decideHandoff(true)
+        runCurrent()
+        val sent = channel.sent.single() as CompanionFrame.Session
+        assertEquals(voucher, sent.voucher)
+        val bytes = CompanionFrameCodec.encode(sent)
+        val decoded = (CompanionFrameCodec.decode(bytes.copyOfRange(4, bytes.size)) as DecodedFrame.Frame).frame
+        assertEquals(sent, decoded)
+        val json = org.json.JSONObject(String(bytes.copyOfRange(4, bytes.size)))
+        assertEquals(true, json.getBoolean("adultAgeGate"))
+        assertEquals("2026-07-18", json.getString("termsVersion"))
+        assertEquals(true, json.getBoolean("communityVisible"))
+    }
+
+    @Test
+    fun `without a voucher the fields are omitted so the TV treats the gate as not vouched`() = runTest {
+        val channel = FakeChannel()
+        val controller = controller(channel, exporter(ExportedStationSession("sst", "James", cookies())), voucher = null)
+        pair(channel, controller)
+        controller.decideHandoff(true)
+        runCurrent()
+        val bytes = CompanionFrameCodec.encode(channel.sent.single() as CompanionFrame.Session)
+        val json = org.json.JSONObject(String(bytes.copyOfRange(4, bytes.size)))
+        assertFalse(json.has("adultAgeGate"))
+    }
+
+    @Test
+    fun `a not-vouched listener sends false values rather than omitting them`() = runTest {
+        val channel = FakeChannel()
+        val voucher = CommunityVoucher(adultAgeGate = false, termsVersion = "", communityVisible = false)
+        val controller = controller(channel, exporter(ExportedStationSession("sst", "James", cookies())), voucher)
+        pair(channel, controller)
+        controller.decideHandoff(true)
+        runCurrent()
+        val sent = channel.sent.single() as CompanionFrame.Session
+        assertEquals(voucher, sent.voucher)
     }
 }
