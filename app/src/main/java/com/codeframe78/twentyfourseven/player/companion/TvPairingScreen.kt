@@ -32,6 +32,7 @@ fun TvPairingScreen(
     onConfirmFingerprint: (Boolean) -> Unit,
     onDecideRequest: (Boolean) -> Unit,
     onChooseTrust: (Boolean) -> Unit,
+    onDecideHandoff: (Boolean) -> Unit,
     onRevoke: () -> Unit,
     onDismissMessage: () -> Unit,
     modifier: Modifier = Modifier,
@@ -48,6 +49,22 @@ fun TvPairingScreen(
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(onClick = { onConfirmFingerprint(true) }) { Text("They match") }
                     OutlinedButton(onClick = { onConfirmFingerprint(false) }) { Text("They differ") }
+                }
+            }
+            is PairingUiState.HandoffOffer -> {
+                Text("Paired with ${state.tvName}.")
+                Text(
+                    "Sign this TV in to ${state.station.uppercase()} as ${state.account}?",
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Text(
+                    "The TV could then search and request songs by itself with your account, without asking here. It keeps " +
+                        "your sign-in after this pairing ends, until you remove it on the TV. Signing out here does not sign " +
+                        "the TV out. Only do this on a TV you own.",
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(onClick = { onDecideHandoff(false) }) { Text("Not now") }
+                    OutlinedButton(onClick = { onDecideHandoff(true) }) { Text("Sign the TV in") }
                 }
             }
             is PairingUiState.TrustChoice -> {

@@ -1,5 +1,8 @@
 package com.codeframe78.twentyfourseven.player.companion
 
+import com.codeframe78.twentyfourseven.player.domain.ExportedStationSession
+import com.codeframe78.twentyfourseven.player.domain.StationId
+import com.codeframe78.twentyfourseven.player.domain.StationSessionExporter
 import java.io.IOException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -14,6 +17,8 @@ sealed interface PairingUiState {
     data object Connecting : PairingUiState
     /** Typed pairing: the listener compares [fingerprint] with the TV screen before anything is sent. */
     data class ConfirmFingerprint(val fingerprint: String) : PairingUiState
+    /** Asked once after pairing: hand the phone's station session to the TV so it can search and request by itself? */
+    data class HandoffOffer(val tvName: String, val station: String, val account: String) : PairingUiState
     /** Asked once after pairing: may this TV request songs without the listener approving each one? */
     data class TrustChoice(val tvName: String) : PairingUiState
     /** [trusted]: requests from this TV skip the approval screen; [notice] names the song just requested that way. */
@@ -39,6 +44,7 @@ class CompanionPairingController(
     private val probe: suspend (host: String, port: Int) -> ProbedConnection,
     private val handlerFor: (approve: suspend (CompanionTrack) -> Boolean) -> CompanionRequestHandler,
     private val keepAliveMillis: Long = 15_000L,
+    private val sessionExporter: StationSessionExporter? = null,
 ) {
     private val mutableState = MutableStateFlow<PairingUiState>(PairingUiState.Idle)
     val uiState: StateFlow<PairingUiState> = mutableState
@@ -49,6 +55,10 @@ class CompanionPairingController(
     private var trusted = false
     private var trustAsked = false
     private var notice: String? = null
+
+    /** The session the listener is being asked to hand over. Never put in UI state, logs or messages. */
+    private var offered: ExportedStationSession? = null
+    private var handoffAsked = false
     private var channel: CompanionChannel? = null
     private var jobs = mutableListOf<Job>()
     private var tvName = ""
@@ -135,6 +145,68 @@ class CompanionPairingController(
         mutableState.value = PairingUiState.Active(tvName, station, trusted)
     }
 
+    /** The listener's answer to "sign this TV in to <station> as <account>?". Decline sends nothing. */
+    fun decideHandoff(approve: Boolean) {
+        if (mutableState.value !is PairingUiState.HandoffOffer) return
+        val exported = offered
+        offered = null
+        val live = channel
+        if (!approve || exported == null || live == null) {
+            CompanionLog.d("session handoff: declined")
+            mutableState.value = afterHandoffStep()
+            return
+        }
+        val frame = CompanionFrame.Session(exported.station, exported.account.take(64), exported.cookies)
+        val encodable = runCatching { CompanionFrameCodec.encode(frame) }.isSuccess
+        if (!encodable) {
+            CompanionLog.e("session handoff: not sent, frame too large or invalid (${exported.cookies.size} cookies)")
+            notice = "The sign-in is too large to send to the TV."
+            mutableState.value = PairingUiState.Active(tvName, station, trusted, notice)
+            return
+        }
+        CompanionLog.d("session handoff: sending ${exported.cookies.size} cookies ${exported.cookies.map { it.name }}")
+        notice = "Sending the sign-in to the TV…"
+        mutableState.value = PairingUiState.Active(tvName, station, trusted, notice)
+        launch {
+            try {
+                live.writeFrame(frame)
+            } catch (failure: IOException) {
+                CompanionLog.e("session handoff: send failed ${failure.javaClass.name}")
+                notice = "The sign-in could not be sent to the TV."
+                mutableState.value = PairingUiState.Active(tvName, station, trusted, notice)
+            }
+        }
+    }
+
+    private fun onHandoffResult(frame: CompanionFrame) {
+        notice = when (frame) {
+            is CompanionFrame.SessionOk -> "The TV is signed in to ${frame.station.uppercase()}."
+            is CompanionFrame.SessionRefused -> "The TV did not accept the sign-in: ${frame.reason.take(100)}"
+            else -> return
+        }
+        CompanionLog.d("session handoff: TV answered ${frame.javaClass.simpleName}")
+        val current = mutableState.value
+        if (current is PairingUiState.Active) mutableState.value = current.copy(notice = notice)
+    }
+
+    private fun afterHandoffStep(): PairingUiState =
+        if (trustAsked) PairingUiState.Active(tvName, station, trusted, notice) else PairingUiState.TrustChoice(tvName)
+
+    private suspend fun afterPaired(): PairingUiState {
+        if (handoffAsked) offered = null
+        if (!handoffAsked) {
+            handoffAsked = true
+            val exported = runCatching { sessionExporter?.export(StationId(station)) }.getOrNull()
+            if (exported != null && exported.cookies.isNotEmpty() && exported.account.isNotBlank()) {
+                offered = exported
+                CompanionLog.d("session handoff: offered, ${exported.cookies.size} cookies ${exported.cookies.map { it.name }}")
+                return PairingUiState.HandoffOffer(tvName, station, exported.account.take(64))
+            }
+            CompanionLog.d("session handoff: not offered (no signed-in session)")
+        }
+        return afterHandoffStep()
+    }
+
     fun decideRequest(approved: Boolean) {
         approval?.complete(approved)
         approval = null
@@ -167,6 +239,8 @@ class CompanionPairingController(
         trusted = false
         trustAsked = false
         notice = null
+        offered = null
+        handoffAsked = false
         if (mutableState.value !is PairingUiState.Message) mutableState.value = PairingUiState.Idle
     }
 
@@ -211,8 +285,11 @@ class CompanionPairingController(
     private suspend fun observe(live: CompanionSession) {
         live.state.collect { state ->
             when (state) {
-                is CompanionState.Paired -> mutableState.value =
-                    if (trustAsked) PairingUiState.Active(tvName, station, trusted, notice) else PairingUiState.TrustChoice(tvName)
+                is CompanionState.Paired -> {
+                    val current = mutableState.value
+                    // A pending offer or an active screen already past the question stays as it is.
+                    if (current !is PairingUiState.HandoffOffer) mutableState.value = afterPaired()
+                }
                 is CompanionState.Closed -> {
                     mutableState.value = PairingUiState.Message(closeText(state.reason))
                     close()
@@ -226,7 +303,11 @@ class CompanionPairingController(
         try {
             while (true) {
                 when (val decoded = live.readFrame()) {
-                    is DecodedFrame.Frame -> activeSession.onFrame(decoded.frame)
+                    is DecodedFrame.Frame -> when (val frame = decoded.frame) {
+                        is CompanionFrame.SessionOk, is CompanionFrame.SessionRefused -> onHandoffResult(frame)
+                        is CompanionFrame.Session -> Unit
+                        else -> activeSession.onFrame(frame)
+                    }
                     DecodedFrame.Unknown -> Unit
                     is DecodedFrame.UnsupportedVersion, DecodedFrame.Malformed -> {
                         activeSession.onProtocolError()

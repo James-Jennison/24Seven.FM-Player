@@ -14,6 +14,7 @@ class TvPairingViewModel(container: AppContainer) : ViewModel() {
         clockMillis = System::currentTimeMillis,
         connect = { qr -> withContext(Dispatchers.IO) { PinnedTlsConnector().connect(qr) } },
         probe = { host, port -> withContext(Dispatchers.IO) { PinnedTlsConnector().probe(host, port) } },
+        sessionExporter = container.stationSessionExporter,
         handlerFor = { approve ->
             PlayerCompanionRequestHandler(
                 stations = container.stationRepository,

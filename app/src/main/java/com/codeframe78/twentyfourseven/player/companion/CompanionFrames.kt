@@ -1,5 +1,6 @@
 package com.codeframe78.twentyfourseven.player.companion
 
+import com.codeframe78.twentyfourseven.player.domain.SessionCookie
 import java.io.ByteArrayOutputStream
 import java.io.DataInputStream
 import java.io.EOFException
@@ -39,6 +40,12 @@ sealed interface CompanionFrame {
     data class Submitting(val op: String) : CompanionFrame
     data class Result(val op: String, val code: CompanionResultCode, val reason: String? = null) : CompanionFrame
     data class StateChanged(val station: String, val account: String) : CompanionFrame
+    /** Hands the phone's station session to the TV after the listener approved it. [toString] never shows cookie values. */
+    data class Session(val station: String, val account: String, val cookies: List<SessionCookie>) : CompanionFrame {
+        override fun toString(): String = "Session(station=$station, cookies=${cookies.map { it.name }})"
+    }
+    data class SessionOk(val station: String) : CompanionFrame
+    data class SessionRefused(val reason: String) : CompanionFrame
     data object Revoke : CompanionFrame
     data object Ping : CompanionFrame
     data object Pong : CompanionFrame
@@ -59,6 +66,10 @@ object CompanionFrameCodec {
     private const val MAX_TEXT = 200
     private const val MAX_TRACK_REF = 512
     private const val MAX_REASON = 300
+    private const val MAX_COOKIES = 16
+    private const val MAX_COOKIE_NAME = 128
+    private const val MAX_COOKIE_VALUE = 4096
+    private const val MAX_COOKIE_PATH = 128
     private val OP = Regex("[0-9a-f]{32}")
     private val STATION = Regex("[a-z0-9]{1,16}")
 
@@ -127,6 +138,21 @@ object CompanionFrameCodec {
                 .also { if (frame.reason != null) it.put("reason", frame.reason) }
             is CompanionFrame.StateChanged -> json.put("type", "state_changed").put("station", frame.station)
                 .put("account", frame.account)
+            is CompanionFrame.Session -> json.put("type", "session").put("station", frame.station)
+                .put("account", frame.account)
+                .put(
+                    "cookies",
+                    org.json.JSONArray().also { array ->
+                        frame.cookies.forEach {
+                            array.put(
+                                JSONObject().put("name", it.name).put("value", it.value).put("maxAge", it.maxAgeSeconds)
+                                    .put("secure", it.secure).put("path", it.path),
+                            )
+                        }
+                    },
+                )
+            is CompanionFrame.SessionOk -> json.put("type", "session_ok").put("station", frame.station)
+            is CompanionFrame.SessionRefused -> json.put("type", "session_refused").put("reason", frame.reason)
             CompanionFrame.Revoke -> json.put("type", "revoke")
             CompanionFrame.Ping -> json.put("type", "ping")
             CompanionFrame.Pong -> json.put("type", "pong")
@@ -163,6 +189,25 @@ object CompanionFrameCodec {
             reason = if (json.has("reason")) text(json, "reason", MAX_REASON) else null,
         )
         "state_changed" -> CompanionFrame.StateChanged(station = station(json), account = text(json, "account", MAX_LABEL))
+        "session" -> CompanionFrame.Session(
+            station = station(json),
+            account = text(json, "account", MAX_LABEL),
+            cookies = (json.optJSONArray("cookies") ?: throw IllegalArgumentException("cookies")).let { array ->
+                require(array.length() in 1..MAX_COOKIES) { "cookies" }
+                (0 until array.length()).map {
+                    val item = array.optJSONObject(it) ?: throw IllegalArgumentException("cookie")
+                    SessionCookie(
+                        name = text(item, "name", MAX_COOKIE_NAME, allowEmpty = false),
+                        value = text(item, "value", MAX_COOKIE_VALUE),
+                        maxAgeSeconds = item.optLong("maxAge", -1L),
+                        secure = item.optBoolean("secure", true),
+                        path = text(item, "path", MAX_COOKIE_PATH, allowEmpty = false),
+                    )
+                }
+            },
+        )
+        "session_ok" -> CompanionFrame.SessionOk(station = station(json))
+        "session_refused" -> CompanionFrame.SessionRefused(reason = text(json, "reason", MAX_REASON))
         "revoke" -> CompanionFrame.Revoke
         "ping" -> CompanionFrame.Ping
         "pong" -> CompanionFrame.Pong
