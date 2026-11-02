@@ -24,6 +24,38 @@ The Owner said the first version should need nothing done server-side. That sele
 5. The phone checks the safety gate and submits once. The result (accepted, refused with the station's reason, or uncertain) returns to the TV.
 6. Either side can revoke the pairing; pairing expires after a bounded idle period. Signing out on the phone ends it.
 
+## Requirements from the TV-side review (2026-11-02)
+
+Reviewed by the TV writer session; review only, no TV code written, and TV pairing scope is not yet assigned by the Owner.
+
+**Pairing payload and channel**
+- QR is the primary route. It carries: protocol version, TV name, TV LAN address and port, a 128-bit one-time secret, a short expiry, and the SHA-256 of a per-pairing TV public key.
+- The channel is TLS (or Noise) pinned to that key, so a LAN attacker cannot intercept after the scan. Plain HTTP is not acceptable.
+- Fallback: a 6-digit code plus the TV's IP shown under the QR. mDNS discovery is optional and not relied on, because guest Wi-Fi and client isolation break it and it adds a permission story.
+- The TV listens only while its pairing or requests screen is open, never from a background service. The phone is foreground-only, so both sides match.
+- Every message carries an operation ID and is idempotent. The TV never infers success from silence.
+
+**Decisions taken as defaults (reversible, flagged for Owner review)**
+- The TV generates the key, per pairing.
+- The TV owns the pairing-code expiry clock (it issues the secret); both sides also enforce a bounded idle expiry on an established pairing.
+- A change of station or signed-in account on the phone invalidates any pending operation and returns the TV to the unpaired state.
+- The TV shows only a phone-supplied label for the account, never tokens or an email address.
+
+**States both sides must cover**
+1. Unpaired: QR with countdown, expiry and regenerate.
+2. Paired-idle: phone name, station and account label, Revoke.
+3. Search: dictation or keyboard, loading, empty, error, offline.
+4. Confirm: the exact track, Confirm and Cancel, then "waiting for phone approval".
+5. Result: accepted; refused with the station's reason; **phone unreachable before submit** (nothing was submitted); **unknown after submit** (check the Queue, no automatic retry). These two failure codes are distinct.
+6. Revoked, expired or phone signed out: back to state 1.
+- Everything is D-pad and Back navigable, and playback continues while these screens are open.
+
+**Unverified and to spike on the physical Streamer before the protocol is fixed**
+- Network-security and manifest review for an inbound listener (TV is HTTPS-only today).
+- QR rendering library or encoder, with its Gradle verification-metadata entry.
+- Multicast on Ethernet versus Wi-Fi, and keyboard dictation behavior.
+- Sleep and wake: the listener must rebind and the phone must reconnect.
+
 ## Open decisions for the Owner
 
 1. **Transport.** LAN discovery with a direct channel (reachable Ethernet TV and Wi-Fi phone, but guest networks and VPNs break it), or a relay (needs hosting and new privacy obligations). Recommendation: LAN only for the first version.
