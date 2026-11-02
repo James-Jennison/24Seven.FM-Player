@@ -111,7 +111,9 @@ class CompanionSessionHandoffTest {
         assertEquals(cookies(), sent.cookies)
         channel.incoming.send(DecodedFrame.Frame(CompanionFrame.SessionOk("sst")))
         runCurrent()
-        assertEquals("The TV is signed in to SST.", (controller.uiState.value as PairingUiState.Active).notice)
+        val active = controller.uiState.value as PairingUiState.Active
+        assertEquals("The TV is signed in to SST.", active.notice)
+        assertTrue(active.handedOver)
     }
 
     @Test
@@ -135,6 +137,7 @@ class CompanionSessionHandoffTest {
         channel.incoming.send(DecodedFrame.Frame(CompanionFrame.SessionRefused("storage full")))
         runCurrent()
         assertEquals("The TV did not accept the sign-in: storage full", (controller.uiState.value as PairingUiState.Active).notice)
+        assertFalse((controller.uiState.value as PairingUiState.Active).handedOver)
         assertEquals(1, channel.sent.size)
     }
 

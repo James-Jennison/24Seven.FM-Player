@@ -32,6 +32,8 @@ sealed interface PairingUiState {
         val station: String,
         val trusted: Boolean = false,
         val notice: String? = null,
+        /** The TV accepted the phone's station session and can request songs by itself. */
+        val handedOver: Boolean = false,
     ) : PairingUiState
     /** The exact track the TV asked for, waiting for the listener's decision on the phone. */
     data class Approval(val tvName: String, val track: CompanionTrack) : PairingUiState
@@ -66,6 +68,7 @@ class CompanionPairingController(
     /** The session the listener is being asked to hand over. Never put in UI state, logs or messages. */
     private var offered: ExportedStationSession? = null
     private var handoffAsked = false
+    private var handedOver = false
     private var channel: CompanionChannel? = null
     private var jobs = mutableListOf<Job>()
     private var tvName = ""
@@ -164,13 +167,13 @@ class CompanionPairingController(
             return
         }
         notice = "Sending the sign-in to the TV…"
-        mutableState.value = PairingUiState.Active(tvName, station, trusted, notice)
+        mutableState.value = PairingUiState.Active(tvName, station, trusted, notice, handedOver)
         launch {
             val gate = readGate()
             if (gate == null || !gate.passes) {
                 CompanionLog.d("session handoff: not sent, community gate failed at approval")
                 notice = gate?.blockedReason ?: "The community settings on this phone could not be read."
-                mutableState.value = PairingUiState.Active(tvName, station, trusted, notice)
+                mutableState.value = PairingUiState.Active(tvName, station, trusted, notice, handedOver)
                 return@launch
             }
             val voucher = gate.voucher
@@ -178,7 +181,7 @@ class CompanionPairingController(
             if (runCatching { CompanionFrameCodec.encode(frame) }.isFailure) {
                 CompanionLog.e("session handoff: not sent, frame too large or invalid (${exported.cookies.size} cookies)")
                 notice = "The sign-in is too large to send to the TV."
-                mutableState.value = PairingUiState.Active(tvName, station, trusted, notice)
+                mutableState.value = PairingUiState.Active(tvName, station, trusted, notice, handedOver)
                 return@launch
             }
             CompanionLog.d(
@@ -189,12 +192,13 @@ class CompanionPairingController(
             } catch (failure: IOException) {
                 CompanionLog.e("session handoff: send failed ${failure.javaClass.name}")
                 notice = "The sign-in could not be sent to the TV."
-                mutableState.value = PairingUiState.Active(tvName, station, trusted, notice)
+                mutableState.value = PairingUiState.Active(tvName, station, trusted, notice, handedOver)
             }
         }
     }
 
     private fun onHandoffResult(frame: CompanionFrame) {
+        if (frame is CompanionFrame.SessionOk) handedOver = true
         notice = when (frame) {
             is CompanionFrame.SessionOk -> "The TV is signed in to ${frame.station.uppercase()}."
             is CompanionFrame.SessionRefused -> when (frame.reason) {
@@ -206,7 +210,7 @@ class CompanionPairingController(
         }
         CompanionLog.d("session handoff: TV answered ${frame.javaClass.simpleName}")
         val current = mutableState.value
-        if (current is PairingUiState.Active) mutableState.value = current.copy(notice = notice)
+        if (current is PairingUiState.Active) mutableState.value = current.copy(notice = notice, handedOver = handedOver)
     }
 
     private suspend fun readGate(): CommunityGateCheck? = try {
@@ -222,7 +226,7 @@ class CompanionPairingController(
     }
 
     private fun afterHandoffStep(): PairingUiState =
-        if (trustAsked) PairingUiState.Active(tvName, station, trusted, notice) else PairingUiState.TrustChoice(tvName)
+        if (trustAsked) PairingUiState.Active(tvName, station, trusted, notice, handedOver) else PairingUiState.TrustChoice(tvName)
 
     private suspend fun afterPaired(): PairingUiState {
         if (handoffAsked) offered = null
@@ -286,6 +290,7 @@ class CompanionPairingController(
         notice = null
         offered = null
         handoffAsked = false
+        handedOver = false
         if (mutableState.value !is PairingUiState.Message) mutableState.value = PairingUiState.Idle
     }
 
@@ -310,7 +315,7 @@ class CompanionPairingController(
             CompanionLog.d("trusted TV: approving without the approval screen")
             val text = "Requesting: ${track.title}"
             notice = text
-            mutableState.value = PairingUiState.Active(tvName, station, trusted = true, notice = text)
+            mutableState.value = PairingUiState.Active(tvName, station, trusted = true, notice = text, handedOver = handedOver)
             scope.launch {
                 delay(NOTICE_MILLIS)
                 if (notice == text) {

@@ -89,7 +89,10 @@ fun TvPairingScreen(
             is PairingUiState.Active -> {
                 Text("Paired with ${state.tvName}.")
                 Text(
-                    if (state.trusted) {
+                    if (state.handedOver) {
+                        "The TV is signed in to ${state.station.uppercase()} and can search and request songs by itself. " +
+                            "Remove its sign-in on the TV when you no longer want that."
+                    } else if (state.trusted) {
                         "Songs you choose on the TV are requested on ${state.station.uppercase()} without asking, until you end the pairing."
                     } else {
                         "Songs you choose on the TV are requested on ${state.station.uppercase()}. You approve each one here."
