@@ -62,6 +62,8 @@ class CompanionPairingControllerTest {
         assertTrue(channel.sent.single() is CompanionFrame.Pair)
         channel.incoming.send(DecodedFrame.Frame(CompanionFrame.PairOk("s1")))
         runCurrent()
+        assertEquals(PairingUiState.TrustChoice("Living room"), controller.uiState.value)
+        controller.setTrust(false)
         assertEquals(PairingUiState.Active("Living room", "sst"), controller.uiState.value)
     }
 
@@ -87,6 +89,7 @@ class CompanionPairingControllerTest {
         runCurrent()
         channel.incoming.send(DecodedFrame.Frame(CompanionFrame.PairOk("s1")))
         runCurrent()
+        controller.setTrust(false)
         channel.sent.clear()
         channel.incoming.send(DecodedFrame.Frame(CompanionFrame.Propose(op, "sst", "B000:12", "Song", "Artist", "Album")))
         runCurrent()
@@ -107,6 +110,8 @@ class CompanionPairingControllerTest {
         controller.pairWithQr(qrText(), "Razr", "James", "sst")
         runCurrent()
         channel.incoming.send(DecodedFrame.Frame(CompanionFrame.PairOk("s1")))
+        runCurrent()
+        controller.setTrust(false)
         channel.incoming.send(DecodedFrame.Frame(CompanionFrame.Propose(op, "sst", "B000:12", "Song", "Artist", "Album")))
         runCurrent()
         controller.decideRequest(false)
@@ -166,5 +171,98 @@ class CompanionPairingControllerTest {
         val other = controller(channel)
         other.pairWithCode("192.168.1.20", 8443, "12345", "Razr", "James", "sst")
         assertTrue(other.uiState.value is PairingUiState.Message)
+    }
+
+    private suspend fun kotlinx.coroutines.test.TestScope.pairedTrusted(channel: FakeChannel, handler: Handler, trust: Boolean): CompanionPairingController {
+        val controller = controller(channel, handler)
+        controller.pairWithQr(qrText(), "Razr", "James", "sst")
+        runCurrent()
+        channel.incoming.send(DecodedFrame.Frame(CompanionFrame.PairOk("s1")))
+        runCurrent()
+        assertEquals(PairingUiState.TrustChoice("Living room"), controller.uiState.value)
+        controller.setTrust(trust)
+        channel.sent.clear()
+        return controller
+    }
+
+    @Test
+    fun `a trusted TV submits without the approval screen and shows a notice`() = runTest {
+        val channel = FakeChannel()
+        val handler = Handler()
+        val controller = pairedTrusted(channel, handler, trust = true)
+        channel.incoming.send(DecodedFrame.Frame(CompanionFrame.Propose(op, "sst", "B000:12", "Song", "Artist", "Album")))
+        runCurrent()
+        assertEquals(1, handler.submits)
+        assertEquals(CompanionFrame.Result(op, CompanionResultCode.Accepted), channel.sent.last())
+        assertEquals(PairingUiState.Active("Living room", "sst", trusted = true, notice = "Requesting: Song"), controller.uiState.value)
+    }
+
+    @Test
+    fun `a trusted TV is still stopped by the community safety gate`() = runTest {
+        val channel = FakeChannel()
+        val handler = object : CompanionRequestHandler by Handler() {
+            var submitted = false
+            override suspend fun passesSafetyGate() = false
+            override suspend fun submit(track: CompanionTrack): CompanionSubmitOutcome { submitted = true; return CompanionSubmitOutcome.Accepted }
+        }
+        val controller = CompanionPairingController(
+            scope = backgroundScope, clockMillis = { 1_000_000L }, connect = { channel },
+            probe = { _, _ -> ProbedConnection(channel, keyHash) },
+            handlerFor = { approve -> object : CompanionRequestHandler by handler {
+                override suspend fun approve(track: CompanionTrack) = approve(track)
+            } },
+            keepAliveMillis = 1_000_000L,
+        )
+        controller.pairWithQr(qrText(), "Razr", "James", "sst")
+        runCurrent()
+        channel.incoming.send(DecodedFrame.Frame(CompanionFrame.PairOk("s1")))
+        runCurrent()
+        controller.setTrust(true)
+        channel.sent.clear()
+        channel.incoming.send(DecodedFrame.Frame(CompanionFrame.Propose(op, "sst", "B000:12", "Song", "Artist", "Album")))
+        runCurrent()
+        assertTrue(!handler.submitted)
+        assertEquals(CompanionFrame.Declined(op), channel.sent.last())
+    }
+
+    @Test
+    fun `declining the trust question keeps asking for every request`() = runTest {
+        val channel = FakeChannel()
+        val handler = Handler()
+        val controller = pairedTrusted(channel, handler, trust = false)
+        channel.incoming.send(DecodedFrame.Frame(CompanionFrame.Propose(op, "sst", "B000:12", "Song", "Artist", "Album")))
+        runCurrent()
+        assertTrue(controller.uiState.value is PairingUiState.Approval)
+        assertEquals(0, handler.submits)
+    }
+
+    @Test
+    fun `an unanswered trust question never auto-approves`() = runTest {
+        val channel = FakeChannel()
+        val handler = Handler()
+        val controller = controller(channel, handler)
+        controller.pairWithQr(qrText(), "Razr", "James", "sst")
+        runCurrent()
+        channel.incoming.send(DecodedFrame.Frame(CompanionFrame.PairOk("s1")))
+        channel.incoming.send(DecodedFrame.Frame(CompanionFrame.Propose(op, "sst", "B000:12", "Song", "Artist", "Album")))
+        runCurrent()
+        assertTrue(controller.uiState.value is PairingUiState.Approval)
+        assertEquals(0, handler.submits)
+    }
+
+    @Test
+    fun `trust ends with the pairing and the next pairing asks again`() = runTest {
+        val channel = FakeChannel()
+        val handler = Handler()
+        val controller = pairedTrusted(channel, handler, trust = true)
+        controller.close()
+        controller.dismissMessage()
+        val second = FakeChannel()
+        val again = controller(second, handler)
+        again.pairWithQr(qrText(), "Razr", "James", "sst")
+        runCurrent()
+        second.incoming.send(DecodedFrame.Frame(CompanionFrame.PairOk("s2")))
+        runCurrent()
+        assertEquals(PairingUiState.TrustChoice("Living room"), again.uiState.value)
     }
 }

@@ -31,6 +31,7 @@ fun TvPairingScreen(
     onPairWithCode: (host: String, port: Int, code: String) -> Unit,
     onConfirmFingerprint: (Boolean) -> Unit,
     onDecideRequest: (Boolean) -> Unit,
+    onChooseTrust: (Boolean) -> Unit,
     onRevoke: () -> Unit,
     onDismissMessage: () -> Unit,
     modifier: Modifier = Modifier,
@@ -49,9 +50,28 @@ fun TvPairingScreen(
                     OutlinedButton(onClick = { onConfirmFingerprint(false) }) { Text("They differ") }
                 }
             }
+            is PairingUiState.TrustChoice -> {
+                Text("Paired with ${state.tvName}.")
+                Text("Let this TV request songs without asking each time?", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    "Until you end the pairing it can request songs with your account. The phone still checks each song " +
+                        "and the community rules first. Nothing is saved.",
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(onClick = { onChooseTrust(false) }) { Text("Ask each time") }
+                    OutlinedButton(onClick = { onChooseTrust(true) }) { Text("Yes, for this pairing") }
+                }
+            }
             is PairingUiState.Active -> {
                 Text("Paired with ${state.tvName}.")
-                Text("Songs you choose on the TV are requested on ${state.station.uppercase()}. You approve each one here.")
+                Text(
+                    if (state.trusted) {
+                        "Songs you choose on the TV are requested on ${state.station.uppercase()} without asking, until you end the pairing."
+                    } else {
+                        "Songs you choose on the TV are requested on ${state.station.uppercase()}. You approve each one here."
+                    },
+                )
+                state.notice?.let { Text(it, style = MaterialTheme.typography.titleMedium) }
                 OutlinedButton(onClick = onRevoke) { Text("End pairing") }
             }
             is PairingUiState.Approval -> {

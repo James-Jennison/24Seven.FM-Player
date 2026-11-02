@@ -90,6 +90,7 @@ fun TvPairingHost(onDismiss: () -> Unit) {
                         },
                         onConfirmFingerprint = controller::confirmFingerprint,
                         onDecideRequest = controller::decideRequest,
+                        onChooseTrust = controller::setTrust,
                         onRevoke = controller::revoke,
                         onDismissMessage = controller::dismissMessage,
                     )

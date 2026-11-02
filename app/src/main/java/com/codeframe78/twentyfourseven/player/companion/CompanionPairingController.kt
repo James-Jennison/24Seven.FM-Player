@@ -14,7 +14,15 @@ sealed interface PairingUiState {
     data object Connecting : PairingUiState
     /** Typed pairing: the listener compares [fingerprint] with the TV screen before anything is sent. */
     data class ConfirmFingerprint(val fingerprint: String) : PairingUiState
-    data class Active(val tvName: String, val station: String) : PairingUiState
+    /** Asked once after pairing: may this TV request songs without the listener approving each one? */
+    data class TrustChoice(val tvName: String) : PairingUiState
+    /** [trusted]: requests from this TV skip the approval screen; [notice] names the song just requested that way. */
+    data class Active(
+        val tvName: String,
+        val station: String,
+        val trusted: Boolean = false,
+        val notice: String? = null,
+    ) : PairingUiState
     /** The exact track the TV asked for, waiting for the listener's decision on the phone. */
     data class Approval(val tvName: String, val track: CompanionTrack) : PairingUiState
     data class Message(val text: String) : PairingUiState
@@ -36,6 +44,11 @@ class CompanionPairingController(
     val uiState: StateFlow<PairingUiState> = mutableState
 
     private var session: CompanionSession? = null
+
+    /** In memory only, for the life of this pairing: [close] clears it. Rotation does not, because the controller survives it. */
+    private var trusted = false
+    private var trustAsked = false
+    private var notice: String? = null
     private var channel: CompanionChannel? = null
     private var jobs = mutableListOf<Job>()
     private var tvName = ""
@@ -113,6 +126,15 @@ class CompanionPairingController(
         fingerprintDecision = null
     }
 
+    /** The listener's answer to "let this TV request songs without asking each time?". Asked once per pairing. */
+    fun setTrust(trustTv: Boolean) {
+        if (mutableState.value !is PairingUiState.TrustChoice) return
+        trusted = trustTv
+        trustAsked = true
+        CompanionLog.d("trust decision: ${if (trustTv) "trusted for this pairing" else "ask each time"}")
+        mutableState.value = PairingUiState.Active(tvName, station, trusted)
+    }
+
     fun decideRequest(approved: Boolean) {
         approval?.complete(approved)
         approval = null
@@ -142,6 +164,9 @@ class CompanionPairingController(
         channel?.let { runCatching { it.close() } }
         channel = null
         session = null
+        trusted = false
+        trustAsked = false
+        notice = null
         if (mutableState.value !is PairingUiState.Message) mutableState.value = PairingUiState.Idle
     }
 
@@ -161,6 +186,23 @@ class CompanionPairingController(
     }
 
     private suspend fun askListener(track: CompanionTrack): Boolean {
+        if (trusted) {
+            // Resolve and the community safety gate have already run and still decide whether anything is submitted.
+            CompanionLog.d("trusted TV: approving without the approval screen")
+            val text = "Requesting: ${track.title}"
+            notice = text
+            mutableState.value = PairingUiState.Active(tvName, station, trusted = true, notice = text)
+            scope.launch {
+                delay(NOTICE_MILLIS)
+                if (notice == text) {
+                    notice = null
+                    val current = mutableState.value
+                    if (current is PairingUiState.Active && current.notice == text) mutableState.value = current.copy(notice = null)
+                }
+            }
+            return true
+        }
+        CompanionLog.d("untrusted TV: asking the listener")
         val decision = CompletableDeferred<Boolean>().also { approval = it }
         mutableState.value = PairingUiState.Approval(tvName, track)
         return decision.await()
@@ -169,7 +211,8 @@ class CompanionPairingController(
     private suspend fun observe(live: CompanionSession) {
         live.state.collect { state ->
             when (state) {
-                is CompanionState.Paired -> mutableState.value = PairingUiState.Active(tvName, station)
+                is CompanionState.Paired -> mutableState.value =
+                    if (trustAsked) PairingUiState.Active(tvName, station, trusted, notice) else PairingUiState.TrustChoice(tvName)
                 is CompanionState.Closed -> {
                     mutableState.value = PairingUiState.Message(closeText(state.reason))
                     close()
@@ -210,6 +253,10 @@ class CompanionPairingController(
 
     private fun launch(block: suspend () -> Unit) {
         jobs += scope.launch { block() }
+    }
+
+    private companion object {
+        const val NOTICE_MILLIS = 6_000L
     }
 
     private fun fail(text: String) {
