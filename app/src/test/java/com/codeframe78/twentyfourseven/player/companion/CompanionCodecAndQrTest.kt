@@ -120,4 +120,34 @@ class CompanionCodecAndQrTest {
         assertFalse(proof.contains(secret))
         assertFalse(proof == PairingProof.compute("01".repeat(16), keyHash))
     }
+
+    @Test
+    fun `proofs match independently computed vectors so the TV can check its own`() {
+        val keyHash = "11".repeat(32)
+        assertEquals(
+            "fbe4b1db0b7ee3c740efa1e88e5a3bd37e9e63d5792752f5064b43555f97b0c9",
+            PairingProof.compute("00".repeat(16), keyHash),
+        )
+        assertEquals(
+            "a9b701cbd81460b50517eeec120d8a1f5771fce14aae158b549edec95d60936f",
+            PairingProof.computeTyped("123456", keyHash),
+        )
+    }
+
+    @Test
+    fun `typed pairing codes must be exactly six digits`() {
+        listOf("12345", "1234567", "12a456", "").forEach {
+            try {
+                PairingProof.computeTyped(it, "11".repeat(32))
+                fail("expected rejection of '$it'")
+            } catch (_: IllegalArgumentException) {
+            }
+        }
+    }
+
+    @Test
+    fun `the fingerprint is the first 64 bits in four groups of four`() {
+        val hash = "2D711642B726B044" + "0".repeat(48)
+        assertEquals("2d71 1642 b726 b044", PairingFingerprint.of(hash))
+    }
 }

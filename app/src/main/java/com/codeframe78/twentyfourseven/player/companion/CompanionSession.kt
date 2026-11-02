@@ -68,19 +68,27 @@ class CompanionSession(
     private var tvSession: String = ""
     private var closeAfterOperation: CloseReason? = null
 
-    suspend fun startPairing(qr: PairingQr, phoneLabel: String, accountLabel: String, stationId: String) {
+    suspend fun startPairing(qr: PairingQr, phoneLabel: String, accountLabel: String, stationId: String) =
+        sendPair(PairingProof.compute(qr.secretHex, qr.keyHashHex), phoneLabel, accountLabel, stationId)
+
+    /**
+     * Typed-code pairing. The caller must already have shown [PairingFingerprint] for the key it read from the live
+     * connection and received the listener's confirmation; the proof is not sent before that.
+     */
+    suspend fun startTypedPairing(
+        code: String,
+        keyHashHex: String,
+        phoneLabel: String,
+        accountLabel: String,
+        stationId: String,
+    ) = sendPair(PairingProof.computeTyped(code, keyHashHex), phoneLabel, accountLabel, stationId)
+
+    private suspend fun sendPair(proof: String, phoneLabel: String, accountLabel: String, stationId: String) {
         check(mutableState.value == CompanionState.Unpaired) { "Already pairing" }
         station = stationId
         mutableState.value = CompanionState.Pairing
         touch()
-        send(
-            CompanionFrame.Pair(
-                proof = PairingProof.compute(qr.secretHex, qr.keyHashHex),
-                phone = phoneLabel,
-                account = accountLabel,
-                station = stationId,
-            ),
-        )
+        send(CompanionFrame.Pair(proof = proof, phone = phoneLabel, account = accountLabel, station = stationId))
     }
 
     suspend fun onFrame(frame: CompanionFrame) {

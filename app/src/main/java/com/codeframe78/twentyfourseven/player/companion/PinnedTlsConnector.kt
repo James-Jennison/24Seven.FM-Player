@@ -54,6 +54,26 @@ class CompanionConnection internal constructor(private val socket: SSLSocket) : 
     }
 }
 
+/** Accepts any certificate but records its key hash, for the typed path where the listener confirms the fingerprint. */
+class CapturingTrustManager : X509TrustManager {
+    @Volatile var keyHashHex: String? = null
+        private set
+
+    override fun checkServerTrusted(chain: Array<out X509Certificate>?, authType: String?) {
+        val leaf = chain?.firstOrNull() ?: throw CertificateException("No TV certificate")
+        keyHashHex = PinnedTrustManager.sha256Hex(leaf.publicKey.encoded)
+    }
+
+    override fun checkClientTrusted(chain: Array<out X509Certificate>?, authType: String?) {
+        throw CertificateException("The phone does not accept client certificates")
+    }
+
+    override fun getAcceptedIssuers(): Array<X509Certificate> = emptyArray()
+}
+
+/** A connection whose TV key is not yet trusted: nothing may be sent until the listener confirms [keyHashHex]. */
+class ProbedConnection internal constructor(val connection: CompanionConnection, val keyHashHex: String)
+
 class PinnedTlsConnector(private val timeoutMillis: Int = 5_000) {
     /** Connects to a LAN host from a parsed QR payload; never to anything else. */
     fun connect(qr: PairingQr): CompanionConnection {
@@ -71,6 +91,31 @@ class PinnedTlsConnector(private val timeoutMillis: Int = 5_000) {
             throw failure
         }
         return CompanionConnection(socket)
+    }
+
+    /** Typed path: connect to a LAN host, read the key the TV presents, send nothing. */
+    fun probe(host: String, port: Int): ProbedConnection {
+        require(PairingQr.isLanHost(host)) { "Not a local network address" }
+        require(port in 1..65535)
+        val capture = CapturingTrustManager()
+        val context = SSLContext.getInstance("TLSv1.3")
+        context.init(null, arrayOf(capture), null)
+        val socket = context.socketFactory.createSocket() as SSLSocket
+        try {
+            socket.enabledProtocols = arrayOf("TLSv1.3")
+            socket.soTimeout = READ_TIMEOUT_MILLIS
+            socket.connect(InetSocketAddress(host.trim('[', ']'), port), timeoutMillis)
+            socket.startHandshake()
+        } catch (failure: Exception) {
+            runCatching { socket.close() }
+            throw failure
+        }
+        val hash = capture.keyHashHex
+        if (hash == null) {
+            runCatching { socket.close() }
+            throw CertificateException("The TV presented no key")
+        }
+        return ProbedConnection(CompanionConnection(socket), hash)
     }
 
     private companion object {

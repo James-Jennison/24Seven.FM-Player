@@ -75,6 +75,14 @@ class CompanionSessionTest {
     }
 
     @Test
+    fun `typed pairing sends the typed proof`() = runTest {
+        val rig = Rig(this)
+        rig.session.startTypedPairing("123456", qr.keyHashHex, "Razr", "James", "sst")
+        val pair = rig.sent.single() as CompanionFrame.Pair
+        assertEquals(PairingProof.computeTyped("123456", qr.keyHashHex), pair.proof)
+    }
+
+    @Test
     fun `a refused pairing closes the session`() = runTest {
         val rig = Rig(this)
         rig.session.startPairing(qr, "Razr", "James", "sst")

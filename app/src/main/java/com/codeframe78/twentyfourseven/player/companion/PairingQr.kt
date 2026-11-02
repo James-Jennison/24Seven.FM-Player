@@ -80,8 +80,27 @@ object PairingProof {
         return mac.doFinal(hexBytes(keyHashHex)).joinToString("") { "%02x".format(it) }
     }
 
+    /**
+     * Typed pairing: the secret is the six ASCII digits shown on the TV, used as the HMAC key bytes. The message is
+     * still the decoded 32-byte key hash. Only send this after the listener has confirmed the TV's fingerprint.
+     */
+    fun computeTyped(code: String, keyHashHex: String): String {
+        require(code.length == 6 && code.all { it in '0'..'9' }) { "Pairing code must be six digits" }
+        val mac = Mac.getInstance("HmacSHA256")
+        mac.init(SecretKeySpec(code.toByteArray(Charsets.US_ASCII), "HmacSHA256"))
+        return mac.doFinal(hexBytes(keyHashHex)).joinToString("") { "%02x".format(it) }
+    }
+
     private fun hexBytes(hex: String): ByteArray {
         require(hex.length % 2 == 0)
         return ByteArray(hex.length / 2) { hex.substring(it * 2, it * 2 + 2).toInt(16).toByte() }
+    }
+}
+
+object PairingFingerprint {
+    /** First 64 bits of the key hash as four groups of four lowercase hex characters; compare ignoring case. */
+    fun of(keyHashHex: String): String {
+        require(keyHashHex.length == 64)
+        return keyHashHex.lowercase().take(16).chunked(4).joinToString(" ")
     }
 }
