@@ -149,7 +149,13 @@ internal class StationExtrasRemoteDataSource(
             if (action.path != "/modules.php" || queryValue(action.rawQuery, "name") != "Your_Account") {
                 throw IOException("Profile form posts elsewhere")
             }
-            pages.postForm(stationId, form.actionPath, catalogParser.profileFormFields(form, edited), PROFILE_EDIT_LIMIT)
+            pages.postForm(
+                stationId,
+                form.actionPath,
+                catalogParser.profileFormFields(form, edited),
+                PROFILE_EDIT_LIMIT,
+                referer = PROFILE_EDIT_PATH,
+            )
             profileEditForm(stationId)
         }
 
