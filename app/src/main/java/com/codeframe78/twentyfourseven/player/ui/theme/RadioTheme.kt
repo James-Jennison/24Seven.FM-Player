@@ -94,36 +94,40 @@ fun StationPalette.themedAccent(): Color = if (isSystemInDarkTheme()) accent els
 @Composable
 fun StationPalette.onAccent(): Color = if (isSystemInDarkTheme()) Color(0xFF1C1424) else Color.White
 
+/**
+ * Each accent is the station website's own brand colour (its `theme-color`), so the app, the TV app and the sites agree.
+ * Death.FM's pure red is lifted slightly so it stays readable on the dark surfaces.
+ */
 fun stationPalette(stationId: StationId?): StationPalette = when (stationId?.value) {
     "sst" -> StationPalette(
-        accent = Color(0xFFFFC65B),
-        secondary = Color(0xFF7188C7),
-        glow = Color(0xFF172448),
-        accentOnLight = Color(0xFF7A5200),
+        accent = Color(0xFF99CCFF),
+        secondary = Color(0xFF5B8FC7),
+        glow = Color(0xFF12253D),
+        accentOnLight = Color(0xFF1F5E99),
     )
     "1980s" -> StationPalette(
-        accent = Color(0xFFFF4FD8),
-        secondary = Color(0xFF35DFFF),
-        glow = Color(0xFF3A1647),
-        accentOnLight = Color(0xFFB3007F),
+        accent = Color(0xFFFF99CC),
+        secondary = Color(0xFFEE88BB),
+        glow = Color(0xFF3A1530),
+        accentOnLight = Color(0xFFB8337A),
     )
     "afm" -> StationPalette(
-        accent = Color(0xFFFFB35C),
-        secondary = Color(0xFFFF755F),
-        glow = Color(0xFF432519),
-        accentOnLight = Color(0xFF9A4D00),
+        accent = Color(0xFFFFCC99),
+        secondary = Color(0xFFEEBB88),
+        glow = Color(0xFF3D2A14),
+        accentOnLight = Color(0xFF9A5A12),
     )
     "dfm" -> StationPalette(
-        accent = Color(0xFFB69CFF),
-        secondary = Color(0xFF6E74E8),
-        glow = Color(0xFF251B49),
-        accentOnLight = Color(0xFF5B3EC2),
+        accent = Color(0xFFFF4D4D),
+        secondary = Color(0xFFCC0000),
+        glow = Color(0xFF3A0F12),
+        accentOnLight = Color(0xFFB00020),
     )
     "efm" -> StationPalette(
-        accent = Color(0xFF55D9A4),
-        secondary = Color(0xFF2EB8B2),
-        glow = Color(0xFF123D38),
-        accentOnLight = Color(0xFF0B7C5C),
+        accent = Color(0xFFFFFF66),
+        secondary = Color(0xFFB5B545),
+        glow = Color(0xFF3A3A10),
+        accentOnLight = Color(0xFF6B6B00),
     )
     else -> StationPalette(
         accent = RadioLavender,
