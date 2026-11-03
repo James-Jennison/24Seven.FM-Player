@@ -89,6 +89,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import com.codeframe78.twentyfourseven.player.companion.TvCompanionFeature
+import com.codeframe78.twentyfourseven.player.companion.TvPairingHost
+import androidx.compose.material.icons.filled.Tv
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -1696,6 +1699,17 @@ private fun MoreScreen(
                 testTag = "more_device_preferences",
             ) {
                 DevicePreferencesSection(state, onUseLastStationAtStartup, onSetStartupStation, showTitle = false)
+            }
+            if (TvCompanionFeature.ENABLED) {
+                var showTvPairing by rememberSaveable { mutableStateOf(false) }
+                MoreLink(
+                    title = "Pair with a TV",
+                    summary = "Link the 24Seven.FM TV app to your account so you can request songs from the TV.",
+                    icon = Icons.Default.Tv,
+                    testTag = "more_pair_tv",
+                    onClick = { showTvPairing = true },
+                )
+                if (showTvPairing) TvPairingHost(onDismiss = { showTvPairing = false })
             }
             MoreLink(
                 title = "App guide",
