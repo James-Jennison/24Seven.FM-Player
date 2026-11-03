@@ -222,7 +222,8 @@ internal class StationSongRequestRemoteDataSource(
                 fields.putIfAbsent(input.attr("name"), input.`val`())
             }
         }
-        if (setOf("msg", "send", "remLen").any { it !in fields && it != "msg" }) return null
+        // "send" is checked above and added when posting; the stations now render it as a <button>, not an <input>.
+        if ("remLen" !in fields) return null
         return RequestMessageForm(
             action = action,
             referer = referer,

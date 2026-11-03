@@ -258,10 +258,10 @@ class StationSongRequestRemoteDataSourceTest {
         val response = """
             Request Wait 20m · VIP 1m
             Request Received - Your request has been sent to the DJ application.
-            <form action="/modules.php?name=Album&amp;action=submitmessage&amp;asin=B00005BG8G&amp;id=2055716">
-              <textarea name="msg"></textarea>
-              <input name="send" type="submit" value="Send">
-              <input name="remLen" value="80" readonly>
+            <form class="message-form" method="post" action="/modules.php?name=Album&amp;action=submitmessage&amp;asin=B00005BG8G&amp;id=2055716">
+              <textarea id="msg" rows="3" name="msg" maxlength="80" aria-describedby="chars"></textarea>
+              <button type="submit" name="send" value="Send">Send message</button>
+              <input type="text" name="remLen" value="80" readonly>
             </form>
         """.trimIndent()
         val remote = StationSongRequestRemoteDataSource(
