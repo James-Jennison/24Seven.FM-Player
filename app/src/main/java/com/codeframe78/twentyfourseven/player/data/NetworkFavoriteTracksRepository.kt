@@ -44,6 +44,8 @@ internal class NetworkFavoriteTracksRepository(
                         status = FavoriteTracksLoadStatus.Error,
                         errorMessage = if (failure is FavoritesAuthenticationRequiredException) {
                             "Sign in to this station to load your favorite tracks."
+                        } else if (failure.isStationSideFailure()) {
+                            "The station's favorites page is not responding. This is a problem on the station, not with your account. Try again later."
                         } else {
                             "Your favorite tracks could not be loaded right now."
                         },

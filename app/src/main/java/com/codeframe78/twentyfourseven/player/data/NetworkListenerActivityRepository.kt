@@ -43,6 +43,8 @@ internal class NetworkListenerActivityRepository(
                         status = ListenerActivityLoadStatus.Error,
                         errorMessage = if (failure is ListenerActivityAuthenticationRequiredException) {
                             "Sign in to this station to load request activity and membership status."
+                        } else if (failure.isStationSideFailure()) {
+                            "The station's request activity page is not responding. This is a problem on the station, not with your account. Try again later."
                         } else {
                             "Request activity could not be loaded right now."
                         },

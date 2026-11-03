@@ -130,7 +130,7 @@ internal class StationListenerActivityRemoteDataSource(
                     uri = uri.resolve(location)
                     return@repeat
                 }
-                if (status !in 200..299) throw IOException("Station returned HTTP $status")
+                if (status !in 200..299) throw StationHttpException(status)
                 val charset = declaredCharset(connection.contentType, StandardCharsets.ISO_8859_1)
                 return connection.inputStream.bufferedReader(charset).use {
                     it.readBounded(responseLimit)

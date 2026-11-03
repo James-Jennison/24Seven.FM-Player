@@ -81,6 +81,7 @@ import com.codeframe78.twentyfourseven.player.domain.FavoriteChangeStatus
 import com.codeframe78.twentyfourseven.player.domain.MemberListSort
 import com.codeframe78.twentyfourseven.player.domain.MemberSummary
 import com.codeframe78.twentyfourseven.player.domain.MembersStatus
+import com.codeframe78.twentyfourseven.player.domain.loadFailureText
 import com.codeframe78.twentyfourseven.player.domain.ProfileEditStatus
 import com.codeframe78.twentyfourseven.player.domain.RecentlyAddedStatus
 import com.codeframe78.twentyfourseven.player.domain.STATION_CLOCK_ZONE
@@ -125,7 +126,7 @@ internal fun AlbumReviewsSection(state: MainUiState, albumId: String, actions: S
             }
             AlbumReviewsStatus.Error -> Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    "Reviews could not be loaded right now.",
+                    loadFailureText("Reviews could not be loaded right now.", "album page", reviews.stationSide),
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.weight(1f),
                 )
@@ -205,7 +206,7 @@ internal fun RecentlyAddedSection(state: MainUiState, actions: StationExtrasActi
         when {
             recent.batches.isEmpty() && recent.status == RecentlyAddedStatus.Error -> Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    "Recently added albums could not be loaded right now.",
+                    loadFailureText("Recently added albums could not be loaded right now.", "Recently Added page", recent.stationSide),
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.weight(1f),
                 )
@@ -306,7 +307,7 @@ internal fun CalendarSection(state: MainUiState, actions: StationExtrasActions) 
         when {
             calendar.days.isEmpty() && calendar.status == CalendarStatus.Error -> Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    "The calendar could not be loaded right now.",
+                    loadFailureText("The calendar could not be loaded right now.", "calendar page", calendar.stationSide),
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.weight(1f),
                 )
@@ -480,7 +481,7 @@ internal fun MembersDialog(state: MainUiState, actions: StationExtrasActions) {
                         members.status == MembersStatus.Error -> item {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
-                                    "The members list could not be loaded right now.",
+                                    loadFailureText("The members list could not be loaded right now.", "members page", members.stationSide),
                                     color = MaterialTheme.colorScheme.error,
                                     modifier = Modifier.weight(1f),
                                 )

@@ -57,8 +57,8 @@ internal class NetworkStationExtrasRepository(
         } catch (cancellation: CancellationException) {
             state.update { if (it.profile.isLoading(name)) it.copy(profile = MemberProfileState()) else it }
             throw cancellation
-        } catch (_: Exception) {
-            MemberProfileState(MemberProfileStatus.Error, name)
+        } catch (failure: Exception) {
+            MemberProfileState(MemberProfileStatus.Error, name, stationSide = failure.isStationSideFailure())
         }
         // A card the listener already closed, or replaced with another member's, is left alone.
         state.update { if (it.profile.isLoading(name)) it.copy(profile = loaded) else it }
@@ -84,8 +84,8 @@ internal class NetworkStationExtrasRepository(
             throw cancellation
         } catch (_: FavoritesAuthenticationRequiredException) {
             MemberFavoritesState(MemberFavoritesStatus.SignInRequired, memberName)
-        } catch (_: Exception) {
-            MemberFavoritesState(MemberFavoritesStatus.Error, memberName)
+        } catch (failure: Exception) {
+            MemberFavoritesState(MemberFavoritesStatus.Error, memberName, stationSide = failure.isStationSideFailure())
         }
         state.update { if (it.memberFavorites.isLoading(memberName)) it.copy(memberFavorites = loaded) else it }
     }
@@ -109,8 +109,8 @@ internal class NetworkStationExtrasRepository(
         } catch (cancellation: CancellationException) {
             state.update { if (it.history.isLoading(date, block)) it.copy(history = PlayedHistoryState()) else it }
             throw cancellation
-        } catch (_: Exception) {
-            PlayedHistoryState(PlayedHistoryStatus.Error, date, block)
+        } catch (failure: Exception) {
+            PlayedHistoryState(PlayedHistoryStatus.Error, date, block, stationSide = failure.isStationSideFailure())
         }
         state.update { if (it.history.isLoading(date, block)) it.copy(history = loaded) else it }
     }
@@ -129,8 +129,8 @@ internal class NetworkStationExtrasRepository(
         } catch (cancellation: CancellationException) {
             state.update { it.copy(news = it.news.copy(status = StationNewsStatus.Idle)) }
             throw cancellation
-        } catch (_: Exception) {
-            state.update { it.copy(news = it.news.copy(status = StationNewsStatus.Error)) }
+        } catch (failure: Exception) {
+            state.update { it.copy(news = it.news.copy(status = StationNewsStatus.Error, stationSide = failure.isStationSideFailure())) }
         }
     }
 
@@ -146,8 +146,8 @@ internal class NetworkStationExtrasRepository(
         } catch (cancellation: CancellationException) {
             state.update { it.copy(recentlyAdded = it.recentlyAdded.copy(status = RecentlyAddedStatus.Idle)) }
             throw cancellation
-        } catch (_: Exception) {
-            state.update { it.copy(recentlyAdded = it.recentlyAdded.copy(status = RecentlyAddedStatus.Error)) }
+        } catch (failure: Exception) {
+            state.update { it.copy(recentlyAdded = it.recentlyAdded.copy(status = RecentlyAddedStatus.Error, stationSide = failure.isStationSideFailure())) }
         }
     }
 
@@ -160,8 +160,8 @@ internal class NetworkStationExtrasRepository(
         } catch (cancellation: CancellationException) {
             state.update { if (it.albumReviews.isLoading(albumId)) it.copy(albumReviews = AlbumReviewsState()) else it }
             throw cancellation
-        } catch (_: Exception) {
-            AlbumReviewsState(albumId, AlbumReviewsStatus.Error)
+        } catch (failure: Exception) {
+            AlbumReviewsState(albumId, AlbumReviewsStatus.Error, stationSide = failure.isStationSideFailure())
         }
         state.update { if (it.albumReviews.isLoading(albumId)) it.copy(albumReviews = loaded) else it }
     }
@@ -192,8 +192,8 @@ internal class NetworkStationExtrasRepository(
             } catch (cancellation: CancellationException) {
                 state.update { it.copy(members = MembersState()) }
                 throw cancellation
-            } catch (_: Exception) {
-                current.copy(status = MembersStatus.Error)
+            } catch (failure: Exception) {
+                current.copy(status = MembersStatus.Error, stationSide = failure.isStationSideFailure())
             }
             state.update { if (it.members.status == MembersStatus.Loading) it.copy(members = loaded) else it }
         }
@@ -215,8 +215,8 @@ internal class NetworkStationExtrasRepository(
             } catch (cancellation: CancellationException) {
                 state.update { it.copy(members = current.copy(query = trimmed, sort = sort)) }
                 throw cancellation
-            } catch (_: Exception) {
-                current.copy(status = MembersStatus.Error, query = trimmed, sort = sort, members = emptyList(), nextStart = null)
+            } catch (failure: Exception) {
+                current.copy(status = MembersStatus.Error, query = trimmed, sort = sort, members = emptyList(), nextStart = null, stationSide = failure.isStationSideFailure())
             }
             state.update { if (it.members.status == MembersStatus.Loading) it.copy(members = loaded) else it }
         }
@@ -263,8 +263,8 @@ internal class NetworkStationExtrasRepository(
         } catch (cancellation: CancellationException) {
             state.update { it.copy(calendar = it.calendar.copy(status = CalendarStatus.Idle)) }
             throw cancellation
-        } catch (_: Exception) {
-            state.update { it.copy(calendar = it.calendar.copy(status = CalendarStatus.Error)) }
+        } catch (failure: Exception) {
+            state.update { it.copy(calendar = it.calendar.copy(status = CalendarStatus.Error, stationSide = failure.isStationSideFailure())) }
         }
     }
 
