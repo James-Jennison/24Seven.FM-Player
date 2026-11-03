@@ -219,6 +219,16 @@ class CompanionSessionTest {
     }
 
     @Test
+    fun `the same station and account reported again does not end the pairing`() = runTest {
+        val rig = Rig(this)
+        rig.pairedSession(qr)
+        rig.session.onStationOrAccountChanged("sst", "James")
+        runCurrent()
+        assertEquals(CompanionState.Paired("s1"), rig.session.state.value)
+        assertTrue(rig.sent.none { it is CompanionFrame.StateChanged })
+    }
+
+    @Test
     fun `a station change during submitting still reports the result and then ends the pairing`() = runTest {
         val rig = Rig(this)
         val gate = CompletableDeferred<Unit>()

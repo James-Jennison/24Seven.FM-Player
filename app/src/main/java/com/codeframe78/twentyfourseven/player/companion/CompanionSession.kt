@@ -62,6 +62,7 @@ class CompanionSession(
     val state: StateFlow<CompanionState> = mutableState
 
     private var station: String = ""
+    private var account: String = ""
     private var lastActivityMillis: Long = clockMillis()
     private var operation: Job? = null
     private val finished = LinkedHashMap<String, CompanionFrame>()
@@ -86,6 +87,7 @@ class CompanionSession(
     private suspend fun sendPair(proof: String, phoneLabel: String, accountLabel: String, stationId: String) {
         check(mutableState.value == CompanionState.Unpaired) { "Already pairing" }
         station = stationId
+        account = accountLabel
         mutableState.value = CompanionState.Pairing
         touch()
         send(CompanionFrame.Pair(proof = proof, phone = phoneLabel, account = accountLabel, station = stationId))
@@ -116,6 +118,8 @@ class CompanionSession(
     /** The phone's station or signed-in account changed: any pending approval is dropped and the pairing ends. */
     suspend fun onStationOrAccountChanged(newStation: String, newAccount: String) {
         if (!isLive()) return
+        // The screen reports the same values again whenever it is composed anew; that is not a change.
+        if (newStation == station && newAccount == account) return
         send(CompanionFrame.StateChanged(newStation, newAccount))
         // A request already submitting cannot be taken back; its result is still reported, then the pairing ends.
         if (mutableState.value is CompanionState.Submitting) {

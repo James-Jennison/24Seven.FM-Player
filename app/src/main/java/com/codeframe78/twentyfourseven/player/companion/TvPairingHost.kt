@@ -58,7 +58,9 @@ fun TvPairingHost(onDismiss: () -> Unit) {
         }
     }
     LaunchedEffect(stationId, account) {
-        if (stationId != null) controller.onStationOrAccountChanged(stationId.value, account)
+        CompanionLog.d("station/account effect: station=${stationId?.value} accountSignedIn=${account.isNotEmpty()} authStatus=${auth?.status}")
+        // auth is null until the account state has loaded; that is not a sign-out.
+        if (stationId != null && auth != null) controller.onStationOrAccountChanged(stationId.value, account)
     }
 
     val state by controller.uiState.collectAsState()
