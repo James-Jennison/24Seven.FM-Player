@@ -253,6 +253,56 @@ class StationSongRequestRemoteDataSourceTest {
     }
 
     @Test
+    fun `the stations' current Request Received wording is accepted despite the Request Wait header`() = runTest {
+        val connections = mutableListOf<FakeConnection>()
+        val response = """
+            Request Wait 20m · VIP 1m
+            Request Received - Your request has been sent to the DJ application.
+            <form class="message-form" method="post" action="/modules.php?name=Album&amp;action=submitmessage&amp;asin=B00005BG8G&amp;id=2055716">
+              <textarea id="msg" rows="3" name="msg" maxlength="80" aria-describedby="chars"></textarea>
+              <button type="submit" name="send" value="Send">Send message</button>
+              <input type="text" name="remLen" value="80" readonly>
+            </form>
+        """.trimIndent()
+        val remote = StationSongRequestRemoteDataSource(
+            sessionStore = sessionStore(),
+            requestQueueVerifier = queuedRequestVerifier,
+        ) { uri ->
+            when (connections.size) {
+                0 -> FakeConnection(uri.toURL(), response)
+                else -> FakeConnection(uri.toURL(), "Your message has been saved.")
+            }.also(connections::add)
+        }
+
+        assertEquals(
+            RequestSubmissionResult.Submitted("The request is confirmed in Queue. The optional message was saved."),
+            remote.submit(stationId, track(), "Nice one"),
+        )
+        assertEquals(2, connections.size)
+        assertEquals("POST", connections[1].requestMethod)
+    }
+
+    @Test
+    fun `the Request Wait header alone is not a rejection`() = runTest {
+        val remote = StationSongRequestRemoteDataSource(sessionStore = sessionStore()) { uri ->
+            FakeConnection(uri.toURL(), "Request Wait 20m · VIP 1m Repeat Interval 5 / 15 Days")
+        }
+
+        val failure = runCatching { remote.submit(stationId, track(), "") }
+        assertTrue(failure.exceptionOrNull() is java.io.IOException)
+        assertEquals("Unrecognized station request confirmation", failure.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `a real wait message is still a rejection`() = runTest {
+        val remote = StationSongRequestRemoteDataSource(sessionStore = sessionStore()) { uri ->
+            FakeConnection(uri.toURL(), "Request Wait 20m. Request wait time has not elapsed for this account.")
+        }
+
+        assertTrue(remote.submit(stationId, track(), "") is RequestSubmissionResult.Rejected)
+    }
+
+    @Test
     fun `sign-in wording elsewhere on an accepted page does not expire the session`() = runTest {
         val store = sessionStore()
         val connections = mutableListOf<FakeConnection>()
