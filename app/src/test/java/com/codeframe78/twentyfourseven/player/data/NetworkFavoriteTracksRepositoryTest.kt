@@ -144,6 +144,14 @@ class NetworkFavoriteTracksRepositoryTest {
             return RankedFavoritesPage(ranked, nextPage = if (page < rankedPages) page + 1 else null)
         }
 
+        var albumSongIds = mapOf<Pair<String, String>, String>()
+        val lookups = mutableListOf<Pair<String, String>>()
+
+        override suspend fun findSongId(stationId: StationId, albumId: String, title: String): String? {
+            lookups += albumId to title
+            return albumSongIds[albumId to title]
+        }
+
         override suspend fun change(stationId: StationId, songId: String, change: FavoriteChange) {
             changeFailure?.let { throw it }
             changes += songId to change
@@ -193,6 +201,34 @@ class NetworkFavoriteTracksRepositoryTest {
             favoriteChangeRequest(FavoriteChange.Remove, "246835"),
         )
         assertEquals(true, runCatching { favoriteChangeRequest(FavoriteChange.Remove, "1&op=x") }.isFailure)
+    }
+
+    @Test
+    fun `a ranked track without a song number takes it from its album page when it is changed`() = runTest {
+        val remote = FakeFavoriteTracksRemote(
+            ranked = listOf(
+                FavoriteTrack(1, "Opening", "Album", "Composer", songId = "11"),
+                FavoriteTrack(2, "Unavailable", "Album Two", "Composer", albumId = "B000000002"),
+                FavoriteTrack(3, "Unknown", "Album Three", "Composer", albumId = "B000000003"),
+            ),
+        ).apply { albumSongIds = mapOf(("B000000002" to "Unavailable") to "22") }
+        val repository = NetworkFavoriteTracksRepository(remote)
+        repository.refreshRanked(stationId)
+
+        repository.changeRankedFavorite(stationId, 2, FavoriteChange.MoveUp)
+        assertEquals(listOf("22" to FavoriteChange.MoveUp), remote.changes)
+        with(repository.observeFavorites(stationId).first()) {
+            assertEquals(FavoriteChangeStatus.Done, change.status)
+            // The number read stays with the row after the ranked list is read again.
+            assertEquals("22", ranked.tracks[1].songId)
+        }
+        repository.changeRankedFavorite(stationId, 2, FavoriteChange.MoveDown)
+        assertEquals(listOf("B000000002" to "Unavailable"), remote.lookups)
+
+        // An album page that does not name the track sends nothing and reports the failure.
+        repository.changeRankedFavorite(stationId, 3, FavoriteChange.Remove)
+        assertEquals(2, remote.changes.size)
+        assertEquals(FavoriteChangeStatus.Failed, repository.observeFavorites(stationId).first().change.status)
     }
 
     @Test

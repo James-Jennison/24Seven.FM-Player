@@ -310,4 +310,27 @@ class FavoriteTracksPageParserTest {
         assertEquals("B000000002", page.tracks[1].albumId)
         assertEquals(2, page.nextPage)
     }
+
+    @Test
+    fun `an album page names the song number of a track that cannot be requested`() {
+        val html = """
+            <table><tr><td><table>
+              <tr><td class="td01"><img src="/images/requestbutton_disabled.png" title="Last played: 2026-11-11"></td>
+                <td class="td01"><span id="ityes246835"><img src="/images/heart.svg" alt="In Favorites"></span><a id="itno246835" style="display:none" href="javascript:void(0)" onclick="AddTrack(246835, &quot;ityes246835&quot;, &quot;itno246835&quot;); return false;"><img src="/images/heart.svg"></a></td>
+                <td class="td01"><span itemprop="name">All For Love</span><br><i itemprop="byArtist">Composer</i></td></tr>
+              <tr><td class="td01"><a href="/modules.php?name=Req&amp;asin=B000000OD8&amp;songID=246836"><img src="/images/requestbutton_request.png"></a></td>
+                <td class="td01"></td>
+                <td class="td01"><span itemprop="name">Main Title</span></td></tr>
+              <tr><td class="td01"><img src="/images/requestbutton_disabled.png"></td><td class="td01"><a onclick="AddTrack(1, &quot;a&quot;, &quot;b&quot;)">x</a></td><td class="td01"><span itemprop="name">Twice</span></td></tr>
+              <tr><td class="td01"><img src="/images/requestbutton_disabled.png"></td><td class="td01"><a onclick="AddTrack(2, &quot;a&quot;, &quot;b&quot;)">x</a></td><td class="td01"><span itemprop="name">Twice</span></td></tr>
+            </table></td></tr></table>
+        """.trimIndent()
+        val parser = FavoriteTracksPageParser()
+
+        assertEquals("246835", parser.albumTrackSongId(html, "All For Love"))
+        assertEquals("246836", parser.albumTrackSongId(html, "Main Title"))
+        // Two tracks with one title cannot be told apart, and a title the page does not have names nothing.
+        assertEquals(null, parser.albumTrackSongId(html, "Twice"))
+        assertEquals(null, parser.albumTrackSongId(html, "Missing"))
+    }
 }

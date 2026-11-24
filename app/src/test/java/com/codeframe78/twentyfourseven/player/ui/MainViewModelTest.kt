@@ -1032,6 +1032,11 @@ class MainViewModelTest {
             songId: String,
             change: com.codeframe78.twentyfourseven.player.domain.FavoriteChange,
         ) = Unit
+        override suspend fun changeRankedFavorite(
+            stationId: StationId,
+            position: Int,
+            change: com.codeframe78.twentyfourseven.player.domain.FavoriteChange,
+        ) = Unit
         override suspend fun clear(stationId: StationId) {
             clearedStations += stationId
             state.value = FavoriteTracksState(stationId)

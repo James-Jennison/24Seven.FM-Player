@@ -23,6 +23,9 @@ internal class NetworkFavoriteTracksRepository(
     private val states = ConcurrentHashMap<StationId, MutableStateFlow<FavoriteTracksState>>()
     private val locks = ConcurrentHashMap<StationId, Mutex>()
 
+    /** Song numbers read from album pages for ranked tracks the feed gave none, by album and title. */
+    private val resolved = ConcurrentHashMap<StationId, ConcurrentHashMap<Pair<String, String>, String>>()
+
     override fun observeFavorites(stationId: StationId): Flow<FavoriteTracksState> =
         state(stationId).asStateFlow()
 
@@ -128,7 +131,7 @@ internal class NetworkFavoriteTracksRepository(
             it.copy(
                 ranked = RankedFavoritesState(
                     RankedFavoritesStatus.Ready,
-                    ranked.tracks + withKnownSongIds(page.tracks, it.tracks),
+                    ranked.tracks + withKnownSongIds(stationId, page.tracks, it.tracks),
                     loadedPages = next,
                     hasMore = page.nextPage != null && page.tracks.isNotEmpty(),
                 ),
@@ -137,9 +140,40 @@ internal class NetworkFavoriteTracksRepository(
     }
 
     override suspend fun changeFavorite(stationId: StationId, songId: String, change: FavoriteChange): Unit =
+        lock(stationId).withLock { applyChange(stationId, songId, change) }
+
+    override suspend fun changeRankedFavorite(stationId: StationId, position: Int, change: FavoriteChange): Unit =
         lock(stationId).withLock {
+            val track = state(stationId).value.ranked.tracks.firstOrNull { it.position == position } ?: return@withLock
+            track.songId?.let { return@withLock applyChange(stationId, it, change) }
+            val albumId = track.albumId ?: return@withLock
+            update(stationId) { it.copy(change = FavoriteChangeState(FavoriteChangeStatus.Working, change, null)) }
+            val status = try {
+                val songId = remote.findSongId(stationId, albumId, track.title)
+                if (songId != null) {
+                    resolved.getOrPut(stationId) { ConcurrentHashMap() }[albumId to track.title] = songId
+                    update(stationId) { state ->
+                        state.copy(ranked = state.ranked.copy(tracks = withKnownSongIds(stationId, state.ranked.tracks, state.tracks)))
+                    }
+                    return@withLock applyChange(stationId, songId, change)
+                }
+                FavoriteChangeStatus.Failed
+            } catch (cancellation: CancellationException) {
+                update(stationId) { it.copy(change = FavoriteChangeState()) }
+                throw cancellation
+            } catch (_: FavoritesAuthenticationRequiredException) {
+                FavoriteChangeStatus.SignInRequired
+            } catch (_: Exception) {
+                FavoriteChangeStatus.Failed
+            }
+            // Nothing was sent to the station, so the lists are left as they are.
+            update(stationId) { it.copy(change = FavoriteChangeState(status, change, null)) }
+        }
+
+    private suspend fun applyChange(stationId: StationId, songId: String, change: FavoriteChange) {
+        run {
             val current = state(stationId).value
-            if (current.tracks.none { it.songId == songId } && current.ranked.tracks.none { it.songId == songId }) return@withLock
+            if (current.tracks.none { it.songId == songId } && current.ranked.tracks.none { it.songId == songId }) return
             val working = FavoriteChangeState(FavoriteChangeStatus.Working, change, songId)
             update(stationId) { it.copy(change = working) }
             val status = try {
@@ -155,7 +189,7 @@ internal class NetworkFavoriteTracksRepository(
                 FavoriteChangeStatus.Failed
             }
             update(stationId) { it.copy(change = working.copy(status = status)) }
-            if (status == FavoriteChangeStatus.SignInRequired) return@withLock
+            if (status == FavoriteChangeStatus.SignInRequired) return
             // A move only changes the ranked order; the full list is sorted by the station and is re-read after a removal.
             if (current.ranked.loadedPages > 0) reloadRanked(stationId, current.ranked.loadedPages)
             if (change == FavoriteChange.Remove && current.status == FavoriteTracksLoadStatus.Ready) {
@@ -163,6 +197,7 @@ internal class NetworkFavoriteTracksRepository(
             }
             Unit
         }
+    }
 
     /** Reads the first [pages] pages of the full list again, so a removal shows without losing the pages already read. */
     private suspend fun reloadPages(stationId: StationId, pages: Int, requestableOnly: Boolean) {
@@ -202,6 +237,7 @@ internal class NetworkFavoriteTracksRepository(
      * it on every row, so a ranked track takes it from the same album and title there when the full list has it.
      */
     private fun withKnownSongIds(
+        stationId: StationId,
         ranked: List<com.codeframe78.twentyfourseven.player.domain.FavoriteTrack>,
         full: List<com.codeframe78.twentyfourseven.player.domain.FavoriteTrack>,
     ): List<com.codeframe78.twentyfourseven.player.domain.FavoriteTrack> {
@@ -210,8 +246,13 @@ internal class NetworkFavoriteTracksRepository(
             .groupBy { it.albumId to it.title }
             .filterValues { it.size == 1 }
             .mapValues { it.value.single().songId }
+        val read = resolved[stationId].orEmpty()
         return ranked.map { track ->
-            if (track.songId != null) track else track.copy(songId = known[track.albumId to track.title])
+            if (track.songId != null) {
+                track
+            } else {
+                track.copy(songId = known[track.albumId to track.title] ?: track.albumId?.let { read[it to track.title] })
+            }
         }
     }
 
@@ -254,7 +295,7 @@ internal class NetworkFavoriteTracksRepository(
             return
         }
         update(stationId) {
-            it.copy(ranked = RankedFavoritesState(RankedFavoritesStatus.Ready, withKnownSongIds(tracks, it.tracks), loaded, hasMore))
+            it.copy(ranked = RankedFavoritesState(RankedFavoritesStatus.Ready, withKnownSongIds(stationId, tracks, it.tracks), loaded, hasMore))
         }
     }
 
@@ -288,5 +329,6 @@ class UnavailableFavoriteTracksRepository : FavoriteTracksRepository {
     override suspend fun refreshRanked(stationId: StationId) = Unit
     override suspend fun loadMoreRanked(stationId: StationId) = Unit
     override suspend fun changeFavorite(stationId: StationId, songId: String, change: FavoriteChange) = Unit
+    override suspend fun changeRankedFavorite(stationId: StationId, position: Int, change: FavoriteChange) = Unit
     override suspend fun clear(stationId: StationId) = Unit
 }

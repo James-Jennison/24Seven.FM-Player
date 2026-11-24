@@ -25,6 +25,13 @@ class FavoriteTrackSortOrderTest {
     }
 
     @Test
+    fun `a title is quoted once`() {
+        assertEquals("\"Opening\"", quotedTitle("Opening"))
+        assertEquals("\"Sons Of Scotland!\"", quotedTitle("\"Sons Of Scotland!\""))
+        assertEquals("\"\"Let's Go, Boys\" Reprise\"", quotedTitle("\"Let's Go, Boys\" Reprise"))
+    }
+
+    @Test
     fun `favorites sort by every displayed metadata field`() {
         assertOrder(FavoriteTrackSortOrder.Position, 3, 1, 2)
         assertOrder(FavoriteTrackSortOrder.TrackName, 1, 2, 3)

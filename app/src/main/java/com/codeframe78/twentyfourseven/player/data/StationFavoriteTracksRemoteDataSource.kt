@@ -23,6 +23,13 @@ internal interface FavoriteTracksRemoteDataSource {
     /** One page of the member's own ranked favorites, from the profile feed. Needs the station session. */
     suspend fun loadRanked(stationId: StationId, page: Int): RankedFavoritesPage
 
+    /**
+     * The station's song number for one track of an album, read from the signed-in album page. The ranked feed names
+     * no song number for a track that cannot be requested, and a change needs one. Null when the page does not name
+     * exactly one track with that title. Needs the station session.
+     */
+    suspend fun findSongId(stationId: StationId, albumId: String, title: String): String?
+
     /** Sends one change for one track the way the station's own favorites controls do. Needs the station session. */
     suspend fun change(stationId: StationId, songId: String, change: FavoriteChange)
 }
@@ -98,6 +105,19 @@ internal class StationFavoriteTracksRemoteDataSource(
             throw failure
         }
     }
+
+    override suspend fun findSongId(stationId: StationId, albumId: String, title: String): String? =
+        withContext(Dispatchers.IO) {
+            require(albumId.matches(ALBUM_ID))
+            val origin = origin(stationId)
+            val manager = authenticatedCookieManager(stationId, origin)
+            val page = request(stationId, URI(origin).resolve("/modules.php?name=Album&asin=$albumId"), origin, manager, ALBUM_LIMIT)
+            if (parser.showsSignedOutVisitor(page, origin)) {
+                sessions.expire(stationId)
+                throw FavoritesAuthenticationRequiredException()
+            }
+            parser.albumTrackSongId(page, title)
+        }
 
     override suspend fun change(stationId: StationId, songId: String, change: FavoriteChange) =
         withContext(Dispatchers.IO) {
@@ -212,6 +232,8 @@ internal class StationFavoriteTracksRemoteDataSource(
         const val DISCOVERY_LIMIT = 512_000
         const val LIST_LIMIT = 5_000_000
         const val CHANGE_LIMIT = 512_000
+        const val ALBUM_LIMIT = 2_000_000
+        val ALBUM_ID = Regex("^[A-Za-z0-9_.-]{1,64}$")
         const val CHANGE_LOG_TAG = "FavoriteChange"
         const val RANKED_PATH = "/modules/Your_Profile/favsTabAJAX.php"
         const val RANKED_LIMIT = 1_000_000

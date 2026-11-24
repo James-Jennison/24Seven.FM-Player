@@ -91,5 +91,11 @@ interface FavoriteTracksRepository {
 
     /** Sends one change for one track, then reads the ranked list (and, after a removal, the full list) again. */
     suspend fun changeFavorite(stationId: StationId, songId: String, change: FavoriteChange)
+
+    /**
+     * Sends one change for the ranked track at [position] when the ranked list names no song number for it, which is
+     * the case for a track that cannot be requested now. The number is read from the track's album page first.
+     */
+    suspend fun changeRankedFavorite(stationId: StationId, position: Int, change: FavoriteChange)
     suspend fun clear(stationId: StationId)
 }

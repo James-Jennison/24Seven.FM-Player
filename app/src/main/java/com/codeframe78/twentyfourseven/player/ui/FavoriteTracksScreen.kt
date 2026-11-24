@@ -334,6 +334,13 @@ internal fun favoriteCountLabel(
     }
 }
 
+/** A title in quotation marks, unless the title already carries its own, as "Sons Of Scotland!" does. */
+internal fun quotedTitle(title: String): String {
+    val trimmed = title.trim()
+    val quoted = trimmed.length >= 2 && trimmed.first() in "\"\u201C" && trimmed.last() in "\"\u201D"
+    return if (quoted) trimmed else "\"$trimmed\""
+}
+
 internal fun FavoriteTrack.matchesFilter(query: String): Boolean =
     title.contains(query, ignoreCase = true) ||
         album.contains(query, ignoreCase = true) ||
@@ -400,10 +407,12 @@ internal fun favoriteManagement(
 ): FavoriteManagement? {
     val station = state.selectedStation ?: return null
     val favorites = state.favorites ?: return null
-    val songId = track.songId ?: return null
+    // A ranked track the station names no song number for can still be changed: the number is read from its album
+    // page when the change is made.
+    if (track.songId == null && (rankedTracks == null || track.albumId == null)) return null
     if (!station.capabilities.supportsFavoriteManagement || state.auth?.status != AuthStatus.SignedIn) return null
     val onChange = LocalStationExtrasActions.current.onChangeFavorite
-    val index = rankedTracks?.indexOfFirst { it.songId == songId } ?: -1
+    val index = rankedTracks?.indexOfFirst { it.position == track.position } ?: -1
     return FavoriteManagement(
         showsMoves = rankedTracks != null,
         canMoveUp = index > 0,
@@ -610,7 +619,7 @@ internal fun FavoriteTrackCard(
         AlertDialog(
             onDismissRequest = { confirmRemove = false },
             title = { Text("Remove from favorites?") },
-            text = { Text("\"${track.title}\" will be removed from your favorites on the station.") },
+            text = { Text("${quotedTitle(track.title)} will be removed from your favorites on the station.") },
             confirmButton = {
                 TextButton(
                     onClick = {

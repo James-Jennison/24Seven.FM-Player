@@ -850,8 +850,13 @@ class MainViewModel(
     /** Moves or removes one of the signed-in member's own favorites; the list is read again afterwards. */
     fun changeFavorite(track: FavoriteTrack, change: FavoriteChange) = viewModelScope.launch {
         val station = signedInStation { it.supportsFavorites && it.supportsFavoriteManagement } ?: return@launch
-        val songId = track.songId ?: return@launch
-        favorites.changeFavorite(station.id, songId, change)
+        val songId = track.songId
+        if (songId != null) {
+            favorites.changeFavorite(station.id, songId, change)
+        } else if (track.albumId != null) {
+            // A ranked track that cannot be requested now: the station's feed names no song number for it.
+            favorites.changeRankedFavorite(station.id, track.position, change)
+        }
     }
 
     /** The selected station when it has the capability and community content may be shown. */

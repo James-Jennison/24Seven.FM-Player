@@ -232,6 +232,28 @@ internal class FavoriteTracksPageParser {
     private fun totalTracks(document: Document): Int? = document.selectFirst(".favorite-result-count")?.text()
         ?.let { TOTAL_TRACKS.find(it)?.groupValues?.get(1)?.toIntOrNull() }
 
+    /**
+     * The song number of the track named [title] on a signed-in album page. Every track row there carries the number
+     * in its favorite heart ("AddTrack(246835, ...)"), also when the track cannot be requested, and a requestable row
+     * carries it in its request link as well. Null unless exactly one row has that title.
+     */
+    fun albumTrackSongId(html: String, title: String): String? {
+        val wanted = title.trim()
+        val matches = Jsoup.parse(html).select("tr").asSequence()
+            .filter { row -> row.select("tr").size == 1 && row.selectFirst("img[src*=requestbutton]") != null }
+            .filter { row -> row.selectFirst("[itemprop=name]")?.text()?.trim() == wanted }
+            .map { row ->
+                row.select("[onclick]").firstNotNullOfOrNull { ADD_TRACK.find(it.attr("onclick"))?.groupValues?.get(1) }
+                    ?: row.select("a[href*=name=Req&]").firstNotNullOfOrNull { link ->
+                        runCatching { URI(link.attr("href").substringAfter('?').let { "x:/?$it" }) }.getOrNull()
+                            ?.let { queryValue(it.rawQuery, "songID") }?.takeIf { it.matches(NUMERIC_ID) }
+                    }
+            }
+            .take(2)
+            .toList()
+        return matches.singleOrNull()
+    }
+
     /** The song number in the row's own move/remove controls. */
     private fun rowControlSongId(row: Element): String? = row.select("button[formaction]").firstNotNullOfOrNull { button ->
         val action = runCatching { URI(button.absUrl("formaction")) }.getOrNull() ?: return@firstNotNullOfOrNull null
@@ -301,6 +323,7 @@ internal class FavoriteTracksPageParser {
         val YEAR = Regex("[0-9]{4}")
         val DURATION = Regex("[0-9]{1,3}:[0-5][0-9](:[0-5][0-9])?")
         val TOTAL_TRACKS = Regex("of\\s+([0-9][0-9,]*)\\s+tracks?", RegexOption.IGNORE_CASE)
+        val ADD_TRACK = Regex("AddTrack\\(\\s*([0-9]{1,10})\\s*,")
         val VIEW_INFO_TRACK = Regex("ViewInfoTrack\\(\\s*[0-9]{1,10}\\s*,\\s*([0-9]{1,10})\\s*\\)")
         const val MAX_TRACKS = 5_000
         val NUMERIC_ID = Regex("^[0-9]{1,10}$")
