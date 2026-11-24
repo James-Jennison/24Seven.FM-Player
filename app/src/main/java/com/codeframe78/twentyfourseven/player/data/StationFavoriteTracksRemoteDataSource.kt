@@ -116,7 +116,7 @@ internal class StationFavoriteTracksRemoteDataSource(
                 sessions.expire(stationId)
                 throw FavoritesAuthenticationRequiredException()
             }
-            parser.albumTrackSongId(page, title)
+            parser.albumTrackSongId(page, title, albumId)
         }
 
     override suspend fun change(stationId: StationId, songId: String, change: FavoriteChange) =

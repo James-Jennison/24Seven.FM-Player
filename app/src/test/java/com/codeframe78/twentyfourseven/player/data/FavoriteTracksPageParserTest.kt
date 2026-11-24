@@ -346,5 +346,10 @@ class FavoriteTracksPageParserTest {
         val twoNumbers = html.replace("name=Req&amp;asin=B000000OD8&amp;songID=246836\"", "name=Req&amp;asin=B000000OD8&amp;songID=246836\" onclick=\"AddTrack(999, 1)\"")
         assertEquals(true, twoNumbers != html)
         assertEquals(null, parser.albumTrackSongId(twoNumbers, "Main Title"))
+        // The page must be the album asked for: a request link naming another album means nothing on it is taken.
+        assertEquals("246836", parser.albumTrackSongId(html, "Main Title", "B000000OD8"))
+        assertEquals("246835", parser.albumTrackSongId(html, "All For Love", "B000000OD8"))
+        assertEquals(null, parser.albumTrackSongId(html, "Main Title", "B000000002"))
+        assertEquals(null, parser.albumTrackSongId(html, "All For Love", "B000000002"))
     }
 }

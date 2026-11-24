@@ -237,22 +237,24 @@ internal class FavoriteTracksPageParser {
      * in its favorite heart ("AddTrack(246835, ...)"), also when the track cannot be requested, and a requestable row
      * carries it in its request link as well. Null unless exactly one row has that title.
      */
-    fun albumTrackSongId(html: String, title: String): String? {
+    fun albumTrackSongId(html: String, title: String, albumId: String? = null): String? {
         val wanted = title.trim()
+        val rows = Jsoup.parse(html).select("tr").filter { row ->
+            row.select("tr").size == 1 && row.selectFirst("[itemprop=name]") != null
+        }
+        fun requestLinks(row: Element) = row.select("a[href*=name=Req&]").mapNotNull { link ->
+            runCatching { URI(link.attr("href").substringAfter('?').let { "x:/?$it" }) }.getOrNull()
+        }
+        // A track row that can be requested names its album. One that names another album means the page is not
+        // only the album asked for, so nothing on it is taken.
+        if (albumId != null && rows.any { row -> requestLinks(row).any { queryValue(it.rawQuery, "asin") != albumId } }) return null
         // Every row that names the title counts, with or without a request button, so two tracks that share a title
         // are always seen as two and neither is taken for the other.
-        val row = Jsoup.parse(html).select("tr").asSequence()
-            .filter { row -> row.select("tr").size == 1 }
-            .filter { row -> row.select("[itemprop=name]").any { it.text().trim() == wanted } }
-            .take(2)
-            .toList()
+        val row = rows.filter { row -> row.select("[itemprop=name]").any { it.text().trim() == wanted } }
             .singleOrNull() ?: return null
         // A row is one track. More than one number in it means the row is not what this reads, so nothing is named.
         val numbers = row.select("[onclick]").mapNotNull { ADD_TRACK.find(it.attr("onclick"))?.groupValues?.get(1) } +
-            row.select("a[href*=name=Req&]").mapNotNull { link ->
-                runCatching { URI(link.attr("href").substringAfter('?').let { "x:/?$it" }) }.getOrNull()
-                    ?.let { queryValue(it.rawQuery, "songID") }?.takeIf { it.matches(NUMERIC_ID) }
-            }
+            requestLinks(row).mapNotNull { queryValue(it.rawQuery, "songID")?.takeIf { id -> id.matches(NUMERIC_ID) } }
         return numbers.distinct().singleOrNull()
     }
 
