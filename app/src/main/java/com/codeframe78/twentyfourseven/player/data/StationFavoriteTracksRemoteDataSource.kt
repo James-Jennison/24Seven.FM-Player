@@ -11,7 +11,6 @@ import java.io.IOException
 import java.net.CookieManager
 import java.net.HttpURLConnection
 import java.net.URI
-import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
 internal interface FavoriteTracksRemoteDataSource {
@@ -36,6 +35,25 @@ internal fun listPageUrl(listUrl: String, page: Int, requestableOnly: Boolean): 
     append(listUrl)
     if (requestableOnly) append("&requestable=1")
     if (page > 1) append("&page=").append(page)
+}
+
+/**
+ * The address and form fields one favorites change is posted with, as the stations' pages send them since the
+ * November 2026 redesign.
+ *
+ * A move is the row button's own address, which carries the operation and the song number, posted with no fields.
+ * The row's remove button only opens the station's "Are you sure" page; the removal itself is that page's form,
+ * which posts the song number, the second-step operation and Yes2Remove=1 (its Remove button; 0 is Cancel). The
+ * Player asks for confirmation itself, so it posts that form directly.
+ */
+internal fun favoriteChangeRequest(change: FavoriteChange, songId: String): Pair<String, String> {
+    require(songId.matches(Regex("^[0-9]{1,10}$")))
+    val favorites = "/modules.php?name=Favorites"
+    return when (change) {
+        FavoriteChange.MoveUp -> "$favorites&op=movetrackup&songid=$songId" to ""
+        FavoriteChange.MoveDown -> "$favorites&op=movetrackdown&songid=$songId" to ""
+        FavoriteChange.Remove -> favorites to "songid=$songId&Yes2Remove=1&op=removetrackfromlist2"
+    }
 }
 
 internal class StationFavoriteTracksRemoteDataSource(
@@ -86,15 +104,9 @@ internal class StationFavoriteTracksRemoteDataSource(
             require(songId.matches(SONG_ID))
             val origin = origin(stationId)
             val manager = authenticatedCookieManager(stationId, origin)
-            val operation = when (change) {
-                FavoriteChange.MoveUp -> "movetrackup"
-                FavoriteChange.MoveDown -> "movetrackdown"
-                FavoriteChange.Remove -> "removetrackfromlist"
-            }
-            // Since the November 2026 redesign each row's buttons submit an empty shared form to an address that
-            // carries the operation and the song number, so the Player posts to that same address with no fields.
-            val action = URI(origin).resolve("$FAVORITES_PATH&op=${encode(operation)}&songid=${encode(songId)}")
-            val response = request(stationId, action, origin, manager, CHANGE_LIMIT, form = "")
+            val (address, form) = favoriteChangeRequest(change, songId)
+            val operation = address.substringAfter("op=", "removetrackfromlist2").substringBefore('&')
+            val response = request(stationId, URI(origin).resolve(address), origin, manager, CHANGE_LIMIT, form)
             if (Log.isLoggable(CHANGE_LOG_TAG, Log.DEBUG)) {
                 Log.d(CHANGE_LOG_TAG, "op=$operation responseChars=${response.length} signedOut=${parser.showsSignedOutVisitor(response, origin)}")
             }
@@ -102,11 +114,13 @@ internal class StationFavoriteTracksRemoteDataSource(
                 sessions.expire(stationId)
                 throw FavoritesAuthenticationRequiredException()
             }
+            // An answer that still asks "Are you sure" means the station removed nothing.
+            if (change == FavoriteChange.Remove && REMOVE_CONFIRMATION.containsMatchIn(response)) {
+                throw IOException("Favorites removal was not confirmed")
+            }
             // The station's own page treats these phrases in the answer as a failed update.
             if (CHANGE_FAILURE.containsMatchIn(response)) throw IOException("Favorites update failed")
         }
-
-    private fun encode(value: String): String = URLEncoder.encode(value, StandardCharsets.UTF_8.name())
 
     private fun authenticatedCookieManager(stationId: StationId, origin: String): CookieManager {
         return sessions.cookieManager(stationId, origin).also { manager ->
@@ -204,6 +218,8 @@ internal class StationFavoriteTracksRemoteDataSource(
         const val RANKED_PAGE_SIZE = 50
         const val MAX_RANKED_PAGES = 40
         const val MAX_LIST_PAGES = 200
+        /** The station's "Are you sure" form names its Cancel and Remove buttons Yes2Remove. */
+        val REMOVE_CONFIRMATION = Regex("name=[\"']Yes2Remove[\"']", RegexOption.IGNORE_CASE)
         val CHANGE_FAILURE = Regex("Can't (?:delete|update|open)|Fatal error|Hacking attempt", RegexOption.IGNORE_CASE)
         val SONG_ID = Regex("[0-9]{1,10}")
         const val MAX_REDIRECTS = 5

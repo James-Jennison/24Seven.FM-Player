@@ -178,6 +178,24 @@ class NetworkFavoriteTracksRepositoryTest {
     }
 
     @Test
+    fun `a move posts the row address with no fields and a removal posts the station's confirmation form`() {
+        assertEquals(
+            "/modules.php?name=Favorites&op=movetrackup&songid=246835" to "",
+            favoriteChangeRequest(FavoriteChange.MoveUp, "246835"),
+        )
+        assertEquals(
+            "/modules.php?name=Favorites&op=movetrackdown&songid=246835" to "",
+            favoriteChangeRequest(FavoriteChange.MoveDown, "246835"),
+        )
+        // The row's own remove address only opens the "Are you sure" page, so the second step is what is sent.
+        assertEquals(
+            "/modules.php?name=Favorites" to "songid=246835&Yes2Remove=1&op=removetrackfromlist2",
+            favoriteChangeRequest(FavoriteChange.Remove, "246835"),
+        )
+        assertEquals(true, runCatching { favoriteChangeRequest(FavoriteChange.Remove, "1&op=x") }.isFailure)
+    }
+
+    @Test
     fun `a list page address carries the requestable choice and the page number`() {
         val list = "https://example.com/modules/Favorites/thelist.php?user2view=7"
         assertEquals(list, listPageUrl(list, 1, false))
