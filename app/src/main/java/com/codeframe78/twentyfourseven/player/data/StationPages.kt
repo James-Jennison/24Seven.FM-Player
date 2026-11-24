@@ -32,6 +32,8 @@ internal interface StationPages {
         fields: List<Pair<String, String>>,
         maxCharacters: Int,
         charset: Charset = StandardCharsets.UTF_8,
+        /** The page the form came from, sent with the station's own origin as a browser would. */
+        referer: String? = null,
     ): StationPageResponse
 }
 
@@ -58,14 +60,15 @@ internal class HttpStationPages(
         fields: List<Pair<String, String>>,
         maxCharacters: Int,
         charset: Charset,
+        referer: String?,
     ): StationPageResponse {
         val encoded = fields.joinToString("&") { (name, value) ->
             "${URLEncoder.encode(name, charset.name())}=${URLEncoder.encode(value, charset.name())}"
         }
-        return request(stationId, path, FormBody(encoded.toByteArray(StandardCharsets.US_ASCII), charset), maxCharacters)
+        return request(stationId, path, FormBody(encoded.toByteArray(StandardCharsets.US_ASCII), charset), maxCharacters, referer)
     }
 
-    private fun request(stationId: StationId, path: String, body: FormBody?, maxCharacters: Int): StationPageResponse {
+    private fun request(stationId: StationId, path: String, body: FormBody?, maxCharacters: Int, referer: String? = null): StationPageResponse {
         val origin = origin(stationId)
         val expectedOrigin = URI(origin)
         val cookies = sessions.cookieManager(stationId, origin)
@@ -85,6 +88,10 @@ internal class HttpStationPages(
                     connection.setRequestProperty(name, values.joinToString("; "))
                 }
                 pendingBody?.let { form ->
+                    if (referer != null) {
+                        connection.setRequestProperty("Origin", origin.trimEnd('/'))
+                        connection.setRequestProperty("Referer", expectedOrigin.resolve(referer).toString())
+                    }
                     connection.doOutput = true
                     connection.setRequestProperty(
                         "Content-Type",

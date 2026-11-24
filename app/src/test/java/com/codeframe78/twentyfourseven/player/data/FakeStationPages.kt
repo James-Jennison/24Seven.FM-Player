@@ -11,6 +11,7 @@ internal class FakeStationPages(
 ) : StationPages {
     val requests = mutableListOf<String>()
     val posted = mutableListOf<List<Pair<String, String>>>()
+    val referers = mutableListOf<String?>()
     var expired = false
         private set
 
@@ -34,8 +35,10 @@ internal class FakeStationPages(
         fields: List<Pair<String, String>>,
         maxCharacters: Int,
         charset: Charset,
+        referer: String?,
     ): StationPageResponse {
         requests += "POST $path"
+        referers += referer
         posted += fields
         return StationPageResponse(respond("POST", path, fields), URI(ORIGIN).resolve(path))
     }
