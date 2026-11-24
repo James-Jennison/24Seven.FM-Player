@@ -9,17 +9,31 @@ import org.junit.Test
 
 class FavoriteTrackSortOrderTest {
     @Test
-    fun `station position order reuses an already ordered large list`() {
+    fun `station order shows the list as the station sent it`() {
         val ordered = (1..1_500).map { position ->
             FavoriteTrack(position, "Track $position", "Album", "Artist")
         }
-
         assertSame(ordered, ordered.sortedForFavorites(FavoriteTrackSortOrder.Position))
+
+        // A redesigned row's position is its ranking number, so a later page's rows keep their place after the
+        // rows already read instead of being sorted in among them.
+        val pages = listOf(349, 1500, 47, 632, 921, 57).map { rank -> FavoriteTrack(rank, "Track $rank", "Album", "Artist") }
+        assertEquals(
+            listOf(349, 1500, 47, 632, 921, 57),
+            pages.sortedForFavorites(FavoriteTrackSortOrder.Position).map(FavoriteTrack::position),
+        )
+    }
+
+    @Test
+    fun `a title is quoted once`() {
+        assertEquals("\"Opening\"", quotedTitle("Opening"))
+        assertEquals("\"Sons Of Scotland!\"", quotedTitle("\"Sons Of Scotland!\""))
+        assertEquals("\"\"Let's Go, Boys\" Reprise\"", quotedTitle("\"Let's Go, Boys\" Reprise"))
     }
 
     @Test
     fun `favorites sort by every displayed metadata field`() {
-        assertOrder(FavoriteTrackSortOrder.Position, 1, 2, 3)
+        assertOrder(FavoriteTrackSortOrder.Position, 3, 1, 2)
         assertOrder(FavoriteTrackSortOrder.TrackName, 1, 2, 3)
         assertOrder(FavoriteTrackSortOrder.Album, 3, 2, 1)
         assertOrder(FavoriteTrackSortOrder.Artist, 2, 3, 1)
@@ -66,4 +80,19 @@ class FavoriteTrackSortOrderTest {
             availability = TrackRequestAvailability(TrackRequestStatus.InCurrentQueue),
         ),
     )
+
+    @Test
+    fun `a cooldown time stays on one line after its label`() {
+        assertEquals(
+            "Last played: Nov\u00A013\u00A0·\u00A04:06\u00A0PM\nRequest cooldown ends: Nov\u00A028\u00A0·\u00A04:06\u00A0PM",
+            unbrokenValues("Last played: Nov 13 · 4:06 PM\nRequest cooldown ends: Nov 28 · 4:06 PM"),
+        )
+        assertEquals("The artist is already in queue.", unbrokenValues("The artist is already in queue."))
+        // A time in another year is kept whole too, and text around a time still wraps where it did.
+        assertEquals(
+            "Note: played on Nov\u00A028,\u00A02025\u00A0·\u00A011:59\u00A0AM by request: see the queue",
+            unbrokenValues("Note: played on Nov 28, 2025 · 11:59 AM by request: see the queue"),
+        )
+        assertEquals("Requests reopen: after the current event ends", unbrokenValues("Requests reopen: after the current event ends"))
+    }
 }

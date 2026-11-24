@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -208,9 +209,24 @@ internal fun FavoriteTracksScreen(
                         )
                     }
                     item {
+                        val actions = LocalStationExtrasActions.current
+                        val requestableOnly = favorites?.requestableOnly == true
+                        Column {
+                        FilterChip(
+                            selected = requestableOnly,
+                            onClick = { actions.onSetFavoritesRequestableOnly(!requestableOnly) },
+                            label = { Text("Requestable only") },
+                            modifier = Modifier.testTag("favorites_requestable_only"),
+                        )
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                if (filter.isBlank()) "${visibleTracks.size} tracks" else "${visibleTracks.size} of ${favorites?.tracks?.size ?: 0} tracks",
+                                favoriteCountLabel(
+                                    shown = visibleTracks.size,
+                                    loaded = favorites?.tracks?.size ?: 0,
+                                    total = favorites?.totalTracks,
+                                    filtered = filter.isNotBlank(),
+                                    requestableOnly = favorites?.requestableOnly == true,
+                                ),
                                 style = MaterialTheme.typography.labelLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.weight(1f),
@@ -240,11 +256,16 @@ internal fun FavoriteTracksScreen(
                                 }
                             }
                         }
+                        }
                     }
                     if (visibleTracks.isEmpty()) {
                         item {
                             Text(
-                                if (filter.isBlank()) "No favorite tracks were found." else "No favorites match this filter.",
+                                when {
+                                    filter.isNotBlank() -> "No favorites match this filter."
+                                    favorites?.requestableOnly == true -> "None of your favorites can be requested right now."
+                                    else -> "No favorite tracks were found."
+                                },
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
@@ -262,6 +283,21 @@ internal fun FavoriteTracksScreen(
                             manage = favoriteManagement(state, track, rankedTracks = null),
                         )
                     }
+                    if (favorites?.hasMore == true || favorites?.loadingMore == true) {
+                        item {
+                            val actions = LocalStationExtrasActions.current
+                            if (favorites.moreFailed) MoreFailedNotice()
+                            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                                if (favorites.loadingMore) {
+                                    CircularProgressIndicator(Modifier.size(28.dp))
+                                } else {
+                                    TextButton(onClick = actions.onLoadMoreFavorites, modifier = Modifier.testTag("favorites_more")) {
+                                        Text("Show the next 50")
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -277,6 +313,34 @@ internal fun FavoriteTracksScreen(
                 .padding(20.dp),
         )
     }
+}
+
+/**
+ * The count above the list. The stations page the list 50 at a time, so a filter or sort covers only the tracks read
+ * so far, and the label says so while more remain.
+ */
+internal fun favoriteCountLabel(
+    shown: Int,
+    loaded: Int,
+    total: Int?,
+    filtered: Boolean,
+    requestableOnly: Boolean = false,
+): String {
+    val partial = total != null && total > loaded
+    val tracks = if (requestableOnly) "requestable tracks" else "tracks"
+    return when {
+        filtered && partial -> "$shown matches in $loaded of $total $tracks loaded"
+        filtered -> "$shown of $loaded $tracks"
+        partial -> "$loaded of $total $tracks loaded"
+        else -> "$loaded $tracks"
+    }
+}
+
+/** A title in quotation marks, unless the title already carries its own, as "Sons Of Scotland!" does. */
+internal fun quotedTitle(title: String): String {
+    val trimmed = title.trim()
+    val quoted = trimmed.length >= 2 && trimmed.first() in "\"\u201C" && trimmed.last() in "\"\u201D"
+    return if (quoted) trimmed else "\"$trimmed\""
 }
 
 internal fun FavoriteTrack.matchesFilter(query: String): Boolean =
@@ -345,10 +409,12 @@ internal fun favoriteManagement(
 ): FavoriteManagement? {
     val station = state.selectedStation ?: return null
     val favorites = state.favorites ?: return null
-    val songId = track.songId ?: return null
+    // A ranked track the station names no song number for can still be changed: the number is read from its album
+    // page when the change is made.
+    if (track.songId == null && (rankedTracks == null || track.albumId == null)) return null
     if (!station.capabilities.supportsFavoriteManagement || state.auth?.status != AuthStatus.SignedIn) return null
     val onChange = LocalStationExtrasActions.current.onChangeFavorite
-    val index = rankedTracks?.indexOfFirst { it.songId == songId } ?: -1
+    val index = rankedTracks?.indexOfFirst { it.position == track.position } ?: -1
     return FavoriteManagement(
         showsMoves = rankedTracks != null,
         canMoveUp = index > 0,
@@ -407,6 +473,7 @@ private fun LazyListScope.rankedFavoriteItems(state: MainUiState, onPrepareReque
     if (ranked.tracks.isNotEmpty() && (ranked.hasMore || ranked.status == RankedFavoritesStatus.Loading)) {
         item {
             val actions = LocalStationExtrasActions.current
+            if (ranked.moreFailed) MoreFailedNotice()
             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 if (ranked.status == RankedFavoritesStatus.Loading) {
                     CircularProgressIndicator(Modifier.size(28.dp))
@@ -419,6 +486,28 @@ private fun LazyListScope.rankedFavoriteItems(state: MainUiState, onPrepareReque
         }
     }
 }
+
+/** Shown above "Show the next 50" when the last attempt to read the next page failed. */
+@Composable
+private fun MoreFailedNotice() {
+    Text(
+        "The next tracks could not be loaded. Try again.",
+        color = MaterialTheme.colorScheme.error,
+        style = MaterialTheme.typography.bodySmall,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth().testTag("favorites_more_failed"),
+    )
+}
+
+/**
+ * Keeps each time the app writes ("Nov 28 · 4:06 PM", "Nov 28, 2025 · 4:06 PM") on one line, so "Request cooldown ends:
+ * Nov 28 · 4:06 PM" wraps before the time when it must wrap, never between the time and "PM". Other text is left as it
+ * is and wraps as usual.
+ */
+internal fun unbrokenValues(label: String): String =
+    label.replace(REQUEST_TIME_TEXT) { it.value.replace(' ', '\u00A0') }
+
+private val REQUEST_TIME_TEXT = Regex("""[A-Z][a-z]{2} \d{1,2}(?:, \d{4})? · \d{1,2}:\d{2} [AP]M""")
 
 /** One favorite as a row: its cover, what it is, whether it can be requested, and the request button when it can. */
 @Composable
@@ -479,7 +568,7 @@ internal fun FavoriteTrackCard(
                     listOf(track.artist, track.album).filter(String::isNotBlank).joinToString(" · "),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
                 val facts = listOfNotNull(track.genre, track.year, track.duration).joinToString(" · ")
@@ -495,18 +584,21 @@ internal fun FavoriteTrackCard(
                 }
                 track.availability.detail?.let {
                     Text(
-                        availabilityDetailLabel(it),
+                        unbrokenValues(availabilityDetailLabel(it)),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-            }
-            if (available) {
-                FilledTonalButton(
-                    onClick = { onPrepareRequest(track) },
-                    enabled = canRequest,
-                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
-                ) { Text("Request Now") }
+                if (available) {
+                    // Under the text, not beside it: beside it the button left a phone too little room for the title,
+                    // the artist and the length.
+                    FilledTonalButton(
+                        onClick = { onPrepareRequest(track) },
+                        enabled = canRequest,
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+                        modifier = Modifier.padding(top = 4.dp).heightIn(min = 36.dp),
+                    ) { Text("Request Now") }
+                }
             }
             if (manage != null) {
                 Box {
@@ -555,7 +647,7 @@ internal fun FavoriteTrackCard(
         AlertDialog(
             onDismissRequest = { confirmRemove = false },
             title = { Text("Remove from favorites?") },
-            text = { Text("\"${track.title}\" will be removed from your favorites on the station.") },
+            text = { Text("${quotedTitle(track.title)} will be removed from your favorites on the station.") },
             confirmButton = {
                 TextButton(
                     onClick = {

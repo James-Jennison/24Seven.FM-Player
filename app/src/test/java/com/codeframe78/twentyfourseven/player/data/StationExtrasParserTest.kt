@@ -152,6 +152,34 @@ class StationExtrasParserTest {
     fun `a news page without stories yields none`() {
         assertEquals(emptyList<Any>(), parser.parseNews("<html><body><p>The station is being upgraded.</p></body></html>", origin))
     }
+
+    @Test
+    fun `parses a redesigned news story that has a publisher note and an album list but no full-text block`() {
+        val html = """
+            <main class="news-listing"><article class="news-story news-story-modern">
+              <header class="news-story-header"><h2><a href="/modules.php?name=News&amp;file=article&amp;sid=1234">Playlist Update Thanks</a></h2>
+              <div class="news-story-meta"><span><time datetime="2026-11-16T07:10:47">November 16th, 2026 - 07:10</time> &middot; Published by <a href="/modules.php?name=Your_Account&amp;op=userinfo&amp;username=JERIC">JERIC</a></span></div></header>
+              <div class="news-story-body td01"><div class="news-home-update">
+                <aside class="news-home-publisher-note"><p>We're up to date on all incoming donations.</p><p>Thank you to everyone who donated music.</p></aside>
+                <div class="news-home-update-list"><div class="news-home-album-list">
+                  <div class="news-home-album"><a class="news-home-cover-link" href="/modules.php?name=Album&amp;asin=B000000001"><img class="news-home-cover" src="/images/cover/100/B000000001.jpg"></a><div class="news-home-album-copy"><a href="/modules.php?name=Album&amp;asin=B000000001">Abominable</a> Rupert Gregson-Williams</div></div>
+                  <div class="news-home-album"><a class="news-home-cover-link" href="/modules.php?name=Album&amp;asin=EXAMPLE_ID"><img class="news-home-cover" src="/images/cover/EXAMPLE_ID.jpg"></a><div class="news-home-album-copy"><a class="news-home-album-link" href="/modules.php?name=Album&amp;asin=EXAMPLE_ID" title="Example Album">Example Album</a><span class="news-home-contributor">Contributed by <a href="/modules.php?name=Web_Links&amp;l_op=visit&amp;lid=1">Example Label</a></span></div></div>
+                </div></div></div></div>
+            </article></main>
+        """.trimIndent()
+
+        val story = parser.parseNews(html, origin).single()
+
+        assertEquals("1234", story.id)
+        assertEquals("Playlist Update Thanks", story.title)
+        assertEquals("JERIC", story.author)
+        assertTrue(story.body.startsWith("We're up to date on all incoming donations."))
+        assertTrue(story.body.contains("Abominable Rupert Gregson-Williams"))
+        // The station sets the contributor right after the album with no space; the body keeps them apart.
+        assertTrue(story.body.contains("Example Album · Contributed by Example Label"))
+        assertEquals(2, story.coverUrls.size)
+    }
+
 }
 
 internal object StationExtrasFixtures {

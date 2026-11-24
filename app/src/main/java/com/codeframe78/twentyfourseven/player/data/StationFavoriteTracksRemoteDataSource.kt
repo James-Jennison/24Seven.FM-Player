@@ -11,17 +11,56 @@ import java.io.IOException
 import java.net.CookieManager
 import java.net.HttpURLConnection
 import java.net.URI
-import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
 internal interface FavoriteTracksRemoteDataSource {
-    suspend fun load(stationId: StationId): List<FavoriteTrack>
+    /**
+     * One page of the member's full favorites list, 50 tracks a page. With [requestableOnly] the station leaves out
+     * the tracks that cannot be requested now. Needs the station session.
+     */
+    suspend fun load(stationId: StationId, page: Int = 1, requestableOnly: Boolean = false): FavoriteTracksPage
 
     /** One page of the member's own ranked favorites, from the profile feed. Needs the station session. */
     suspend fun loadRanked(stationId: StationId, page: Int): RankedFavoritesPage
 
+    /**
+     * The station's song number for one track of an album, read from the signed-in album page. The ranked feed names
+     * no song number for a track that cannot be requested, and a change needs one. Null when the page does not name
+     * exactly one track with that title. Needs the station session.
+     */
+    suspend fun findSongId(stationId: StationId, albumId: String, title: String): String?
+
     /** Sends one change for one track the way the station's own favorites controls do. Needs the station session. */
     suspend fun change(stationId: StationId, songId: String, change: FavoriteChange)
+}
+
+/**
+ * The address of one page of a favorites list. The station's own "Requestable only" link adds requestable=1, and its
+ * Next link adds the page number.
+ */
+internal fun listPageUrl(listUrl: String, page: Int, requestableOnly: Boolean): String = buildString {
+    append(listUrl)
+    if (requestableOnly) append("&requestable=1")
+    if (page > 1) append("&page=").append(page)
+}
+
+/**
+ * The address and form fields one favorites change is posted with, as the stations' pages send them since the
+ * November 2026 redesign.
+ *
+ * A move is the row button's own address, which carries the operation and the song number, posted with no fields.
+ * The row's remove button only opens the station's "Are you sure" page; the removal itself is that page's form,
+ * which posts the song number, the second-step operation and Yes2Remove=1 (its Remove button; 0 is Cancel). The
+ * Player asks for confirmation itself, so it posts that form directly.
+ */
+internal fun favoriteChangeRequest(change: FavoriteChange, songId: String): Pair<String, String> {
+    require(songId.matches(Regex("^[0-9]{1,10}$")))
+    val favorites = "/modules.php?name=Favorites"
+    return when (change) {
+        FavoriteChange.MoveUp -> "$favorites&op=movetrackup&songid=$songId" to ""
+        FavoriteChange.MoveDown -> "$favorites&op=movetrackdown&songid=$songId" to ""
+        FavoriteChange.Remove -> favorites to "songid=$songId&Yes2Remove=1&op=removetrackfromlist2"
+    }
 }
 
 internal class StationFavoriteTracksRemoteDataSource(
@@ -32,13 +71,18 @@ internal class StationFavoriteTracksRemoteDataSource(
         it.toURL().openConnection() as HttpURLConnection
     },
 ) : FavoriteTracksRemoteDataSource {
-    override suspend fun load(stationId: StationId): List<FavoriteTrack> = withContext(Dispatchers.IO) {
+    override suspend fun load(stationId: StationId, page: Int, requestableOnly: Boolean): FavoriteTracksPage = withContext(Dispatchers.IO) {
+        require(page in 1..MAX_LIST_PAGES)
         try {
             val origin = origin(stationId)
             val manager = authenticatedCookieManager(stationId, origin)
             val discovery = request(stationId, URI(origin).resolve(FAVORITES_PATH), origin, manager, DISCOVERY_LIMIT)
             val listUrl = parser.parseListUrl(discovery, origin)
-            parser.parseTracks(request(stationId, URI(listUrl), origin, manager, LIST_LIMIT), origin)
+            // The list is paged since the stations' November 2026 redesign; page 1 is the list address itself.
+            val pageUrl = listPageUrl(listUrl, page, requestableOnly)
+            val response = request(stationId, URI(pageUrl), origin, manager, LIST_LIMIT)
+            if (parser.showsSignedOutVisitor(response, origin)) throw FavoritesAuthenticationRequiredException()
+            parser.parseTracksPage(response, origin)
         } catch (failure: FavoritesAuthenticationRequiredException) {
             sessions.expire(stationId)
             throw failure
@@ -62,20 +106,27 @@ internal class StationFavoriteTracksRemoteDataSource(
         }
     }
 
+    override suspend fun findSongId(stationId: StationId, albumId: String, title: String): String? =
+        withContext(Dispatchers.IO) {
+            require(albumId.matches(ALBUM_ID))
+            val origin = origin(stationId)
+            val manager = authenticatedCookieManager(stationId, origin)
+            val page = request(stationId, URI(origin).resolve("/modules.php?name=Album&asin=$albumId"), origin, manager, ALBUM_LIMIT)
+            if (parser.showsSignedOutVisitor(page, origin)) {
+                sessions.expire(stationId)
+                throw FavoritesAuthenticationRequiredException()
+            }
+            parser.albumTrackSongId(page, title, albumId)
+        }
+
     override suspend fun change(stationId: StationId, songId: String, change: FavoriteChange) =
         withContext(Dispatchers.IO) {
             require(songId.matches(SONG_ID))
             val origin = origin(stationId)
             val manager = authenticatedCookieManager(stationId, origin)
-            val operation = when (change) {
-                FavoriteChange.MoveUp -> "movetrackup"
-                FavoriteChange.MoveDown -> "movetrackdown"
-                FavoriteChange.Remove -> "removetrackfromlist2"
-            }
-            // The station's own controls form posts these three fields; Yes2Remove is its confirmation flag.
-            val form = listOf("songid" to songId, "Yes2Remove" to "1", "op" to operation)
-                .joinToString("&") { (name, value) -> "${encode(name)}=${encode(value)}" }
-            val response = request(stationId, URI(origin).resolve(FAVORITES_PATH), origin, manager, CHANGE_LIMIT, form)
+            val (address, form) = favoriteChangeRequest(change, songId)
+            val operation = address.substringAfter("op=", "removetrackfromlist2").substringBefore('&')
+            val response = request(stationId, URI(origin).resolve(address), origin, manager, CHANGE_LIMIT, form)
             if (Log.isLoggable(CHANGE_LOG_TAG, Log.DEBUG)) {
                 Log.d(CHANGE_LOG_TAG, "op=$operation responseChars=${response.length} signedOut=${parser.showsSignedOutVisitor(response, origin)}")
             }
@@ -83,11 +134,13 @@ internal class StationFavoriteTracksRemoteDataSource(
                 sessions.expire(stationId)
                 throw FavoritesAuthenticationRequiredException()
             }
+            // An answer that still asks "Are you sure" means the station removed nothing.
+            if (change == FavoriteChange.Remove && REMOVE_CONFIRMATION.containsMatchIn(response)) {
+                throw IOException("Favorites removal was not confirmed")
+            }
             // The station's own page treats these phrases in the answer as a failed update.
             if (CHANGE_FAILURE.containsMatchIn(response)) throw IOException("Favorites update failed")
         }
-
-    private fun encode(value: String): String = URLEncoder.encode(value, StandardCharsets.UTF_8.name())
 
     private fun authenticatedCookieManager(stationId: StationId, origin: String): CookieManager {
         return sessions.cookieManager(stationId, origin).also { manager ->
@@ -179,11 +232,16 @@ internal class StationFavoriteTracksRemoteDataSource(
         const val DISCOVERY_LIMIT = 512_000
         const val LIST_LIMIT = 5_000_000
         const val CHANGE_LIMIT = 512_000
+        const val ALBUM_LIMIT = 2_000_000
+        val ALBUM_ID = Regex("^[A-Za-z0-9_.-]{1,64}$")
         const val CHANGE_LOG_TAG = "FavoriteChange"
         const val RANKED_PATH = "/modules/Your_Profile/favsTabAJAX.php"
         const val RANKED_LIMIT = 1_000_000
         const val RANKED_PAGE_SIZE = 50
         const val MAX_RANKED_PAGES = 40
+        const val MAX_LIST_PAGES = 200
+        /** The station's "Are you sure" form names its Cancel and Remove buttons Yes2Remove. */
+        val REMOVE_CONFIRMATION = Regex("name=[\"']?Yes2Remove\\b", RegexOption.IGNORE_CASE)
         val CHANGE_FAILURE = Regex("Can't (?:delete|update|open)|Fatal error|Hacking attempt", RegexOption.IGNORE_CASE)
         val SONG_ID = Regex("[0-9]{1,10}")
         const val MAX_REDIRECTS = 5

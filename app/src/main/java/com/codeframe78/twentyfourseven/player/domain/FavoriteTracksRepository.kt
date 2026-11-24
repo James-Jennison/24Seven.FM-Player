@@ -30,7 +30,8 @@ data class FavoriteTrack(
 /** A change to the member's own favorites list, sent as the station's own form sends it. */
 enum class FavoriteChange { MoveUp, MoveDown, Remove }
 
-enum class FavoriteChangeStatus { Idle, Working, Done, SignInRequired, Failed }
+/** [Unconfirmed]: the station answered a removal without complaint, but no list could be read back to show it. */
+enum class FavoriteChangeStatus { Idle, Working, Done, SignInRequired, Failed, Unconfirmed }
 
 data class FavoriteChangeState(
     val status: FavoriteChangeStatus = FavoriteChangeStatus.Idle,
@@ -50,6 +51,8 @@ data class RankedFavoritesState(
     val tracks: List<FavoriteTrack> = emptyList(),
     val loadedPages: Int = 0,
     val hasMore: Boolean = false,
+    /** True when the last attempt to read the next page failed; the pages already read stay. */
+    val moreFailed: Boolean = false,
 )
 
 data class FavoriteTracksState(
@@ -59,11 +62,33 @@ data class FavoriteTracksState(
     val errorMessage: String? = null,
     val change: FavoriteChangeState = FavoriteChangeState(),
     val ranked: RankedFavoritesState = RankedFavoritesState(),
+    /** Pages of the full list read so far; the stations list 50 tracks a page. */
+    val loadedPages: Int = 0,
+    /** Whether the station links to a page after the last one read. */
+    val hasMore: Boolean = false,
+    /** True while the next page of the full list is being read. */
+    val loadingMore: Boolean = false,
+    /** True when the last attempt to read the next page failed; the pages already read stay. */
+    val moreFailed: Boolean = false,
+    /** The size of the whole list as the station states it, when it states one. */
+    val totalTracks: Int? = null,
+    /** Whether the list was read with the station's "Requestable only" choice, which leaves out unavailable tracks. */
+    val requestableOnly: Boolean = false,
 )
 
 interface FavoriteTracksRepository {
     fun observeFavorites(stationId: StationId): Flow<FavoriteTracksState>
+    /** Reads the first page of the full list again. */
     suspend fun refresh(stationId: StationId)
+
+    /** Reads the next page of the full list and adds it to the tracks already shown. */
+    suspend fun loadMore(stationId: StationId)
+
+    /**
+     * Chooses whether the full list leaves out tracks that cannot be requested now, as the station's own
+     * "Requestable only" link does, and reads the first page again. Nothing is saved on the station.
+     */
+    suspend fun setRequestableOnly(stationId: StationId, requestableOnly: Boolean)
 
     /** Reads the first page of the member's ranked favorites. Needs the station session. */
     suspend fun refreshRanked(stationId: StationId)
@@ -71,5 +96,11 @@ interface FavoriteTracksRepository {
 
     /** Sends one change for one track, then reads the ranked list (and, after a removal, the full list) again. */
     suspend fun changeFavorite(stationId: StationId, songId: String, change: FavoriteChange)
+
+    /**
+     * Sends one change for the ranked track at [position] when the ranked list names no song number for it, which is
+     * the case for a track that cannot be requested now. The number is read from the track's album page first.
+     */
+    suspend fun changeRankedFavorite(stationId: StationId, position: Int, change: FavoriteChange)
     suspend fun clear(stationId: StationId)
 }
