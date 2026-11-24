@@ -7,6 +7,7 @@ import com.codeframe78.twentyfourseven.player.domain.CalendarEntry
 import com.codeframe78.twentyfourseven.player.domain.CalendarEntryKind
 import com.codeframe78.twentyfourseven.player.domain.CalendarStatus
 import com.codeframe78.twentyfourseven.player.domain.EditableProfile
+import com.codeframe78.twentyfourseven.player.domain.loadFailureText
 import com.codeframe78.twentyfourseven.player.domain.FavoriteTrack
 import com.codeframe78.twentyfourseven.player.domain.FlagOption
 import com.codeframe78.twentyfourseven.player.domain.MemberListSort
@@ -255,6 +256,40 @@ class NetworkStationExtrasRepositoryTest {
             "Your profile could not be loaded right now.",
             offline.observeExtras(station).first().profileEdit.message,
         )
+    }
+
+    @Test
+    fun `every station page names a server error as the station's problem and an offline failure as a plain failure`() = runTest {
+        for ((failure, stationSide) in listOf<Pair<Exception, Boolean>>(
+            StationHttpException(500) to true,
+            StationHttpException(503) to true,
+            StationFormUnavailableException() to true,
+            StationHttpException(404) to false,
+            java.io.IOException("offline") to false,
+        )) {
+            val repository = NetworkStationExtrasRepository(FakeRemote(failure = failure))
+            repository.refreshCalendar(station)
+            repository.refreshNews(station)
+            repository.refreshRecentlyAdded(station)
+            repository.openMembers(station)
+            repository.openProfile(station, "Listener")
+            repository.loadHistory(station, LocalDate.of(2026, 10, 29), 0)
+            repository.openAlbumReviews(station, "B000000001")
+            with(repository.observeExtras(station).first()) {
+                assertEquals("calendar $failure", stationSide, calendar.stationSide)
+                assertEquals("news $failure", stationSide, news.stationSide)
+                assertEquals("recent $failure", stationSide, recentlyAdded.stationSide)
+                assertEquals("members $failure", stationSide, members.stationSide)
+                assertEquals("profile $failure", stationSide, profile.stationSide)
+                assertEquals("history $failure", stationSide, history.stationSide)
+                assertEquals("reviews $failure", stationSide, albumReviews.stationSide)
+            }
+        }
+        assertEquals(
+            "Reviews could not be loaded right now.",
+            loadFailureText("Reviews could not be loaded right now.", "album page", stationSide = false),
+        )
+        assertTrue(loadFailureText("x", "calendar page", stationSide = true).contains("problem on the station"))
     }
 
     private class FakeRemote(

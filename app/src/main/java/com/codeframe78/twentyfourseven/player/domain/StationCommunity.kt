@@ -21,6 +21,7 @@ enum class RecentlyAddedStatus { Idle, Loading, Ready, Error }
 data class RecentlyAddedState(
     val status: RecentlyAddedStatus = RecentlyAddedStatus.Idle,
     val batches: List<RecentlyAddedBatch> = emptyList(),
+    val stationSide: Boolean = false,
 )
 
 /** A member review of an album, as the station shows it on the album's page. */
@@ -41,6 +42,7 @@ data class AlbumReviewsState(
     val albumId: String? = null,
     val status: AlbumReviewsStatus = AlbumReviewsStatus.Closed,
     val reviews: List<AlbumReview> = emptyList(),
+    val stationSide: Boolean = false,
 )
 
 /** A member who is on the station right now, from the station's Online Now block. */
@@ -82,6 +84,7 @@ data class MembersState(
     val members: List<MemberSummary> = emptyList(),
     /** The offset of the next page the station would serve, or null when the list is complete. */
     val nextStart: Int? = null,
+    val stationSide: Boolean = false,
 )
 
 /** One line of the station's calendar: a theme day, a composer's birthday, or a member's birthday. */
@@ -105,7 +108,19 @@ enum class CalendarStatus { Idle, Loading, Ready, Error }
 data class CalendarState(
     val status: CalendarStatus = CalendarStatus.Idle,
     val days: List<CalendarDay> = emptyList(),
+    val stationSide: Boolean = false,
 )
+
+/**
+ * The line for a station page that failed to load. When the station itself answered with an error the member is told
+ * so, because nothing about their account or connection would fix it.
+ */
+fun loadFailureText(default: String, subject: String, stationSide: Boolean): String =
+    if (stationSide) {
+        "The station's $subject is not responding. This is a problem on the station, not with your account. Try again later."
+    } else {
+        default
+    }
 
 /** The fields of the station's Edit Profile form that the Player lets a member change. */
 data class EditableProfile(
