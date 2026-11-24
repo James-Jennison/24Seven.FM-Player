@@ -94,6 +94,7 @@ internal fun FavoriteChangeNotice(state: MainUiState) {
     val message = when (change.status) {
         FavoriteChangeStatus.SignInRequired -> "Sign in to the station again to change your favorites."
         FavoriteChangeStatus.Failed -> "That change could not be made. The list shows what the station has now."
+        FavoriteChangeStatus.Unconfirmed -> "The station did not confirm that removal. Refresh the list to see what it has now."
         else -> return
     }
     Text(message, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)

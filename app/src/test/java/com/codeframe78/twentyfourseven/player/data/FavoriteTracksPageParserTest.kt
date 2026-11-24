@@ -342,5 +342,9 @@ class FavoriteTracksPageParserTest {
         assertEquals(true, oneButton != html)
         assertEquals(null, parser.albumTrackSongId(oneButton, "Twice"))
         assertEquals("246835", parser.albumTrackSongId(oneButton, "All For Love"))
+        // A row that carries two different numbers names neither.
+        val twoNumbers = html.replace("name=Req&amp;asin=B000000OD8&amp;songID=246836\"", "name=Req&amp;asin=B000000OD8&amp;songID=246836\" onclick=\"AddTrack(999, 1)\"")
+        assertEquals(true, twoNumbers != html)
+        assertEquals(null, parser.albumTrackSongId(twoNumbers, "Main Title"))
     }
 }

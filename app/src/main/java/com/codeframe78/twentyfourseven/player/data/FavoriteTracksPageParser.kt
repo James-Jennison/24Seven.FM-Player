@@ -247,11 +247,13 @@ internal class FavoriteTracksPageParser {
             .take(2)
             .toList()
             .singleOrNull() ?: return null
-        return row.select("[onclick]").firstNotNullOfOrNull { ADD_TRACK.find(it.attr("onclick"))?.groupValues?.get(1) }
-            ?: row.select("a[href*=name=Req&]").firstNotNullOfOrNull { link ->
+        // A row is one track. More than one number in it means the row is not what this reads, so nothing is named.
+        val numbers = row.select("[onclick]").mapNotNull { ADD_TRACK.find(it.attr("onclick"))?.groupValues?.get(1) } +
+            row.select("a[href*=name=Req&]").mapNotNull { link ->
                 runCatching { URI(link.attr("href").substringAfter('?').let { "x:/?$it" }) }.getOrNull()
                     ?.let { queryValue(it.rawQuery, "songID") }?.takeIf { it.matches(NUMERIC_ID) }
             }
+        return numbers.distinct().singleOrNull()
     }
 
     /** The song number in the row's own move/remove controls. */

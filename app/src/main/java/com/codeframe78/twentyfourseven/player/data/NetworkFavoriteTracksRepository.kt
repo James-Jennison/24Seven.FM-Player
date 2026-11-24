@@ -155,7 +155,7 @@ internal class NetworkFavoriteTracksRepository(
             val status = try {
                 // Read from the album page each time, so a number is never older than the change it is used for.
                 val songId = remote.findSongId(stationId, albumId, track.title)
-                if (songId != null) return@withLock applyChange(stationId, songId, change, listed = true)
+                if (songId != null) return@withLock applyChange(stationId, songId, change, row = track)
                 FavoriteChangeStatus.Failed
             } catch (cancellation: CancellationException) {
                 update(stationId) { it.copy(change = FavoriteChangeState()) }
@@ -169,11 +169,21 @@ internal class NetworkFavoriteTracksRepository(
             update(stationId) { it.copy(change = FavoriteChangeState(status, change, null)) }
         }
 
-    /** [listed] is true when the caller already matched [songId] to a row shown; otherwise it must be on one. */
-    private suspend fun applyChange(stationId: StationId, songId: String, change: FavoriteChange, listed: Boolean = false) {
+    /**
+     * [row] is the ranked row a song number was read from an album page for; otherwise [songId] must be on a row
+     * shown, so nothing is sent for a number the lists do not name.
+     */
+    private suspend fun applyChange(
+        stationId: StationId,
+        songId: String,
+        change: FavoriteChange,
+        row: com.codeframe78.twentyfourseven.player.domain.FavoriteTrack? = null,
+    ) {
         run {
             val current = state(stationId).value
-            if (!listed && current.tracks.none { it.songId == songId } && current.ranked.tracks.none { it.songId == songId }) return
+            val shown = row ?: current.tracks.firstOrNull { it.songId == songId }
+                ?: current.ranked.tracks.firstOrNull { it.songId == songId } ?: return
+            val removed = RemovedTrack(songId, shown.albumId, shown.title)
             val working = FavoriteChangeState(FavoriteChangeStatus.Working, change, songId)
             update(stationId) { it.copy(change = working) }
             val status = try {
@@ -191,15 +201,25 @@ internal class NetworkFavoriteTracksRepository(
             update(stationId) { it.copy(change = working.copy(status = status)) }
             if (status == FavoriteChangeStatus.SignInRequired) return
             // A move only changes the ranked order; the full list is sorted by the station and is re-read after a removal.
-            val rankedRead = current.ranked.loadedPages > 0 && reloadRanked(stationId, current.ranked.loadedPages)
+            val rankedRead = current.ranked.loadedPages > 0 &&
+                reloadRanked(stationId, current.ranked.loadedPages, afterChange = true)
             val listRead = change == FavoriteChange.Remove && current.status == FavoriteTracksLoadStatus.Ready &&
                 reloadPages(stationId, current.loadedPages, current.requestableOnly)
-            // A removal the station answered without complaint is only reported done when the lists read back agree.
             if (change == FavoriteChange.Remove && status == FavoriteChangeStatus.Done) {
+                // The station's answer alone does not show a removal happened. Each list that named the track before
+                // and was read back says whether it still does; a list that never named it says nothing.
                 val after = state(stationId).value
-                val stillListed = (rankedRead && after.ranked.tracks.any { it.songId == songId }) ||
-                    (listRead && after.tracks.any { it.songId == songId })
-                if (stillListed) update(stationId) { it.copy(change = working.copy(status = FavoriteChangeStatus.Failed)) }
+                val stillNamed = listOfNotNull(
+                    after.ranked.tracks.takeIf { rankedRead && current.ranked.tracks.any(removed::isSameTrack) },
+                    after.tracks.takeIf { listRead && current.tracks.any(removed::isSameTrack) },
+                ).map { it.any(removed::isSameTrack) }
+                val verdict = when {
+                    stillNamed.isEmpty() -> FavoriteChangeStatus.Unconfirmed
+                    stillNamed.none { it } -> FavoriteChangeStatus.Done
+                    stillNamed.all { it } -> FavoriteChangeStatus.Failed
+                    else -> FavoriteChangeStatus.Unconfirmed
+                }
+                if (verdict != status) update(stationId) { it.copy(change = working.copy(status = verdict)) }
             }
             Unit
         }
@@ -236,7 +256,8 @@ internal class NetworkFavoriteTracksRepository(
                 errorMessage = null,
                 loadedPages = loaded,
                 hasMore = hasMore,
-                moreFailed = false,
+                // The pages read again are the ones already shown, so a next page that failed is still missing.
+                moreFailed = it.moreFailed && hasMore && loaded == it.loadedPages,
                 totalTracks = total,
             )
         }
@@ -274,7 +295,7 @@ internal class NetworkFavoriteTracksRepository(
      * Reads the first [pages] ranked pages again, in order, so the list shown is the station's current order. False
      * when they could not be read.
      */
-    private suspend fun reloadRanked(stationId: StationId, pages: Int): Boolean {
+    private suspend fun reloadRanked(stationId: StationId, pages: Int, afterChange: Boolean = false): Boolean {
         val tracks = mutableListOf<com.codeframe78.twentyfourseven.player.domain.FavoriteTrack>()
         var hasMore = false
         var loaded = 0
@@ -292,7 +313,10 @@ internal class NetworkFavoriteTracksRepository(
         } catch (failure: Exception) {
             update(stationId) {
                 it.copy(
-                    ranked = it.ranked.copy(status = RankedFavoritesStatus.Error),
+                    // After a change the rows already shown stay usable; only a first read with nothing to show is an error.
+                    ranked = it.ranked.copy(
+                        status = if (afterChange && it.ranked.tracks.isNotEmpty()) RankedFavoritesStatus.Ready else RankedFavoritesStatus.Error,
+                    ),
                     errorMessage = if (failure is FavoritesAuthenticationRequiredException) {
                         "Sign in to this station to load your favorite tracks."
                     } else {
@@ -303,7 +327,16 @@ internal class NetworkFavoriteTracksRepository(
             return false
         }
         update(stationId) {
-            it.copy(ranked = RankedFavoritesState(RankedFavoritesStatus.Ready, withKnownSongIds(tracks, it.tracks), loaded, hasMore))
+            it.copy(
+                ranked = RankedFavoritesState(
+                    RankedFavoritesStatus.Ready,
+                    withKnownSongIds(tracks, it.tracks),
+                    loaded,
+                    hasMore,
+                    // Reading the same pages again after a change leaves a next page that failed still missing.
+                    moreFailed = afterChange && it.ranked.moreFailed && hasMore && loaded == it.ranked.loadedPages,
+                ),
+            )
         }
         return true
     }
@@ -317,6 +350,12 @@ internal class NetworkFavoriteTracksRepository(
     }
 
     private fun lock(stationId: StationId) = locks.getOrPut(stationId, ::Mutex)
+
+    /** What identifies a removed track in a list read back: its song number, or its album and title on a row without one. */
+    private data class RemovedTrack(val songId: String, val albumId: String?, val title: String) {
+        fun isSameTrack(track: com.codeframe78.twentyfourseven.player.domain.FavoriteTrack): Boolean =
+            track.songId == songId || (track.songId == null && albumId != null && track.albumId == albumId && track.title == title)
+    }
 
     private companion object {
         const val MAX_RANKED_PAGES = 40

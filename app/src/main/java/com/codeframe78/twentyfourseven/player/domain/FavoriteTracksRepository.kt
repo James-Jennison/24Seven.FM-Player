@@ -30,7 +30,8 @@ data class FavoriteTrack(
 /** A change to the member's own favorites list, sent as the station's own form sends it. */
 enum class FavoriteChange { MoveUp, MoveDown, Remove }
 
-enum class FavoriteChangeStatus { Idle, Working, Done, SignInRequired, Failed }
+/** [Unconfirmed]: the station answered a removal without complaint, but no list could be read back to show it. */
+enum class FavoriteChangeStatus { Idle, Working, Done, SignInRequired, Failed, Unconfirmed }
 
 data class FavoriteChangeState(
     val status: FavoriteChangeStatus = FavoriteChangeStatus.Idle,
