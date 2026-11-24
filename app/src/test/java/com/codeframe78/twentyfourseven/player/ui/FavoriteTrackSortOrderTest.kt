@@ -80,4 +80,13 @@ class FavoriteTrackSortOrderTest {
             availability = TrackRequestAvailability(TrackRequestStatus.InCurrentQueue),
         ),
     )
+
+    @Test
+    fun `a cooldown time stays on one line after its label`() {
+        assertEquals(
+            "Last played: Nov\u00A013\u00A0·\u00A04:06\u00A0PM\nRequest cooldown ends: Nov\u00A028\u00A0·\u00A04:06\u00A0PM",
+            unbrokenValues("Last played: Nov 13 · 4:06 PM\nRequest cooldown ends: Nov 28 · 4:06 PM"),
+        )
+        assertEquals("The artist is already in queue.", unbrokenValues("The artist is already in queue."))
+    }
 }

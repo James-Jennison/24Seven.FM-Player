@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -498,6 +499,15 @@ private fun MoreFailedNotice() {
     )
 }
 
+/**
+ * Keeps the value after each line's label on one line, so "Request cooldown ends: Nov 28 · 4:06 PM" wraps after the
+ * label when it must wrap, never between the time and "PM".
+ */
+internal fun unbrokenValues(label: String): String = label.lines().joinToString("\n") { line ->
+    val at = line.indexOf(": ")
+    if (at < 0) line else line.substring(0, at + 2) + line.substring(at + 2).replace(' ', '\u00A0')
+}
+
 /** One favorite as a row: its cover, what it is, whether it can be requested, and the request button when it can. */
 @Composable
 internal fun FavoriteTrackCard(
@@ -557,7 +567,7 @@ internal fun FavoriteTrackCard(
                     listOf(track.artist, track.album).filter(String::isNotBlank).joinToString(" · "),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
                 val facts = listOfNotNull(track.genre, track.year, track.duration).joinToString(" · ")
@@ -573,18 +583,21 @@ internal fun FavoriteTrackCard(
                 }
                 track.availability.detail?.let {
                     Text(
-                        availabilityDetailLabel(it),
+                        unbrokenValues(availabilityDetailLabel(it)),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-            }
-            if (available) {
-                FilledTonalButton(
-                    onClick = { onPrepareRequest(track) },
-                    enabled = canRequest,
-                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
-                ) { Text("Request Now") }
+                if (available) {
+                    // Under the text, not beside it: beside it the button left a phone too little room for the title,
+                    // the artist and the length.
+                    FilledTonalButton(
+                        onClick = { onPrepareRequest(track) },
+                        enabled = canRequest,
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+                        modifier = Modifier.padding(top = 4.dp).heightIn(min = 36.dp),
+                    ) { Text("Request Now") }
+                }
             }
             if (manage != null) {
                 Box {
