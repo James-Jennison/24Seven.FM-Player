@@ -241,7 +241,7 @@ internal class StationFavoriteTracksRemoteDataSource(
         const val MAX_RANKED_PAGES = 40
         const val MAX_LIST_PAGES = 200
         /** The station's "Are you sure" form names its Cancel and Remove buttons Yes2Remove. */
-        val REMOVE_CONFIRMATION = Regex("name=[\"']Yes2Remove[\"']", RegexOption.IGNORE_CASE)
+        val REMOVE_CONFIRMATION = Regex("name=[\"']?Yes2Remove\\b", RegexOption.IGNORE_CASE)
         val CHANGE_FAILURE = Regex("Can't (?:delete|update|open)|Fatal error|Hacking attempt", RegexOption.IGNORE_CASE)
         val SONG_ID = Regex("[0-9]{1,10}")
         const val MAX_REDIRECTS = 5

@@ -230,7 +230,7 @@ internal class FavoriteTracksPageParser {
 
     /** The count in "1–50 of 1500 tracks". */
     private fun totalTracks(document: Document): Int? = document.selectFirst(".favorite-result-count")?.text()
-        ?.let { TOTAL_TRACKS.find(it)?.groupValues?.get(1)?.toIntOrNull() }
+        ?.let { TOTAL_TRACKS.find(it)?.groupValues?.get(1)?.replace(",", "")?.toIntOrNull() }
 
     /**
      * The song number of the track named [title] on a signed-in album page. Every track row there carries the number
@@ -239,19 +239,19 @@ internal class FavoriteTracksPageParser {
      */
     fun albumTrackSongId(html: String, title: String): String? {
         val wanted = title.trim()
-        val matches = Jsoup.parse(html).select("tr").asSequence()
-            .filter { row -> row.select("tr").size == 1 && row.selectFirst("img[src*=requestbutton]") != null }
-            .filter { row -> row.selectFirst("[itemprop=name]")?.text()?.trim() == wanted }
-            .map { row ->
-                row.select("[onclick]").firstNotNullOfOrNull { ADD_TRACK.find(it.attr("onclick"))?.groupValues?.get(1) }
-                    ?: row.select("a[href*=name=Req&]").firstNotNullOfOrNull { link ->
-                        runCatching { URI(link.attr("href").substringAfter('?').let { "x:/?$it" }) }.getOrNull()
-                            ?.let { queryValue(it.rawQuery, "songID") }?.takeIf { it.matches(NUMERIC_ID) }
-                    }
-            }
+        // Every row that names the title counts, with or without a request button, so two tracks that share a title
+        // are always seen as two and neither is taken for the other.
+        val row = Jsoup.parse(html).select("tr").asSequence()
+            .filter { row -> row.select("tr").size == 1 }
+            .filter { row -> row.select("[itemprop=name]").any { it.text().trim() == wanted } }
             .take(2)
             .toList()
-        return matches.singleOrNull()
+            .singleOrNull() ?: return null
+        return row.select("[onclick]").firstNotNullOfOrNull { ADD_TRACK.find(it.attr("onclick"))?.groupValues?.get(1) }
+            ?: row.select("a[href*=name=Req&]").firstNotNullOfOrNull { link ->
+                runCatching { URI(link.attr("href").substringAfter('?').let { "x:/?$it" }) }.getOrNull()
+                    ?.let { queryValue(it.rawQuery, "songID") }?.takeIf { it.matches(NUMERIC_ID) }
+            }
     }
 
     /** The song number in the row's own move/remove controls. */

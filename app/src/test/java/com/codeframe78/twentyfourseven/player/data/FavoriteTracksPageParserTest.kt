@@ -256,6 +256,8 @@ class FavoriteTracksPageParserTest {
         assertEquals("18:36", page.tracks[1].duration)
         assertEquals(2, page.nextPage)
         assertEquals(1500, page.totalTracks)
+        // A total written with a thousands separator reads the same.
+        assertEquals(1500, parser.parseTracksPage(html.replace("of 1500 tracks", "of 1,500 tracks"), origin).totalTracks)
 
         val last = parser.parseTracksPage(html.replace("""<a rel="next" href="/modules/Favorites/thelist.php?user2view=4821&amp;page=2">Next</a>""", ""), origin)
         assertNull(last.nextPage)
@@ -332,5 +334,13 @@ class FavoriteTracksPageParserTest {
         // Two tracks with one title cannot be told apart, and a title the page does not have names nothing.
         assertEquals(null, parser.albumTrackSongId(html, "Twice"))
         assertEquals(null, parser.albumTrackSongId(html, "Missing"))
+        // The second of two same-titled tracks still counts when its row shows no request button.
+        val oneButton = html.replace(
+            """<tr><td class="td01"><img src="/images/requestbutton_disabled.png"></td><td class="td01"><a onclick="AddTrack(2,""",
+            """<tr><td class="td01"></td><td class="td01"><a onclick="AddTrack(2,""",
+        )
+        assertEquals(true, oneButton != html)
+        assertEquals(null, parser.albumTrackSongId(oneButton, "Twice"))
+        assertEquals("246835", parser.albumTrackSongId(oneButton, "All For Love"))
     }
 }

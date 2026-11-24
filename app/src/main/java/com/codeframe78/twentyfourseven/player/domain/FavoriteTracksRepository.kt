@@ -50,6 +50,8 @@ data class RankedFavoritesState(
     val tracks: List<FavoriteTrack> = emptyList(),
     val loadedPages: Int = 0,
     val hasMore: Boolean = false,
+    /** True when the last attempt to read the next page failed; the pages already read stay. */
+    val moreFailed: Boolean = false,
 )
 
 data class FavoriteTracksState(
@@ -65,6 +67,8 @@ data class FavoriteTracksState(
     val hasMore: Boolean = false,
     /** True while the next page of the full list is being read. */
     val loadingMore: Boolean = false,
+    /** True when the last attempt to read the next page failed; the pages already read stay. */
+    val moreFailed: Boolean = false,
     /** The size of the whole list as the station states it, when it states one. */
     val totalTracks: Int? = null,
     /** Whether the list was read with the station's "Requestable only" choice, which leaves out unavailable tracks. */

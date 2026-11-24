@@ -285,6 +285,7 @@ internal fun FavoriteTracksScreen(
                     if (favorites?.hasMore == true || favorites?.loadingMore == true) {
                         item {
                             val actions = LocalStationExtrasActions.current
+                            if (favorites.moreFailed) MoreFailedNotice()
                             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                                 if (favorites.loadingMore) {
                                     CircularProgressIndicator(Modifier.size(28.dp))
@@ -471,6 +472,7 @@ private fun LazyListScope.rankedFavoriteItems(state: MainUiState, onPrepareReque
     if (ranked.tracks.isNotEmpty() && (ranked.hasMore || ranked.status == RankedFavoritesStatus.Loading)) {
         item {
             val actions = LocalStationExtrasActions.current
+            if (ranked.moreFailed) MoreFailedNotice()
             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 if (ranked.status == RankedFavoritesStatus.Loading) {
                     CircularProgressIndicator(Modifier.size(28.dp))
@@ -482,6 +484,18 @@ private fun LazyListScope.rankedFavoriteItems(state: MainUiState, onPrepareReque
             }
         }
     }
+}
+
+/** Shown above "Show the next 50" when the last attempt to read the next page failed. */
+@Composable
+private fun MoreFailedNotice() {
+    Text(
+        "The next tracks could not be loaded. Try again.",
+        color = MaterialTheme.colorScheme.error,
+        style = MaterialTheme.typography.bodySmall,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth().testTag("favorites_more_failed"),
+    )
 }
 
 /** One favorite as a row: its cover, what it is, whether it can be requested, and the request button when it can. */

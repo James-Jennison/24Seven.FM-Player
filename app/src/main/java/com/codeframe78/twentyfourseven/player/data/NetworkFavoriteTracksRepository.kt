@@ -23,25 +23,27 @@ internal class NetworkFavoriteTracksRepository(
     private val states = ConcurrentHashMap<StationId, MutableStateFlow<FavoriteTracksState>>()
     private val locks = ConcurrentHashMap<StationId, Mutex>()
 
-    /** Song numbers read from album pages for ranked tracks the feed gave none, by album and title. */
-    private val resolved = ConcurrentHashMap<StationId, ConcurrentHashMap<Pair<String, String>, String>>()
-
     override fun observeFavorites(stationId: StationId): Flow<FavoriteTracksState> =
         state(stationId).asStateFlow()
 
-    override suspend fun refresh(stationId: StationId): Unit = lock(stationId).withLock { readFirstPage(stationId) }
+    override suspend fun refresh(stationId: StationId) {
+        lock(stationId).withLock { readFirstPage(stationId) }
+    }
 
     override suspend fun setRequestableOnly(stationId: StationId, requestableOnly: Boolean): Unit =
         lock(stationId).withLock {
-            if (state(stationId).value.requestableOnly == requestableOnly) return@withLock
+            val before = state(stationId).value.requestableOnly
+            if (before == requestableOnly) return@withLock
             update(stationId) { it.copy(requestableOnly = requestableOnly) }
-            readFirstPage(stationId)
+            // The tracks shown were read with the earlier choice, so a failed read puts the choice back with them.
+            if (!readFirstPage(stationId)) update(stationId) { it.copy(requestableOnly = before) }
         }
 
-    private suspend fun readFirstPage(stationId: StationId) {
+    /** Reads page one of the full list; false when it could not be read. */
+    private suspend fun readFirstPage(stationId: StationId): Boolean {
         update(stationId) { it.copy(status = FavoriteTracksLoadStatus.Loading, errorMessage = null) }
         val requestableOnly = state(stationId).value.requestableOnly
-        runCatching { remote.load(stationId, 1, requestableOnly) }
+        return runCatching { remote.load(stationId, 1, requestableOnly) }
             .onSuccess { page ->
                 update(stationId) {
                     it.copy(
@@ -51,6 +53,7 @@ internal class NetworkFavoriteTracksRepository(
                         loadedPages = 1,
                         hasMore = page.nextPage != null && page.tracks.isNotEmpty(),
                         loadingMore = false,
+                        moreFailed = false,
                         totalTracks = page.totalTracks,
                     )
                 }
@@ -67,7 +70,7 @@ internal class NetworkFavoriteTracksRepository(
                     )
                 }
             }
-        Unit
+            .isSuccess
     }
 
     override suspend fun loadMore(stationId: StationId): Unit = lock(stationId).withLock {
@@ -75,7 +78,7 @@ internal class NetworkFavoriteTracksRepository(
         if (current.status != FavoriteTracksLoadStatus.Ready || !current.hasMore || current.loadedPages >= MAX_LIST_PAGES) {
             return@withLock
         }
-        update(stationId) { it.copy(loadingMore = true) }
+        update(stationId) { it.copy(loadingMore = true, moreFailed = false) }
         val next = current.loadedPages + 1
         val page = try {
             remote.load(stationId, next, current.requestableOnly)
@@ -87,6 +90,7 @@ internal class NetworkFavoriteTracksRepository(
             update(stationId) {
                 it.copy(
                     loadingMore = false,
+                    moreFailed = failure !is FavoritesAuthenticationRequiredException,
                     errorMessage = if (failure is FavoritesAuthenticationRequiredException) {
                         "Sign in to this station to load your favorite tracks."
                     } else {
@@ -124,14 +128,14 @@ internal class NetworkFavoriteTracksRepository(
             throw cancellation
         } catch (_: Exception) {
             // The pages already shown stay; only the next one failed.
-            update(stationId) { it.copy(ranked = ranked) }
+            update(stationId) { it.copy(ranked = ranked.copy(moreFailed = true)) }
             return@withLock
         }
         update(stationId) {
             it.copy(
                 ranked = RankedFavoritesState(
                     RankedFavoritesStatus.Ready,
-                    ranked.tracks + withKnownSongIds(stationId, page.tracks, it.tracks),
+                    ranked.tracks + withKnownSongIds(page.tracks, it.tracks),
                     loadedPages = next,
                     hasMore = page.nextPage != null && page.tracks.isNotEmpty(),
                 ),
@@ -149,14 +153,9 @@ internal class NetworkFavoriteTracksRepository(
             val albumId = track.albumId ?: return@withLock
             update(stationId) { it.copy(change = FavoriteChangeState(FavoriteChangeStatus.Working, change, null)) }
             val status = try {
+                // Read from the album page each time, so a number is never older than the change it is used for.
                 val songId = remote.findSongId(stationId, albumId, track.title)
-                if (songId != null) {
-                    resolved.getOrPut(stationId) { ConcurrentHashMap() }[albumId to track.title] = songId
-                    update(stationId) { state ->
-                        state.copy(ranked = state.ranked.copy(tracks = withKnownSongIds(stationId, state.ranked.tracks, state.tracks)))
-                    }
-                    return@withLock applyChange(stationId, songId, change)
-                }
+                if (songId != null) return@withLock applyChange(stationId, songId, change, listed = true)
                 FavoriteChangeStatus.Failed
             } catch (cancellation: CancellationException) {
                 update(stationId) { it.copy(change = FavoriteChangeState()) }
@@ -170,10 +169,11 @@ internal class NetworkFavoriteTracksRepository(
             update(stationId) { it.copy(change = FavoriteChangeState(status, change, null)) }
         }
 
-    private suspend fun applyChange(stationId: StationId, songId: String, change: FavoriteChange) {
+    /** [listed] is true when the caller already matched [songId] to a row shown; otherwise it must be on one. */
+    private suspend fun applyChange(stationId: StationId, songId: String, change: FavoriteChange, listed: Boolean = false) {
         run {
             val current = state(stationId).value
-            if (current.tracks.none { it.songId == songId } && current.ranked.tracks.none { it.songId == songId }) return
+            if (!listed && current.tracks.none { it.songId == songId } && current.ranked.tracks.none { it.songId == songId }) return
             val working = FavoriteChangeState(FavoriteChangeStatus.Working, change, songId)
             update(stationId) { it.copy(change = working) }
             val status = try {
@@ -191,16 +191,25 @@ internal class NetworkFavoriteTracksRepository(
             update(stationId) { it.copy(change = working.copy(status = status)) }
             if (status == FavoriteChangeStatus.SignInRequired) return
             // A move only changes the ranked order; the full list is sorted by the station and is re-read after a removal.
-            if (current.ranked.loadedPages > 0) reloadRanked(stationId, current.ranked.loadedPages)
-            if (change == FavoriteChange.Remove && current.status == FavoriteTracksLoadStatus.Ready) {
+            val rankedRead = current.ranked.loadedPages > 0 && reloadRanked(stationId, current.ranked.loadedPages)
+            val listRead = change == FavoriteChange.Remove && current.status == FavoriteTracksLoadStatus.Ready &&
                 reloadPages(stationId, current.loadedPages, current.requestableOnly)
+            // A removal the station answered without complaint is only reported done when the lists read back agree.
+            if (change == FavoriteChange.Remove && status == FavoriteChangeStatus.Done) {
+                val after = state(stationId).value
+                val stillListed = (rankedRead && after.ranked.tracks.any { it.songId == songId }) ||
+                    (listRead && after.tracks.any { it.songId == songId })
+                if (stillListed) update(stationId) { it.copy(change = working.copy(status = FavoriteChangeStatus.Failed)) }
             }
             Unit
         }
     }
 
-    /** Reads the first [pages] pages of the full list again, so a removal shows without losing the pages already read. */
-    private suspend fun reloadPages(stationId: StationId, pages: Int, requestableOnly: Boolean) {
+    /**
+     * Reads the first [pages] pages of the full list again, so a removal shows without losing the pages already read.
+     * False when they could not be read.
+     */
+    private suspend fun reloadPages(stationId: StationId, pages: Int, requestableOnly: Boolean): Boolean {
         var tracks = emptyList<com.codeframe78.twentyfourseven.player.domain.FavoriteTrack>()
         var loaded = 0
         var hasMore = false
@@ -218,7 +227,7 @@ internal class NetworkFavoriteTracksRepository(
             throw cancellation
         } catch (_: Exception) {
             // The list shown stays as it was; the change notice already says what happened.
-            return
+            return false
         }
         update(stationId) {
             it.copy(
@@ -227,9 +236,11 @@ internal class NetworkFavoriteTracksRepository(
                 errorMessage = null,
                 loadedPages = loaded,
                 hasMore = hasMore,
+                moreFailed = false,
                 totalTracks = total,
             )
         }
+        return true
     }
 
     /**
@@ -237,7 +248,6 @@ internal class NetworkFavoriteTracksRepository(
      * it on every row, so a ranked track takes it from the same album and title there when the full list has it.
      */
     private fun withKnownSongIds(
-        stationId: StationId,
         ranked: List<com.codeframe78.twentyfourseven.player.domain.FavoriteTrack>,
         full: List<com.codeframe78.twentyfourseven.player.domain.FavoriteTrack>,
     ): List<com.codeframe78.twentyfourseven.player.domain.FavoriteTrack> {
@@ -246,13 +256,8 @@ internal class NetworkFavoriteTracksRepository(
             .groupBy { it.albumId to it.title }
             .filterValues { it.size == 1 }
             .mapValues { it.value.single().songId }
-        val read = resolved[stationId].orEmpty()
         return ranked.map { track ->
-            if (track.songId != null) {
-                track
-            } else {
-                track.copy(songId = known[track.albumId to track.title] ?: track.albumId?.let { read[it to track.title] })
-            }
+            if (track.songId != null) track else track.copy(songId = known[track.albumId to track.title])
         }
     }
 
@@ -265,8 +270,11 @@ internal class NetworkFavoriteTracksRepository(
         return shown + page.filter { track -> track.songId == null || seen.add(track.songId) }
     }
 
-    /** Reads the first [pages] ranked pages again, in order, so the list shown is the station's current order. */
-    private suspend fun reloadRanked(stationId: StationId, pages: Int) {
+    /**
+     * Reads the first [pages] ranked pages again, in order, so the list shown is the station's current order. False
+     * when they could not be read.
+     */
+    private suspend fun reloadRanked(stationId: StationId, pages: Int): Boolean {
         val tracks = mutableListOf<com.codeframe78.twentyfourseven.player.domain.FavoriteTrack>()
         var hasMore = false
         var loaded = 0
@@ -292,11 +300,12 @@ internal class NetworkFavoriteTracksRepository(
                     },
                 )
             }
-            return
+            return false
         }
         update(stationId) {
-            it.copy(ranked = RankedFavoritesState(RankedFavoritesStatus.Ready, withKnownSongIds(stationId, tracks, it.tracks), loaded, hasMore))
+            it.copy(ranked = RankedFavoritesState(RankedFavoritesStatus.Ready, withKnownSongIds(tracks, it.tracks), loaded, hasMore))
         }
+        return true
     }
 
     override suspend fun clear(stationId: StationId) = lock(stationId).withLock {

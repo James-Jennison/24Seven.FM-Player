@@ -119,7 +119,7 @@ class NetworkFavoriteTracksRepositoryTest {
 
     private class FakeFavoriteTracksRemote(
         var tracks: List<FavoriteTrack> = emptyList(),
-        private val failure: Throwable? = null,
+        var failure: Throwable? = null,
         private val changeFailure: Throwable? = null,
         var ranked: List<FavoriteTrack> = emptyList(),
         private val rankedPages: Int = 1,
@@ -219,16 +219,92 @@ class NetworkFavoriteTracksRepositoryTest {
         assertEquals(listOf("22" to FavoriteChange.MoveUp), remote.changes)
         with(repository.observeFavorites(stationId).first()) {
             assertEquals(FavoriteChangeStatus.Done, change.status)
-            // The number read stays with the row after the ranked list is read again.
-            assertEquals("22", ranked.tracks[1].songId)
+            // The number is not kept: the next change reads the album page again, so it is never a stale one.
+            assertEquals(null, ranked.tracks[1].songId)
         }
+        remote.albumSongIds = mapOf(("B000000002" to "Unavailable") to "23")
         repository.changeRankedFavorite(stationId, 2, FavoriteChange.MoveDown)
-        assertEquals(listOf("B000000002" to "Unavailable"), remote.lookups)
+        assertEquals(List(2) { "B000000002" to "Unavailable" }, remote.lookups)
+        assertEquals("23" to FavoriteChange.MoveDown, remote.changes.last())
 
         // An album page that does not name the track sends nothing and reports the failure.
         repository.changeRankedFavorite(stationId, 3, FavoriteChange.Remove)
         assertEquals(2, remote.changes.size)
         assertEquals(FavoriteChangeStatus.Failed, repository.observeFavorites(stationId).first().change.status)
+    }
+
+    @Test
+    fun `a removal the station answers but does not carry out is reported as failed`() = runTest {
+        val tracks = listOf(
+            FavoriteTrack(1, "Opening", "Album", "Composer", songId = "11"),
+            FavoriteTrack(2, "Finale", "Album", "Composer", songId = "12"),
+        )
+        // The fake accepts the removal and keeps listing the track, as a station that ignored it would.
+        val remote = FakeFavoriteTracksRemote(tracks, ranked = tracks)
+        val repository = NetworkFavoriteTracksRepository(remote)
+        repository.refresh(stationId)
+        repository.refreshRanked(stationId)
+        repository.changeFavorite(stationId, "11", FavoriteChange.Remove)
+        assertEquals(FavoriteChangeStatus.Failed, repository.observeFavorites(stationId).first().change.status)
+
+        // Once the lists read back no longer name it, the same removal is reported done.
+        remote.tracks = tracks.drop(1)
+        remote.ranked = tracks.drop(1)
+        repository.changeFavorite(stationId, "11", FavoriteChange.Remove)
+        assertEquals(FavoriteChangeStatus.Done, repository.observeFavorites(stationId).first().change.status)
+
+        // A move has nothing to read back, so the station's answer stands.
+        repository.changeFavorite(stationId, "12", FavoriteChange.MoveUp)
+        assertEquals(FavoriteChangeStatus.Done, repository.observeFavorites(stationId).first().change.status)
+    }
+
+    @Test
+    fun `a next page that cannot be read says so and keeps the pages already read`() = runTest {
+        val tracks = listOf(FavoriteTrack(1, "Opening", "Album", "Composer", songId = "11"))
+        val remote = FakeFavoriteTracksRemote(tracks, ranked = tracks, rankedPages = 3).apply { listPages = 3 }
+        val repository = NetworkFavoriteTracksRepository(remote)
+        repository.refresh(stationId)
+        repository.refreshRanked(stationId)
+
+        remote.failure = java.io.IOException("offline")
+        repository.loadMore(stationId)
+        repository.loadMoreRanked(stationId)
+        with(repository.observeFavorites(stationId).first()) {
+            assertEquals(true, moreFailed)
+            assertEquals(false, loadingMore)
+            assertEquals(true, hasMore)
+            assertEquals(1, this.tracks.size)
+            assertEquals(FavoriteTracksLoadStatus.Ready, status)
+            assertEquals(true, ranked.moreFailed)
+            assertEquals(1, ranked.tracks.size)
+            assertEquals(true, ranked.hasMore)
+        }
+
+        remote.failure = null
+        repository.loadMore(stationId)
+        repository.loadMoreRanked(stationId)
+        with(repository.observeFavorites(stationId).first()) {
+            assertEquals(false, moreFailed)
+            assertEquals(2, this.tracks.size)
+            assertEquals(false, ranked.moreFailed)
+            assertEquals(2, ranked.tracks.size)
+        }
+    }
+
+    @Test
+    fun `requestable only goes back to the earlier choice when its page cannot be read`() = runTest {
+        val tracks = listOf(FavoriteTrack(1, "Opening", "Album", "Composer", songId = "11"))
+        val remote = FakeFavoriteTracksRemote(tracks)
+        val repository = NetworkFavoriteTracksRepository(remote)
+        repository.refresh(stationId)
+
+        remote.failure = java.io.IOException("offline")
+        repository.setRequestableOnly(stationId, true)
+        with(repository.observeFavorites(stationId).first()) {
+            assertEquals(false, requestableOnly)
+            assertEquals(FavoriteTracksLoadStatus.Error, status)
+            assertEquals(1, this.tracks.size)
+        }
     }
 
     @Test
