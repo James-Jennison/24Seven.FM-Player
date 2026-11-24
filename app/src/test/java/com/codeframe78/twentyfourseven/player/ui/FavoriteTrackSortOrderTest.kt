@@ -88,5 +88,11 @@ class FavoriteTrackSortOrderTest {
             unbrokenValues("Last played: Nov 13 · 4:06 PM\nRequest cooldown ends: Nov 28 · 4:06 PM"),
         )
         assertEquals("The artist is already in queue.", unbrokenValues("The artist is already in queue."))
+        // A time in another year is kept whole too, and text around a time still wraps where it did.
+        assertEquals(
+            "Note: played on Nov\u00A028,\u00A02025\u00A0·\u00A011:59\u00A0AM by request: see the queue",
+            unbrokenValues("Note: played on Nov 28, 2025 · 11:59 AM by request: see the queue"),
+        )
+        assertEquals("Requests reopen: after the current event ends", unbrokenValues("Requests reopen: after the current event ends"))
     }
 }

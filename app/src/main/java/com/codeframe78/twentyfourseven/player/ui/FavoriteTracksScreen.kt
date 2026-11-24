@@ -500,13 +500,14 @@ private fun MoreFailedNotice() {
 }
 
 /**
- * Keeps the value after each line's label on one line, so "Request cooldown ends: Nov 28 · 4:06 PM" wraps after the
- * label when it must wrap, never between the time and "PM".
+ * Keeps each time the app writes ("Nov 28 · 4:06 PM", "Nov 28, 2025 · 4:06 PM") on one line, so "Request cooldown ends:
+ * Nov 28 · 4:06 PM" wraps before the time when it must wrap, never between the time and "PM". Other text is left as it
+ * is and wraps as usual.
  */
-internal fun unbrokenValues(label: String): String = label.lines().joinToString("\n") { line ->
-    val at = line.indexOf(": ")
-    if (at < 0) line else line.substring(0, at + 2) + line.substring(at + 2).replace(' ', '\u00A0')
-}
+internal fun unbrokenValues(label: String): String =
+    label.replace(REQUEST_TIME_TEXT) { it.value.replace(' ', '\u00A0') }
+
+private val REQUEST_TIME_TEXT = Regex("""[A-Z][a-z]{2} \d{1,2}(?:, \d{4})? · \d{1,2}:\d{2} [AP]M""")
 
 /** One favorite as a row: its cover, what it is, whether it can be requested, and the request button when it can. */
 @Composable
