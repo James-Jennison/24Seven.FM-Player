@@ -3,7 +3,7 @@ package com.codeframe78.twentyfourseven.player.ui
 import com.codeframe78.twentyfourseven.player.domain.FavoriteTrack
 
 internal enum class FavoriteTrackSortOrder(val label: String) {
-    Position("Favorites order"),
+    Position("Station order"),
     TrackName("Track Name"),
     Album("Album"),
     Artist("Artist"),
@@ -14,7 +14,10 @@ internal enum class FavoriteTrackSortOrder(val label: String) {
 }
 
 internal fun List<FavoriteTrack>.sortedForFavorites(order: FavoriteTrackSortOrder): List<FavoriteTrack> = when (order) {
-    FavoriteTrackSortOrder.Position -> if (isSortedByPosition()) this else sortedBy(FavoriteTrack::position)
+    // The station sends the list in the order the member chose on the site, a page at a time. A redesigned row's
+    // position is the track's ranking number, not its place in that list, so the list is shown as it was read and a
+    // later page follows the pages before it.
+    FavoriteTrackSortOrder.Position -> this
     FavoriteTrackSortOrder.TrackName -> sortedWith(textComparator(FavoriteTrack::title))
     FavoriteTrackSortOrder.Album -> sortedWith(textComparator(FavoriteTrack::album))
     FavoriteTrackSortOrder.Artist -> sortedWith(textComparator(FavoriteTrack::artist))
@@ -28,13 +31,6 @@ internal fun List<FavoriteTrack>.sortedForFavorites(order: FavoriteTrackSortOrde
             .thenBy(FavoriteTrack::position),
     )
     FavoriteTrackSortOrder.PlayState -> sortedForDisplay(TrackSortOrder.PlayState, FavoriteTrack::availability)
-}
-
-private fun List<FavoriteTrack>.isSortedByPosition(): Boolean {
-    for (index in 1 until size) {
-        if (this[index - 1].position > this[index].position) return false
-    }
-    return true
 }
 
 private fun textComparator(selector: (FavoriteTrack) -> String?): Comparator<FavoriteTrack> =

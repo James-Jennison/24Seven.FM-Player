@@ -67,6 +67,8 @@ data class FavoriteTracksState(
     val loadingMore: Boolean = false,
     /** The size of the whole list as the station states it, when it states one. */
     val totalTracks: Int? = null,
+    /** Whether the list was read with the station's "Requestable only" choice, which leaves out unavailable tracks. */
+    val requestableOnly: Boolean = false,
 )
 
 interface FavoriteTracksRepository {
@@ -76,6 +78,12 @@ interface FavoriteTracksRepository {
 
     /** Reads the next page of the full list and adds it to the tracks already shown. */
     suspend fun loadMore(stationId: StationId)
+
+    /**
+     * Chooses whether the full list leaves out tracks that cannot be requested now, as the station's own
+     * "Requestable only" link does, and reads the first page again. Nothing is saved on the station.
+     */
+    suspend fun setRequestableOnly(stationId: StationId, requestableOnly: Boolean)
 
     /** Reads the first page of the member's ranked favorites. Needs the station session. */
     suspend fun refreshRanked(stationId: StationId)

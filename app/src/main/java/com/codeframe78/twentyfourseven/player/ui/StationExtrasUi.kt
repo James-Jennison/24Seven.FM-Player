@@ -129,6 +129,8 @@ internal data class StationExtrasActions(
     val onRefreshRankedFavorites: () -> Unit = {},
     val onLoadMoreRankedFavorites: () -> Unit = {},
     val onLoadMoreFavorites: () -> Unit = {},
+    /** Shows only the favorites that can be requested now, or all of them again. */
+    val onSetFavoritesRequestableOnly: (Boolean) -> Unit = {},
 )
 
 /** Lets any screen open the history archive or news without threading callbacks through every layout. */

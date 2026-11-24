@@ -1024,6 +1024,7 @@ class MainViewModelTest {
         override fun observeFavorites(stationId: StationId): Flow<FavoriteTracksState> = state
         override suspend fun refresh(stationId: StationId) = Unit
         override suspend fun loadMore(stationId: StationId) = Unit
+        override suspend fun setRequestableOnly(stationId: StationId, requestableOnly: Boolean) = Unit
         override suspend fun refreshRanked(stationId: StationId) = Unit
         override suspend fun loadMoreRanked(stationId: StationId) = Unit
         override suspend fun changeFavorite(

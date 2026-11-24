@@ -9,17 +9,24 @@ import org.junit.Test
 
 class FavoriteTrackSortOrderTest {
     @Test
-    fun `station position order reuses an already ordered large list`() {
+    fun `station order shows the list as the station sent it`() {
         val ordered = (1..1_500).map { position ->
             FavoriteTrack(position, "Track $position", "Album", "Artist")
         }
-
         assertSame(ordered, ordered.sortedForFavorites(FavoriteTrackSortOrder.Position))
+
+        // A redesigned row's position is its ranking number, so a later page's rows keep their place after the
+        // rows already read instead of being sorted in among them.
+        val pages = listOf(349, 1500, 47, 632, 921, 57).map { rank -> FavoriteTrack(rank, "Track $rank", "Album", "Artist") }
+        assertEquals(
+            listOf(349, 1500, 47, 632, 921, 57),
+            pages.sortedForFavorites(FavoriteTrackSortOrder.Position).map(FavoriteTrack::position),
+        )
     }
 
     @Test
     fun `favorites sort by every displayed metadata field`() {
-        assertOrder(FavoriteTrackSortOrder.Position, 1, 2, 3)
+        assertOrder(FavoriteTrackSortOrder.Position, 3, 1, 2)
         assertOrder(FavoriteTrackSortOrder.TrackName, 1, 2, 3)
         assertOrder(FavoriteTrackSortOrder.Album, 3, 2, 1)
         assertOrder(FavoriteTrackSortOrder.Artist, 2, 3, 1)

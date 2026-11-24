@@ -208,6 +208,15 @@ internal fun FavoriteTracksScreen(
                         )
                     }
                     item {
+                        val actions = LocalStationExtrasActions.current
+                        val requestableOnly = favorites?.requestableOnly == true
+                        Column {
+                        FilterChip(
+                            selected = requestableOnly,
+                            onClick = { actions.onSetFavoritesRequestableOnly(!requestableOnly) },
+                            label = { Text("Requestable only") },
+                            modifier = Modifier.testTag("favorites_requestable_only"),
+                        )
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 favoriteCountLabel(
@@ -215,6 +224,7 @@ internal fun FavoriteTracksScreen(
                                     loaded = favorites?.tracks?.size ?: 0,
                                     total = favorites?.totalTracks,
                                     filtered = filter.isNotBlank(),
+                                    requestableOnly = favorites?.requestableOnly == true,
                                 ),
                                 style = MaterialTheme.typography.labelLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -245,11 +255,16 @@ internal fun FavoriteTracksScreen(
                                 }
                             }
                         }
+                        }
                     }
                     if (visibleTracks.isEmpty()) {
                         item {
                             Text(
-                                if (filter.isBlank()) "No favorite tracks were found." else "No favorites match this filter.",
+                                when {
+                                    filter.isNotBlank() -> "No favorites match this filter."
+                                    favorites?.requestableOnly == true -> "None of your favorites can be requested right now."
+                                    else -> "No favorite tracks were found."
+                                },
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
@@ -302,13 +317,20 @@ internal fun FavoriteTracksScreen(
  * The count above the list. The stations page the list 50 at a time, so a filter or sort covers only the tracks read
  * so far, and the label says so while more remain.
  */
-internal fun favoriteCountLabel(shown: Int, loaded: Int, total: Int?, filtered: Boolean): String {
+internal fun favoriteCountLabel(
+    shown: Int,
+    loaded: Int,
+    total: Int?,
+    filtered: Boolean,
+    requestableOnly: Boolean = false,
+): String {
     val partial = total != null && total > loaded
+    val tracks = if (requestableOnly) "requestable tracks" else "tracks"
     return when {
-        filtered && partial -> "$shown matches in $loaded of $total tracks loaded"
-        filtered -> "$shown of $loaded tracks"
-        partial -> "$loaded of $total tracks loaded"
-        else -> "$loaded tracks"
+        filtered && partial -> "$shown matches in $loaded of $total $tracks loaded"
+        filtered -> "$shown of $loaded $tracks"
+        partial -> "$loaded of $total $tracks loaded"
+        else -> "$loaded $tracks"
     }
 }
 

@@ -15,14 +15,27 @@ import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
 internal interface FavoriteTracksRemoteDataSource {
-    /** One page of the member's full favorites list, 50 tracks a page. Needs the station session. */
-    suspend fun load(stationId: StationId, page: Int = 1): FavoriteTracksPage
+    /**
+     * One page of the member's full favorites list, 50 tracks a page. With [requestableOnly] the station leaves out
+     * the tracks that cannot be requested now. Needs the station session.
+     */
+    suspend fun load(stationId: StationId, page: Int = 1, requestableOnly: Boolean = false): FavoriteTracksPage
 
     /** One page of the member's own ranked favorites, from the profile feed. Needs the station session. */
     suspend fun loadRanked(stationId: StationId, page: Int): RankedFavoritesPage
 
     /** Sends one change for one track the way the station's own favorites controls do. Needs the station session. */
     suspend fun change(stationId: StationId, songId: String, change: FavoriteChange)
+}
+
+/**
+ * The address of one page of a favorites list. The station's own "Requestable only" link adds requestable=1, and its
+ * Next link adds the page number.
+ */
+internal fun listPageUrl(listUrl: String, page: Int, requestableOnly: Boolean): String = buildString {
+    append(listUrl)
+    if (requestableOnly) append("&requestable=1")
+    if (page > 1) append("&page=").append(page)
 }
 
 internal class StationFavoriteTracksRemoteDataSource(
@@ -33,7 +46,7 @@ internal class StationFavoriteTracksRemoteDataSource(
         it.toURL().openConnection() as HttpURLConnection
     },
 ) : FavoriteTracksRemoteDataSource {
-    override suspend fun load(stationId: StationId, page: Int): FavoriteTracksPage = withContext(Dispatchers.IO) {
+    override suspend fun load(stationId: StationId, page: Int, requestableOnly: Boolean): FavoriteTracksPage = withContext(Dispatchers.IO) {
         require(page in 1..MAX_LIST_PAGES)
         try {
             val origin = origin(stationId)
@@ -41,7 +54,7 @@ internal class StationFavoriteTracksRemoteDataSource(
             val discovery = request(stationId, URI(origin).resolve(FAVORITES_PATH), origin, manager, DISCOVERY_LIMIT)
             val listUrl = parser.parseListUrl(discovery, origin)
             // The list is paged since the stations' November 2026 redesign; page 1 is the list address itself.
-            val pageUrl = if (page == 1) listUrl else "$listUrl&page=$page"
+            val pageUrl = listPageUrl(listUrl, page, requestableOnly)
             val response = request(stationId, URI(pageUrl), origin, manager, LIST_LIMIT)
             if (parser.showsSignedOutVisitor(response, origin)) throw FavoritesAuthenticationRequiredException()
             parser.parseTracksPage(response, origin)

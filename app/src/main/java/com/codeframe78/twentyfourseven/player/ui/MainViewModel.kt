@@ -837,6 +837,11 @@ class MainViewModel(
         favorites.loadMore(station.id)
     }
 
+    fun setFavoritesRequestableOnly(requestableOnly: Boolean) = viewModelScope.launch {
+        val station = signedInStation { it.supportsFavorites } ?: return@launch
+        favorites.setRequestableOnly(station.id, requestableOnly)
+    }
+
     fun loadMoreRankedFavorites() = viewModelScope.launch {
         val station = signedInStation { it.supportsFavorites && it.supportsFavoriteManagement } ?: return@launch
         favorites.loadMoreRanked(station.id)

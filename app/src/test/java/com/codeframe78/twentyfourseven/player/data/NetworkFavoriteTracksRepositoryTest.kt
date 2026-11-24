@@ -129,9 +129,12 @@ class NetworkFavoriteTracksRepositoryTest {
 
         var listPages = 1
 
-        override suspend fun load(stationId: StationId, page: Int): FavoriteTracksPage {
+        val listRequests = mutableListOf<Pair<Int, Boolean>>()
+
+        override suspend fun load(stationId: StationId, page: Int, requestableOnly: Boolean): FavoriteTracksPage {
             failure?.let { throw it }
             loads++
+            listRequests += page to requestableOnly
             val pageTracks = if (listPages == 1) tracks else tracks.map { it.copy(songId = it.songId?.let { id -> "$id-$page" }) }
             return FavoriteTracksPage(pageTracks, nextPage = if (page < listPages) page + 1 else null, totalTracks = tracks.size * listPages)
         }
@@ -145,6 +148,42 @@ class NetworkFavoriteTracksRepositoryTest {
             changeFailure?.let { throw it }
             changes += songId to change
         }
+    }
+
+    @Test
+    fun `requestable only re-reads the first page and stays chosen for later pages and refreshes`() = runTest {
+        val tracks = listOf(FavoriteTrack(1, "Opening", "Album", "Composer", songId = "11"))
+        val remote = FakeFavoriteTracksRemote(tracks).apply { listPages = 3 }
+        val repository = NetworkFavoriteTracksRepository(remote)
+        repository.refresh(stationId)
+        repository.loadMore(stationId)
+
+        repository.setRequestableOnly(stationId, true)
+        with(repository.observeFavorites(stationId).first()) {
+            assertEquals(true, requestableOnly)
+            assertEquals(1, loadedPages)
+            assertEquals(1, this.tracks.size)
+        }
+        repository.loadMore(stationId)
+        repository.refresh(stationId)
+        // Choosing the same value again reads nothing.
+        repository.setRequestableOnly(stationId, true)
+        repository.setRequestableOnly(stationId, false)
+
+        assertEquals(
+            listOf(1 to false, 2 to false, 1 to true, 2 to true, 1 to true, 1 to false),
+            remote.listRequests,
+        )
+        assertEquals(false, repository.observeFavorites(stationId).first().requestableOnly)
+    }
+
+    @Test
+    fun `a list page address carries the requestable choice and the page number`() {
+        val list = "https://example.com/modules/Favorites/thelist.php?user2view=7"
+        assertEquals(list, listPageUrl(list, 1, false))
+        assertEquals("$list&page=3", listPageUrl(list, 3, false))
+        assertEquals("$list&requestable=1", listPageUrl(list, 1, true))
+        assertEquals("$list&requestable=1&page=2", listPageUrl(list, 2, true))
     }
 
     @Test

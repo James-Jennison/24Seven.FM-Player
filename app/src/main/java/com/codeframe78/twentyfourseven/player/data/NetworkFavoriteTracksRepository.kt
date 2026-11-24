@@ -26,9 +26,19 @@ internal class NetworkFavoriteTracksRepository(
     override fun observeFavorites(stationId: StationId): Flow<FavoriteTracksState> =
         state(stationId).asStateFlow()
 
-    override suspend fun refresh(stationId: StationId): Unit = lock(stationId).withLock {
+    override suspend fun refresh(stationId: StationId): Unit = lock(stationId).withLock { readFirstPage(stationId) }
+
+    override suspend fun setRequestableOnly(stationId: StationId, requestableOnly: Boolean): Unit =
+        lock(stationId).withLock {
+            if (state(stationId).value.requestableOnly == requestableOnly) return@withLock
+            update(stationId) { it.copy(requestableOnly = requestableOnly) }
+            readFirstPage(stationId)
+        }
+
+    private suspend fun readFirstPage(stationId: StationId) {
         update(stationId) { it.copy(status = FavoriteTracksLoadStatus.Loading, errorMessage = null) }
-        runCatching { remote.load(stationId, 1) }
+        val requestableOnly = state(stationId).value.requestableOnly
+        runCatching { remote.load(stationId, 1, requestableOnly) }
             .onSuccess { page ->
                 update(stationId) {
                     it.copy(
@@ -65,7 +75,7 @@ internal class NetworkFavoriteTracksRepository(
         update(stationId) { it.copy(loadingMore = true) }
         val next = current.loadedPages + 1
         val page = try {
-            remote.load(stationId, next)
+            remote.load(stationId, next, current.requestableOnly)
         } catch (cancellation: CancellationException) {
             update(stationId) { it.copy(loadingMore = false) }
             throw cancellation
@@ -149,20 +159,20 @@ internal class NetworkFavoriteTracksRepository(
             // A move only changes the ranked order; the full list is sorted by the station and is re-read after a removal.
             if (current.ranked.loadedPages > 0) reloadRanked(stationId, current.ranked.loadedPages)
             if (change == FavoriteChange.Remove && current.status == FavoriteTracksLoadStatus.Ready) {
-                reloadPages(stationId, current.loadedPages)
+                reloadPages(stationId, current.loadedPages, current.requestableOnly)
             }
             Unit
         }
 
     /** Reads the first [pages] pages of the full list again, so a removal shows without losing the pages already read. */
-    private suspend fun reloadPages(stationId: StationId, pages: Int) {
+    private suspend fun reloadPages(stationId: StationId, pages: Int, requestableOnly: Boolean) {
         var tracks = emptyList<com.codeframe78.twentyfourseven.player.domain.FavoriteTrack>()
         var loaded = 0
         var hasMore = false
         var total: Int? = null
         try {
             for (page in 1..pages.coerceIn(1, MAX_LIST_PAGES)) {
-                val result = remote.load(stationId, page)
+                val result = remote.load(stationId, page, requestableOnly)
                 tracks = mergePage(tracks, result.tracks)
                 loaded = page
                 total = result.totalTracks ?: total
@@ -274,6 +284,7 @@ class UnavailableFavoriteTracksRepository : FavoriteTracksRepository {
 
     override suspend fun refresh(stationId: StationId) = Unit
     override suspend fun loadMore(stationId: StationId) = Unit
+    override suspend fun setRequestableOnly(stationId: StationId, requestableOnly: Boolean) = Unit
     override suspend fun refreshRanked(stationId: StationId) = Unit
     override suspend fun loadMoreRanked(stationId: StationId) = Unit
     override suspend fun changeFavorite(stationId: StationId, songId: String, change: FavoriteChange) = Unit

@@ -129,7 +129,12 @@ internal class StationExtrasParser {
     private fun modernStoryBody(story: Element): String? {
         val note = story.selectFirst(".news-home-publisher-note")?.let(::plainText).orEmpty()
         val albums = story.select(".news-home-album-copy")
-            .map { it.text().replace(SPACES, " ").trim() }
+            .map { copy ->
+                // The album link and the "Contributed by" note sit side by side with no space between them.
+                val contributor = copy.selectFirst(".news-home-contributor")?.text()?.replace(SPACES, " ")?.trim().orEmpty()
+                val album = copy.clone().apply { select(".news-home-contributor").remove() }.text().replace(SPACES, " ").trim()
+                listOf(album, contributor).filter(String::isNotEmpty).joinToString(" · ")
+            }
             .filter(String::isNotEmpty)
         val text = listOf(note, albums.joinToString("\n")).filter(String::isNotEmpty).joinToString("\n\n")
         return text.ifEmpty { null }

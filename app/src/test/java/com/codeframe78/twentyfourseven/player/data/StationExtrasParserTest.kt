@@ -163,6 +163,7 @@ class StationExtrasParserTest {
                 <aside class="news-home-publisher-note"><p>We're up to date on all incoming donations.</p><p>Thank you to everyone who donated music.</p></aside>
                 <div class="news-home-update-list"><div class="news-home-album-list">
                   <div class="news-home-album"><a class="news-home-cover-link" href="/modules.php?name=Album&amp;asin=B000000001"><img class="news-home-cover" src="/images/cover/100/B000000001.jpg"></a><div class="news-home-album-copy"><a href="/modules.php?name=Album&amp;asin=B000000001">Abominable</a> Rupert Gregson-Williams</div></div>
+                  <div class="news-home-album"><a class="news-home-cover-link" href="/modules.php?name=Album&amp;asin=EXAMPLE_ID"><img class="news-home-cover" src="/images/cover/EXAMPLE_ID.jpg"></a><div class="news-home-album-copy"><a class="news-home-album-link" href="/modules.php?name=Album&amp;asin=EXAMPLE_ID" title="Example Album">Example Album</a><span class="news-home-contributor">Contributed by <a href="/modules.php?name=Web_Links&amp;l_op=visit&amp;lid=1">Example Label</a></span></div></div>
                 </div></div></div></div>
             </article></main>
         """.trimIndent()
@@ -174,7 +175,9 @@ class StationExtrasParserTest {
         assertEquals("JERIC", story.author)
         assertTrue(story.body.startsWith("We're up to date on all incoming donations."))
         assertTrue(story.body.contains("Abominable Rupert Gregson-Williams"))
-        assertEquals(1, story.coverUrls.size)
+        // The station sets the contributor right after the album with no space; the body keeps them apart.
+        assertTrue(story.body.contains("Example Album · Contributed by Example Label"))
+        assertEquals(2, story.coverUrls.size)
     }
 
 }

@@ -1778,7 +1778,7 @@ class RadioAppTest {
         composeRule.onNodeWithTag("favorite_track_1500").assertIsDisplayed()
         composeRule.onNodeWithTag("favorite_tracks_list").performScrollToIndex(2)
         composeRule.onNodeWithTag("favorite_track_sort").performScrollTo().performClick()
-        listOf("Favorites order", "Track Name", "Album", "Artist", "Genre", "Year", "Length", "Play state").forEach {
+        listOf("Station order", "Track Name", "Album", "Artist", "Genre", "Year", "Length", "Play state").forEach {
             composeRule.onNodeWithText(it).assertExists()
         }
         composeRule.onNodeWithText("Track Name").performClick()
