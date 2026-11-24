@@ -59,11 +59,23 @@ data class FavoriteTracksState(
     val errorMessage: String? = null,
     val change: FavoriteChangeState = FavoriteChangeState(),
     val ranked: RankedFavoritesState = RankedFavoritesState(),
+    /** Pages of the full list read so far; the stations list 50 tracks a page. */
+    val loadedPages: Int = 0,
+    /** Whether the station links to a page after the last one read. */
+    val hasMore: Boolean = false,
+    /** True while the next page of the full list is being read. */
+    val loadingMore: Boolean = false,
+    /** The size of the whole list as the station states it, when it states one. */
+    val totalTracks: Int? = null,
 )
 
 interface FavoriteTracksRepository {
     fun observeFavorites(stationId: StationId): Flow<FavoriteTracksState>
+    /** Reads the first page of the full list again. */
     suspend fun refresh(stationId: StationId)
+
+    /** Reads the next page of the full list and adds it to the tracks already shown. */
+    suspend fun loadMore(stationId: StationId)
 
     /** Reads the first page of the member's ranked favorites. Needs the station session. */
     suspend fun refreshRanked(stationId: StationId)

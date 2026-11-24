@@ -210,7 +210,12 @@ internal fun FavoriteTracksScreen(
                     item {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                if (filter.isBlank()) "${visibleTracks.size} tracks" else "${visibleTracks.size} of ${favorites?.tracks?.size ?: 0} tracks",
+                                favoriteCountLabel(
+                                    shown = visibleTracks.size,
+                                    loaded = favorites?.tracks?.size ?: 0,
+                                    total = favorites?.totalTracks,
+                                    filtered = filter.isNotBlank(),
+                                ),
                                 style = MaterialTheme.typography.labelLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.weight(1f),
@@ -262,6 +267,20 @@ internal fun FavoriteTracksScreen(
                             manage = favoriteManagement(state, track, rankedTracks = null),
                         )
                     }
+                    if (favorites?.hasMore == true || favorites?.loadingMore == true) {
+                        item {
+                            val actions = LocalStationExtrasActions.current
+                            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                                if (favorites.loadingMore) {
+                                    CircularProgressIndicator(Modifier.size(28.dp))
+                                } else {
+                                    TextButton(onClick = actions.onLoadMoreFavorites, modifier = Modifier.testTag("favorites_more")) {
+                                        Text("Show the next 50")
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -276,6 +295,20 @@ internal fun FavoriteTracksScreen(
                 .padding(padding)
                 .padding(20.dp),
         )
+    }
+}
+
+/**
+ * The count above the list. The stations page the list 50 at a time, so a filter or sort covers only the tracks read
+ * so far, and the label says so while more remain.
+ */
+internal fun favoriteCountLabel(shown: Int, loaded: Int, total: Int?, filtered: Boolean): String {
+    val partial = total != null && total > loaded
+    return when {
+        filtered && partial -> "$shown matches in $loaded of $total tracks loaded"
+        filtered -> "$shown of $loaded tracks"
+        partial -> "$loaded of $total tracks loaded"
+        else -> "$loaded tracks"
     }
 }
 

@@ -28,13 +28,17 @@ internal class NetworkFavoriteTracksRepository(
 
     override suspend fun refresh(stationId: StationId): Unit = lock(stationId).withLock {
         update(stationId) { it.copy(status = FavoriteTracksLoadStatus.Loading, errorMessage = null) }
-        runCatching { remote.load(stationId) }
-            .onSuccess { tracks ->
+        runCatching { remote.load(stationId, 1) }
+            .onSuccess { page ->
                 update(stationId) {
                     it.copy(
                         status = FavoriteTracksLoadStatus.Ready,
-                        tracks = tracks,
+                        tracks = page.tracks,
                         errorMessage = null,
+                        loadedPages = 1,
+                        hasMore = page.nextPage != null && page.tracks.isNotEmpty(),
+                        loadingMore = false,
+                        totalTracks = page.totalTracks,
                     )
                 }
             }
@@ -51,6 +55,43 @@ internal class NetworkFavoriteTracksRepository(
                 }
             }
         Unit
+    }
+
+    override suspend fun loadMore(stationId: StationId): Unit = lock(stationId).withLock {
+        val current = state(stationId).value
+        if (current.status != FavoriteTracksLoadStatus.Ready || !current.hasMore || current.loadedPages >= MAX_LIST_PAGES) {
+            return@withLock
+        }
+        update(stationId) { it.copy(loadingMore = true) }
+        val next = current.loadedPages + 1
+        val page = try {
+            remote.load(stationId, next)
+        } catch (cancellation: CancellationException) {
+            update(stationId) { it.copy(loadingMore = false) }
+            throw cancellation
+        } catch (failure: Exception) {
+            // The pages already shown stay; only the next one failed.
+            update(stationId) {
+                it.copy(
+                    loadingMore = false,
+                    errorMessage = if (failure is FavoritesAuthenticationRequiredException) {
+                        "Sign in to this station to load your favorite tracks."
+                    } else {
+                        it.errorMessage
+                    },
+                )
+            }
+            return@withLock
+        }
+        update(stationId) {
+            it.copy(
+                tracks = mergePage(it.tracks, page.tracks),
+                loadedPages = next,
+                hasMore = page.nextPage != null && page.tracks.isNotEmpty(),
+                loadingMore = false,
+                totalTracks = page.totalTracks ?: it.totalTracks,
+            )
+        }
     }
 
     override suspend fun refreshRanked(stationId: StationId): Unit = lock(stationId).withLock {
@@ -77,7 +118,7 @@ internal class NetworkFavoriteTracksRepository(
             it.copy(
                 ranked = RankedFavoritesState(
                     RankedFavoritesStatus.Ready,
-                    ranked.tracks + page.tracks,
+                    ranked.tracks + withKnownSongIds(page.tracks, it.tracks),
                     loadedPages = next,
                     hasMore = page.nextPage != null && page.tracks.isNotEmpty(),
                 ),
@@ -108,12 +149,70 @@ internal class NetworkFavoriteTracksRepository(
             // A move only changes the ranked order; the full list is sorted by the station and is re-read after a removal.
             if (current.ranked.loadedPages > 0) reloadRanked(stationId, current.ranked.loadedPages)
             if (change == FavoriteChange.Remove && current.status == FavoriteTracksLoadStatus.Ready) {
-                runCatching { remote.load(stationId) }.onSuccess { tracks ->
-                    update(stationId) { it.copy(status = FavoriteTracksLoadStatus.Ready, tracks = tracks, errorMessage = null) }
-                }
+                reloadPages(stationId, current.loadedPages)
             }
             Unit
         }
+
+    /** Reads the first [pages] pages of the full list again, so a removal shows without losing the pages already read. */
+    private suspend fun reloadPages(stationId: StationId, pages: Int) {
+        var tracks = emptyList<com.codeframe78.twentyfourseven.player.domain.FavoriteTrack>()
+        var loaded = 0
+        var hasMore = false
+        var total: Int? = null
+        try {
+            for (page in 1..pages.coerceIn(1, MAX_LIST_PAGES)) {
+                val result = remote.load(stationId, page)
+                tracks = mergePage(tracks, result.tracks)
+                loaded = page
+                total = result.totalTracks ?: total
+                hasMore = result.nextPage != null && result.tracks.isNotEmpty()
+                if (!hasMore) break
+            }
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (_: Exception) {
+            // The list shown stays as it was; the change notice already says what happened.
+            return
+        }
+        update(stationId) {
+            it.copy(
+                status = FavoriteTracksLoadStatus.Ready,
+                tracks = tracks,
+                errorMessage = null,
+                loadedPages = loaded,
+                hasMore = hasMore,
+                totalTracks = total,
+            )
+        }
+    }
+
+    /**
+     * The redesigned ranked feed names a track's song number only when the track can be requested. The full list names
+     * it on every row, so a ranked track takes it from the same album and title there when the full list has it.
+     */
+    private fun withKnownSongIds(
+        ranked: List<com.codeframe78.twentyfourseven.player.domain.FavoriteTrack>,
+        full: List<com.codeframe78.twentyfourseven.player.domain.FavoriteTrack>,
+    ): List<com.codeframe78.twentyfourseven.player.domain.FavoriteTrack> {
+        if (ranked.all { it.songId != null }) return ranked
+        val known = full.filter { it.songId != null && it.albumId != null }
+            .groupBy { it.albumId to it.title }
+            .filterValues { it.size == 1 }
+            .mapValues { it.value.single().songId }
+        return ranked.map { track ->
+            if (track.songId != null) track else track.copy(songId = known[track.albumId to track.title])
+        }
+    }
+
+    /** Adds a page to the tracks already read, skipping any track a shifted page repeats. */
+    private fun mergePage(
+        shown: List<com.codeframe78.twentyfourseven.player.domain.FavoriteTrack>,
+        page: List<com.codeframe78.twentyfourseven.player.domain.FavoriteTrack>,
+    ): List<com.codeframe78.twentyfourseven.player.domain.FavoriteTrack> {
+        val seen = shown.mapNotNullTo(HashSet()) { it.songId }
+        return shown + page.filter { track -> track.songId == null || seen.add(track.songId) }
+    }
 
     /** Reads the first [pages] ranked pages again, in order, so the list shown is the station's current order. */
     private suspend fun reloadRanked(stationId: StationId, pages: Int) {
@@ -144,7 +243,9 @@ internal class NetworkFavoriteTracksRepository(
             }
             return
         }
-        update(stationId) { it.copy(ranked = RankedFavoritesState(RankedFavoritesStatus.Ready, tracks, loaded, hasMore)) }
+        update(stationId) {
+            it.copy(ranked = RankedFavoritesState(RankedFavoritesStatus.Ready, withKnownSongIds(tracks, it.tracks), loaded, hasMore))
+        }
     }
 
     override suspend fun clear(stationId: StationId) = lock(stationId).withLock {
@@ -159,6 +260,7 @@ internal class NetworkFavoriteTracksRepository(
 
     private companion object {
         const val MAX_RANKED_PAGES = 40
+        const val MAX_LIST_PAGES = 200
     }
 
     private fun update(stationId: StationId, transform: (FavoriteTracksState) -> FavoriteTracksState) {
@@ -171,6 +273,7 @@ class UnavailableFavoriteTracksRepository : FavoriteTracksRepository {
         kotlinx.coroutines.flow.flowOf(FavoriteTracksState(stationId))
 
     override suspend fun refresh(stationId: StationId) = Unit
+    override suspend fun loadMore(stationId: StationId) = Unit
     override suspend fun refreshRanked(stationId: StationId) = Unit
     override suspend fun loadMoreRanked(stationId: StationId) = Unit
     override suspend fun changeFavorite(stationId: StationId, songId: String, change: FavoriteChange) = Unit

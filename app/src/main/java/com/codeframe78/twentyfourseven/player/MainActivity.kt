@@ -323,6 +323,7 @@ class MainActivity : AppCompatActivity() {
                             onChangeFavorite = viewModel::changeFavorite,
                             onRefreshRankedFavorites = viewModel::refreshRankedFavorites,
                             onLoadMoreRankedFavorites = viewModel::loadMoreRankedFavorites,
+                            onLoadMoreFavorites = viewModel::loadMoreFavorites,
                         ),
                         onRefreshQueue = viewModel::refreshQueue,
                         onRefreshChat = viewModel::refreshChat,

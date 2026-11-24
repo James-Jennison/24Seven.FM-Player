@@ -15,7 +15,8 @@ import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
 internal interface FavoriteTracksRemoteDataSource {
-    suspend fun load(stationId: StationId): List<FavoriteTrack>
+    /** One page of the member's full favorites list, 50 tracks a page. Needs the station session. */
+    suspend fun load(stationId: StationId, page: Int = 1): FavoriteTracksPage
 
     /** One page of the member's own ranked favorites, from the profile feed. Needs the station session. */
     suspend fun loadRanked(stationId: StationId, page: Int): RankedFavoritesPage
@@ -32,13 +33,18 @@ internal class StationFavoriteTracksRemoteDataSource(
         it.toURL().openConnection() as HttpURLConnection
     },
 ) : FavoriteTracksRemoteDataSource {
-    override suspend fun load(stationId: StationId): List<FavoriteTrack> = withContext(Dispatchers.IO) {
+    override suspend fun load(stationId: StationId, page: Int): FavoriteTracksPage = withContext(Dispatchers.IO) {
+        require(page in 1..MAX_LIST_PAGES)
         try {
             val origin = origin(stationId)
             val manager = authenticatedCookieManager(stationId, origin)
             val discovery = request(stationId, URI(origin).resolve(FAVORITES_PATH), origin, manager, DISCOVERY_LIMIT)
             val listUrl = parser.parseListUrl(discovery, origin)
-            parser.parseTracks(request(stationId, URI(listUrl), origin, manager, LIST_LIMIT), origin)
+            // The list is paged since the stations' November 2026 redesign; page 1 is the list address itself.
+            val pageUrl = if (page == 1) listUrl else "$listUrl&page=$page"
+            val response = request(stationId, URI(pageUrl), origin, manager, LIST_LIMIT)
+            if (parser.showsSignedOutVisitor(response, origin)) throw FavoritesAuthenticationRequiredException()
+            parser.parseTracksPage(response, origin)
         } catch (failure: FavoritesAuthenticationRequiredException) {
             sessions.expire(stationId)
             throw failure
@@ -70,12 +76,12 @@ internal class StationFavoriteTracksRemoteDataSource(
             val operation = when (change) {
                 FavoriteChange.MoveUp -> "movetrackup"
                 FavoriteChange.MoveDown -> "movetrackdown"
-                FavoriteChange.Remove -> "removetrackfromlist2"
+                FavoriteChange.Remove -> "removetrackfromlist"
             }
-            // The station's own controls form posts these three fields; Yes2Remove is its confirmation flag.
-            val form = listOf("songid" to songId, "Yes2Remove" to "1", "op" to operation)
-                .joinToString("&") { (name, value) -> "${encode(name)}=${encode(value)}" }
-            val response = request(stationId, URI(origin).resolve(FAVORITES_PATH), origin, manager, CHANGE_LIMIT, form)
+            // Since the November 2026 redesign each row's buttons submit an empty shared form to an address that
+            // carries the operation and the song number, so the Player posts to that same address with no fields.
+            val action = URI(origin).resolve("$FAVORITES_PATH&op=${encode(operation)}&songid=${encode(songId)}")
+            val response = request(stationId, action, origin, manager, CHANGE_LIMIT, form = "")
             if (Log.isLoggable(CHANGE_LOG_TAG, Log.DEBUG)) {
                 Log.d(CHANGE_LOG_TAG, "op=$operation responseChars=${response.length} signedOut=${parser.showsSignedOutVisitor(response, origin)}")
             }
@@ -184,6 +190,7 @@ internal class StationFavoriteTracksRemoteDataSource(
         const val RANKED_LIMIT = 1_000_000
         const val RANKED_PAGE_SIZE = 50
         const val MAX_RANKED_PAGES = 40
+        const val MAX_LIST_PAGES = 200
         val CHANGE_FAILURE = Regex("Can't (?:delete|update|open)|Fatal error|Hacking attempt", RegexOption.IGNORE_CASE)
         val SONG_ID = Regex("[0-9]{1,10}")
         const val MAX_REDIRECTS = 5

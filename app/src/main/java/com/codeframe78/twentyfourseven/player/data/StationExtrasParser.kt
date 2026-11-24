@@ -105,8 +105,9 @@ internal class StationExtrasParser {
             val link = story.selectFirst("header a[href]") ?: return@mapNotNull null
             val title = link.text().trim().takeIf(String::isNotEmpty) ?: return@mapNotNull null
             val id = STORY_ID.find(link.attr("href"))?.groupValues?.get(1) ?: return@mapNotNull null
-            val body = story.selectFirst(".news-full-text")?.let(::plainText).orEmpty()
-            if (body.isEmpty()) return@mapNotNull null
+            val body = story.selectFirst(".news-full-text")?.let(::plainText)
+                ?: modernStoryBody(story)
+            if (body.isNullOrEmpty()) return@mapNotNull null
             StationNewsStory(
                 id = id,
                 title = title.take(MAX_LABEL_CHARACTERS),
@@ -115,11 +116,24 @@ internal class StationExtrasParser {
                 author = story.selectFirst(".news-story-meta a")?.text()?.trim()
                     ?.takeIf { it.isNotEmpty() && it.length <= MAX_NAME_CHARACTERS },
                 body = body.take(MAX_STORY_CHARACTERS),
-                coverUrls = story.select(".news-selected-covers img[src]")
+                coverUrls = story.select(".news-selected-covers img[src], .news-home-cover-link img[src]")
                     .mapNotNull { stationUrl(it.attr("src"), origin) }
                     .take(MAX_STORY_COVERS),
             )
         }.take(MAX_STORIES)
+
+    /**
+     * The redesigned news page gives a story no full-text block: it holds the publisher's note and a list of the albums
+     * the update added, so the body is the note followed by one line per album.
+     */
+    private fun modernStoryBody(story: Element): String? {
+        val note = story.selectFirst(".news-home-publisher-note")?.let(::plainText).orEmpty()
+        val albums = story.select(".news-home-album-copy")
+            .map { it.text().replace(SPACES, " ").trim() }
+            .filter(String::isNotEmpty)
+        val text = listOf(note, albums.joinToString("\n")).filter(String::isNotEmpty).joinToString("\n\n")
+        return text.ifEmpty { null }
+    }
 
     /** Story text with the page's line breaks kept and its markup, links, and images dropped. */
     private fun plainText(element: Element): String {

@@ -193,4 +193,25 @@ class StationCatalogParserTest {
         // A country the station did not offer is not sent.
         assertEquals("us.gif", values["user_flag"])
     }
+
+    @Test
+    fun `parses the redesigned recently added table with a header row per day`() {
+        val html = """
+            <main class="news-listing news-view-recent"><div class="news-recent-scroll"><table class="news-recent-table table01">
+            <tr><th class="th01" scope="rowgroup"><a href="/modules.php?name=News&amp;file=article&amp;sid=9">November 16, 2026</a> &middot; Published by: <a href="/modules.php?name=Your_Account&amp;op=userinfo&amp;username=JERIC">JERIC</a></th></tr>
+            <tr class="news-recent-album"><td class="td01"><a href="/modules.php?name=Album&amp;asin=B000000001">Abominable - Rupert Gregson-Williams</a><span class="news-recent-contributor"> &middot; Contributed by <a href="/modules.php?name=Your_Account&amp;op=userinfo&amp;username=MojoPin">MojoPin</a></span></td></tr>
+            <tr class="news-recent-album"><td class="td01"><a href="/modules.php?name=Album&amp;asin=B000000002">Captain Blood - Erich Wolfgang Korngold</a></td></tr>
+            <tr><th class="th01" scope="rowgroup"><a href="/modules.php?name=News&amp;file=article&amp;sid=8">November 9, 2026</a> &middot; Published by: <a href="/modules.php?name=Your_Account&amp;op=userinfo&amp;username=JERIC">JERIC</a></th></tr>
+            <tr class="news-recent-album"><td class="td01"><a href="/modules.php?name=Album&amp;asin=B000000003">Third - Composer</a></td></tr>
+            </table></div></main>
+        """.trimIndent()
+
+        val batches = parser.parseRecentlyAdded(html, origin)
+
+        assertEquals(listOf("November 16, 2026", "November 9, 2026"), batches.map { it.dateLabel })
+        assertEquals("JERIC", batches[0].author)
+        assertEquals(listOf("B000000001", "B000000002"), batches[0].albums.map { it.albumId })
+        assertEquals("Abominable - Rupert Gregson-Williams", batches[0].albums[0].title)
+        assertEquals(listOf("B000000003"), batches[1].albums.map { it.albumId })
+    }
 }

@@ -210,4 +210,104 @@ class FavoriteTracksPageParserTest {
         assertNull(lastPage.nextPage)
         assertEquals(1, lastPage.tracks.first().position)
     }
+
+    @Test
+    fun `parses a page of the redesigned member list with its rank, controls, paging and stated total`() {
+        val html = """
+            <nav class="favorite-list-tabs"><a target="_top" href="/modules.php?name=Favorites&amp;user2view=4821" aria-current="page">Tracks</a></nav>
+            <div class="favorite-toolbar-options"><span class="favorite-result-count">1&ndash;50 of 1500 tracks</span></div>
+            <nav class="favorite-pager favorite-pager-top"><span>Page 1</span><a rel="next" href="/modules/Favorites/thelist.php?user2view=4821&amp;page=2">Next</a></nav>
+            <form id="favorite-manage" action="/modules.php?name=Favorites" method="post" target="_top"></form>
+            <table class="table01" id="favtracks"><tbody>
+            <tr><th class="th01 favorite-rank-heading">#</th><th class="th01">Control</th><th class="th01 favorite-cover"></th><th class="th01 favorite-request">Request</th><th class="th01 favorite-info-heading">Track</th><th id="lastplaytr" class="th01 favorite-played">Last played</th></tr>
+            <tr><td class="td01" align="center"><span class="favorite-rank">349</span><br><span style="color:#FFFF80;font-weight:bold;">22:32</span></td>
+              <td class="td01" align="center"><div class="favorite-actions"><button type="button" class="favorite-control q-btn favorite-info-button" onclick="ViewInfoTrack(4821, 246835);">i</button><button type="submit" form="favorite-manage" formaction="/modules.php?name=Favorites&amp;op=movetrackup&amp;songid=246835" class="favorite-control q-btn btn-up">&#9650;</button><button type="submit" form="favorite-manage" formaction="/modules.php?name=Favorites&amp;op=movetrackdown&amp;songid=246835" class="favorite-control q-btn btn-down">&#9660;</button><button type="submit" form="favorite-manage" formaction="/modules.php?name=Favorites&amp;op=removetrackfromlist&amp;songid=246835" class="favorite-control q-btn btn-del">&#10006;</button></div></td>
+              <td class="td01 favorite-cover"><a target="_top" href="/modules.php?name=Album&amp;asin=B000000001"><img src="/images/cover/040/B000000001.jpg" alt="View album"></a></td>
+              <td class="td01 favorite-request"><img src="/modules/SAM/images/requestbutton_disabled.png" title="Last played: 2026-11-13 16:06:05; Request cooldown ends: 2026-11-28 16:06:05" alt="Request cooldown ends: 2026-11-28 16:06:05"></td>
+              <td class="td02 favorite-info"><strong>Exodus</strong>Example Album: The Best by <a target="_top" href="/modules.php?name=Requests&amp;postartistsearch=true&amp;artist=Composer%20One">Composer One</a><small class="favorite-meta">2000, Soundtrack</small></td>
+              <td class="td01 favorite-played" align="center"><time datetime="2026-11-13T16:06:05"><strong>2026-11-13</strong><br>16:06</time></td>
+            </tr>
+            <tr><td class="td01" align="center"><span class="favorite-rank">961</span><br><span style="color:#FFFF80;font-weight:bold;">18:36</span></td>
+              <td class="td01" align="center"><div class="favorite-actions"><button type="button" class="favorite-control q-btn favorite-info-button" onclick="ViewInfoTrack(4821, 197907);">i</button><button type="submit" form="favorite-manage" formaction="/modules.php?name=Favorites&amp;op=removetrackfromlist&amp;songid=197907" class="favorite-control q-btn btn-del">&#10006;</button></div></td>
+              <td class="td01 favorite-cover"><a target="_top" href="/modules.php?name=Album&amp;asin=B000KNB1IM"><img src="/images/cover/040/B000KNB1IM.jpg" alt="View album"></a></td>
+              <td class="td01 favorite-request"><a target="_top" href="/modules.php?name=Req&amp;asin=B000KNB1IM&amp;songID=197907"><img src="/modules/SAM/images/requestbutton_request.png" title="Last played: 2026-07-30 15:02:47; Request this track." alt="Request this track."></a></td>
+              <td class="td02 favorite-info"><strong>Scherzo Berzerko In 3 Portions</strong>Cartoon Concerto by <a target="_top" href="/modules.php?name=Requests&amp;postartistsearch=true&amp;artist=Bruce%20Broughton">Bruce Broughton</a><small class="favorite-meta">2003, Soundtrack</small></td>
+              <td class="td01 favorite-played" align="center"><time datetime="2026-07-30T15:02:47"><strong>2026-07-30</strong><br>15:02</time></td>
+            </tr>
+            </tbody></table>
+        """.trimIndent()
+
+        val page = parser.parseTracksPage(html, origin)
+
+        assertEquals(listOf(349, 961), page.tracks.map { it.position })
+        assertEquals(listOf("Exodus", "Scherzo Berzerko In 3 Portions"), page.tracks.map { it.title })
+        assertEquals("Example Album: The Best", page.tracks[0].album)
+        assertEquals("Composer One", page.tracks[0].artist)
+        assertEquals("2000", page.tracks[0].year)
+        assertEquals("Soundtrack", page.tracks[0].genre)
+        assertEquals("22:32", page.tracks[0].duration)
+        assertEquals("B000000001", page.tracks[0].albumId)
+        assertNull(page.tracks[0].requestTrack)
+        assertEquals(TrackRequestStatus.RecentlyPlayed, page.tracks[0].availability.status)
+        assertEquals("246835", page.tracks[0].songId)
+        assertEquals("197907", page.tracks[1].requestTrack?.songId)
+        assertEquals("B000KNB1IM", page.tracks[1].requestTrack?.albumId)
+        assertEquals("Cartoon Concerto", page.tracks[1].album)
+        assertEquals("18:36", page.tracks[1].duration)
+        assertEquals(2, page.nextPage)
+        assertEquals(1500, page.totalTracks)
+
+        val last = parser.parseTracksPage(html.replace("""<a rel="next" href="/modules/Favorites/thelist.php?user2view=4821&amp;page=2">Next</a>""", ""), origin)
+        assertNull(last.nextPage)
+    }
+
+    @Test
+    fun `parses another member's redesigned list, whose rows carry the listener's own heart cell`() {
+        val html = """
+            <table id="favtracks"><tr>
+              <td class="td01"><span class="favorite-rank">1131</span><br><span>21:08</span></td>
+              <td class="td01"><button type="button" class="favorite-control q-btn favorite-info-button" onclick="ViewInfoTrack(4822, 300001);">i</button></td>
+              <td class="td01 favorite-cover"><a target="_top" href="/modules.php?name=Album&amp;asin=B07YYWVGSK"><img src="/images/cover/040/B07YYWVGSK.jpg"></a></td>
+              <td class="td01 favorite-request"><a target="_top" href="/modules.php?name=Req&amp;asin=B07YYWVGSK&amp;songID=300001"><img src="/modules/SAM/images/requestbutton_request.png" title="Request this track."></a></td>
+              <td class="td02 favorite-info"><strong>Tuesday (Voiceless)</strong>Ad Astra by <a target="_top" href="/modules.php?name=Requests&amp;postartistsearch=true&amp;artist=Max%20Richter">Max Richter</a><small class="favorite-meta">2019, Soundtrack</small></td>
+              <td class="td01" align="center"><a style="display:none" href="/modules.php?name=Favorites&amp;song2view=300001" target="_top"><img src="/images/favorites/heart-red.png"></a><a href="#" onclick="AddTrack(300001, 'ityes300001', 'itno300001'); return false;"><img src="/images/favorites/heart-gray.png"></a></td>
+              <td class="td01 favorite-played"><time datetime="2026-11-08T03:04:21"><strong>2026-11-08</strong><br>03:04</time></td>
+            </tr></table>
+        """.trimIndent()
+
+        val track = parser.parseTracks(html, origin).single()
+
+        assertEquals(1131, track.position)
+        assertEquals("Tuesday (Voiceless)", track.title)
+        assertEquals("Ad Astra", track.album)
+        assertEquals("Max Richter", track.artist)
+        assertEquals("300001", track.songId)
+        assertEquals("21:08", track.duration)
+    }
+
+    @Test
+    fun `parses the redesigned ranked feed, whose rows no longer carry the controls form`() {
+        val html = """
+            <table class="table01"><tr>
+              <td class="td01"><div><a href="/modules.php?name=Album&amp;asin=B000AYI8YQ"><img src="/images/cover/040/B000AYI8YQ.jpg" alt="View album details" title="Example Album (1997 TV)"></a></div></td>
+              <td class="td01"><a href="/modules.php?name=Req&amp;asin=B000AYI8YQ&amp;songID=190659"><img src="/modules/SAM/images/requestbutton_request.png" title="Request this track."></a></td>
+              <td class="td02"><strong>Opening Fanfare</strong><br>Example Album (1997 TV) by <b>Composer One</b><br><span>1997, Soundtrack</span></td>
+            </tr><tr>
+              <td class="td01"><div><a href="/modules.php?name=Album&amp;asin=B000000002"><img src="/images/cover/040/B000000002.jpg" title="Second Album"></a></div></td>
+              <td class="td01"><img src="/modules/SAM/images/requestbutton_disabled.png" title="Request cooldown ends: 2026-11-28 16:06:05"></td>
+              <td class="td02"><strong>Finale</strong><br>Second Album by <b>Composer Two</b><br><span>2003, Game</span></td>
+            </tr></table>
+            <button type="button" class="profile-tab-btn favorite-page" data-page-url="/modules/Your_Profile/favsTabAJAX.php?tracks_page=2&amp;albums_page=1&amp;kind=tracks">Next</button>
+        """.trimIndent()
+
+        val page = parser.parseRankedPage(org.json.JSONObject().put("result", 0).put("HTML", html).toString(), origin)
+
+        assertEquals(listOf("Opening Fanfare", "Finale"), page.tracks.map { it.title })
+        assertEquals("Example Album (1997 TV)", page.tracks[0].album)
+        assertEquals("Composer One", page.tracks[0].artist)
+        assertEquals("190659", page.tracks[0].songId)
+        assertNull(page.tracks[1].songId)
+        assertEquals("B000000002", page.tracks[1].albumId)
+        assertEquals(2, page.nextPage)
+    }
 }

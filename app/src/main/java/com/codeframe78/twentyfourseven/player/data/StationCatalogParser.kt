@@ -18,8 +18,11 @@ internal data class AlbumReviewsPage(val reviews: List<AlbumReview>)
 /** Reads the stations' Recently Added page, an album page's reviews, and the Edit Profile form. */
 internal class StationCatalogParser {
     /** The batches on the Recently Added page, newest first as the station lists them. */
-    fun parseRecentlyAdded(html: String, origin: String): List<RecentlyAddedBatch> =
-        Jsoup.parse(html, origin).select("article.news-story").mapNotNull { story ->
+    fun parseRecentlyAdded(html: String, origin: String): List<RecentlyAddedBatch> {
+        val document = Jsoup.parse(html, origin)
+        val table = document.selectFirst("table.news-recent-table")
+        if (table != null) return parseRecentlyAddedTable(table, origin)
+        return document.select("article.news-story").mapNotNull { story ->
             val dateLabel = story.selectFirst(".news-story-meta time")?.text()?.trim()
                 ?.takeIf(String::isNotEmpty)?.take(MAX_LABEL_CHARACTERS) ?: return@mapNotNull null
             val albums = story.select("table.news-album-table a[href]")
@@ -33,6 +36,38 @@ internal class StationCatalogParser {
                 albums = albums,
             )
         }.take(MAX_BATCHES)
+    }
+
+    /**
+     * The redesigned page is one table: a header row per day ("November 16, 2026 · Published by: Name") followed by one
+     * row per album ("Title - Artist · Contributed by Name"). The rows carry no cover images.
+     */
+    private fun parseRecentlyAddedTable(table: Element, origin: String): List<RecentlyAddedBatch> {
+        val batches = mutableListOf<RecentlyAddedBatch>()
+        var dateLabel: String? = null
+        var author: String? = null
+        var albums = mutableListOf<RecentlyAddedAlbum>()
+        fun finish() {
+            val label = dateLabel
+            if (label != null && albums.isNotEmpty()) batches += RecentlyAddedBatch(label, author, albums.toList())
+            albums = mutableListOf()
+        }
+        for (row in table.select("tr")) {
+            val heading = row.selectFirst("th")
+            if (heading != null) {
+                finish()
+                val links = heading.select("a")
+                dateLabel = (links.firstOrNull()?.text() ?: heading.text().substringBefore("·"))
+                    .trim().takeIf(String::isNotEmpty)?.take(MAX_LABEL_CHARACTERS)
+                author = links.getOrNull(1)?.text()?.trim()?.takeIf { it.isNotEmpty() && it.length <= MAX_NAME_CHARACTERS }
+                continue
+            }
+            val link = row.select("a[href]").firstOrNull { ALBUM_ID_QUERY.containsMatchIn(it.attr("href")) } ?: continue
+            if (albums.size < MAX_ALBUMS_PER_BATCH) recentlyAddedAlbum(link, origin)?.let(albums::add)
+        }
+        finish()
+        return batches.take(MAX_BATCHES)
+    }
 
     private fun recentlyAddedAlbum(link: Element, origin: String): RecentlyAddedAlbum? {
         val url = stationUrl(link.attr("href"), origin) ?: return null

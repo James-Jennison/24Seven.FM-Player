@@ -128,6 +128,7 @@ internal data class StationExtrasActions(
     val onChangeFavorite: (FavoriteTrack, FavoriteChange) -> Unit = { _, _ -> },
     val onRefreshRankedFavorites: () -> Unit = {},
     val onLoadMoreRankedFavorites: () -> Unit = {},
+    val onLoadMoreFavorites: () -> Unit = {},
 )
 
 /** Lets any screen open the history archive or news without threading callbacks through every layout. */

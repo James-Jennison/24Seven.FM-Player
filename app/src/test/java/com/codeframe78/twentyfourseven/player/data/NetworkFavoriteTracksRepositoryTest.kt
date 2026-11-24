@@ -127,10 +127,13 @@ class NetworkFavoriteTracksRepositoryTest {
         val changes = mutableListOf<Pair<String, FavoriteChange>>()
         var loads = 0
 
-        override suspend fun load(stationId: StationId): List<FavoriteTrack> {
+        var listPages = 1
+
+        override suspend fun load(stationId: StationId, page: Int): FavoriteTracksPage {
             failure?.let { throw it }
             loads++
-            return tracks
+            val pageTracks = if (listPages == 1) tracks else tracks.map { it.copy(songId = it.songId?.let { id -> "$id-$page" }) }
+            return FavoriteTracksPage(pageTracks, nextPage = if (page < listPages) page + 1 else null, totalTracks = tracks.size * listPages)
         }
 
         override suspend fun loadRanked(stationId: StationId, page: Int): RankedFavoritesPage {
@@ -142,5 +145,50 @@ class NetworkFavoriteTracksRepositoryTest {
             changeFailure?.let { throw it }
             changes += songId to change
         }
+    }
+
+    @Test
+    fun `the full list loads a page at a time and keeps the pages already read when a removal re-reads it`() = runTest {
+        val tracks = listOf(
+            FavoriteTrack(1, "Opening", "Album", "Composer", songId = "11"),
+            FavoriteTrack(2, "Finale", "Album", "Composer", songId = "12"),
+        )
+        val remote = FakeFavoriteTracksRemote(tracks).apply { listPages = 2 }
+        val repository = NetworkFavoriteTracksRepository(remote)
+
+        repository.refresh(stationId)
+        with(repository.observeFavorites(stationId).first()) {
+            assertEquals(2, this.tracks.size)
+            assertEquals(1, loadedPages)
+            assertEquals(true, hasMore)
+            assertEquals(4, totalTracks)
+        }
+
+        repository.loadMore(stationId)
+        with(repository.observeFavorites(stationId).first()) {
+            assertEquals(4, this.tracks.size)
+            assertEquals(2, loadedPages)
+            assertEquals(false, hasMore)
+            assertEquals(false, loadingMore)
+        }
+        repository.loadMore(stationId)
+        assertEquals(4, repository.observeFavorites(stationId).first().tracks.size)
+
+        remote.loads = 0
+        repository.changeFavorite(stationId, "11-1", FavoriteChange.Remove)
+        assertEquals(2, remote.loads)
+        assertEquals(2, repository.observeFavorites(stationId).first().loadedPages)
+    }
+
+    @Test
+    fun `a ranked track without a song number takes it from the same album and title in the full list`() = runTest {
+        val full = listOf(FavoriteTrack(1, "Finale", "Album", "Composer", albumId = "B000000002", songId = "12"))
+        val ranked = listOf(FavoriteTrack(1, "Finale", "Album", "Composer", albumId = "B000000002"))
+        val repository = NetworkFavoriteTracksRepository(FakeFavoriteTracksRemote(full, ranked = ranked))
+
+        repository.refresh(stationId)
+        repository.refreshRanked(stationId)
+
+        assertEquals("12", repository.observeFavorites(stationId).first().ranked.tracks.single().songId)
     }
 }
