@@ -18,7 +18,7 @@ declaration shown on the app's Google Play listing that day.
 **What 1.0.3 changes.** Nothing that adds a kind of data sent off the device.
 
 - The permissions in the signed bundle are identical to those in the 1.0.2 (21) bundle, and the source manifest did not
-  change between `v1.0.2` and `v1.0.3`.
+  change between `v1.0.2` and `be6db5e` (then tagged `v1.0.3`).
 - One dependency was added, `io.coil-kt.coil3:coil-gif` 3.4.0, which decodes animated images on the device. No
   advertising, analytics, crash-reporting, tracking, billing or social-login SDK was added.
 - New or changed requests: `https://24seven.fm/station-feeds.json` and each station's `now-playing.php` (public reads;
