@@ -217,12 +217,15 @@ internal class StationSongRequestRemoteDataSource(
             return null
         }
         val fields = linkedMapOf<String, String>()
-        form.select("input[name]").forEach { input ->
+        // The stations' November 2026 pages submit the message with a "send" button rather than a submit input. No
+        // other button is sent.
+        form.select("input[name], button[name=send]").forEach { input ->
             if (!input.hasAttr("disabled") && (input.attr("type") !in setOf("checkbox", "radio") || input.hasAttr("checked"))) {
                 fields.putIfAbsent(input.attr("name"), input.`val`())
             }
         }
-        if (setOf("msg", "send", "remLen").any { it !in fields && it != "msg" }) return null
+        // "msg" is the textarea and is filled in when the message is posted.
+        if ("send" !in fields || "remLen" !in fields) return null
         return RequestMessageForm(
             action = action,
             referer = referer,
@@ -275,11 +278,18 @@ internal class StationSongRequestRemoteDataSource(
         }
         .toMap()
 
+    /**
+     * The words of a reply without the now-playing header's figures. Since the stations' November 2026 redesign every
+     * page's header carries a "Request Wait 20m" figure, the station-wide wait, which is not part of the reply.
+     */
+    private fun replyText(html: String): String =
+        Jsoup.parse(html).also { it.select(HEADER_FIGURES).remove() }.text().replace(Regex("\\s+"), " ").trim()
+
     private fun classifySubmission(
         html: String,
         hasAuthenticatedMessageForm: Boolean,
     ): RequestSubmissionResult {
-        val text = Jsoup.parse(html).text().replace(Regex("\\s+"), " ").trim()
+        val text = replyText(html)
         // The acknowledgement with its member-only message form is the strongest signal, so unrelated sign-in
         // wording elsewhere on the page must not turn a delivered request into an expired session.
         if (hasAuthenticatedMessageForm && ACCEPTANCE_PATTERNS.any { it.containsMatchIn(text) }) {
@@ -431,7 +441,7 @@ internal class StationSongRequestRemoteDataSource(
     }
 
     private fun containsTerminalRequestResponse(html: String, albumId: String): Boolean {
-        val text = Jsoup.parse(html).text().replace(Regex("\\s+"), " ").trim()
+        val text = replyText(html)
         if (ACCEPTANCE_PATTERNS.any { it.containsMatchIn(text) } && containsCompleteMessageForm(html, albumId)) return true
         return TERMINAL_REJECTION_PATTERNS.any { it.containsMatchIn(text) }
     }
@@ -439,7 +449,7 @@ internal class StationSongRequestRemoteDataSource(
     private fun rejectionMessage(rejection: Regex): String = when (rejection.pattern) {
         "played recently" -> "The station reports this track was played recently."
         "already (?:in|on) the queue" -> "The station reports this track is already in the queue."
-        "(?:request\\s+wait|cooldown|too soon to request|request limit)" ->
+        WAIT_REJECTION ->
             "The station reports that this account must wait before requesting again."
         else -> "The station rejected this request. Check Queue before trying again."
     }
@@ -459,6 +469,8 @@ internal class StationSongRequestRemoteDataSource(
         val SAFE_ALBUM_ID = Regex("[A-Za-z0-9_-]{1,64}")
         val NUMERIC_ID = Regex("\\d{1,20}")
         val REDIRECT_STATUSES = setOf(301, 302, 303, 307, 308)
+        const val WAIT_REJECTION = "(?:request\\s+wait|cooldown|too soon to request|request limit)"
+        const val HEADER_FIGURES = "section.np-header .np-stat"
         val REJECTION_PATTERNS = listOf(
             Regex("request failed", RegexOption.IGNORE_CASE),
             Regex("played recently", RegexOption.IGNORE_CASE),
@@ -466,16 +478,18 @@ internal class StationSongRequestRemoteDataSource(
             Regex("can only request", RegexOption.IGNORE_CASE),
             Regex("(?:request|track) (?:is )?not available", RegexOption.IGNORE_CASE),
             Regex("already (?:in|on) the queue", RegexOption.IGNORE_CASE),
-            Regex("(?:request\\s+wait|cooldown|too soon to request|request limit)", RegexOption.IGNORE_CASE),
+            Regex(WAIT_REJECTION, RegexOption.IGNORE_CASE),
             Regex("not eligible", RegexOption.IGNORE_CASE),
         )
         val TERMINAL_REJECTION_PATTERNS = REJECTION_PATTERNS.filterNot {
-            it.pattern == "(?:request\\s+wait|cooldown|too soon to request|request limit)"
+            it.pattern == WAIT_REJECTION
         }
         val ACCEPTANCE_PATTERNS = listOf(
             Regex("request successful", RegexOption.IGNORE_CASE),
             Regex("request has successfully been delivered", RegexOption.IGNORE_CASE),
             Regex("request was successfully delivered", RegexOption.IGNORE_CASE),
+            // The acknowledgement the stations have shown since their November 2026 redesign.
+            Regex("request has been sent to the DJ application", RegexOption.IGNORE_CASE),
         )
         val ORIGINS = mapOf(
             StationId("sst") to "https://streamingsoundtracks.com/",
