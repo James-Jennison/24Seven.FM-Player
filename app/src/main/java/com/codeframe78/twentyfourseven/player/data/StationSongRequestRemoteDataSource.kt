@@ -217,7 +217,8 @@ internal class StationSongRequestRemoteDataSource(
             return null
         }
         val fields = linkedMapOf<String, String>()
-        form.select("input[name]").forEach { input ->
+        // The stations' November 2026 pages submit the message with a named button rather than a submit input.
+        form.select("input[name], button[name]").forEach { input ->
             if (!input.hasAttr("disabled") && (input.attr("type") !in setOf("checkbox", "radio") || input.hasAttr("checked"))) {
                 fields.putIfAbsent(input.attr("name"), input.`val`())
             }
@@ -439,7 +440,7 @@ internal class StationSongRequestRemoteDataSource(
     private fun rejectionMessage(rejection: Regex): String = when (rejection.pattern) {
         "played recently" -> "The station reports this track was played recently."
         "already (?:in|on) the queue" -> "The station reports this track is already in the queue."
-        "(?:request\\s+wait|cooldown|too soon to request|request limit)" ->
+        WAIT_REJECTION ->
             "The station reports that this account must wait before requesting again."
         else -> "The station rejected this request. Check Queue before trying again."
     }
@@ -459,6 +460,7 @@ internal class StationSongRequestRemoteDataSource(
         val SAFE_ALBUM_ID = Regex("[A-Za-z0-9_-]{1,64}")
         val NUMERIC_ID = Regex("\\d{1,20}")
         val REDIRECT_STATUSES = setOf(301, 302, 303, 307, 308)
+        const val WAIT_REJECTION = "(?:request\\s+wait\\s*:|cooldown|too soon to request|request limit)"
         val REJECTION_PATTERNS = listOf(
             Regex("request failed", RegexOption.IGNORE_CASE),
             Regex("played recently", RegexOption.IGNORE_CASE),
@@ -466,16 +468,20 @@ internal class StationSongRequestRemoteDataSource(
             Regex("can only request", RegexOption.IGNORE_CASE),
             Regex("(?:request|track) (?:is )?not available", RegexOption.IGNORE_CASE),
             Regex("already (?:in|on) the queue", RegexOption.IGNORE_CASE),
-            Regex("(?:request\\s+wait|cooldown|too soon to request|request limit)", RegexOption.IGNORE_CASE),
+            // "Request Wait" needs its colon: every page's header now carries a "Request Wait 20m" figure, which is
+            // the station-wide wait and not a refusal.
+            Regex(WAIT_REJECTION, RegexOption.IGNORE_CASE),
             Regex("not eligible", RegexOption.IGNORE_CASE),
         )
         val TERMINAL_REJECTION_PATTERNS = REJECTION_PATTERNS.filterNot {
-            it.pattern == "(?:request\\s+wait|cooldown|too soon to request|request limit)"
+            it.pattern == WAIT_REJECTION
         }
         val ACCEPTANCE_PATTERNS = listOf(
             Regex("request successful", RegexOption.IGNORE_CASE),
             Regex("request has successfully been delivered", RegexOption.IGNORE_CASE),
             Regex("request was successfully delivered", RegexOption.IGNORE_CASE),
+            // The acknowledgement the stations have shown since their November 2026 redesign.
+            Regex("request has been sent to the DJ application", RegexOption.IGNORE_CASE),
         )
         val ORIGINS = mapOf(
             StationId("sst") to "https://streamingsoundtracks.com/",

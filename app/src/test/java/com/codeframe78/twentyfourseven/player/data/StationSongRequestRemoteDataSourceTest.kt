@@ -253,6 +253,57 @@ class StationSongRequestRemoteDataSourceTest {
     }
 
     @Test
+    fun `the redesigned acknowledgement with a send button is accepted and its message posted`() = runTest {
+        val connections = mutableListOf<FakeConnection>()
+        val remote = StationSongRequestRemoteDataSource(
+            sessionStore = sessionStore(),
+            requestQueueVerifier = queuedRequestVerifier,
+        ) { uri ->
+            when (connections.size) {
+                0 -> FakeConnection(uri.toURL(), redesignedPage(REDESIGNED_ACKNOWLEDGEMENT))
+                else -> FakeConnection(uri.toURL(), "Your message has been saved.")
+            }.also(connections::add)
+        }
+
+        val result = remote.submit(stationId, track(), "Thanks")
+
+        assertTrue(result is RequestSubmissionResult.Submitted)
+        assertEquals(2, connections.size)
+        assertEquals("POST", connections[1].requestMethod)
+        assertEquals(
+            "/modules.php?name=Album&action=submitmessage&asin=B00005BG8G&id=2084353",
+            connections[1].url.file,
+        )
+        assertEquals("send=Send&remLen=74&msg=Thanks", connections[1].postedBody.toString(Charsets.UTF_8.name()))
+    }
+
+    @Test
+    fun `the station-wide wait in the page header is not read as a refusal`() = runTest {
+        val remote = StationSongRequestRemoteDataSource(sessionStore = sessionStore()) { uri ->
+            FakeConnection(uri.toURL(), redesignedPage("<h2>Something the Player does not know</h2>"))
+        }
+
+        val outcome = runCatching { remote.submit(stationId, track(), "") }
+
+        assertTrue(outcome.exceptionOrNull() is IOException)
+        assertTrue(outcome.getOrNull() !is RequestSubmissionResult.Rejected)
+    }
+
+    @Test
+    fun `a wait the station states with its colon is still a refusal`() = runTest {
+        val remote = StationSongRequestRemoteDataSource(sessionStore = sessionStore()) { uri ->
+            FakeConnection(uri.toURL(), redesignedPage("<p>Request Wait: 12 Minutes</p>"))
+        }
+
+        val result = remote.submit(stationId, track(), "")
+
+        assertEquals(
+            RequestSubmissionResult.Rejected("The station reports that this account must wait before requesting again."),
+            result,
+        )
+    }
+
+    @Test
     fun `sign-in wording elsewhere on an accepted page does not expire the session`() = runTest {
         val store = sessionStore()
         val connections = mutableListOf<FakeConnection>()
@@ -450,11 +501,28 @@ class StationSongRequestRemoteDataSourceTest {
         )
     }
 
+    /** The header figures every station page has carried since the November 2026 redesign, around [body]. */
+    private fun redesignedPage(body: String) = """
+        <html><body>
+        <div>Listeners<b>53</b> In Queue<b>00h 16m</b> Request Wait<b>20m · VIP 1m</b> Repeat Interval<b>5 / 15 Days</b></div>
+        $body
+        </body></html>
+    """.trimIndent()
+
     private fun track() = RequestableTrack("B00005BG8G", "263260", "Just Testing", eligible = true)
 
     private companion object {
         val queuedRequestVerifier = RequestQueueVerifier { _, _ -> RequestQueueVerification.Queued }
         val stationId = StationId("sst")
+        const val REDESIGNED_ACKNOWLEDGEMENT = """
+            <h2>Request Received</h2>
+            <p>Your request has been sent to the DJ application. You can add a message while it waits in the queue.</p>
+            <form action="/modules.php?name=Album&amp;action=submitmessage&amp;asin=B00005BG8G&amp;id=2084353" method="post">
+              <textarea name="msg"></textarea>
+              <button name="send" type="submit" value="Send">Send</button>
+              <input name="remLen" type="text" value="80">
+            </form>
+        """
     }
 
     private class FakeConnection(
