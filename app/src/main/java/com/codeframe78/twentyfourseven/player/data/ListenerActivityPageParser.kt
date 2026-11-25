@@ -89,6 +89,27 @@ internal class ListenerActivityPageParser {
         else -> MembershipTier.Standard
     }
 
+    /**
+     * The "Your Next Request" figure in the summary at the top of the station's request page. On November 24, 2026
+     * a signed-in member's SST pages carried no request clock block, and this figure was where the status was stated.
+     * Null when the page has no such figure or words it in a way that says neither ready nor a wait in minutes.
+     */
+    fun parseRequestSummary(html: String): RequestCooldownEvidence? {
+        val document = Jsoup.parse(html)
+        requireSignedIn(document)
+        val value = document.select("div.request-summary div.request-stat").asSequence()
+            .filter { it.selectFirst("span")?.text()?.trim().equals(NEXT_REQUEST_LABEL, ignoreCase = true) }
+            .mapNotNull { it.selectFirst("strong")?.text()?.replace(WHITESPACE, " ")?.trim() }
+            .toList()
+            .singleOrNull()
+            ?: return null
+        if (value.equals(SUMMARY_READY, ignoreCase = true)) return RequestCooldownEvidence(RequestReadiness.Ready, null)
+        // The wait wording has not been observed on a live page; it is read the way the page words its other waits.
+        val minutes = SUMMARY_WAIT_MINUTES.find(value)?.groupValues?.get(1)?.toIntOrNull()?.takeIf { it > 0 }
+            ?: return null
+        return RequestCooldownEvidence(RequestReadiness.Waiting, minutes)
+    }
+
     fun parseCooldown(html: String): RequestCooldownEvidence {
         val document = Jsoup.parse(html)
         requireSignedIn(document)
@@ -243,6 +264,9 @@ internal class ListenerActivityPageParser {
         const val MAX_HISTORY_SUMMARY_CHARACTERS = 300
         const val MAX_REQUESTED_AT_CHARACTERS = 64
         val HISTORY_POSITION = Regex("^([0-9]{1,2})\\.\\s+(.+)$")
+        const val NEXT_REQUEST_LABEL = "Your Next Request"
+        const val SUMMARY_READY = "Ready to request"
+        val SUMMARY_WAIT_MINUTES = Regex("\\b([0-9]{1,4})\\s+minutes?\\b", RegexOption.IGNORE_CASE)
         val WAIT_MINUTES = Regex("Request\\s+Wait:\\s*([0-9]{1,4})\\s+Minutes?", RegexOption.IGNORE_CASE)
         val READY = Regex("Your\\s+Request:\\s*Ready", RegexOption.IGNORE_CASE)
         val WHITESPACE = Regex("\\s+")

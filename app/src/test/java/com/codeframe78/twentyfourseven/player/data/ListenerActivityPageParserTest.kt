@@ -155,6 +155,46 @@ class ListenerActivityPageParserTest {
     }
 
     @Test
+    fun `request page summary states ready, a wait, or nothing usable`() {
+        assertEquals(
+            RequestCooldownEvidence(RequestReadiness.Ready, null),
+            parser.parseRequestSummary(requestsPage("Ready to request")),
+        )
+        assertEquals(
+            RequestCooldownEvidence(RequestReadiness.Waiting, 14),
+            parser.parseRequestSummary(requestsPage("14 minutes")),
+        )
+        assertEquals(
+            RequestCooldownEvidence(RequestReadiness.Waiting, 1),
+            parser.parseRequestSummary(requestsPage("Wait 1 minute")),
+        )
+        // The member and VIP waits beside it are station-wide figures, not this member's status.
+        assertNull(parser.parseRequestSummary(requestsPage("Sign in to request a track.")))
+        assertNull(parser.parseRequestSummary(requestsPage("0 minutes")))
+        assertNull(parser.parseRequestSummary("<html><body><p>Requests are closed</p></body></html>"))
+        assertNull(
+            parser.parseRequestSummary(
+                requestsPage("Ready to request") +
+                    "<div class=\"request-summary\"><div class=\"request-stat\">" +
+                    "<span>Your Next Request</span><strong>9 minutes</strong></div></div>",
+            ),
+        )
+        assertThrows(ListenerActivityAuthenticationRequiredException::class.java) {
+            parser.parseRequestSummary("<form><input name=\"user_password\"></form>")
+        }
+    }
+
+    private fun requestsPage(nextRequest: String) = """
+        <div class="requests-page"><section class="requests-intro"><div class="request-summary">
+          <div class="request-stat"><span>Your Next Request</span><strong>$nextRequest</strong></div>
+          <div class="request-stat"><span>Member Wait</span><strong>20 minutes</strong></div>
+          <div class="request-stat"><span><img class="request-member-icon" src="/x.png" alt=""> VIP Wait</span><strong>1 minute</strong></div>
+        </div></section>
+        <div class="request-summary requests-library-stats"><div class="request-stat"><span>Tracks</span><strong>94,000</strong></div></div>
+        </div>
+    """.trimIndent()
+
+    @Test
     fun `membership is read only from the matching profile table`() {
         val vip = parser.parseMembership(
             profilePage("Listener", "<a href=\"/modules.php?name=VIP_Subscribe\"><img alt=\"VIP\"></a>"),
