@@ -89,6 +89,28 @@ internal class ListenerActivityPageParser {
         else -> MembershipTier.Standard
     }
 
+    /**
+     * The "Your Next Request" figure in the summary at the top of the station's request page. On November 24, 2026
+     * a signed-in member's SST pages carried no request clock block, and this figure was where the status was stated.
+     * Only the wording seen on a live page, "Ready to request", is read. How the page words a wait has not been
+     * observed, so any other value is null and the status stays unknown.
+     */
+    fun parseRequestSummary(html: String): RequestCooldownEvidence? {
+        val document = Jsoup.parse(html)
+        requireSignedIn(document)
+        val value = document.select("div.request-summary div.request-stat").asSequence()
+            .filter { it.selectFirst("span")?.text()?.trim().equals(NEXT_REQUEST_LABEL, ignoreCase = true) }
+            .mapNotNull { it.selectFirst("strong")?.text()?.replace(WHITESPACE, " ")?.trim() }
+            .toList()
+            .singleOrNull()
+            ?: return null
+        return if (value.equals(SUMMARY_READY, ignoreCase = true)) {
+            RequestCooldownEvidence(RequestReadiness.Ready, null)
+        } else {
+            null
+        }
+    }
+
     fun parseCooldown(html: String): RequestCooldownEvidence {
         val document = Jsoup.parse(html)
         requireSignedIn(document)
@@ -243,6 +265,8 @@ internal class ListenerActivityPageParser {
         const val MAX_HISTORY_SUMMARY_CHARACTERS = 300
         const val MAX_REQUESTED_AT_CHARACTERS = 64
         val HISTORY_POSITION = Regex("^([0-9]{1,2})\\.\\s+(.+)$")
+        const val NEXT_REQUEST_LABEL = "Your Next Request"
+        const val SUMMARY_READY = "Ready to request"
         val WAIT_MINUTES = Regex("Request\\s+Wait:\\s*([0-9]{1,4})\\s+Minutes?", RegexOption.IGNORE_CASE)
         val READY = Regex("Your\\s+Request:\\s*Ready", RegexOption.IGNORE_CASE)
         val WHITESPACE = Regex("\\s+")

@@ -53,6 +53,7 @@ internal class StationListenerActivityRemoteDataSource(
                     discovery.cooldown
                         ?: discovery.requestTimerUrl
                             ?.let { parser.parseCooldown(request(stationId, URI(it), origin, manager, TIMER_RESPONSE_LIMIT)) }
+                        ?: requestSummary(stationId, origin, manager)
                         ?: RequestCooldownEvidence(RequestReadiness.Unknown, null)
                 }
                 val membership = async {
@@ -92,6 +93,20 @@ internal class StationListenerActivityRemoteDataSource(
         profileParser.parseProfile(request(stationId, URI(origin).resolve(path), origin, manager, PROFILE_CARD_LIMIT), origin)
             ?.takeIf { it.username.equals(displayName, ignoreCase = true) }
     }.getOrNull()
+
+    /**
+     * The member's request status as the request page states it, for a history page that carries neither the clock
+     * block nor a timer frame. Null when that page could not be read, so the status stays unknown instead of failing
+     * the whole refresh. A page that asks for sign-in still ends the session, as it does for every other page here.
+     */
+    private fun requestSummary(stationId: StationId, origin: String, manager: CookieManager): RequestCooldownEvidence? =
+        try {
+            parser.parseRequestSummary(request(stationId, URI(origin).resolve(REQUESTS_PATH), origin, manager))
+        } catch (failure: ListenerActivityAuthenticationRequiredException) {
+            throw failure
+        } catch (_: IOException) {
+            null
+        }
 
     private fun authenticatedCookieManager(stationId: StationId, origin: String): CookieManager {
         return sessions.cookieManager(stationId, origin).also { manager ->
@@ -156,6 +171,7 @@ internal class StationListenerActivityRemoteDataSource(
 
     private companion object {
         const val REQUEST_HISTORY_PATH = "/modules.php?name=Your_Requests"
+        const val REQUESTS_PATH = "/modules.php?name=Requests"
         const val PROFILE_CARD_PATH = "/modules/Your_Profile/hoverCardAJAX.php?username="
         const val PROFILE_CARD_LIMIT = 50_000
         const val USER_AGENT = "24Seven.FM-Player/0.1 (Android; official non-commercial client)"
