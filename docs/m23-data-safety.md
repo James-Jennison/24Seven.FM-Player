@@ -10,6 +10,42 @@ and the stations' public smiley catalogue and images, and a smiley picker. None 
 account data off the device, and none adds collection, sharing or an SDK. No change to the declaration is expected;
 the owner confirms this against the signed candidate and the active Console form before submission.
 
+## 1.0.3 (code 22) reconciliation — November 24, 2026
+
+Checked against the signed 1.0.3 (22) bundle built from `main` at `be6db5e` (SHA-256 `d65a0cc1…`) and the
+declaration shown on the app's Google Play listing that day.
+
+**What 1.0.3 changes.** Nothing that adds a kind of data sent off the device.
+
+- The permissions in the signed bundle are identical to those in the 1.0.2 (21) bundle, and the source manifest did not
+  change between `v1.0.2` and `v1.0.3`.
+- One dependency was added, `io.coil-kt.coil3:coil-gif` 3.4.0, which decodes animated images on the device. No
+  advertising, analytics, crash-reporting, tracking, billing or social-login SDK was added.
+- New or changed requests: `https://24seven.fm/station-feeds.json` and each station's `now-playing.php` (public reads;
+  the registry request carries only an `Accept` header and the app's fixed user agent, and the app installs no global
+  cookie handler), the station smiley catalogue and images, the favorites list with its page and requestable
+  parameters, the signed-in album page read before a move or removal of a ranked favorite, and the station's
+  two-step removal form. The favorites requests go to the same station, in the member's own session, and are the
+  same kind of action 1.0.2 already sent.
+- A credential-free probe that discarded every body reached `station-feeds.json` and, on all five stations,
+  `now-playing.php`, the smiley catalogue and the Favorites page over HTTPS with a verified certificate. The only
+  redirects were from the `www` host to the bare host, over HTTPS. All 51 addresses in the registry are HTTPS.
+  Cleartext traffic remains disabled for every host.
+
+**The declaration on the listing.** Collected: Personal info (User IDs); App activity (In-app search history, Other
+actions); Messages (Other in-app messages). No data shared with third parties. Data is encrypted in transit. Users can
+request that data be deleted.
+
+**Differences found.** None of these was introduced by 1.0.3; each already applies to the published 1.0.2.
+
+| Difference | Fact | Open decision for the owner |
+| --- | --- | --- |
+| Edit profile has no row in this worksheet and no matching type on the listing | Since 1.0.2 a signed-in member can send their real name, location, country, occupation, interests, website, signature and about text to their station, after an explicit Save. `PRIVACY.md` describes this | Whether to add Personal info (Name, and Other info or Address for the location) and App activity (Other user-generated content) to the declaration, or to rely on a user-initiated exception |
+| Google Cast diagnostics | The inventory below says to declare the Cast SDK's automatic diagnostics as App activity, App interactions. The listing does not show App interactions | Whether to add App interactions, collected for analytics |
+| Two inventory rows said "not in a released build" | Private messages and album rating with add-to-favorites shipped in 1.0.2. Their types (Other in-app messages, Other actions) are on the listing | None; the rows are corrected below |
+
+No Console answer was changed in this reconciliation. Station retention facts remain as recorded on August 11, 2026.
+
 ## Scope and decision rules
 
 - Google Play defines collection as transmitting user data from the app off the device, including transmission directly
@@ -52,8 +88,9 @@ the owner confirms this against the signed candidate and the active Console form
 | Chat message | Sent after explicit Send; loaded history is memory-only | Messages → Other in-app messages | Optional; app functionality | Evaluate the explicit station post under the user-initiated exception | Post/log retention, moderation access, deletion |
 | Optional song-request message | Sent after explicit request confirmation; pending text is transient | Messages → Other in-app messages | Optional; app functionality | Evaluate the explicit station post under the user-initiated exception | Request/message retention and deletion |
 | Song-request/track action | Sent once after explicit confirmation; result state is transient | App activity → Other actions | Optional; app functionality | Evaluate the explicit station action under the user-initiated exception | Action/request history retention and deletion |
-| Private message (added October 2, 2026; not in a released build) | Sent to the station after explicit Review and Send, once; folder lists and opened messages are fetched on request and memory-only; drafts are not saved | Messages → Other in-app messages | Optional; app functionality | Evaluate the explicit station post under the user-initiated exception | Private-message retention and deletion on the station |
-| Album rating and add-to-favorites (added October 2, 2026; not in a released build) | Sent once after an explicit tap (rating also needs a chosen value and confirmation); result state is transient | App activity → Other actions; reconcile whether a rating is Other user-generated content in the active form | Optional; app functionality | Evaluate the explicit station action under the user-initiated exception | Rating/favorite retention and deletion on the station |
+| Private message (added October 2, 2026; released in 1.0.2) | Sent to the station after explicit Review and Send, once; folder lists and opened messages are fetched on request and memory-only; drafts are not saved | Messages → Other in-app messages | Optional; app functionality | Evaluate the explicit station post under the user-initiated exception | Private-message retention and deletion on the station |
+| Album rating and add-to-favorites (added October 2, 2026; released in 1.0.2) | Sent once after an explicit tap (rating also needs a chosen value and confirmation); result state is transient | App activity → Other actions; reconcile whether a rating is Other user-generated content in the active form | Optional; app functionality | Evaluate the explicit station action under the user-initiated exception | Rating/favorite retention and deletion on the station |
+| Edit profile (released in 1.0.2; row added November 24, 2026) | Real name, location, country, occupation, interests, website, signature, about text, newsletter choice and online-status choice are sent to the member's station once, after an explicit Save; the form is fetched on request and held in memory | Personal info → Name; location as Address or Other info; free text as App activity → Other user-generated content; reconcile with the active form | Optional; account management and app functionality | Evaluate the explicit station post under the user-initiated exception | Profile retention and deletion on the station |
 | Station-library search text | Sent only when Search is explicitly used; query/results UI is transient | App activity → In-app search history | Optional; app functionality | Evaluate the direct station query under the user-initiated exception | Search/log retention and whether terms are linked to an account/IP |
 | Abuse-report email handoff | Player transfers a bounded fixed-recipient draft to the chosen email app; Player does not persist it or send/read email | Personal info → Name/Email; Messages → Emails or Other in-app messages; possibly Other UGC under active wording | Optional; app functionality, security, and compliance | On-device app-to-app transfer is sharing, but the explicit Review email/send flow may qualify for the specific user-initiated exception | Email-app and receiving administration retention/processors/deletion |
 | Diagnostic Copy/Share | Generated locally from a fixed allowlist; Copy uses Android clipboard and Share opens the chooser; no automatic upload or persistence | On-device processing is out of collection scope; selected external transfer must still be evaluated | Optional; support/app functionality | Explicit user-selected destination is provisionally within the user-initiated sharing exception | Confirm active Console treatment |
