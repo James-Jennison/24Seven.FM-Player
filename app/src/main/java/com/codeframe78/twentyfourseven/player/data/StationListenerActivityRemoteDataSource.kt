@@ -97,11 +97,13 @@ internal class StationListenerActivityRemoteDataSource(
     /**
      * The member's request status as the request page states it, for a history page that carries neither the clock
      * block nor a timer frame. Null when that page could not be read, so the status stays unknown instead of failing
-     * the whole refresh.
+     * the whole refresh. A page that asks for sign-in still ends the session, as it does for every other page here.
      */
     private fun requestSummary(stationId: StationId, origin: String, manager: CookieManager): RequestCooldownEvidence? =
         try {
             parser.parseRequestSummary(request(stationId, URI(origin).resolve(REQUESTS_PATH), origin, manager))
+        } catch (failure: ListenerActivityAuthenticationRequiredException) {
+            throw failure
         } catch (_: IOException) {
             null
         }

@@ -155,22 +155,15 @@ class ListenerActivityPageParserTest {
     }
 
     @Test
-    fun `request page summary states ready, a wait, or nothing usable`() {
+    fun `request page summary is read only for the wording seen on a live page`() {
         assertEquals(
             RequestCooldownEvidence(RequestReadiness.Ready, null),
             parser.parseRequestSummary(requestsPage("Ready to request")),
         )
-        assertEquals(
-            RequestCooldownEvidence(RequestReadiness.Waiting, 14),
-            parser.parseRequestSummary(requestsPage("14 minutes")),
-        )
-        assertEquals(
-            RequestCooldownEvidence(RequestReadiness.Waiting, 1),
-            parser.parseRequestSummary(requestsPage("Wait 1 minute")),
-        )
-        // The member and VIP waits beside it are station-wide figures, not this member's status.
+        // How the page words a wait has not been observed, so a minutes figure is not taken as one.
+        assertNull(parser.parseRequestSummary(requestsPage("14 minutes")))
+        assertNull(parser.parseRequestSummary(requestsPage("Ready in 14 minutes")))
         assertNull(parser.parseRequestSummary(requestsPage("Sign in to request a track.")))
-        assertNull(parser.parseRequestSummary(requestsPage("0 minutes")))
         assertNull(parser.parseRequestSummary("<html><body><p>Requests are closed</p></body></html>"))
         assertNull(
             parser.parseRequestSummary(

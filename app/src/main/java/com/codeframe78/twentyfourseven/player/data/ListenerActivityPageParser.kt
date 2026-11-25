@@ -92,7 +92,8 @@ internal class ListenerActivityPageParser {
     /**
      * The "Your Next Request" figure in the summary at the top of the station's request page. On November 24, 2026
      * a signed-in member's SST pages carried no request clock block, and this figure was where the status was stated.
-     * Null when the page has no such figure or words it in a way that says neither ready nor a wait in minutes.
+     * Only the wording seen on a live page, "Ready to request", is read. How the page words a wait has not been
+     * observed, so any other value is null and the status stays unknown.
      */
     fun parseRequestSummary(html: String): RequestCooldownEvidence? {
         val document = Jsoup.parse(html)
@@ -103,11 +104,11 @@ internal class ListenerActivityPageParser {
             .toList()
             .singleOrNull()
             ?: return null
-        if (value.equals(SUMMARY_READY, ignoreCase = true)) return RequestCooldownEvidence(RequestReadiness.Ready, null)
-        // The wait wording has not been observed on a live page; it is read the way the page words its other waits.
-        val minutes = SUMMARY_WAIT_MINUTES.find(value)?.groupValues?.get(1)?.toIntOrNull()?.takeIf { it > 0 }
-            ?: return null
-        return RequestCooldownEvidence(RequestReadiness.Waiting, minutes)
+        return if (value.equals(SUMMARY_READY, ignoreCase = true)) {
+            RequestCooldownEvidence(RequestReadiness.Ready, null)
+        } else {
+            null
+        }
     }
 
     fun parseCooldown(html: String): RequestCooldownEvidence {
@@ -266,7 +267,6 @@ internal class ListenerActivityPageParser {
         val HISTORY_POSITION = Regex("^([0-9]{1,2})\\.\\s+(.+)$")
         const val NEXT_REQUEST_LABEL = "Your Next Request"
         const val SUMMARY_READY = "Ready to request"
-        val SUMMARY_WAIT_MINUTES = Regex("\\b([0-9]{1,4})\\s+minutes?\\b", RegexOption.IGNORE_CASE)
         val WAIT_MINUTES = Regex("Request\\s+Wait:\\s*([0-9]{1,4})\\s+Minutes?", RegexOption.IGNORE_CASE)
         val READY = Regex("Your\\s+Request:\\s*Ready", RegexOption.IGNORE_CASE)
         val WHITESPACE = Regex("\\s+")
