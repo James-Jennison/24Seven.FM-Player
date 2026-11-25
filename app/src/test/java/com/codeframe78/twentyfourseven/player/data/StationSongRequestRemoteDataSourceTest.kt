@@ -278,6 +278,41 @@ class StationSongRequestRemoteDataSourceTest {
     }
 
     @Test
+    fun `a blank message posts nothing and other buttons on the form are never sent`() = runTest {
+        val connections = mutableListOf<FakeConnection>()
+        val page = redesignedPage(
+            REDESIGNED_ACKNOWLEDGEMENT.replace("</form>", "<button name=\"preview\" value=\"1\">Preview</button></form>"),
+        )
+        val remote = StationSongRequestRemoteDataSource(
+            sessionStore = sessionStore(),
+            requestQueueVerifier = queuedRequestVerifier,
+        ) { uri ->
+            when (connections.size) {
+                0, 1 -> FakeConnection(uri.toURL(), page)
+                else -> FakeConnection(uri.toURL(), "Your message has been saved.")
+            }.also(connections::add)
+        }
+
+        assertTrue(remote.submit(stationId, track(), "") is RequestSubmissionResult.Submitted)
+        assertEquals(1, connections.size)
+
+        assertTrue(remote.submit(stationId, track(), "Thanks") is RequestSubmissionResult.Submitted)
+        assertEquals("send=Send&remLen=74&msg=Thanks", connections[2].postedBody.toString(Charsets.UTF_8.name()))
+    }
+
+    @Test
+    fun `the redesigned acknowledgement without its message form is not accepted`() = runTest {
+        val remote = StationSongRequestRemoteDataSource(sessionStore = sessionStore()) { uri ->
+            FakeConnection(
+                uri.toURL(),
+                redesignedPage("<p>Your request has been sent to the DJ application.</p>"),
+            )
+        }
+
+        assertTrue(runCatching { remote.submit(stationId, track(), "") }.exceptionOrNull() is IOException)
+    }
+
+    @Test
     fun `the station-wide wait in the page header is not read as a refusal`() = runTest {
         val remote = StationSongRequestRemoteDataSource(sessionStore = sessionStore()) { uri ->
             FakeConnection(uri.toURL(), redesignedPage("<h2>Something the Player does not know</h2>"))
@@ -290,9 +325,9 @@ class StationSongRequestRemoteDataSourceTest {
     }
 
     @Test
-    fun `a wait the station states with its colon is still a refusal`() = runTest {
+    fun `wait wording outside the header is still a refusal`() = runTest {
         val remote = StationSongRequestRemoteDataSource(sessionStore = sessionStore()) { uri ->
-            FakeConnection(uri.toURL(), redesignedPage("<p>Request Wait: 12 Minutes</p>"))
+            FakeConnection(uri.toURL(), redesignedPage("<p>Request Wait 12 Minutes</p>"))
         }
 
         val result = remote.submit(stationId, track(), "")
@@ -504,7 +539,10 @@ class StationSongRequestRemoteDataSourceTest {
     /** The header figures every station page has carried since the November 2026 redesign, around [body]. */
     private fun redesignedPage(body: String) = """
         <html><body>
-        <div>Listeners<b>53</b> In Queue<b>00h 16m</b> Request Wait<b>20m · VIP 1m</b> Repeat Interval<b>5 / 15 Days</b></div>
+        <section class="np-header station-sst"><div class="np-center"><div class="np-stats td03">
+          <div class="np-stat"><span class="np-stat-label">In Queue</span><strong>00h 16m</strong></div>
+          <div class="np-stat"><span class="np-stat-label">Request Wait</span><a href="/modules.php?name=Requests"><strong>20m <small>· VIP 1m</small></strong></a></div>
+        </div></div></section>
         $body
         </body></html>
     """.trimIndent()
