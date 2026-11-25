@@ -12,6 +12,8 @@ import com.codeframe78.twentyfourseven.player.data.InMemoryNowPlayingRepository
 import com.codeframe78.twentyfourseven.player.data.PollingQueueRepository
 import com.codeframe78.twentyfourseven.player.data.NetworkAuthRepository
 import com.codeframe78.twentyfourseven.player.data.AndroidKeystoreAuthSessionStore
+import com.codeframe78.twentyfourseven.player.data.StoredStationSessionExporter
+import com.codeframe78.twentyfourseven.player.domain.StationSessionExporter
 import com.codeframe78.twentyfourseven.player.data.AndroidCommunityNotificationRepository
 import com.codeframe78.twentyfourseven.player.data.PollingChatRepository
 import com.codeframe78.twentyfourseven.player.data.SharedPreferencesAppGuideRepository
@@ -92,6 +94,7 @@ class AppContainer(application: Application) {
     val communityNotificationRepository = AndroidCommunityNotificationRepository(application)
 
     val stationRepository = BootstrapStationRepository(stationPreferences)
+    val stationSessionExporter: StationSessionExporter = StoredStationSessionExporter(authSessionStore, stationRepository)
     val nowPlayingRepository: NowPlayingRepository = nowPlayingStore
     val nowPlayingPublisher: NowPlayingPublisher = nowPlayingStore
     private val stationNowPlayingRepository = StationNowPlayingArtworkRepository()

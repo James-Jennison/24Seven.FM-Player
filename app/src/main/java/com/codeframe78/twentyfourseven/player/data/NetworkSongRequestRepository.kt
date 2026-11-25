@@ -2,6 +2,7 @@ package com.codeframe78.twentyfourseven.player.data
 
 import com.codeframe78.twentyfourseven.player.domain.RequestSearchField
 import com.codeframe78.twentyfourseven.player.domain.RequestSearchTarget
+import com.codeframe78.twentyfourseven.player.domain.SongRequestOutcome
 import com.codeframe78.twentyfourseven.player.domain.RequestSuggestionMode
 import com.codeframe78.twentyfourseven.player.domain.SongRequestLoadStatus
 import com.codeframe78.twentyfourseven.player.domain.SongRequestRepository
@@ -172,7 +173,7 @@ internal class NetworkSongRequestRepository(
             unavailable(stationId, contextRejection.rejectionMessage())
             return@withLock
         }
-        update(stationId) { it.copy(status = SongRequestLoadStatus.Submitting, errorMessage = null, notice = null) }
+        update(stationId) { it.copy(status = SongRequestLoadStatus.Submitting, errorMessage = null, notice = null, outcome = null) }
         // The track list that exposed the Request action is the last station-provided
         // availability. Re-loading it here adds latency and cannot supersede the request
         // handler, which is the only authority that can accept or reject the request.
@@ -186,6 +187,7 @@ internal class NetworkSongRequestRepository(
                                 pendingRequest = null,
                                 notice = result.message,
                                 transactionBlocks = current.withoutLocalBlock(pending.track.identity),
+                                outcome = SongRequestOutcome.Submitted,
                             )
                         }
                     }
@@ -196,6 +198,7 @@ internal class NetworkSongRequestRepository(
                                 pendingRequest = null,
                                 transactionBlocks = current.withoutLocalBlock(pending.track.identity),
                                 errorMessage = result.message,
+                                outcome = SongRequestOutcome.Unconfirmed,
                             )
                         }
                     }
@@ -206,6 +209,7 @@ internal class NetworkSongRequestRepository(
                                 pendingRequest = null,
                                 transactionBlocks = current.withoutLocalBlock(pending.track.identity),
                                 errorMessage = result.message,
+                                outcome = SongRequestOutcome.Rejected(result.message),
                             )
                         }
                     }
@@ -214,6 +218,7 @@ internal class NetworkSongRequestRepository(
                             status = SongRequestLoadStatus.Ready,
                             pendingRequest = null,
                             errorMessage = "Sign in to this station before requesting a song.",
+                            outcome = SongRequestOutcome.NotSent("Sign in to this station before requesting a song."),
                         )
                     }
                 }
@@ -226,6 +231,7 @@ internal class NetworkSongRequestRepository(
                         transactionBlocks = current.withoutLocalBlock(pending.track.identity),
                         errorMessage = "The station may have received this request, but confirmation could not be read. " +
                             "${confirmationFailureDetail(failure)} Check Queue before trying again. Nothing was retried.",
+                        outcome = SongRequestOutcome.Unconfirmed,
                     )
                 }
             }
@@ -254,6 +260,7 @@ internal class NetworkSongRequestRepository(
                 pendingRequest = PreparedSongRequest(stationId, normalizedName, track),
                 notice = null,
                 errorMessage = null,
+                outcome = null,
             )
         }
     }
@@ -285,7 +292,12 @@ internal class NetworkSongRequestRepository(
     }
 
     private fun unavailable(stationId: StationId, message: String) = update(stationId) {
-        it.copy(status = SongRequestLoadStatus.Ready, pendingRequest = null, errorMessage = message)
+        it.copy(
+            status = SongRequestLoadStatus.Ready,
+            pendingRequest = null,
+            errorMessage = message,
+            outcome = SongRequestOutcome.NotSent(message),
+        )
     }
 
     private fun confirmationFailureDetail(failure: Throwable): String = when {

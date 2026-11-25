@@ -80,6 +80,16 @@ data class RequestTransactionBlock(
     val identity: RequestTrackIdentity? = null,
 )
 
+/** What the station-facing request attempt ended as; null until a request is confirmed. */
+sealed interface SongRequestOutcome {
+    data object Submitted : SongRequestOutcome
+    data class Rejected(val message: String) : SongRequestOutcome
+    /** The station may have received the request; it was never retried. */
+    data object Unconfirmed : SongRequestOutcome
+    /** Nothing was sent, for example because the sign-in or station no longer matched. */
+    data class NotSent(val message: String) : SongRequestOutcome
+}
+
 data class SongRequestState(
     val stationId: StationId,
     val status: SongRequestLoadStatus = SongRequestLoadStatus.Idle,
@@ -92,6 +102,7 @@ data class SongRequestState(
     val transactionBlocks: List<RequestTransactionBlock> = emptyList(),
     val notice: String? = null,
     val errorMessage: String? = null,
+    val outcome: SongRequestOutcome? = null,
 )
 
 interface SongRequestRepository {
